@@ -1,0 +1,422 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* 
+ * Vue Black Dashboard 风格主题
+ * 深色主题为主，柔和护眼配色
+ * 卡片布局宽敞，排版精美
+ */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --font-sans:
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', ui-sans-serif,
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  --font-serif:
+    'Noto Serif SC', 'Songti SC', 'SimSun', ui-serif, Georgia, Cambria,
+    'Times New Roman', Times, serif;
+  
+  /* Black Dashboard 特色颜色 */
+  --color-info: var(--info);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+}
+
+/* 
+ * 亮色模式 (Light Mode)
+ * 柔和浅色背景，清晰易读
+ */
+:root {
+  --radius: 0.75rem;
+  
+  /* 主背景 - 柔和米白 */
+  --background: #f5f6fa;
+  --foreground: #2c3e50;
+  
+  /* 卡片 - 纯白，轻微阴影 */
+  --card: #ffffff;
+  --card-foreground: #2c3e50;
+  
+  /* 弹出层 */
+  --popover: #ffffff;
+  --popover-foreground: #2c3e50;
+  
+  /* 主色调 - 深蓝紫色 */
+  --primary: #5e72e4;
+  --primary-foreground: #ffffff;
+  
+  /* 次要色调 - 柔和灰 */
+  --secondary: #f7fafc;
+  --secondary-foreground: #525f7f;
+  
+  /* 静音/禁用状态 */
+  --muted: #f7fafc;
+  --muted-foreground: #8898aa;
+  
+  /* 强调色 - 浅紫 */
+  --accent: #f3f4f6;
+  --accent-foreground: #5e72e4;
+  
+  /* 危险色 - 柔和红 */
+  --destructive: #f5365c;
+  --destructive-foreground: #ffffff;
+  
+  /* 边框和输入 */
+  --border: #e9ecef;
+  --input: #e9ecef;
+  --ring: #5e72e4;
+  
+  /* 图表颜色 - Black Dashboard 配色 */
+  --chart-1: #5e72e4;
+  --chart-2: #11cdef;
+  --chart-3: #2dce89;
+  --chart-4: #fb6340;
+  --chart-5: #f5365c;
+  
+  /* 侧边栏 */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #525f7f;
+  --sidebar-primary: #5e72e4;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f7fafc;
+  --sidebar-accent-foreground: #525f7f;
+  --sidebar-border: #e9ecef;
+  --sidebar-ring: #5e72e4;
+  
+  /* Black Dashboard 状态色 */
+  --info: #11cdef;
+  --success: #2dce89;
+  --warning: #fb6340;
+  --danger: #f5365c;
+}
+
+/* 
+ * 暗黑模式 (Dark Mode)
+ * 深色背景，护眼配色
+ */
+.dark {
+  /* 主背景 - 深灰黑 */
+  --background: #1a1d29;
+  --foreground: #e9ecef;
+  
+  /* 卡片 - 深灰 */
+  --card: #27293d;
+  --card-foreground: #e9ecef;
+  
+  /* 弹出层 */
+  --popover: #27293d;
+  --popover-foreground: #e9ecef;
+  
+  /* 主色调 - 亮紫 */
+  --primary: #5e72e4;
+  --primary-foreground: #ffffff;
+  
+  /* 次要色调 */
+  --secondary: #344675;
+  --secondary-foreground: #e9ecef;
+  
+  /* 静音/禁用状态 */
+  --muted: #344675;
+  --muted-foreground: #8898aa;
+  
+  /* 强调色 */
+  --accent: #344675;
+  --accent-foreground: #5e72e4;
+  
+  /* 危险色 */
+  --destructive: #f5365c;
+  --destructive-foreground: #ffffff;
+  
+  /* 边框和输入 */
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #5e72e4;
+  
+  /* 图表颜色 */
+  --chart-1: #5e72e4;
+  --chart-2: #11cdef;
+  --chart-3: #2dce89;
+  --chart-4: #fb6340;
+  --chart-5: #f5365c;
+  
+  /* 侧边栏 - 深色 */
+  --sidebar: #1e1e2f;
+  --sidebar-foreground: #e9ecef;
+  --sidebar-primary: #5e72e4;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #27293d;
+  --sidebar-accent-foreground: #e9ecef;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #5e72e4;
+  
+  /* Black Dashboard 状态色 */
+  --info: #11cdef;
+  --success: #2dce89;
+  --warning: #fb6340;
+  --danger: #f5365c;
+}
+
+/* 全局样式优化 */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  
+  /* 滚动条样式 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted rounded;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+  
+  /* 选中文字样式 */
+  ::selection {
+    @apply bg-primary/30;
+  }
+}
+
+/* 卡片样式 - Black Dashboard 风格 */
+@layer components {
+  .card-dashboard {
+    @apply bg-card rounded-xl border border-border/50 shadow-sm;
+    @apply transition-all duration-300 ease-in-out;
+  }
+  
+  .card-dashboard:hover {
+    @apply shadow-lg border-border;
+    transform: translateY(-2px);
+  }
+  
+  .dark .card-dashboard {
+    @apply shadow-none;
+    background: linear-gradient(180deg, #27293d 0%, #1f2230 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  /* 统计卡片 */
+  .stat-card {
+    @apply p-6 rounded-xl;
+    @apply bg-gradient-to-br from-card to-muted/50;
+    @apply border border-border/50;
+  }
+  
+  .dark .stat-card {
+    background: linear-gradient(135deg, #27293d 0%, #1e1e2f 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  /* 按钮样式 */
+  .btn-dashboard {
+    @apply px-6 py-2.5 rounded-lg font-medium;
+    @apply transition-all duration-200;
+    @apply bg-primary text-primary-foreground;
+    @apply hover:opacity-90 hover:shadow-lg;
+  }
+  
+  .btn-dashboard-secondary {
+    @apply px-6 py-2.5 rounded-lg font-medium;
+    @apply transition-all duration-200;
+    @apply bg-secondary text-secondary-foreground;
+    @apply hover:bg-secondary/80;
+  }
+  
+  /* 输入框样式 */
+  .input-dashboard {
+    @apply px-4 py-3 rounded-lg;
+    @apply bg-background border border-border;
+    @apply focus:ring-2 focus:ring-primary/20 focus:border-primary;
+    @apply transition-all duration-200;
+  }
+  
+  .dark .input-dashboard {
+    @apply bg-muted/50 border-white/10;
+  }
+  
+  /* 表格样式 */
+  .table-dashboard {
+    @apply w-full;
+  }
+  
+  .table-dashboard th {
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider;
+    @apply text-muted-foreground bg-muted/50;
+    @apply border-b border-border;
+  }
+  
+  .dark .table-dashboard th {
+    @apply bg-muted/30;
+  }
+  
+  .table-dashboard td {
+    @apply px-4 py-4 border-b border-border/50;
+    @apply text-sm;
+  }
+  
+  .table-dashboard tr:hover td {
+    @apply bg-muted/30;
+  }
+  
+  /* 徽章样式 */
+  .badge-dashboard {
+    @apply px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+  
+  /* 渐变文字 */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #5e72e4 0%, #11cdef 100%);
+  }
+  
+  /* 侧边栏菜单 */
+  .sidebar-menu-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg;
+    @apply text-sidebar-foreground/70;
+    @apply transition-all duration-200;
+    @apply hover:bg-sidebar-accent hover:text-sidebar-foreground;
+  }
+  
+  .sidebar-menu-item.active {
+    @apply bg-sidebar-primary text-sidebar-primary-foreground;
+  }
+  
+  /* 页面标题 */
+  .page-title {
+    @apply text-2xl font-bold text-foreground;
+    @apply mb-1;
+  }
+  
+  .page-subtitle {
+    @apply text-sm text-muted-foreground;
+  }
+}
+
+/* 动画效果 */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  /* Blob 动画 */
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+  
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+  
+  @keyframes blob {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+  
+  /* 玻璃态效果 */
+  .glass {
+    @apply bg-white/10 backdrop-blur-lg;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .dark .glass {
+    @apply bg-black/20;
+  }
+}
