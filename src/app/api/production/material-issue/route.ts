@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
 import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { allocateFIFO, executeFIFODeduction } from '@/lib/fifo-allocation';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -154,18 +155,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
           [item.issued_qty, inv.id]
         );
 
-        const [batchRows]: any = await conn.execute(
-          `SELECT id, batch_no, available_qty, unit_price, inbound_date
-           FROM inv_inventory_batch
-           WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 'normal'
-           ORDER BY inbound_date ASC, id ASC
-           FOR UPDATE`,
-          [item.material_id, issue.warehouse_id]
-        );
+        const allocation = await allocateFIFO(conn, item.material_id, issue.warehouse_id, Number(item.issued_qty));
 
-        let remainingQty = Number(item.issued_qty);
-        let totalCost = 0;
-        const fifoRecommended = batchRows.length > 0 ? batchRows[0].batch_no : null;
+        if (allocation.shortage > 0) {
+          throw new Error(`物料 ${item.material_name} 批次库存不足: 需要 ${item.issued_qty}, 可用 ${allocation.total_available}, 缺少 ${allocation.shortage}`);
+        }
+
+        const fifoRecommended = allocation.allocations.length > 0 ? allocation.allocations[0].batch_no : null;
         const usedBatch = item.batch_no || null;
 
         if (usedBatch && fifoRecommended && usedBatch !== fifoRecommended) {
@@ -178,23 +174,18 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
           } catch {}
         }
 
-        for (const batch of batchRows) {
-          if (remainingQty <= 0) break;
-          const batchAvail = Number(batch.available_qty);
-          const deductQty = Math.min(remainingQty, batchAvail);
-          const batchCost = deductQty * Number(batch.unit_price || 0);
-
-          await conn.execute(
-            'UPDATE inv_inventory_batch SET available_qty = available_qty - ? WHERE id = ?',
-            [deductQty, batch.id]
-          );
-
-          totalCost += batchCost;
-          remainingQty -= deductQty;
-        }
+        const { deductionDetails, totalCost } = await executeFIFODeduction(conn, allocation, {
+          sourceType: 'material_issue',
+          sourceId: id,
+          sourceNo: issue.issue_no,
+          warehouseId: issue.warehouse_id,
+          warehouseCode: '',
+          operatorId: null,
+          operatorName: issue.operator_name || null,
+        });
 
         const transNo = 'TRX' + Date.now() + String(item.id).slice(-4);
-        const [matRows]: any = await conn.execute('SELECT material_code FROM mdm_material WHERE id = ?', [item.material_id]);
+        const [matRows]: any = await conn.execute('SELECT material_code FROM inv_material WHERE id = ?', [item.material_id]);
         const matCode = matRows.length > 0 ? matRows[0].material_code : '';
         const avgCost = Number(item.issued_qty) > 0 ? totalCost / Number(item.issued_qty) : 0;
 

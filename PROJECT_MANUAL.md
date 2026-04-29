@@ -110,3 +110,161 @@ HAVING ABS(batch_total_available - inventory_qty) > 0.001;
 ## 约束
 - 不能删除未处理的旧表，需先建立新表，双写运行一段时间后废弃旧表。
 - 保持现有 API 接口不变，通过适配层做字段映射。
+
+---
+
+## 六大修复项实施记录（已完成）
+
+### 【1】统一采购订单表
+
+**新建标准表**：`std_purchase_order` + `std_purchase_order_line`
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | BIGINT UNSIGNED AUTO_INCREMENT | 统一主键类型 |
+| order_no | VARCHAR(50) UK | 采购单号 |
+| source_request_id | BIGINT UNSIGNED | 来源请购单ID |
+| supplier_id | BIGINT UNSIGNED | 供应商ID |
+| status | TINYINT | 0-草稿/1-已提交/2-审校中/3-审校通过/4-已批准/5-部分收货/6-已完成/7-已取消/8-已关闭 |
+| legacy_source | VARCHAR(30) | 旧表来源标识 |
+| legacy_id | BIGINT UNSIGNED | 旧表原始ID |
+
+**迁移结果**：
+- pur_order → std_purchase_order: 10行
+- pur_purchase_order → std_purchase_order: 5行
+- pur_order_detail → std_purchase_order_line: 10行
+- pur_purchase_order_line → std_purchase_order_line: 19行
+
+**状态枚举映射**：
+- pur_order: 1→0, 2→4, 3→5, 4→6, 5→8
+- pur_purchase_order: 10→0, 20→2, 30→4, 40→5, 50→6, 90→8
+
+### 【2】统一BOM表
+
+**新建标准表**：`std_bom_header` + `std_bom_line`
+
+| 关键字段 | 说明 |
+|----------|------|
+| effective_date | 生效日期（新增） |
+| obsolete_date | 失效日期（新增） |
+| material_type | TINYINT: 1-原材料/2-半成品/3-辅料/4-包材/5-其他 |
+
+**迁移结果**：
+- prd_bom → std_bom_header: 10行
+- prd_bom_detail → std_bom_line: 30行
+- bom_header → std_bom_header: 1行
+- bom_line → std_bom_line: 4行
+- mdm_product_bom: 10行需手动映射
+
+### 【3】统一物料主档
+
+**新建标准表**：`std_material`
+
+**迁移结果**：
+- inv_material → std_material: 20行
+- bom_material → std_material: 4行
+- mdm_material: 表不存在，跳过
+
+### 【4】修复HRM考勤表员工ID
+
+**修改**：新增 `employee_id_int INT UNSIGNED` 字段
+
+**迁移结果**：
+- hr_attendance 表已创建（含 employee_id_int）
+- POST接口已更新，写入时自动填充 employee_id_int
+
+### 【5】创建出库批次分配表
+
+**新建表**：`inv_outbound_batch_allocation`
+
+| 字段 | 说明 |
+|------|------|
+| source_type | 来源类型: outbound_order/material_issue/outsource_issue |
+| batch_id | 批次ID |
+| allocated_qty | 分配数量 |
+| unit_cost | 单位成本 |
+| total_cost | 总成本 |
+| fifo_mode | FIFO模式: fifo_auto/specified_batch/manual_override |
+
+### 【6】统一FIFO分配实现
+
+**新建共享模块**：`src/lib/fifo-allocation.ts`
+
+| 函数 | 说明 |
+|------|------|
+| allocateFIFO | FIFO批次分配（含保质期优先排序） |
+| executeFIFODeduction | 执行FIFO扣减+事务记录+批次分配表写入 |
+| executeSpecifiedBatchDeduction | 执行指定批次扣减 |
+
+**已改造路由**：
+- `warehouse/outbound/confirm/route.ts` — 移除内联allocateFIFO，改用共享模块
+- `production/material-issue/route.ts` — 生产发料接入FIFO，改用共享模块
+
+---
+
+## 快速修复上线执行顺序
+
+### 第一阶段：停服与数据库迁移
+
+```
+1. 停止 Next.js 应用服务
+2. 执行迁移 API（按顺序）：
+   GET /api/migrations/six-critical-fixes?step=1  （采购订单统一）
+   GET /api/migrations/six-critical-fixes?step=2  （BOM统一）
+   GET /api/migrations/six-critical-fixes?step=3  （物料主档统一）
+   GET /api/migrations/six-critical-fixes?step=4  （HRM考勤修复）
+   GET /api/migrations/six-critical-fixes?step=5  （出库批次分配表）
+   GET /api/migrations/purchase-request-fk         （请购单FK字段）
+3. 验证迁移结果：
+   SELECT COUNT(*) FROM std_purchase_order;      -- 预期15
+   SELECT COUNT(*) FROM std_purchase_order_line;  -- 预期29
+   SELECT COUNT(*) FROM std_bom_header;           -- 预期11
+   SELECT COUNT(*) FROM std_bom_line;             -- 预期34
+   SELECT COUNT(*) FROM std_material;             -- 预期24
+   SELECT COUNT(*) FROM inv_outbound_batch_allocation; -- 预期0（新表）
+```
+
+### 第二阶段：后端部署
+
+```
+4. 部署新代码（含共享FIFO模块、改造后的路由）
+5. 启动 Next.js 应用
+6. 验证：
+   - 创建请购单 → 检查 material_id 是否写入
+   - 生产发料过账 → 检查 inv_outbound_batch_allocation 是否有记录
+   - 出库确认 → 检查FIFO分配是否正常
+```
+
+### 第三阶段：双写过渡期（2-4周）
+
+```
+7. 新数据同时写入旧表和标准表
+8. 定期对比数据一致性
+9. 前端逐步切换到标准表API
+```
+
+### 第四阶段：旧表废弃
+
+```
+10. 确认所有前端已切换到标准表API
+11. 停止双写
+12. 旧表标记为只读（RENAME TO _archived_表名）
+13. 30天后确认无问题，DROP旧表
+```
+
+### 旧表废弃与清理策略
+
+| 旧表 | 新表 | 过渡期操作 | 废弃条件 |
+|------|------|-----------|---------|
+| pur_order | std_purchase_order | 双写+legacy_source标记 | 所有PO API切换到std表 |
+| pur_purchase_order | std_purchase_order | 双写+legacy_source标记 | 所有PO API切换到std表 |
+| pur_order_detail | std_purchase_order_line | 双写 | 同上 |
+| pur_purchase_order_line | std_purchase_order_line | 双写 | 同上 |
+| prd_bom | std_bom_header | 双写+legacy_source标记 | 所有BOM API切换到std表 |
+| prd_bom_detail | std_bom_line | 双写 | 同上 |
+| bom_header | std_bom_header | 双写+legacy_source标记 | 同上 |
+| bom_line | std_bom_line | 双写 | 同上 |
+| mdm_product_bom | std_bom_header | 手动映射 | 映射完成 |
+| inv_material | std_material | 双写+legacy_source标记 | 所有物料API切换到std表 |
+| bom_material | std_material | 双写+legacy_source标记 | 同上 |
+| hr_attendance.employee_id | hr_attendance.employee_id_int | 新写入同时填两字段 | 所有HR API使用INT字段 |

@@ -163,13 +163,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   // 插入考勤记录
   const result = await execute(
     `INSERT INTO hr_attendance (
-      attendance_date, employee_id, employee_name,
+      attendance_date, employee_id, employee_id_int, employee_name,
       department_name, check_in_time, check_out_time,
       status, working_hours, overtime_hours, remark
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       attendanceDate,
       employeeId,
+      parseInt(employeeId) || null,
       employeeName,
       departmentName,
       checkInTime,
