@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-GitHub 目录批量上传工具（Git 版本）
-功能：图形界面、进度条、自动 Git 提交和推送
+GitHub 目录批量上传工具（Git 版本 - 美化界面）
+功能：现代化 UI、进度条、自动 Git 提交和推送
 作者：snqig
 更新日期：2026-04-29
 """
@@ -14,13 +14,14 @@ from pathlib import Path
 from datetime import datetime
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
+import webbrowser
 
 
 class GitHubUploader:
     def __init__(self, root):
         self.root = root
         self.root.title("🚀 Git 上传工具 - 自动提交和推送")
-        self.root.geometry("850x700")
+        self.root.geometry("800x650")
         self.root.resizable(True, True)
         
         # 设置窗口图标（如果有的话）
@@ -45,90 +46,203 @@ class GitHubUploader:
         style = ttk.Style()
         style.theme_use('clam')
         
-        # 配置颜色方案
-        style.configure('Title.TLabel', font=('Microsoft YaHei UI', 12, 'bold'), foreground='#2c3e50')
-        style.configure('Header.TLabel', font=('Microsoft YaHei UI', 10, 'bold'), foreground='#34495e')
-        style.configure('TButton', font=('Microsoft YaHei UI', 9), padding=5)
-        style.configure('TCheckbutton', font=('Microsoft YaHei UI', 9))
+        # 配置颜色方案 - 现代化设计
+        # 主色调
+        PRIMARY_COLOR = '#4A90E2'      # 蓝色
+        SECONDARY_COLOR = '#50C878'    # 绿色
+        ACCENT_COLOR = '#FF6B6B'       # 红色
+        BG_COLOR = '#F5F7FA'           # 浅灰背景
+        CARD_BG = '#FFFFFF'            # 卡片背景
+        TEXT_COLOR = '#2C3E50'         # 深色文字
         
-        main_frame = ttk.Frame(self.root, padding="15")
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        style.configure('TFrame', background=BG_COLOR)
+        style.configure('Card.TFrame', background=CARD_BG, relief='flat')
+        style.configure('Title.TLabel', 
+                       font=('Microsoft YaHei UI', 12, 'bold'), 
+                       foreground=TEXT_COLOR,
+                       background=BG_COLOR)
+        style.configure('Header.TLabel', 
+                       font=('Microsoft YaHei UI', 10, 'bold'), 
+                       foreground=PRIMARY_COLOR,
+                       background=CARD_BG)
+        style.configure('Info.TLabel', 
+                       font=('Microsoft YaHei UI', 9), 
+                       foreground=TEXT_COLOR,
+                       background=CARD_BG)
+        style.configure('TButton', 
+                       font=('Microsoft YaHei UI', 9, 'bold'),
+                       padding=8,
+                       foreground='white',
+                       background=PRIMARY_COLOR)
+        style.map('TButton',
+                 background=[('active', '#357ABD'), ('pressed', '#2E6BA8')])
+        style.configure('Success.TButton',
+                       font=('Microsoft YaHei UI', 9, 'bold'),
+                       padding=8,
+                       foreground='white',
+                       background=SECONDARY_COLOR)
+        style.map('Success.TButton',
+                 background=[('active', '#45B068'), ('pressed', '#3DA05A')])
+        style.configure('Danger.TButton',
+                       font=('Microsoft YaHei UI', 9, 'bold'),
+                       padding=8,
+                       foreground='white',
+                       background=ACCENT_COLOR)
+        style.map('Danger.TButton',
+                 background=[('active', '#E55A5A'), ('pressed', '#D54A4A')])
+        style.configure('TCheckbutton', 
+                       font=('Microsoft YaHei UI', 9),
+                       background=CARD_BG,
+                       foreground=TEXT_COLOR)
+        style.configure('TProgressbar', 
+                       background=PRIMARY_COLOR,
+                       troughcolor='#E0E0E0')
+        style.configure('TEntry',
+                       font=('Consolas', 9),
+                       padding=5,
+                       fieldbackground='white')
+        style.configure('TLabelframe',
+                       font=('Microsoft YaHei UI', 10, 'bold'),
+                       background=CARD_BG,
+                       foreground=PRIMARY_COLOR)
+        style.configure('TLabelframe.Label',
+                       font=('Microsoft YaHei UI', 10, 'bold'),
+                       background=CARD_BG,
+                       foreground=PRIMARY_COLOR)
+        
+        # 主框架
+        main_frame = ttk.Frame(self.root, style='TFrame')
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
+        
+        # 标题栏
+        title_frame = ttk.Frame(main_frame, style='Card.TFrame')
+        title_frame.pack(fill=tk.X, padx=3, pady=3)
+        
+        title_label = ttk.Label(title_frame, 
+                               text="🚀 Git 上传工具", 
+                               style='Title.TLabel')
+        title_label.pack(pady=8)
+        
+        subtitle_label = ttk.Label(title_frame,
+                                  text="自动提交和推送到 GitHub",
+                                  font=('Microsoft YaHei UI', 9),
+                                  foreground='#7F8C8D',
+                                  background=CARD_BG)
+        subtitle_label.pack(pady=(0, 5))
 
-        # 仓库信息
+        # 仓库信息卡片
         repo_frame = ttk.LabelFrame(main_frame, text="📦 仓库信息", padding="10")
-        repo_frame.pack(fill=tk.X, pady=8)
+        repo_frame.pack(fill=tk.X, pady=5, padx=3)
         
-        ttk.Label(repo_frame, text="Owner:", style='Header.TLabel').grid(row=0, column=0, sticky=tk.W, padx=8, pady=5)
-        ttk.Entry(repo_frame, textvariable=self.owner, width=25, font=('Consolas', 9)).grid(row=0, column=1, padx=8, pady=5, sticky=tk.W)
+        ttk.Label(repo_frame, text="Owner:", style='Info.TLabel').grid(row=0, column=0, sticky=tk.W, padx=8, pady=5)
+        owner_entry = ttk.Entry(repo_frame, textvariable=self.owner, width=25, font=('Consolas', 9))
+        owner_entry.grid(row=0, column=1, padx=8, pady=5, sticky=tk.W)
         
-        ttk.Label(repo_frame, text="Repo:", style='Header.TLabel').grid(row=0, column=2, sticky=tk.W, padx=8, pady=5)
-        ttk.Entry(repo_frame, textvariable=self.repo, width=25, font=('Consolas', 9)).grid(row=0, column=3, padx=8, pady=5, sticky=tk.W)
+        ttk.Label(repo_frame, text="Repo:", style='Info.TLabel').grid(row=0, column=2, sticky=tk.W, padx=8, pady=5)
+        repo_entry = ttk.Entry(repo_frame, textvariable=self.repo, width=25, font=('Consolas', 9))
+        repo_entry.grid(row=0, column=3, padx=8, pady=5, sticky=tk.W)
         
-        ttk.Label(repo_frame, text="分支:", style='Header.TLabel').grid(row=1, column=0, sticky=tk.W, padx=8, pady=5)
-        ttk.Entry(repo_frame, textvariable=self.branch, width=30, font=('Consolas', 9)).grid(row=1, column=1, padx=8, pady=5, sticky=tk.W)
+        ttk.Label(repo_frame, text="分支:", style='Info.TLabel').grid(row=1, column=0, sticky=tk.W, padx=8, pady=5)
+        branch_entry = ttk.Entry(repo_frame, textvariable=self.branch, width=25, font=('Consolas', 9))
+        branch_entry.grid(row=1, column=1, padx=8, pady=5, sticky=tk.W)
 
-        # 提交信息
+        # 提交信息卡片
         commit_frame = ttk.LabelFrame(main_frame, text="💬 提交信息", padding="10")
-        commit_frame.pack(fill=tk.X, pady=8)
+        commit_frame.pack(fill=tk.X, pady=5, padx=3)
         
-        ttk.Label(commit_frame, text="Commit Message:", style='Header.TLabel').grid(row=0, column=0, sticky=tk.W, padx=8, pady=5)
-        ttk.Entry(commit_frame, textvariable=self.commit_message, width=70, font=('Consolas', 9)).grid(row=0, column=1, padx=8, pady=5, sticky=tk.W+tk.E)
+        ttk.Label(commit_frame, text="Commit Message:", style='Info.TLabel').grid(row=0, column=0, sticky=tk.W, padx=8, pady=5)
+        commit_entry = ttk.Entry(commit_frame, textvariable=self.commit_message, width=65, font=('Consolas', 9))
+        commit_entry.grid(row=0, column=1, padx=8, pady=5, sticky=tk.W+tk.E)
 
-        # 本地目录
+        # 本地目录卡片
         dir_frame = ttk.LabelFrame(main_frame, text="📁 本地目录", padding="10")
-        dir_frame.pack(fill=tk.X, pady=8)
+        dir_frame.pack(fill=tk.X, pady=5, padx=3)
         
-        ttk.Label(dir_frame, text="目录路径:", style='Header.TLabel').grid(row=0, column=0, sticky=tk.W, padx=8, pady=5)
-        ttk.Entry(dir_frame, textvariable=self.local_dir, width=60, font=('Consolas', 9)).grid(row=0, column=1, padx=8, pady=5, sticky=tk.W+tk.E)
+        ttk.Label(dir_frame, text="目录路径:", style='Info.TLabel').grid(row=0, column=0, sticky=tk.W, padx=8, pady=5)
         
-        browse_btn = ttk.Button(dir_frame, text="📂 浏览...", command=self.select_dir)
+        dir_entry = ttk.Entry(dir_frame, textvariable=self.local_dir, width=55, font=('Consolas', 9))
+        dir_entry.grid(row=0, column=1, padx=8, pady=5, sticky=tk.W+tk.E)
+        
+        browse_btn = ttk.Button(dir_frame, text="📂 浏览...", command=self.select_dir, style='Success.TButton')
         browse_btn.grid(row=0, column=2, padx=8, pady=5)
 
-        # 上传选项
+        # 上传选项卡片
         option_frame = ttk.LabelFrame(main_frame, text="⚙️ 上传选项", padding="10")
-        option_frame.pack(fill=tk.X, pady=8)
+        option_frame.pack(fill=tk.X, pady=5, padx=3)
         
         self.auto_commit_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(option_frame, text="✓ 自动 git add（添加所有更改）", variable=self.auto_commit_var).pack(anchor=tk.W, padx=8, pady=3)
+        ttk.Checkbutton(option_frame, text="✓ 自动 git add", variable=self.auto_commit_var).pack(anchor=tk.W, padx=8, pady=3)
         
         self.auto_push_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(option_frame, text="✓ 自动 git push（推送到远程）", variable=self.auto_push_var).pack(anchor=tk.W, padx=8, pady=3)
+        ttk.Checkbutton(option_frame, text="✓ 自动 git push", variable=self.auto_push_var).pack(anchor=tk.W, padx=8, pady=3)
         
         self.force_push_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(option_frame, text="⚠️ 强制推送（--force，谨慎使用）", variable=self.force_push_var).pack(anchor=tk.W, padx=8, pady=3)
+        force_cb = ttk.Checkbutton(option_frame, text="⚠️ 强制推送（谨慎使用）", variable=self.force_push_var)
+        force_cb.pack(anchor=tk.W, padx=8, pady=3)
 
-        # 进度条
+        # 进度条卡片
         progress_frame = ttk.LabelFrame(main_frame, text="📊 上传进度", padding="10")
-        progress_frame.pack(fill=tk.X, pady=8)
+        progress_frame.pack(fill=tk.X, pady=5, padx=3)
         
         self.progress_var = tk.DoubleVar()
-        self.progress_bar = ttk.Progressbar(progress_frame, variable=self.progress_var, maximum=100, mode='determinate')
-        self.progress_bar.pack(fill=tk.X, padx=8, pady=8)
+        self.progress_bar = ttk.Progressbar(progress_frame, 
+                                           variable=self.progress_var, 
+                                           maximum=100, 
+                                           mode='determinate',
+                                           style='TProgressbar')
+        self.progress_bar.pack(fill=tk.X, padx=8, pady=6)
         
-        self.status_label = ttk.Label(progress_frame, text="⏸️ 等待开始", font=('Microsoft YaHei UI', 9), foreground='#7f8c8d')
-        self.status_label.pack(anchor=tk.W, padx=8)
+        self.status_label = ttk.Label(progress_frame, 
+                                     text="⏸️ 等待开始", 
+                                     font=('Microsoft YaHei UI', 9, 'bold'), 
+                                     foreground='#7F8C8D')
+        self.status_label.pack(anchor=tk.W, padx=8, pady=3)
 
-        # 日志
-        log_frame = ttk.LabelFrame(main_frame, text="📝 上传日志", padding="10")
-        log_frame.pack(fill=tk.BOTH, expand=True, pady=8)
+        # 日志卡片
+        log_frame = ttk.LabelFrame(main_frame, text="📝 上传日志", padding="8")
+        log_frame.pack(fill=tk.BOTH, expand=True, pady=5, padx=3)
         
-        self.log_text = scrolledtext.ScrolledText(log_frame, height=12, wrap=tk.WORD, 
-                                                  font=('Consolas', 9), 
-                                                  bg='#f8f9fa', 
-                                                  fg='#2c3e50')
-        self.log_text.pack(fill=tk.BOTH, expand=True)
+        self.log_text = scrolledtext.ScrolledText(log_frame, 
+                                                 height=8, 
+                                                 wrap=tk.WORD, 
+                                                 font=('Consolas', 9), 
+                                                 bg='#F8F9FA', 
+                                                 fg='#2C3E50',
+                                                 relief='flat',
+                                                 borderwidth=0)
+        self.log_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=3)
 
-        # 按钮
+        # 按钮区域
         btn_frame = ttk.Frame(main_frame)
-        btn_frame.pack(fill=tk.X, pady=12)
+        btn_frame.pack(fill=tk.X, pady=8, padx=3)
         
-        self.upload_btn = ttk.Button(btn_frame, text="🚀 开始上传", command=self.start_upload)
-        self.upload_btn.pack(side=tk.LEFT, padx=8)
+        self.upload_btn = ttk.Button(btn_frame, 
+                                    text="🚀 开始上传", 
+                                    command=self.start_upload,
+                                    style='Success.TButton')
+        self.upload_btn.pack(side=tk.LEFT, padx=5)
         
-        self.cancel_btn = ttk.Button(btn_frame, text="⛔ 取消", command=self.cancel_upload, state=tk.DISABLED)
-        self.cancel_btn.pack(side=tk.LEFT, padx=8)
+        self.cancel_btn = ttk.Button(btn_frame, 
+                                    text="⛔ 取消", 
+                                    command=self.cancel_upload, 
+                                    state=tk.DISABLED,
+                                    style='Danger.TButton')
+        self.cancel_btn.pack(side=tk.LEFT, padx=5)
         
-        ttk.Button(btn_frame, text="🧹 清空日志", command=self.clear_log).pack(side=tk.LEFT, padx=8)
+        clear_btn = ttk.Button(btn_frame, 
+                              text="🧹 清空日志", 
+                              command=self.clear_log)
+        clear_btn.pack(side=tk.LEFT, padx=5)
+        
+        # 底部信息
+        info_frame = ttk.Frame(main_frame)
+        info_frame.pack(fill=tk.X, pady=5, padx=3)
+        
+        info_label = ttk.Label(info_frame,
+                              text="提示: 请确保已配置 Git 和远程仓库 | 代理: 127.0.0.1:3067",
+                              font=('Microsoft YaHei UI', 8),
+                              foreground='#95A5A6')
+        info_label.pack()
 
     def select_dir(self):
         directory = filedialog.askdirectory(title="选择要上传的目录")
