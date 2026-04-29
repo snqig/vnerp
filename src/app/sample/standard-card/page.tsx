@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -107,6 +107,10 @@ export default function StandardCardPage() {
   const [materialTypeFilter, setMaterialTypeFilter] = useState<string>('全部');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [cardToDelete, setCardToDelete] = useState<StandardCardListItem | null>(null);
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [cardToApprove, setCardToApprove] = useState<StandardCardListItem | null>(null);
+  const [approvalStatus, setApprovalStatus] = useState<any>(null);
+  const [loadingApproval, setLoadingApproval] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
@@ -201,6 +205,86 @@ export default function StandardCardPage() {
   const handleDelete = (card: StandardCardListItem) => {
     setCardToDelete(card);
     setDeleteDialogOpen(true);
+  };
+
+  const handleApprove = async (card: StandardCardListItem) => {
+    setCardToApprove(card);
+    setLoadingApproval(true);
+    try {
+      const response = await fetch(`/api/standard-cards/approve?id=${card.id}`);
+      const result = await response.json();
+      if (result.success) {
+        setApprovalStatus(result.data);
+        setApproveDialogOpen(true);
+      } else {
+        alert('获取审核状态失败: ' + result.message);
+      }
+    } catch (error) {
+      console.error('获取审核状态失败:', error);
+      alert('获取审核状态失败');
+    } finally {
+      setLoadingApproval(false);
+    }
+  };
+
+  const handleApproveAction = async (type: string, userName: string) => {
+    if (!cardToApprove) return;
+
+    try {
+      const response = await fetch('/api/standard-cards/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: cardToApprove.id,
+          type,
+          userId: 1,
+          userName,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        alert(result.message);
+        setApproveDialogOpen(false);
+        loadCards();
+      } else {
+        alert('操作失败: ' + result.message);
+      }
+    } catch (error) {
+      console.error('审核失败:', error);
+      alert('审核失败');
+    }
+  };
+
+  const handleUnapprove = async (type: string) => {
+    if (!cardToApprove) return;
+
+    if (!confirm('确定要撤销此审核吗？')) return;
+
+    try {
+      const response = await fetch('/api/standard-cards/approve', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: cardToApprove.id,
+          type,
+          userId: 1,
+          userName: '当前用户',
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        alert(result.message);
+        setApproveDialogOpen(false);
+        loadCards();
+      } else {
+        alert('操作失败: ' + result.message);
+      }
+    } catch (error) {
+      console.error('撤销审核失败:', error);
+      alert('撤销审核失败');
+    }
   };
 
   const confirmDelete = async () => {
@@ -524,6 +608,17 @@ export default function StandardCardPage() {
                         <TableCell>{getStatusBadge(card.status)}</TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-1">
+                            {card.status === 2 && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-green-600"
+                                onClick={() => handleApprove(card)}
+                                title="审核"
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon"
@@ -616,6 +711,108 @@ export default function StandardCardPage() {
               </Button>
               <Button variant="destructive" onClick={confirmDelete}>
                 删除
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* 审核对话框 */}
+        <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+          <DialogContent className="max-w-2xl" resizable>
+            <DialogHeader>
+              <DialogTitle>标准卡审核流程</DialogTitle>
+              <DialogDescription>
+                标准卡编号：{cardToApprove?.cardNo}
+              </DialogDescription>
+            </DialogHeader>
+            {loadingApproval ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              </div>
+            ) : approvalStatus ? (
+              <div className="space-y-4 py-4">
+                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                  <span className="text-sm font-medium">当前状态：</span>
+                  <Badge variant={approvalStatus.status === 3 ? 'default' : 'secondary'}>
+                    {approvalStatus.statusLabel}
+                  </Badge>
+                </div>
+
+                <div className="space-y-3">
+                  {approvalStatus.steps.map((step: any, index: number) => (
+                    <div key={step.type} className="flex items-center gap-3 p-3 border rounded-lg">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
+                        ${step.status === 'completed' ? 'bg-green-100 text-green-700' : 
+                          step.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 
+                          'bg-gray-100 text-gray-700'}">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{step.name}</span>
+                          {step.status === 'completed' && step.approver && (
+                            <Badge variant="outline" className="text-xs">
+                              {step.approver}
+                            </Badge>
+                          )}
+                        </div>
+                        {step.status === 'completed' && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            已审核
+                          </div>
+                        )}
+                        {step.status === 'pending' && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            待审核
+                          </div>
+                        )}
+                        {step.status === 'waiting' && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            等待前置审核
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        {step.status === 'pending' && (
+                          <Input
+                            placeholder="请输入审核人姓名"
+                            className="w-40"
+                            id={`approve-input-${step.type}`}
+                          />
+                        )}
+                        {step.status === 'pending' && (
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              const input = document.getElementById(`approve-input-${step.type}`) as HTMLInputElement;
+                              if (input?.value.trim() !== '') {
+                                handleApproveAction(step.type, input.value.trim());
+                              } else {
+                                alert('请输入审核人姓名');
+                              }
+                            }}
+                          >
+                            审核
+                          </Button>
+                        )}
+                        {step.status === 'completed' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleUnapprove(step.type)}
+                          >
+                            撤销
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>
+                关闭
               </Button>
             </DialogFooter>
           </DialogContent>

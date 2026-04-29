@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { MainLayout } from '@/components/layout';
 import {
@@ -201,7 +201,7 @@ export default function WorkOrdersPage() {
                     新建工单
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl" resizable>
                   <DialogHeader>
                     <DialogTitle>新建生产工单</DialogTitle>
                     <DialogDescription>从销售订单生成工单</DialogDescription>

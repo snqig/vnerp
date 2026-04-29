@@ -19,6 +19,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Search, Plus, Eye, Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
 
 const sampleData = [
   {
@@ -47,8 +49,16 @@ const sampleData = [
   },
 ];
 
+const statusLabelMap: Record<string, string> = {
+  pending: '待审批',
+  approved: '已通过',
+  rejected: '已拒绝',
+  completed: '已完成',
+};
+
 export default function SampleManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string }> = {
@@ -65,10 +75,23 @@ export default function SampleManagementPage() {
     );
   };
 
+  const exportColumns = [
+    { key: '样品编号', header: '样品编号' },
+    { key: '样品名称', header: '样品名称' },
+    { key: '客户', header: '客户' },
+    { key: '申请日期', header: '申请日期' },
+    { key: '交付日期', header: '交付日期' },
+    { key: '状态', header: '状态' },
+  ];
+  const getExportData = () => sampleData.map(s => ({
+    样品编号: s.id, 样品名称: s.name, 客户: s.customer,
+    申请日期: s.requestDate, 交付日期: s.deliveryDate,
+    状态: statusLabelMap[s.status] || s.status,
+  }));
+
   return (
     <MainLayout title="样品管理">
       <div className="space-y-6">
-        {/* 工具栏 */}
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -94,15 +117,26 @@ export default function SampleManagementPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                新增样品
-              </Button>
+              <div className="flex gap-2 items-center">
+                <TableExportToolbar
+                  selectedCount={selectedIds.size}
+                  totalCount={sampleData.length}
+                  onSelectAll={() => setSelectedIds(new Set(sampleData.map(s => s.id)))}
+                  onDeselectAll={() => setSelectedIds(new Set())}
+                  onPrint={() => printTable(getExportData(), exportColumns, '样品列表')}
+                  onExportPDF={() => exportTableToPDF(getExportData(), '样品列表', exportColumns, '样品列表')}
+                  onExportXLS={() => exportTableToXLS(getExportData(), '样品列表', exportColumns)}
+                  onExportWORD={() => exportTableToWORD(getExportData(), '样品列表', exportColumns, '样品列表')}
+                />
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  新增样品
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 样品列表 */}
         <Card>
           <CardHeader>
             <CardTitle>样品列表</CardTitle>
@@ -112,6 +146,15 @@ export default function SampleManagementPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-muted/50">
+                    <th className="h-12 px-4 text-left align-middle font-medium w-[40px]">
+                      <Checkbox
+                        checked={selectedIds.size > 0 && selectedIds.size === sampleData.length}
+                        onCheckedChange={(checked) => {
+                          if (checked) setSelectedIds(new Set(sampleData.map(s => s.id)));
+                          else setSelectedIds(new Set());
+                        }}
+                      />
+                    </th>
                     <th className="h-12 px-4 text-left align-middle font-medium">样品编号</th>
                     <th className="h-12 px-4 text-left align-middle font-medium">样品名称</th>
                     <th className="h-12 px-4 text-left align-middle font-medium">客户</th>
@@ -124,6 +167,16 @@ export default function SampleManagementPage() {
                 <tbody>
                   {sampleData.map((sample) => (
                     <tr key={sample.id} className="border-b transition-colors hover:bg-muted/50">
+                      <td className="p-4">
+                        <Checkbox
+                          checked={selectedIds.has(sample.id)}
+                          onCheckedChange={(checked) => {
+                            const next = new Set(selectedIds);
+                            if (checked) next.add(sample.id); else next.delete(sample.id);
+                            setSelectedIds(next);
+                          }}
+                        />
+                      </td>
                       <td className="p-4 font-mono">{sample.id}</td>
                       <td className="p-4 font-medium">{sample.name}</td>
                       <td className="p-4">{sample.customer}</td>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -467,7 +467,7 @@ export default function WarehouseSetupPage() {
 
         {/* 新增/编辑对话框 */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
               <DialogTitle>
                 {editingWarehouse ? '编辑仓库' : '新增仓库'}

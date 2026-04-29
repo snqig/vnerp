@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登录测试 - React模拟</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 10px 0; cursor: pointer; width: 100%; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; white-space: pre-wrap; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        input { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>登录测试 - 模拟React流程</h1>
+    
+    <label>用户名:</label>
+    <input type="text" id="username" value="admin" />
+    
+    <label>密码:</label>
+    <input type="password" id="password" value="admin123" />
+    
+    <button onclick="simulateLogin()">模拟登录流程</button>
+    <button onclick="clearAll()">清除所有数据</button>
+    
+    <div id="result" class="result">点击"模拟登录流程"开始测试...</div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let testToken = null;
+        let testUser = null;
+        
+        function log(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            const time = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            resultDiv.innerHTML += `<div class="${className}">[${time}] ${message}</div>`;
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+        }
+        
+        async function simulateLogin() {
+            document.getElementById('result').innerHTML = '';
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // 步骤1: 调用登录API
+            log('步骤1: 调用登录API...');
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    log(`❌ 登录API失败: ${result.message}`, 'error');
+                    return;
+                }
+                
+                log('✅ 登录API成功', 'success');
+                testToken = result.data.token;
+                testUser = result.data.user;
+                
+                // 步骤2: 保存到LocalStorage (模拟React的login函数)
+                log('步骤2: 保存到LocalStorage...');
+                localStorage.setItem('token', testToken);
+                localStorage.setItem('user', JSON.stringify(testUser));
+                log('✅ 数据已保存到LocalStorage', 'success');
+                
+                // 步骤3: 验证LocalStorage
+                log('步骤3: 验证LocalStorage...');
+                const savedToken = localStorage.getItem('token');
+                const savedUser = localStorage.getItem('user');
+                
+                if (savedToken && savedUser) {
+                    log('✅ LocalStorage验证成功', 'success');
+                } else {
+                    log('❌ LocalStorage验证失败', 'error');
+                    return;
+                }
+                
+                // 步骤4: 获取菜单 (模拟React的fetchMenus)
+                log('步骤4: 获取菜单...');
+                const menuResponse = await fetch(`${API_BASE}/api/auth/menus`, {
+                    headers: { 'Authorization': `Bearer ${savedToken}` }
+                });
+                
+                if (menuResponse.status === 401) {
+                    log('❌ 获取菜单返回401，Token无效', 'error');
+                    return;
+                }
+                
+                const menuResult = await menuResponse.json();
+                
+                if (menuResult.success) {
+                    log(`✅ 获取菜单成功: ${menuResult.data.menus?.length || 0}个菜单`, 'success');
+                } else {
+                    log(`⚠️ 获取菜单失败: ${menuResult.message}`, 'error');
+                }
+                
+                // 步骤5: 模拟跳转到首页后的验证
+                log('步骤5: 模拟跳转后验证...');
+                setTimeout(async () => {
+                    const tokenAfterRedirect = localStorage.getItem('token');
+                    if (tokenAfterRedirect) {
+                        log('✅ 跳转后Token仍然存在', 'success');
+                        log('\n🎉 所有测试通过！登录流程正常。', 'success');
+                        log('如果实际项目仍有问题，可能是React组件渲染问题。');
+                    } else {
+                        log('❌ 跳转后Token丢失', 'error');
+                    }
+                }, 100);
+                
+            } catch (error) {
+                log(`❌ 错误: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearAll() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            document.getElementById('result').innerHTML = '已清除所有数据';
+        }
+    </script>
+</body>
+</html>

@@ -16,6 +16,8 @@ import { toast } from 'sonner';
 import QRCode from 'qrcode';
 import { usePermission } from '@/hooks/usePermission';
 import { PermissionGuard } from '@/components/PermissionGuard';
+import { useDebounce } from '@/hooks/use-debounce';
+import { useCompanyName } from '@/hooks/useCompanyName';
 
 // 员工接口
 interface Employee {
@@ -61,6 +63,7 @@ interface Role {
 }
 
 export default function EmployeePage() {
+  const { companyName } = useCompanyName();
   const { hasPermission } = usePermission();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -70,6 +73,7 @@ export default function EmployeePage() {
   const [form, setForm] = useState<Partial<Employee>>({});
   const [editing, setEditing] = useState(false);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -98,7 +102,7 @@ export default function EmployeePage() {
   const calculateStats = useCallback((data: Employee[]) => {
     const total = data.length;
     const male = data.filter(e => e.gender === 1).length;
-    const female = data.filter(e => e.gender === 0).length;
+    const female = data.filter(e => e.gender === 2).length;
     const ages = data.filter(e => e.age).map(e => e.age!);
     const avgAge = ages.length > 0 ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
     
@@ -151,8 +155,8 @@ export default function EmployeePage() {
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
     try {
-      const url = search 
-        ? `/api/organization/employee?keyword=${encodeURIComponent(search)}`
+      const url = debouncedSearch 
+        ? `/api/organization/employee?keyword=${encodeURIComponent(debouncedSearch)}`
         : '/api/organization/employee';
       const response = await fetch(url);
       const result = await response.json();
@@ -166,7 +170,7 @@ export default function EmployeePage() {
     } finally {
       setLoading(false);
     }
-  }, [search, calculateStats]);
+  }, [debouncedSearch, calculateStats]);
 
   // 获取部门列表
   const fetchDepartments = useCallback(async () => {
@@ -328,6 +332,67 @@ export default function EmployeePage() {
     }
   };
 
+  const handlePrintList = () => {
+    const dataToPrint = selectedEmployees.length > 0
+      ? employees.filter(emp => selectedEmployees.includes(emp.id))
+      : employees;
+
+    if (dataToPrint.length === 0) {
+      toast.error('没有数据可打印');
+      return;
+    }
+
+    const statusLabels: Record<number, string> = { 1: '在职', 0: '停用', 2: '试用期', 3: '离职' };
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('无法打开打印窗口，请检查浏览器弹窗设置');
+      return;
+    }
+
+    const rows = dataToPrint.map((emp, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${emp.employee_no}</td>
+        <td>${emp.name}</td>
+        <td>${emp.gender === 1 ? '男' : '女'}</td>
+        <td>${emp.age || '-'}</td>
+        <td>${emp.dept_name}</td>
+        <td>${emp.section || '-'}</td>
+        <td>${emp.position}</td>
+        <td>${emp.entry_date}</td>
+        <td>${emp.education || '-'}</td>
+        <td>${emp.native_place || '-'}</td>
+        <td>${emp.phone}</td>
+        <td>${statusLabels[emp.status] || '未知'}</td>
+      </tr>`).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>员工列表打印</title>
+      <style>
+        @page { size: A4 landscape; margin: 10mm; }
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; padding: 20px; color: #333; }
+        h1 { text-align: center; border-bottom: 2px solid #1a56db; padding-bottom: 10px; color: #1a56db; font-size: 20px; }
+        .info { text-align: center; color: #666; margin-bottom: 15px; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { border: 1px solid #999; padding: 5px 6px; text-align: center; }
+        th { background-color: #f0f4ff; font-weight: bold; color: #1a56db; }
+        .footer { margin-top: 20px; text-align: right; color: #999; font-size: 11px; }
+        @media print { body { padding: 0; } }
+      </style></head>
+      <body>
+        <h1>员工列表</h1>
+        <div class="info">打印时间：${new Date().toLocaleString('zh-CN')} | 共 ${dataToPrint.length} 名员工</div>
+        <table>
+          <thead><tr><th>序号</th><th>员工编号</th><th>姓名</th><th>性别</th><th>年龄</th><th>部门</th><th>课室</th><th>职位</th><th>入职日期</th><th>学历</th><th>籍贯</th><th>联系方式</th><th>状态</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="footer">${companyName}</div>
+        <script>window.onload=function(){window.print();}</script>
+      </body></html>`;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    toast.success(`正在打印 ${dataToPrint.length} 名员工记录`);
+  };
+
   // 批量打印
   const handleBatchPrint = () => {
     if (selectedEmployees.length === 0) {
@@ -486,7 +551,7 @@ export default function EmployeePage() {
     const cardsHtml = selectedEmps.map((emp, index) => `
       <div class="card" style="${index > 0 ? 'page-break-before: always;' : ''}">
         <div class="header">
-          <div class="company-name">苏州达昌印刷科技有限公司</div>
+          <div class="company-name">${companyName}</div>
           <div class="card-title">员工上岗证</div>
         </div>
         <div class="photo-area">
@@ -904,6 +969,10 @@ export default function EmployeePage() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 刷新
               </Button>
+              <Button variant="outline" onClick={handlePrintList}>
+                <Printer className="w-4 h-4 mr-2" />
+                打印
+              </Button>
               <Button variant="outline" onClick={exportToExcel}>
                 <FileSpreadsheet className="w-4 h-4 mr-2" />
                 导出Excel
@@ -1222,7 +1291,7 @@ export default function EmployeePage() {
 
       {/* 员工表单对话框 */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" resizable>
           <DialogHeader>
             <DialogTitle>{editing ? '编辑员工' : '新增员工'}</DialogTitle>
             <DialogDescription>
@@ -1293,7 +1362,7 @@ export default function EmployeePage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>性别</Label>
+              <Label>性别 <span className="text-gray-400 text-xs">(身份证自动识别)</span></Label>
               <Select 
                 value={form.gender?.toString() || '1'} 
                 onValueChange={(v) => setForm({...form, gender: parseInt(v)})}
@@ -1303,7 +1372,7 @@ export default function EmployeePage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">男</SelectItem>
-                  <SelectItem value="0">女</SelectItem>
+                  <SelectItem value="2">女</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1424,19 +1493,20 @@ export default function EmployeePage() {
               <Input 
                 value={form.id_card || ''} 
                 onChange={(e) => {
-                  const idCard = e.target.value;
-                  // 从身份证提取出生日期和年龄
+                  const idCard = e.target.value.replace(/[^0-9Xx]/g, '');
                   let birthDate = '';
                   let age = undefined;
+                  let gender = form.gender;
                   if (idCard.length === 18) {
                     const year = idCard.substring(6, 10);
                     const month = idCard.substring(10, 12);
                     const day = idCard.substring(12, 14);
                     birthDate = `${year}-${month}-${day}`;
-                    // 计算年龄
                     const birthYear = parseInt(year);
                     const currentYear = new Date().getFullYear();
                     age = currentYear - birthYear;
+                    const genderDigit = parseInt(idCard.substring(16, 17));
+                    gender = genderDigit % 2 === 1 ? 1 : 2;
                   } else if (idCard.length === 15) {
                     const year = '19' + idCard.substring(6, 8);
                     const month = idCard.substring(8, 10);
@@ -1445,12 +1515,15 @@ export default function EmployeePage() {
                     const birthYear = parseInt(year);
                     const currentYear = new Date().getFullYear();
                     age = currentYear - birthYear;
+                    const genderDigit = parseInt(idCard.substring(14, 15));
+                    gender = genderDigit % 2 === 1 ? 1 : 2;
                   }
                   setForm({
                     ...form, 
                     id_card: idCard,
                     birth_date: birthDate || form.birth_date,
-                    age: age || form.age
+                    age: age || form.age,
+                    gender: gender,
                   });
                 }}
                 placeholder="请输入身份证号"
@@ -1514,7 +1587,7 @@ export default function EmployeePage() {
 
       {/* 打印上岗证对话框 */}
       <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg" resizable>
           <DialogHeader>
             <DialogTitle>员工上岗证预览</DialogTitle>
             <DialogDescription>
@@ -1525,7 +1598,7 @@ export default function EmployeePage() {
             {/* 上岗证卡片 - 打印内容 */}
             <div ref={printRef} className="card" style={{ minWidth: '320px' }}>
               <div className="header">
-                <div className="company-name">苏州达昌印刷科技有限公司</div>
+                <div className="company-name">{companyName}</div>
                 <div className="card-title">员工上岗证</div>
               </div>
               <div className="photo-area">
@@ -1587,7 +1660,7 @@ export default function EmployeePage() {
 
       {/* 批量打印对话框 */}
       <Dialog open={batchPrintDialogOpen} onOpenChange={setBatchPrintDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto" resizable>
           <DialogHeader>
             <DialogTitle>批量打印上岗证</DialogTitle>
             <DialogDescription>

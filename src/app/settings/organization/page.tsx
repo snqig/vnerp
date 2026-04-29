@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -39,13 +39,14 @@ interface Company {
 // 部门接口
 interface Department {
   id: number;
-  code: string;
-  name: string;
+  dept_code: string;
+  dept_name: string;
   parent_id: number;
-  manager_name: string;
+  leader_name: string;
   sort_order: number;
   description: string;
   status: number;
+  children?: Department[];
 }
 
 // 角色接口
@@ -666,7 +667,7 @@ export default function OrganizationPage() {
 
       {/* 部门对话框 */}
       <Dialog open={deptDialogOpen} onOpenChange={setDeptDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg" resizable>
           <DialogHeader>
             <DialogTitle>{deptEditing ? '编辑部门' : '新增部门'}</DialogTitle>
             <DialogDescription>
@@ -678,16 +679,16 @@ export default function OrganizationPage() {
               <div className="space-y-2">
                 <Label>部门编码 <span className="text-red-500">*</span></Label>
                 <Input 
-                  value={deptForm.code || ''} 
-                  onChange={(e) => setDeptForm({...deptForm, code: e.target.value})}
+                  value={deptForm.dept_code || ''} 
+                  onChange={(e) => setDeptForm({...deptForm, dept_code: e.target.value})}
                   placeholder="如: DEPT001"
                 />
               </div>
               <div className="space-y-2">
                 <Label>部门名称 <span className="text-red-500">*</span></Label>
                 <Input 
-                  value={deptForm.name || ''} 
-                  onChange={(e) => setDeptForm({...deptForm, name: e.target.value})}
+                  value={deptForm.dept_name || ''} 
+                  onChange={(e) => setDeptForm({...deptForm, dept_name: e.target.value})}
                   placeholder="请输入部门名称"
                 />
               </div>
@@ -707,7 +708,7 @@ export default function OrganizationPage() {
                     .filter(d => d.id !== deptForm.id) // 排除自己，避免循环引用
                     .map(dept => (
                       <SelectItem key={dept.id} value={String(dept.id)}>
-                        {dept.name}
+                        {dept.dept_name}
                       </SelectItem>
                     ))
                   }
@@ -718,8 +719,8 @@ export default function OrganizationPage() {
               <div className="space-y-2">
                 <Label>部门负责人</Label>
                 <Input 
-                  value={deptForm.manager_name || ''} 
-                  onChange={(e) => setDeptForm({...deptForm, manager_name: e.target.value})}
+                  value={deptForm.leader_name || ''} 
+                  onChange={(e) => setDeptForm({...deptForm, leader_name: e.target.value})}
                   placeholder="请输入负责人姓名"
                 />
               </div>

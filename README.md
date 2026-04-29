@@ -1,1 +1,0 @@
-npx opencode-ai

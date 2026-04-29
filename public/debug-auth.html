@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>认证调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 10px 0; cursor: pointer; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; white-space: pre-wrap; font-family: monospace; font-size: 12px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        .warning { background: #fff3e0; color: #e65100; }
+        h2 { margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>认证状态调试工具</h1>
+    
+    <h2>当前状态</h2>
+    <button onclick="checkCurrentState()">检查当前认证状态</button>
+    <div id="currentState" class="result">点击按钮检查...</div>
+    
+    <h2>完整登录流程测试</h2>
+    <button onclick="testFullFlow()">测试完整登录流程</button>
+    <div id="fullFlow" class="result">点击按钮开始测试...</div>
+    
+    <h2>操作</h2>
+    <button onclick="clearStorage()">清除 LocalStorage</button>
+    <button onclick="goToLogin()">跳转到登录页</button>
+    <button onclick="goToHome()">跳转到首页</button>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        
+        function log(elementId, message, type = 'info') {
+            const el = document.getElementById(elementId);
+            const time = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : '';
+            el.innerHTML += `<div class="${className}">[${time}] ${message}</div>`;
+        }
+        
+        function checkCurrentState() {
+            const el = document.getElementById('currentState');
+            el.innerHTML = '';
+            
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            log('currentState', '=== 当前认证状态 ===');
+            log('currentState', `Token: ${token ? '✅ 存在' : '❌ 不存在'}`);
+            log('currentState', `User: ${user ? '✅ 存在' : '❌ 不存在'}`);
+            
+            if (user) {
+                try {
+                    const userObj = JSON.parse(user);
+                    log('currentState', `用户名: ${userObj.username}`);
+                    log('currentState', `真实姓名: ${userObj.realName}`);
+                    log('currentState', `角色: ${userObj.roles?.map(r => r.role_name).join(', ') || '无'}`);
+                    log('currentState', `权限数量: ${userObj.permissions?.length || 0}`);
+                } catch (e) {
+                    log('currentState', '解析用户数据失败: ' + e.message, 'error');
+                }
+            }
+        }
+        
+        async function testFullFlow() {
+            const el = document.getElementById('fullFlow');
+            el.innerHTML = '';
+            
+            // 步骤1: 清除旧数据
+            log('fullFlow', '步骤1: 清除旧数据...', 'warning');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            // 步骤2: 登录
+            log('fullFlow', '步骤2: 调用登录API...');
+            try {
+                const loginRes = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+                const loginData = await loginRes.json();
+                
+                if (!loginData.success) {
+                    log('fullFlow', `❌ 登录失败: ${loginData.message}`, 'error');
+                    return;
+                }
+                
+                log('fullFlow', '✅ 登录API成功', 'success');
+                
+                // 步骤3: 保存到LocalStorage
+                log('fullFlow', '步骤3: 保存到LocalStorage...');
+                localStorage.setItem('token', loginData.data.token);
+                localStorage.setItem('user', JSON.stringify(loginData.data.user));
+                log('fullFlow', '✅ 数据已保存', 'success');
+                
+                // 步骤4: 验证保存
+                log('fullFlow', '步骤4: 验证LocalStorage...');
+                const savedToken = localStorage.getItem('token');
+                const savedUser = localStorage.getItem('user');
+                
+                if (savedToken && savedUser) {
+                    log('fullFlow', '✅ LocalStorage验证成功', 'success');
+                } else {
+                    log('fullFlow', '❌ LocalStorage验证失败', 'error');
+                    return;
+                }
+                
+                // 步骤5: 获取菜单
+                log('fullFlow', '步骤5: 获取菜单...');
+                const menuRes = await fetch(`${API_BASE}/api/auth/menus`, {
+                    headers: { 'Authorization': `Bearer ${savedToken}` }
+                });
+                
+                log('fullFlow', `菜单API状态: ${menuRes.status}`);
+                
+                if (menuRes.status === 401) {
+                    log('fullFlow', '❌ 菜单API返回401 - Token无效', 'error');
+                    return;
+                }
+                
+                const menuData = await menuRes.json();
+                
+                if (menuData.success) {
+                    log('fullFlow', `✅ 菜单获取成功: ${menuData.data.menus?.length || 0}个菜单`, 'success');
+                } else {
+                    log('fullFlow', `⚠️ 菜单获取失败: ${menuData.message}`, 'warning');
+                }
+                
+                // 步骤6: 最终验证
+                log('fullFlow', '步骤6: 最终验证...');
+                const finalToken = localStorage.getItem('token');
+                const finalUser = localStorage.getItem('user');
+                
+                if (finalToken && finalUser) {
+                    log('fullFlow', '✅ 所有测试通过！认证状态正常。', 'success');
+                    log('fullFlow', '现在可以跳转到首页: <a href="/">点击这里</a>');
+                } else {
+                    log('fullFlow', '❌ 最终验证失败 - 数据丢失', 'error');
+                }
+                
+            } catch (error) {
+                log('fullFlow', `❌ 错误: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearStorage() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            alert('已清除 LocalStorage');
+        }
+        
+        function goToLogin() {
+            window.location.href = '/login';
+        }
+        
+        function goToHome() {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

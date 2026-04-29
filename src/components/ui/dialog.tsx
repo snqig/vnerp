@@ -50,19 +50,58 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  resizable = false,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  resizable?: boolean
 }) {
+  const contentRef = React.useRef<HTMLDivElement>(null)
+  const [size, setSize] = React.useState<{ width: number; height: number } | null>(null)
+  const isDragging = React.useRef(false)
+  const startPos = React.useRef({ x: 0, y: 0 })
+  const startSize = React.useRef({ width: 0, height: 0 })
+
+  const handleMouseDown = React.useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    isDragging.current = true
+    startPos.current = { x: e.clientX, y: e.clientY }
+    if (contentRef.current) {
+      startSize.current = {
+        width: contentRef.current.offsetWidth,
+        height: contentRef.current.offsetHeight,
+      }
+    }
+    const handleMouseMove = (ev: MouseEvent) => {
+      if (!isDragging.current) return
+      const dx = ev.clientX - startPos.current.x
+      const dy = ev.clientY - startPos.current.y
+      const newWidth = Math.max(320, startSize.current.width + dx)
+      const newHeight = Math.max(200, startSize.current.height + dy)
+      setSize({ width: newWidth, height: newHeight })
+    }
+    const handleMouseUp = () => {
+      isDragging.current = false
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }, [])
+
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
       <DialogPrimitive.Content
+        ref={contentRef}
         data-slot="dialog-content"
         className={cn(
           "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg",
+          resizable && "resize-none overflow-auto",
           className
         )}
+        style={size ? { width: size.width, height: size.height, maxWidth: '95vw', maxHeight: '95vh' } : undefined}
         {...props}
       >
         {children}
@@ -74,6 +113,16 @@ function DialogContent({
             <XIcon />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
+        )}
+        {resizable && (
+          <div
+            className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize flex items-end justify-end p-0.5"
+            onMouseDown={handleMouseDown}
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-muted-foreground/50">
+              <path d="M9 1L1 9M9 5L5 9M9 9L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </div>
         )}
       </DialogPrimitive.Content>
     </DialogPortal>

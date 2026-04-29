@@ -1,295 +1,229 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { query, execute, queryOne } from '@/lib/db';
+import { NextRequest } from 'next/server';
+import { query, transaction, queryPaginated } from '@/lib/db';
+import {
+  successResponse,
+  paginatedResponse,
+  errorResponse,
+  commonErrors,
+  withErrorHandler,
+  validateRequestBody,
+} from '@/lib/api-response';
+import { generateDocumentNo } from '@/lib/document-numbering';
 
-// 打样单接口
-interface SampleOrder {
-  id?: number;
-  sample_no: string;
-  order_month: number;
-  order_date: string;
-  sample_type: string;
-  customer_name: string;
-  print_method: string;
-  color_sequence: string;
-  product_name: string;
-  material_code: string;
-  size_spec: string;
-  material_desc: string;
-  sample_order_no: string;
-  required_date: string;
-  progress_status: string;
-  is_confirmed: number;
-  is_urgent: number;
-  is_produce_together: number;
-  quantity: number;
-  progress_detail: string;
-  sample_count: number;
-  sample_reason: string;
-  order_tracker: string;
-  provided_material: string;
-  receive_time: string;
-  mylar_info: string;
-  sample_stock: string;
-  customer_confirm: string;
-  remark: string;
-  status: number;
-  create_time?: string;
-  update_time?: string;
-}
+// 获取打样订单列表
+export const GET = withErrorHandler(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const keyword = searchParams.get('keyword') || '';
+  const customerName = searchParams.get('customerName') || '';
+  const deliveryStatus = searchParams.get('deliveryStatus') || '';
+  const startDate = searchParams.get('startDate') || '';
+  const endDate = searchParams.get('endDate') || '';
+  const page = parseInt(searchParams.get('page') || '1');
+  const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
-// GET - 获取打样单列表或单个打样单
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-    const status = searchParams.get('status');
-    const customer = searchParams.get('customer');
-    const sampleType = searchParams.get('sampleType');
-    const keyword = searchParams.get('keyword');
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '10');
-
-    if (id) {
-      // 获取单个打样单
-      const sql = 'SELECT * FROM sample_order WHERE id = ? AND deleted = 0';
-      const order = await queryOne<SampleOrder>(sql, [parseInt(id)]);
-      
-      if (!order) {
-        return NextResponse.json(
-          { success: false, message: '打样单不存在' },
-          { status: 404 }
-        );
-      }
-      
-      return NextResponse.json({ 
-        success: true, 
-        data: order 
-      });
-    }
-
-    // 获取列表
-    let sql = 'SELECT * FROM sample_order WHERE deleted = 0';
-    const params: any[] = [];
-
-    if (status && status !== 'all') {
-      sql += ' AND status = ?';
-      params.push(parseInt(status));
-    }
-
-    if (customer) {
-      sql += ' AND customer_name LIKE ?';
-      params.push(`%${customer}%`);
-    }
-
-    if (sampleType) {
-      sql += ' AND sample_type = ?';
-      params.push(sampleType);
-    }
-
-    if (keyword) {
-      sql += ' AND (sample_no LIKE ? OR customer_name LIKE ? OR product_name LIKE ? OR material_code LIKE ?)';
-      params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
-    }
-
-    // 获取总数
-    const countSql = sql.replace('SELECT *', 'SELECT COUNT(*) as total');
-    const countResult = await queryOne<{ total: number }>(countSql, params);
-    const total = countResult?.total || 0;
-
-    // 分页
-    sql += ' ORDER BY order_date DESC, id DESC LIMIT ? OFFSET ?';
-    params.push(pageSize, (page - 1) * pageSize);
-
-    const orders = await query<SampleOrder>(sql, params);
-
-    return NextResponse.json({
-      success: true,
-      data: orders,
-      pagination: {
-        total,
-        page,
-        pageSize,
-        totalPages: Math.ceil(total / pageSize),
-      },
-    });
-  } catch (error) {
-    console.error('获取打样单列表失败:', error);
-    return NextResponse.json(
-      { success: false, message: '获取打样单列表失败' },
-      { status: 500 }
-    );
-  }
-}
-
-// POST - 创建打样单
-export async function POST(request: NextRequest) {
-  try {
-    const body: SampleOrder = await request.json();
-    
-    // 生成打样单号
-    const date = new Date();
-    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-    const randomStr = Math.random().toString(36).substring(2, 5).toUpperCase();
-    const sampleNo = `DY-${dateStr}-${randomStr}`;
-    
-    const sql = `INSERT INTO sample_order (
-      sample_no, order_month, order_date, sample_type, customer_name,
-      print_method, color_sequence, product_name, material_code, size_spec,
-      material_desc, sample_order_no, required_date, progress_status,
-      is_confirmed, is_urgent, is_produce_together, quantity, progress_detail,
-      sample_count, sample_reason, order_tracker, provided_material, receive_time,
-      mylar_info, sample_stock, customer_confirm, remark, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    
-    const params = [
-      sampleNo,
-      body.order_month,
-      body.order_date,
-      body.sample_type,
-      body.customer_name,
-      body.print_method,
-      body.color_sequence,
-      body.product_name,
-      body.material_code,
-      body.size_spec,
-      body.material_desc,
-      body.sample_order_no,
-      body.required_date,
-      body.progress_status,
-      body.is_confirmed || 0,
-      body.is_urgent || 0,
-      body.is_produce_together || 0,
-      body.quantity,
-      body.progress_detail,
-      body.sample_count || 1,
-      body.sample_reason,
-      body.order_tracker,
-      body.provided_material,
-      body.receive_time,
-      body.mylar_info,
-      body.sample_stock,
-      body.customer_confirm,
-      body.remark,
-      body.status || 0,
-    ];
-    
-    const result = await execute(sql, params);
-    
-    return NextResponse.json({
-      success: true,
-      message: '打样单创建成功',
-      data: { id: (result as any).insertId, sample_no: sampleNo },
-    });
-  } catch (error) {
-    console.error('创建打样单失败:', error);
-    return NextResponse.json(
-      { success: false, message: '创建打样单失败: ' + (error as Error).message },
-      { status: 500 }
-    );
-  }
-}
-
-// PUT - 更新打样单
-export async function PUT(request: NextRequest) {
-  try {
-    const body: SampleOrder = await request.json();
-    const { id } = body;
-    
-    if (!id) {
-      return NextResponse.json(
-        { success: false, message: '缺少打样单ID' },
-        { status: 400 }
-      );
-    }
-    
-    const sql = `UPDATE sample_order SET
-      order_month = ?, order_date = ?, sample_type = ?, customer_name = ?,
-      print_method = ?, color_sequence = ?, product_name = ?, material_code = ?, size_spec = ?,
-      material_desc = ?, sample_order_no = ?, required_date = ?, progress_status = ?,
-      is_confirmed = ?, is_urgent = ?, is_produce_together = ?, quantity = ?, progress_detail = ?,
-      sample_count = ?, sample_reason = ?, order_tracker = ?, provided_material = ?, receive_time = ?,
-      mylar_info = ?, sample_stock = ?, customer_confirm = ?, remark = ?, status = ?
-    WHERE id = ? AND deleted = 0`;
-    
-    const params = [
-      body.order_month,
-      body.order_date,
-      body.sample_type,
-      body.customer_name,
-      body.print_method,
-      body.color_sequence,
-      body.product_name,
-      body.material_code,
-      body.size_spec,
-      body.material_desc,
-      body.sample_order_no,
-      body.required_date,
-      body.progress_status,
-      body.is_confirmed,
-      body.is_urgent,
-      body.is_produce_together,
-      body.quantity,
-      body.progress_detail,
-      body.sample_count,
-      body.sample_reason,
-      body.order_tracker,
-      body.provided_material,
-      body.receive_time,
-      body.mylar_info,
-      body.sample_stock,
-      body.customer_confirm,
-      body.remark,
-      body.status,
+  // 基础查询SQL
+  let sql = `
+    SELECT
       id,
-    ];
-    
-    const result = await execute(sql, params);
-    
-    if (result.affectedRows === 0) {
-      return NextResponse.json(
-        { success: false, message: '打样单不存在或已被删除' },
-        { status: 404 }
-      );
-    }
-    
-    return NextResponse.json({
-      success: true,
-      message: '打样单更新成功',
-    });
-  } catch (error) {
-    console.error('更新打样单失败:', error);
-    return NextResponse.json(
-      { success: false, message: '更新打样单失败' },
-      { status: 500 }
-    );
-  }
-}
+      order_no,
+      notify_date,
+      customer_name,
+      product_name,
+      material_no,
+      version,
+      size_spec,
+      material_spec,
+      quantity,
+      customer_require_date,
+      actual_delivery_date,
+      delivery_status,
+      remark,
+      create_time,
+      update_time
+    FROM sal_sample_order
+    WHERE deleted = 0
+  `;
 
-// DELETE - 删除打样单
-export async function DELETE(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-    
-    if (!id) {
-      return NextResponse.json(
-        { success: false, message: '缺少打样单ID' },
-        { status: 400 }
-      );
-    }
-    
-    // 软删除
-    await execute('UPDATE sample_order SET deleted = 1 WHERE id = ?', [parseInt(id)]);
-    
-    return NextResponse.json({
-      success: true,
-      message: '打样单删除成功',
-    });
-  } catch (error) {
-    console.error('删除打样单失败:', error);
-    return NextResponse.json(
-      { success: false, message: '删除打样单失败' },
-      { status: 500 }
-    );
+  let countSql = `SELECT COUNT(*) as total FROM sal_sample_order WHERE deleted = 0`;
+  const params: any[] = [];
+
+  if (keyword) {
+    const keywordCondition = ` AND (order_no LIKE ? OR product_name LIKE ? OR material_no LIKE ?)`;
+    sql += keywordCondition;
+    countSql += keywordCondition;
+    params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
   }
-}
+
+  if (customerName) {
+    sql += ` AND customer_name = ?`;
+    countSql += ` AND customer_name = ?`;
+    params.push(customerName);
+  }
+
+  if (deliveryStatus) {
+    sql += ` AND delivery_status = ?`;
+    countSql += ` AND delivery_status = ?`;
+    params.push(deliveryStatus);
+  }
+
+  if (startDate) {
+    sql += ` AND notify_date >= ?`;
+    countSql += ` AND notify_date >= ?`;
+    params.push(startDate);
+  }
+
+  if (endDate) {
+    sql += ` AND notify_date <= ?`;
+    countSql += ` AND notify_date <= ?`;
+    params.push(endDate);
+  }
+
+  sql += ` ORDER BY notify_date DESC, id DESC`;
+
+  // 使用分页查询工具
+  const result = await queryPaginated(sql, countSql, params, { page, pageSize });
+
+  return paginatedResponse(result.data, result.pagination);
+});
+
+// 创建打样订单
+export const POST = withErrorHandler(async (request: NextRequest) => {
+  const body = await request.json();
+
+  // 验证必填字段
+  const validation = validateRequestBody(body, [
+    'notify_date',
+    'customer_name',
+    'product_name',
+    'material_no',
+  ]);
+
+  if (!validation.valid) {
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+  }
+
+  const {
+    notify_date,
+    customer_name,
+    product_name,
+    material_no,
+    version,
+    size_spec,
+    material_spec,
+    quantity,
+    customer_require_date,
+    remark,
+  } = body;
+
+  const orderNo = await generateDocumentNo('sample');
+
+  const result = await query(
+    `INSERT INTO sal_sample_order 
+     (order_no, notify_date, customer_name, product_name, material_no, version, 
+      size_spec, material_spec, quantity, customer_require_date, 
+      delivery_status, remark, create_time) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, NOW())`,
+    [
+      orderNo,
+      notify_date,
+      customer_name,
+      product_name,
+      material_no,
+      version || 'A',
+      size_spec || '',
+      material_spec || '',
+      quantity || 0,
+      customer_require_date || null,
+      remark || '',
+    ]
+  );
+
+  const insertId = (result as any).insertId;
+
+  return successResponse({ id: insertId, order_no: orderNo }, '打样订单创建成功');
+}, '创建打样订单失败');
+
+// 更新打样订单
+export const PUT = withErrorHandler(async (request: NextRequest) => {
+  const body = await request.json();
+  const { id, ...updateData } = body;
+
+  if (!id) {
+    return errorResponse('打样订单ID不能为空', 400, 400);
+  }
+
+  // 查询打样订单
+  const orders = await query(
+    'SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0',
+    [id]
+  );
+
+  if (!orders || (orders as any[]).length === 0) {
+    return commonErrors.notFound('打样订单不存在');
+  }
+
+  const updateFields: string[] = [];
+  const updateParams: any[] = [];
+
+  const fieldMapping: { [key: string]: string } = {
+    notify_date: 'notify_date',
+    customer_name: 'customer_name',
+    product_name: 'product_name',
+    material_no: 'material_no',
+    version: 'version',
+    size_spec: 'size_spec',
+    material_spec: 'material_spec',
+    quantity: 'quantity',
+    customer_require_date: 'customer_require_date',
+    actual_delivery_date: 'actual_delivery_date',
+    delivery_status: 'delivery_status',
+    remark: 'remark',
+  };
+
+  for (const [key, value] of Object.entries(updateData)) {
+    if (fieldMapping[key] && value !== undefined) {
+      updateFields.push(`${fieldMapping[key]} = ?`);
+      updateParams.push(value);
+    }
+  }
+
+  if (updateFields.length === 0) {
+    return errorResponse('没有要更新的字段', 400, 400);
+  }
+
+  updateParams.push(id);
+  await query(
+    `UPDATE sal_sample_order SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
+    updateParams
+  );
+
+  return successResponse({ id }, '打样订单更新成功');
+}, '更新打样订单失败');
+
+// 删除打样订单
+export const DELETE = withErrorHandler(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  if (!id) {
+    return errorResponse('打样订单ID不能为空', 400, 400);
+  }
+
+  // 查询打样订单
+  const orders = await query(
+    'SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0',
+    [id]
+  );
+
+  if (!orders || (orders as any[]).length === 0) {
+    return commonErrors.notFound('打样订单不存在');
+  }
+
+  // 软删除
+  await query(
+    'UPDATE sal_sample_order SET deleted = 1, update_time = NOW() WHERE id = ?',
+    [id]
+  );
+
+  return successResponse(null, '打样订单删除成功');
+}, '删除打样订单失败');

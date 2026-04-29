@@ -6,6 +6,7 @@ import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Save, Printer, ArrowLeft, Building2, Upload, FileText, Image as ImageIcon, X } from 'lucide-react';
+import { useCompanyName } from '@/hooks/useCompanyName';
 import {
   Command,
   CommandEmpty,
@@ -238,6 +239,7 @@ const FileUploadCell = ({
 };
 
 export default function InputPage() {
+  const { companyName } = useCompanyName();
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -637,7 +639,7 @@ export default function InputPage() {
               {/* 表头：公司名称 */}
               <tr>
                 <td colSpan={16} className="text-center border-none">
-                  <h1 className="text-2xl font-bold text-[#1a3c7a]">苏州达昌印刷科技有限公司</h1>
+                  <h1 className="text-2xl font-bold text-[#1a3c7a]">{companyName}</h1>
                 </td>
                 <td colSpan={3} className="py-4 border-none">
                   <div className="flex items-center w-full h-full">

@@ -381,8 +381,7 @@
       transform: translateX(0);
     }
   }
-  
-  /* Blob 动画 */
+
   .animate-blob {
     animation: blob 7s infinite;
   }
@@ -409,8 +408,7 @@
       transform: translate(0px, 0px) scale(1);
     }
   }
-  
-  /* 玻璃态效果 */
+
   .glass {
     @apply bg-white/10 backdrop-blur-lg;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -419,4 +417,384 @@
   .dark .glass {
     @apply bg-black/20;
   }
+
+  .tech-card {
+    animation: techCardIn 0.6s ease-out both;
+    background: rgba(9, 22, 55, 0.6);
+    border: 1px solid rgba(6, 182, 212, 0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tech-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.6), transparent);
+    animation: scanLine 3s linear infinite;
+  }
+
+  @keyframes techCardIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes scanLine {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+
+  .tech-card-delay-1 { animation-delay: 0.1s; }
+  .tech-card-delay-2 { animation-delay: 0.2s; }
+  .tech-card-delay-3 { animation-delay: 0.3s; }
+  .tech-card-delay-4 { animation-delay: 0.4s; }
+  .tech-card-delay-5 { animation-delay: 0.5s; }
+  .tech-card-delay-6 { animation-delay: 0.6s; }
+
+  .tech-glow {
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.1), inset 0 1px 0 rgba(6, 182, 212, 0.1);
+  }
+
+  .tech-glow:hover {
+    box-shadow: 0 0 25px rgba(6, 182, 212, 0.2), inset 0 1px 0 rgba(6, 182, 212, 0.15);
+  }
+
+  .tech-border-glow {
+    position: relative;
+  }
+
+  .tech-border-glow::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), transparent 40%, transparent 60%, rgba(59, 130, 246, 0.3));
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tech-border-glow:hover::after {
+    opacity: 1;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(6, 182, 212, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes grid-move {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(40px);
+    }
+  }
+
+  .tech-grid-bg {
+    background-image:
+      linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: grid-move 8s linear infinite;
+  }
+
+  @keyframes particle-drift {
+    0% {
+      transform: translateY(0) translateX(0);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100vh) translateX(20px);
+      opacity: 0;
+    }
+  }
+
+  .tech-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: rgba(6, 182, 212, 0.5);
+    border-radius: 50%;
+    animation: particle-drift 10s linear infinite;
+  }
+
+  .tech-title-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .tech-title-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .tech-title-line-left,
+  .tech-title-line-right {
+    width: 40px;
+    height: 20px;
+    position: relative;
+  }
+
+  .tech-title-line-left::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, transparent 40%, rgba(6, 182, 212, 0.8));
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  }
+
+  .tech-title-line-right::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(225deg, transparent 40%, rgba(6, 182, 212, 0.8));
+    clip-path: polygon(0 0, 100% 100%, 0 100%);
+  }
+
+  .tech-title-bottom-line {
+    width: calc(100% + 104px);
+    height: 1px;
+    margin-top: 4px;
+    background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.8) 20%, rgba(59, 130, 246, 0.6) 50%, rgba(6, 182, 212, 0.8) 80%, transparent);
+    position: relative;
+  }
+
+  .tech-title-bottom-line::before,
+  .tech-title-bottom-line::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(6, 182, 212, 0.9);
+    box-shadow: 0 0 6px rgba(6, 182, 212, 0.6);
+  }
+
+  .tech-title-bottom-line::before {
+    left: 20%;
+  }
+
+  .tech-title-bottom-line::after {
+    right: 20%;
+  }
+}
+
+/*
+ * SnowAdmin 主题扩展样式
+ * 与现有浅色/深色模式完全独立，互不干扰
+ */
+
+/* 侧边栏深色模式 - 独立控制，不影响主内容区 */
+.snow-sidebar-dark aside,
+.snow-sidebar-dark [data-sidebar="true"] {
+  --sidebar: #1a1a2e !important;
+  --sidebar-foreground: #e0e0e0 !important;
+  --sidebar-primary: #5e72e4 !important;
+  --sidebar-primary-foreground: #ffffff !important;
+  --sidebar-accent: #16213e !important;
+  --sidebar-accent-foreground: #e0e0e0 !important;
+  --sidebar-border: #2a2a4a !important;
+  --sidebar-ring: #5e72e4 !important;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%) !important;
+  border-right-color: #2a2a4a !important;
+}
+
+.snow-sidebar-dark aside .text-foreground,
+.snow-sidebar-dark [data-sidebar="true"] .text-foreground {
+  color: #e0e0e0 !important;
+}
+
+.snow-sidebar-dark aside .text-muted-foreground,
+.snow-sidebar-dark [data-sidebar="true"] .text-muted-foreground {
+  color: #8898aa !important;
+}
+
+.snow-sidebar-dark aside .bg-background,
+.snow-sidebar-dark [data-sidebar="true"] .bg-background {
+  background: #1a1a2e !important;
+}
+
+.snow-sidebar-dark aside .border-border,
+.snow-sidebar-dark [data-sidebar="true"] .border-border {
+  border-color: #2a2a4a !important;
+}
+
+.snow-sidebar-dark aside .hover\:bg-accent:hover,
+.snow-sidebar-dark [data-sidebar="true"] .hover\:bg-accent:hover {
+  background: rgba(94, 114, 228, 0.15) !important;
+}
+
+.snow-sidebar-dark aside .bg-primary\/10,
+.snow-sidebar-dark [data-sidebar="true"] .bg-primary\/10 {
+  background: rgba(94, 114, 228, 0.2) !important;
+}
+
+/* 色弱模式 - 叠加 CSS 滤镜，不影响主题变量 */
+.snow-color-weak {
+  filter: url(#snow-color-weak-filter) !important;
+}
+
+.snow-color-weak body,
+.snow-color-weak #root {
+  filter: invert(80%) hue-rotate(180deg) !important;
+}
+
+.snow-color-weak img,
+.snow-color-weak video,
+.snow-color-weak canvas,
+.snow-color-weak [data-no-filter="true"] {
+  filter: invert(100%) hue-rotate(180deg) !important;
+}
+
+/* 灰色模式 - 全站灰度滤镜，优先级高于色弱模式 */
+.snow-gray-mode {
+  filter: grayscale(100%) !important;
+}
+
+.snow-gray-mode img,
+.snow-gray-mode video,
+.snow-gray-mode canvas {
+  filter: grayscale(100%) !important;
+}
+
+/* 灰色模式与色弱模式同时开启时，灰色模式优先 */
+.snow-gray-mode.snow-color-weak {
+  filter: grayscale(100%) !important;
+}
+
+/* 导航模式适配 */
+
+/* 顶部导航模式 - 隐藏侧边栏 */
+[data-nav-mode="top"] aside,
+[data-nav-mode="top"] [data-sidebar="true"] {
+  display: none !important;
+}
+
+/* 顶部导航模式 - 顶部菜单栏样式 */
+[data-nav-mode="top"] .snow-top-nav {
+  display: flex !important;
+}
+
+/* 混合导航模式 - 侧边栏显示子菜单 */
+[data-nav-mode="mixed"] .snow-mixed-submenu {
+  display: flex !important;
+}
+
+/* 顶部导航菜单样式 */
+.snow-top-nav {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  padding: 0 16px;
+  height: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.snow-top-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+  transition: all 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.snow-top-nav-item:hover {
+  background: var(--accent);
+  color: var(--primary);
+}
+
+.snow-top-nav-item.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* 混合导航子菜单样式 */
+.snow-mixed-submenu {
+  display: none;
+  flex-direction: column;
+  padding: 8px;
+}
+
+.snow-mixed-submenu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--sidebar-foreground);
+  transition: all 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.snow-mixed-submenu-item:hover {
+  background: var(--sidebar-accent);
+  color: var(--sidebar-primary);
+}
+
+.snow-mixed-submenu-item.active {
+  background: var(--sidebar-primary);
+  color: var(--sidebar-primary-foreground);
 }

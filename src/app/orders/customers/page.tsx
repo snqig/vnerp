@@ -1,6 +1,6 @@
-'use client';
+﻿﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import {
   Card,
@@ -22,9 +22,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { SearchInput } from '@/components/ui/search-input';
 import {
   Select,
   SelectContent,
@@ -45,8 +55,13 @@ import {
   User,
   RefreshCw,
   Eye,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Checkbox } from '@/components/ui/checkbox';
+import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
 
 // 客户列表项接口（基于 crm_customer 表）
 interface CustomerListItem {
@@ -111,10 +126,32 @@ export default function CustomersPage() {
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
 
+  const [isViewOpen, setIsViewOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerListItem | null>(null);
+  const [editForm, setEditForm] = useState<Record<string, string>>({});
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
   // 从数据库加载客户数据
   useEffect(() => {
     fetchCustomers();
   }, [currentPage, statusFilter, customerTypeFilter, followUpStatusFilter]);
+
+  // 防抖搜索：搜索词变化时自动触发搜索
+  const isInitialRender = useRef(true);
+  useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      setCurrentPage(1);
+      fetchCustomers();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const fetchCustomers = async () => {
     try {
@@ -194,12 +231,38 @@ export default function CustomersPage() {
 
   // 处理编辑客户
   const handleEdit = (customer: CustomerListItem) => {
-    router.push(`/orders/customers/${customer.id}/edit`);
+    setSelectedCustomer(customer);
+    setEditForm({
+      customerCode: customer.customerCode,
+      customerName: customer.customerName,
+      shortName: customer.shortName || '',
+      customerType: String(customer.customerType),
+      industry: customer.industry || '',
+      scale: customer.scale || '',
+      creditLevel: customer.creditLevel || '',
+      province: customer.province || '',
+      city: customer.city || '',
+      district: customer.district || '',
+      address: customer.address || '',
+      contactName: customer.contactName || '',
+      contactPhone: customer.contactPhone || '',
+      contactEmail: customer.contactEmail || '',
+      fax: customer.fax || '',
+      website: customer.website || '',
+      taxNumber: customer.taxNumber || '',
+      bankName: customer.bankName || '',
+      bankAccount: customer.bankAccount || '',
+      followUpStatus: String(customer.followUpStatus),
+      status: String(customer.status),
+      remark: customer.remark || '',
+    });
+    setIsEditOpen(true);
   };
 
   // 处理查看客户详情
   const handleView = (customer: CustomerListItem) => {
-    router.push(`/orders/customers/${customer.id}`);
+    setSelectedCustomer(customer);
+    setIsViewOpen(true);
   };
 
   // 处理删除客户
@@ -222,6 +285,52 @@ export default function CustomersPage() {
     } catch (error) {
       console.error('删除失败:', error);
       alert('删除失败，请检查网络连接');
+    }
+  };
+
+  // 保存编辑
+  const handleSaveEdit = async () => {
+    if (!selectedCustomer) return;
+    try {
+      const body = {
+        customer_code: editForm.customerCode,
+        customer_name: editForm.customerName,
+        short_name: editForm.shortName,
+        customer_type: parseInt(editForm.customerType) || 1,
+        industry: editForm.industry,
+        scale: editForm.scale,
+        credit_level: editForm.creditLevel,
+        province: editForm.province,
+        city: editForm.city,
+        district: editForm.district,
+        address: editForm.address,
+        contact_name: editForm.contactName,
+        contact_phone: editForm.contactPhone,
+        contact_email: editForm.contactEmail,
+        fax: editForm.fax,
+        website: editForm.website,
+        tax_number: editForm.taxNumber,
+        bank_name: editForm.bankName,
+        bank_account: editForm.bankAccount,
+        follow_up_status: parseInt(editForm.followUpStatus) || 1,
+        status: parseInt(editForm.status) ?? 1,
+        remark: editForm.remark,
+      };
+      const response = await fetch(`/api/customers?id=${selectedCustomer.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const result = await response.json();
+      if (result.success) {
+        setIsEditOpen(false);
+        fetchCustomers();
+      } else {
+        alert('保存失败: ' + result.message);
+      }
+    } catch (error) {
+      console.error('保存失败:', error);
+      alert('保存失败，请检查网络连接');
     }
   };
 
@@ -257,7 +366,30 @@ export default function CustomersPage() {
 
   // 分页计算
   const totalPages = Math.ceil(totalCount / pageSize);
-  const filteredCustomers = customers;
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      if (sortOrder === 'asc') setSortOrder('desc');
+      else if (sortOrder === 'desc') { setSortField(null); setSortOrder(null); }
+    } else { setSortField(field); setSortOrder('asc'); }
+  };
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
+    return sortOrder === 'asc' ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
+  };
+
+  const filteredCustomers = useMemo(() => {
+    if (!sortField || !sortOrder) return customers;
+    return [...customers].sort((a, b) => {
+      const aVal = (a as any)[sortField];
+      const bVal = (b as any)[sortField];
+      const aStr = String(aVal ?? '').toLowerCase();
+      const bStr = String(bVal ?? '').toLowerCase();
+      if (aStr < bStr) return sortOrder === 'asc' ? -1 : 1;
+      if (aStr > bStr) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [customers, sortField, sortOrder]);
 
   return (
     <MainLayout title="客户档案">
@@ -318,16 +450,12 @@ export default function CustomersPage() {
             <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 min-w-[200px]">
                 <label className="text-sm font-medium mb-2 block">搜索</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="客户编码/名称/联系人/电话"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="pl-9"
-                  />
-                </div>
+                <SearchInput
+                  placeholder="客户编码/名称/联系人/电话"
+                  value={searchTerm}
+                  onChange={setSearchTerm}
+                  onSearch={() => { setCurrentPage(1); fetchCustomers(); }}
+                />
               </div>
               <div className="w-[140px]">
                 <label className="text-sm font-medium mb-2 block">客户类型</label>
@@ -388,29 +516,100 @@ export default function CustomersPage() {
 
         {/* 客户列表 */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>客户列表</CardTitle>
+            <TableExportToolbar
+              selectedCount={selectedIds.size}
+              totalCount={filteredCustomers.length}
+              onSelectAll={() => setSelectedIds(new Set(filteredCustomers.map(c => c.id)))}
+              onDeselectAll={() => setSelectedIds(new Set())}
+              onPrint={() => printTable(filteredCustomers.map(c => ({
+                客户编码: c.customerCode, 客户名称: c.customerName, 类型: customerTypeMap[c.customerType]?.label || '',
+                联系人: c.contactName, 联系电话: c.contactPhone, 地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                跟进状态: followUpStatusMap[c.followUpStatus]?.label || '', 状态: statusMap[c.status]?.label || '',
+              })), [
+                { key: '客户编码', header: '客户编码' }, { key: '客户名称', header: '客户名称' },
+                { key: '类型', header: '类型' }, { key: '联系人', header: '联系人' },
+                { key: '联系电话', header: '联系电话' }, { key: '地址', header: '地址' },
+                { key: '跟进状态', header: '跟进状态' }, { key: '状态', header: '状态' },
+              ], '客户列表')}
+              onExportPDF={() => exportTableToPDF(filteredCustomers.map(c => ({
+                客户编码: c.customerCode, 客户名称: c.customerName, 类型: customerTypeMap[c.customerType]?.label || '',
+                联系人: c.contactName, 联系电话: c.contactPhone, 地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                跟进状态: followUpStatusMap[c.followUpStatus]?.label || '', 状态: statusMap[c.status]?.label || '',
+              })), '客户列表', [
+                { key: '客户编码', header: '客户编码' }, { key: '客户名称', header: '客户名称' },
+                { key: '类型', header: '类型' }, { key: '联系人', header: '联系人' },
+                { key: '联系电话', header: '联系电话' }, { key: '地址', header: '地址' },
+                { key: '跟进状态', header: '跟进状态' }, { key: '状态', header: '状态' },
+              ], '客户列表')}
+              onExportXLS={() => exportTableToXLS(filteredCustomers.map(c => ({
+                客户编码: c.customerCode, 客户名称: c.customerName, 类型: customerTypeMap[c.customerType]?.label || '',
+                联系人: c.contactName, 联系电话: c.contactPhone, 地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                跟进状态: followUpStatusMap[c.followUpStatus]?.label || '', 状态: statusMap[c.status]?.label || '',
+              })), '客户列表', [
+                { key: '客户编码', header: '客户编码' }, { key: '客户名称', header: '客户名称' },
+                { key: '类型', header: '类型' }, { key: '联系人', header: '联系人' },
+                { key: '联系电话', header: '联系电话' }, { key: '地址', header: '地址' },
+                { key: '跟进状态', header: '跟进状态' }, { key: '状态', header: '状态' },
+              ])}
+              onExportWORD={() => exportTableToWORD(filteredCustomers.map(c => ({
+                客户编码: c.customerCode, 客户名称: c.customerName, 类型: customerTypeMap[c.customerType]?.label || '',
+                联系人: c.contactName, 联系电话: c.contactPhone, 地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                跟进状态: followUpStatusMap[c.followUpStatus]?.label || '', 状态: statusMap[c.status]?.label || '',
+              })), '客户列表', [
+                { key: '客户编码', header: '客户编码' }, { key: '客户名称', header: '客户名称' },
+                { key: '类型', header: '类型' }, { key: '联系人', header: '联系人' },
+                { key: '联系电话', header: '联系电话' }, { key: '地址', header: '地址' },
+                { key: '跟进状态', header: '跟进状态' }, { key: '状态', header: '状态' },
+              ], '客户列表')}
+            />
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="w-[100px]">客户编码</TableHead>
-                    <TableHead className="w-[180px]">客户名称</TableHead>
-                    <TableHead className="w-[100px]">类型</TableHead>
-                    <TableHead className="w-[120px]">联系人</TableHead>
-                    <TableHead className="w-[130px]">联系电话</TableHead>
-                    <TableHead className="w-[200px]">地址</TableHead>
-                    <TableHead className="w-[100px]">跟进状态</TableHead>
-                    <TableHead className="w-[70px]">状态</TableHead>
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={selectedIds.size > 0 && selectedIds.size === filteredCustomers.length}
+                        onCheckedChange={(checked) => {
+                          if (checked) setSelectedIds(new Set(filteredCustomers.map(c => c.id)));
+                          else setSelectedIds(new Set());
+                        }}
+                      />
+                    </TableHead>
+                    <TableHead className="w-[100px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('customerCode')}>
+                      <span className="inline-flex items-center">客户编码{getSortIcon('customerCode')}</span>
+                    </TableHead>
+                    <TableHead className="w-[180px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('customerName')}>
+                      <span className="inline-flex items-center">客户名称{getSortIcon('customerName')}</span>
+                    </TableHead>
+                    <TableHead className="w-[100px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('customerType')}>
+                      <span className="inline-flex items-center">类型{getSortIcon('customerType')}</span>
+                    </TableHead>
+                    <TableHead className="w-[120px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('contactName')}>
+                      <span className="inline-flex items-center">联系人{getSortIcon('contactName')}</span>
+                    </TableHead>
+                    <TableHead className="w-[130px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('contactPhone')}>
+                      <span className="inline-flex items-center">联系电话{getSortIcon('contactPhone')}</span>
+                    </TableHead>
+                    <TableHead className="w-[200px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('address')}>
+                      <span className="inline-flex items-center">地址{getSortIcon('address')}</span>
+                    </TableHead>
+                    <TableHead className="w-[100px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('followUpStatus')}>
+                      <span className="inline-flex items-center">跟进状态{getSortIcon('followUpStatus')}</span>
+                    </TableHead>
+                    <TableHead className="w-[70px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('status')}>
+                      <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
+                    </TableHead>
                     <TableHead className="w-[80px] text-center">操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+                      <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
                         <div className="flex items-center justify-center gap-2">
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                           加载中...
@@ -419,13 +618,23 @@ export default function CustomersPage() {
                     </TableRow>
                   ) : filteredCustomers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
+                      <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
                         暂无数据
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredCustomers.map((customer) => (
                       <TableRow key={customer.id} className="group hover:bg-muted/30">
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.has(customer.id)}
+                            onCheckedChange={(checked) => {
+                              const next = new Set(selectedIds);
+                              if (checked) next.add(customer.id); else next.delete(customer.id);
+                              setSelectedIds(next);
+                            }}
+                          />
+                        </TableCell>
                         <TableCell className="font-mono text-sm">
                           {customer.customerCode}
                         </TableCell>
@@ -531,6 +740,246 @@ export default function CustomersPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* 查看客户详情对话框 */}
+        <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" resizable>
+            <DialogHeader>
+              <DialogTitle>客户详情</DialogTitle>
+              <DialogDescription>查看客户完整信息</DialogDescription>
+            </DialogHeader>
+            {selectedCustomer && (
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">客户编码</span>
+                    <p className="font-medium">{selectedCustomer.customerCode}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">客户名称</span>
+                    <p className="font-medium">{selectedCustomer.customerName}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">简称</span>
+                    <p className="font-medium">{selectedCustomer.shortName || '-'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">客户类型</span>
+                    <p>{getCustomerTypeBadge(selectedCustomer.customerType)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">行业</span>
+                    <p className="font-medium">{selectedCustomer.industry || '-'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">规模</span>
+                    <p className="font-medium">{selectedCustomer.scale || '-'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">信用等级</span>
+                    <p className="font-medium">{selectedCustomer.creditLevel || '-'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-sm text-muted-foreground">跟进状态</span>
+                    <p>{getFollowUpStatusBadge(selectedCustomer.followUpStatus)}</p>
+                  </div>
+                </div>
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">联系信息</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">联系人</span>
+                      <p className="font-medium">{selectedCustomer.contactName || '-'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">联系电话</span>
+                      <p className="font-medium">{selectedCustomer.contactPhone || '-'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">邮箱</span>
+                      <p className="font-medium">{selectedCustomer.contactEmail || '-'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">传真</span>
+                      <p className="font-medium">{selectedCustomer.fax || '-'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">网址</span>
+                      <p className="font-medium">{selectedCustomer.website || '-'}</p>
+                    </div>
+                    <div className="space-y-1 col-span-2">
+                      <span className="text-sm text-muted-foreground">地址</span>
+                      <p className="font-medium">{[selectedCustomer.province, selectedCustomer.city, selectedCustomer.district, selectedCustomer.address].filter(Boolean).join('') || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">财务信息</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">税号</span>
+                      <p className="font-medium">{selectedCustomer.taxNumber || '-'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">开户银行</span>
+                      <p className="font-medium">{selectedCustomer.bankName || '-'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">银行账号</span>
+                      <p className="font-medium">{selectedCustomer.bankAccount || '-'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-sm text-muted-foreground">状态</span>
+                      <p>{getStatusBadge(selectedCustomer.status)}</p>
+                    </div>
+                  </div>
+                </div>
+                {selectedCustomer.remark && (
+                  <div className="border-t pt-4">
+                    <span className="text-sm text-muted-foreground">备注</span>
+                    <p className="font-medium mt-1">{selectedCustomer.remark}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* 编辑客户对话框 */}
+        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" resizable>
+            <DialogHeader>
+              <DialogTitle>编辑客户</DialogTitle>
+              <DialogDescription>修改客户信息</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>客户编码 *</Label>
+                  <Input value={editForm.customerCode || ''} onChange={e => setEditForm(prev => ({ ...prev, customerCode: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>客户名称 *</Label>
+                  <Input value={editForm.customerName || ''} onChange={e => setEditForm(prev => ({ ...prev, customerName: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>简称</Label>
+                  <Input value={editForm.shortName || ''} onChange={e => setEditForm(prev => ({ ...prev, shortName: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>客户类型</Label>
+                  <Select value={editForm.customerType || '1'} onValueChange={v => setEditForm(prev => ({ ...prev, customerType: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">企业</SelectItem>
+                      <SelectItem value="2">个人</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>行业</Label>
+                  <Input value={editForm.industry || ''} onChange={e => setEditForm(prev => ({ ...prev, industry: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>规模</Label>
+                  <Input value={editForm.scale || ''} onChange={e => setEditForm(prev => ({ ...prev, scale: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>信用等级</Label>
+                  <Input value={editForm.creditLevel || ''} onChange={e => setEditForm(prev => ({ ...prev, creditLevel: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>跟进状态</Label>
+                  <Select value={editForm.followUpStatus || '1'} onValueChange={v => setEditForm(prev => ({ ...prev, followUpStatus: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">潜在客户</SelectItem>
+                      <SelectItem value="2">意向客户</SelectItem>
+                      <SelectItem value="3">成交客户</SelectItem>
+                      <SelectItem value="4">流失客户</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-3">联系信息</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>联系人</Label>
+                    <Input value={editForm.contactName || ''} onChange={e => setEditForm(prev => ({ ...prev, contactName: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>联系电话</Label>
+                    <Input value={editForm.contactPhone || ''} onChange={e => setEditForm(prev => ({ ...prev, contactPhone: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>邮箱</Label>
+                    <Input value={editForm.contactEmail || ''} onChange={e => setEditForm(prev => ({ ...prev, contactEmail: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>传真</Label>
+                    <Input value={editForm.fax || ''} onChange={e => setEditForm(prev => ({ ...prev, fax: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>网址</Label>
+                    <Input value={editForm.website || ''} onChange={e => setEditForm(prev => ({ ...prev, website: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>省份</Label>
+                    <Input value={editForm.province || ''} onChange={e => setEditForm(prev => ({ ...prev, province: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>城市</Label>
+                    <Input value={editForm.city || ''} onChange={e => setEditForm(prev => ({ ...prev, city: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>区县</Label>
+                    <Input value={editForm.district || ''} onChange={e => setEditForm(prev => ({ ...prev, district: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label>详细地址</Label>
+                    <Input value={editForm.address || ''} onChange={e => setEditForm(prev => ({ ...prev, address: e.target.value }))} />
+                  </div>
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-3">财务信息</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>税号</Label>
+                    <Input value={editForm.taxNumber || ''} onChange={e => setEditForm(prev => ({ ...prev, taxNumber: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>开户银行</Label>
+                    <Input value={editForm.bankName || ''} onChange={e => setEditForm(prev => ({ ...prev, bankName: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>银行账号</Label>
+                    <Input value={editForm.bankAccount || ''} onChange={e => setEditForm(prev => ({ ...prev, bankAccount: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>状态</Label>
+                    <Select value={editForm.status || '1'} onValueChange={v => setEditForm(prev => ({ ...prev, status: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">启用</SelectItem>
+                        <SelectItem value="0">禁用</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>备注</Label>
+                <Input value={editForm.remark || ''} onChange={e => setEditForm(prev => ({ ...prev, remark: e.target.value }))} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditOpen(false)}>取消</Button>
+              <Button onClick={handleSaveEdit}>保存</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );

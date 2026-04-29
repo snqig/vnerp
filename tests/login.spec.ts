@@ -44,7 +44,7 @@ test.describe('登录模块测试', () => {
     await expect(page).toHaveURL('/', { timeout: 10000 });
     
     // 验证用户信息显示
-    await expect(page.locator('text=达昌ERP')).toBeVisible();
+    await expect(page.locator('text=越南达昌科技有限公司')).toBeVisible();
     
     // 验证侧边栏菜单显示
     await expect(page.locator('nav')).toBeVisible();
@@ -136,7 +136,7 @@ test.describe('登录模块测试', () => {
    */
   test('UI测试: 登录页面元素显示检查', async ({ page }) => {
     // 验证Logo显示
-    await expect(page.locator('h1')).toContainText('达昌ERP');
+    await expect(page.locator('h1')).toContainText('越南达昌科技有限公司');
     
     // 验证表单标签
     await expect(page.locator('label', { hasText: '用户名' })).toBeVisible();

@@ -569,3 +569,146 @@ export type OutsourceOrder = typeof outsourceOrders.$inferSelect;
 export type Vehicle = typeof vehicles.$inferSelect;
 export type DeliveryOrder = typeof deliveryOrders.$inferSelect;
 export type SampleRequest = typeof sampleRequests.$inferSelect;
+
+// ==================== dcprint 迁移功能 ====================
+
+// 物料标签表
+export const materialLabels = pgTable('material_labels', {
+  id: serial('id').primaryKey(),
+  labelNo: varchar('label_no', { length: 50 }).notNull().unique(), // 标签编号
+  qrCode: text('qr_code'), // 二维码内容
+  purchaseOrderNo: varchar('purchase_order_no', { length: 50 }), // 采购单号
+  supplierName: varchar('supplier_name', { length: 200 }), // 供应商名称
+  receiveDate: timestamp('receive_date'), // 进料日期
+  materialCode: varchar('material_code', { length: 50 }).notNull(), // 物料代号
+  materialName: varchar('material_name', { length: 200 }), // 品名
+  specification: varchar('specification', { length: 200 }), // 进料规格
+  unit: varchar('unit', { length: 20 }), // 单位
+  batchNo: varchar('batch_no', { length: 50 }), // 批号
+  quantity: numeric('quantity', { precision: 18, scale: 4 }).default('0'), // 数量
+  packageQty: numeric('package_qty', { precision: 18, scale: 4 }).default('0'), // 包装量
+  width: numeric('width', { precision: 18, scale: 2 }), // 宽幅
+  lengthPerRoll: numeric('length_per_roll', { precision: 18, scale: 2 }), // 每卷米数
+  remark: text('remark'), // 备注
+  colorCode: varchar('color_code', { length: 50 }), // 颜色代号
+  mixRemark: text('mix_remark'), // 混合料备注
+  warehouseId: integer('warehouse_id').references(() => warehouses.id), // 仓库ID
+  locationId: integer('location_id').references(() => locations.id), // 库位ID
+  isMainMaterial: boolean('is_main_material').default(false), // 是否母材
+  isUsed: boolean('is_used').default(false), // 是否已使用
+  isCut: boolean('is_cut').default(false), // 是否已分切
+  parentLabelId: integer('parent_label_id'), // 父标签ID（分切来源）
+  status: varchar('status', { length: 20 }).default('active'), // active/frozen/disabled
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// 分切记录表
+export const cuttingRecords = pgTable('cutting_records', {
+  id: serial('id').primaryKey(),
+  recordNo: varchar('record_no', { length: 50 }).notNull().unique(), // 分切单号
+  sourceLabelId: integer('source_label_id').notNull().references(() => materialLabels.id), // 源标签ID
+  sourceLabelNo: varchar('source_label_no', { length: 50 }).notNull(), // 源标签编号
+  cutWidthStr: varchar('cut_width_str', { length: 200 }), // 分切宽幅（如：10+20+30）
+  originalWidth: numeric('original_width', { precision: 18, scale: 2 }), // 原宽幅
+  cutTotalWidth: numeric('cut_total_width', { precision: 18, scale: 2 }), // 分切总宽幅
+  remainWidth: numeric('remain_width', { precision: 18, scale: 2 }), // 剩余宽幅
+  operatorId: integer('operator_id').references(() => employees.id), // 操作员ID
+  operatorName: varchar('operator_name', { length: 50 }), // 操作员名称
+  cutTime: timestamp('cut_time').defaultNow(), // 分切时间
+  remark: text('remark'), // 备注
+  status: varchar('status', { length: 20 }).default('active'), // active/cancelled
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// 分切明细表
+export const cuttingDetails = pgTable('cutting_details', {
+  id: serial('id').primaryKey(),
+  recordId: integer('record_id').notNull().references(() => cuttingRecords.id), // 分切记录ID
+  newLabelId: integer('new_label_id').notNull().references(() => materialLabels.id), // 新标签ID
+  newLabelNo: varchar('new_label_no', { length: 50 }).notNull(), // 新标签编号
+  cutWidth: numeric('cut_width', { precision: 18, scale: 2 }), // 分切宽幅
+  sequence: integer('sequence').default(0), // 分切序号
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// 生产流程卡表
+export const processCards = pgTable('process_cards', {
+  id: serial('id').primaryKey(),
+  cardNo: varchar('card_no', { length: 50 }).notNull().unique(), // 流程卡卡号
+  qrCode: text('qr_code'), // 二维码内容
+  workOrderId: integer('work_order_id').references(() => workOrders.id), // 工单ID
+  workOrderNo: varchar('work_order_no', { length: 50 }), // 工单号
+  productCode: varchar('product_code', { length: 50 }), // 成品料号
+  productName: varchar('product_name', { length: 200 }), // 成品品名
+  materialSpec: varchar('material_spec', { length: 200 }), // 材料规格
+  workOrderDate: timestamp('work_order_date'), // 工单日期
+  planQty: numeric('plan_qty', { precision: 18, scale: 4 }).default('0'), // 计划生产数量
+  mainLabelId: integer('main_label_id').references(() => materialLabels.id), // 主材标签ID
+  mainLabelNo: varchar('main_label_no', { length: 50 }), // 主材标签编号
+  burdeningStatus: varchar('burdening_status', { length: 20 }).default('pending'), // 配料状态
+  lockStatus: varchar('lock_status', { length: 20 }).default('unlocked'), // 锁住状态
+  createUserId: integer('create_user_id').references(() => employees.id), // 创建人ID
+  createUserName: varchar('create_user_name', { length: 50 }), // 创建人名称
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// 流程卡物料关联表
+export const processCardMaterials = pgTable('process_card_materials', {
+  id: serial('id').primaryKey(),
+  cardId: integer('card_id').notNull().references(() => processCards.id), // 流程卡ID
+  cardNo: varchar('card_no', { length: 50 }), // 流程卡卡号
+  labelId: integer('label_id').notNull().references(() => materialLabels.id), // 物料标签ID
+  labelNo: varchar('label_no', { length: 50 }).notNull(), // 物料标签编号
+  materialType: varchar('material_type', { length: 20 }).default('auxiliary'), // 物料类型：main/auxiliary
+  materialCode: varchar('material_code', { length: 50 }), // 物料代号
+  materialName: varchar('material_name', { length: 200 }), // 物料名称
+  specification: varchar('specification', { length: 200 }), // 规格
+  batchNo: varchar('batch_no', { length: 50 }), // 批号
+  quantity: numeric('quantity', { precision: 18, scale: 4 }).default('0'), // 用量
+  unit: varchar('unit', { length: 20 }), // 单位
+  remark: text('remark'), // 备注
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// 物料追溯记录表
+export const traceRecords = pgTable('trace_records', {
+  id: serial('id').primaryKey(),
+  traceNo: varchar('trace_no', { length: 50 }).notNull().unique(), // 追溯单号
+  cardId: integer('card_id').references(() => processCards.id), // 流程卡ID
+  cardNo: varchar('card_no', { length: 50 }), // 流程卡卡号
+  workOrderNo: varchar('work_order_no', { length: 50 }), // 工单号
+  productCode: varchar('product_code', { length: 50 }), // 成品料号
+  mainLabelId: integer('main_label_id').references(() => materialLabels.id), // 主材标签ID
+  traceType: varchar('trace_type', { length: 20 }).default('forward'), // 追溯类型：forward/backward
+  operatorId: integer('operator_id').references(() => employees.id), // 操作员ID
+  operatorName: varchar('operator_name', { length: 50 }), // 操作员名称
+  traceTime: timestamp('trace_time').defaultNow(), // 追溯时间
+  remark: text('remark'), // 备注
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// 扫码操作日志表
+export const scanLogs = pgTable('scan_logs', {
+  id: serial('id').primaryKey(),
+  scanType: varchar('scan_type', { length: 50 }).notNull(), // 扫码类型: cutting/process/trace
+  qrContent: text('qr_content'), // 二维码内容
+  labelNo: varchar('label_no', { length: 50 }), // 标签编号
+  operation: varchar('operation', { length: 50 }), // 操作类型
+  result: varchar('result', { length: 20 }).default('success'), // 结果：success/failed
+  message: text('message'), // 结果消息
+  operatorId: integer('operator_id').references(() => employees.id), // 操作员ID
+  operatorName: varchar('operator_name', { length: 50 }), // 操作员名称
+  scanTime: timestamp('scan_time').defaultNow(), // 扫码时间
+  ipAddress: varchar('ip_address', { length: 50 }), // IP地址
+});
+
+// 类型导出
+type MaterialLabel = typeof materialLabels.$inferSelect;
+type CuttingRecord = typeof cuttingRecords.$inferSelect;
+type CuttingDetail = typeof cuttingDetails.$inferSelect;
+type ProcessCard = typeof processCards.$inferSelect;
+type ProcessCardMaterial = typeof processCardMaterials.$inferSelect;
+type TraceRecord = typeof traceRecords.$inferSelect;
+type ScanLog = typeof scanLogs.$inferSelect;

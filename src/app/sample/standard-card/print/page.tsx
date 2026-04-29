@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Printer, Download } from 'lucide-react';
+import { useCompanyName } from '@/hooks/useCompanyName';
 
 interface PrintSequence {
   id: number;
@@ -102,6 +103,7 @@ const InputCell = ({ value, placeholder = '', className = '' }: { value: string;
 );
 
 function PrintPageContent() {
+  const { companyName } = useCompanyName();
   const router = useRouter();
   const searchParams = useSearchParams();
   const printRef = useRef<HTMLDivElement>(null);
@@ -479,7 +481,7 @@ function PrintPageContent() {
             {/* 表头：公司名称 */}
             <tr>
               <td colSpan={16} className="text-center" style={{ border: 'none' }}>
-                <h1 className="text-2xl font-bold text-[#1a3c7a]">苏州达昌印刷科技有限公司</h1>
+                <h1 className="text-2xl font-bold text-[#1a3c7a]">{companyName}</h1>
               </td>
               <td colSpan={3} className="py-4" style={{ border: 'none' }}>
                 <div className="flex items-center w-full h-full">

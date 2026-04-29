@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -420,7 +420,7 @@ export default function RolesPage() {
 
       {/* 新增/编辑角色对话框 */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg" resizable>
           <DialogHeader>
             <DialogTitle>{editing ? '编辑角色' : '新增角色'}</DialogTitle>
             <DialogDescription>
@@ -482,7 +482,7 @@ export default function RolesPage() {
 
       {/* 权限设置对话框 */}
       <Dialog open={permissionDialogOpen} onOpenChange={setPermissionDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" resizable>
           <DialogHeader>
             <DialogTitle>设置权限 - {selectedRole?.role_name}</DialogTitle>
             <DialogDescription>

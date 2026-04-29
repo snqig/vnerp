@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,12 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Save, Plus, Trash2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface Department {
+  id: number;
+  dept_code: string;
+  dept_name: string;
+}
 
 interface RequestItem {
   id: number;
@@ -69,6 +75,18 @@ export default function NewPurchaseRequestPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<RequestForm>(initialForm);
   const [saving, setSaving] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  useEffect(() => {
+    fetch('/api/organization/department')
+      .then(res => res.json())
+      .then(result => {
+        if (result.success && Array.isArray(result.data)) {
+          setDepartments(result.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const calculateAmount = (quantity: number, price: number) => {
     return quantity * price;
@@ -215,11 +233,18 @@ export default function NewPurchaseRequestPage() {
               </div>
               <div className="space-y-2">
                 <Label>申请部门</Label>
-                <Input
-                  value={formData.request_dept}
-                  onChange={(e) => setFormData(prev => ({ ...prev, request_dept: e.target.value }))}
-                  placeholder="如：生产部"
-                />
+                <Select value={formData.request_dept} onValueChange={(v) => setFormData(prev => ({ ...prev, request_dept: v }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择部门" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.map(dept => (
+                      <SelectItem key={dept.id} value={dept.dept_name}>
+                        {dept.dept_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>申请人 <span className="text-red-500">*</span></Label>
@@ -274,10 +299,10 @@ export default function NewPurchaseRequestPage() {
             <CardContent>
               <div className="space-y-4">
                 {formData.items.map((item, index) => (
-                  <div key={item.id} className="grid grid-cols-12 gap-2 items-end p-4 border rounded-lg bg-gray-50">
+                  <div key={item.id} className="grid grid-cols-12 gap-2 items-end p-4 border rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700">
                     <div className="col-span-1">
                       <Label className="text-xs">行号</Label>
-                      <div className="text-sm font-medium py-2">{index + 1}</div>
+                      <div className="text-sm font-medium py-2 text-gray-900 dark:text-white">{index + 1}</div>
                     </div>
                     <div className="col-span-2">
                       <Label className="text-xs">物料编码</Label>
@@ -333,7 +358,7 @@ export default function NewPurchaseRequestPage() {
                     </div>
                     <div className="col-span-1">
                       <Label className="text-xs">金额</Label>
-                      <div className="text-sm font-medium py-2">{item.amount.toFixed(2)}</div>
+                      <div className="text-sm font-medium py-2 text-gray-900 dark:text-white">{item.amount.toFixed(2)}</div>
                     </div>
                     <div className="col-span-1">
                       <Button
@@ -352,9 +377,9 @@ export default function NewPurchaseRequestPage() {
 
               {/* 合计 */}
               <div className="flex justify-end mt-4 pt-4 border-t">
-                <div className="text-lg font-bold">
-                  合计金额：<span className="text-blue-600">¥{getTotalAmount().toFixed(2)}</span>
-                </div>
+                <div className="text-lg font-bold text-gray-900 dark:text-white">
+                合计金额：<span className="text-blue-600 dark:text-blue-400">¥{getTotalAmount().toFixed(2)}</span>
+              </div>
               </div>
             </CardContent>
           </Card>
@@ -366,7 +391,7 @@ export default function NewPurchaseRequestPage() {
             </CardHeader>
             <CardContent>
               <textarea
-                className="w-full min-h-[100px] p-3 border rounded-md"
+                className="w-full min-h-[100px] p-3 border rounded-md bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                 value={formData.remark}
                 onChange={(e) => setFormData(prev => ({ ...prev, remark: e.target.value }))}
                 placeholder="其他备注信息..."

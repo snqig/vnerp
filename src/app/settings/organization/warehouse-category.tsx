@@ -318,8 +318,7 @@ export function WarehouseCategoryManager() {
                   </TableRow>
                 ) : (
                   categories.map((category) => (
-                    <>
-                      <TableRow key={category.id} className="hover:bg-gray-50">
+                    <TableRow key={category.id} className="hover:bg-gray-50">
                         <TableCell className="font-medium">{category.code}</TableCell>
                         <TableCell>
                           <div>
@@ -330,18 +329,18 @@ export function WarehouseCategoryManager() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary" className={category.warehouse_count > 0 ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-500'}>
+                          <Badge variant="secondary" className={(category.warehouse_count || 0) > 0 ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-500'}>
                             {category.warehouse_count || 0} 个仓库
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <span className="text-sm text-gray-600">
-                            {category.total_capacity > 0 ? `${category.total_capacity?.toLocaleString()} / ${category.total_used_capacity?.toLocaleString()}` : '-'}
+                            {(category.total_capacity || 0) > 0 ? `${(category.total_capacity || 0).toLocaleString()} / ${(category.total_used_capacity || 0).toLocaleString()}` : '-'}
                           </span>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {category.total_capacity > 0 ? (
+                            {(category.total_capacity || 0) > 0 ? (
                               <>
                                 <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
                                   <div 
@@ -387,8 +386,6 @@ export function WarehouseCategoryManager() {
                           </div>
                         </TableCell>
                       </TableRow>
-
-                    </>
                   ))
                 )}
               </TableBody>

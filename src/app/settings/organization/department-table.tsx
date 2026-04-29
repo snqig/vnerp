@@ -12,7 +12,7 @@ interface Department {
   dept_code: string;
   dept_name: string;
   parent_id: number;
-  manager_name: string;
+  leader_name: string;
   sort_order: number;
   description: string;
   status: number;
@@ -122,7 +122,7 @@ function DepartmentRow({
             {level === 0 && <span className="ml-2 text-xs text-gray-400">(一级部门)</span>}
           </div>
         </TableCell>
-        <TableCell>{dept.manager_name || '-'}</TableCell>
+        <TableCell>{dept.leader_name || '-'}</TableCell>
         <TableCell>{dept.sort_order}</TableCell>
         <TableCell>{getStatusBadge(dept.status)}</TableCell>
         <TableCell className="text-right">

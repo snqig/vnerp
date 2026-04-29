@@ -27,6 +27,7 @@ import {
   Clock,
   AlertTriangle,
 } from 'lucide-react';
+import { useCompanyName } from '@/hooks/useCompanyName';
 
 // 模块配置
 const modules = [
@@ -185,6 +186,7 @@ const terminalScenarios = [
 ];
 
 export default function ModulesPage() {
+  const { companyName } = useCompanyName();
   return (
     <MainLayout title="系统模块">
       <div className="space-y-6">
@@ -196,7 +198,7 @@ export default function ModulesPage() {
                 <QrCode className="h-8 w-8 text-blue-600" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-bold mb-2">越南达昌丝网印刷科技有限公司 ERP系统</h2>
+                <h2 className="text-xl font-bold mb-2">{companyName} ERP系统</h2>
                 <p className="text-muted-foreground mb-4">
                   专为解决丝网印刷企业"订单杂、批次多、交期短、工序长"的特性而设计。
                   以二维码为唯一数据载体，通过工业PDA+手机+PDF三端协同，

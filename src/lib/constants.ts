@@ -1,114 +1,161 @@
 // 系统常量定义
 
-// 仓库类型
-export const WAREHOUSE_TYPES = [
-  { value: 'raw', label: '原料仓库' },
-  { value: 'finished', label: '成品仓库' },
-  { value: 'plate', label: '板房仓库' },
-  { value: 'ink', label: '油墨仓库' },
-] as const;
+// ==================== 订单状态 ====================
+export const OrderStatus = {
+  DRAFT: 'draft',
+  CONFIRMED: 'confirmed',
+  PRODUCING: 'producing',
+  SHIPPED: 'shipped',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+} as const;
 
-// 订单状态
-export const ORDER_STATUS = [
-  { value: 'draft', label: '草稿', color: 'secondary' },
-  { value: 'confirmed', label: '已确认', color: 'default' },
-  { value: 'producing', label: '生产中', color: 'primary' },
-  { value: 'completed', label: '已完成', color: 'success' },
-  { value: 'cancelled', label: '已取消', color: 'destructive' },
-] as const;
+export const OrderStatusLabel: Record<string, string> = {
+  [OrderStatus.DRAFT]: '草稿',
+  [OrderStatus.CONFIRMED]: '已确认',
+  [OrderStatus.PRODUCING]: '生产中',
+  [OrderStatus.SHIPPED]: '已发货',
+  [OrderStatus.COMPLETED]: '已完成',
+  [OrderStatus.CANCELLED]: '已取消',
+};
 
-// 工单状态
-export const WORK_ORDER_STATUS = [
-  { value: 'created', label: '已创建', color: 'secondary' },
-  { value: 'scheduled', label: '已排产', color: 'default' },
-  { value: 'producing', label: '生产中', color: 'primary' },
-  { value: 'completed', label: '已完成', color: 'success' },
-  { value: 'closed', label: '已关闭', color: 'destructive' },
-] as const;
+// ==================== 工单状态 ====================
+export const WorkOrderStatus = {
+  PENDING: 'pending',
+  PRODUCING: 'producing',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+} as const;
 
-// 检验类型
-export const INSPECTION_TYPES = [
-  { value: 'incoming', label: '来料检验' },
-  { value: 'first_article', label: '首件确认' },
-  { value: 'patrol', label: '巡检' },
-  { value: 'finished', label: '成品检验' },
-] as const;
+export const WorkOrderStatusLabel: Record<string, string> = {
+  [WorkOrderStatus.PENDING]: '待生产',
+  [WorkOrderStatus.PRODUCING]: '生产中',
+  [WorkOrderStatus.COMPLETED]: '已完成',
+  [WorkOrderStatus.CANCELLED]: '已取消',
+};
 
-// 检验结果
-export const INSPECTION_RESULTS = [
-  { value: 'pass', label: '合格', color: 'success' },
-  { value: 'fail', label: '不合格', color: 'destructive' },
-  { value: 'pending', label: '待判定', color: 'warning' },
-] as const;
+// ==================== 工单优先级 ====================
+export const WorkOrderPriority = {
+  LOW: 'low',
+  NORMAL: 'normal',
+  HIGH: 'high',
+  URGENT: 'urgent',
+} as const;
 
-// 库存状态
-export const INVENTORY_STATUS = [
-  { value: 'available', label: '可用', color: 'success' },
-  { value: 'frozen', label: '冻结', color: 'warning' },
-  { value: 'inspecting', label: '待检', color: 'secondary' },
-] as const;
+export const WorkOrderPriorityLabel: Record<string, string> = {
+  [WorkOrderPriority.LOW]: '低',
+  [WorkOrderPriority.NORMAL]: '正常',
+  [WorkOrderPriority.HIGH]: '高',
+  [WorkOrderPriority.URGENT]: '紧急',
+};
 
-// 派车状态
-export const DELIVERY_STATUS = [
-  { value: 'planned', label: '计划中', color: 'secondary' },
-  { value: 'loading', label: '装车中', color: 'default' },
-  { value: 'transit', label: '运输中', color: 'primary' },
-  { value: 'delivered', label: '已送达', color: 'success' },
-] as const;
+// ==================== 入库单状态 ====================
+export const InboundStatus = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+} as const;
 
-// 采购状态
-export const PURCHASE_STATUS = [
-  { value: 'draft', label: '草稿', color: 'secondary' },
-  { value: 'sent', label: '已发送', color: 'default' },
-  { value: 'partial', label: '部分到货', color: 'warning' },
-  { value: 'completed', label: '已完成', color: 'success' },
-] as const;
+export const InboundStatusLabel: Record<string, string> = {
+  [InboundStatus.PENDING]: '待确认',
+  [InboundStatus.CONFIRMED]: '已确认',
+  [InboundStatus.COMPLETED]: '已完成',
+  [InboundStatus.CANCELLED]: '已取消',
+};
 
-// 委外状态
-export const OUTSOURCE_STATUS = [
-  { value: 'sent', label: '已发送', color: 'default' },
-  { value: 'partial', label: '部分回货', color: 'warning' },
-  { value: 'completed', label: '已完成', color: 'success' },
-] as const;
+// ==================== 出库单状态 ====================
+export const OutboundStatus = {
+  PENDING: 'pending',
+  CONFIRMED: 'confirmed',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+} as const;
 
-// 打样状态
-export const SAMPLE_STATUS = [
-  { value: 'draft', label: '草稿', color: 'secondary' },
-  { value: 'producing', label: '制作中', color: 'primary' },
-  { value: 'completed', label: '已完成', color: 'success' },
-  { value: 'mass_production', label: '已转量产', color: 'default' },
-] as const;
+export const OutboundStatusLabel: Record<string, string> = {
+  [OutboundStatus.PENDING]: '待确认',
+  [OutboundStatus.CONFIRMED]: '已确认',
+  [OutboundStatus.COMPLETED]: '已完成',
+  [OutboundStatus.CANCELLED]: '已取消',
+};
 
-// 工序列表
-export const PROCESS_LIST = [
-  { code: 'P01', name: '切料', sequence: 1 },
-  { code: 'P02', name: '磨切', sequence: 2 },
-  { code: 'P03', name: '分切', sequence: 3 },
-  { code: 'P04', name: '印刷', sequence: 4 },
-  { code: 'P05', name: '烘干', sequence: 5 },
-  { code: 'P06', name: '模切', sequence: 6 },
-  { code: 'P07', name: '检验', sequence: 7 },
-  { code: 'P08', name: '包装', sequence: 8 },
-] as const;
+// ==================== 库存交易类型 ====================
+export const InventoryTransType = {
+  INBOUND: 'inbound',
+  OUTBOUND: 'outbound',
+  INBOUND_CANCEL: 'inbound_cancel',
+  OUTBOUND_CANCEL: 'outbound_cancel',
+  ADJUSTMENT: 'adjustment',
+  TRANSFER: 'transfer',
+} as const;
 
-// 设备保养周期
-export const MAINTENANCE_TYPES = [
-  { value: 'daily', label: '日常保养' },
-  { value: 'weekly', label: '周保养' },
-  { value: 'monthly', label: '月保养' },
-  { value: 'yearly', label: '年保养' },
-] as const;
+// ==================== 审核状态 ====================
+export const AuditStatus = {
+  PENDING: 0,
+  APPROVED: 1,
+  REJECTED: 2,
+} as const;
 
-// 不良处置方式
-export const DISPOSITION_TYPES = [
-  { value: 'rework', label: '返工' },
-  { value: 'scrap', label: '报废' },
-  { value: 'concession', label: '特采' },
-] as const;
+export const AuditStatusLabel: Record<number, string> = {
+  [AuditStatus.PENDING]: '待审核',
+  [AuditStatus.APPROVED]: '已通过',
+  [AuditStatus.REJECTED]: '已拒绝',
+};
 
-// 三端终端类型
-export const TERMINAL_TYPES = [
-  { value: 'pda', label: '工业PDA' },
-  { value: 'mobile', label: '手机端' },
-  { value: 'pdf', label: 'PDF二维码' },
-] as const;
+// ==================== 数据权限范围 ====================
+export const DataScopeType = {
+  ALL: 'all',
+  DEPT: 'dept',
+  SELF: 'self',
+  DEPT_AND_SELF: 'dept_and_self',
+} as const;
+
+export const DataScopeLabel: Record<string, string> = {
+  [DataScopeType.ALL]: '全部数据',
+  [DataScopeType.DEPT]: '本部门数据',
+  [DataScopeType.SELF]: '仅本人数据',
+  [DataScopeType.DEPT_AND_SELF]: '本部门及本人数据',
+};
+
+// ==================== 用户状态 ====================
+export const UserStatus = {
+  DISABLED: 0,
+  ENABLED: 1,
+} as const;
+
+// ==================== 删除标记 ====================
+export const DeleteFlag = {
+  NORMAL: 0,
+  DELETED: 1,
+} as const;
+
+// ==================== 订单号前缀 ====================
+export const OrderNoPrefix = {
+  SALES_ORDER: 'SO',
+  WORK_ORDER: 'WO',
+  INBOUND_ORDER: 'RK',
+  OUTBOUND_ORDER: 'CK',
+  PURCHASE_ORDER: 'CG',
+} as const;
+
+// ==================== 分页默认值 ====================
+export const PaginationDefaults = {
+  PAGE: 1,
+  PAGE_SIZE: 10,
+  MAX_PAGE_SIZE: 100,
+} as const;
+
+// ==================== 税率 ====================
+export const TaxRate = {
+  ZERO: 0,
+  LOW: 0.03,
+  NORMAL: 0.13,
+  HIGH: 0.16,
+} as const;
+
+// ==================== 日期格式 ====================
+export const DateFormat = {
+  DATE: 'YYYY-MM-DD',
+  DATETIME: 'YYYY-MM-DD HH:mm:ss',
+  TIME: 'HH:mm:ss',
+} as const;

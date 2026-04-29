@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登录调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>登录调试工具</h1>
+    
+    <h2>步骤1: 登录</h2>
+    <button onclick="login()">测试登录 (admin/admin123)</button>
+    <div id="loginResult" class="result"></div>
+    
+    <h2>步骤2: 检查存储</h2>
+    <button onclick="checkStorage()">检查 LocalStorage</button>
+    <div id="storageResult" class="result"></div>
+    
+    <h2>步骤3: 获取菜单</h2>
+    <button onclick="getMenus()">测试获取菜单</button>
+    <div id="menuResult" class="result"></div>
+    
+    <h2>清除数据</h2>
+    <button onclick="clearStorage()">清除 LocalStorage</button>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        
+        async function login() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '登录中...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('user', JSON.stringify(data.data.user));
+                    resultDiv.innerHTML = `<div class="success">✅ 登录成功!<br>Token: ${data.data.token.substring(0, 50)}...<br>用户: ${data.data.user.username}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ 登录失败: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 错误: ${error.message}</div>`;
+            }
+        }
+        
+        function checkStorage() {
+            const resultDiv = document.getElementById('storageResult');
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            resultDiv.innerHTML = `
+                <div class="${token ? 'success' : 'error'}">
+                    Token: ${token ? '✅ 存在 (' + token.substring(0, 30) + '...)' : '❌ 不存在'}<br>
+                    User: ${user ? '✅ 存在' : '❌ 不存在'}<br>
+                    ${user ? '用户信息: <pre>' + JSON.stringify(JSON.parse(user), null, 2).substring(0, 500) + '</pre>' : ''}
+                </div>
+            `;
+        }
+        
+        async function getMenus() {
+            const resultDiv = document.getElementById('menuResult');
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<div class="error">❌ 请先登录</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '获取菜单中...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/menus`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `<div class="success">✅ 获取菜单成功!<br>菜单数量: ${data.data.menus?.length || 0}<br>权限数量: ${data.data.permissions?.length || 0}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ 获取菜单失败: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 错误: ${error.message}</div>`;
+            }
+        }
+        
+        function clearStorage() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            alert('已清除');
+        }
+    </script>
+</body>
+</html>

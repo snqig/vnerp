@@ -365,7 +365,7 @@ export default function SampleOrderDetailPage() {
 
         {/* 删除确认对话框 */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <DialogContent>
+          <DialogContent resizable>
             <DialogHeader>
               <DialogTitle>确认删除</DialogTitle>
               <DialogDescription>

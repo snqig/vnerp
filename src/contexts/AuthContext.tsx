@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 
 interface User {
   id: number;
@@ -45,93 +45,110 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-let globalAuthState: AuthState = {
-  user: null,
-  menus: [],
-  permissions: [],
-  isAuthenticated: false,
-  isLoading: true
-};
-
-let menusLoaded = false;
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>(globalAuthState);
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    menus: [],
+    permissions: [],
+    isAuthenticated: false,
+    isLoading: true
+  });
 
-  const fetchMenus = useCallback(async (token: string) => {
-    if (menusLoaded && globalAuthState.menus.length > 0) {
+  const authChecked = useRef(false);
+  const menusLoadedRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const menusCountRef = useRef(0);
+
+  const fetchMenus = useCallback(async (token: string, force: boolean = false) => {
+    if (!force && menusLoadedRef.current && menusCountRef.current > 0) {
       return;
     }
-    
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     try {
       const response = await fetch('/api/auth/menus', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal: abortControllerRef.current.signal
       });
-      
+
       if (response.status === 401) {
+        console.error('[AuthContext] 菜单API返回401');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         sessionStorage.removeItem('token');
         sessionStorage.removeItem('user');
-        globalAuthState = {
+        menusLoadedRef.current = false;
+        menusCountRef.current = 0;
+        setState({
           user: null,
           menus: [],
           permissions: [],
           isAuthenticated: false,
           isLoading: false
-        };
-        setState(globalAuthState);
+        });
         return;
       }
-      
+
       const result = await response.json();
       if (result.success) {
-        globalAuthState = {
-          ...globalAuthState,
-          menus: result.data || [],
-          permissions: result.permissions || []
-        };
-        menusLoaded = true;
-        setState(globalAuthState);
+        menusLoadedRef.current = true;
+        const menus = result.data.menus || [];
+        menusCountRef.current = menus.length;
+        setState(prev => ({
+          ...prev,
+          menus: menus,
+          permissions: result.data.permissions || [],
+          isLoading: false
+        }));
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        return;
+      }
       console.error('获取菜单失败:', error);
+      setState(prev => ({ ...prev, isLoading: false }));
     }
   }, []);
 
   useEffect(() => {
-    if (menusLoaded) {
-      setState(globalAuthState);
-      return;
-    }
+    if (authChecked.current) return;
+    authChecked.current = true;
 
-    const loadAuth = async () => {
-      let token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      let userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const initAuth = async () => {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
 
       if (token && userStr) {
         try {
           const user = JSON.parse(userStr);
-          globalAuthState = {
+          setState({
             user,
             menus: [],
             permissions: user.permissions || [],
             isAuthenticated: true,
-            isLoading: false
-          };
-          setState(globalAuthState);
+            isLoading: true
+          });
           await fetchMenus(token);
         } catch (e) {
-          globalAuthState = { ...globalAuthState, isLoading: false };
-          setState(globalAuthState);
+          console.error('[AuthContext] 解析失败:', e);
+          setState(prev => ({ ...prev, isLoading: false }));
         }
       } else {
-        globalAuthState = { ...globalAuthState, isLoading: false };
-        setState(globalAuthState);
+        setState(prev => ({ ...prev, isLoading: false }));
       }
     };
 
-    loadAuth();
+    initAuth();
+
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [fetchMenus]);
 
   const login = useCallback(async (username: string, password: string, rememberMe: boolean = true) => {
@@ -148,17 +165,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storage = rememberMe ? localStorage : sessionStorage;
         storage.setItem('token', result.data.token);
         storage.setItem('user', JSON.stringify(result.data.user));
-        
-        globalAuthState = {
+
+        menusLoadedRef.current = false;
+        menusCountRef.current = 0;
+        setState({
           user: result.data.user,
           menus: [],
           permissions: result.data.user.permissions || [],
           isAuthenticated: true,
-          isLoading: false
-        };
-        menusLoaded = false;
-        setState(globalAuthState);
-        await fetchMenus(result.data.token);
+          isLoading: true
+        });
+
+        await fetchMenus(result.data.token, true);
         return { success: true };
       } else {
         return { success: false, message: result.message };
@@ -173,15 +191,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user');
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
-    globalAuthState = {
+    menusLoadedRef.current = false;
+    menusCountRef.current = 0;
+    authChecked.current = false;
+    setState({
       user: null,
       menus: [],
       permissions: [],
       isAuthenticated: false,
       isLoading: false
-    };
-    menusLoaded = false;
-    setState(globalAuthState);
+    });
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
     }
