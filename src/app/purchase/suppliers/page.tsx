@@ -160,7 +160,10 @@ export default function SuppliersPage() {
       if (result.success) {
         let data = result.data || [];
         if (gradeFilter !== 'all') {
-          data = data.filter((s: Supplier) => s.credit_level === gradeFilter);
+          data = data.filter((s: Supplier) => {
+            const level = s.credit_level || 'B';
+            return level === gradeFilter;
+          });
         }
         setList(data);
         setTotal(result.pagination?.total || data.length);
@@ -392,7 +395,7 @@ export default function SuppliersPage() {
   const stats = {
     S: list.filter(s => s.credit_level === 'S').length,
     A: list.filter(s => s.credit_level === 'A').length,
-    B: list.filter(s => s.credit_level === 'B').length,
+    B: list.filter(s => s.credit_level === 'B' || !s.credit_level).length,
     C: list.filter(s => s.credit_level === 'C').length,
     D: list.filter(s => s.credit_level === 'D').length,
   };

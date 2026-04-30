@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
+import { formatDate } from '@/lib/date-utils';
 import {
   Card,
   CardContent,
@@ -609,7 +610,7 @@ export default function ProductionSchedulePage() {
                           <TableCell>{schedule.product_name}</TableCell>
                           <TableCell>{getWorkshopBadge(schedule.workshop)}</TableCell>
                           <TableCell>{Number(schedule.planned_qty).toLocaleString()}</TableCell>
-                          <TableCell>{schedule.planned_start || '-'}</TableCell>
+                          <TableCell>{formatDate(schedule.planned_start) || '-'}</TableCell>
                           <TableCell>{getPriorityBadge(schedule.priority)}</TableCell>
                           <TableCell>{getStatusBadge(schedule.status)}</TableCell>
                           <TableCell>
@@ -771,13 +772,13 @@ export default function ProductionSchedulePage() {
                     <h4 className="font-semibold text-sm text-muted-foreground">计划时间</h4>
                     <div className="grid grid-cols-4 gap-2 text-sm">
                       <span className="text-muted-foreground">计划开始:</span>
-                      <span>{selectedSchedule.planned_start || '-'}</span>
+                      <span>{formatDate(selectedSchedule.planned_start) || '-'}</span>
                       <span className="text-muted-foreground">计划结束:</span>
-                      <span>{selectedSchedule.planned_end || '-'}</span>
+                      <span>{formatDate(selectedSchedule.planned_end) || '-'}</span>
                       <span className="text-muted-foreground">实际开始:</span>
-                      <span>{selectedSchedule.actual_start || '-'}</span>
+                      <span>{formatDate(selectedSchedule.actual_start) || '-'}</span>
                       <span className="text-muted-foreground">实际结束:</span>
-                      <span>{selectedSchedule.actual_end || '-'}</span>
+                      <span>{formatDate(selectedSchedule.actual_end) || '-'}</span>
                     </div>
                   </div>
 

@@ -1,7 +1,8 @@
-﻿﻿'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
+import { formatDate } from '@/lib/date-utils';
 import {
   Card,
   CardContent,
@@ -603,9 +604,9 @@ export default function WorkOrderPage() {
                           <TableCell>{getPriorityBadge(order.priority)}</TableCell>
                           <TableCell>
                             <div className="flex flex-col text-xs">
-                              <span>{order.plan_start_date || '-'}</span>
+                              <span>{formatDate(order.plan_start_date) || '-'}</span>
                               <span className="text-muted-foreground">至</span>
-                              <span>{order.plan_end_date || '-'}</span>
+                              <span>{formatDate(order.plan_end_date) || '-'}</span>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -744,9 +745,9 @@ export default function WorkOrderPage() {
                       <h4 className="font-semibold text-sm text-muted-foreground">计划时间</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">开始日期:</span>
-                        <span>{selectedOrder.plan_start_date || '-'}</span>
+                        <span>{formatDate(selectedOrder.plan_start_date) || '-'}</span>
                         <span className="text-muted-foreground">结束日期:</span>
-                        <span>{selectedOrder.plan_end_date || '-'}</span>
+                        <span>{formatDate(selectedOrder.plan_end_date) || '-'}</span>
                       </div>
                     </div>
 

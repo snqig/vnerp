@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
-import { Plus, Search, Edit, Trash2, FileCheck } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, FileCheck, Upload, FileText, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ContractReviewRecord {
@@ -84,6 +84,9 @@ export default function ContractReviewPage() {
   const [editItem, setEditItem] = useState<Partial<ContractReviewRecord>>({});
   const [activeReviewTab, setActiveReviewTab] = useState('biz');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [attachments, setAttachments] = useState<{name: string; url: string}[]>([]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -199,6 +202,32 @@ export default function ContractReviewPage() {
     setEditItem(item);
     setActiveReviewTab('biz');
     setShowReviewDialog(true);
+  };
+
+  const handleFileUpload = async () => {
+    if (!uploadFile) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+      const res = await fetch('/api/upload/contract', { method: 'POST', body: formData });
+      const result = await res.json();
+      if (result.success) {
+        setAttachments(prev => [...prev, { name: uploadFile.name, url: result.data.url }]);
+        setUploadFile(null);
+        toast({ title: '文件上传成功' });
+      } else {
+        toast({ title: '上传失败', description: result.message, variant: 'destructive' });
+      }
+    } catch (e) {
+      toast({ title: '上传失败', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeAttachment = (idx: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== idx));
   };
 
   return (
@@ -401,6 +430,34 @@ export default function ContractReviewPage() {
                 <div><Label>评审意见</Label><Textarea rows={3} value={editItem.purchase_opinion || ''} onChange={e => setEditItem({ ...editItem, purchase_opinion: e.target.value })} placeholder="采购部评审意见" /></div>
               </TabsContent>
             </Tabs>
+            <div className="border-t pt-4 mt-4 space-y-3">
+              <h3 className="font-semibold flex items-center gap-2"><Upload className="h-4 w-4" />附件上传</h3>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
+                  onChange={e => { if (e.target.files?.[0]) setUploadFile(e.target.files[0]); }}
+                  className="max-w-xs"
+                />
+                <Button size="sm" disabled={!uploadFile || uploading} onClick={handleFileUpload}>
+                  {uploading ? '上传中...' : '上传'}
+                </Button>
+                {uploadFile && <span className="text-sm text-muted-foreground truncate max-w-[200px]">{uploadFile.name}</span>}
+              </div>
+              {attachments.length > 0 && (
+                <div className="space-y-1">
+                  {attachments.map((att, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-sm">
+                      <FileText className="h-4 w-4 text-blue-500" />
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate">{att.name}</a>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => removeAttachment(idx)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <DialogFooter className="mt-4">
               <Button variant="outline" onClick={() => setShowReviewDialog(false)}>关闭</Button>
               <Button onClick={handleSaveReview}>保存评审意见</Button>
