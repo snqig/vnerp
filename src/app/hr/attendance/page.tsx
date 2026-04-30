@@ -60,12 +60,16 @@ const statusOptions = [
 // 部门选项
 const departmentOptions = [
   { value: 'all', label: '全部部门' },
+  { value: '管理部', label: '管理部' },
+  { value: '业务部', label: '业务部' },
   { value: '生产部', label: '生产部' },
+  { value: '打样中心', label: '打样中心' },
+  { value: '采购部', label: '采购部' },
   { value: '品质部', label: '品质部' },
-  { value: '研发部', label: '研发部' },
-  { value: '销售部', label: '销售部' },
-  { value: '行政部', label: '行政部' },
-  { value: '财务部', label: '财务部' },
+  { value: '模切', label: '模切' },
+  { value: '商标', label: '商标' },
+  { value: '其他', label: '其他' },
+  { value: '采购', label: '采购' },
 ];
 
 // 示例考勤记录数据
@@ -114,23 +118,29 @@ export default function AttendancePage() {
   const fetchAttendanceRecords = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/hr/attendance');
+      const res = await fetch('/api/hr/attendance?pageSize=9999');
       const data = await res.json();
       if (data.success || data.code === 200) {
         const records = data.data || [];
-        setAttendanceRecords(records.map((r: any, idx: number) => ({
-          id: r.id || idx + 1,
-          date: r.attendance_date || r.date,
-          employeeId: r.employee_no || r.employee_id,
-          employeeName: r.employee_name,
-          department: r.department_name || r.department,
-          checkIn: r.check_in_time || r.check_in,
-          checkOut: r.check_out_time || r.check_out,
-          status: r.status || 'normal',
-          workingHours: r.working_hours || calculateWorkingHours(r.check_in_time || r.check_in, r.check_out_time || r.check_out),
-          overtimeHours: r.overtime_hours || 0,
-          remark: r.remark || '',
-        })));
+        setAttendanceRecords(records.map((r: any, idx: number) => {
+          let dateStr = r.attendanceDate || r.attendance_date || r.date || '';
+          if (dateStr && dateStr.includes('T')) {
+            dateStr = dateStr.slice(0, 10);
+          }
+          return {
+            id: r.id || idx + 1,
+            date: dateStr,
+            employeeId: r.employeeId || r.employee_id,
+            employeeName: r.employeeName || r.employee_name,
+            department: r.departmentName || r.department_name || r.department,
+            checkIn: r.checkInTime || r.check_in_time || r.check_in,
+            checkOut: r.checkOutTime || r.check_out_time || r.check_out,
+            status: r.status || 'normal',
+            workingHours: r.workingHours || r.working_hours || calculateWorkingHours(r.checkInTime || r.check_in_time || r.check_in, r.checkOutTime || r.check_out_time || r.check_out),
+            overtimeHours: r.overtimeHours || r.overtime_hours || 0,
+            remark: r.remark || '',
+          };
+        }));
       }
     } catch (error) {
       console.error('Failed to fetch attendance records:', error);
@@ -141,10 +151,7 @@ export default function AttendancePage() {
 
   // 刷新数据
   const handleRefresh = useCallback(async () => {
-    setIsLoading(true);
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setIsLoading(false);
+    await fetchAttendanceRecords();
     toast.success('数据已刷新');
   }, []);
 
@@ -277,49 +284,69 @@ export default function AttendancePage() {
   };
 
   // 保存考勤记录
-  const handleSave = () => {
-    const newRecord = {
-      id: attendanceRecords.length + 1,
-      date: formData.attendanceDate,
-      employeeId: formData.employeeId,
-      employeeName: formData.employeeName,
-      department: formData.departmentName,
-      checkIn: formData.checkInTime,
-      checkOut: formData.checkOutTime,
-      status: formData.status,
-      workingHours: parseFloat(formData.workingHours) || 0,
-      overtimeHours: parseFloat(formData.overtimeHours) || 0,
-      remark: formData.remark,
-    };
-    
-    setAttendanceRecords([newRecord, ...attendanceRecords]);
-    setIsAddDialogOpen(false);
-    toast.success('考勤记录保存成功');
+  const handleSave = async () => {
+    try {
+      const res = await fetch('/api/hr/attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          attendanceDate: formData.attendanceDate,
+          employeeId: formData.employeeId,
+          employeeName: formData.employeeName,
+          departmentName: formData.departmentName,
+          checkInTime: formData.checkInTime,
+          checkOutTime: formData.checkOutTime,
+          status: formData.status,
+          workingHours: parseFloat(formData.workingHours) || undefined,
+          overtimeHours: parseFloat(formData.overtimeHours) || 0,
+          remark: formData.remark,
+        }),
+      });
+      const data = await res.json();
+      if (data.success || data.code === 200) {
+        setIsAddDialogOpen(false);
+        await fetchAttendanceRecords();
+        toast.success('考勤记录保存成功');
+      } else {
+        toast.error(data.message || '保存失败');
+      }
+    } catch (error) {
+      toast.error('保存失败，请重试');
+    }
   };
 
   // 更新考勤记录
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!currentRecord) return;
-    
-    setAttendanceRecords(attendanceRecords.map(r => 
-      r.id === currentRecord.id 
-        ? { 
-            ...r, 
-            date: formData.attendanceDate,
-            employeeId: formData.employeeId,
-            employeeName: formData.employeeName,
-            department: formData.departmentName,
-            checkIn: formData.checkInTime,
-            checkOut: formData.checkOutTime,
-            status: formData.status,
-            workingHours: parseFloat(formData.workingHours) || 0,
-            overtimeHours: parseFloat(formData.overtimeHours) || 0,
-            remark: formData.remark,
-          }
-        : r
-    ));
-    setIsEditDialogOpen(false);
-    toast.success('考勤记录更新成功');
+    try {
+      const res = await fetch('/api/hr/attendance', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: currentRecord.id,
+          attendanceDate: formData.attendanceDate,
+          employeeId: formData.employeeId,
+          employeeName: formData.employeeName,
+          departmentName: formData.departmentName,
+          checkInTime: formData.checkInTime,
+          checkOutTime: formData.checkOutTime,
+          status: formData.status,
+          workingHours: parseFloat(formData.workingHours) || undefined,
+          overtimeHours: parseFloat(formData.overtimeHours) || 0,
+          remark: formData.remark,
+        }),
+      });
+      const data = await res.json();
+      if (data.success || data.code === 200) {
+        setIsEditDialogOpen(false);
+        await fetchAttendanceRecords();
+        toast.success('考勤记录更新成功');
+      } else {
+        toast.error(data.message || '更新失败');
+      }
+    } catch (error) {
+      toast.error('更新失败，请重试');
+    }
   };
 
   // 删除考勤记录
@@ -328,11 +355,21 @@ export default function AttendancePage() {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!currentRecord) return;
-    setAttendanceRecords(attendanceRecords.filter(r => r.id !== currentRecord.id));
-    setIsDeleteDialogOpen(false);
-    toast.success('考勤记录删除成功');
+    try {
+      const res = await fetch(`/api/hr/attendance?id=${currentRecord.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success || data.code === 200) {
+        setIsDeleteDialogOpen(false);
+        await fetchAttendanceRecords();
+        toast.success('考勤记录删除成功');
+      } else {
+        toast.error(data.message || '删除失败');
+      }
+    } catch (error) {
+      toast.error('删除失败，请重试');
+    }
   };
 
   // 打印

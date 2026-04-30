@@ -16,6 +16,8 @@ vi.mock('@/lib/api-response', () => ({
 
 import { query, execute } from '@/lib/db'
 
+const mockExecute = vi.mocked(execute) as unknown as ReturnType<typeof vi.fn>
+
 describe('系统配置API测试', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -48,7 +50,7 @@ describe('系统配置API测试', () => {
 
       const request = new Request('http://localhost/api/system/config?configName=公司')
       const response = await GET(request as any)
-      const data = await response.json()
+      await response.json()
 
       expect(query).toHaveBeenCalledWith(
         expect.stringContaining('config_name LIKE ?'),
@@ -63,7 +65,7 @@ describe('系统配置API测试', () => {
 
       const request = new Request('http://localhost/api/system/config?configKey=company')
       const response = await GET(request as any)
-      const data = await response.json()
+      await response.json()
 
       expect(query).toHaveBeenCalledWith(
         expect.stringContaining('config_key LIKE ?'),
@@ -88,7 +90,7 @@ describe('系统配置API测试', () => {
 
   describe('POST - 创建配置', () => {
     it('应该创建新配置', async () => {
-      vi.mocked(execute).mockResolvedValue({ insertId: 100 })
+      mockExecute.mockResolvedValue({ insertId: 100 })
 
       const request = new Request('http://localhost/api/system/config', {
         method: 'POST',
@@ -114,7 +116,7 @@ describe('系统配置API测试', () => {
     })
 
     it('应该使用默认类型', async () => {
-      vi.mocked(execute).mockResolvedValue({ insertId: 1 })
+      mockExecute.mockResolvedValue({ insertId: 1 })
 
       const request = new Request('http://localhost/api/system/config', {
         method: 'POST',
@@ -137,7 +139,7 @@ describe('系统配置API测试', () => {
 
   describe('PUT - 更新配置', () => {
     it('应该更新配置', async () => {
-      vi.mocked(execute).mockResolvedValue({ affectedRows: 1 })
+      mockExecute.mockResolvedValue({ affectedRows: 1 })
 
       const request = new Request('http://localhost/api/system/config', {
         method: 'PUT',
@@ -166,7 +168,7 @@ describe('系统配置API测试', () => {
 
   describe('DELETE - 删除配置', () => {
     it('应该删除配置', async () => {
-      vi.mocked(execute).mockResolvedValue({ affectedRows: 1 })
+      mockExecute.mockResolvedValue({ affectedRows: 1 })
 
       const request = new Request('http://localhost/api/system/config?id=1', {
         method: 'DELETE',

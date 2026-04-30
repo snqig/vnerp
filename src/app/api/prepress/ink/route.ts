@@ -9,12 +9,14 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const inkCode = searchParams.get('inkCode') || '';
   const inkName = searchParams.get('inkName') || '';
   const inkType = searchParams.get('inkType') || '';
+  const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
   const params: any[] = [];
   if (inkCode) { where += ' AND ink_code LIKE ?'; params.push('%' + inkCode + '%'); }
   if (inkName) { where += ' AND ink_name LIKE ?'; params.push('%' + inkName + '%'); }
   if (inkType) { where += ' AND ink_type = ?'; params.push(Number(inkType)); }
+  if (status !== '') { where += ' AND status = ?'; params.push(Number(status)); }
 
   const totalRows: any = await query('SELECT COUNT(*) as total FROM prd_ink ' + where, params);
   const total = totalRows[0]?.total || 0;

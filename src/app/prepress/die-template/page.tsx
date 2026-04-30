@@ -150,6 +150,10 @@ export default function DieTemplatePage() {
     complete_immediately: true,
   });
 
+  const [statusCardDialogOpen, setStatusCardDialogOpen] = useState(false);
+  const [statusCardType, setStatusCardType] = useState<string>('');
+  const [statusCardList, setStatusCardList] = useState<DieTemplate[]>([]);
+
   const [form, setForm] = useState({
     template_code: '',
     template_name: '',
@@ -523,6 +527,70 @@ export default function DieTemplatePage() {
     setSelectedItem(null);
   };
 
+  const handleStatusCardClick = (type: string) => {
+    let filtered: DieTemplate[] = [];
+    switch (type) {
+      case 'available':
+        filtered = list.filter(i => i.die_status === 'available' || (!i.die_status && i.status === 1));
+        break;
+      case 'maintenance_needed':
+        filtered = list.filter(i => i.die_status === 'maintenance_needed');
+        break;
+      case 're_rule_needed':
+        filtered = list.filter(i => i.die_status === 're_rule_needed');
+        break;
+      case 'scrap':
+        filtered = list.filter(i => i.die_status === 'scrap' || i.status === 4);
+        break;
+      case 'maintenance_due':
+        filtered = list.filter(i => {
+          const pct = getMaintenanceProgress(i);
+          return pct >= 80;
+        });
+        break;
+      default:
+        filtered = list;
+    }
+    setStatusCardType(type);
+    setStatusCardList(filtered);
+    setStatusCardDialogOpen(true);
+  };
+
+  const getStatusCardTitle = () => {
+    switch (statusCardType) {
+      case 'available': return '可用刀模/网版';
+      case 'maintenance_needed': return '需保养刀模/网版';
+      case 're_rule_needed': return '需重做刀模/网版';
+      case 'scrap': return '已报废刀模/网版';
+      case 'maintenance_due': return '待保养刀模/网版';
+      default: return '全部刀模/网版';
+    }
+  };
+
+  const handleCardMaintenance = async (item: DieTemplate) => {
+    setSelectedItem(item);
+    setMaintenanceForm({
+      maintenance_type: item.die_status === 're_rule_needed' ? 're_rule' : 'routine',
+      cost: '',
+      technician_name: '',
+      remark: '',
+      complete_immediately: true,
+    });
+    setMaintenanceDialogOpen(true);
+  };
+
+  const handleCardReRule = async (item: DieTemplate) => {
+    setSelectedItem(item);
+    setMaintenanceForm({
+      maintenance_type: 're_rule',
+      cost: '',
+      technician_name: '',
+      remark: '',
+      complete_immediately: false,
+    });
+    setMaintenanceDialogOpen(true);
+  };
+
   const openEditDialog = (item: DieTemplate) => {
     setSelectedItem(item);
     setEditing(true);
@@ -581,37 +649,37 @@ export default function DieTemplatePage() {
     <MainLayout title="刀模/网版寿命管理">
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-6">
-          <Card>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('all')}>
             <CardContent className="pt-4">
               <div className="text-sm text-gray-500">总数</div>
               <div className="text-2xl font-bold">{dashboardStats.total_count || 0}</div>
             </CardContent>
           </Card>
-          <Card className="border-green-200">
+          <Card className="border-green-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('available')}>
             <CardContent className="pt-4">
               <div className="text-sm text-green-600">可用</div>
               <div className="text-2xl font-bold text-green-600">{dashboardStats.available_count || 0}</div>
             </CardContent>
           </Card>
-          <Card className="border-yellow-200">
+          <Card className="border-yellow-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('maintenance_needed')}>
             <CardContent className="pt-4">
               <div className="text-sm text-yellow-600">需保养</div>
               <div className="text-2xl font-bold text-yellow-600">{dashboardStats.warning_count || 0}</div>
             </CardContent>
           </Card>
-          <Card className="border-orange-200">
+          <Card className="border-orange-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('re_rule_needed')}>
             <CardContent className="pt-4">
               <div className="text-sm text-orange-600">需重做</div>
               <div className="text-2xl font-bold text-orange-600">{dashboardStats.locked_count || 0}</div>
             </CardContent>
           </Card>
-          <Card className="border-gray-200">
+          <Card className="border-gray-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('scrap')}>
             <CardContent className="pt-4">
               <div className="text-sm text-gray-500">已报废</div>
               <div className="text-2xl font-bold text-gray-500">{dashboardStats.scrap_count || 0}</div>
             </CardContent>
           </Card>
-          <Card className="border-blue-200">
+          <Card className="border-blue-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('maintenance_due')}>
             <CardContent className="pt-4">
               <div className="text-sm text-blue-600">待保养</div>
               <div className="text-2xl font-bold text-blue-600">{dashboardStats.maintenance_due_count || 0}</div>
@@ -1267,6 +1335,91 @@ export default function DieTemplatePage() {
                 )}
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+        <Dialog open={statusCardDialogOpen} onOpenChange={setStatusCardDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" resizable>
+            <DialogHeader>
+              <DialogTitle>{getStatusCardTitle()}</DialogTitle>
+              <DialogDescription>共 {statusCardList.length} 条记录</DialogDescription>
+            </DialogHeader>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>编号</TableHead>
+                  <TableHead>名称</TableHead>
+                  <TableHead>资产类型</TableHead>
+                  <TableHead>累计/最大使用率</TableHead>
+                  <TableHead>生命周期</TableHead>
+                  <TableHead>保养进度</TableHead>
+                  <TableHead>操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {statusCardList.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">暂无记录</TableCell>
+                  </TableRow>
+                ) : statusCardList.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-mono">{item.template_code}</TableCell>
+                    <TableCell>{item.template_name}</TableCell>
+                    <TableCell>
+                      <Badge className={(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.color || 'bg-gray-100'}>
+                        {(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.label || '-'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className={`h-full ${getUsageBarColor(item)}`} style={{ width: `${getUsagePercent(item)}%` }} />
+                        </div>
+                        <span className="text-sm font-medium">{getUsagePercent(item)}%</span>
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {item.cumulative_impressions || item.current_usage} / {item.max_impressions || item.max_usage}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color || 'bg-gray-100'}>
+                        {(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label || '-'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className={`h-full ${getMaintenanceBarColor(item)}`} style={{ width: `${getMaintenanceProgress(item)}%` }} />
+                        </div>
+                        <span className="text-xs">{getMaintenanceProgress(item)}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {(statusCardType === 'maintenance_needed' || statusCardType === 'maintenance_due') && (
+                          <Button size="sm" variant="outline" className="text-yellow-700 border-yellow-300 hover:bg-yellow-50" onClick={() => handleCardMaintenance(item)}>
+                            <Wrench className="h-3 w-3 mr-1" />
+                            保养
+                          </Button>
+                        )}
+                        {(statusCardType === 're_rule_needed' || statusCardType === 'maintenance_needed') && (
+                          <Button size="sm" variant="outline" className="text-orange-700 border-orange-300 hover:bg-orange-50" onClick={() => handleCardReRule(item)}>
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            重做
+                          </Button>
+                        )}
+                        <Button size="sm" variant="outline" onClick={() => { setDetailData(item); setDetailOpen(true); }}>
+                          <Eye className="h-3 w-3 mr-1" />
+                          详情
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setStatusCardDialogOpen(false)}>关闭</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

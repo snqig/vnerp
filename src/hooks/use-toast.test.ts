@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 import { useToast } from './use-toast'
 
 describe('useToast Hook测试', () => {
@@ -60,8 +60,8 @@ describe('useToast Hook测试', () => {
   it('应该自动生成唯一ID', () => {
     const { result } = renderHook(() => useToast())
 
-    let id1: string
-    let id2: string
+    let id1 = ''
+    let id2 = ''
 
     act(() => {
       id1 = result.current.toast({ title: '消息1' })
@@ -125,12 +125,12 @@ describe('useToast Hook测试', () => {
   it('应该只移除指定的toast', () => {
     const { result } = renderHook(() => useToast())
 
-    let id1: string
-    let id2: string
+    let id1 = ''
+    const _id2 = ''
 
     act(() => {
       id1 = result.current.toast({ title: '消息1' })
-      id2 = result.current.toast({ title: '消息2' })
+      result.current.toast({ title: '消息2' })
     })
 
     act(() => {

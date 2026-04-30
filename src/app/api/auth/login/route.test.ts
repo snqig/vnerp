@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from './route'
 
-// Mock依赖
 vi.mock('@/lib/db', () => ({
   query: vi.fn(),
   execute: vi.fn(),
@@ -9,8 +8,6 @@ vi.mock('@/lib/db', () => ({
 
 vi.mock('jose', () => ({
   SignJWT: class MockSignJWT {
-    private payload: any = {}
-    constructor(payload: any) { this.payload = payload }
     setProtectedHeader() { return this }
     setIssuedAt() { return this }
     setExpirationTime() { return this }
@@ -26,6 +23,9 @@ vi.mock('bcryptjs', () => ({
 
 import { query, execute } from '@/lib/db'
 import bcrypt from 'bcryptjs'
+
+const mockCompare = vi.mocked(bcrypt.compare) as unknown as ReturnType<typeof vi.fn>
+const mockExecute = vi.mocked(execute) as unknown as ReturnType<typeof vi.fn>
 
 describe('登录API测试', () => {
   beforeEach(() => {
@@ -48,13 +48,12 @@ describe('登录API测试', () => {
       lock_time: null,
     }
 
-    // Mock user query
     vi.mocked(query)
-      .mockResolvedValueOnce([mockUser])  // First call: user lookup
-      .mockResolvedValueOnce([])           // Second call: user roles
+      .mockResolvedValueOnce([mockUser])
+      .mockResolvedValueOnce([])
 
-    vi.mocked(bcrypt.compare).mockResolvedValue(true)
-    vi.mocked(execute).mockResolvedValue({ affectedRows: 1 })
+    mockCompare.mockResolvedValueOnce(true)
+    mockExecute.mockResolvedValueOnce({ affectedRows: 1 })
 
     const request = new Request('http://localhost/api/auth/login', {
       method: 'POST',
@@ -115,8 +114,8 @@ describe('登录API测试', () => {
     }
 
     vi.mocked(query).mockResolvedValue([mockUser])
-    vi.mocked(bcrypt.compare).mockResolvedValue(false)
-    vi.mocked(execute).mockResolvedValue({ affectedRows: 1 })
+    mockCompare.mockResolvedValueOnce(false)
+    mockExecute.mockResolvedValueOnce({ affectedRows: 1 })
 
     const request = new Request('http://localhost/api/auth/login', {
       method: 'POST',
@@ -143,8 +142,8 @@ describe('登录API测试', () => {
     }
 
     vi.mocked(query).mockResolvedValue([mockUser])
-    vi.mocked(bcrypt.compare).mockResolvedValue(false)
-    vi.mocked(execute).mockResolvedValue({ affectedRows: 1 })
+    mockCompare.mockResolvedValueOnce(false)
+    mockExecute.mockResolvedValueOnce({ affectedRows: 1 })
 
     const request = new Request('http://localhost/api/auth/login', {
       method: 'POST',
@@ -214,8 +213,8 @@ describe('登录API测试', () => {
     }
 
     vi.mocked(query).mockResolvedValue([mockUser])
-    vi.mocked(bcrypt.compare).mockResolvedValue(true)
-    vi.mocked(execute).mockResolvedValue({ affectedRows: 1 })
+    mockCompare.mockResolvedValueOnce(true)
+    mockExecute.mockResolvedValueOnce({ affectedRows: 1 })
 
     const request = new Request('http://localhost/api/auth/login', {
       method: 'POST',
@@ -225,7 +224,6 @@ describe('登录API测试', () => {
 
     await POST(request as any)
 
-    // 验证登录日志被记录（更新失败计数后记录日志）
     expect(execute).toHaveBeenCalledWith(
       expect.stringContaining('UPDATE sys_user SET login_fail_count'),
       expect.any(Array)

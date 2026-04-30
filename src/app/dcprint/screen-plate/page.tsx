@@ -40,6 +40,7 @@ interface ScreenPlate {
   last_clean_date: string;
   last_reclaim_date: string;
   tension_date: string;
+  remark: string;
   create_time: string;
 }
 
@@ -87,7 +88,7 @@ export default function ScreenPlatePage() {
   const [editItem, setEditItem] = useState<Partial<ScreenPlate>>({});
   const [historyList, setHistoryList] = useState<HistoryRecord[]>([]);
   const [currentPlateId, setCurrentPlateId] = useState<number | null>(null);
-  const [showLifeDialog, setShowLifeDialog] = useState(false);
+  const [_showLifeDialog, setShowLifeDialog] = useState(false);
   const [lifeAction, setLifeAction] = useState('');
   const [lifeRemark, setLifeRemark] = useState('');
   const [lifeTension, setLifeTension] = useState('');

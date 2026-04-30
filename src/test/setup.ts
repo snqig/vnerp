@@ -18,9 +18,12 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
+  readonly root: Element | null = null
+  readonly rootMargin: string = ''
+  readonly thresholds: ReadonlyArray<number> = []
+  constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
   disconnect() {}
-  observe() {}
-  unobserve() {}
-  takeRecords() { return [] }
-}
+  observe(_target: Element) {}
+  unobserve(_target: Element) {}
+  takeRecords(): IntersectionObserverEntry[] { return [] }
+} as any

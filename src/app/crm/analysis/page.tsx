@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -74,9 +74,23 @@ export default function CustomerAnalysisPage() {
       const res = await fetch('/api/crm/analysis?' + params);
       const data = await res.json();
       if (data.code === 200) {
-        setRecords(data.data.list || []);
+        const rawList = data.data.list || [];
+        const rawSummary = data.data.summary || {};
+        setRecords(rawList.map((r: any) => ({
+          ...r,
+          on_time_rate: r.on_time_rate != null ? Number(r.on_time_rate) : null,
+          satisfaction_score: r.satisfaction_score != null ? Number(r.satisfaction_score) : null,
+          growth_rate: r.growth_rate != null ? Number(r.growth_rate) : null,
+          order_amount: Number(r.order_amount || 0),
+        })));
         setTotal(data.data.total || 0);
-        setSummary(data.data.summary || {});
+        setSummary({
+          total_customers: Number(rawSummary.total_customers || 0),
+          total_orders: Number(rawSummary.total_orders || 0),
+          total_amount: Number(rawSummary.total_amount || 0),
+          avg_satisfaction: Number(rawSummary.avg_satisfaction || 0),
+          avg_on_time_rate: Number(rawSummary.avg_on_time_rate || 0),
+        });
       }
     } catch { toast({ title: '获取数据失败', variant: 'destructive' }); }
   };

@@ -1,16 +1,18 @@
-﻿'use client';
-import { useEffect, useState } from 'react';
+'use client';
+import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
 import { Plus, Search, Edit, Trash2, FileCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -57,6 +59,18 @@ const statusMap: Record<number, { label: string; variant: 'default' | 'secondary
   4: { label: '已拒绝', variant: 'destructive' },
 };
 
+const exportColumns = [
+  { key: 'review_no', label: '评审编号' },
+  { key: 'order_no', label: '订单号' },
+  { key: 'customer_name', label: '客户名称' },
+  { key: 'product_name', label: '产品名称' },
+  { key: 'quantity', label: '数量' },
+  { key: 'amount', label: '金额' },
+  { key: 'delivery_date', label: '交期' },
+  { key: 'sample_status_label', label: '样品状态' },
+  { key: 'status_label', label: '评审状态' },
+];
+
 export default function ContractReviewPage() {
   const { toast } = useToast();
   const [list, setList] = useState<ContractReviewRecord[]>([]);
@@ -69,8 +83,9 @@ export default function ContractReviewPage() {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<ContractReviewRecord>>({});
   const [activeReviewTab, setActiveReviewTab] = useState('biz');
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: String(page), pageSize: '20',
@@ -83,9 +98,48 @@ export default function ContractReviewPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) { console.error(e); }
+  }, [page, searchCustomer, searchProduct, searchStatus]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
   };
 
-  useEffect(() => { fetchData(); }, [page]);
+  const toggleSelectAll = () => {
+    if (selectedIds.size === list.length && list.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(list.map(i => i.id!)));
+    }
+  };
+
+  const getExportData = () =>
+    list.map(item => ({
+      ...item,
+      sample_status_label: sampleStatusMap[item.sample_status]?.label || '未知',
+      status_label: statusMap[item.status]?.label || '未知',
+    }));
+
+  const handlePrint = () => {
+    printTable(getExportData(), exportColumns, '合同评审管理');
+  };
+
+  const handleExportPDF = () => {
+    exportTableToPDF(getExportData(), '合同评审管理', exportColumns, '合同评审管理');
+  };
+
+  const handleExportXLS = () => {
+    exportTableToXLS(getExportData(), '合同评审管理', exportColumns);
+  };
+
+  const handleExportWORD = () => {
+    exportTableToWORD(getExportData(), '合同评审管理', exportColumns, '合同评审管理');
+  };
 
   const handleSave = async () => {
     try {
@@ -173,14 +227,32 @@ export default function ContractReviewPage() {
                 </Select>
                 <Button variant="outline" onClick={fetchData}>查询</Button>
               </div>
-              <Button onClick={() => { setEditItem({ sample_status: 'pending' }); setShowDialog(true); }}>
-                <Plus className="h-4 w-4 mr-2" />新建评审
-              </Button>
+              <div className="flex items-center gap-2">
+                <TableExportToolbar
+                  selectedCount={selectedIds.size}
+                  totalCount={list.length}
+                  onSelectAll={toggleSelectAll}
+                  onDeselectAll={() => setSelectedIds(new Set())}
+                  onPrint={handlePrint}
+                  onExportPDF={handleExportPDF}
+                  onExportXLS={handleExportXLS}
+                  onExportWORD={handleExportWORD}
+                />
+                <Button onClick={() => { setEditItem({ sample_status: 'pending' }); setShowDialog(true); }}>
+                  <Plus className="h-4 w-4 mr-2" />新建评审
+                </Button>
+              </div>
             </div>
 
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={list.length > 0 && selectedIds.size === list.length}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead>评审编号</TableHead>
                   <TableHead>订单号</TableHead>
                   <TableHead>客户名称</TableHead>
@@ -195,7 +267,13 @@ export default function ContractReviewPage() {
               </TableHeader>
               <TableBody>
                 {list.map(item => (
-                  <TableRow key={item.id}>
+                  <TableRow key={item.id} className={selectedIds.has(item.id!) ? 'bg-blue-50' : ''}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(item.id!)}
+                        onCheckedChange={() => toggleSelect(item.id!)}
+                      />
+                    </TableCell>
                     <TableCell className="font-mono text-sm">{item.review_no}</TableCell>
                     <TableCell>{item.order_no || '-'}</TableCell>
                     <TableCell>{item.customer_name}</TableCell>
@@ -230,14 +308,14 @@ export default function ContractReviewPage() {
                 ))}
                 {list.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
+                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
 
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">共 {total} 条</span>
+              <span className="text-sm text-muted-foreground">共 {total} 条{selectedIds.size > 0 && `，已选 ${selectedIds.size} 条`}</span>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</Button>
                 <Button variant="outline" size="sm" disabled={page * 20 >= total} onClick={() => setPage(p => p + 1)}>下一页</Button>
