@@ -267,4 +267,75 @@ HAVING ABS(batch_total_available - inventory_qty) > 0.001;
 | mdm_product_bom | std_bom_header | 手动映射 | 映射完成 |
 | inv_material | std_material | 双写+legacy_source标记 | 所有物料API切换到std表 |
 | bom_material | std_material | 双写+legacy_source标记 | 同上 |
+
+---
+
+## 七、Readmd.md 要求实施记录（2026-04-29）
+
+### 7.1 外键补充迁移
+
+**迁移 API**: `/api/migrations/foreign-keys`
+
+**修复项**:
+1. BOM 体系外键：bom_line → bom_header, bom_material；bom_alternative → bom_header, bom_line, bom_material；bom_version_history → bom_header
+2. 油墨外键：base_ink.supplier_id → pur_supplier
+3. 网版外键：prd_screen_plate.customer_id → mdm_customer；warehouse_id → inv_warehouse；location_id → inv_location
+4. 库存标签外键：inv_material_label.parent_label_id → inv_material_label；warehouse_id → inv_warehouse；location_id → inv_location
+5. 用户外键：sys_user.department_id → sys_department
+6. 索引补充：bom_line.material_id, base_ink.supplier_id, prd_screen_plate.plate_code, inv_material_label.label_no/material_code, prd_process_card.main_label_id, sys_user.department_id
+
+### 7.2 网版生命周期管理
+
+**新增表**: `screen_plate_history`
+- 字段：id, screen_plate_id, action, tension_value, life_increment, remark, operator_id, operator_name, created_at
+- 外键：screen_plate_id → prd_screen_plate(id) ON DELETE CASCADE
+- 索引：idx_screen_plate_action, idx_created_at
+
+**网版表字段优化** (prd_screen_plate):
+- 新增：plate_code, mesh_material, size, tension_value, tension_date, life_count, max_life_count, reclaim_count, exposure_date, last_used_date, last_clean_date, last_reclaim_date, scrap_reason, storage_location, frame_type
+
+**API 路由**:
+- `/api/screen-plates` - 网版 CRUD
+- `/api/screen-plates/history` - 生命周期记录
+
+**前端页面**: `/dcprint/screen-plate`
+- 网版列表、新增、编辑、删除
+- 生命周期历史记录查看和新增
+- 支持按编码、状态筛选
+
+### 7.3 油墨耗用管理
+
+**新增表**: `ink_usage`
+- 字段：id, work_order_id, screen_plate_id, ink_id, ink_code, ink_name, usage_qty, unit, usage_date, operator_id, operator_name, remark, create_time, update_time, deleted
+- 外键：ink_id → base_ink(id) ON DELETE RESTRICT；screen_plate_id → prd_screen_plate(id) ON DELETE SET NULL
+- 索引：idx_work_order_id, idx_screen_plate_id, idx_ink_id, idx_usage_date
+
+**API 路由**: `/api/ink-usages` - 油墨耗用 CRUD
+
+**前端页面**: `/dcprint/ink-usage`
+- 油墨耗用列表、新增、删除
+- 支持按网版ID、日期范围筛选
+- 油墨选择下拉框
+
+### 7.4 分切标签管理
+
+**API 路由**: `/api/material-labels`
+- GET: 标签列表/详情，支持按 materialCode, batchNo, isCut, warehouseId 筛选
+- POST: 创建标签或分切（type='cut'）
+- PUT: 更新标签（仓库、位置、使用状态等）
+- DELETE: 删除标签
+
+**分切逻辑**:
+- 输入：parentLabelId, cutWidths[]（分切宽度数组）
+- 输出：新标签列表 + 剩余宽度
+- 自动计算新标签数量（按宽度比例）
+- 父标签标记 is_cut=1，更新 remaining_width
+
+### 7.5 数据库视图
+
+**迁移 API**: `/api/migrations/views`
+
+**创建视图**:
+- `v_purchase_request_full` - 请购单完整信息（含部门、人员名称）
+- `v_purchase_order_std_full` - 标准采购订单完整信息
 | hr_attendance.employee_id | hr_attendance.employee_id_int | 新写入同时填两字段 | 所有HR API使用INT字段 |

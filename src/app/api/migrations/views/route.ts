@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
-import { query, execute, withErrorHandler, successResponse } from '@/lib/db';
+import { query, execute } from '@/lib/db';
+import { successResponse, withErrorHandler } from '@/lib/api-response';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const results: string[] = [];
@@ -107,16 +108,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           i.material_id,
           m.material_code,
           m.material_name,
-          m.material_spec,
+          m.specification AS material_spec,
           m.unit,
           i.warehouse_id,
           w.warehouse_name,
           i.quantity AS total_qty,
-          COALESCE(b.batch_summary.total_available, 0) AS batch_available_qty,
-          i.quantity - COALESCE(b.batch_summary.total_available, 0) AS diff_qty
+          COALESCE(b.total_available, 0) AS batch_available_qty,
+          i.quantity - COALESCE(b.total_available, 0) AS diff_qty
         FROM inv_inventory i
-        LEFT JOIN inv_material_std m ON i.material_id = m.id
-        LEFT JOIN sys_warehouse w ON i.warehouse_id = w.id
+        LEFT JOIN inv_material m ON i.material_id = m.id
+        LEFT JOIN inv_warehouse w ON i.warehouse_id = w.id
         LEFT JOIN (
           SELECT material_id, warehouse_id, SUM(available_qty) AS total_available
           FROM inv_inventory_batch
@@ -136,8 +137,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           a.employee_id AS employee_code,
           a.emp_id,
           e.name AS employee_name,
-          e.department_id,
-          d.dept_name AS department_name,
+          a.department_name,
           a.check_in_time,
           a.check_out_time,
           a.status,
@@ -146,7 +146,6 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           a.remark
         FROM hr_attendance a
         LEFT JOIN sys_employee e ON a.emp_id = e.id
-        LEFT JOIN sys_department d ON e.department_id = d.id
         WHERE a.deleted = 0
       `,
     },
@@ -166,15 +165,15 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           m.material_name,
           ba.batch_id,
           ba.batch_no,
-          ba.allocate_qty,
+          ba.allocated_qty,
           ba.unit_cost,
           ba.total_cost,
           ba.fifo_mode,
           ba.operator_name,
           ba.create_time
         FROM inv_outbound_batch_allocation ba
-        LEFT JOIN sys_warehouse w ON ba.warehouse_id = w.id
-        LEFT JOIN inv_material_std m ON ba.material_id = m.id
+        LEFT JOIN inv_warehouse w ON ba.warehouse_id = w.id
+        LEFT JOIN inv_material m ON ba.material_id = m.id
       `,
     },
   ];

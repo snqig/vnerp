@@ -13,17 +13,22 @@ const dbConfig = {
   database: process.env.DB_NAME || 'vnerpdacahng',
   charset: 'utf8mb4',
   waitForConnections: true,
-  connectionLimit: 25,
-  queueLimit: 0,
+  connectionLimit: 10,
+  maxIdle: 5,
+  idleTimeout: 60000,
+  queueLimit: 50,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0,
+  keepAliveInitialDelay: 30000,
+  connectTimeout: 10000,
 };
 
-// 创建连接池
-let pool: mysql.Pool | null = null;
+// 创建连接池 - 使用全局单例模式防止热重载时重复创建
+const globalForDb = globalThis as unknown as {
+  pool: mysql.Pool | undefined;
+};
 
 export function getPool(): mysql.Pool {
-  if (!pool) {
+  if (!globalForDb.pool) {
     if (DEBUG_DB) {
       console.log('[DB] Creating new MySQL pool with config:', {
         host: dbConfig.host,
@@ -32,29 +37,46 @@ export function getPool(): mysql.Pool {
         database: dbConfig.database,
       });
     }
-    pool = mysql.createPool(dbConfig);
+    globalForDb.pool = mysql.createPool(dbConfig);
   }
-  return pool;
+  return globalForDb.pool;
 }
 
 // 执行查询
 export async function query<T = any>(sql: string, values?: any[]): Promise<T[]> {
-  try {
-    const pool = getPool();
-    if (DEBUG_DB) {
-      // 确保 sql 是字符串类型
-      const sqlStr = typeof sql === 'string' ? sql : String(sql);
-      console.log('[DB] Executing query:', sqlStr.substring(0, 100), 'values:', values);
+  let retries = 2;
+  let lastError: Error | null = null;
+
+  while (retries > 0) {
+    try {
+      const pool = getPool();
+      if (DEBUG_DB) {
+        const sqlStr = typeof sql === 'string' ? sql : String(sql);
+        console.log('[DB] Executing query:', sqlStr.substring(0, 100), 'values:', values);
+      }
+      const [rows] = await pool.query(sql, values);
+      if (DEBUG_DB) {
+        console.log('[DB] Query returned', (rows as any[]).length, 'rows');
+      }
+      return rows as T[];
+    } catch (error: any) {
+      lastError = error;
+      // 如果是连接过多错误，等待后重试
+      if (error.code === 'ER_CON_COUNT_ERROR' || error.code === 'PROTOCOL_CONNECTION_LOST') {
+        retries--;
+        if (retries > 0) {
+          console.warn(`[DB] Connection error, retrying... (${2 - retries}/2)`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+      }
+      console.error('[DB] Query error:', error);
+      throw error;
     }
-    const [rows] = await pool.query(sql, values);
-    if (DEBUG_DB) {
-      console.log('[DB] Query returned', (rows as any[]).length, 'rows');
-    }
-    return rows as T[];
-  } catch (error) {
-    console.error('[DB] Query error:', error);
-    throw error;
   }
+
+  console.error('[DB] Query error after retries:', lastError);
+  throw lastError;
 }
 
 // 执行插入/更新/删除

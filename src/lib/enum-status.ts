@@ -1,22 +1,16 @@
 export enum PurBizStatus {
   DRAFT = 0,
-  SUBMITTED = 1,
-  REVIEWING = 2,
-  REVIEW_PASS = 3,
-  APPROVED = 4,
-  CONVERT_PO = 5,
-  REJECTED = 6,
+  PENDING_APPROVAL = 1,
+  APPROVED = 2,
+  CONVERT_PO = 3,
   CLOSED = 9,
 }
 
 export const PurBizStatusLabel: Record<PurBizStatus, string> = {
   [PurBizStatus.DRAFT]: '草稿',
-  [PurBizStatus.SUBMITTED]: '已提交',
-  [PurBizStatus.REVIEWING]: '审校中',
-  [PurBizStatus.REVIEW_PASS]: '审校通过',
-  [PurBizStatus.APPROVED]: '已批准',
+  [PurBizStatus.PENDING_APPROVAL]: '待审批',
+  [PurBizStatus.APPROVED]: '已审批',
   [PurBizStatus.CONVERT_PO]: '已转采购',
-  [PurBizStatus.REJECTED]: '驳回',
   [PurBizStatus.CLOSED]: '已关闭',
 };
 
@@ -118,17 +112,11 @@ export function canTransition(current: number, target: number, statusEnum: Recor
 export function getNextStatuses(current: PurBizStatus): PurBizStatus[] {
   switch (current) {
     case PurBizStatus.DRAFT:
-      return [PurBizStatus.SUBMITTED, PurBizStatus.CLOSED];
-    case PurBizStatus.SUBMITTED:
-      return [PurBizStatus.REVIEWING, PurBizStatus.REJECTED, PurBizStatus.CLOSED];
-    case PurBizStatus.REVIEWING:
-      return [PurBizStatus.REVIEW_PASS, PurBizStatus.REJECTED];
-    case PurBizStatus.REVIEW_PASS:
-      return [PurBizStatus.APPROVED, PurBizStatus.REJECTED];
+      return [PurBizStatus.PENDING_APPROVAL, PurBizStatus.CLOSED];
+    case PurBizStatus.PENDING_APPROVAL:
+      return [PurBizStatus.APPROVED, PurBizStatus.CLOSED];
     case PurBizStatus.APPROVED:
       return [PurBizStatus.CONVERT_PO, PurBizStatus.CLOSED];
-    case PurBizStatus.REJECTED:
-      return [PurBizStatus.DRAFT, PurBizStatus.CLOSED];
     case PurBizStatus.CONVERT_PO:
       return [PurBizStatus.CLOSED];
     case PurBizStatus.CLOSED:

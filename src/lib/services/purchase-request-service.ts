@@ -1,4 +1,4 @@
-import { query, execute, transaction } from '@/lib/db';
+import { transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { PurBizStatus, PoStatus } from '@/lib/enum-status';
 
@@ -24,7 +24,7 @@ export async function convertRequestToPurchaseOrder(requestId: number): Promise<
     const request = requestRows[0];
 
     if (Number(request.status) !== PurBizStatus.APPROVED) {
-      throw new Error(`请购单状态不是"已批准"，无法转采购。当前状态: ${request.status}`);
+      throw new Error(`请购单状态不是"已审批"，无法转采购。当前状态: ${request.status}`);
     }
 
     const [items]: any = await conn.execute(

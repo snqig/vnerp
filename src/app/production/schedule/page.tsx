@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -73,24 +73,25 @@ import QRCode from 'qrcode';
 // 排程数据类型
 interface Schedule {
   id: number;
-  card_no: string;
-  qr_code: string;
-  work_order_no: string;
-  product_code: string;
+  schedule_no: string;
+  order_id: number | null;
+  order_no: string | null;
+  product_id: number | null;
+  product_code: string | null;
   product_name: string;
-  material_spec: string;
-  work_order_date: string;
-  plan_qty: number;
-  main_label_no: string;
-  burdening_status: number;
-  lock_status: number;
-  create_user_name: string;
+  workshop: string;
+  planned_qty: number;
+  completed_qty: number;
+  planned_start: string | null;
+  planned_end: string | null;
+  actual_start: string | null;
+  actual_end: string | null;
+  priority: number;
+  status: number;
+  scheduler: string | null;
+  remark: string | null;
   create_time: string;
   update_time: string;
-  customer_name?: string;
-  customer_code?: string;
-  process_flow1?: string;
-  process_flow2?: string;
 }
 
 // 统计数据类型
@@ -111,12 +112,34 @@ interface ScheduleStats {
 // 获取状态标签
 const getStatusBadge = (status: number) => {
   const statusMap: Record<number, { label: string; className: string }> = {
-    0: { label: '待排产', className: 'bg-gray-100 text-gray-700' },
-    1: { label: '已排产', className: 'bg-blue-100 text-blue-700' },
-    2: { label: '生产中', className: 'bg-orange-100 text-orange-700' },
-    3: { label: '已完成', className: 'bg-green-100 text-green-700' },
+    1: { label: '待排产', className: 'bg-gray-100 text-gray-700' },
+    2: { label: '已排产', className: 'bg-blue-100 text-blue-700' },
+    3: { label: '生产中', className: 'bg-orange-100 text-orange-700' },
+    4: { label: '已完成', className: 'bg-green-100 text-green-700' },
+    5: { label: '已取消', className: 'bg-red-100 text-red-700' },
   };
   const config = statusMap[status] || { label: '未知', className: 'bg-gray-100 text-gray-700' };
+  return <Badge className={config.className}>{config.label}</Badge>;
+};
+
+// 获取优先级标签
+const getPriorityBadge = (priority: number) => {
+  const priorityMap: Record<number, { label: string; className: string }> = {
+    1: { label: '紧急', className: 'bg-red-100 text-red-700' },
+    2: { label: '正常', className: 'bg-blue-100 text-blue-700' },
+    3: { label: '低', className: 'bg-gray-100 text-gray-700' },
+  };
+  const config = priorityMap[priority] || { label: '正常', className: 'bg-blue-100 text-blue-700' };
+  return <Badge className={config.className}>{config.label}</Badge>;
+};
+
+// 获取车间标签
+const getWorkshopBadge = (workshop: string) => {
+  const workshopMap: Record<string, { label: string; className: string }> = {
+    'die_cut': { label: '模切', className: 'bg-purple-100 text-purple-700' },
+    'trademark': { label: '商标', className: 'bg-indigo-100 text-indigo-700' },
+  };
+  const config = workshopMap[workshop] || { label: workshop, className: 'bg-gray-100 text-gray-700' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -361,18 +384,18 @@ export default function ProductionSchedulePage() {
   const fetchSchedules = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/production/schedule');
+      const res = await fetch('/api/production/schedule?pageSize=100');
       const data = await res.json();
       if (data.success) {
-        const list = Array.isArray(data.data) ? data.data : [];
+        const list = data.data?.list || [];
         setSchedules(list);
         setStats({
           total: list.length,
-          pending: list.filter((s: Schedule) => s.burdening_status === 0).length,
-          scheduled: list.filter((s: Schedule) => s.burdening_status === 1).length,
-          producing: list.filter((s: Schedule) => s.burdening_status === 2).length,
-          completed: list.filter((s: Schedule) => s.burdening_status === 3).length,
-          planQty: list.reduce((sum: number, s: Schedule) => sum + (parseFloat(String(s.plan_qty)) || 0), 0),
+          pending: list.filter((s: Schedule) => s.status === 1).length,
+          scheduled: list.filter((s: Schedule) => s.status === 2).length,
+          producing: list.filter((s: Schedule) => s.status === 3).length,
+          completed: list.filter((s: Schedule) => s.status === 4).length,
+          planQty: list.reduce((sum: number, s: Schedule) => sum + (Number(s.planned_qty) || 0), 0),
           dailyStats: [],
         });
       }
@@ -390,30 +413,33 @@ export default function ProductionSchedulePage() {
   // 编辑表单状态
   const [editForm, setEditForm] = useState({
     product_name: '',
-    material_spec: '',
-    plan_qty: 0,
-    work_order_date: '',
-    main_label_no: '',
+    workshop: '',
+    planned_qty: 0,
+    planned_start: '',
+    planned_end: '',
+    priority: 2,
+    scheduler: '',
+    remark: '',
   });
 
   // 筛选排程
   const filteredSchedules = schedules.filter((schedule) => {
     if (activeTab !== 'all') {
       const statusMap: Record<string, number> = {
-        pending: 0,
-        scheduled: 1,
-        producing: 2,
-        completed: 3,
+        pending: 1,
+        scheduled: 2,
+        producing: 3,
+        completed: 4,
       };
-      if (schedule.burdening_status !== statusMap[activeTab]) return false;
+      if (schedule.status !== statusMap[activeTab]) return false;
     }
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
-        schedule.card_no.toLowerCase().includes(query) ||
-        schedule.work_order_no.toLowerCase().includes(query) ||
+        schedule.schedule_no.toLowerCase().includes(query) ||
+        (schedule.order_no && schedule.order_no.toLowerCase().includes(query)) ||
         schedule.product_name.toLowerCase().includes(query) ||
-        schedule.customer_name?.toLowerCase().includes(query)
+        (schedule.scheduler && schedule.scheduler.toLowerCase().includes(query))
       );
     }
     return true;
@@ -429,10 +455,13 @@ export default function ProductionSchedulePage() {
     setSelectedSchedule(schedule);
     setEditForm({
       product_name: schedule.product_name,
-      material_spec: schedule.material_spec,
-      plan_qty: schedule.plan_qty,
-      work_order_date: schedule.work_order_date,
-      main_label_no: schedule.main_label_no,
+      workshop: schedule.workshop,
+      planned_qty: schedule.planned_qty,
+      planned_start: schedule.planned_start || '',
+      planned_end: schedule.planned_end || '',
+      priority: schedule.priority,
+      scheduler: schedule.scheduler || '',
+      remark: schedule.remark || '',
     });
     setIsEditOpen(true);
   };
@@ -886,12 +915,13 @@ export default function ProductionSchedulePage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>排程号</TableHead>
-                        <TableHead>工单号</TableHead>
-                        <TableHead>产品信息</TableHead>
-                        <TableHead>客户</TableHead>
+                        <TableHead>排产单号</TableHead>
+                        <TableHead>订单号</TableHead>
+                        <TableHead>产品名称</TableHead>
+                        <TableHead>车间</TableHead>
                         <TableHead>计划数量</TableHead>
-                        <TableHead>排产日期</TableHead>
+                        <TableHead>计划开始</TableHead>
+                        <TableHead>优先级</TableHead>
                         <TableHead>状态</TableHead>
                         <TableHead>操作</TableHead>
                       </TableRow>
@@ -899,28 +929,14 @@ export default function ProductionSchedulePage() {
                     <TableBody>
                       {filteredSchedules.map((schedule) => (
                         <TableRow key={schedule.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex flex-col">
-                              <span>{schedule.card_no}</span>
-                              <span className="text-xs text-muted-foreground">{schedule.qr_code}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{schedule.work_order_no}</TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{schedule.product_name}</span>
-                              <span className="text-xs text-muted-foreground">{schedule.material_spec}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span>{schedule.customer_name}</span>
-                              <span className="text-xs text-muted-foreground">{schedule.customer_code}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{schedule.plan_qty.toLocaleString()}</TableCell>
-                          <TableCell>{schedule.work_order_date}</TableCell>
-                          <TableCell>{getStatusBadge(schedule.burdening_status)}</TableCell>
+                          <TableCell className="font-medium">{schedule.schedule_no}</TableCell>
+                          <TableCell>{schedule.order_no || '-'}</TableCell>
+                          <TableCell>{schedule.product_name}</TableCell>
+                          <TableCell>{getWorkshopBadge(schedule.workshop)}</TableCell>
+                          <TableCell>{Number(schedule.planned_qty).toLocaleString()}</TableCell>
+                          <TableCell>{schedule.planned_start || '-'}</TableCell>
+                          <TableCell>{getPriorityBadge(schedule.priority)}</TableCell>
+                          <TableCell>{getStatusBadge(schedule.status)}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
                               <Button
@@ -945,23 +961,19 @@ export default function ProductionSchedulePage() {
                                     <Edit className="h-4 w-4 mr-2" />
                                     编辑
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleViewQrCode(schedule)}>
-                                    <QrCode className="h-4 w-4 mr-2" />
-                                    查看二维码
-                                  </DropdownMenuItem>
-                                  {schedule.burdening_status === 0 && (
+                                  {schedule.status === 1 && (
                                     <DropdownMenuItem onClick={() => handleConfirmSchedule(schedule)}>
                                       <CalendarIcon className="h-4 w-4 mr-2" />
                                       确认排产
                                     </DropdownMenuItem>
                                   )}
-                                  {schedule.burdening_status === 1 && (
+                                  {schedule.status === 2 && (
                                     <DropdownMenuItem onClick={() => handleStartProduction(schedule)}>
                                       <Play className="h-4 w-4 mr-2" />
                                       开始生产
                                     </DropdownMenuItem>
                                   )}
-                                  {schedule.burdening_status === 2 && (
+                                  {schedule.status === 3 && (
                                     <DropdownMenuItem onClick={() => handleCompleteSchedule(schedule)}>
                                       <CheckCircle className="h-4 w-4 mr-2" />
                                       完成排程

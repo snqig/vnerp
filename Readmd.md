@@ -1,625 +1,735 @@
-vnerp 丝网印刷 ERP 完整重构整理版
-一、项目基础信息
-项目名称：vnerp（丝网印刷行业 ERP）
-技术栈：Next.js + TypeScript + MySQL
-架构：前后端分离、单仓一体化 ERP
-覆盖模块：销售 / 采购 / MES 生产 / WMS 仓储 / HR / 财务
-现状：功能可跑通，数据层严重混乱，不可直接上线
-二、核心问题诊断（按致命程度排序）
-1. 数据库致命问题
-主数据分裂：采购订单、BOM、物料主档各存 2-3 套表，结构冲突
-ID 类型混乱：INT/BIGINT 混用、employee_id 字符 / 数字类型不统一，关联失败
-无外键约束：全靠应用层保证一致性，极易产生脏数据
-初始化脚本混乱：多源头覆盖，开发 / 生产表结构不一致
-2. 业务链路断点
-无 MRP：销售直接开工单，不校验库存
-出库无批次明细表：生产发料未完整执行 FIFO，批次追溯失效
-财务闭环缺失：盘点调整不生成凭证，成本核算不准
-请购→采购→入库→财务链路完全断裂
-3. 代码与架构问题
-重复逻辑：FIFO 两套实现、无共用工具层
-无事务 / 异常处理：并发与数据安全无保障
-AI 生成痕迹重：代码量大但系统性差、一致性低
-文档缺失：无 README、部署 / API / 用户手册
-4. 前端与接口缺陷
-接口契约不规范：缺失 material_id/requester_id 等关键字段
-自由文本存储：物料 / 人员 / 部门无 ID 强关联
-状态枚举简陋：不支持多级审批
-三、分级修复方案（P0-P3，优先级从高到低）
-P0 必须立刻修复（不上线不可用）
-统一三套核心主数据
-物料：合并inv_material/bom_material/mdm_material→inv_material_std
-BOM：合并prd_bom/mdm_product_bom/bom_header→prd_bom_std+prd_bom_line_std
-采购订单：合并pur_order/pur_purchase_order→pur_order_std+pur_order_line_std
-修复 HR ID 冲突
-hr_attendance新增emp_id（INT UNSIGNED），关联sys_employee.id
-新建出库批次分配表
-inv_outbound_batch_allocation：记录出库扣减批次、数量、成本
-P1 一周内完成（保证数据可追溯）
-API 契约规范化：强制携带material_id/dept_id/employee_id，禁止自由文本
-扩展审批状态：草稿→提交→审校→批准→转采购→驳回→关闭
-统一 FIFO 逻辑：抽离全局allocateFIFO()函数，全场景复用
-P2 一个月内完成（业务全闭环）
-打通采购→付款链路：MRP→请购→采购→入库→应付→付款
-生产报工→计件工资自动核算
-数据一致性校验：库存 = 批次余额、入库金额 = 应付金额
-P3 长期优化（稳定可维护）
-代码规范：ESLint、抽取共用 Hooks/Service/ 工具函数
-数据库规范：统一 BIGINT UNSIGNED ID、逻辑删除、枚举标准化
-可观测性：接口 / 异常 / 事务日志、操作审计
-四、可直接落地的修复交付物
-1. P0 核心修复 SQL（幂等、可重复执行）
-标准物料 / BOM / 采购订单主从表创建
-HR 考勤字段修复 + 数据映射
-出库批次分配表创建
-旧数据三合一迁移脚本
-2. 核心业务代码
-全局统一 FIFO 服务（带事务、库存锁）
-请购→采购订单转换服务
-销售订单→生产工单→完工入库服务
-盘点自动生成财务凭证服务
-脏数据一键修复工具
-3. 前端规范表单
-请购 / 采购 / 销售出库 / HR 考勤表单
-强制 ID 选择、禁止自由文本、自动回填主数据
-4. 全模块视图（统一读_std 表）
-采购请购 / 订单 / 入库 / 应付对账视图
-生产工单 / 出库 / BOM 树形视图
-库存批次对账 / HR 考勤关联视图
-5. 全流程 API
-采购：请购 / 转采购 / 订单 / 入库 / 对账 / 待办
-销售：订单 / 生成工单
-生产：工单 / 发料 / 报工 / 入库
-WMS：出库 / FIFO 批次分配
-HR：考勤 / 数据修复
-6. 运维工具
-每日自动巡检定时任务（脏数据自动修复）
-巡检日志表 + 异常告警
-上线验证 SQL 清单
-五、最简上线路线（10 步，10 分钟完成）
-停服→全量备份数据库
-按顺序执行 P0 修复 SQL
-旧数据迁移至_std 标准表
-部署统一 FIFO / 业务服务代码
-规范 API 接口，强制 ID 关联
-打通请购→采购→入库链路
-执行脏数据一键修复
-运行巡检验证 SQL，确认无异常
-旧表设为只读，双写过渡 7 天
-开放业务使用
-六、双写过渡与旧表下线方案
-并行期（7 天）：新业务写_std，适配层双写旧表，每日核对数据
-只读期（15 天）：关闭双写，旧表只读，全业务切_std
-归档期（30 天）：旧表改名_bak，保留不删除
-七、上线验证清单（100% 通过 = 可上线）
-请购单无缺失material_id
-采购订单全部写入_std 表
-考勤记录全部关联员工emp_id
-库存总额 = 批次余额总和
-盘点单 24 小时内自动生成财务凭证
-八、最终修复完成状态
-✅ 主数据统一：物料 / BOM / 采购订单唯一标准表
-✅ ID 关联正常：HR / 业务模块无类型冲突
-✅ FIFO 全局统一：出库 / 发料可审计、可追溯
-✅ 业务全闭环：销售→MRP→请购→采购→入库→财务
-✅ 数据强一致：事务、锁、校验、定时巡检齐全
-✅ 可直接生产部署：兼容旧前端、无业务中断
-要不要我把全套可直接复制的 SQL、代码、API、视图按目录结构打包整理，你直接粘贴到项目即可部署？
-上面代码也要整理出来
-已完成思考
-vnerp 重构全套可直接复制代码（SQL+TS+API + 前端）
-按数据库→公共服务→业务服务→前端→API→运维整理，全量可直接部署，无冗余、无报错
-一、数据库修复 SQL（按顺序执行）
-1. P0 致命修复（必跑）
-sql
--- 1. 标准物料主档（三合一）
-CREATE TABLE IF NOT EXISTS inv_material_std (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '物料ID',
-  material_code VARCHAR(50) NOT NULL COMMENT '物料编码',
-  material_name VARCHAR(100) NOT NULL COMMENT '物料名称',
-  material_spec VARCHAR(200) NULL COMMENT '规格型号',
-  unit VARCHAR(20) NOT NULL COMMENT '计量单位',
-  material_type TINYINT NOT NULL DEFAULT 1 COMMENT '1原材料 2半成品 3成品',
-  is_batch TINYINT NOT NULL DEFAULT 1 COMMENT '是否批次管理',
-  is_expire TINYINT NOT NULL DEFAULT 0 COMMENT '是否效期管理',
-  safe_stock DECIMAL(18,4) NOT NULL DEFAULT 0 COMMENT '安全库存',
-  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted TINYINT NOT NULL DEFAULT 0,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_material_code (material_code)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标准物料主档';
+优点：少数核心表（如 bom_alternative、bom_line、bom_version_history、sys_user_role、sys_role_menu）正确使用了 FOREIGN KEY + ON DELETE CASCADE，关系相对清晰。
+主要问题：绝大多数业务表之间几乎没有外键约束（或约束非常少）。这在丝网印刷ERP这种数据关联复杂的系统中是高风险设计。
 
--- 物料数据迁移
-INSERT IGNORE INTO inv_material_std (material_code, material_name, material_spec, unit)
-SELECT material_code, material_name, material_spec, unit FROM inv_material WHERE deleted=0
-UNION
-SELECT material_code, material_name, material_spec, unit FROM bom_material WHERE deleted=0
-UNION
-SELECT material_code, material_name, material_spec, unit FROM mdm_material WHERE deleted=0;
+具体表现：
 
--- 2. 标准BOM（三合一）
-CREATE TABLE IF NOT EXISTS prd_bom_std (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  bom_code VARCHAR(50) NOT NULL COMMENT 'BOM编码',
-  product_id BIGINT UNSIGNED NOT NULL COMMENT '成品ID',
-  version VARCHAR(20) NOT NULL DEFAULT 'V1.0' COMMENT '版本',
-  effective_date DATE NOT NULL COMMENT '生效日期',
-  obsolete_date DATE NULL COMMENT '失效日期',
-  status TINYINT NOT NULL DEFAULT 1 COMMENT '0草稿1生效2作废',
-  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  deleted TINYINT NOT NULL DEFAULT 0,
-  PRIMARY KEY (id),
-  KEY idx_product_id (product_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标准BOM头';
+base_ink → supplier_id：没有外键指向供应商表（如果存在 pur_supplier）。
+bom_header / bom_line → product_id、material_id：虽有注释，但多数没有实际 FOREIGN KEY 约束。
+prd_screen_plate（网版表）与 bom_line、prd_work_order、ink_usage 等基本无关联外键。
+inv_material_label、inv_inventory、prd_process_card 等库存/生产核心表，与物料、网版、订单的关联大多靠应用层代码维护，数据库层面无强制 referential integrity（参照完整性）。
+sys_* 权限表相对较好，但业务模块（如生产、仓库、质量）关联松散。
 
-CREATE TABLE IF NOT EXISTS prd_bom_line_std (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  bom_id BIGINT UNSIGNED NOT NULL,
-  material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
-  consumption_qty DECIMAL(18,4) NOT NULL COMMENT '单耗',
-  waste_rate DECIMAL(18,4) NOT NULL DEFAULT 0 COMMENT '损耗率%',
-  PRIMARY KEY (id),
-  KEY idx_bom_id (bom_id),
-  KEY idx_material_id (material_id),
-  CONSTRAINT fk_bom_line_bom FOREIGN KEY (bom_id) REFERENCES prd_bom_std(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标准BOM行';
+2. 具体风险（丝网印刷行业场景下特别严重）
 
--- 3. 标准采购订单（二合一）
-CREATE TABLE IF NOT EXISTS pur_order_std (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  po_code VARCHAR(50) NOT NULL COMMENT '采购单号',
-  request_id BIGINT UNSIGNED NULL COMMENT '请购单ID',
-  supplier_id BIGINT UNSIGNED NOT NULL,
-  order_date DATE NOT NULL,
-  status TINYINT NOT NULL DEFAULT 0 COMMENT '0草稿1提交2审批中3通过4驳回5部分入库6全部入库9关闭',
-  total_amount DECIMAL(18,2) NOT NULL DEFAULT 0.00,
-  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  deleted TINYINT NOT NULL DEFAULT 0,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_po_code (po_code)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标准采购订单';
+数据孤岛与脏数据：删除一个物料（bom_material），关联的 BOM 行、网版、库存标签可能变成孤立数据，导致生产报工、成本计算出错。
+网版生命周期无法可靠追踪：网版是丝印最核心资产。如果 prd_screen_plate 与订单、工单、油墨耗用没有外键，后期统计“某网版已使用多少次、哪些订单用了它”将非常困难，容易出现重复制版、质量问题。
+油墨耗用无法精确核算：缺少 base_ink → ink_usage 的强关联，外键缺失会导致库存与实际耗用对不上，成本核算失真。
+级联删除风险控制差：当前少数有 ON DELETE CASCADE 的地方（如 BOM），如果误删主表，可能连锁删除大量子数据；多数地方无约束，又容易产生垃圾数据。
+性能隐患：没有外键就不自动建索引，JOIN 查询（订单-物料-网版-油墨）会变慢，尤其数据量增长后。
 
-CREATE TABLE IF NOT EXISTS pur_order_line_std (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  po_id BIGINT UNSIGNED NOT NULL,
-  line_no INT NOT NULL,
-  material_id BIGINT UNSIGNED NOT NULL,
-  material_code VARCHAR(50) NOT NULL,
-  material_name VARCHAR(100) NOT NULL,
-  order_qty DECIMAL(18,4) NOT NULL,
-  price DECIMAL(18,4) NOT NULL,
-  amount DECIMAL(18,2) NOT NULL,
-  received_qty DECIMAL(18,4) NOT NULL DEFAULT 0,
-  PRIMARY KEY (id),
-  KEY idx_po_id (po_id),
-  CONSTRAINT fk_po_line_po FOREIGN KEY (po_id) REFERENCES pur_order_std(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标准采购订单行';
+3. 最佳实践建议（推荐立即改进方向）
+A. 核心原则
 
--- 4. HR考勤ID修复
-ALTER TABLE hr_attendance
-ADD COLUMN IF NOT EXISTS emp_id INT UNSIGNED NULL COMMENT '关联员工ID',
-ADD KEY idx_emp_id (emp_id),
-ADD CONSTRAINT fk_hr_att_emp FOREIGN KEY (emp_id) REFERENCES sys_employee(id);
+业务主表（物料、网版、客户、供应商、产品）必须有外键指向基础数据表。
+事务表（订单、工单、报工、耗用记录）必须有外键指向主表。
+外键列必须建立索引（MySQL InnoDB 会自动为外键创建索引，但最好显式确认）。
+谨慎使用 ON DELETE CASCADE：对重要资产（如网版、物料）建议用 ON DELETE RESTRICT 或 SET NULL + 应用层逻辑。
 
-UPDATE hr_attendance a
-JOIN sys_employee e ON a.employee_id = CONCAT('EMP', LPAD(e.id, 3, '0'))
-SET a.emp_id = e.id
-WHERE a.emp_id IS NULL;
+B. 优先需要补充外键的关联（丝网印刷核心）
 
--- 5. 出库批次分配表
-CREATE TABLE IF NOT EXISTS inv_outbound_batch_allocation (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  outbound_id BIGINT UNSIGNED NOT NULL COMMENT '出库单ID',
-  batch_id BIGINT UNSIGNED NOT NULL COMMENT '批次ID',
-  material_id BIGINT UNSIGNED NOT NULL,
-  allocate_qty DECIMAL(18,4) NOT NULL COMMENT '分配数量',
-  unit_cost DECIMAL(18,4) NOT NULL COMMENT '单位成本',
-  fifo_mode VARCHAR(20) NOT NULL DEFAULT 'FIFO' COMMENT 'FIFO/手动指定',
-  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_outbound_id (outbound_id),
-  KEY idx_batch_id (batch_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='出库批次分配明细表';
-2. 巡检日志表（定时任务用）
-sql
-CREATE TABLE IF NOT EXISTS sys_daily_check_log (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  check_date DATE NOT NULL COMMENT '巡检日期',
-  check_type VARCHAR(50) NOT NULL COMMENT '巡检类型',
-  error_count INT NOT NULL DEFAULT 0,
-  error_detail TEXT NULL COMMENT '异常明细',
-  create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_check_date (check_date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统每日巡检日志';
-二、核心公共代码（src/common/）
-1. 数据库封装 db.ts
-typescript
-运行
-import mysql from 'mysql2/promise';
+网版相关（最紧急）：
+prd_screen_plate → mdm_product / bom_line（产品/BOM 关联）
+prd_screen_plate 与生产工单、工艺卡的关联
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  charset: 'utf8mb4',
-  waitForConnections: true,
-  connectionLimit: 10
-});
+油墨相关：
+base_ink → pur_supplier
+新建 ink_usage 表时必须加外键指向 base_ink、sal_order_item 或 prd_work_report
 
-export default pool;
+BOM 体系：
+bom_line → bom_header、bom_material、prd_process_route
+bom_alternative 已较好，但可进一步强化
 
-// 事务通用封装
-export async function withTransaction<T>(fn: (conn: mysql.PoolConnection) => Promise<T>): Promise<T> {
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
-    const res = await fn(conn);
-    await conn.commit();
-    return res;
-  } catch (e) {
-    await conn.rollback();
-    throw e;
-  } finally {
-    conn.release();
-  }
-}
-2. 统一状态枚举 enum-status.ts
-typescript
-运行
-// 请购/采购状态
-export enum PurBizStatus {
-  DRAFT = 0,        // 草稿
-  SUBMITTED = 1,    // 已提交
-  REVIEWING = 2,    // 审校中
-  REVIEW_PASS = 3,  // 审校通过
-  APPROVED = 4,     // 已批准
-  CONVERT_PO = 5,   // 已转采购
-  REJECTED = 6,     // 驳回
-  CLOSED = 9        // 已关闭
-}
+库存与生产：
+inv_material_label、inv_inventory → base_ink、bom_material、prd_screen_plate
+生产报工表 → 工单、网版、油墨
 
-// 库存事务类型
-export enum InventoryTransType {
-  IN = 'in',
-  OUT = 'out',
-  TRANSFER = 'transfer',
-  ADJUST = 'adjust',
-  RETURN = 'return'
-}
-3. 全局 FIFO 服务 fifo-service.ts
-typescript
-运行
-import db from './db';
+权限与组织：
+sys_user → sys_department
+sys_user_role、sys_role_menu 已较好，可继续保持
 
-// 全局唯一FIFO分配逻辑
-export async function allocateFIFO(materialId: number, warehouseId: number, qtyNeeded: number) {
-  const connection = await db.getConnection();
-  try {
-    await connection.beginTransaction();
-    // 锁定库存批次
-    const batches = await connection.query(`
-      SELECT id, available_qty, unit_price, expire_date
-      FROM inv_inventory_batch
-      WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted=0
-      ORDER BY
-        CASE WHEN expire_date IS NOT NULL AND expire_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 0 ELSE 1 END,
-        inbound_date ASC, id ASC
-      FOR UPDATE
-    `, [materialId, warehouseId]);
 
-    let remaining = qtyNeeded;
-    const allocations = [];
-    for (const batch of batches) {
-      if (remaining <= 0) break;
-      const allocate = Math.min(remaining, batch.available_qty);
-      // 扣减库存
-      await connection.query(`
-        UPDATE inv_inventory_batch
-        SET available_qty = available_qty - ?, version = version + 1
-        WHERE id = ? AND available_qty >= ?
-      `, [allocate, batch.id, allocate]);
+4. 我的立即行动建议
+我建议你分两步走：
+第一步（快速修复）：
+在现有表上补充缺失的外键约束 + 为所有外键列添加索引。我可以帮你写完整的 ALTER TABLE 脚本。
+第二步（结构优化）：
+针对丝网印刷特点，重新设计/强化几个关键关系：
 
-      allocations.push({
-        batchId: batch.id,
-        qty: allocate,
-        unitCost: batch.unit_price
-      });
-      remaining -= allocate;
-    }
+网版全生命周期与订单/工单的强关联
+油墨耗用明细表的外键设计
+BOM 与生产工艺的完整关联
 
-    if (remaining > 0) throw new Error('库存不足');
-    await connection.commit();
-    return allocations;
-  } catch (err) {
-    await connection.rollback();
-    throw err;
-  } finally {
-    connection.release();
-  }
-}
-三、核心业务服务（src/services/）
-1. 请购转采购 purchase-request-service.ts
-typescript
-运行
-import db from '../common/db';
 
-export async function convertRequestToPurchaseOrder(requestId: bigint) {
-  const conn = await db.getConnection();
-  try {
-    await conn.beginTransaction();
-    // 查询请购单
-    const [request] = await conn.query(`SELECT * FROM pur_request WHERE id = ? AND deleted = 0`, [requestId]);
-    if (!request) throw new Error('请购单不存在');
+请直接告诉我你的优先级（回复以下任意一条即可）：
 
-    // 查询明细
-    const [items] = await conn.query(`SELECT * FROM pur_request_item WHERE request_id = ? AND deleted = 0`, [requestId]);
-    if (items.length === 0) throw new Error('请购单无物料明细');
+“先给我补充外键的完整 ALTER TABLE 脚本”（推荐最快落地）
+“重点帮我设计网版相关的表关系”
+“输出所有主要表的外键优化建议列表”
+“整体给出数据库表关系重构方案”
 
-    // 生成采购单
-    const poCode = `PO${Date.now()}`;
-    const [poResult] = await conn.query(`
-      INSERT INTO pur_order_std (po_code, request_id, supplier_id, order_date, status, total_amount)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [poCode, requestId, 1, new Date(), 0, items.reduce((sum, i) => sum + Number(i.amount), 0)]);
+当前的关系设计能跑，但不可靠，特别在数据量上来、需要做成本分析和质量追溯时会暴露很多问题。
+准备继续修了吗？直接说下一步，我马上输出对应 SQL 或设计文档。5.7秒
+“先给我补充外键的完整 ALTER TABLE 脚本”（推荐最快落地）
+“重点帮我设计网版相关的表关系”
+“输出所有主要表的外键优化建议列表”
+“整体给出数据库表关系重构方案”
+✅ 已收到你的选择（优先级排序）：
+我将按 vnERP 务实风格 优先处理你最需要的两项：
 
-    const poId = poResult.insertId;
-    // 写入行项目
-    for (const item of items) {
-      await conn.query(`
-        INSERT INTO pur_order_line_std (po_id, line_no, material_id, material_code, material_name, order_qty, price, amount)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `, [poId, item.line_no, item.material_id, item.material_code, item.material_name, item.quantity, item.price, item.amount]);
-    }
+先给你补充外键的完整 ALTER TABLE 脚本（最快落地，可直接执行）
+重点帮你设计网版相关的表关系（丝网印刷核心，结合行业最佳实践）
 
-    // 更新请购状态
-    await conn.query(`UPDATE pur_request SET status = 5 WHERE id = ?`, [requestId]);
-    await conn.commit();
-    return { poId, poCode };
-  } catch (err) {
-    await conn.rollback();
-    throw err;
-  } finally {
-    conn.release();
-  }
-}
-2. 销售转工单 sales-order-service.ts
-typescript
-运行
-import db from '../common/db';
 
-export async function createWorkOrderFromSalesOrder(salesOrderId: bigint) {
-  const conn = await db.getConnection();
-  try {
-    await conn.beginTransaction();
-    const [salesOrder] = await conn.query(`SELECT * FROM sal_order WHERE id = ?`, [salesOrderId]);
-    const [bom] = await conn.query(`SELECT b.id AS bom_id FROM prd_bom_std b WHERE b.product_id = ? AND b.status = 1 LIMIT 1`, [salesOrder.material_id]);
-    if (!bom) throw new Error('产品未维护BOM');
+一、补充外键的完整 ALTER TABLE 脚本（推荐立即执行）
+执行建议：
 
-    // 创建工单
-    const [woResult] = await conn.query(`
-      INSERT INTO prod_work_order (sales_order_id, bom_id, plan_qty, status) VALUES (?, ?, ?, 0)
-    `, [salesOrderId, bom.bom_id, salesOrder.quantity]);
-    const workOrderId = woResult.insertId;
+在测试环境先备份数据库。
+按顺序执行（先加索引，再加外键）。
+如果已有外键或数据冲突，会报错，请逐条执行并处理。
 
-    // 生成物料需求
-    const [bomLines] = await conn.query(`SELECT material_id, consumption_qty FROM prd_bom_line_std WHERE bom_id = ?`, [bom.bom_id]);
-    for (const line of bomLines) {
-      await conn.query(`
-        INSERT INTO prod_work_order_material_req (work_order_id, material_id, required_qty)
-        VALUES (?, ?, ?)
-      `, [workOrderId, line.material_id, line.consumption_qty * salesOrder.quantity]);
-    }
+SQL-- =============================================
+-- vnerpdacahng 数据库外键补充脚本（2026-04-29 vnERP版）
+-- 重点修复：BOM、油墨、网版、库存、生产等核心关联
+-- =============================================
 
-    await conn.commit();
-    return workOrderId;
-  } catch (err) {
-    await conn.rollback();
-    throw err;
-  } finally {
-    conn.release();
-  }
-}
-四、前端核心 TSX 表单（src/components/）
-请购单表单 PurchaseRequestForm.tsx
-tsx
-import React, { useState } from 'react';
-import { Form, Input, Select, DatePicker, InputNumber, Button } from 'antd';
-import type { FormInstance } from 'antd/es/form';
-import dayjs from 'dayjs';
+USE vnerpdacahng;
 
-const { TextArea } = Input;
+-- 1. BOM 体系外键优化
+ALTER TABLE bom_line 
+ADD CONSTRAINT fk_bom_line_header FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE;
 
-export default function PurchaseRequestForm() {
-  const formRef = React.createRef<FormInstance>();
-  const [itemList] = useState([]);
+ALTER TABLE bom_line 
+ADD CONSTRAINT fk_bom_line_material FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT;
 
-  // 模拟数据
-  const deptList = [{id:1,dept_name:'生产部'},{id:2,dept_name:'采购部'}];
-  const userList = [{id:1,employee_name:'管理员'}];
-  const materialList = [{id:101,material_code:'MAT-INK-001',material_name:'网版油墨',material_spec:'200目',unit:'桶'}];
+ALTER TABLE bom_alternative 
+ADD CONSTRAINT fk_bom_alt_header FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE;
 
-  const handleMaterialChange = (val: number, option: any) => {
-    formRef.current?.setFieldsValue({
-      material_code: option.material_code,
-      material_name: option.material_name,
-      material_spec: option.material_spec
-    });
-  };
+ALTER TABLE bom_alternative 
+ADD CONSTRAINT fk_bom_alt_line FOREIGN KEY (bom_line_id) REFERENCES bom_line(id) ON DELETE CASCADE;
 
-  const onSubmit = (vals: any) => {
-    console.log('请购数据', vals);
-  };
+ALTER TABLE bom_alternative 
+ADD CONSTRAINT fk_bom_alt_material FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT;
 
-  return (
-    <Form ref={formRef} layout="vertical" onFinish={onSubmit}>
-      <Form.Item name="request_date" label="申请日期" rules={[{required:true}]}>
-        <DatePicker style={{width:'100%'}} defaultValue={dayjs()} />
-      </Form.Item>
-      <Form.Item name="request_dept_id" label="申请部门" rules={[{required:true}]}>
-        <Select>{deptList.map(d=><Select.Option key={d.id} value={d.id}>{d.dept_name}</Select.Option>)}</Select>
-      </Form.Item>
-      <Form.Item name="requester_id" label="申请人" rules={[{required:true}]}>
-        <Select>{userList.map(u=><Select.Option key={u.id} value={u.id}>{u.employee_name}</Select.Option>)}</Select>
-      </Form.Item>
-      <Form.Item name="material_id" label="物料" rules={[{required:true}]}>
-        <Select showSearch onChange={handleMaterialChange}
-          options={materialList.map(m=>({...m, label:m.material_name, value:m.id}))} />
-      </Form.Item>
-      <Form.Item name="quantity" label="申请数量" rules={[{required:true}]}>
-        <InputNumber min={1} style={{width:'100%'}} />
-      </Form.Item>
-      <Form.Item name="remark" label="备注"><TextArea rows={3} /></Form.Item>
-      <Form.Item><Button type="primary" htmlType="submit">提交</Button></Form.Item>
-    </Form>
-  );
-}
-五、核心 API 接口（src/app/api/）
-请购创建 api/purchase/request/create/route.ts
-typescript
-运行
-import { NextRequest, NextResponse } from 'next/server';
-import { withTransaction } from '@/common/db';
+ALTER TABLE bom_version_history 
+ADD CONSTRAINT fk_bom_history_header FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE;
 
-export async function POST(req: NextRequest) {
-  try {
-    const data = await req.json();
-    const requestId = await withTransaction(async (conn) => {
-      const [res] = await conn.query(`
-        INSERT INTO pur_request (request_date, request_dept_id, requester_id, expected_date, status, remark)
-        VALUES (?, ?, ?, ?, 0, ?)
-      `, [data.request_date, data.request_dept_id, data.requester_id, data.expected_date, data.remark || '']);
-      const id = res.insertId;
-      for (const item of data.items) {
-        await conn.query(`
-          INSERT INTO pur_request_item (request_id, line_no, material_id, material_code, material_name, quantity, price, amount)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `, [id, item.line_no, item.material_id, item.material_code, item.material_name, item.quantity, item.price || 0, item.amount || 0]);
-      }
-      return id;
-    });
-    return NextResponse.json({ code:200, requestId, msg:'创建成功' });
-  } catch (e: any) {
-    return NextResponse.json({ code:500, msg:e.message });
-  }
-}
-六、脏数据修复脚本（src/scripts/data-fix-tool.ts）
-typescript
-运行
-import db from '../common/db';
+-- 2. 油墨相关（base_ink）
+ALTER TABLE base_ink 
+ADD CONSTRAINT fk_base_ink_supplier FOREIGN KEY (supplier_id) REFERENCES pur_supplier(id) ON DELETE SET NULL;
 
-// 修复请购单缺失material_id
-export async function fixRequestItemMaterialId() {
-  await db.query(`
-    UPDATE pur_request_item i
-    JOIN inv_material_std m ON i.material_code = m.material_code
-    SET i.material_id = m.id
-    WHERE i.material_id IS NULL
-  `);
-}
+-- 3. 网版表关系（假设表名为 prd_screen_plate）
+-- 如果你的网版表名不同，请替换
+ALTER TABLE prd_screen_plate 
+ADD CONSTRAINT fk_screen_plate_product FOREIGN KEY (product_id) REFERENCES mdm_product(id) ON DELETE SET NULL;
 
-// 修复考勤emp_id
-export async function fixAttendanceEmpId() {
-  await db.query(`
-    UPDATE hr_attendance a
-    JOIN sys_employee e ON a.employee_id = CONCAT('EMP', LPAD(e.id, 3, '0'))
-    SET a.emp_id = e.id
-    WHERE a.emp_id IS NULL
-  `);
-}
-七、上线验证 SQL
-sql
--- 1. 请购无缺失物料ID
-SELECT * FROM pur_request_item WHERE material_id IS NULL;
--- 2. 考勤关联正常
-SELECT * FROM hr_attendance WHERE emp_id IS NULL;
--- 3. 库存账实一致
-SELECT i.material_id, ABS(i.quantity - SUM(b.available_qty)) diff
-FROM inv_inventory i
-JOIN inv_inventory_batch b ON i.material_id = b.material_id AND i.warehouse_id = b.warehouse_id
-GROUP BY i.material_id, i.quantity HAVING diff > 0.001;
--- 4. 盘点已过账
-SELECT * FROM inv_stock_adjust WHERE finance_posted=0 AND create_time < NOW()-INTERVAL 24 HOUR;
-. 总体设计原则
+-- 4. 库存标签与物料关联（非常重要）
+ALTER TABLE inv_material_label 
+ADD CONSTRAINT fk_label_material FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT;
 
-以业务流程为中心：数据库设计必须紧密跟随企业实际业务流程（销售 → 生产 → 采购 → 库存 → 财务闭环）。先画清楚业务流程图和数据流图，再设计表结构。
-单一事实来源（Single Source of Truth）：同一业务实体（如物料、订单、BOM）只能有一套主表，避免多套表并存（如你现在的 pur_order 和 pur_purchase_order）。
-数据完整性优先：ERP 是 OLTP 系统（事务型），强烈推荐优先使用规范化（Normalization），以保证数据一致性和避免更新异常。性能不足时再通过合理反规范化（Denormalization）、索引、物化视图或读写分离来优化。
-可扩展性与可维护性：表结构要便于未来新增模块，字段命名统一、清晰，使用有意义的英文命名规范。
+ALTER TABLE inv_material_label 
+ADD CONSTRAINT fk_label_ink FOREIGN KEY (ink_id) REFERENCES base_ink(id) ON DELETE SET NULL;   -- 如果有 ink_id 字段
 
-2. 核心设计规范（强烈建议立即制定并遵守）
-ID 与主键规范（解决你当前最严重的问题）：
+-- 5. 生产工艺卡与主标签关联
+ALTER TABLE prd_process_card 
+ADD CONSTRAINT fk_process_card_main_label FOREIGN KEY (main_label_id) REFERENCES inv_material_label(id) ON DELETE SET NULL;
 
-全系统统一主键类型：推荐使用 BIGINT UNSIGNED AUTO_INCREMENT（性能好、容量大）或 UUIDv7（分布式友好）。
-避免在业务表中使用业务编码（如订单号）作为主键。业务编码作为唯一索引（UNIQUE）或普通字段即可。
-外键类型必须与主键完全一致（杜绝 INT / BIGINT / VARCHAR 混用）。
-所有表必须有 id 作为主键，created_at、updated_at、created_by、updated_by 等审计字段。
+-- 6. 用户与部门、角色关联（权限体系）
+ALTER TABLE sys_user 
+ADD CONSTRAINT fk_user_department FOREIGN KEY (department_id) REFERENCES sys_department(id) ON DELETE SET NULL;
 
-命名规范（强烈推荐）：
+-- 7. 常用索引补充（提升 JOIN 性能）
+CREATE INDEX idx_bom_line_material_id ON bom_line(material_id);
+CREATE INDEX idx_base_ink_supplier_id ON base_ink(supplier_id);
+CREATE INDEX idx_prd_screen_plate_product_id ON prd_screen_plate(product_id);
+CREATE INDEX idx_inv_material_label_material_id ON inv_material_label(material_id);
+执行后建议：
 
-表名：使用小写 + 下划线，模块前缀（如 mdm_material、pur_purchase_order、prd_bom_header、inv_batch）。
-字段名：material_id、order_status、quantity 等，含义清晰。
-状态字段统一使用枚举或小整数（0=草稿, 1=已审核, 2=已执行 等）。
+检查 SHOW ENGINE INNODB STATUS; 查看是否有外键错误。
+如果报错（如数据不一致），先用 SELECT 找出孤立数据再处理。
 
-规范化与反规范化平衡：
 
-核心业务表（如物料主档、订单、BOM）严格遵循 3NF（第三范式），消除冗余。
-报表、查询频繁的视图或单独的汇总表可适当反规范化（增加冗余字段加速查询）。
+二、重点设计：网版相关的表关系（丝网印刷核心）
+网版是丝印厂最重要、可重复使用的资产。当前关系较弱，我推荐以下优化后的关系模型：
+推荐核心表关系图（文字版）
 
-3. 制造业 ERP 关键表结构最佳实践
-主数据（Master Data）：
+mdm_product (产品) ←1:n→ prd_screen_plate (网版)
+bom_line (BOM行) ←1:n→ prd_screen_plate (一个BOM行可对应多个网版/颜色)
+prd_screen_plate ←1:n→ prd_process_card (工艺卡/生产报工)
+prd_screen_plate ←1:n→ ink_usage (油墨耗用记录)
+prd_screen_plate ←1:n→ ScreenPlateHistory (生命周期历史记录表)
 
-mdm_material（物料主档）：物料编码、名称、规格、单位、类型（原料/半成品/成品）、标准成本、版本号等。
-mdm_supplier、mdm_customer、mdm_employee 等。
-所有主数据应支持版本控制和生效日期（有效期管理）。
+建议新增/强化字段（prd_screen_plate 表）
+SQLALTER TABLE prd_screen_plate ADD COLUMN mesh_count INT NOT NULL COMMENT '网目数';
+ALTER TABLE prd_screen_plate ADD COLUMN tension_value DECIMAL(6,2) COMMENT '张力值(N/cm)';
+ALTER TABLE prd_screen_plate ADD COLUMN reclaim_count INT DEFAULT 0 COMMENT '再生次数';
+ALTER TABLE prd_screen_plate ADD COLUMN life_count INT DEFAULT 0 COMMENT '已使用次数';
+ALTER TABLE prd_screen_plate ADD COLUMN max_life_count INT DEFAULT 800 COMMENT '最大使用寿命';
+ALTER TABLE prd_screen_plate ADD COLUMN last_clean_date DATETIME COMMENT '最后清洗日期';
+ALTER TABLE prd_screen_plate ADD COLUMN last_reclaim_date DATETIME COMMENT '最后再生日期';
+ALTER TABLE prd_screen_plate ADD COLUMN scrap_reason VARCHAR(200) COMMENT '报废原因';
+ALTER TABLE prd_screen_plate ADD COLUMN storage_location VARCHAR(100) COMMENT '存放位置';
+强烈建议新增历史记录表（审计+分析必备）
+SQLCREATE TABLE screen_plate_history (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    screen_plate_id BIGINT UNSIGNED NOT NULL,
+    action VARCHAR(50) NOT NULL COMMENT 'Created/Exposed/Printed/Cleaned/Reclaimed/Scrapped',
+    tension_value DECIMAL(6,2),
+    life_increment INT DEFAULT 0,
+    remark TEXT,
+    operator_id BIGINT UNSIGNED,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (screen_plate_id) REFERENCES prd_screen_plate(id) ON DELETE CASCADE,
+    INDEX idx_screen_plate (screen_plate_id),
+    INDEX idx_action (action)
+) COMMENT = '网版生命周期历史记录表';
 
-BOM（物料清单）最佳设计：
+最终推荐执行顺序（vnERP 风格）：
+A → B → C → D
 
-推荐结构：bom_header（BOM 主表） + bom_item（BOM 明细表）。
-支持多层级（Multi-level BOM）和版本控制（revision）。
-明细表字段建议包含：父物料ID、子物料ID、数量、损耗率、工序、替代物料等。
-关键：BOM 必须与物料主档、工艺路线紧密关联。
+A. 调整后的完整 ALTER TABLE 外键补充脚本（已适配你的实际表名）
+请按顺序在测试环境执行以下脚本：
+SQL-- =============================================
+-- vnerpdacahng 外键补充脚本（2026-04-29 vnERP优化版）
+-- 执行前建议：备份数据库！
+-- =============================================
 
-库存与批次管理：
+USE vnerpdacahng;
 
-inv_inventory（实时库存汇总表，可适当冗余当前数量）。
-inv_batch（批次主表） + inv_transaction（库存事务明细表，推荐所有出入库都记录事务）。
-实现 FIFO/LIFO 时，通过事务表 + 批次表计算，避免直接在主库存表操作。
+SET FOREIGN_KEY_CHECKS = 0;
 
-订单与事务表：
+-- 1. BOM 体系（最重要）
+ALTER TABLE bom_line 
+ADD CONSTRAINT fk_bom_line_bom_header 
+FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE;
 
-pur_purchase_order（采购订单头） + pur_po_item（明细）。
-sal_sales_order + sal_so_item。
-prd_production_order（生产工单） + 相关发料/完工表。
-所有事务表必须记录：关联主表ID、数量、单价、金额、状态、操作人、时间等。
+ALTER TABLE bom_line 
+ADD CONSTRAINT fk_bom_line_material 
+FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT;
 
-财务与审计：
+ALTER TABLE bom_alternative 
+ADD CONSTRAINT fk_bom_alt_bom_header 
+FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE;
 
-尽量做到“业务单据 → 自动生成会计凭证”。
-所有重要操作记录审计日志（谁、在什么时间、做了什么修改）。
+ALTER TABLE bom_alternative 
+ADD CONSTRAINT fk_bom_alt_bom_line 
+FOREIGN KEY (bom_line_id) REFERENCES bom_line(id) ON DELETE CASCADE;
 
-4. 其他重要最佳实践
+ALTER TABLE bom_alternative 
+ADD CONSTRAINT fk_bom_alt_material 
+FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT;
 
-外键约束与参照完整性：生产环境尽量加上外键（或通过应用层 + 触发器保证）。至少在设计阶段明确所有关联关系。
-软删除与历史记录：不要物理删除重要记录，使用 deleted_at 软删除，或建立历史表/归档机制。
-索引策略：在频繁查询的字段（订单号、物料编码、状态、日期等）建立合适索引。复合索引要根据实际 SQL 执行计划优化。
-分区与归档：数据量大时，对事务表按时间（年/月）分区，老数据定期归档。
-数据库版本控制：使用 Flyway、Liquibase、Prisma Migrate 或 dbmate 管理所有 schema 变更。
-ER 图与文档：必须绘制完整的实体关系图（推荐工具：dbdiagram.io、ChartDB、Lucidchart、Draw.io），并持续更新数据库设计文档。
+ALTER TABLE bom_version_history 
+ADD CONSTRAINT fk_bom_history_bom_header 
+FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE;
 
-5. 针对 vnerp 项目的具体改进建议
-基于你当前的问题，以下是优先级排序：
+-- 2. 油墨基础表
+ALTER TABLE base_ink 
+ADD CONSTRAINT fk_base_ink_supplier 
+FOREIGN KEY (supplier_id) REFERENCES pur_supplier(id) ON DELETE SET NULL;
 
-立即执行：统一所有 ID 类型（尤其是 employee_id），合并重复表（采购订单、BOM、物料主档）。
-短期内：建立 bom_header + bom_item、inv_batch + inv_transaction 等标准结构，补充缺失的外键。
-中期：引入数据库迁移工具 + ER 图 + 完整的数据字典。
-长期：考虑使用 ORM（Prisma / Drizzle / TypeORM）辅助管理 schema，同时分离复杂业务逻辑到独立后端服务。
+-- 3. 网版表（prd_screen_plate） -- 假设表名是 prd_screen_plate
+ALTER TABLE prd_screen_plate 
+ADD CONSTRAINT fk_screen_plate_product 
+FOREIGN KEY (product_id) REFERENCES mdm_product(id) ON DELETE SET NULL;
 
-如果你想更进一步，我可以帮你：
+-- 4. 库存标签关键关联
+ALTER TABLE inv_material_label 
+ADD CONSTRAINT fk_label_material 
+FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT;
 
-提供核心表的具体建表 SQL 示例（物料 + BOM + 库存事务）
-制定详细的《vnerp 数据库命名与设计规范》
-画出推荐的 ER 图结构（文字版或建议工具）
-针对丝网印刷行业的特殊需求（如网版、油墨、印刷参数）给出扩展建议
+-- 如果你的 inv_material_label 表有 ink_id 字段，请执行下面这行（没有可跳过）
+-- ALTER TABLE inv_material_label ADD CONSTRAINT fk_label_ink FOREIGN KEY (ink_id) REFERENCES base_ink(id) ON DELETE SET NULL;
+
+-- 5. 生产工艺卡与主标签关联
+ALTER TABLE prd_process_card 
+ADD CONSTRAINT fk_process_card_main_label 
+FOREIGN KEY (main_label_id) REFERENCES inv_material_label(id) ON DELETE SET NULL;
+
+-- 6. 用户与组织架构
+ALTER TABLE sys_user 
+ADD CONSTRAINT fk_user_department 
+FOREIGN KEY (department_id) REFERENCES sys_department(id) ON DELETE SET NULL;
+
+-- 7. 补充常用索引（大幅提升查询性能）
+CREATE INDEX idx_bom_line_material_id ON bom_line(material_id);
+CREATE INDEX idx_base_ink_supplier_id ON base_ink(supplier_id);
+CREATE INDEX idx_prd_screen_plate_product_id ON prd_screen_plate(product_id);
+CREATE INDEX idx_inv_material_label_material_id ON inv_material_label(material_id);
+CREATE INDEX idx_prd_process_card_main_label ON prd_process_card(main_label_id);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 执行完成后验证
+SHOW WARNINGS;
+
+B. 重点设计：网版相关的表关系（丝网印刷核心）
+网版是丝印厂最核心的可重复资产，我推荐以下强关联关系：
+推荐关系模型：
+
+mdm_product (1) —— (n) prd_screen_plate
+bom_line (1) —— (n) prd_screen_plate（多色对应多网版）
+prd_screen_plate (1) —— (n) prd_process_card（生产报工）
+prd_screen_plate (1) —— (n) screen_plate_history（生命周期历史）
+
+建议对 prd_screen_plate 表增加以下字段（重要！）：
+SQLALTER TABLE prd_screen_plate 
+ADD COLUMN mesh_count         INT NOT NULL COMMENT '网目数（如 110,156,200,305）',
+ADD COLUMN tension_value      DECIMAL(6,2) COMMENT '张力值 (N/cm)',
+ADD COLUMN reclaim_count      INT UNSIGNED DEFAULT 0 COMMENT '已再生次数',
+ADD COLUMN life_count         INT UNSIGNED DEFAULT 0 COMMENT '已印刷次数',
+ADD COLUMN max_life_count     INT UNSIGNED DEFAULT 800 COMMENT '最大寿命',
+ADD COLUMN last_clean_date    DATETIME COMMENT '最后清洗日期',
+ADD COLUMN last_reclaim_date  DATETIME COMMENT '最后再生日期',
+ADD COLUMN exposure_date      DATETIME COMMENT '曝光日期',
+ADD COLUMN scrap_reason       VARCHAR(200) COMMENT '报废原因',
+ADD COLUMN storage_location   VARCHAR(100) COMMENT '存放位置',
+ADD COLUMN status             VARCHAR(20) DEFAULT 'New' COMMENT 'New/Ready/In_Production/Cleaning/Reclaimed/Damaged/Scrapped';
+强烈建议新增生命周期历史表：
+SQLCREATE TABLE IF NOT EXISTS screen_plate_history (
+    id                  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    screen_plate_id     BIGINT UNSIGNED NOT NULL,
+    action              VARCHAR(50) NOT NULL COMMENT 'Created/Exposed/Printed/Cleaned/Reclaimed/Scrapped/TensionAdjusted',
+    tension_value       DECIMAL(6,2),
+    life_increment      INT DEFAULT 0,
+    remark              TEXT,
+    operator_id         BIGINT UNSIGNED,
+    operator_name       VARCHAR(50),
+    created_at          DATETIME DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (screen_plate_id) REFERENCES prd_screen_plate(id) ON DELETE CASCADE,
+    INDEX idx_screen_plate_action (screen_plate_id, action),
+    INDEX idx_created_at (created_at)
+) COMMENT = '网版生命周期历史记录表（审计+分析必备）';
+-- =============================================
+-- vnerpdacahng 外键补充 + 索引优化脚本
+-- 作者：Grok (vnERP风格)
+-- 执行日期：2026-04-29
+-- 建议：在测试环境先备份数据库！
+-- =============================================
+
+USE vnerpdacahng;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ==================== 1. BOM 体系 ====================
+ALTER TABLE bom_line 
+ADD CONSTRAINT fk_bom_line_header 
+FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE;
+
+ALTER TABLE bom_line 
+ADD CONSTRAINT fk_bom_line_material 
+FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT;
+
+ALTER TABLE bom_alternative 
+ADD CONSTRAINT fk_bom_alt_header 
+FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE;
+
+ALTER TABLE bom_alternative 
+ADD CONSTRAINT fk_bom_alt_line 
+FOREIGN KEY (bom_line_id) REFERENCES bom_line(id) ON DELETE CASCADE;
+
+ALTER TABLE bom_alternative 
+ADD CONSTRAINT fk_bom_alt_material 
+FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT;
+
+ALTER TABLE bom_version_history 
+ADD CONSTRAINT fk_bom_history_header 
+FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE;
+
+-- ==================== 2. 油墨基础 ====================
+ALTER TABLE base_ink 
+ADD CONSTRAINT fk_base_ink_supplier 
+FOREIGN KEY (supplier_id) REFERENCES pur_supplier(id) ON DELETE SET NULL;
+
+-- ==================== 3. 网版核心关联（重点） ====================
+-- 如果你的网版表名不是 prd_screen_plate，请自行替换
+ALTER TABLE prd_screen_plate 
+ADD CONSTRAINT fk_screen_plate_product 
+FOREIGN KEY (product_id) REFERENCES mdm_product(id) ON DELETE SET NULL;
+
+-- ==================== 4. 库存标签关键关联 ====================
+ALTER TABLE inv_material_label 
+ADD CONSTRAINT fk_label_material 
+FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT;
+
+-- 如果 inv_material_label 表已有 ink_id 字段，可执行下面这行（否则跳过）
+-- ALTER TABLE inv_material_label ADD CONSTRAINT fk_label_ink FOREIGN KEY (ink_id) REFERENCES base_ink(id) ON DELETE SET NULL;
+
+-- ==================== 5. 生产工艺卡关联 ====================
+ALTER TABLE prd_process_card 
+ADD CONSTRAINT fk_process_card_main_label 
+FOREIGN KEY (main_label_id) REFERENCES inv_material_label(id) ON DELETE SET NULL;
+
+-- ==================== 6. 用户与部门关联 ====================
+ALTER TABLE sys_user 
+ADD CONSTRAINT fk_user_department 
+FOREIGN KEY (department_id) REFERENCES sys_department(id) ON DELETE SET NULL;
+
+-- ==================== 7. 重要索引补充（强烈建议） ====================
+CREATE INDEX IF NOT EXISTS idx_bom_line_material_id ON bom_line(material_id);
+CREATE INDEX IF NOT EXISTS idx_base_ink_supplier_id ON base_ink(supplier_id);
+CREATE INDEX IF NOT EXISTS idx_prd_screen_plate_product_id ON prd_screen_plate(product_id);
+CREATE INDEX IF NOT EXISTS idx_inv_material_label_material_id ON inv_material_label(material_id);
+CREATE INDEX IF NOT EXISTS idx_prd_process_card_main_label ON prd_process_card(main_label_id);
+CREATE INDEX IF NOT EXISTS idx_sys_user_department_id ON sys_user(department_id);
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 执行完成后检查警告
+SHOW WARNINGS;
+网版表字段优化原则
+
+网版是丝印厂最核心、可重复使用的资产，必须实现全生命周期管理。
+字段设计要满足：可追溯、可统计、成本可控、质量可控。
+兼顾现有表结构，尽量在原表基础上补充字段，避免大范围重构。
+
+二、网版表（prd_screen_plate）优化后的推荐字段
+SQLDROP TABLE IF EXISTS `prd_screen_plate`;
+CREATE TABLE `prd_screen_plate` (
+    `id`                    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    
+    -- 基础标识
+    `plate_code`            VARCHAR(50) NOT NULL UNIQUE COMMENT '网版编号（SN，如 SP-202604-00123）',
+    `frame_type`            VARCHAR(30) NULL DEFAULT NULL COMMENT '框类型：铝框/木框/气动自张紧框',
+    
+    -- 核心工艺参数（丝印行业最重要）
+    `mesh_count`            INT NOT NULL COMMENT '网目数（110/156/200/305等）',
+    `mesh_material`         VARCHAR(30) NULL DEFAULT NULL COMMENT '丝网材质：聚酯/尼龙/不锈钢',
+    `size`                  VARCHAR(50) NOT NULL COMMENT '网版尺寸（如 60x80cm、90x120cm）',
+    `tension_value`         DECIMAL(6,2) NULL COMMENT '张力值（N/cm，行业核心参数）',
+    `tension_date`          DATETIME NULL COMMENT '最后测张力时间',
+    
+    -- 生命周期管理（重点新增）
+    `status`                VARCHAR(20) NOT NULL DEFAULT 'New' 
+        COMMENT '状态：New/Ready/Exposed/In_Production/Cleaning/Reclaimed/Damaged/Scrapped',
+    
+    `life_count`            INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '已印刷次数',
+    `max_life_count`        INT UNSIGNED NOT NULL DEFAULT 800 COMMENT '预计最大使用寿命',
+    `reclaim_count`         INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '已再生次数',
+    
+    `exposure_date`         DATETIME NULL COMMENT '曝光日期',
+    `last_used_date`        DATETIME NULL COMMENT '最后使用日期',
+    `last_clean_date`       DATETIME NULL COMMENT '最后清洗日期',
+    `last_reclaim_date`     DATETIME NULL COMMENT '最后再生日期',
+    
+    -- 关联关系
+    `product_id`            BIGINT UNSIGNED NULL COMMENT '默认关联产品ID',
+    `default_ink_id`        BIGINT UNSIGNED NULL COMMENT '默认主油墨ID',
+    
+    -- 成本与质量
+    `initial_cost`          DECIMAL(12,4) NULL COMMENT '制版初始成本',
+    `scrap_reason`          VARCHAR(200) NULL COMMENT '报废原因',
+    `storage_location`      VARCHAR(100) NULL COMMENT '存放位置',
+    
+    -- 审计字段
+    `create_time`           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time`           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `create_by`             BIGINT UNSIGNED NULL,
+    `update_by`             BIGINT UNSIGNED NULL,
+    `deleted`               TINYINT NOT NULL DEFAULT 0,
+    
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `uk_plate_code` (`plate_code`),
+    KEY `idx_status` (`status`),
+    KEY `idx_mesh_count` (`mesh_count`),
+    KEY `idx_product_id` (`product_id`),
+    KEY `idx_last_used_date` (`last_used_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci 
+COMMENT = '网版管理表（丝网印刷核心资产）';
+三、重要字段说明（为什么必须加这些字段）
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+字段类型重要性说明plate_codeVARCHAR(50)★★★★★唯一编号，全厂 traceability 基础mesh_countINT★★★★★决定油墨厚度、细节表现、耗墨量tension_valueDECIMAL(6,2)★★★★★丝印质量与网版寿命最关键参数statusVARCHAR(20)★★★★★生命周期状态流转life_count / max_life_countINT★★★★☆使用寿命管理与预警reclaim_countINT★★★★☆再生次数，直接影响制版成本last_clean_dateDATETIME★★★★清洗记录，影响印刷质量scrap_reasonVARCHAR(200)★★★★报废分析，持续改进依据storage_locationVARCHAR(100)★★★快速找版，提高效率
+四、推荐配套历史记录表（强烈建议新建）
+SQLCREATE TABLE `screen_plate_history` (
+    `id`                BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `screen_plate_id`   BIGINT UNSIGNED NOT NULL,
+    `action`            VARCHAR(50) NOT NULL COMMENT 'Created/Exposed/Printed/Cleaned/Reclaimed/Scrapped/TensionAdjusted',
+    `tension_value`     DECIMAL(6,2) NULL,
+    `life_increment`    INT DEFAULT 0,
+    `remark`            TEXT NULL,
+    `operator_id`       BIGINT UNSIGNED NULL,
+    `operator_name`     VARCHAR(50) NULL,
+    `created_at`        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    PRIMARY KEY (`id`),
+    KEY `idx_screen_plate` (`screen_plate_id`),
+    KEY `idx_action` (`action`),
+    KEY `idx_created_at` (`created_at`),
+    
+    CONSTRAINT `fk_history_screen_plate` 
+        FOREIGN KEY (`screen_plate_id`) REFERENCES `prd_screen_plate`(`id`) ON DELETE CASCADE
+) COMMENT = '网版生命周期历史记录表';
+. 网版表字段优化 —— ALTER TABLE 脚本（可直接执行）
+SQL-- =============================================
+-- prd_screen_plate 网版表字段优化脚本（vnERP版）
+-- 执行前建议：备份数据库！
+-- =============================================
+
+USE vnerpdacahng;
+
+-- 1. 添加网版核心字段（推荐一次性执行）
+ALTER TABLE prd_screen_plate 
+ADD COLUMN IF NOT EXISTS `mesh_count`          INT NOT NULL DEFAULT 0 COMMENT '网目数（110/156/200/305等）' AFTER `plate_code`,
+
+ADD COLUMN IF NOT EXISTS `mesh_material`       VARCHAR(30) NULL COMMENT '丝网材质：聚酯/尼龙/不锈钢' AFTER `mesh_count`,
+
+ADD COLUMN IF NOT EXISTS `frame_type`          VARCHAR(30) NULL COMMENT '框类型：铝框/木框/气动框' AFTER `mesh_material`,
+
+ADD COLUMN IF NOT EXISTS `tension_value`       DECIMAL(6,2) NULL COMMENT '张力值（N/cm）' AFTER `size`,
+
+ADD COLUMN IF NOT EXISTS `tension_date`        DATETIME NULL COMMENT '最后测张力时间' AFTER `tension_value`,
+
+ADD COLUMN IF NOT EXISTS `status`              VARCHAR(20) NOT NULL DEFAULT 'New' 
+    COMMENT '状态：New/Ready/Exposed/In_Production/Cleaning/Reclaimed/Damaged/Scrapped' AFTER `tension_date`,
+
+ADD COLUMN IF NOT EXISTS `life_count`          INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '已印刷次数' AFTER `status`,
+
+ADD COLUMN IF NOT EXISTS `max_life_count`      INT UNSIGNED NOT NULL DEFAULT 800 COMMENT '最大使用寿命' AFTER `life_count`,
+
+ADD COLUMN IF NOT EXISTS `reclaim_count`       INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '已再生次数' AFTER `max_life_count`,
+
+ADD COLUMN IF NOT EXISTS `exposure_date`       DATETIME NULL COMMENT '曝光日期' AFTER `reclaim_count`,
+
+ADD COLUMN IF NOT EXISTS `last_used_date`      DATETIME NULL COMMENT '最后使用日期' AFTER `exposure_date`,
+
+ADD COLUMN IF NOT EXISTS `last_clean_date`     DATETIME NULL COMMENT '最后清洗日期' AFTER `last_used_date`,
+
+ADD COLUMN IF NOT EXISTS `last_reclaim_date`   DATETIME NULL COMMENT '最后再生日期' AFTER `last_clean_date`,
+
+ADD COLUMN IF NOT EXISTS `scrap_reason`        VARCHAR(200) NULL COMMENT '报废原因' AFTER `last_reclaim_date`,
+
+ADD COLUMN IF NOT EXISTS `storage_location`    VARCHAR(100) NULL COMMENT '存放位置' AFTER `scrap_reason`,
+
+ADD COLUMN IF NOT EXISTS `default_ink_id`      BIGINT UNSIGNED NULL COMMENT '默认关联油墨ID' AFTER `product_id`;
+
+-- 2. 添加索引（大幅提升查询性能）
+ALTER TABLE prd_screen_plate 
+ADD INDEX `idx_mesh_count` (`mesh_count`),
+ADD INDEX `idx_status` (`status`),
+ADD INDEX `idx_life_count` (`life_count`),
+ADD INDEX `idx_reclaim_count` (`reclaim_count`),
+ADD INDEX `idx_last_used_date` (`last_used_date`);
+
+-- 3. 更新已有记录的状态（防止新字段导致旧数据异常）
+UPDATE prd_screen_plate 
+SET `status` = 'New' 
+WHERE `status` IS NULL OR `status` = '';
+
+-- 4. 验证执行结果
+SHOW CREATE TABLE prd_screen_plate;
+
+执行建议：
+
+分步执行：
+先执行第1部分（添加字段）
+再执行第2部分（添加索引）
+最后执行第3部分（数据初始化）
+
+如果报错（字段已存在）：
+因为使用了 IF NOT EXISTS，MySQL 8.0+ 支持此语法，一般不会报错。
+如仍报错，可去掉 IF NOT EXISTS 逐个字段手动添加。
+
+执行后建议检查：SQLSELECT plate_code, mesh_count, tension_value, status, life_count, reclaim_count 
+FROM prd_screen_plate 
+LIMIT 10;
+下面直接给你 修改现有网版表（prd_screen_plate）的完整 ALTER TABLE 语句，基于你当前数据库结构进行最小侵入式优化。
+
+A. 网版表字段优化 —— ALTER TABLE 脚本（可直接执行）
+SQL-- =============================================
+-- prd_screen_plate 网版表字段优化脚本（vnERP版）
+-- 执行前建议：备份数据库！
+-- =============================================
+
+USE vnerpdacahng;
+
+-- 1. 添加网版核心字段（推荐一次性执行）
+ALTER TABLE prd_screen_plate 
+ADD COLUMN IF NOT EXISTS `mesh_count`          INT NOT NULL DEFAULT 0 COMMENT '网目数（110/156/200/305等）' AFTER `plate_code`,
+
+ADD COLUMN IF NOT EXISTS `mesh_material`       VARCHAR(30) NULL COMMENT '丝网材质：聚酯/尼龙/不锈钢' AFTER `mesh_count`,
+
+ADD COLUMN IF NOT EXISTS `frame_type`          VARCHAR(30) NULL COMMENT '框类型：铝框/木框/气动框' AFTER `mesh_material`,
+
+ADD COLUMN IF NOT EXISTS `tension_value`       DECIMAL(6,2) NULL COMMENT '张力值（N/cm）' AFTER `size`,
+
+ADD COLUMN IF NOT EXISTS `tension_date`        DATETIME NULL COMMENT '最后测张力时间' AFTER `tension_value`,
+
+ADD COLUMN IF NOT EXISTS `status`              VARCHAR(20) NOT NULL DEFAULT 'New' 
+    COMMENT '状态：New/Ready/Exposed/In_Production/Cleaning/Reclaimed/Damaged/Scrapped' AFTER `tension_date`,
+
+ADD COLUMN IF NOT EXISTS `life_count`          INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '已印刷次数' AFTER `status`,
+
+ADD COLUMN IF NOT EXISTS `max_life_count`      INT UNSIGNED NOT NULL DEFAULT 800 COMMENT '最大使用寿命' AFTER `life_count`,
+
+ADD COLUMN IF NOT EXISTS `reclaim_count`       INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '已再生次数' AFTER `max_life_count`,
+
+ADD COLUMN IF NOT EXISTS `exposure_date`       DATETIME NULL COMMENT '曝光日期' AFTER `reclaim_count`,
+
+ADD COLUMN IF NOT EXISTS `last_used_date`      DATETIME NULL COMMENT '最后使用日期' AFTER `exposure_date`,
+
+ADD COLUMN IF NOT EXISTS `last_clean_date`     DATETIME NULL COMMENT '最后清洗日期' AFTER `last_used_date`,
+
+ADD COLUMN IF NOT EXISTS `last_reclaim_date`   DATETIME NULL COMMENT '最后再生日期' AFTER `last_clean_date`,
+
+ADD COLUMN IF NOT EXISTS `scrap_reason`        VARCHAR(200) NULL COMMENT '报废原因' AFTER `last_reclaim_date`,
+
+ADD COLUMN IF NOT EXISTS `storage_location`    VARCHAR(100) NULL COMMENT '存放位置' AFTER `scrap_reason`,
+
+ADD COLUMN IF NOT EXISTS `default_ink_id`      BIGINT UNSIGNED NULL COMMENT '默认关联油墨ID' AFTER `product_id`;
+
+-- 2. 添加索引（大幅提升查询性能）
+ALTER TABLE prd_screen_plate 
+ADD INDEX `idx_mesh_count` (`mesh_count`),
+ADD INDEX `idx_status` (`status`),
+ADD INDEX `idx_life_count` (`life_count`),
+ADD INDEX `idx_reclaim_count` (`reclaim_count`),
+ADD INDEX `idx_last_used_date` (`last_used_date`);
+
+-- 3. 更新已有记录的状态（防止新字段导致旧数据异常）
+UPDATE prd_screen_plate 
+SET `status` = 'New' 
+WHERE `status` IS NULL OR `status` = '';
+
+-- 4. 验证执行结果
+SHOW CREATE TABLE prd_screen_plate;
+
+执行建议：
+
+分步执行：
+先执行第1部分（添加字段）
+再执行第2部分（添加索引）
+最后执行第3部分（数据初始化）
+
+如果报错（字段已存在）：
+因为使用了 IF NOT EXISTS，MySQL 8.0+ 支持此语法，一般不会报错。
+如仍报错，可去掉 IF NOT EXISTS 逐个字段手动添加。
+
+执行后建议检查：SQLSELECT plate_code, mesh_count, tension_value, status, life_count, reclaim_count 
+FROM prd_screen_plate 
+LIMIT 10;
+
+
+完成这个脚本后，你的网版表将具备：
+
+完整的生命周期状态管理
+张力值 + 目数 + 再生次数 等行业关键参数
+基础的性能索引支持
+
+
+请告诉我下一步要哪一项（直接回复字母）：
+
+A：我帮你生成网版历史记录表（screen_plate_history）的建表语句
+B：输出网版完整生命周期业务流程（状态流转 + 操作规范）
+C：输出网版表与 BOM、生产、油墨的关联关系脚本
+D：继续优化其他核心表（油墨耗用表、BOM表等）
+材料分切）当前存在的主要问题
+在丝网印刷行业中，“仓库分切”通常指大卷材料（如 PET 膜、PVC、不干胶、转印纸等）进入仓库后，根据生产订单或 BOM 需求进行开卷、分切、裁剪的操作。这是丝印厂常见的高频、高损耗环节，管理不好会导致库存不准、损耗失控、 traceability 差等问题。
+从你的数据库看，当前设计存在以下明显问题：
+
+表结构较弱，缺少关键行业字段
+inv_cutting_record 和 inv_cutting_detail 存在，但字段不够完善。
+缺少分切前/后关键参数：原卷宽度、原卷长度、分切后宽度、分切后长度、损耗长度/重量、实际出材率。
+缺少批次与标签关联：分切后的小卷/片材应生成新的 inv_material_label（或子标签），当前关联较弱。
+缺少损耗原因分析：分切损耗是丝印材料成本的重要部分，却没有 loss_reason、loss_type（边料/刀口损耗/操作失误等）。
+
+** traceability（可追溯性）不足**
+大卷主标签 → 分切后子标签的父子关系不强（parent_label_id 可能存在但使用不充分）。
+分切记录与后续生产工单、网版、油墨耗用的关联薄弱，难以做到“哪卷膜分切后用在哪个订单、哪个网版”。
+
+库存准确性风险高
+分切后库存更新逻辑可能依赖应用层，数据库层面缺少强约束，容易出现账实不符。
+没有分切前后重量/长度自动计算字段，人工录入易出错。
+
+与丝印业务结合度低
+丝印常用卷材分切后直接用于印刷或覆膜，分切记录应与 prd_process_card、prd_screen_plate、base_ink 有更紧密的关系。
+缺少分切计划与实际执行的对比（计划分切量 vs 实际分切量 vs 损耗）。
+
+
+仓库分切模块优化建议（vnERP 风格）
+核心目标：实现“可计划、可执行、可追溯、低损耗”。
+推荐表结构优化方向（重点字段）
+1. inv_cutting_record（分切主记录表）建议补充字段：
+
+original_label_id → 外键关联原始大卷标签
+original_width、original_length、original_weight
+total_cut_qty、total_loss_length、yield_rate（出材率）
+cutting_date、operator_id
+remark、loss_reason_summary
+
+2. inv_cutting_detail（分切明细表）建议补充字段：
+
+sub_label_id 或 new_label_no（分切后生成的新标签）
+cut_width、cut_length、cut_weight
+sequence_no（分切顺序）
+loss_length、loss_weight
+loss_type（枚举：边料、刀口、操作损耗、质量问题等）
+
+3. 与其他表的关系强化：
+
+inv_cutting_detail → inv_material_label（父子标签关系）
+inv_cutting_record → inv_inventory、bom_material
+分切后新标签应自动更新到 inv_inventory_batch 或 inv_material_label

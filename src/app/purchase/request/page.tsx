@@ -81,10 +81,9 @@ interface RequestItem {
 const statusMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   0: { label: '草稿', variant: 'secondary' },
   1: { label: '待审批', variant: 'outline' },
-  2: { label: '已批准', variant: 'default' },
-  3: { label: '已拒绝', variant: 'destructive' },
-  4: { label: '已转采购', variant: 'default' },
-  5: { label: '已完成', variant: 'default' },
+  2: { label: '已审批', variant: 'default' },
+  3: { label: '已转采购', variant: 'default' },
+  9: { label: '已关闭', variant: 'secondary' },
 };
 
 const priorityMap: Record<number, { label: string; color: string }> = {
@@ -440,10 +439,9 @@ export default function PurchaseRequestPage() {
             <option value="all">全部状态</option>
             <option value="0">草稿</option>
             <option value="1">待审批</option>
-            <option value="2">已批准</option>
-            <option value="3">已拒绝</option>
-            <option value="4">已转采购</option>
-            <option value="5">已完成</option>
+            <option value="2">已审批</option>
+            <option value="3">已转采购</option>
+            <option value="9">已关闭</option>
           </select>
           <Button variant="outline" onClick={handleSearch}>
             搜索
