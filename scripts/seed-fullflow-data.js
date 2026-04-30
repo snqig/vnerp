@@ -453,20 +453,34 @@ async function main() {
           if (tableHas(schemas['pur_receipt_detail'], 'expiry_date')) data.expiry_date = dateStr;
           if (tableHas(schemas['pur_receipt_detail'], 'location_code')) data.location_code = 'A01-01';
           await safeInsert(connection, 'pur_receipt_detail', data);
+        }
+      }
 
-          // 库存
-          if (schemas['inv_inventory']) {
-            const invData = {};
-            if (tableHas(schemas['inv_inventory'], 'material_id')) invData.material_id = materialIds[bm.matIdx] || (bm.matIdx + 1);
-            if (tableHas(schemas['inv_inventory'], 'warehouse_id')) invData.warehouse_id = warehouseIds[0] || 1;
-            if (tableHas(schemas['inv_inventory'], 'location_code')) invData.location_code = 'A01-01';
-            if (tableHas(schemas['inv_inventory'], 'quantity')) invData.quantity = receiptQty;
-            if (tableHas(schemas['inv_inventory'], 'locked_qty')) invData.locked_qty = 0;
-            if (tableHas(schemas['inv_inventory'], 'available_qty')) invData.available_qty = receiptQty;
-            if (tableHas(schemas['inv_inventory'], 'batch_no')) invData.batch_no = batchNo;
-            if (tableHas(schemas['inv_inventory'], 'production_date')) invData.production_date = dateStr;
-            if (tableHas(schemas['inv_inventory'], 'expiry_date')) invData.expiry_date = dateStr;
-            await safeInsert(connection, 'inv_inventory', invData);
+      // 4.7b 库存（直接创建，不依赖入库表，使用ON DUPLICATE KEY UPDATE累加）
+      if (schemas['inv_inventory']) {
+        for (const bm of bomMaterials) {
+          const receiptQty = quantity * bm.qty;
+          const batchNo = `BT2024${String(i).padStart(4, '0')}${bm.matIdx + 1}`;
+          const matId = materialIds[bm.matIdx] || (bm.matIdx + 1);
+          const whId = warehouseIds[0] || 1;
+          try {
+            const invCols = [];
+            const invVals = [];
+            const updCols = [];
+            if (tableHas(schemas['inv_inventory'], 'material_id')) { invCols.push('material_id'); invVals.push(matId); }
+            if (tableHas(schemas['inv_inventory'], 'warehouse_id')) { invCols.push('warehouse_id'); invVals.push(whId); }
+            if (tableHas(schemas['inv_inventory'], 'location_code')) { invCols.push('location_code'); invVals.push('A01-01'); }
+            if (tableHas(schemas['inv_inventory'], 'quantity')) { invCols.push('quantity'); invVals.push(receiptQty); updCols.push('quantity = quantity + VALUES(quantity)'); }
+            if (tableHas(schemas['inv_inventory'], 'locked_qty')) { invCols.push('locked_qty'); invVals.push(0); }
+            if (tableHas(schemas['inv_inventory'], 'available_qty')) { invCols.push('available_qty'); invVals.push(receiptQty); updCols.push('available_qty = available_qty + VALUES(available_qty)'); }
+            if (tableHas(schemas['inv_inventory'], 'batch_no')) { invCols.push('batch_no'); invVals.push(batchNo); }
+            if (tableHas(schemas['inv_inventory'], 'production_date')) { invCols.push('production_date'); invVals.push(dateStr); }
+            if (tableHas(schemas['inv_inventory'], 'expiry_date')) { invCols.push('expiry_date'); invVals.push(dateStr); }
+            const placeholders = invCols.map(() => '?').join(', ');
+            const sql = `INSERT INTO inv_inventory (${invCols.join(', ')}) VALUES (${placeholders}) ON DUPLICATE KEY UPDATE ${updCols.join(', ')}`;
+            await connection.execute(sql, invVals);
+          } catch (e) {
+            console.log(`[Skip] inv_inventory upsert failed: ${e.message}`);
           }
         }
       }
