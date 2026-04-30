@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { Validator, CommonValidations } from './validation'
+import { Validator, CommonValidations, ValidationPresets, validateRequestBody } from './validation'
 
 describe('验证工具测试', () => {
   describe('Validator.validateValue - 单值验证', () => {
@@ -180,6 +180,157 @@ describe('验证工具测试', () => {
         basicSalary: 5000,
       })
       expect(result.valid).toBe(true)
+    })
+
+    it('应该验证品质检验信息', () => {
+      const result = CommonValidations.qualityInspection({
+        cardId: 0,
+        inspectResult: 'invalid',
+        qualifiedQty: -1,
+      })
+      expect(result.valid).toBe(false)
+      expect(result.errors.length).toBeGreaterThan(0)
+    })
+
+    it('应该通过有效品质检验信息', () => {
+      const result = CommonValidations.qualityInspection({
+        cardId: 1,
+        inspectResult: 'pass',
+        qualifiedQty: 100,
+        defectQty: 0,
+        inspector: '张三',
+      })
+      expect(result.valid).toBe(true)
+    })
+  })
+
+  describe('ValidationPresets - 预设验证', () => {
+    it('应该验证编码格式', () => {
+      const rule = ValidationPresets.code('test')
+      expect(rule.field).toBe('test')
+      expect(rule.required).toBe(true)
+      expect(rule.pattern).toBeDefined()
+    })
+
+    it('应该验证名称格式', () => {
+      const rule = ValidationPresets.name('test', true)
+      expect(rule.field).toBe('test')
+      expect(rule.required).toBe(true)
+      expect(rule.minLength).toBe(1)
+      expect(rule.maxLength).toBe(100)
+    })
+
+    it('应该验证邮箱格式', () => {
+      const rule = ValidationPresets.email('email')
+      expect(rule.type).toBe('email')
+      expect(rule.maxLength).toBe(100)
+    })
+
+    it('应该验证手机号格式', () => {
+      const rule = ValidationPresets.phone('phone')
+      expect(rule.type).toBe('phone')
+    })
+
+    it('应该验证数量范围', () => {
+      const rule = ValidationPresets.quantity('qty', true, 0, 100)
+      expect(rule.min).toBe(0)
+      expect(rule.max).toBe(100)
+    })
+
+    it('应该验证金额小数位', () => {
+      const rule = ValidationPresets.amount('price')
+      expect(rule.custom).toBeDefined()
+      const result = Validator.validateValue(100.999, rule)
+      expect(result).toContain('最多只能有2位小数')
+    })
+
+    it('应该验证状态枚举', () => {
+      const rule = ValidationPresets.status('status', true, [0, 1])
+      expect(rule.enum).toEqual([0, 1])
+    })
+
+    it('应该验证日期类型', () => {
+      const rule = ValidationPresets.date('birthday')
+      expect(rule.type).toBe('date')
+    })
+
+    it('应该验证备注长度', () => {
+      const rule = ValidationPresets.remark('note', false, 200)
+      expect(rule.maxLength).toBe(200)
+      expect(rule.required).toBe(false)
+    })
+  })
+
+  describe('validateRequestBody - 请求体验证', () => {
+    it('应该验证请求体', () => {
+      const validator = validateRequestBody([
+        { field: 'name', required: true },
+        { field: 'age', type: 'number', min: 0 },
+      ])
+      const result = validator({ name: '', age: -1 })
+      expect(result.valid).toBe(false)
+      expect(result.errors.length).toBeGreaterThan(0)
+    })
+
+    it('应该通过有效请求体', () => {
+      const validator = validateRequestBody([
+        { field: 'name', required: true },
+        { field: 'age', type: 'number', min: 0 },
+      ])
+      const result = validator({ name: '张三', age: 20 })
+      expect(result.valid).toBe(true)
+    })
+  })
+
+  describe('Validator.validateValue - 边界情况', () => {
+    it('应该处理空字符串', () => {
+      const result = Validator.validateValue('', { field: 'test', required: true })
+      expect(result).toContain('test 为必填项')
+    })
+
+    it('应该处理null值', () => {
+      const result = Validator.validateValue(null, { field: 'test', required: true })
+      expect(result).toContain('test 为必填项')
+    })
+
+    it('应该处理undefined值', () => {
+      const result = Validator.validateValue(undefined, { field: 'test', required: true })
+      expect(result).toContain('test 为必填项')
+    })
+
+    it('应该处理非必填的null值', () => {
+      const result = Validator.validateValue(null, { field: 'test', required: false })
+      expect(result).toBeNull()
+    })
+
+    it('应该验证字符串最小长度', () => {
+      const result = Validator.validateValue('ab', { field: 'test', minLength: 3 })
+      expect(result).toContain('长度不能少于 3 个字符')
+    })
+
+    it('应该验证字符串最大长度', () => {
+      const result = Validator.validateValue('abcdef', { field: 'test', maxLength: 3 })
+      expect(result).toContain('长度不能超过 3 个字符')
+    })
+
+    it('应该验证数字最小值', () => {
+      const result = Validator.validateValue(5, { field: 'test', type: 'number', min: 10 })
+      expect(result).toContain('不能小于 10')
+    })
+
+    it('应该验证数字最大值', () => {
+      const result = Validator.validateValue(15, { field: 'test', type: 'number', max: 10 })
+      expect(result).toContain('不能大于 10')
+    })
+
+    it('应该验证枚举值', () => {
+      const result = Validator.validateValue('c', { field: 'test', enum: ['a', 'b'] })
+      expect(result).toContain('必须是以下值之一: a, b')
+    })
+
+    it('应该验证正则表达式', () => {
+      const result = Validator.validateValue('123', { field: 'test', pattern: /^[a-z]+$/ })
+      expect(result).toContain('test 格式不正确')
     })
   })
 })

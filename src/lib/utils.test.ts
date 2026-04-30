@@ -10,6 +10,10 @@ import {
   formatAmount,
   formatQuantity,
   calculateEfficiency,
+  needsEfficiencyWarning,
+  calculateExpiryDate,
+  compareDate,
+  getStatusConfig,
 } from './utils'
 
 describe('工具函数测试', () => {
@@ -188,6 +192,85 @@ describe('工具函数测试', () => {
     it('应该返回0当时间为负数', () => {
       const result = calculateEfficiency(-100, 80)
       expect(result).toBe(0)
+    })
+  })
+
+  describe('needsEfficiencyWarning - 效率预警', () => {
+    it('应该在效率低于阈值时返回true', () => {
+      expect(needsEfficiencyWarning(70)).toBe(true)
+      expect(needsEfficiencyWarning(79)).toBe(true)
+    })
+
+    it('应该在效率等于阈值时返回false', () => {
+      expect(needsEfficiencyWarning(80)).toBe(false)
+    })
+
+    it('应该在效率高于阈值时返回false', () => {
+      expect(needsEfficiencyWarning(90)).toBe(false)
+    })
+
+    it('应该支持自定义阈值', () => {
+      expect(needsEfficiencyWarning(85, 90)).toBe(true)
+      expect(needsEfficiencyWarning(95, 90)).toBe(false)
+    })
+  })
+
+  describe('calculateExpiryDate - 计算有效期', () => {
+    it('应该正确计算有效期', () => {
+      const productionDate = new Date('2024-01-01')
+      const result = calculateExpiryDate(productionDate, 30)
+      expect(result).toEqual(new Date('2024-01-31'))
+    })
+
+    it('应该处理跨年', () => {
+      const productionDate = new Date('2024-12-15')
+      const result = calculateExpiryDate(productionDate, 30)
+      expect(result).toEqual(new Date('2025-01-14'))
+    })
+  })
+
+  describe('compareDate - 日期比较', () => {
+    it('应该返回负数当a早于b', () => {
+      const result = compareDate('2024-01-01', '2024-01-02')
+      expect(result).toBeLessThan(0)
+    })
+
+    it('应该返回正数当a晚于b', () => {
+      const result = compareDate('2024-01-02', '2024-01-01')
+      expect(result).toBeGreaterThan(0)
+    })
+
+    it('应该返回0当日期相等', () => {
+      const result = compareDate('2024-01-01', '2024-01-01')
+      expect(result).toBe(0)
+    })
+
+    it('应该支持Date对象', () => {
+      const result = compareDate(new Date('2024-01-01'), new Date('2024-01-02'))
+      expect(result).toBeLessThan(0)
+    })
+  })
+
+  describe('getStatusConfig - 状态配置', () => {
+    const statusList = [
+      { value: 'active', label: '启用', color: 'green' },
+      { value: 'inactive', label: '禁用', color: 'red' },
+    ] as const
+
+    it('应该返回匹配的状态配置', () => {
+      const result = getStatusConfig('active', statusList)
+      expect(result).toEqual({ label: '启用', color: 'green' })
+    })
+
+    it('应该返回默认值当状态不存在', () => {
+      const result = getStatusConfig('unknown', statusList)
+      expect(result).toEqual({ label: 'unknown', color: 'default' })
+    })
+
+    it('应该使用默认颜色当未指定', () => {
+      const list = [{ value: 'test', label: '测试' }]
+      const result = getStatusConfig('test', list)
+      expect(result).toEqual({ label: '测试', color: 'default' })
     })
   })
 })

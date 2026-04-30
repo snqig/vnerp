@@ -6,6 +6,7 @@ import {
   commonErrors,
   withErrorHandler,
   validateRequestBody,
+  logOperation,
 } from './api-response'
 
 // Mock NextResponse
@@ -17,6 +18,11 @@ vi.mock('next/server', () => ({
       json: async () => data,
     }),
   },
+}))
+
+// Mock database
+vi.mock('@/lib/db', () => ({
+  execute: vi.fn().mockResolvedValue({}),
 }))
 
 describe('API响应工具测试', () => {
@@ -180,6 +186,57 @@ describe('API响应工具测试', () => {
       const result = validateRequestBody({ name: 'John' }, ['name', 'email'])
       expect(result.valid).toBe(false)
       expect(result.missing).toEqual(['email'])
+    })
+  })
+
+  describe('logOperation - 操作日志', () => {
+    it('应该记录操作日志', async () => {
+      const params = {
+        title: '测试操作',
+        oper_name: 'admin',
+        oper_type: '测试',
+        oper_method: 'GET',
+        oper_url: '/api/test',
+        oper_ip: '127.0.0.1',
+        oper_param: '{"key": "value"}',
+        oper_result: '成功',
+        status: 1,
+      }
+      await logOperation(params)
+    })
+
+    it('应该使用默认值', async () => {
+      const params = {
+        title: '测试操作',
+        oper_type: '测试',
+        oper_method: 'GET',
+        oper_url: '/api/test',
+      }
+      await logOperation(params)
+    })
+
+    it('应该处理截断参数', async () => {
+      const params = {
+        title: '测试操作',
+        oper_type: '测试',
+        oper_method: 'GET',
+        oper_url: '/api/test',
+        oper_param: 'a'.repeat(3000),
+        oper_result: 'b'.repeat(3000),
+      }
+      await logOperation(params)
+    })
+
+    it('应该处理null参数', async () => {
+      const params = {
+        title: '测试操作',
+        oper_type: '测试',
+        oper_method: 'GET',
+        oper_url: '/api/test',
+        oper_param: null,
+        oper_result: null,
+      }
+      await logOperation(params)
     })
   })
 })
