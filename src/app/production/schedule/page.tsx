@@ -58,7 +58,6 @@ import {
   AlertCircle,
   Play,
   Pause,
-  QrCode,
   Trash2,
   Filter,
   Download,
@@ -68,7 +67,6 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-import QRCode from 'qrcode';
 
 // 排程数据类型
 interface Schedule {
@@ -143,220 +141,6 @@ const getWorkshopBadge = (workshop: string) => {
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
-// 模拟排程数据
-const mockSchedules: Schedule[] = [
-  {
-    id: 1,
-    card_no: 'SC20240318001',
-    qr_code: 'DCERP:PC:SC20240318001',
-    work_order_no: 'WO202403001',
-    product_code: 'PROD-A001',
-    product_name: '透明包装膜A款',
-    material_spec: 'PET透明膜 0.1mm',
-    work_order_date: '2024-03-18',
-    plan_qty: 5000,
-    main_label_no: 'LBL202403001',
-    burdening_status: 2,
-    lock_status: 0,
-    create_user_name: '张三',
-    create_time: '2024-03-18 08:00:00',
-    update_time: '2024-03-18 10:00:00',
-    customer_name: '深圳科技有限公司',
-    customer_code: 'CUST20240001',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-  },
-  {
-    id: 2,
-    card_no: 'SC20240319002',
-    qr_code: 'DCERP:PC:SC20240319002',
-    work_order_no: 'WO202403002',
-    product_code: 'PROD-B002',
-    product_name: '防静电膜B款',
-    material_spec: '防静电膜 0.08mm',
-    work_order_date: '2024-03-19',
-    plan_qty: 3000,
-    main_label_no: 'LBL202403002',
-    burdening_status: 2,
-    lock_status: 0,
-    create_user_name: '李四',
-    create_time: '2024-03-19 08:00:00',
-    update_time: '2024-03-19 10:00:00',
-    customer_name: '广州贸易发展有限公司',
-    customer_code: 'CUST20240002',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-  },
-  {
-    id: 3,
-    card_no: 'SC20240320003',
-    qr_code: 'DCERP:PC:SC20240320003',
-    work_order_no: 'WO202403003',
-    product_code: 'PROD-C003',
-    product_name: '标签贴纸C款',
-    material_spec: '不干胶纸 80g',
-    work_order_date: '2024-03-20',
-    plan_qty: 8000,
-    main_label_no: 'LBL202403003',
-    burdening_status: 1,
-    lock_status: 0,
-    create_user_name: '王五',
-    create_time: '2024-03-20 08:00:00',
-    update_time: '2024-03-20 08:00:00',
-    customer_name: '东莞制造有限公司',
-    customer_code: 'CUST20240003',
-    process_flow1: '切料-印刷-模切',
-    process_flow2: '检验-包装',
-  },
-  {
-    id: 4,
-    card_no: 'SC20240317004',
-    qr_code: 'DCERP:PC:SC20240317004',
-    work_order_no: 'WO202403004',
-    product_code: 'PROD-D004',
-    product_name: '彩印膜D款',
-    material_spec: 'BOPP彩印膜 0.12mm',
-    work_order_date: '2024-03-17',
-    plan_qty: 6000,
-    main_label_no: 'LBL202403004',
-    burdening_status: 3,
-    lock_status: 0,
-    create_user_name: '赵六',
-    create_time: '2024-03-17 08:00:00',
-    update_time: '2024-03-17 16:00:00',
-    customer_name: '佛山实业集团有限公司',
-    customer_code: 'CUST20240004',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-  },
-  {
-    id: 5,
-    card_no: 'SC20240321005',
-    qr_code: 'DCERP:PC:SC20240321005',
-    work_order_no: 'WO202403005',
-    product_code: 'PROD-E005',
-    product_name: '热收缩膜E款',
-    material_spec: 'POF热收缩膜 0.15mm',
-    work_order_date: '2024-03-21',
-    plan_qty: 4500,
-    main_label_no: 'LBL202403005',
-    burdening_status: 0,
-    lock_status: 0,
-    create_user_name: '孙七',
-    create_time: '2024-03-21 08:00:00',
-    update_time: '2024-03-21 08:00:00',
-    customer_name: '中山电子科技有限公司',
-    customer_code: 'CUST20240005',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-  },
-  {
-    id: 6,
-    card_no: 'SC20240322006',
-    qr_code: 'DCERP:PC:SC20240322006',
-    work_order_no: 'WO202403006',
-    product_code: 'PROD-F006',
-    product_name: '保护膜F款',
-    material_spec: 'PE保护膜 0.05mm',
-    work_order_date: '2024-03-22',
-    plan_qty: 3500,
-    main_label_no: 'LBL202403006',
-    burdening_status: 1,
-    lock_status: 0,
-    create_user_name: '周八',
-    create_time: '2024-03-22 08:00:00',
-    update_time: '2024-03-22 08:00:00',
-    customer_name: '惠州包装材料有限公司',
-    customer_code: 'CUST20240006',
-    process_flow1: '切料-印刷-模切',
-    process_flow2: '检验-包装',
-  },
-  {
-    id: 7,
-    card_no: 'SC20240323007',
-    qr_code: 'DCERP:PC:SC20240323007',
-    work_order_no: 'WO202403007',
-    product_code: 'PROD-G007',
-    product_name: '复合膜G款',
-    material_spec: '复合膜材料 0.2mm',
-    work_order_date: '2024-03-23',
-    plan_qty: 5500,
-    main_label_no: 'LBL202403007',
-    burdening_status: 0,
-    lock_status: 0,
-    create_user_name: '吴九',
-    create_time: '2024-03-23 08:00:00',
-    update_time: '2024-03-23 08:00:00',
-    customer_name: '珠海进出口贸易有限公司',
-    customer_code: 'CUST20240007',
-    process_flow1: '切料-复合-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-  },
-  {
-    id: 8,
-    card_no: 'SC20240324008',
-    qr_code: 'DCERP:PC:SC20240324008',
-    work_order_no: 'WO202403008',
-    product_code: 'PROD-H008',
-    product_name: '印刷膜H款',
-    material_spec: '印刷专用膜 0.1mm',
-    work_order_date: '2024-03-24',
-    plan_qty: 4000,
-    main_label_no: 'LBL202403008',
-    burdening_status: 1,
-    lock_status: 0,
-    create_user_name: '郑十',
-    create_time: '2024-03-24 08:00:00',
-    update_time: '2024-03-24 08:00:00',
-    customer_name: '江门印刷包装有限公司',
-    customer_code: 'CUST20240008',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-  },
-  {
-    id: 9,
-    card_no: 'SC20240325009',
-    qr_code: 'DCERP:PC:SC20240325009',
-    work_order_no: 'WO202403009',
-    product_code: 'PROD-I009',
-    product_name: '新材料I款',
-    material_spec: '生物降解膜 0.1mm',
-    work_order_date: '2024-03-25',
-    plan_qty: 2500,
-    main_label_no: 'LBL202403009',
-    burdening_status: 0,
-    lock_status: 0,
-    create_user_name: '钱十一',
-    create_time: '2024-03-25 08:00:00',
-    update_time: '2024-03-25 08:00:00',
-    customer_name: '肇庆新材料科技有限公司',
-    customer_code: 'CUST20240009',
-    process_flow1: '切料-磨切-印刷',
-    process_flow2: '模切-检验-包装',
-  },
-  {
-    id: 10,
-    card_no: 'SC20240326010',
-    qr_code: 'DCERP:PC:SC20240326010',
-    work_order_no: 'WO202403010',
-    product_code: 'PROD-J010',
-    product_name: '塑料膜J款',
-    material_spec: 'PVC塑料膜 0.12mm',
-    work_order_date: '2024-03-26',
-    plan_qty: 6000,
-    main_label_no: 'LBL202403010',
-    burdening_status: 1,
-    lock_status: 0,
-    create_user_name: '冯十二',
-    create_time: '2024-03-26 08:00:00',
-    update_time: '2024-03-26 08:00:00',
-    customer_name: '汕头塑料制品有限公司',
-    customer_code: 'CUST20240010',
-    process_flow1: '切料-磨切-印刷-烘干',
-    process_flow2: '模切-检验-包装',
-  },
-];
-
 export default function ProductionSchedulePage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [stats, setStats] = useState<ScheduleStats>({
@@ -371,10 +155,8 @@ export default function ProductionSchedulePage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isQrOpen, setIsQrOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [date, setDate] = useState<Date>();
@@ -476,21 +258,12 @@ export default function ProductionSchedulePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: selectedSchedule.id,
-          product_name: editForm.product_name,
-          material_spec: editForm.material_spec,
-          plan_qty: editForm.plan_qty,
-          work_order_date: editForm.work_order_date,
-          main_label_no: editForm.main_label_no,
+          ...editForm,
         }),
       });
       const result = await response.json();
       if (result.success) {
-        // 更新本地数据
-        setSchedules(schedules.map(s => 
-          s.id === selectedSchedule.id 
-            ? { ...s, ...editForm }
-            : s
-        ));
+        fetchSchedules();
         setIsEditOpen(false);
         alert('排程更新成功');
       } else {
@@ -513,16 +286,12 @@ export default function ProductionSchedulePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: schedule.id,
-          burdening_status: 1,
+          status: 2,
         }),
       });
       const result = await response.json();
       if (result.success) {
-        setSchedules(schedules.map(s => 
-          s.id === schedule.id 
-            ? { ...s, burdening_status: 1 }
-            : s
-        ));
+        fetchSchedules();
         alert('排产确认成功');
       } else {
         alert(result.message || '确认失败');
@@ -544,16 +313,12 @@ export default function ProductionSchedulePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: schedule.id,
-          burdening_status: 2,
+          status: 3,
         }),
       });
       const result = await response.json();
       if (result.success) {
-        setSchedules(schedules.map(s => 
-          s.id === schedule.id 
-            ? { ...s, burdening_status: 2 }
-            : s
-        ));
+        fetchSchedules();
         alert('生产开始成功');
       } else {
         alert(result.message || '开始失败');
@@ -575,16 +340,12 @@ export default function ProductionSchedulePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: schedule.id,
-          burdening_status: 3,
+          status: 4,
         }),
       });
       const result = await response.json();
       if (result.success) {
-        setSchedules(schedules.map(s => 
-          s.id === schedule.id 
-            ? { ...s, burdening_status: 3 }
-            : s
-        ));
+        fetchSchedules();
         alert('排程完成成功');
       } else {
         alert(result.message || '完成失败');
@@ -627,92 +388,6 @@ export default function ProductionSchedulePage() {
     }
   };
 
-  // 查看二维码
-  const handleViewQrCode = async (schedule: Schedule) => {
-    setSelectedSchedule(schedule);
-    try {
-      const url = await QRCode.toDataURL(schedule.qr_code, {
-        width: 300,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#ffffff',
-        },
-      });
-      setQrCodeUrl(url);
-      setIsQrOpen(true);
-    } catch (error) {
-      console.error('生成二维码失败:', error);
-    }
-  };
-
-  // 下载二维码
-  const handleDownloadQrCode = () => {
-    if (qrCodeUrl && selectedSchedule) {
-      const link = document.createElement('a');
-      link.href = qrCodeUrl;
-      link.download = `QR_${selectedSchedule.card_no}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
-  // 打印二维码
-  const handlePrintQrCode = () => {
-    if (qrCodeUrl && selectedSchedule) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>打印二维码 - ${selectedSchedule.card_no}</title>
-              <style>
-                body { 
-                  display: flex; 
-                  justify-content: center; 
-                  align-items: center; 
-                  height: 100vh; 
-                  margin: 0;
-                  font-family: Arial, sans-serif;
-                }
-                .container {
-                  text-align: center;
-                }
-                .qr-code {
-                  width: 300px;
-                  height: 300px;
-                }
-                .info {
-                  margin-top: 20px;
-                  font-size: 14px;
-                }
-                .card-no {
-                  font-size: 18px;
-                  font-weight: bold;
-                  margin-bottom: 10px;
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <img src="${qrCodeUrl}" class="qr-code" />
-                <div class="info">
-                  <div class="card-no">${selectedSchedule.card_no}</div>
-                  <div>产品: ${selectedSchedule.product_name}</div>
-                  <div>客户: ${selectedSchedule.customer_name}</div>
-                  <div>数量: ${selectedSchedule.plan_qty.toLocaleString()}</div>
-                </div>
-              </div>
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
-      }
-    }
-  };
-
   // 获取未来7天的日期
   const getNext7Days = () => {
     const days = [];
@@ -727,7 +402,7 @@ export default function ProductionSchedulePage() {
   // 获取某天的排程
   const getSchedulesByDate = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return schedules.filter((s) => s.work_order_date === dateStr);
+    return schedules.filter((s) => s.planned_start && s.planned_start.startsWith(dateStr));
   };
 
   return (
@@ -1032,8 +707,8 @@ export default function ProductionSchedulePage() {
                               onClick={() => handleViewDetail(s)}
                             >
                               <div className="font-medium truncate">{s.product_name}</div>
-                              <div className="text-muted-foreground">{s.plan_qty.toLocaleString()}</div>
-                              <div className="mt-1">{getStatusBadge(s.burdening_status)}</div>
+                              <div className="text-muted-foreground">{Number(s.planned_qty).toLocaleString()}</div>
+                              <div className="mt-1">{getStatusBadge(s.status)}</div>
                             </div>
                           ))
                         )}
@@ -1053,8 +728,8 @@ export default function ProductionSchedulePage() {
               <>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
-                    排程详情: {selectedSchedule.card_no}
-                    {getStatusBadge(selectedSchedule.burdening_status)}
+                    排程详情: {selectedSchedule.schedule_no}
+                    {getStatusBadge(selectedSchedule.status)}
                   </DialogTitle>
                   <DialogDescription>查看生产排程详细信息</DialogDescription>
                 </DialogHeader>
@@ -1065,14 +740,14 @@ export default function ProductionSchedulePage() {
                     <div className="space-y-3">
                       <h4 className="font-semibold text-sm text-muted-foreground">排程信息</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">排程号:</span>
-                        <span>{selectedSchedule.card_no}</span>
-                        <span className="text-muted-foreground">二维码:</span>
-                        <span className="text-xs">{selectedSchedule.qr_code}</span>
-                        <span className="text-muted-foreground">工单号:</span>
-                        <span>{selectedSchedule.work_order_no}</span>
-                        <span className="text-muted-foreground">主标编号:</span>
-                        <span>{selectedSchedule.main_label_no}</span>
+                        <span className="text-muted-foreground">排产单号:</span>
+                        <span>{selectedSchedule.schedule_no}</span>
+                        <span className="text-muted-foreground">订单号:</span>
+                        <span>{selectedSchedule.order_no || '-'}</span>
+                        <span className="text-muted-foreground">排产人:</span>
+                        <span>{selectedSchedule.scheduler || '-'}</span>
+                        <span className="text-muted-foreground">优先级:</span>
+                        <span>{getPriorityBadge(selectedSchedule.priority)}</span>
                       </div>
                     </div>
 
@@ -1082,57 +757,46 @@ export default function ProductionSchedulePage() {
                         <span className="text-muted-foreground">产品名称:</span>
                         <span>{selectedSchedule.product_name}</span>
                         <span className="text-muted-foreground">产品编码:</span>
-                        <span>{selectedSchedule.product_code}</span>
-                        <span className="text-muted-foreground">物料规格:</span>
-                        <span>{selectedSchedule.material_spec}</span>
+                        <span>{selectedSchedule.product_code || '-'}</span>
+                        <span className="text-muted-foreground">车间:</span>
+                        <span>{getWorkshopBadge(selectedSchedule.workshop)}</span>
                         <span className="text-muted-foreground">计划数量:</span>
-                        <span>{selectedSchedule.plan_qty.toLocaleString()}</span>
+                        <span>{Number(selectedSchedule.planned_qty).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* 客户信息 */}
+                  {/* 计划时间 */}
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">客户信息</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">计划时间</h4>
                     <div className="grid grid-cols-4 gap-2 text-sm">
-                      <span className="text-muted-foreground">客户名称:</span>
-                      <span>{selectedSchedule.customer_name}</span>
-                      <span className="text-muted-foreground">客户编码:</span>
-                      <span>{selectedSchedule.customer_code}</span>
+                      <span className="text-muted-foreground">计划开始:</span>
+                      <span>{selectedSchedule.planned_start || '-'}</span>
+                      <span className="text-muted-foreground">计划结束:</span>
+                      <span>{selectedSchedule.planned_end || '-'}</span>
+                      <span className="text-muted-foreground">实际开始:</span>
+                      <span>{selectedSchedule.actual_start || '-'}</span>
+                      <span className="text-muted-foreground">实际结束:</span>
+                      <span>{selectedSchedule.actual_end || '-'}</span>
                     </div>
                   </div>
 
-                  {/* 工艺流程 */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">工艺流程</h4>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {selectedSchedule.process_flow1?.split('-').map((process, index, arr) => (
-                        <div key={index} className="flex items-center">
-                          <Badge variant="outline">{process}</Badge>
-                          {index < arr.length - 1 && <span className="mx-1 text-muted-foreground">→</span>}
-                        </div>
-                      ))}
-                      {selectedSchedule.process_flow2?.split('-').map((process, index, arr) => (
-                        <div key={`2-${index}`} className="flex items-center">
-                          <span className="mx-1 text-muted-foreground">→</span>
-                          <Badge variant="outline">{process}</Badge>
-                        </div>
-                      ))}
+                  {/* 备注 */}
+                  {selectedSchedule.remark && (
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm text-muted-foreground">备注</h4>
+                      <div className="text-sm p-3 bg-gray-50 rounded">{selectedSchedule.remark}</div>
                     </div>
-                  </div>
+                  )}
 
                   {/* 时间信息 */}
                   <div className="space-y-3">
                     <h4 className="font-semibold text-sm text-muted-foreground">时间信息</h4>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <span className="text-muted-foreground">排产日期:</span>
-                      <span>{selectedSchedule.work_order_date}</span>
                       <span className="text-muted-foreground">创建时间:</span>
                       <span>{selectedSchedule.create_time}</span>
                       <span className="text-muted-foreground">更新时间:</span>
                       <span>{selectedSchedule.update_time}</span>
-                      <span className="text-muted-foreground">创建人:</span>
-                      <span>{selectedSchedule.create_user_name}</span>
                     </div>
                   </div>
 
@@ -1141,108 +805,24 @@ export default function ProductionSchedulePage() {
                     <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
                       关闭
                     </Button>
-                    {selectedSchedule.burdening_status === 0 && (
-                      <Button>
+                    {selectedSchedule.status === 1 && (
+                      <Button onClick={() => { handleConfirmSchedule(selectedSchedule); setIsDetailOpen(false); }}>
                         <CalendarIcon className="h-4 w-4 mr-2" />
                         确认排产
                       </Button>
                     )}
-                    {selectedSchedule.burdening_status === 1 && (
-                      <Button>
+                    {selectedSchedule.status === 2 && (
+                      <Button onClick={() => { handleStartProduction(selectedSchedule); setIsDetailOpen(false); }}>
                         <Play className="h-4 w-4 mr-2" />
                         开始生产
                       </Button>
                     )}
-                    {selectedSchedule.burdening_status === 2 && (
-                      <Button>
+                    {selectedSchedule.status === 3 && (
+                      <Button onClick={() => { handleCompleteSchedule(selectedSchedule); setIsDetailOpen(false); }}>
                         <CheckCircle className="h-4 w-4 mr-2" />
                         完成排程
                       </Button>
                     )}
-                  </div>
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* 二维码查看对话框 */}
-        <Dialog open={isQrOpen} onOpenChange={setIsQrOpen}>
-          <DialogContent className="max-w-md" resizable>
-            {selectedSchedule && (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    <QrCode className="h-5 w-5" />
-                    二维码: {selectedSchedule.card_no}
-                  </DialogTitle>
-                  <DialogDescription>扫描二维码查看生产排程详情</DialogDescription>
-                </DialogHeader>
-
-                <div className="flex flex-col items-center gap-6 py-6">
-                  {/* 二维码图片 */}
-                  {qrCodeUrl ? (
-                    <div className="border-2 border-gray-200 rounded-lg p-4 bg-white">
-                      <img
-                        src={qrCodeUrl}
-                        alt="QR Code"
-                        className="w-64 h-64"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-64 h-64 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg">
-                      <span className="text-muted-foreground">生成中...</span>
-                    </div>
-                  )}
-
-                  {/* 排程信息 */}
-                  <div className="w-full space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">排程号:</span>
-                      <span className="font-medium">{selectedSchedule.card_no}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">产品:</span>
-                      <span className="font-medium">{selectedSchedule.product_name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">客户:</span>
-                      <span className="font-medium">{selectedSchedule.customer_name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">数量:</span>
-                      <span className="font-medium">{selectedSchedule.plan_qty.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">二维码内容:</span>
-                      <span className="font-mono text-xs text-muted-foreground">{selectedSchedule.qr_code}</span>
-                    </div>
-                  </div>
-
-                  {/* 操作按钮 */}
-                  <div className="flex gap-2 w-full">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={handleDownloadQrCode}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      下载
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={handlePrintQrCode}
-                    >
-                      <Printer className="h-4 w-4 mr-2" />
-                      打印
-                    </Button>
-                    <Button
-                      className="flex-1"
-                      onClick={() => setIsQrOpen(false)}
-                    >
-                      关闭
-                    </Button>
                   </div>
                 </div>
               </>
@@ -1258,7 +838,7 @@ export default function ProductionSchedulePage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Edit className="h-5 w-5" />
-                    编辑排程: {selectedSchedule.card_no}
+                    编辑排程: {selectedSchedule.schedule_no}
                   </DialogTitle>
                   <DialogDescription>修改生产排程信息</DialogDescription>
                 </DialogHeader>
@@ -1274,12 +854,19 @@ export default function ProductionSchedulePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>物料规格</Label>
-                      <Input
-                        value={editForm.material_spec}
-                        onChange={(e) => setEditForm({ ...editForm, material_spec: e.target.value })}
-                        placeholder="输入物料规格"
-                      />
+                      <Label>车间</Label>
+                      <Select
+                        value={editForm.workshop}
+                        onValueChange={(value) => setEditForm({ ...editForm, workshop: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择车间" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="die_cut">模切车间</SelectItem>
+                          <SelectItem value="trademark">商标车间</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -1287,26 +874,60 @@ export default function ProductionSchedulePage() {
                       <Label>计划数量</Label>
                       <Input
                         type="number"
-                        value={editForm.plan_qty}
-                        onChange={(e) => setEditForm({ ...editForm, plan_qty: parseInt(e.target.value) || 0 })}
+                        value={editForm.planned_qty}
+                        onChange={(e) => setEditForm({ ...editForm, planned_qty: parseInt(e.target.value) || 0 })}
                         placeholder="输入计划数量"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>排产日期</Label>
+                      <Label>优先级</Label>
+                      <Select
+                        value={String(editForm.priority)}
+                        onValueChange={(value) => setEditForm({ ...editForm, priority: parseInt(value) })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择优先级" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">紧急</SelectItem>
+                          <SelectItem value="2">正常</SelectItem>
+                          <SelectItem value="3">低</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>计划开始</Label>
                       <Input
-                        type="date"
-                        value={editForm.work_order_date}
-                        onChange={(e) => setEditForm({ ...editForm, work_order_date: e.target.value })}
+                        type="datetime-local"
+                        value={editForm.planned_start}
+                        onChange={(e) => setEditForm({ ...editForm, planned_start: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>计划结束</Label>
+                      <Input
+                        type="datetime-local"
+                        value={editForm.planned_end}
+                        onChange={(e) => setEditForm({ ...editForm, planned_end: e.target.value })}
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>主标编号</Label>
+                    <Label>排产人</Label>
                     <Input
-                      value={editForm.main_label_no}
-                      onChange={(e) => setEditForm({ ...editForm, main_label_no: e.target.value })}
-                      placeholder="输入主标编号"
+                      value={editForm.scheduler}
+                      onChange={(e) => setEditForm({ ...editForm, scheduler: e.target.value })}
+                      placeholder="输入排产人"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>备注</Label>
+                    <Input
+                      value={editForm.remark}
+                      onChange={(e) => setEditForm({ ...editForm, remark: e.target.value })}
+                      placeholder="输入备注"
                     />
                   </div>
                 </div>
@@ -1335,7 +956,7 @@ export default function ProductionSchedulePage() {
                     确认删除
                   </DialogTitle>
                   <DialogDescription>
-                    确定要删除排程 <strong>{selectedSchedule.card_no}</strong> 吗？此操作不可恢复。
+                    确定要删除排程 <strong>{selectedSchedule.schedule_no}</strong> 吗？此操作不可恢复。
                   </DialogDescription>
                 </DialogHeader>
 
@@ -1344,9 +965,9 @@ export default function ProductionSchedulePage() {
                     <p className="font-medium text-red-800">排程信息:</p>
                     <ul className="mt-2 space-y-1 text-red-700">
                       <li>产品: {selectedSchedule.product_name}</li>
-                      <li>客户: {selectedSchedule.customer_name}</li>
-                      <li>数量: {selectedSchedule.plan_qty.toLocaleString()}</li>
-                      <li>状态: {getStatusBadge(selectedSchedule.burdening_status)}</li>
+                      <li>车间: {getWorkshopBadge(selectedSchedule.workshop)}</li>
+                      <li>数量: {Number(selectedSchedule.planned_qty).toLocaleString()}</li>
+                      <li>状态: {getStatusBadge(selectedSchedule.status)}</li>
                     </ul>
                   </div>
                 </div>

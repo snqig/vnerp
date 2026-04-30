@@ -46,7 +46,7 @@ export async function createWorkOrderFromSalesOrder(salesOrderId: number): Promi
     }
 
     const bom = bomRows[0];
-    const workOrderNo = await generateDocumentNo('WO');
+    const workOrderNo = await generateDocumentNo('work_order');
 
     const [woResult]: any = await conn.execute(
       `INSERT INTO prod_work_order (work_order_no, sales_order_id, product_id, product_name, bom_id, plan_qty, status, create_time)

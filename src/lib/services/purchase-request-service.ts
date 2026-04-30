@@ -42,7 +42,7 @@ export async function convertRequestToPurchaseOrder(requestId: number): Promise<
       throw new Error(`存在 ${itemsWithoutMaterialId.length} 条明细缺少物料ID，请先完善物料信息`);
     }
 
-    const poCode = await generateDocumentNo('PO');
+    const poCode = await generateDocumentNo('purchase_order');
     const totalAmount = items.reduce((sum: number, i: any) => sum + Number(i.amount || 0), 0);
 
     const [poResult]: any = await conn.execute(

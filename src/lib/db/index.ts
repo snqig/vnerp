@@ -186,5 +186,5 @@ export async function queryPaginated<T = any>(
   };
 }
 
-// 为了保持向后兼容，导出 pool
-export { pool, dbConfig };
+// 为了保持向后兼容，导出 getPool 和 dbConfig
+export { dbConfig };
