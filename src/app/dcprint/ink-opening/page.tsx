@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, RefreshCw, Clock, AlertTriangle, Droplets, Eye, Trash2, Timer } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
+import { UserSelect } from '@/components/ui/user-select';
 
 interface InkOpeningRecord {
   id: number;
@@ -59,6 +60,7 @@ const EXPIRE_HOURS_OPTIONS = [
 ];
 
 export default function InkOpeningPage() {
+  const { toast } = useToast();
   const [records, setRecords] = useState<InkOpeningRecord[]>([]);
   const [overdueList, setOverdueList] = useState<InkOpeningRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -108,7 +110,7 @@ export default function InkOpeningPage() {
         if (data.data?.overdue_list) setOverdueList(data.data.overdue_list);
       }
     } catch (e) {
-      toast.error('获取油墨开罐记录失败');
+      toast({ title: '获取油墨开罐记录失败', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -133,7 +135,7 @@ export default function InkOpeningPage() {
 
   const handleCreate = async () => {
     if (!form.material_id || !form.open_time || !form.expire_hours) {
-      toast.error('请填写必填字段');
+      toast({ title: '请填写必填字段', variant: 'destructive' });
       return;
     }
     try {
@@ -156,7 +158,7 @@ export default function InkOpeningPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('油墨开罐记录创建成功');
+        toast({ title: '油墨开罐记录创建成功' });
         setDialogOpen(false);
         setForm({
           material_id: '',
@@ -173,10 +175,10 @@ export default function InkOpeningPage() {
         });
         fetchRecords();
       } else {
-        toast.error(data.message || '创建失败');
+        toast({ title: data.message || '创建失败', variant: 'destructive' });
       }
     } catch (e) {
-      toast.error('创建油墨开罐记录失败');
+      toast({ title: '创建油墨开罐记录失败', variant: 'destructive' });
     }
   };
 
@@ -189,13 +191,13 @@ export default function InkOpeningPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('状态更新成功');
+        toast({ title: '状态更新成功' });
         fetchRecords();
       } else {
-        toast.error(data.message || '更新失败');
+        toast({ title: data.message || '更新失败', variant: 'destructive' });
       }
     } catch (e) {
-      toast.error('更新失败');
+      toast({ title: '更新失败', variant: 'destructive' });
     }
   };
 
@@ -205,13 +207,13 @@ export default function InkOpeningPage() {
       const res = await fetch(`/api/dcprint/ink-opening?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        toast.success('删除成功');
+        toast({ title: '删除成功' });
         fetchRecords();
       } else {
-        toast.error(data.message || '删除失败');
+        toast({ title: data.message || '删除失败', variant: 'destructive' });
       }
     } catch (e) {
-      toast.error('删除失败');
+      toast({ title: '删除失败', variant: 'destructive' });
     }
   };
 
@@ -538,7 +540,7 @@ export default function InkOpeningPage() {
               </div>
               <div>
                 <Label>操作员</Label>
-                <Input value={form.operator_name} onChange={(e) => setForm(prev => ({ ...prev, operator_name: e.target.value }))} placeholder="操作员姓名" />
+                <UserSelect value={form.operator_name} onChange={(v) => setForm(prev => ({ ...prev, operator_name: v }))} />
               </div>
               <div>
                 <Label>备注</Label>

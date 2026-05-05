@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { UserSelect } from '@/components/ui/user-select';
 
 interface EcoRecord {
   id?: number;
@@ -199,7 +200,7 @@ export default function EcoPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>产品编码</Label><Input value={form.product_code || ''} onChange={e => setForm({ ...form, product_code: e.target.value })} /></div>
-                <div><Label>申请人</Label><Input value={form.applicant || ''} onChange={e => setForm({ ...form, applicant: e.target.value })} /></div>
+                <div><Label>申请人</Label><UserSelect value={form.applicant || ''} onChange={v => setForm({ ...form, applicant: v })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>原版本</Label><Input value={form.old_version || ''} onChange={e => setForm({ ...form, old_version: e.target.value })} placeholder="V1.0" /></div>

@@ -116,8 +116,6 @@ export default function SampleOrdersPage() {
     remark: '',
   });
 
-  const printRef = useRef<HTMLDivElement>(null);
-
   const handleSort = (field: string) => {
     if (sortField === field) {
       if (sortOrder === 'asc') setSortOrder('desc');
@@ -539,7 +537,7 @@ export default function SampleOrdersPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedOrders.map((order, index) => (
+                    {sortedOrders.map((order) => (
                       <tr key={order.id} className={`border-b transition-colors hover:bg-muted/50 ${selectedIds.has(order.id) ? 'bg-primary/5' : ''}`}>
                         <td className="p-4">
                           <Checkbox

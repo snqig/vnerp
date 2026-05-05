@@ -38,7 +38,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { NavigationMode } from '@/hooks/useSnowAdminTheme';
 import { useCompanyName } from '@/hooks/useCompanyName';
 
@@ -221,6 +221,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const [activeParentCode, setActiveParentCode] = useState<string | null>(null);
   const { menus, isLoading, user, isAuthenticated, logout } = useAuth();
   const { companyName } = useCompanyName();
+  const { toast } = useToast();
 
   // 调试日志
   useEffect(() => {
@@ -339,7 +340,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
         const newIndex = items.findIndex((item) => item.id === over.id);
         const newOrder = arrayMove(items, oldIndex, newIndex);
         saveMenuOrder(newOrder);
-        toast.success('菜单顺序已保存');
+        toast({ title: '菜单顺序已保存' });
         return newOrder;
       });
     }

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Search, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Printer, FileSpreadsheet, FileText, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { UserSelect } from '@/components/ui/user-select';
 
 interface TransferOrder {
   id: number; transfer_no: string; from_warehouse_id: number; to_warehouse_id: number;

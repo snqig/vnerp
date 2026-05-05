@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { UserSelect } from '@/components/ui/user-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
 
@@ -192,7 +193,7 @@ export default function StocktakingPage() {
               <div><Label>仓库</Label><Select value={String(editItem.warehouse_id || '')} onValueChange={v => setEditItem({ ...editItem, warehouse_id: Number(v) })}><SelectTrigger><SelectValue placeholder="选择仓库" /></SelectTrigger><SelectContent>{warehouses.map(w => <SelectItem key={w.id} value={String(w.id)}>{w.warehouse_name}</SelectItem>)}</SelectContent></Select></div>
               <div><Label>盘点日期</Label><Input type="date" value={editItem.taking_date || ''} onChange={e => setEditItem({ ...editItem, taking_date: e.target.value })} /></div>
               <div><Label>盘点类型</Label><Select value={String(editItem.taking_type || 1)} onValueChange={v => setEditItem({ ...editItem, taking_type: Number(v) })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="1">全面盘点</SelectItem><SelectItem value="2">抽样盘点</SelectItem><SelectItem value="3">循环盘点</SelectItem></SelectContent></Select></div>
-              <div><Label>盘点人</Label><Input value={editItem.operator_name || ''} onChange={e => setEditItem({ ...editItem, operator_name: e.target.value })} /></div>
+              <div><Label>操作人</Label><UserSelect value={editItem.operator_name || ''} onChange={v => setEditItem({ ...editItem, operator_name: v })} /></div>
               <div className="col-span-2"><Label>备注</Label><Input value={editItem.remark || ''} onChange={e => setEditItem({ ...editItem, remark: e.target.value })} /></div>
             </div>
             <DialogFooter><Button variant="outline" onClick={() => setShowDialog(false)}>取消</Button><Button onClick={handleSave}>保存</Button></DialogFooter>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { UserSelect } from '@/components/ui/user-select';
 
 interface InkMixedRecord {
   id: number; record_no: string; base_ink_id: number; base_ink_code: string; base_ink_name: string;
@@ -169,7 +170,7 @@ export default function InkMixedPage() {
               <div><Label>色彩编码</Label><Input value={editItem.color_code || ''} onChange={e => setEditItem({ ...editItem, color_code: e.target.value })} placeholder="如: #FF5500" /></div>
               <div><Label>客户名称</Label><Input value={editItem.company_name || ''} onChange={e => setEditItem({ ...editItem, company_name: e.target.value })} /></div>
               <div><Label>调色时间</Label><Input type="datetime-local" value={editItem.mix_time || ''} onChange={e => setEditItem({ ...editItem, mix_time: e.target.value })} /></div>
-              <div><Label>操作员</Label><Input value={editItem.operator_name || ''} onChange={e => setEditItem({ ...editItem, operator_name: e.target.value })} /></div>
+              <div><Label>操作员</Label><UserSelect value={editItem.operator_name || ''} onChange={v => setEditItem({ ...editItem, operator_name: v })} /></div>
               <div><Label>数量</Label><Input type="number" step="0.01" value={editItem.quantity || ''} onChange={e => setEditItem({ ...editItem, quantity: Number(e.target.value) })} /></div>
               <div><Label>单位</Label><Select value={editItem.unit || 'kg'} onValueChange={v => setEditItem({ ...editItem, unit: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="kg">kg</SelectItem><SelectItem value="g">g</SelectItem><SelectItem value="L">L</SelectItem><SelectItem value="mL">mL</SelectItem></SelectContent></Select></div>
               <div><Label>过期时间</Label><Input type="datetime-local" value={editItem.expire_time || ''} onChange={e => setEditItem({ ...editItem, expire_time: e.target.value })} /></div>

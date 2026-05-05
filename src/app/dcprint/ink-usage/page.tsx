@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Trash2, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { UserSelect } from '@/components/ui/user-select';
 
 interface InkUsage {
   id: number;
@@ -88,7 +89,7 @@ export default function InkUsagePage() {
         body: JSON.stringify({
           ...editItem,
           usageDate: editItem.usage_date || new Date().toISOString(),
-          operatorName: '系统'
+          operatorName: editItem.operator_name || ''
         })
       });
       const result = await res.json();
@@ -198,6 +199,7 @@ export default function InkUsagePage() {
               <div><Label>网版ID（可选）</Label><Input type="number" value={editItem.screen_plate_id ?? ''} onChange={e => setEditItem({ ...editItem, screen_plate_id: Number(e.target.value) })} /></div>
               <div><Label>工单ID（可选）</Label><Input type="number" value={editItem.work_order_id ?? ''} onChange={e => setEditItem({ ...editItem, work_order_id: Number(e.target.value) })} /></div>
               <div><Label>耗用日期</Label><Input type="datetime-local" value={editItem.usage_date?.slice(0, 16) || ''} onChange={e => setEditItem({ ...editItem, usage_date: e.target.value })} /></div>
+              <div><Label>操作人</Label><UserSelect value={editItem.operator_name || ''} onChange={v => setEditItem({ ...editItem, operator_name: v })} /></div>
               <div><Label>备注</Label><Textarea value={editItem.remark || ''} onChange={e => setEditItem({ ...editItem, remark: e.target.value })} /></div>
             </div>
             <DialogFooter><Button variant="outline" onClick={() => setShowDialog(false)}>取消</Button><Button onClick={handleSave}>保存</Button></DialogFooter>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Edit, Trash2, RefreshCw, Wrench, ClipboardList } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
 interface MaintenancePlan {
   id: number;
@@ -66,6 +66,7 @@ const RECORD_RESULT: Record<number, { label: string; color: string }> = {
 };
 
 export default function EquipmentMaintenancePage() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('plan');
   const [plans, setPlans] = useState<MaintenancePlan[]>([]);
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
@@ -101,7 +102,7 @@ export default function EquipmentMaintenancePage() {
         setPlans(result.data?.list || []);
         setPlanTotal(result.data?.total || 0);
       }
-    } catch (e) { console.error(e); toast.error('获取保养计划失败'); }
+    } catch (e) { console.error(e); toast({ title: '获取保养计划失败', variant: 'destructive' }); }
     finally { setLoading(false); }
   }, [planPage, searchNo]);
 
@@ -116,7 +117,7 @@ export default function EquipmentMaintenancePage() {
         setRecords(result.data?.list || []);
         setRecordTotal(result.data?.total || 0);
       }
-    } catch (e) { console.error(e); toast.error('获取保养记录失败'); }
+    } catch (e) { console.error(e); toast({ title: '获取保养记录失败', variant: 'destructive' }); }
     finally { setLoading(false); }
   }, [recordPage, searchNo]);
 
@@ -133,15 +134,15 @@ export default function EquipmentMaintenancePage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast.success(dialogType === 'plan' ? '保养计划创建成功' : '保养记录创建成功');
+        toast({ title: dialogType === 'plan' ? '保养计划创建成功' : '保养记录创建成功' });
         setDialogOpen(false);
         if (activeTab === 'plan') fetchPlans(); else fetchRecords();
       } else {
-        toast.error(result.message || '操作失败');
+        toast({ title: result.message || '操作失败', variant: 'destructive' });
       }
     } catch (e) {
       console.error(e);
-      toast.error('保存失败');
+      toast({ title: '保存失败', variant: 'destructive' });
     }
   };
 
@@ -153,9 +154,9 @@ export default function EquipmentMaintenancePage() {
         body: JSON.stringify({ type: 'plan', id, status }),
       });
       const result = await res.json();
-      if (result.success) { toast.success('状态更新成功'); fetchPlans(); }
-      else { toast.error(result.message || '更新失败'); }
-    } catch (e) { toast.error('更新失败'); }
+      if (result.success) { toast({ title: '状态更新成功' }); fetchPlans(); }
+      else { toast({ title: result.message || '更新失败', variant: 'destructive' }); }
+    } catch (e) { toast({ title: '更新失败', variant: 'destructive' }); }
   };
 
   const handleDelete = async (id: number, type: string) => {
@@ -163,9 +164,9 @@ export default function EquipmentMaintenancePage() {
     try {
       const res = await fetch(`/api/equipment/maintenance?id=${id}&type=${type}`, { method: 'DELETE' });
       const result = await res.json();
-      if (result.success) { toast.success('删除成功'); if (type === 'plan') fetchPlans(); else fetchRecords(); }
-      else { toast.error(result.message || '删除失败'); }
-    } catch (e) { toast.error('删除失败'); }
+      if (result.success) { toast({ title: '删除成功' }); if (type === 'plan') fetchPlans(); else fetchRecords(); }
+      else { toast({ title: result.message || '删除失败', variant: 'destructive' }); }
+    } catch (e) { toast({ title: '删除失败', variant: 'destructive' }); }
   };
 
   const openNewPlan = () => {

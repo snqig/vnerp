@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Edit, Trash2, Shield, RefreshCw, Search, Users, CheckSquare, Square, LayoutGrid, MousePointer } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { getPermissionModules, Permission } from '@/hooks/usePermission';
 
 // 角色接口
@@ -51,6 +51,7 @@ const dataScopeOptions = [
 const permissionModules = getPermissionModules();
 
 export default function RolesPage() {
+  const { toast } = useToast();
   const [roles, setRoles] = useState<Role[]>([]);
   const [menus, setMenus] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,7 +81,7 @@ export default function RolesPage() {
       }
     } catch (error) {
       console.error('获取角色列表失败:', error);
-      toast.error('获取角色列表失败');
+      toast({ title: '获取角色列表失败', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -93,10 +94,12 @@ export default function RolesPage() {
       const result = await response.json();
       if (result.success) {
         setMenus(result.data);
+        return result.data;
       }
     } catch (error) {
       console.error('获取菜单列表失败:', error);
     }
+    return [];
   }, []);
 
   // 获取角色权限
@@ -130,7 +133,7 @@ export default function RolesPage() {
   // 保存角色
   const saveRole = async () => {
     if (!form.role_code || !form.role_name) {
-      toast.error('角色编码和名称不能为空');
+      toast({ title: '角色编码和名称不能为空', variant: 'destructive' });
       return;
     }
 
@@ -146,15 +149,15 @@ export default function RolesPage() {
       
       const result = await response.json();
       if (result.success) {
-        toast.success(editing ? '角色更新成功' : '角色创建成功');
+        toast({ title: editing ? '角色更新成功' : '角色创建成功' });
         setDialogOpen(false);
         fetchRoles();
       } else {
-        toast.error(result.message || '保存失败');
+        toast({ title: result.message || '保存失败', variant: 'destructive' });
       }
     } catch (error) {
       console.error('保存角色失败:', error);
-      toast.error('保存角色失败');
+      toast({ title: '保存角色失败', variant: 'destructive' });
     }
   };
 
@@ -169,14 +172,14 @@ export default function RolesPage() {
       
       const result = await response.json();
       if (result.success) {
-        toast.success('角色删除成功');
+        toast({ title: '角色删除成功' });
         fetchRoles();
       } else {
-        toast.error(result.message || '删除失败');
+        toast({ title: result.message || '删除失败', variant: 'destructive' });
       }
     } catch (error) {
       console.error('删除角色失败:', error);
-      toast.error('删除角色失败');
+      toast({ title: '删除角色失败', variant: 'destructive' });
     }
   };
 
@@ -197,11 +200,10 @@ export default function RolesPage() {
       
       const menuResult = await menuResponse.json();
       if (!menuResult.success) {
-        toast.error(menuResult.message || '菜单权限设置失败');
+        toast({ title: menuResult.message || '菜单权限设置失败', variant: 'destructive' });
         return;
       }
 
-      // 保存按钮权限
       const btnResponse = await fetch('/api/role-permissions/buttons', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -213,16 +215,22 @@ export default function RolesPage() {
 
       const btnResult = await btnResponse.json();
       if (!btnResult.success) {
-        toast.error(btnResult.message || '按钮权限设置失败');
+        toast({ title: btnResult.message || '按钮权限设置失败', variant: 'destructive' });
         return;
       }
 
-      toast.success('权限设置成功');
+      toast({ title: '权限设置成功' });
       setPermissionDialogOpen(false);
-      fetchRoles(); // 刷新角色列表
+      fetchRoles();
+
+      try {
+        await fetch('/api/auth/cache/clear', { method: 'POST' });
+      } catch (e) {
+        console.error('清除缓存失败:', e);
+      }
     } catch (error) {
       console.error('保存权限失败:', error);
-      toast.error('保存权限失败');
+      toast({ title: '保存权限失败', variant: 'destructive' });
     }
   };
 
@@ -247,9 +255,9 @@ export default function RolesPage() {
     setSelectedPermissions([]);
     setActivePermissionTab('menus');
     
-    // 确保菜单已加载
-    if (menus.length === 0) {
-      await fetchMenus();
+    let currentMenus = menus;
+    if (currentMenus.length === 0) {
+      currentMenus = await fetchMenus();
     }
     
     await fetchRolePermissions(role.id);

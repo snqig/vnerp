@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
@@ -145,6 +145,7 @@ const initialSequence: PrintSequence = {
 
 function InputV2PageContent() {
   const router = useRouter();
+  const { toast } = useToast();
   const searchParams = useSearchParams();
   const editId = searchParams.get('id');
   const isEditMode = searchParams.get('edit') === 'true';
@@ -279,11 +280,11 @@ function InputV2PageContent() {
           documentCode: card.document_code || '',
         });
       } else {
-        toast.error('加载标准卡数据失败');
+        toast({ title: '加载标准卡数据失败', variant: 'destructive' });
       }
     } catch (error) {
       console.error('加载标准卡数据失败:', error);
-      toast.error('加载标准卡数据失败');
+      toast({ title: '加载标准卡数据失败', variant: 'destructive' });
     }
   };
 
@@ -434,16 +435,16 @@ function InputV2PageContent() {
       const result = await response.json();
 
       if (!result.success) {
-        toast.error(result.message || '保存失败');
+        toast({ title: result.message || '保存失败', variant: 'destructive' });
         return false;
       }
 
       setSavedCardId(result.data?.id || parseInt(editId || '0'));
-      toast.success(isEditMode ? '标准卡更新成功！' : '标准卡保存成功！');
+      toast({ title: isEditMode ? '标准卡更新成功！' : '标准卡保存成功！' });
       return true;
     } catch (error) {
       console.error('保存失败:', error);
-      toast.error('保存失败，请检查网络连接');
+      toast({ title: '保存失败，请检查网络连接', variant: 'destructive' });
       return false;
     } finally {
       setIsSaving(false);

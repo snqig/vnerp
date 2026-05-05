@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Trash2, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { UserSelect } from '@/components/ui/user-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
 
@@ -303,7 +304,7 @@ export default function OutsourceIssuePage() {
                 </Table>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>操作人</Label><Input value={form.operator_name || ''} onChange={e => setForm({ ...form, operator_name: e.target.value })} /></div>
+                <div><Label>操作人</Label><UserSelect value={form.operator_name || ''} onChange={v => setForm({ ...form, operator_name: v })} /></div>
                 <div><Label>备注</Label><Input value={form.remark || ''} onChange={e => setForm({ ...form, remark: e.target.value })} /></div>
               </div>
             </div>

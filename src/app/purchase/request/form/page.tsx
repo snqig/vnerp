@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { ArrowLeft, Printer, Save, Plus, List, ChevronDown, Search, Send, CheckCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { MaterialPicker } from '@/components/ui/material-picker';
 
@@ -129,6 +129,7 @@ const commonUnits = ['个', '件', '箱', '卷', '米', '千克', '公斤', '吨
 export default function PurchaseRequestFormPage() {
   const router = useRouter();
   const { companyName } = useCompanyName();
+  const { toast } = useToast();
   const printRef = useRef<HTMLDivElement>(null);
 
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>(() => {
@@ -283,7 +284,7 @@ export default function PurchaseRequestFormPage() {
 
   const removeRow = (index: number) => {
     if (purchaseItems.length === 1) {
-      toast.error('至少保留一行物料明细');
+      toast({ title: '至少保留一行物料明细', variant: 'destructive' });
       return;
     }
     setPurchaseItems(prev => prev.filter((_, i) => i !== index));
@@ -309,21 +310,21 @@ export default function PurchaseRequestFormPage() {
   const handleSave = async (submitStatus: number = 0) => {
     const filledItems = purchaseItems.filter(item => item.productName || item.spec || item.quantity);
     if (filledItems.length === 0) {
-      toast.error('请至少填写一行物料明细');
+      toast({ title: '请至少填写一行物料明细', variant: 'destructive' });
       return;
     }
     if (!form.applicant) {
-      toast.error('请选择申请人');
+      toast({ title: '请选择申请人', variant: 'destructive' });
       return;
     }
     if (!form.department) {
-      toast.error('请选择部门');
+      toast({ title: '请选择部门', variant: 'destructive' });
       return;
     }
 
     const itemsWithoutMaterialId = filledItems.filter(item => !item.material_id);
     if (itemsWithoutMaterialId.length > 0 && submitStatus >= 1) {
-      toast.error(`有 ${itemsWithoutMaterialId.length} 行物料未从主档选择，提交前请补全`);
+      toast({ title: `有 ${itemsWithoutMaterialId.length} 行物料未从主档选择，提交前请补全`, variant: 'destructive' });
       return;
     }
 
@@ -375,16 +376,16 @@ export default function PurchaseRequestFormPage() {
       const result = await res.json();
       if (result.success) {
         const statusLabel = STATUS_MAP[submitStatus]?.label || '保存';
-        toast.success(`${statusLabel}成功`);
+        toast({ title: `${statusLabel}成功` });
         setEditingStatus(submitStatus);
         if (!editingId && result.data?.id) {
           setEditingId(result.data.id);
         }
       } else {
-        toast.error(result.message || '保存失败');
+        toast({ title: result.message || '保存失败', variant: 'destructive' });
       }
     } catch (e) {
-      toast.error('保存失败');
+      toast({ title: '保存失败', variant: 'destructive' });
     }
   };
 

@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { AnimatedTabs } from '@/components/ui/animated-tabs';
 import { Plus, Search, RefreshCw, AlertTriangle, Shield, Lock, Unlock, Eye, Edit, Trash2, Wrench, QrCode, Activity, BarChart3, Clock, WrenchIcon, RotateCcw } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
 interface DieTemplate {
   id: number;
@@ -122,6 +122,7 @@ const MAINTENANCE_STATUS_MAP: Record<number, { label: string; color: string }> =
 };
 
 export default function DieTemplatePage() {
+  const { toast } = useToast();
   const [list, setList] = useState<DieTemplate[]>([]);
   const [warningList, setWarningList] = useState<DieTemplate[]>([]);
   const [dashboardStats, setDashboardStats] = useState<any>({});
@@ -193,7 +194,7 @@ export default function DieTemplatePage() {
         setDashboardStats(data.data?.dashboardStats || {});
       }
     } catch (e) {
-      toast.error('获取刀模/网版列表失败');
+      toast({ title: '获取刀模/网版列表失败', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -207,7 +208,7 @@ export default function DieTemplatePage() {
         setMaintenanceList(data.data?.list || []);
       }
     } catch (e) {
-      toast.error('获取保养记录失败');
+      toast({ title: '获取保养记录失败', variant: 'destructive' });
     }
   }, []);
 
@@ -219,7 +220,7 @@ export default function DieTemplatePage() {
         setUsageLogList(data.data?.list || []);
       }
     } catch (e) {
-      toast.error('获取使用记录失败');
+      toast({ title: '获取使用记录失败', variant: 'destructive' });
     }
   }, []);
 
@@ -234,7 +235,7 @@ export default function DieTemplatePage() {
 
   const handleCreate = async () => {
     if (!form.template_code || !form.template_name) {
-      toast.error('请填写编号和名称');
+      toast({ title: '请填写编号和名称', variant: 'destructive' });
       return;
     }
     try {
@@ -265,15 +266,15 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('创建成功');
+        toast({ title: '创建成功' });
         setDialogOpen(false);
         resetForm();
         fetchList();
       } else {
-        toast.error(data.message || '创建失败');
+        toast({ title: data.message || '创建失败', variant: 'destructive' });
       }
     } catch (e) {
-      toast.error('创建失败');
+      toast({ title: '创建失败', variant: 'destructive' });
     }
   };
 
@@ -306,27 +307,27 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('更新成功');
+        toast({ title: '更新成功' });
         setDialogOpen(false);
         setEditing(false);
         resetForm();
         fetchList();
       } else {
-        toast.error(data.message || '更新失败');
+        toast({ title: data.message || '更新失败', variant: 'destructive' });
       }
     } catch (e) {
-      toast.error('更新失败');
+      toast({ title: '更新失败', variant: 'destructive' });
     }
   };
 
   const handleDeductUsage = async () => {
     if (!selectedItem || !usageAmount) {
-      toast.error('请输入使用次数');
+      toast({ title: '请输入使用次数', variant: 'destructive' });
       return;
     }
     const deductCount = parseInt(usageAmount);
     if (deductCount <= 0) {
-      toast.error('使用次数必须大于0');
+      toast({ title: '使用次数必须大于0', variant: 'destructive' });
       return;
     }
     try {
@@ -340,15 +341,15 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`已记录${deductCount}次使用，累计${data.data?.cumulative_after || 0}次`);
+        toast({ title: `已记录${deductCount}次使用，累计${data.data?.cumulative_after || 0}次` });
         setUsageDialogOpen(false);
         setUsageAmount('');
         fetchList();
       } else {
-        toast.error(data.message || '记录失败');
+        toast({ title: data.message || '记录失败', variant: 'destructive' });
       }
     } catch (e) {
-      toast.error('记录失败');
+      toast({ title: '记录失败', variant: 'destructive' });
     }
   };
 
@@ -370,16 +371,16 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('保养记录创建成功');
+        toast({ title: '保养记录创建成功' });
         setMaintenanceDialogOpen(false);
         resetMaintenanceForm();
         fetchList();
         if (activeTab === 'maintenance') fetchMaintenanceList();
       } else {
-        toast.error(data.message || '保养创建失败');
+        toast({ title: data.message || '保养创建失败', variant: 'destructive' });
       }
     } catch (e) {
-      toast.error('保养创建失败');
+      toast({ title: '保养创建失败', variant: 'destructive' });
     }
   };
 
@@ -397,14 +398,14 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('保养完成');
+        toast({ title: '保养完成' });
         fetchMaintenanceList();
         fetchList();
       } else {
-        toast.error(data.message || '操作失败');
+        toast({ title: data.message || '操作失败', variant: 'destructive' });
       }
     } catch (e) {
-      toast.error('操作失败');
+      toast({ title: '操作失败', variant: 'destructive' });
     }
   };
 
@@ -432,13 +433,13 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`${action}成功`);
+        toast({ title: `${action}成功` });
         fetchList();
       } else {
-        toast.error(data.message || `${action}失败`);
+        toast({ title: data.message || `${action}失败`, variant: 'destructive' });
       }
     } catch (e) {
-      toast.error(`${action}失败`);
+      toast({ title: `${action}失败`, variant: 'destructive' });
     }
   };
 
@@ -465,13 +466,13 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('报废成功');
+        toast({ title: '报废成功' });
         fetchList();
       } else {
-        toast.error(data.message || '报废失败');
+        toast({ title: data.message || '报废失败', variant: 'destructive' });
       }
     } catch (e) {
-      toast.error('报废失败');
+      toast({ title: '报废失败', variant: 'destructive' });
     }
   };
 
@@ -481,13 +482,13 @@ export default function DieTemplatePage() {
       const res = await fetch(`/api/prepress/die-template?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        toast.success('删除成功');
+        toast({ title: '删除成功' });
         fetchList();
       } else {
-        toast.error(data.message || '删除失败');
+        toast({ title: data.message || '删除失败', variant: 'destructive' });
       }
     } catch (e) {
-      toast.error('删除失败');
+      toast({ title: '删除失败', variant: 'destructive' });
     }
   };
 
