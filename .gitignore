@@ -96,4 +96,32 @@ Desktop.ini
 .vercel
 .turbo
 
+# AI tools and assistants
+.claude/
+.agents/
+.obsidian/
+.roo/
+.workbuddy/
+.coze/
 .coze-logs
+.agentic-tools-mcp/
+
+# Backup directories
+backups/
+
+# Legacy/mirror project
+vnerp/
+
+# Temporary scripts and debug files
+temp_check.js
+api-response.json
+test-login-flow.js
+test_import_vnpython.py
+vnpython.py
+vnpython.pyw
+skills-lock.json
+
+# Database package files (should not be in repo)
+database/package.json
+database/package-lock.json
+database/pnpm-lock.yaml

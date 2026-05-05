@@ -1,13 +1,15 @@
 import { formatDate as baseFormatDate } from './utils';
 
-let cachedDateFormat: string | null = null;
+let cachedDateFormat: string = 'YYYY-MM-DD';
 let fetchPromise: Promise<string> | null = null;
 
 async function fetchDateFormat(): Promise<string> {
-  if (cachedDateFormat) return cachedDateFormat;
-  if (fetchPromise) return fetchPromise;
+  if (cachedDateFormat !== 'YYYY-MM-DD' || fetchPromise) {
+    if (fetchPromise) return fetchPromise;
+    return cachedDateFormat;
+  }
 
-  fetchPromise = (async () => {
+  fetchPromise = (async (): Promise<string> => {
     try {
       const res = await fetch('/api/system/config?pageSize=200');
       const data = await res.json();
@@ -23,7 +25,6 @@ async function fetchDateFormat(): Promise<string> {
     } catch (e) {
       console.error('Failed to fetch date format', e);
     }
-    cachedDateFormat = 'YYYY-MM-DD';
     return cachedDateFormat;
   })();
 

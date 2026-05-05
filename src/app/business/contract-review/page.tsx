@@ -60,15 +60,15 @@ const statusMap: Record<number, { label: string; variant: 'default' | 'secondary
 };
 
 const exportColumns = [
-  { key: 'review_no', label: '评审编号' },
-  { key: 'order_no', label: '订单号' },
-  { key: 'customer_name', label: '客户名称' },
-  { key: 'product_name', label: '产品名称' },
-  { key: 'quantity', label: '数量' },
-  { key: 'amount', label: '金额' },
-  { key: 'delivery_date', label: '交期' },
-  { key: 'sample_status_label', label: '样品状态' },
-  { key: 'status_label', label: '评审状态' },
+  { key: 'review_no', header: '评审编号' },
+  { key: 'order_no', header: '订单号' },
+  { key: 'customer_name', header: '客户名称' },
+  { key: 'product_name', header: '产品名称' },
+  { key: 'quantity', header: '数量' },
+  { key: 'amount', header: '金额' },
+  { key: 'delivery_date', header: '交期' },
+  { key: 'sample_status_label', header: '样品状态' },
+  { key: 'status_label', header: '评审状态' },
 ];
 
 export default function ContractReviewPage() {

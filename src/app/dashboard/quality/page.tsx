@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 interface QualityData {
-  overview: { totalInspections: number; passRate: number; todayInspections: number; todayPassRate: number; pendingInspections: number; defectRate: number };
+  overview: { totalInspections: number; passRate: number; todayInspections: number; todayPassRate: number; pendingInspections: number; defectRate: number; passedInspections: number; failedInspections: number };
   byType: { inspect_type: string; total: number; passed: number }[];
   defectTrend: { date: string; total: number; defects: number }[];
   topDefects: { defect_type: string; count: number }[];
@@ -186,7 +186,7 @@ function HorizontalBarChart({ data }: { data: { defect_type: string; count: numb
 export default function QualityDashboard() {
   const { companyName } = useCompanyName();
   const [data, setData] = useState<QualityData>({
-    overview: { totalInspections: 0, passRate: 0, todayInspections: 0, todayPassRate: 0, pendingInspections: 0, defectRate: 0 },
+    overview: { totalInspections: 0, passRate: 0, todayInspections: 0, todayPassRate: 0, pendingInspections: 0, defectRate: 0, passedInspections: 0, failedInspections: 0 },
     byType: [], defectTrend: [], topDefects: [], recentInspections: [], processQuality: [],
   });
   const [loading, setLoading] = useState(true);

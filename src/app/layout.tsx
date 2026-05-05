@@ -22,7 +22,7 @@ async function getCompanyName(): Promise<string> {
     if (Array.isArray(rows) && rows.length > 0 && rows[0]?.config_value) {
       cachedCompanyName = rows[0].config_value;
       cacheTimestamp = now;
-      return cachedCompanyName;
+      return cachedCompanyName!;
     }
   } catch (e) {
     console.error('Failed to fetch company name:', e);
