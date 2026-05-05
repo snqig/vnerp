@@ -47,9 +47,8 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Printer,
 } from 'lucide-react';
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
 import { formatDate } from '@/lib/date-utils';

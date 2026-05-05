@@ -88,7 +88,6 @@ export default function ScreenPlatePage() {
   const [editItem, setEditItem] = useState<Partial<ScreenPlate>>({});
   const [historyList, setHistoryList] = useState<HistoryRecord[]>([]);
   const [currentPlateId, setCurrentPlateId] = useState<number | null>(null);
-  const [_showLifeDialog, setShowLifeDialog] = useState(false);
   const [lifeAction, setLifeAction] = useState('');
   const [lifeRemark, setLifeRemark] = useState('');
   const [lifeTension, setLifeTension] = useState('');
@@ -186,7 +185,6 @@ export default function ScreenPlatePage() {
       const result = await res.json();
       if (result.success) {
         toast({ title: '记录成功' });
-        setShowLifeDialog(false);
         setLifeAction('');
         setLifeRemark('');
         setLifeTension('');

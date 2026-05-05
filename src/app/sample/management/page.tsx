@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +29,6 @@ import {
 import { Search, Plus, Eye, Edit, Trash2, MoreHorizontal, Loader2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { useCompanyName } from '@/hooks/useCompanyName';
 import { useDebounce } from '@/hooks/use-debounce';
 import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
 import { formatDate } from '@/lib/date-utils';
@@ -77,7 +76,6 @@ const emptyForm = {
 };
 
 export default function SampleManagementPage() {
-  const { companyName } = useCompanyName();
   const { toast } = useToast();
   const [list, setList] = useState<SampleOrder[]>([]);
   const [total, setTotal] = useState(0);
