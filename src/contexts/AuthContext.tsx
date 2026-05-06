@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const menusCountRef = useRef(0);
 
-  const fetchMenus = useCallback(async (token: string, force: boolean = false) => {
+  const fetchMenus = useCallback(async (token: string, force: boolean = false, clearOnAuthError: boolean = true) => {
     if (!force && menusLoadedRef.current && menusCountRef.current > 0) {
       return;
     }
@@ -77,19 +77,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.status === 401) {
         console.error('[AuthContext] 菜单API返回401');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
-        menusLoadedRef.current = false;
-        menusCountRef.current = 0;
-        setState({
-          user: null,
-          menus: [],
-          permissions: [],
-          isAuthenticated: false,
-          isLoading: false
-        });
+        if (clearOnAuthError) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+          menusLoadedRef.current = false;
+          menusCountRef.current = 0;
+          setState({
+            user: null,
+            menus: [],
+            permissions: [],
+            isAuthenticated: false,
+            isLoading: false
+          });
+        } else {
+          setState(prev => ({ ...prev, isLoading: false }));
+        }
         return;
       }
 
@@ -176,7 +180,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isLoading: true
         });
 
-        await fetchMenus(result.data.token, true);
+        fetchMenus(result.data.token, true, false).catch((e) => {
+          console.error('[AuthContext] 登录后加载菜单失败:', e);
+        });
         return { success: true };
       } else {
         return { success: false, message: result.message };

@@ -550,7 +550,7 @@ export default function LoginPage() {
             <p className="text-muted-foreground text-sm">请输入您的登录信息</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-5" data-testid="login-form">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-sm font-medium">用户名</Label>
               <Input
@@ -564,6 +564,7 @@ export default function LoginPage() {
                 onBlur={() => setIsTyping(false)}
                 required
                 className="h-12 bg-background border-border/60 focus:border-primary"
+                data-testid="username-input"
               />
             </div>
 
@@ -578,6 +579,7 @@ export default function LoginPage() {
                   onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                   required
                   className="h-12 pr-10 bg-background border-border/60 focus:border-primary"
+                  data-testid="password-input"
                 />
                 <button
                   type="button"
@@ -603,7 +605,7 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="p-3 text-sm text-red-400 bg-red-950/20 border border-red-900/30 rounded-lg">
+              <div data-testid="login-error" className="p-3 text-sm text-red-400 bg-red-950/20 border border-red-900/30 rounded-lg">
                 {error}
               </div>
             )}
@@ -613,6 +615,7 @@ export default function LoginPage() {
               className="w-full h-12 text-base font-medium"
               size="lg"
               disabled={loading}
+              data-testid="login-submit"
             >
               {loading ? (
                 <div className="flex items-center justify-center">

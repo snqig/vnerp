@@ -122,4 +122,116 @@ describe('Button 组件测试', () => {
     render(<Button type="submit">提交</Button>)
     expect(screen.getByRole('button')).toHaveAttribute('type', 'submit')
   })
+
+  it('应该支持新增变体 success', () => {
+    render(<Button variant="success">成功</Button>)
+    expect(screen.getByRole('button')).toHaveAttribute('data-variant', 'success')
+    expect(screen.getByRole('button')).toHaveClass('bg-green-500')
+  })
+
+  it('应该支持新增变体 warning', () => {
+    render(<Button variant="warning">警告</Button>)
+    expect(screen.getByRole('button')).toHaveAttribute('data-variant', 'warning')
+    expect(screen.getByRole('button')).toHaveClass('bg-yellow-500')
+  })
+
+  it('应该支持新增变体 info', () => {
+    render(<Button variant="info">信息</Button>)
+    expect(screen.getByRole('button')).toHaveAttribute('data-variant', 'info')
+    expect(screen.getByRole('button')).toHaveClass('bg-blue-500')
+  })
+
+  it('应该支持新增尺寸 xl', () => {
+    render(<Button size="xl">超大</Button>)
+    expect(screen.getByRole('button')).toHaveAttribute('data-size', 'xl')
+    expect(screen.getByRole('button')).toHaveClass('h-12')
+  })
+
+  it('应该支持新增尺寸 xs', () => {
+    render(<Button size="xs">超小</Button>)
+    expect(screen.getByRole('button')).toHaveAttribute('data-size', 'xs')
+    expect(screen.getByRole('button')).toHaveClass('h-7')
+  })
+
+  it('应该支持新增尺寸 icon-sm', () => {
+    render(<Button size="icon-sm">图标</Button>)
+    expect(screen.getByRole('button')).toHaveAttribute('data-size', 'icon-sm')
+    expect(screen.getByRole('button')).toHaveClass('size-8')
+  })
+
+  it('应该支持新增尺寸 icon-lg', () => {
+    render(<Button size="icon-lg">图标</Button>)
+    expect(screen.getByRole('button')).toHaveAttribute('data-size', 'icon-lg')
+    expect(screen.getByRole('button')).toHaveClass('size-10')
+  })
+
+  it('应该在loading时同时设置disabled', () => {
+    render(<Button loading disabled={false}>加载</Button>)
+    const button = screen.getByRole('button')
+    expect(button).toBeDisabled()
+  })
+
+  it('应该在loading时忽略disabled=false', () => {
+    render(<Button loading disabled={false}>加载</Button>)
+    expect(screen.getByRole('button')).toBeDisabled()
+  })
+
+  it('应该设置data-slot属性为button', () => {
+    render(<Button>按钮</Button>)
+    expect(screen.getByRole('button')).toHaveAttribute('data-slot', 'button')
+  })
+
+  it('应该支持data-testid属性透传', () => {
+    render(<Button data-testid="my-button">按钮</Button>)
+    expect(screen.getByTestId('my-button')).toBeInTheDocument()
+  })
+
+  it('应该在非loading状态下不渲染Loader2', () => {
+    render(<Button loading={false}>按钮</Button>)
+    expect(document.querySelector('.animate-spin')).not.toBeInTheDocument()
+  })
+
+  it('应该支持shape与variant组合使用', () => {
+    render(<Button variant="destructive" shape="pill">删除</Button>)
+    const button = screen.getByRole('button')
+    expect(button).toHaveAttribute('data-variant', 'destructive')
+    expect(button).toHaveClass('rounded-full')
+  })
+
+  it('应该支持size与shape组合使用', () => {
+    render(<Button size="lg" shape="square">按钮</Button>)
+    const button = screen.getByRole('button')
+    expect(button).toHaveAttribute('data-size', 'lg')
+    expect(button).toHaveClass('rounded-none')
+  })
+
+  it('应该支持fullWidth与loading组合', () => {
+    render(<Button fullWidth loading>加载中</Button>)
+    const button = screen.getByRole('button')
+    expect(button).toHaveClass('w-full')
+    expect(button).toBeDisabled()
+    expect(document.querySelector('.animate-spin')).toBeInTheDocument()
+  })
+
+  it('应该支持所有props组合', () => {
+    render(
+      <Button
+        variant="success"
+        size="xl"
+        shape="pill"
+        fullWidth
+        className="extra-class"
+        data-testid="combo-btn"
+      >
+        组合按钮
+      </Button>
+    )
+    const button = screen.getByTestId('combo-btn')
+    expect(button).toHaveAttribute('data-variant', 'success')
+    expect(button).toHaveAttribute('data-size', 'xl')
+    expect(button).toHaveClass('rounded-full')
+    expect(button).toHaveClass('w-full')
+    expect(button).toHaveClass('extra-class')
+    expect(button).toHaveTextContent('组合按钮')
+  })
 })

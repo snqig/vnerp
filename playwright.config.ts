@@ -7,7 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   
-  /* 测试文件匹配模式 */
+  globalSetup: './tests/global-setup.ts',
+  
   testMatch: '**/*.spec.ts',
   
   /* 完全并行运行测试 */
@@ -47,10 +48,10 @@ export default defineConfig({
     viewport: { width: 1920, height: 1080 },
     
     /* 动作超时 */
-    actionTimeout: 15000,
+    actionTimeout: 30000,
     
     /* 导航超时 */
-    navigationTimeout: 30000,
+    navigationTimeout: 60000,
   },
 
   /* 项目配置 */

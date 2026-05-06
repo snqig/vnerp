@@ -48,6 +48,7 @@ import {
 } from 'lucide-react';
 import { ThemeSettings } from '@/components/theme-settings';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ConfigItem {
   id: number;
@@ -86,7 +87,10 @@ interface NotificationConfig {
 }
 
 export default function BasicsSettingsPage() {
-  const [activeTab, setActiveTab] = useState('general');
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole('super_admin');
+
+  const [activeTab, setActiveTab] = useState(isAdmin ? 'general' : 'theme');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -268,6 +272,10 @@ export default function BasicsSettingsPage() {
 
   useEffect(() => {
     const init = async () => {
+      if (!isAdmin) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       await Promise.all([loadConfigs(), loadDictOptions(), loadDictTypes()]);
       setLoading(false);
@@ -500,14 +508,15 @@ export default function BasicsSettingsPage() {
     <MainLayout title="基础设置">
       <div className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-[500px]">
-            <TabsTrigger value="general">通用设置</TabsTrigger>
-            <TabsTrigger value="numbering">编码规则</TabsTrigger>
-            <TabsTrigger value="dictionary">数据字典</TabsTrigger>
-            <TabsTrigger value="notification">通知设置</TabsTrigger>
+          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5 lg:w-[500px]' : 'grid-cols-1 lg:w-[120px]'}`}>
+            {isAdmin && <TabsTrigger value="general">通用设置</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="numbering">编码规则</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="dictionary">数据字典</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="notification">通知设置</TabsTrigger>}
             <TabsTrigger value="theme">主题设置</TabsTrigger>
           </TabsList>
 
+          {isAdmin && (
           <TabsContent value="general" className="space-y-6">
             <Card>
               <CardHeader>
@@ -614,7 +623,9 @@ export default function BasicsSettingsPage() {
               </Button>
             </div>
           </TabsContent>
+          )}
 
+          {isAdmin && (
           <TabsContent value="numbering" className="space-y-6">
             <Card>
               <CardHeader>
@@ -675,7 +686,9 @@ export default function BasicsSettingsPage() {
               </Button>
             </div>
           </TabsContent>
+          )}
 
+          {isAdmin && (
           <TabsContent value="dictionary" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Card className="lg:col-span-1">
@@ -783,7 +796,9 @@ export default function BasicsSettingsPage() {
               </Card>
             </div>
           </TabsContent>
+          )}
 
+          {isAdmin && (
           <TabsContent value="notification" className="space-y-6">
             <Card>
               <CardHeader>
@@ -833,6 +848,7 @@ export default function BasicsSettingsPage() {
               </Button>
             </div>
           </TabsContent>
+          )}
 
           <TabsContent value="theme" className="space-y-6">
             <ThemeSettings />

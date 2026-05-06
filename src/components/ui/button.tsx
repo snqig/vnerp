@@ -68,6 +68,7 @@ function Button({
   fullWidth = false,
   children,
   disabled,
+  type = 'button',
   ...props
 }: ButtonProps) {
   const Comp = asChild ? Slot : 'button';
@@ -79,6 +80,7 @@ function Button({
       data-variant={variant}
       data-size={size}
       data-loading={loading}
+      type={type}
       className={cn(
         buttonVariants({ variant, size, className }),
         shape === 'pill' && 'rounded-full',

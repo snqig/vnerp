@@ -14,14 +14,14 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   let where = 'WHERE u.deleted = 0';
   const params: any[] = [];
   if (username) { where += ' AND u.username LIKE ?'; params.push('%' + username + '%'); }
-  if (realName) { where += ' AND u.real_name LIKE ?'; params.push('%' + realName + '%'); }
+  if (realName) { where += ' AND COALESCE(e.name, u.real_name) LIKE ?'; params.push('%' + realName + '%'); }
   if (status !== '') { where += ' AND u.status = ?'; params.push(Number(status)); }
 
   const countSql = 'SELECT COUNT(*) as total FROM sys_user u ' + where;
   const totalRows: any = await query(countSql, params);
   const total = totalRows[0]?.total || 0;
 
-  const dataSql = 'SELECT u.id, u.username, u.real_name, u.email, u.phone, u.department_id, u.status, u.first_login, u.create_time, d.dept_name FROM sys_user u LEFT JOIN sys_department d ON u.department_id = d.id ' + where + ' ORDER BY u.id DESC LIMIT ? OFFSET ?';
+  const dataSql = 'SELECT u.id, u.username, COALESCE(e.name, u.real_name) AS real_name, u.real_name AS user_real_name, u.email, u.phone, u.department_id, u.status, u.first_login, u.create_time, d.dept_name, e.employee_no FROM sys_user u LEFT JOIN sys_department d ON u.department_id = d.id LEFT JOIN sys_employee e ON e.employee_no COLLATE utf8mb4_unicode_ci = u.username ' + where + ' ORDER BY u.id DESC LIMIT ? OFFSET ?';
   const rows: any = await query(dataSql, [...params, pageSize, (page - 1) * pageSize]);
 
   for (const user of rows) {

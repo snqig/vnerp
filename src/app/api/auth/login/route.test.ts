@@ -229,4 +229,194 @@ describe('登录API测试', () => {
       expect.any(Array)
     )
   })
+
+  it('应该在锁定时间过后允许重新登录', async () => {
+    const pastLockTime = new Date(Date.now() - 20 * 60 * 1000)
+    const mockUser = {
+      id: 1,
+      username: 'admin',
+      password: 'hashed_password',
+      real_name: '管理员',
+      avatar: null,
+      email: 'admin@example.com',
+      phone: null,
+      department_id: 1,
+      status: 1,
+      first_login: 0,
+      login_fail_count: 5,
+      lock_time: pastLockTime,
+    }
+
+    vi.mocked(query)
+      .mockResolvedValueOnce([mockUser])
+      .mockResolvedValueOnce([])
+
+    mockCompare.mockResolvedValueOnce(true)
+    mockExecute.mockResolvedValueOnce({ affectedRows: 1 })
+
+    const request = new Request('http://localhost/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const response = await POST(request as any)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.success).toBe(true)
+  })
+
+  it('应该在锁定时间内拒绝登录', async () => {
+    const recentLockTime = new Date(Date.now() - 5 * 60 * 1000)
+    const mockUser = {
+      id: 1,
+      username: 'admin',
+      password: 'hashed_password',
+      status: 1,
+      login_fail_count: 5,
+      lock_time: recentLockTime,
+    }
+
+    vi.mocked(query).mockResolvedValue([mockUser])
+
+    const request = new Request('http://localhost/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const response = await POST(request as any)
+    const data = await response.json()
+
+    expect(response.status).toBe(429)
+    expect(data.success).toBe(false)
+    expect(data.message).toContain('账号已锁定')
+  })
+
+  it('应该在密码错误时显示剩余尝试次数', async () => {
+    const mockUser = {
+      id: 1,
+      username: 'admin',
+      password: 'hashed_password',
+      status: 1,
+      login_fail_count: 2,
+      lock_time: null,
+    }
+
+    vi.mocked(query).mockResolvedValue([mockUser])
+    mockCompare.mockResolvedValueOnce(false)
+    mockExecute.mockResolvedValueOnce({ affectedRows: 1 })
+
+    const request = new Request('http://localhost/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'admin', password: 'wrong' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const response = await POST(request as any)
+    const data = await response.json()
+
+    expect(response.status).toBe(401)
+    expect(data.message).toContain('还剩')
+  })
+
+  it('应该在首次登录时返回firstLogin标志', async () => {
+    const mockUser = {
+      id: 1,
+      username: 'admin',
+      password: 'hashed_password',
+      real_name: '管理员',
+      avatar: null,
+      email: 'admin@example.com',
+      phone: null,
+      department_id: 1,
+      status: 1,
+      first_login: 1,
+      login_fail_count: 0,
+      lock_time: null,
+    }
+
+    vi.mocked(query)
+      .mockResolvedValueOnce([mockUser])
+      .mockResolvedValueOnce([])
+
+    mockCompare.mockResolvedValueOnce(true)
+    mockExecute.mockResolvedValueOnce({ affectedRows: 1 })
+
+    const request = new Request('http://localhost/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const response = await POST(request as any)
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.success).toBe(true)
+    expect(data.data.user.firstLogin).toBe(true)
+  })
+
+  it('应该在非首次登录时返回firstLogin为false', async () => {
+    const mockUser = {
+      id: 1,
+      username: 'admin',
+      password: 'hashed_password',
+      real_name: '管理员',
+      avatar: null,
+      email: 'admin@example.com',
+      phone: null,
+      department_id: 1,
+      status: 1,
+      first_login: 0,
+      login_fail_count: 0,
+      lock_time: null,
+    }
+
+    vi.mocked(query)
+      .mockResolvedValueOnce([mockUser])
+      .mockResolvedValueOnce([])
+
+    mockCompare.mockResolvedValueOnce(true)
+    mockExecute.mockResolvedValueOnce({ affectedRows: 1 })
+
+    const request = new Request('http://localhost/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const response = await POST(request as any)
+    const data = await response.json()
+
+    expect(data.data.user.firstLogin).toBe(false)
+  })
+
+  it('应该在密码错误达到上限时锁定账号', async () => {
+    const mockUser = {
+      id: 1,
+      username: 'admin',
+      password: 'hashed_password',
+      status: 1,
+      login_fail_count: 4,
+      lock_time: null,
+    }
+
+    vi.mocked(query).mockResolvedValue([mockUser])
+    mockCompare.mockResolvedValueOnce(false)
+    mockExecute.mockResolvedValueOnce({ affectedRows: 1 })
+
+    const request = new Request('http://localhost/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'admin', password: 'wrong' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+
+    const response = await POST(request as any)
+    const data = await response.json()
+
+    expect(response.status).toBe(429)
+    expect(data.message).toContain('15分钟')
+  })
 })

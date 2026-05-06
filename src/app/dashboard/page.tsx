@@ -81,7 +81,7 @@ export default function DashboardPage() {
               欢迎回来，这里是您的企业运营概览。当前时间：{currentTime}
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => { setLoading(true); fetchDashboard(); }}>
+          <Button variant="outline" size="sm" data-testid="dashboard-refresh" onClick={() => { setLoading(true); fetchDashboard(); }}>
             <RefreshCw className="h-4 w-4 mr-2" />
             刷新数据
           </Button>

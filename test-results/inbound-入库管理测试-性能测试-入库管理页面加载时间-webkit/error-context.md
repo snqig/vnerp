@@ -1,38 +1,98 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
-  - generic [ref=e2]:
-    - generic [ref=e3]:
-      - generic [ref=e5]:
-        - img "越南达昌丝网印刷有限公司" [ref=e6]
-        - generic [ref=e7]: 越南达昌丝网印刷有限公司
-      - generic [ref=e29]:
-        - generic [ref=e30]: 越南达昌丝网印刷有限公司
-        - generic [ref=e31]: 丝网印刷管理系统
-    - generic [ref=e36]:
-      - generic [ref=e37]:
-        - heading "欢迎回来！" [level=1] [ref=e38]
-        - paragraph [ref=e39]: 请输入您的登录信息
-      - generic [ref=e40]:
-        - generic [ref=e41]:
-          - generic [ref=e42]: 用户名
-          - textbox "用户名" [ref=e43]:
-            - /placeholder: 请输入用户名
-            - text: admin
-        - generic [ref=e44]:
-          - generic [ref=e45]: 密码
-          - generic [ref=e46]:
-            - textbox "密码" [ref=e47]:
-              - /placeholder: 请输入密码
-              - text: admin
-            - button [ref=e48]:
-              - img [ref=e49]
-        - generic [ref=e53]:
-          - checkbox "记住我" [ref=e54]
-          - checkbox
-          - generic [ref=e55] [cursor=pointer]: 记住我
-        - generic [ref=e56]: 账号已锁定，请10分钟后再试
-        - button "登 录" [ref=e57]
-  - alert [ref=e59]
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e5]:
+      - img "达昌" [ref=e6]
+      - generic [ref=e7]: 越南达昌科技有限公司
+    - navigation [ref=e11]
+    - generic [ref=e15]:
+      - img [ref=e17]
+      - generic [ref=e22]:
+        - paragraph [ref=e23]: 未登录
+        - paragraph [ref=e24]: 普通用户
+      - button "退出" [ref=e25]
+    - button [ref=e26]:
+      - img
+  - generic [ref=e27]:
+    - banner [ref=e28]:
+      - heading "入库管理" [level=1] [ref=e30]
+      - generic [ref=e31]:
+        - button [ref=e32]:
+          - img
+        - button [ref=e33]:
+          - img
+        - button [ref=e34]:
+          - img
+    - main [ref=e35]:
+      - generic [ref=e36]:
+        - generic [ref=e37]:
+          - button "新增" [ref=e38]:
+            - img
+            - text: 新增
+          - button "混合料新增" [ref=e39]:
+            - img
+            - text: 混合料新增
+          - button "生成标签" [ref=e40]:
+            - img
+            - text: 生成标签
+          - button "物料分切" [ref=e41]:
+            - img
+            - text: 物料分切
+          - button "二维码查询" [ref=e42]:
+            - img
+            - text: 二维码查询
+          - button "打印二维码" [ref=e44]:
+            - img
+            - text: 打印二维码
+          - button "刷新" [ref=e46]:
+            - img
+            - text: 刷新
+          - button "重置" [ref=e47]:
+            - img
+            - text: 重置
+        - generic [ref=e48]:
+          - generic [ref=e52]:
+            - generic [ref=e53]:
+              - paragraph [ref=e54]: 今日入库
+              - paragraph [ref=e55]: "0"
+              - paragraph [ref=e56]: 单位：单
+            - img [ref=e58]
+          - generic [ref=e64]:
+            - generic [ref=e65]:
+              - paragraph [ref=e66]: 本月累计入库
+              - paragraph [ref=e67]: "0"
+              - paragraph [ref=e68]: 单位：单
+            - img [ref=e70]
+          - generic [ref=e83]:
+            - generic [ref=e84]:
+              - paragraph [ref=e85]: 待审核
+              - paragraph [ref=e86]: "0"
+              - paragraph [ref=e87]: 单位：单
+            - img [ref=e89]
+          - generic [ref=e95]:
+            - generic [ref=e96]:
+              - paragraph [ref=e97]: 已生成标签
+              - paragraph [ref=e98]: "0"
+              - paragraph [ref=e99]: 单位：个
+            - img [ref=e101]
+        - generic [ref=e108]:
+          - generic [ref=e109]:
+            - generic [ref=e111]:
+              - img [ref=e112]
+              - text: 入库记录
+            - generic [ref=e115]: 管理所有入库记录
+          - generic [ref=e117]: 暂无入库记录
+        - generic [ref=e119]:
+          - generic [ref=e121]:
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - img [ref=e124]
+                - text: 标签管理
+              - generic [ref=e130]: 管理入库原料的二维码标签（基于已审核入库单自动生成）
+            - button "打印全部标签" [ref=e132]:
+              - img
+              - text: 打印全部标签
+          - generic [ref=e134]: 暂无已审核的入库记录，审核后将自动生成标签
 ```

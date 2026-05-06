@@ -1,0 +1,8 @@
+﻿yx -> real_name=snqig
+EMP2024009 -> real_name=é±åä¸
+quality -> real_name=åè´¨ä¸å
+warehouse -> real_name=ä»åºä¸å
+production -> real_name=çäº§ä¸å
+sales -> real_name=éå®ä¸å
+finance -> real_name=è´¢å¡ä¸å
+admin -> real_name=è¶çº§ç®¡çå
