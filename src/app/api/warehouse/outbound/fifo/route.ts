@@ -39,7 +39,7 @@ async function allocateFIFO(
   const [batches]: any = await conn.query(
     `SELECT 
       id, batch_no, material_id, material_code, material_name,
-      available_qty, unit_price, inbound_date, unit, expire_date
+      available_qty, unit_price, inbound_date, unit, expire_date, version
     FROM inv_inventory_batch 
     WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 'normal'
     ORDER BY
@@ -407,15 +407,19 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
         }
 
         for (const alloc of allocation.allocations) {
-          await conn.execute(
+          const [fifoUpdateResult]: any = await conn.execute(
             `UPDATE inv_inventory_batch SET
               quantity = quantity - ?,
               available_qty = available_qty - ?,
               version = version + 1,
               update_time = NOW()
-            WHERE id = ?`,
-            [alloc.allocate_qty, alloc.allocate_qty, alloc.batch_id]
+            WHERE id = ? AND version = ?`,
+            [alloc.allocate_qty, alloc.allocate_qty, alloc.batch_id, (alloc as any).version]
           );
+
+          if (fifoUpdateResult.affectedRows === 0) {
+            throw new Error(`批次 ${alloc.batch_no} 已被其他操作修改，请重试`);
+          }
 
           deductionDetails.push({
             batch_id: alloc.batch_id,

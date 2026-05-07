@@ -1,6 +1,10 @@
 import mysql from 'mysql2/promise';
 
-// 调试日志开关
+// SECURITY: All database queries in this module use parameterized prepared statements
+// via mysql2's pool.query() and pool.execute() with placeholder values (?).
+// This prevents SQL injection attacks by separating SQL logic from data.
+// NEVER concatenate user input directly into SQL strings.
+
 const DEBUG_DB = process.env.DEBUG_DB === 'true' || process.env.NODE_ENV === 'development';
 
 // MySQL 数据库连接配置
@@ -118,6 +122,31 @@ export async function transaction<T>(callback: (connection: mysql.PoolConnection
   } finally {
     connection.release();
   }
+}
+
+// 带重试的事务处理（乐观锁冲突自动重试）
+export async function transactionWithRetry<T>(
+  callback: (connection: mysql.PoolConnection) => Promise<T>,
+  maxRetries: number = 3
+): Promise<T> {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await transaction(callback);
+    } catch (error: any) {
+      lastError = error;
+      const isOptimisticLockError =
+        error.message?.includes('已被其他操作修改') ||
+        error.message?.includes('affectedRows') ||
+        error.message?.includes('version');
+      if (!isOptimisticLockError || attempt >= maxRetries - 1) {
+        throw error;
+      }
+      const delay = Math.min(100 * Math.pow(2, attempt) + Math.random() * 50, 1000);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError;
 }
 
 // 分页查询辅助函数

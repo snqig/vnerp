@@ -1,7 +1,27 @@
 import { NextResponse } from 'next/server';
 import { execute } from '@/lib/db';
 
-// 统一API响应结构
+export function sanitizeInput(input: string): string {
+  return input
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+export function sanitizeObject<T>(obj: T): T {
+  if (typeof obj === 'string') return sanitizeInput(obj) as T;
+  if (Array.isArray(obj)) return obj.map(item => sanitizeObject(item)) as T;
+  if (obj && typeof obj === 'object') {
+    const sanitized: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      sanitized[key] = sanitizeObject(value);
+    }
+    return sanitized as T;
+  }
+  return obj;
+}
+
 export interface ApiResponse<T = any> {
   code: number;
   success: boolean;
@@ -9,7 +29,6 @@ export interface ApiResponse<T = any> {
   data: T | null;
 }
 
-// 分页响应结构
 export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
   pagination: {
     page: number;
@@ -19,17 +38,15 @@ export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
   };
 }
 
-// 成功响应
 export function successResponse<T>(data: T, message = '操作成功', code = 200): NextResponse<ApiResponse<T>> {
   return NextResponse.json({
     code,
     success: true,
     message,
-    data,
+    data: sanitizeObject(data),
   });
 }
 
-// 分页成功响应
 export function paginatedResponse<T>(
   data: T[],
   pagination: { page: number; pageSize: number; total: number; totalPages: number },
@@ -39,18 +56,17 @@ export function paginatedResponse<T>(
     code: 200,
     success: true,
     message,
-    data,
+    data: sanitizeObject(data),
     pagination,
   });
 }
 
-// 错误响应
 export function errorResponse(message: string, code = 500, statusCode = 500): NextResponse<ApiResponse<null>> {
   return NextResponse.json(
     {
       code,
       success: false,
-      message,
+      message: sanitizeInput(message),
       data: null,
     },
     { status: statusCode }

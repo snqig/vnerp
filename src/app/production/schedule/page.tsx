@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { formatDate } from '@/lib/date-utils';
 import {
@@ -57,6 +57,7 @@ import {
   Factory,
   CheckCircle,
   AlertCircle,
+  AlertTriangle,
   Play,
   Pause,
   Trash2,
@@ -65,9 +66,18 @@ import {
   Printer,
   ChevronLeft,
   ChevronRight,
+  GanttChart,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 // 排程数据类型
 interface Schedule {
@@ -161,7 +171,7 @@ export default function ProductionSchedulePage() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [date, setDate] = useState<Date>();
-  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'gantt'>('list');
   const [loading, setLoading] = useState(false);
 
   const fetchSchedules = async () => {
@@ -227,6 +237,119 @@ export default function ProductionSchedulePage() {
     }
     return true;
   });
+
+  const ganttWorkshopLabels: Record<string, string> = {
+    die_cut: '模切车间',
+    trademark: '商标车间',
+    printing: '印刷车间',
+    packaging: '包装车间',
+  };
+
+  const ganttStatusBarColors: Record<number, string> = {
+    1: 'bg-blue-500/80',
+    2: 'bg-amber-500/80',
+    3: 'bg-green-500/80',
+    4: 'bg-gray-400/80',
+    5: 'bg-red-500/80',
+  };
+
+  const ganttStatusProgressColors: Record<number, string> = {
+    1: 'bg-blue-700/50',
+    2: 'bg-amber-700/50',
+    3: 'bg-green-700/50',
+    4: 'bg-gray-600/50',
+    5: 'bg-red-700/50',
+  };
+
+  const GANTT_DAY_WIDTH = 60;
+  const GANTT_LEFT_COL_WIDTH = 250;
+  const GANTT_ROW_HEIGHT = 44;
+
+  const ganttDateRange = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const start = new Date(now);
+    start.setDate(now.getDate() - 1);
+    const end = new Date(now);
+    end.setDate(now.getDate() + 14);
+    return { startDate: start, endDate: end };
+  }, []);
+
+  const ganttTotalDays = Math.ceil(
+    (ganttDateRange.endDate.getTime() - ganttDateRange.startDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const ganttTimelineWidth = ganttTotalDays * GANTT_DAY_WIDTH;
+
+  const ganttDays = useMemo(() => {
+    const result: Date[] = [];
+    for (let i = 0; i < ganttTotalDays; i++) {
+      const d = new Date(ganttDateRange.startDate);
+      d.setDate(ganttDateRange.startDate.getDate() + i);
+      result.push(d);
+    }
+    return result;
+  }, [ganttDateRange, ganttTotalDays]);
+
+  const ganttTodayOffset = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return Math.max(0, (now.getTime() - ganttDateRange.startDate.getTime()) / (1000 * 60 * 60 * 24));
+  }, [ganttDateRange]);
+
+  const ganttGrouped = useMemo(() => {
+    const groups: Record<string, Schedule[]> = {};
+    filteredSchedules.forEach((s) => {
+      const key = s.workshop || 'other';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(s);
+    });
+    return groups;
+  }, [filteredSchedules]);
+
+  const getGanttBarStyle = (schedule: Schedule) => {
+    if (!schedule.planned_start || !schedule.planned_end) return null;
+    const start = new Date(schedule.planned_start);
+    const end = new Date(schedule.planned_end);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    const startOffset = (start.getTime() - ganttDateRange.startDate.getTime()) / (1000 * 60 * 60 * 24);
+    const duration = Math.max(1, (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24) + 1);
+    return {
+      left: `${Math.max(0, startOffset) * GANTT_DAY_WIDTH}px`,
+      width: `${duration * GANTT_DAY_WIDTH}px`,
+    };
+  };
+
+  const getGanttProgress = (schedule: Schedule) => {
+    if (!schedule.planned_qty || schedule.planned_qty === 0) return 0;
+    return Math.min(1, (schedule.completed_qty || 0) / schedule.planned_qty);
+  };
+
+  const detectGanttConflicts = (items: Schedule[]) => {
+    const conflicts = new Set<number>();
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        const a = items[i];
+        const b = items[j];
+        if (
+          a.planned_start && a.planned_end &&
+          b.planned_start && b.planned_end &&
+          new Date(a.planned_start) < new Date(b.planned_end) &&
+          new Date(b.planned_start) < new Date(a.planned_end)
+        ) {
+          conflicts.add(a.id);
+          conflicts.add(b.id);
+        }
+      }
+    }
+    return conflicts;
+  };
+
+  const isGanttWeekend = (date: Date) => {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  };
+
 // 查看详情
   const handleViewDetail = (schedule: Schedule) => {
     setSelectedSchedule(schedule);
@@ -503,6 +626,14 @@ export default function ProductionSchedulePage() {
                 >
                   日历视图
                 </Button>
+                <Button
+                  variant={viewMode === 'gantt' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('gantt')}
+                >
+                  <GanttChart className="h-4 w-4 mr-1" />
+                  甘特图
+                </Button>
                 <Button variant="outline" size="sm">
                   <Filter className="h-4 w-4 mr-2" />
                   筛选
@@ -717,6 +848,189 @@ export default function ProductionSchedulePage() {
                     </div>
                   );
                 })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 甘特图视图 */}
+        {viewMode === 'gantt' && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <GanttChart className="h-5 w-5" />
+                甘特图排程视图
+              </CardTitle>
+              <CardDescription>按车间分组查看生产排程时间线</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="flex">
+                <div
+                  className="flex-shrink-0 border-r border-border z-10 bg-background"
+                  style={{ width: GANTT_LEFT_COL_WIDTH }}
+                >
+                  <div
+                    className="flex items-center px-3 text-xs font-medium text-muted-foreground border-b border-border bg-muted/50"
+                    style={{ height: GANTT_ROW_HEIGHT }}
+                  >
+                    排程信息
+                  </div>
+                  {Object.entries(ganttGrouped).map(([workshop, items]) => (
+                    <div key={workshop}>
+                      <div
+                        className="flex items-center gap-2 px-3 text-xs font-semibold border-b border-border bg-muted/30"
+                        style={{ height: GANTT_ROW_HEIGHT }}
+                      >
+                        <Factory className="h-3.5 w-3.5 text-muted-foreground" />
+                        {ganttWorkshopLabels[workshop] || workshop}
+                        <span className="text-muted-foreground">({items.length})</span>
+                      </div>
+                      {items.map((schedule) => (
+                        <div
+                          key={schedule.id}
+                          className="flex items-center gap-2 px-3 border-b border-border hover:bg-muted/20 cursor-pointer transition-colors"
+                          style={{ height: GANTT_ROW_HEIGHT }}
+                          onClick={() => handleViewDetail(schedule)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-medium truncate">{schedule.product_name}</div>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              {getStatusBadge(schedule.status)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
+                <ScrollArea className="flex-1">
+                  <div style={{ width: ganttTimelineWidth, minWidth: '100%' }}>
+                    <div className="flex border-b border-border bg-muted/50" style={{ height: GANTT_ROW_HEIGHT }}>
+                      {ganttDays.map((day, i) => (
+                        <div
+                          key={i}
+                          className={`flex flex-col items-center justify-center text-xs border-r border-border/50 ${
+                            isGanttWeekend(day) ? 'bg-muted/30' : ''
+                          } ${format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') ? 'bg-primary/10' : ''}`}
+                          style={{ width: GANTT_DAY_WIDTH }}
+                        >
+                          <span className="font-medium">{format(day, 'MM/dd')}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {format(day, 'EEE', { locale: zhCN })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {Object.entries(ganttGrouped).map(([workshop, items]) => {
+                      const conflicts = detectGanttConflicts(items);
+                      return (
+                        <div key={workshop}>
+                          <div
+                            className="relative border-b border-border bg-muted/10"
+                            style={{ height: GANTT_ROW_HEIGHT }}
+                          >
+                            {ganttDays.map((day, i) => (
+                              <div
+                                key={i}
+                                className={`absolute top-0 bottom-0 border-r border-border/30 ${
+                                  isGanttWeekend(day) ? 'bg-muted/20' : ''
+                                }`}
+                                style={{ left: i * GANTT_DAY_WIDTH, width: GANTT_DAY_WIDTH }}
+                              />
+                            ))}
+                          </div>
+                          {items.map((schedule, idx) => {
+                            const barStyle = getGanttBarStyle(schedule);
+                            const progress = getGanttProgress(schedule);
+                            const hasConflict = conflicts.has(schedule.id);
+                            return (
+                              <div
+                                key={schedule.id}
+                                className="relative border-b border-border"
+                                style={{ height: GANTT_ROW_HEIGHT }}
+                              >
+                                {ganttDays.map((day, i) => (
+                                  <div
+                                    key={i}
+                                    className={`absolute top-0 bottom-0 border-r border-border/20 ${
+                                      isGanttWeekend(day) ? 'bg-muted/10' : ''
+                                    }`}
+                                    style={{ left: i * GANTT_DAY_WIDTH, width: GANTT_DAY_WIDTH }}
+                                  />
+                                ))}
+                                <div
+                                  className="absolute top-0 bottom-0 w-0.5 bg-primary/40 z-10"
+                                  style={{ left: ganttTodayOffset * GANTT_DAY_WIDTH + GANTT_DAY_WIDTH / 2 }}
+                                />
+                                {barStyle && (
+                                  <TooltipProvider delayDuration={200}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <motion.div
+                                          className={`absolute top-1.5 rounded-md cursor-pointer overflow-hidden ${
+                                            ganttStatusBarColors[schedule.status] || 'bg-gray-400/80'
+                                          } ${hasConflict ? 'ring-2 ring-red-500/60' : ''}`}
+                                          style={{
+                                            left: barStyle.left,
+                                            width: barStyle.width,
+                                            height: GANTT_ROW_HEIGHT - 12,
+                                          }}
+                                          initial={{ opacity: 0, scaleX: 0 }}
+                                          animate={{ opacity: 1, scaleX: 1 }}
+                                          transition={{ duration: 0.4, delay: idx * 0.05, ease: 'easeOut' }}
+                                          onClick={() => handleViewDetail(schedule)}
+                                        >
+                                          <div
+                                            className={`absolute inset-y-0 left-0 rounded-md ${
+                                              ganttStatusProgressColors[schedule.status] || 'bg-gray-600/50'
+                                            }`}
+                                            style={{ width: `${progress * 100}%` }}
+                                          />
+                                          <div className="relative flex items-center h-full px-2">
+                                            <span className="text-[11px] text-white font-medium truncate">
+                                              {schedule.product_name}
+                                            </span>
+                                            {hasConflict && (
+                                              <AlertTriangle className="h-3 w-3 text-red-200 ml-1 flex-shrink-0" />
+                                            )}
+                                          </div>
+                                        </motion.div>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="max-w-xs">
+                                        <div className="space-y-1 text-xs">
+                                          <div className="font-semibold">{schedule.schedule_no}</div>
+                                          <div>产品: {schedule.product_name}</div>
+                                          <div>车间: {ganttWorkshopLabels[schedule.workshop] || schedule.workshop}</div>
+                                          <div>计划: {formatDate(schedule.planned_start)} ~ {formatDate(schedule.planned_end)}</div>
+                                          {schedule.actual_start && (
+                                            <div>实际: {formatDate(schedule.actual_start)}{schedule.actual_end ? ` ~ ${formatDate(schedule.actual_end)}` : ''}</div>
+                                          )}
+                                          <div>数量: {schedule.completed_qty || 0}/{schedule.planned_qty}</div>
+                                          <div className="flex items-center gap-1">
+                                            状态: {getStatusBadge(schedule.status)}
+                                          </div>
+                                          {hasConflict && (
+                                            <div className="text-red-500 font-medium flex items-center gap-1">
+                                              <AlertTriangle className="h-3 w-3" />
+                                              时间冲突
+                                            </div>
+                                          )}
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
               </div>
             </CardContent>
           </Card>

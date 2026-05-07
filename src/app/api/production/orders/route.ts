@@ -10,55 +10,66 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const status = searchParams.get('status');
 
   let sql = `
-    SELECT pc.*, sc.customer_name
-    FROM prd_process_card pc
-    LEFT JOIN prd_standard_card sc ON pc.product_code = sc.id
-    WHERE pc.deleted = 0
+    SELECT wo.*,
+           so.order_no AS sales_order_no,
+           m.name AS material_name,
+           m.code AS material_code
+    FROM prd_work_order wo
+    LEFT JOIN sal_order so ON wo.sales_order_id = so.id
+    LEFT JOIN bas_material m ON wo.material_id = m.id
+    WHERE wo.deleted = 0
   `;
   const values: any[] = [];
 
   if (keyword) {
-    sql += ` AND (pc.card_no LIKE ? OR pc.work_order_no LIKE ? OR pc.product_name LIKE ?)`;
+    sql += ` AND (wo.work_order_no LIKE ? OR m.name LIKE ? OR m.code LIKE ?)`;
     const likeKeyword = `%${keyword}%`;
     values.push(likeKeyword, likeKeyword, likeKeyword);
   }
 
   if (status) {
-    sql += ` AND pc.burdening_status = ?`;
+    sql += ` AND wo.status = ?`;
     values.push(parseInt(status));
   }
 
-  sql += ` ORDER BY pc.create_time DESC LIMIT ? OFFSET ?`;
+  sql += ` ORDER BY wo.create_time DESC LIMIT ? OFFSET ?`;
   values.push(pageSize, (page - 1) * pageSize);
 
   const orders = await query(sql, values);
 
   const result = (orders as any[]).map((order: any) => ({
     id: order.id,
-    work_order_no: order.work_order_no || order.card_no,
-    card_no: order.card_no,
-    product_name: order.product_name,
-    product_code: order.product_code,
+    work_order_no: order.work_order_no,
+    sales_order_id: order.sales_order_id,
+    sales_order_no: order.sales_order_no,
+    material_id: order.material_id,
+    material_name: order.material_name,
+    material_code: order.material_code,
     plan_qty: parseFloat(order.plan_qty || '0'),
+    completed_qty: parseFloat(order.completed_qty || '0'),
     quantity: parseFloat(order.plan_qty || '0'),
     unit: order.unit,
-    burdening_status: order.burdening_status,
-    status: order.burdening_status,
-    work_order_date: order.work_order_date,
-    customer_name: order.customer_name,
+    status: order.status,
+    priority: order.priority,
+    plan_start_date: order.plan_start_date,
+    plan_end_date: order.plan_end_date,
+    actual_start_date: order.actual_start_date,
+    actual_end_date: order.actual_end_date,
+    workshop_id: order.workshop_id,
+    workcenter_id: order.workcenter_id,
     remark: order.remark,
     create_time: order.create_time,
     update_time: order.update_time,
   }));
 
-  let countSql = `SELECT COUNT(*) as total FROM prd_process_card pc WHERE pc.deleted = 0`;
+  let countSql = `SELECT COUNT(*) as total FROM prd_work_order wo WHERE wo.deleted = 0`;
   const countValues: any[] = [];
   if (keyword) {
-    countSql += ` AND (pc.card_no LIKE ? OR pc.work_order_no LIKE ? OR pc.product_name LIKE ?)`;
+    countSql += ` AND (wo.work_order_no LIKE ? OR EXISTS (SELECT 1 FROM bas_material m WHERE m.id = wo.material_id AND (m.name LIKE ? OR m.code LIKE ?)))`;
     countValues.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
   }
   if (status) {
-    countSql += ` AND pc.burdening_status = ?`;
+    countSql += ` AND wo.status = ?`;
     countValues.push(parseInt(status));
   }
   const countResult = await query(countSql, countValues);

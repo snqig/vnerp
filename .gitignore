@@ -16,6 +16,8 @@ out/
 coverage/
 *.lcov
 .nyc_output
+playwright-report/
+test-results/
 
 # Environment variables
 .env
@@ -97,14 +99,24 @@ Desktop.ini
 .turbo
 
 # AI tools and assistants
+.agentic-tools-mcp/
+.augment/
 .claude/
-.agents/
-.obsidian/
+.codebuddy/
+.continue/
+.iflow/
+.junie/
+.kiro/
+.opencode/
+.qoder/
+.qwen/
 .roo/
+.windsurf/
 .workbuddy/
 .coze/
 .coze-logs
-.agentic-tools-mcp/
+.agents/
+.obsidian/
 
 # Backup directories
 backups/

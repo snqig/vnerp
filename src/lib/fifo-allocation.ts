@@ -11,6 +11,7 @@ export interface FIFOAllocationItem {
   unit_cost: number;
   inbound_date: string;
   expire_date?: string;
+  version?: number;
 }
 
 export interface FIFOAllocationResult {
@@ -49,17 +50,20 @@ export async function allocateFIFO(
   const [batches]: any = await conn.query(
     `SELECT
       id, batch_no, material_id, material_code, material_name,
-      available_qty, unit_price, inbound_date, unit, expire_date
+      available_qty, unit_price, inbound_date, unit, expire_date, opened_at, version
     FROM inv_inventory_batch
     WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 'normal'
     ORDER BY
       CASE
-        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 30 THEN 0
-        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 60 THEN 1
-        ELSE 2
+        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 0 THEN 0
+        WHEN opened_at IS NOT NULL THEN 1
+        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 30 THEN 2
+        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 60 THEN 3
+        ELSE 4
       END,
-      inbound_date ASC,
+      CASE WHEN opened_at IS NOT NULL THEN opened_at ELSE inbound_date END ASC,
       expire_date ASC,
+      inbound_date ASC,
       id ASC
     FOR UPDATE`,
     [materialId, warehouseId]
@@ -100,6 +104,7 @@ export async function allocateFIFO(
       unit_cost: parseFloat(batch.unit_price) || 0,
       inbound_date: batch.inbound_date,
       expire_date: batch.expire_date,
+      version: batch.version,
     });
 
     remaining -= allocateQty;
@@ -134,8 +139,8 @@ export async function executeFIFODeduction(
         available_qty = available_qty - ?,
         version = version + 1,
         update_time = NOW()
-      WHERE id = ? AND available_qty >= ?`,
-      [alloc.allocate_qty, alloc.allocate_qty, alloc.batch_id, alloc.allocate_qty]
+      WHERE id = ? AND available_qty >= ? AND version = ?`,
+      [alloc.allocate_qty, alloc.allocate_qty, alloc.batch_id, alloc.allocate_qty, alloc.version]
     );
 
     if ((updateResult as any).affectedRows === 0) {
@@ -248,8 +253,8 @@ export async function executeSpecifiedBatchDeduction(
       available_qty = available_qty - ?,
       version = version + 1,
       update_time = NOW()
-    WHERE id = ?`,
-    [params.requiredQty, params.requiredQty, batchData.id]
+    WHERE id = ? AND version = ?`,
+    [params.requiredQty, params.requiredQty, batchData.id, batchData.version]
   );
 
   if ((updateResult as any).affectedRows === 0) {

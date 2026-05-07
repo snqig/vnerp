@@ -1,0 +1,169 @@
+import { NextRequest } from 'next/server';
+import { queryOne, transaction } from '@/lib/db';
+import { successResponse, withErrorHandler } from '@/lib/api-response';
+
+export const POST = withErrorHandler(async (request: NextRequest) => {
+  const result = await transaction(async (conn) => {
+    const stats: Record<string, number> = {};
+
+    await conn.execute('DELETE FROM prd_die_usage_log');
+    await conn.execute('ALTER TABLE prd_die_usage_log AUTO_INCREMENT = 1');
+    await conn.execute('DELETE FROM prd_die_maintenance');
+    await conn.execute('ALTER TABLE prd_die_maintenance AUTO_INCREMENT = 1');
+    await conn.execute('DELETE FROM prd_die_template');
+    await conn.execute('ALTER TABLE prd_die_template AUTO_INCREMENT = 1');
+
+    const dieTemplates = [
+      { code: 'DIE-001', name: '手机标签刀模A型', asset_type: 'die', layout_type: 'single_row', pieces: 12, type: 1, spec: '500×400mm', material: 'SKD11模具钢', max_usage: 500000, current: 125000, warning: 100000, max_imp: 500000, cum_imp: 125000, threshold: 80, maint_interval: 80000, maint_count: 1, last_maint_imp: 80000, status: 1, die_status: 'available', location: 'A栋模具区A01', purchase_date: '2024-01-15', unit_price: 8500, remark: '华为手机标签专用' },
+      { code: 'DIE-002', name: '电池标签刀模B型', asset_type: 'die', layout_type: 'double_row', pieces: 24, type: 1, spec: '600×450mm', material: 'DC53模具钢', max_usage: 600000, current: 480000, warning: 120000, max_imp: 600000, cum_imp: 480000, threshold: 80, maint_interval: 100000, maint_count: 4, last_maint_imp: 400000, status: 2, die_status: 'maintenance_needed', location: 'A栋模具区A02', purchase_date: '2024-01-20', unit_price: 12000, remark: '比亚迪电池标签' },
+      { code: 'DIE-003', name: '面板贴膜刀模C型', asset_type: 'die', layout_type: 'single_row', pieces: 8, type: 1, spec: '450×350mm', material: 'Cr12MoV模具钢', max_usage: 400000, current: 380000, warning: 80000, max_imp: 400000, cum_imp: 380000, threshold: 85, maint_interval: 60000, maint_count: 6, last_maint_imp: 360000, status: 2, die_status: 'maintenance_needed', location: 'A栋模具区A03', purchase_date: '2024-02-01', unit_price: 7500, remark: '美的空调面板' },
+      { code: 'DIE-004', name: '能效标签刀模D型', asset_type: 'die', layout_type: 'triple_row', pieces: 36, type: 1, spec: '700×500mm', material: 'SKH51高速钢', max_usage: 800000, current: 200000, warning: 160000, max_imp: 800000, cum_imp: 200000, threshold: 75, maint_interval: 120000, maint_count: 1, last_maint_imp: 120000, status: 1, die_status: 'available', location: 'A栋模具区A04', purchase_date: '2024-02-10', unit_price: 18000, remark: '格力能效标识' },
+      { code: 'DIE-005', name: '封口标签刀模E型', asset_type: 'die', layout_type: 'double_row', pieces: 20, type: 1, spec: '550×420mm', material: 'DC53模具钢', max_usage: 550000, current: 520000, warning: 110000, max_imp: 550000, cum_imp: 520000, threshold: 80, maint_interval: 90000, maint_count: 5, last_maint_imp: 450000, status: 3, die_status: 're_rule_needed', location: 'A栋模具区A05', purchase_date: '2024-02-15', unit_price: 9500, remark: '小米包装封口' },
+      { code: 'DIE-006', name: '充电器标签刀模F型', asset_type: 'die', layout_type: 'single_row', pieces: 15, type: 1, spec: '480×380mm', material: 'SKD11模具钢', max_usage: 450000, current: 50000, warning: 90000, max_imp: 450000, cum_imp: 50000, threshold: 80, maint_interval: 70000, maint_count: 0, last_maint_imp: 0, status: 1, die_status: 'available', location: 'A栋模具区A06', purchase_date: '2024-03-01', unit_price: 6800, remark: 'OPPO充电器标签' },
+      { code: 'DIE-007', name: '电池仓标签刀模G型', asset_type: 'die', layout_type: 'double_row', pieces: 18, type: 1, spec: '520×400mm', material: 'Cr12MoV模具钢', max_usage: 500000, current: 350000, warning: 100000, max_imp: 500000, cum_imp: 350000, threshold: 80, maint_interval: 80000, maint_count: 4, last_maint_imp: 320000, status: 1, die_status: 'available', location: 'A栋模具区A07', purchase_date: '2024-03-05', unit_price: 8200, remark: 'vivo电池仓标签' },
+      { code: 'DIE-008', name: '笔记本标签刀模H型', asset_type: 'die', layout_type: 'single_row', pieces: 6, type: 1, spec: '400×300mm', material: 'SKH51高速钢', max_usage: 350000, current: 330000, warning: 70000, max_imp: 350000, cum_imp: 330000, threshold: 85, maint_interval: 50000, maint_count: 6, last_maint_imp: 300000, status: 2, die_status: 'maintenance_needed', location: 'A栋模具区A08', purchase_date: '2024-03-10', unit_price: 15000, remark: '联想笔记本底壳' },
+      { code: 'DIE-009', name: '洗衣机标签刀模I型', asset_type: 'die', layout_type: 'double_row', pieces: 10, type: 1, spec: '580×440mm', material: 'DC53模具钢', max_usage: 480000, current: 150000, warning: 96000, max_imp: 480000, cum_imp: 150000, threshold: 80, maint_interval: 75000, maint_count: 2, last_maint_imp: 150000, status: 1, die_status: 'available', location: 'A栋模具区A09', purchase_date: '2024-03-15', unit_price: 11000, remark: '海尔洗衣机面板' },
+      { code: 'DIE-010', name: '电视标签刀模J型', asset_type: 'die', layout_type: 'single_row', pieces: 8, type: 1, spec: '500×380mm', material: 'SKD11模具钢', max_usage: 420000, current: 400000, warning: 84000, max_imp: 420000, cum_imp: 400000, threshold: 80, maint_interval: 65000, maint_count: 6, last_maint_imp: 390000, status: 4, die_status: 'scrap', location: 'A栋模具区A10', purchase_date: '2024-03-20', unit_price: 7200, remark: 'TCL电视后壳-已报废' },
+      { code: 'SCR-001', name: '手机标签丝网版300目', asset_type: 'screen_mesh', layout_type: 'single_row', pieces: 4, type: 2, spec: '600×800mm 300目', material: '聚酯网布', max_usage: 200000, current: 80000, warning: 40000, max_imp: 200000, cum_imp: 80000, threshold: 80, maint_interval: 30000, maint_count: 2, last_maint_imp: 60000, status: 1, die_status: 'available', location: 'B栋网版区B01', purchase_date: '2024-01-10', unit_price: 2800, remark: '华为手机标签丝印' },
+      { code: 'SCR-002', name: '电池标签丝网版350目', asset_type: 'screen_mesh', layout_type: 'single_row', pieces: 4, type: 2, spec: '600×800mm 350目', material: '不锈钢网布', max_usage: 250000, current: 200000, warning: 50000, max_imp: 250000, cum_imp: 200000, threshold: 80, maint_interval: 40000, maint_count: 5, last_maint_imp: 200000, status: 2, die_status: 'maintenance_needed', location: 'B栋网版区B02', purchase_date: '2024-01-12', unit_price: 3500, remark: '比亚迪电池标签丝印' },
+      { code: 'SCR-003', name: '面板贴膜丝网版250目', asset_type: 'screen_mesh', layout_type: 'double_row', pieces: 6, type: 2, spec: '800×1000mm 250目', material: '聚酯网布', max_usage: 180000, current: 60000, warning: 36000, max_imp: 180000, cum_imp: 60000, threshold: 75, maint_interval: 25000, maint_count: 2, last_maint_imp: 50000, status: 1, die_status: 'available', location: 'B栋网版区B03', purchase_date: '2024-02-01', unit_price: 3200, remark: '美的面板丝印' },
+      { code: 'SCR-004', name: '能效标签丝网版380目', asset_type: 'screen_mesh', layout_type: 'single_row', pieces: 4, type: 2, spec: '600×800mm 380目', material: '不锈钢网布', max_usage: 220000, current: 170000, warning: 44000, max_imp: 220000, cum_imp: 170000, threshold: 80, maint_interval: 35000, maint_count: 4, last_maint_imp: 140000, status: 2, die_status: 'maintenance_needed', location: 'B栋网版区B04', purchase_date: '2024-02-05', unit_price: 3800, remark: '格力能效标识丝印' },
+      { code: 'SCR-005', name: '封口标签丝网版300目', asset_type: 'screen_mesh', layout_type: 'double_row', pieces: 8, type: 2, spec: '800×1000mm 300目', material: '聚酯网布', max_usage: 200000, current: 190000, warning: 40000, max_imp: 200000, cum_imp: 190000, threshold: 85, maint_interval: 30000, maint_count: 6, last_maint_imp: 180000, status: 3, die_status: 're_rule_needed', location: 'B栋网版区B05', purchase_date: '2024-02-10', unit_price: 3000, remark: '小米封口标签丝印' },
+      { code: 'SCR-006', name: '充电器标签丝网版350目', asset_type: 'screen_mesh', layout_type: 'single_row', pieces: 4, type: 2, spec: '600×800mm 350目', material: '不锈钢网布', max_usage: 230000, current: 40000, warning: 46000, max_imp: 230000, cum_imp: 40000, threshold: 80, maint_interval: 35000, maint_count: 1, last_maint_imp: 35000, status: 1, die_status: 'available', location: 'B栋网版区B06', purchase_date: '2024-03-01', unit_price: 3600, remark: 'OPPO充电器丝印' },
+      { code: 'SCR-007', name: '电池仓标签丝网版280目', asset_type: 'screen_mesh', layout_type: 'single_row', pieces: 4, type: 2, spec: '600×800mm 280目', material: '聚酯网布', max_usage: 190000, current: 120000, warning: 38000, max_imp: 190000, cum_imp: 120000, threshold: 80, maint_interval: 28000, maint_count: 4, last_maint_imp: 112000, status: 1, die_status: 'available', location: 'B栋网版区B07', purchase_date: '2024-03-05', unit_price: 2600, remark: 'vivo电池仓丝印' },
+      { code: 'SCR-008', name: '笔记本标签丝网版320目', asset_type: 'screen_mesh', layout_type: 'single_row', pieces: 3, type: 2, spec: '500×700mm 320目', material: '不锈钢网布', max_usage: 160000, current: 150000, warning: 32000, max_imp: 160000, cum_imp: 150000, threshold: 85, maint_interval: 25000, maint_count: 6, last_maint_imp: 150000, status: 2, die_status: 'maintenance_needed', location: 'B栋网版区B08', purchase_date: '2024-03-10', unit_price: 4200, remark: '联想笔记本丝印' },
+      { code: 'SCR-009', name: '洗衣机标签丝网版300目', asset_type: 'screen_mesh', layout_type: 'double_row', pieces: 6, type: 2, spec: '800×1000mm 300目', material: '聚酯网布', max_usage: 210000, current: 70000, warning: 42000, max_imp: 210000, cum_imp: 70000, threshold: 80, maint_interval: 32000, maint_count: 2, last_maint_imp: 64000, status: 1, die_status: 'available', location: 'B栋网版区B09', purchase_date: '2024-03-15', unit_price: 3400, remark: '海尔洗衣机丝印' },
+      { code: 'SCR-010', name: '电视标签丝网版350目', asset_type: 'screen_mesh', layout_type: 'single_row', pieces: 4, type: 2, spec: '600×800mm 350目', material: '不锈钢网布', max_usage: 200000, current: 195000, warning: 40000, max_imp: 200000, cum_imp: 195000, threshold: 80, maint_interval: 30000, maint_count: 6, last_maint_imp: 180000, status: 4, die_status: 'scrap', location: 'B栋网版区B10', purchase_date: '2024-03-20', unit_price: 3100, remark: 'TCL电视丝印-已报废' },
+    ];
+
+    for (const die of dieTemplates) {
+      await conn.execute(
+        `INSERT INTO prd_die_template (template_code, template_name, asset_type, layout_type, pieces_per_impression, template_type, specification, material, max_usage, current_usage, remaining_usage, warning_usage, max_impressions, cumulative_impressions, warning_threshold, maintenance_interval, maintenance_count, last_maintenance_impressions, status, die_status, storage_location, purchase_date, unit_price, remark)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [die.code, die.name, die.asset_type, die.layout_type, die.pieces, die.type, die.spec, die.material, die.max_usage, die.current, die.max_usage - die.current, die.warning, die.max_imp, die.cum_imp, die.threshold, die.maint_interval, die.maint_count, die.last_maint_imp, die.status, die.die_status, die.location, die.purchase_date, die.unit_price, die.remark]
+      );
+    }
+    stats.prd_die_template = dieTemplates.length;
+
+    const [dieRows]: any = await conn.execute('SELECT id, template_code FROM prd_die_template ORDER BY id');
+    const dieMap: Record<string, number> = {};
+    for (const row of dieRows) dieMap[row.template_code] = row.id;
+
+    const maintenances = [
+      { dieCode: 'DIE-001', no: 'MT20240215001', type: 'routine', before: 80000, after: 80000, date: '2024-02-15', cost: 350, tech: '张工', status: 3, remark: '常规保养完成' },
+      { dieCode: 'DIE-002', no: 'MT20240301001', type: 'routine', before: 100000, after: 100000, date: '2024-03-01', cost: 420, tech: '李工', status: 3, remark: '第一次保养' },
+      { dieCode: 'DIE-002', no: 'MT20240401001', type: 'grinding', before: 200000, after: 200000, date: '2024-04-01', cost: 680, tech: '李工', status: 3, remark: '磨刃处理' },
+      { dieCode: 'DIE-002', no: 'MT20240501001', type: 'routine', before: 300000, after: 300000, date: '2024-05-01', cost: 400, tech: '王工', status: 3, remark: '第三次保养' },
+      { dieCode: 'DIE-002', no: 'MT20240601001', type: 'routine', before: 400000, after: 400000, date: '2024-06-01', cost: 380, tech: '王工', status: 3, remark: '第四次保养' },
+      { dieCode: 'DIE-003', no: 'MT20240315001', type: 'routine', before: 60000, after: 60000, date: '2024-03-15', cost: 300, tech: '赵工', status: 3, remark: '首次保养' },
+      { dieCode: 'DIE-003', no: 'MT20240415001', type: 'grinding', before: 120000, after: 120000, date: '2024-04-15', cost: 550, tech: '赵工', status: 3, remark: '修版处理' },
+      { dieCode: 'DIE-003', no: 'MT20240515001', type: 'routine', before: 180000, after: 180000, date: '2024-05-15', cost: 320, tech: '张工', status: 3, remark: '第三次保养' },
+      { dieCode: 'DIE-003', no: 'MT20240615001', type: 'routine', before: 240000, after: 240000, date: '2024-06-15', cost: 350, tech: '张工', status: 3, remark: '第四次保养' },
+      { dieCode: 'DIE-003', no: 'MT20240715001', type: 'grinding', before: 300000, after: 300000, date: '2024-07-15', cost: 600, tech: '赵工', status: 3, remark: '第五次保养-磨刃' },
+      { dieCode: 'DIE-003', no: 'MT20240815001', type: 'routine', before: 360000, after: 360000, date: '2024-08-15', cost: 380, tech: '李工', status: 3, remark: '第六次保养' },
+      { dieCode: 'DIE-004', no: 'MT20240401002', type: 'routine', before: 120000, after: 120000, date: '2024-04-01', cost: 500, tech: '王工', status: 3, remark: '首次保养' },
+      { dieCode: 'DIE-005', no: 'MT20240320001', type: 'routine', before: 90000, after: 90000, date: '2024-03-20', cost: 380, tech: '张工', status: 3, remark: '第一次保养' },
+      { dieCode: 'DIE-005', no: 'MT20240420001', type: 'grinding', before: 180000, after: 180000, date: '2024-04-20', cost: 650, tech: '张工', status: 3, remark: '磨刃' },
+      { dieCode: 'DIE-005', no: 'MT20240520001', type: 'routine', before: 270000, after: 270000, date: '2024-05-20', cost: 400, tech: '李工', status: 3, remark: '第三次保养' },
+      { dieCode: 'DIE-005', no: 'MT20240620001', type: 'routine', before: 360000, after: 360000, date: '2024-06-20', cost: 420, tech: '李工', status: 3, remark: '第四次保养' },
+      { dieCode: 'DIE-005', no: 'MT20240720001', type: 'grinding', before: 450000, after: 450000, date: '2024-07-20', cost: 700, tech: '赵工', status: 3, remark: '第五次保养-修版' },
+      { dieCode: 'DIE-008', no: 'MT20240410001', type: 'routine', before: 50000, after: 50000, date: '2024-04-10', cost: 450, tech: '王工', status: 3, remark: '首次保养' },
+      { dieCode: 'DIE-008', no: 'MT20240510001', type: 'grinding', before: 100000, after: 100000, date: '2024-05-10', cost: 750, tech: '王工', status: 3, remark: '磨刃处理' },
+      { dieCode: 'DIE-008', no: 'MT20240610001', type: 'routine', before: 150000, after: 150000, date: '2024-06-10', cost: 480, tech: '张工', status: 3, remark: '第三次保养' },
+    ];
+
+    for (const mt of maintenances) {
+      await conn.execute(
+        `INSERT INTO prd_die_maintenance (maintenance_no, die_id, maintenance_type, impressions_before, impressions_after, maintenance_date, cost, technician_name, status, remark, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [mt.no, dieMap[mt.dieCode] || null, mt.type, mt.before, mt.after, mt.date, mt.cost, mt.tech, mt.status, mt.remark]
+      );
+    }
+    stats.prd_die_maintenance = maintenances.length;
+
+    const usageLogs = [
+      { dieCode: 'DIE-001', work_order_id: 1, work_order_no: 'WO20240501001', process: '模切', impressions: 15000, cum_after: 15000, operator: '陈操作员', date: '2024-05-10' },
+      { dieCode: 'DIE-001', work_order_id: 2, work_order_no: 'WO20240502001', process: '模切', impressions: 20000, cum_after: 35000, operator: '陈操作员', date: '2024-05-15' },
+      { dieCode: 'DIE-001', work_order_id: 3, work_order_no: 'WO20240503001', process: '模切', impressions: 18000, cum_after: 53000, operator: '刘操作员', date: '2024-05-20' },
+      { dieCode: 'DIE-001', work_order_id: 4, work_order_no: 'WO20240504001', process: '模切', impressions: 22000, cum_after: 75000, operator: '刘操作员', date: '2024-05-25' },
+      { dieCode: 'DIE-001', work_order_id: 5, work_order_no: 'WO20240505001', process: '模切', impressions: 25000, cum_after: 100000, operator: '陈操作员', date: '2024-05-30' },
+      { dieCode: 'DIE-002', work_order_id: 6, work_order_no: 'WO20240601001', process: '模切', impressions: 30000, cum_after: 30000, operator: '刘操作员', date: '2024-06-05' },
+      { dieCode: 'DIE-002', work_order_id: 7, work_order_no: 'WO20240602001', process: '模切', impressions: 35000, cum_after: 65000, operator: '陈操作员', date: '2024-06-10' },
+      { dieCode: 'DIE-002', work_order_id: 8, work_order_no: 'WO20240603001', process: '模切', impressions: 28000, cum_after: 93000, operator: '陈操作员', date: '2024-06-15' },
+      { dieCode: 'DIE-003', work_order_id: 9, work_order_no: 'WO20240701001', process: '模切', impressions: 20000, cum_after: 20000, operator: '刘操作员', date: '2024-07-05' },
+      { dieCode: 'DIE-003', work_order_id: 10, work_order_no: 'WO20240702001', process: '模切', impressions: 25000, cum_after: 45000, operator: '陈操作员', date: '2024-07-10' },
+      { dieCode: 'DIE-004', work_order_id: 11, work_order_no: 'WO20240801001', process: '模切', impressions: 40000, cum_after: 40000, operator: '刘操作员', date: '2024-08-05' },
+      { dieCode: 'DIE-004', work_order_id: 12, work_order_no: 'WO20240802001', process: '模切', impressions: 35000, cum_after: 75000, operator: '陈操作员', date: '2024-08-10' },
+      { dieCode: 'DIE-005', work_order_id: 13, work_order_no: 'WO20240901001', process: '模切', impressions: 28000, cum_after: 28000, operator: '刘操作员', date: '2024-09-05' },
+      { dieCode: 'DIE-005', work_order_id: 14, work_order_no: 'WO20240902001', process: '模切', impressions: 32000, cum_after: 60000, operator: '陈操作员', date: '2024-09-10' },
+      { dieCode: 'DIE-006', work_order_id: 15, work_order_no: 'WO20241001001', process: '模切', impressions: 15000, cum_after: 15000, operator: '刘操作员', date: '2024-10-05' },
+      { dieCode: 'DIE-007', work_order_id: 16, work_order_no: 'WO20241101001', process: '模切', impressions: 22000, cum_after: 22000, operator: '陈操作员', date: '2024-11-05' },
+      { dieCode: 'DIE-009', work_order_id: 17, work_order_no: 'WO20241201001', process: '模切', impressions: 18000, cum_after: 18000, operator: '刘操作员', date: '2024-12-05' },
+      { dieCode: 'SCR-001', work_order_id: 18, work_order_no: 'WO20250101001', process: '丝印', impressions: 12000, cum_after: 12000, operator: '黄操作员', date: '2025-01-05' },
+      { dieCode: 'SCR-003', work_order_id: 19, work_order_no: 'WO20250201001', process: '丝印', impressions: 10000, cum_after: 10000, operator: '黄操作员', date: '2025-02-05' },
+      { dieCode: 'SCR-009', work_order_id: 20, work_order_no: 'WO20250301001', process: '丝印', impressions: 8000, cum_after: 8000, operator: '黄操作员', date: '2025-03-05' },
+    ];
+
+    for (const ul of usageLogs) {
+      await conn.execute(
+        `INSERT INTO prd_die_usage_log (die_id, work_order_id, work_order_no, process_name, impressions, cumulative_after, operator_name, usage_date, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [dieMap[ul.dieCode] || null, ul.work_order_id, ul.work_order_no, ul.process, ul.impressions, ul.cum_after, ul.operator, ul.date]
+      );
+    }
+    stats.prd_die_usage_log = usageLogs.length;
+
+    return stats;
+  });
+
+  const verification = await verifyDataIntegrity();
+
+  return successResponse({
+    stats: result,
+    verification,
+  }, '刀模/网版种子数据初始化成功');
+}, '初始化刀模/网版种子数据失败');
+
+async function verifyDataIntegrity() {
+  const errors: string[] = [];
+  const details: Record<string, any> = {};
+
+  const dieCount: any = await queryOne('SELECT COUNT(*) as cnt FROM prd_die_template WHERE deleted = 0');
+  details.die_template_count = dieCount?.cnt || 0;
+  if (details.die_template_count !== 20) errors.push(`刀模/网版数量不正确: 期望20, 实际${details.die_template_count}`);
+
+  const maintCount: any = await queryOne('SELECT COUNT(*) as cnt FROM prd_die_maintenance WHERE deleted = 0');
+  details.maintenance_count = maintCount?.cnt || 0;
+  if (details.maintenance_count !== 20) errors.push(`保养记录数量不正确: 期望20, 实际${details.maintenance_count}`);
+
+  const usageCount: any = await queryOne('SELECT COUNT(*) as cnt FROM prd_die_usage_log');
+  details.usage_log_count = usageCount?.cnt || 0;
+  if (details.usage_log_count !== 20) errors.push(`使用记录数量不正确: 期望20, 实际${details.usage_log_count}`);
+
+  const typeDist: any = await queryOne(`SELECT
+    COALESCE(SUM(CASE WHEN template_type = 1 THEN 1 ELSE 0 END), 0) as die_count,
+    COALESCE(SUM(CASE WHEN template_type = 2 THEN 1 ELSE 0 END), 0) as screen_count
+  FROM prd_die_template WHERE deleted = 0`);
+  details.type_distribution = typeDist;
+
+  const statusDist: any = await queryOne(`SELECT
+    COALESCE(SUM(CASE WHEN die_status = 'available' THEN 1 ELSE 0 END), 0) as available,
+    COALESCE(SUM(CASE WHEN die_status = 'maintenance_needed' THEN 1 ELSE 0 END), 0) as maint_needed,
+    COALESCE(SUM(CASE WHEN die_status = 're_rule_needed' THEN 1 ELSE 0 END), 0) as re_rule,
+    COALESCE(SUM(CASE WHEN die_status = 'scrap' THEN 1 ELSE 0 END), 0) as scrap
+  FROM prd_die_template WHERE deleted = 0`);
+  details.die_status_distribution = statusDist;
+
+  const totalCost: any = await queryOne('SELECT COALESCE(SUM(cost), 0) as total FROM prd_die_maintenance WHERE deleted = 0');
+  details.total_maintenance_cost = totalCost?.total || 0;
+
+  const totalUsage: any = await queryOne('SELECT COALESCE(SUM(impressions), 0) as total FROM prd_die_usage_log');
+  details.total_usage_impressions = totalUsage?.total || 0;
+
+  return { valid: errors.length === 0, errors, details };
+}
+
+export const GET = withErrorHandler(async (request: NextRequest) => {
+  const verification = await verifyDataIntegrity();
+  return successResponse(verification, '数据完整性验证完成');
+}, '验证数据完整性失败');

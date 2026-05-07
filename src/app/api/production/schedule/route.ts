@@ -4,6 +4,23 @@ import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-resp
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
+
+  if (searchParams.get('action') === 'stats') {
+    const statsRows: any = await query(
+      `SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as scheduled,
+        SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as producing,
+        SUM(CASE WHEN status = 4 THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 5 THEN 1 ELSE 0 END) as cancelled,
+        COALESCE(SUM(planned_qty), 0) as total_planned_qty,
+        COALESCE(SUM(completed_qty), 0) as total_completed_qty
+      FROM prd_schedule WHERE deleted = 0`
+    );
+    return successResponse(statsRows[0]);
+  }
+
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const workshop = searchParams.get('workshop') || '';
@@ -25,6 +42,22 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const { order_id, order_no, product_id, product_code, product_name, workshop, planned_qty, planned_start, planned_end, priority, scheduler, remark } = body;
 
   if (!product_name) return errorResponse('产品名称不能为空', 400, 400);
+
+  if (planned_start && planned_end && workshop) {
+    const conflicts: any = await query(
+      `SELECT id, schedule_no, product_name, planned_start, planned_end 
+       FROM prd_schedule 
+       WHERE workshop = ? AND deleted = 0 AND status IN (1, 2, 3)
+       AND planned_start < ? AND planned_end > ?`,
+      [workshop, planned_end, planned_start]
+    );
+    if (conflicts.length > 0) {
+      return errorResponse(
+        `排产冲突: 车间 ${workshop} 在 ${planned_start} ~ ${planned_end} 已有 ${conflicts.length} 个排产计划`,
+        409, 409
+      );
+    }
+  }
 
   const now = new Date();
   const scheduleNo = 'PS' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');

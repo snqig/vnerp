@@ -59,7 +59,22 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     WHERE p.deleted = 0 AND p.status IN (1, 2)
     ORDER BY p.balance DESC LIMIT 10`);
 
+  const summary: any = await queryOne(`
+    SELECT
+      COALESCE((SELECT SUM(amount) FROM fin_receivable WHERE deleted = 0 AND status IN (2, 3)), 0) as total_revenue,
+      COALESCE((SELECT SUM(amount) FROM fin_cost_record WHERE deleted = 0), 0) as total_cost
+  `);
+
+  const totalRevenue = parseFloat(summary?.total_revenue || 0);
+  const totalCost = parseFloat(summary?.total_cost || 0);
+  const totalProfit = totalRevenue - totalCost;
+  const profitRate = totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
+
   return successResponse({
+    total_revenue: totalRevenue,
+    total_cost: totalCost,
+    total_profit: totalProfit,
+    profit_rate: profitRate,
     receivable: {
       total_amount: parseFloat(receivableSummary?.total_amount || 0),
       total_received: parseFloat(receivableSummary?.total_received || 0),
