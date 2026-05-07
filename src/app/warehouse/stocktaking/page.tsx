@@ -174,7 +174,7 @@ export default function StocktakingPage() {
                     </TableRow>
                   );
                 })}
-                {list.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-gray-400 py-8">暂无盘点记录</TableCell></TableRow>}
+                {list.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">暂无盘点记录</TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>

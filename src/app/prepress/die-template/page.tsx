@@ -12,8 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { AnimatedTabs } from '@/components/ui/animated-tabs';
-import { Plus, Search, RefreshCw, AlertTriangle, Shield, Lock, Unlock, Eye, Edit, Trash2, Wrench, QrCode, Activity, BarChart3, Clock, WrenchIcon, RotateCcw } from 'lucide-react';
+import { Plus, Search, RefreshCw, AlertTriangle, Shield, Lock, Unlock, Eye, Edit, Trash2, Wrench, QrCode, Activity, BarChart3, Clock, WrenchIcon, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
 
 interface DieTemplate {
   id: number;
@@ -134,6 +136,9 @@ export default function DieTemplatePage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [dieStatusFilter, setDieStatusFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('list');
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [usageDialogOpen, setUsageDialogOpen] = useState(false);
@@ -232,6 +237,69 @@ export default function DieTemplatePage() {
     if (activeTab === 'maintenance') fetchMaintenanceList();
     if (activeTab === 'usage') fetchUsageLogs();
   }, [activeTab, fetchMaintenanceList, fetchUsageLogs]);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-40" />;
+    return sortDir === 'asc' ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
+  };
+
+  const sortedList = [...list].sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = (a as any)[sortField];
+    const bVal = (b as any)[sortField];
+    if (aVal == null && bVal == null) return 0;
+    if (aVal == null) return 1;
+    if (bVal == null) return -1;
+    let cmp = 0;
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      cmp = aVal.localeCompare(bVal, 'zh-CN');
+    } else {
+      cmp = (aVal as number) - (bVal as number);
+    }
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+
+  const toggleSelect = (id: number) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sortedList.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(sortedList.map(s => s.id)));
+  };
+
+  const exportColumns = [
+    { key: 'template_code', header: '编号' },
+    { key: 'template_name', header: '名称' },
+    { key: 'asset_type_label', header: '资产类型' },
+    { key: 'specification', header: '规格' },
+    { key: 'usage_info', header: '累计/最大' },
+    { key: 'usage_rate', header: '使用率' },
+    { key: 'lifecycle_status', header: '生命周期' },
+    { key: 'storage_location', header: '存放位置' },
+  ];
+
+  const getExportData = () => sortedList.map(item => ({
+    template_code: item.template_code,
+    template_name: item.template_name,
+    asset_type_label: (ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.label || '-',
+    specification: item.specification || '-',
+    usage_info: `${item.cumulative_impressions || item.current_usage} / ${item.max_impressions || item.max_usage}`,
+    usage_rate: `${getUsagePercent(item)}%`,
+    lifecycle_status: (DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label || '-',
+    storage_location: item.storage_location || '-',
+  }));
 
   const handleCreate = async () => {
     if (!form.template_code || !form.template_name) {
@@ -810,6 +878,16 @@ export default function DieTemplatePage() {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   刷新
                 </Button>
+                <TableExportToolbar
+                  selectedCount={selectedIds.size}
+                  totalCount={sortedList.length}
+                  onSelectAll={toggleSelectAll}
+                  onDeselectAll={() => setSelectedIds(new Set())}
+                  onPrint={() => printTable(getExportData(), exportColumns, '刀模/网版列表')}
+                  onExportPDF={() => exportTableToPDF(getExportData(), '刀模/网版列表', exportColumns, '刀模/网版列表')}
+                  onExportXLS={() => exportTableToXLS(getExportData(), '刀模/网版列表', exportColumns)}
+                  onExportWORD={() => exportTableToWORD(getExportData(), '刀模/网版列表', exportColumns, '刀模/网版列表')}
+                />
                 <Button onClick={() => { resetForm(); setEditing(false); setDialogOpen(true); }}>
                   <Plus className="h-4 w-4 mr-2" />
                   新增
@@ -838,8 +916,19 @@ export default function DieTemplatePage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>编号</TableHead>
-                    <TableHead>名称</TableHead>
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={selectedIds.size > 0 && selectedIds.size === sortedList.length}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead className="w-[60px]">序号</TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => handleSort('template_code')}>
+                      <span className="inline-flex items-center">编号{getSortIcon('template_code')}</span>
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none" onClick={() => handleSort('template_name')}>
+                      <span className="inline-flex items-center">名称{getSortIcon('template_name')}</span>
+                    </TableHead>
                     <TableHead>资产类型</TableHead>
                     <TableHead>规格</TableHead>
                     <TableHead>累计/最大</TableHead>
@@ -851,21 +940,28 @@ export default function DieTemplatePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {list.length === 0 ? (
+                  {sortedList.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                         暂无刀模/网版记录
                       </TableCell>
                     </TableRow>
                   ) : (
-                    list.map((item) => (
+                    sortedList.map((item, index) => (
                       <TableRow key={item.id} className={
-                        item.die_status === 'scrap' ? 'bg-gray-50' :
-                        item.die_status === 're_rule_needed' ? 'bg-orange-50' :
-                        item.die_status === 'maintenance_needed' ? 'bg-yellow-50' :
-                        item.status === 3 ? 'bg-red-50' :
-                        item.status === 2 ? 'bg-yellow-50' : ''
+                        item.die_status === 'scrap' ? 'bg-gray-50 dark:bg-gray-900' :
+                        item.die_status === 're_rule_needed' ? 'bg-orange-50 dark:bg-orange-950' :
+                        item.die_status === 'maintenance_needed' ? 'bg-yellow-50 dark:bg-yellow-950' :
+                        item.status === 3 ? 'bg-red-50 dark:bg-red-950' :
+                        item.status === 2 ? 'bg-yellow-50 dark:bg-yellow-950' : ''
                       }>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.has(item.id)}
+                            onCheckedChange={() => toggleSelect(item.id)}
+                          />
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{index + 1}</TableCell>
                         <TableCell className="font-mono">{item.template_code}</TableCell>
                         <TableCell className="font-medium">{item.template_name}</TableCell>
                         <TableCell>

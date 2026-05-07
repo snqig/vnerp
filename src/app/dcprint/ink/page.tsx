@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
 import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
 
 interface Item {
@@ -62,6 +63,7 @@ export default function InkManagementPage() {
   const [editItem, setEditItem] = useState<Partial<Item>>({});
   const [sortField, setSortField] = useState<SortField>('ink_code');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const fetchData = useCallback(async () => {
     try {
@@ -109,6 +111,17 @@ export default function InkManagementPage() {
     }
     return sortDir === 'asc' ? cmp : -cmp;
   });
+
+  const toggleSelect = (id: number) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sortedList.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(sortedList.map(s => s.id)));
+  };
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
@@ -230,10 +243,10 @@ export default function InkManagementPage() {
               </Button>
               <div className="ml-auto">
                 <TableExportToolbar
-                  selectedCount={0}
+                  selectedCount={selectedIds.size}
                   totalCount={sortedList.length}
-                  onSelectAll={() => {}}
-                  onDeselectAll={() => {}}
+                  onSelectAll={toggleSelectAll}
+                  onDeselectAll={() => setSelectedIds(new Set())}
                   onPrint={handlePrint}
                   onExportPDF={handleExportPDF}
                   onExportXLS={handleExportXLS}
@@ -245,6 +258,13 @@ export default function InkManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[40px]">
+                    <Checkbox
+                      checked={selectedIds.size > 0 && selectedIds.size === sortedList.length}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="w-[60px]">序号</TableHead>
                   <TableHead className="text-xs cursor-pointer select-none" onClick={() => handleSort('ink_code')}>
                     <span className="flex items-center">油墨编码<SortIcon field="ink_code" /></span>
                   </TableHead>
@@ -271,10 +291,17 @@ export default function InkManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedList.map(item => {
+                {sortedList.map((item, index) => {
                   const st = statusMap[item.status] ?? statusMap[1];
                   return (
                     <TableRow key={item.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(item.id)}
+                          onCheckedChange={() => toggleSelect(item.id)}
+                        />
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{index + 1}</TableCell>
                       <TableCell className="text-xs font-mono">{item.ink_code}</TableCell>
                       <TableCell className="text-xs">{item.ink_name}</TableCell>
                       <TableCell className="text-xs">{typeMap[item.ink_type] || '-'}</TableCell>
@@ -305,7 +332,7 @@ export default function InkManagementPage() {
                 })}
                 {sortedList.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center text-gray-400 py-8">暂无记录</TableCell>
+                    <TableCell colSpan={13} className="text-center text-gray-400 py-8">暂无记录</TableCell>
                   </TableRow>
                 )}
               </TableBody>

@@ -26,7 +26,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Search, Plus, Eye, Edit, Trash2, MoreHorizontal, Loader2 } from 'lucide-react';
+import { Search, Plus, Eye, Edit, Trash2, MoreHorizontal, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -94,6 +94,38 @@ export default function SampleManagementPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const getSortIcon = (field: string) => {
+    if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-40" />;
+    return sortDir === 'asc' ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
+  };
+
+  const sortedList = [...list].sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = (a as any)[sortField];
+    const bVal = (b as any)[sortField];
+    if (aVal == null && bVal == null) return 0;
+    if (aVal == null) return 1;
+    if (bVal == null) return -1;
+    let cmp = 0;
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      cmp = aVal.localeCompare(bVal, 'zh-CN');
+    } else {
+      cmp = (aVal as number) - (bVal as number);
+    }
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string }> = {
@@ -219,7 +251,7 @@ export default function SampleManagementPage() {
     { key: 'customer_require_date', header: '要求交付日期' },
     { key: 'delivery_status', header: '状态' },
   ];
-  const getExportData = () => list.map(s => ({
+  const getExportData = () => sortedList.map(s => ({
     order_no: s.order_no,
     product_name: s.product_name,
     customer_name: s.customer_name,
@@ -234,8 +266,8 @@ export default function SampleManagementPage() {
     setSelectedIds(next);
   };
   const toggleSelectAll = () => {
-    if (selectedIds.size === list.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(list.map(s => s.id)));
+    if (selectedIds.size === sortedList.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(sortedList.map(s => s.id)));
   };
 
   return (
@@ -308,23 +340,36 @@ export default function SampleManagementPage() {
                     <tr className="border-b bg-muted/50">
                       <th className="h-12 px-4 text-left align-middle font-medium w-[40px]">
                         <Checkbox
-                          checked={selectedIds.size > 0 && selectedIds.size === list.length}
+                          checked={selectedIds.size > 0 && selectedIds.size === sortedList.length}
                           onCheckedChange={toggleSelectAll}
                         />
                       </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">样品编号</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">产品名称</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">客户</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium w-[60px]">序号</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('order_no')}>
+                        <span className="inline-flex items-center">样品编号{getSortIcon('order_no')}</span>
+                      </th>
+                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('product_name')}>
+                        <span className="inline-flex items-center">产品名称{getSortIcon('product_name')}</span>
+                      </th>
+                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('customer_name')}>
+                        <span className="inline-flex items-center">客户{getSortIcon('customer_name')}</span>
+                      </th>
                       <th className="h-12 px-4 text-left align-middle font-medium">规格</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">数量</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">通知日期</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('quantity')}>
+                        <span className="inline-flex items-center">数量{getSortIcon('quantity')}</span>
+                      </th>
+                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('notify_date')}>
+                        <span className="inline-flex items-center">通知日期{getSortIcon('notify_date')}</span>
+                      </th>
                       <th className="h-12 px-4 text-left align-middle font-medium">要求交付日期</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">状态</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('delivery_status')}>
+                        <span className="inline-flex items-center">状态{getSortIcon('delivery_status')}</span>
+                      </th>
                       <th className="h-12 px-4 text-right align-middle font-medium">操作</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {list.map((item) => (
+                    {sortedList.map((item, index) => (
                       <tr key={item.id} className={`border-b transition-colors hover:bg-muted/50 ${selectedIds.has(item.id) ? 'bg-primary/5' : ''}`}>
                         <td className="p-4">
                           <Checkbox
@@ -332,6 +377,7 @@ export default function SampleManagementPage() {
                             onCheckedChange={() => toggleSelect(item.id)}
                           />
                         </td>
+                        <td className="p-4 text-sm text-muted-foreground">{(page - 1) * pageSize + index + 1}</td>
                         <td className="p-4 font-mono text-sm">{item.order_no}</td>
                         <td className="p-4 font-medium">{item.product_name}</td>
                         <td className="p-4">{item.customer_name}</td>

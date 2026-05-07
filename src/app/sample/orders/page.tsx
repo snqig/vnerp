@@ -523,7 +523,8 @@ export default function SampleOrdersPage() {
                           onCheckedChange={toggleSelectAll}
                         />
                       </th>
-                      {sortableHeader('order_no', '序号')}
+                      <th className="h-12 px-4 text-left align-middle font-medium w-[60px]">序号</th>
+                      {sortableHeader('order_no', '订单号')}
                       {sortableHeader('notify_date', '通知日期')}
                       {sortableHeader('customer_name', '客户')}
                       {sortableHeader('product_name', '品名')}
@@ -537,7 +538,7 @@ export default function SampleOrdersPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedOrders.map((order) => (
+                    {sortedOrders.map((order, index) => (
                       <tr key={order.id} className={`border-b transition-colors hover:bg-muted/50 ${selectedIds.has(order.id) ? 'bg-primary/5' : ''}`}>
                         <td className="p-4">
                           <Checkbox
@@ -545,6 +546,7 @@ export default function SampleOrdersPage() {
                             onCheckedChange={() => toggleSelect(order.id)}
                           />
                         </td>
+                        <td className="p-4 text-sm text-muted-foreground">{(pagination.page - 1) * pagination.pageSize + index + 1}</td>
                         <td className="p-4 font-mono text-sm">{order.order_no}</td>
                         <td className="p-4">{formatDate(order.notify_date)}</td>
                         <td className="p-4">{order.customer_name}</td>

@@ -135,7 +135,7 @@ export default function TransferPage() {
 
   const SortableHeader = ({ field, children }: { field: string; children: React.ReactNode }) => (
     <TableHead
-      className="cursor-pointer select-none border border-gray-300 bg-gray-100 text-center whitespace-nowrap hover:bg-gray-200 transition-colors"
+      className="cursor-pointer select-none border border-border bg-muted/50 text-muted-foreground text-center whitespace-nowrap hover:bg-muted/70 transition-colors"
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center justify-center gap-1">
@@ -228,10 +228,10 @@ export default function TransferPage() {
 
         <Card>
           <CardContent className="p-0">
-            <Table className="border-collapse border border-gray-300">
+            <Table className="border-collapse border border-border">
               <TableHeader>
-                <TableRow className="bg-gray-100">
-                  <TableHead className="border border-gray-300 bg-gray-100 text-center w-12">
+                <TableRow className="bg-muted/50">
+                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center w-12">
                     <Checkbox checked={selectedIds.length === list.length && list.length > 0} onCheckedChange={toggleSelectAll} />
                   </TableHead>
                   <SortableHeader field="transfer_no">调拨单号</SortableHeader>
@@ -241,25 +241,25 @@ export default function TransferPage() {
                   <SortableHeader field="transfer_type">类型</SortableHeader>
                   <SortableHeader field="operator_name">操作人</SortableHeader>
                   <SortableHeader field="status">状态</SortableHeader>
-                  <TableHead className="border border-gray-300 bg-gray-100 text-center">操作</TableHead>
+                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sortedList().map(item => {
                   const st = statusMap[item.status] || statusMap[1];
                   return (
-                    <TableRow key={item.id} className="hover:bg-blue-50 even:bg-gray-50/50">
-                      <TableCell className="border border-gray-300 text-center">
+                    <TableRow key={item.id} className="hover:bg-muted/30 even:bg-muted/20">
+                      <TableCell className="border border-border text-center">
                         <Checkbox checked={selectedIds.includes(item.id)} onCheckedChange={() => toggleSelect(item.id)} />
                       </TableCell>
-                      <TableCell className="border border-gray-300 text-center font-mono text-xs">{item.transfer_no}</TableCell>
-                      <TableCell className="border border-gray-300 text-center text-xs">{item.from_warehouse_name || '-'}</TableCell>
-                      <TableCell className="border border-gray-300 text-center text-xs">{item.to_warehouse_name || '-'}</TableCell>
-                      <TableCell className="border border-gray-300 text-center text-xs">{item.transfer_date || '-'}</TableCell>
-                      <TableCell className="border border-gray-300 text-center text-xs">{item.transfer_type === 1 ? '普通' : '紧急'}</TableCell>
-                      <TableCell className="border border-gray-300 text-center text-xs">{item.operator_name || '-'}</TableCell>
-                      <TableCell className="border border-gray-300 text-center"><Badge variant={st.variant} className="text-xs">{st.label}</Badge></TableCell>
-                      <TableCell className="border border-gray-300 text-center">
+                      <TableCell className="border border-border text-center font-mono text-xs">{item.transfer_no}</TableCell>
+                      <TableCell className="border border-border text-center text-xs">{item.from_warehouse_name || '-'}</TableCell>
+                      <TableCell className="border border-border text-center text-xs">{item.to_warehouse_name || '-'}</TableCell>
+                      <TableCell className="border border-border text-center text-xs">{item.transfer_date || '-'}</TableCell>
+                      <TableCell className="border border-border text-center text-xs">{item.transfer_type === 1 ? '普通' : '紧急'}</TableCell>
+                      <TableCell className="border border-border text-center text-xs">{item.operator_name || '-'}</TableCell>
+                      <TableCell className="border border-border text-center"><Badge variant={st.variant} className="text-xs">{st.label}</Badge></TableCell>
+                      <TableCell className="border border-border text-center">
                         <div className="flex gap-1 justify-center">
                           {item.status === 1 && <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => handleStatusChange(item.id, 2)}>审核</Button>}
                           {item.status === 2 && <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => handleStatusChange(item.id, 3)}>完成</Button>}
@@ -270,7 +270,7 @@ export default function TransferPage() {
                     </TableRow>
                   );
                 })}
-                {list.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-gray-400 py-8 border border-gray-300">暂无调拨记录</TableCell></TableRow>}
+                {list.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8 border border-border">暂无调拨记录</TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>
