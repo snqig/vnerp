@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -45,6 +45,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { TableExportToolbar, exportTableToXLS, exportTableToPDF, exportTableToWORD, printTable } from '@/components/ui/table-export-toolbar';
+import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import {
   Search,
   MoreHorizontal,
@@ -321,6 +323,7 @@ export default function QualityFinalPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
 
   const fetchFinals = async () => {
@@ -387,6 +390,8 @@ export default function QualityFinalPage() {
     }
     return true;
   });
+
+  const { sortField, sortDirection, handleSort, sortedData: sortedFinalInspects } = useTableSort(filteredFinals, 'id');
 
   // 查看详情
   const handleViewDetail = (final: FinalInspect) => {
@@ -590,6 +595,37 @@ export default function QualityFinalPage() {
                   <Printer className="h-4 w-4 mr-2" />
                   打印
                 </Button>
+                <TableExportToolbar
+                  selectedCount={selectedIds.length}
+                  totalCount={filteredFinals.length}
+                  onSelectAll={() => setSelectedIds(filteredFinals.map(f => f.id))}
+                  onDeselectAll={() => setSelectedIds([])}
+                  onPrint={handlePrint}
+                  onExportPDF={() => exportTableToPDF(filteredFinals, '成品检验报告', [
+                    { key: 'card_no', header: '流程卡号' },
+                    { key: 'product_name', header: '产品名称' },
+                    { key: 'product_code', header: '产品编码' },
+                    { key: 'material_spec', header: '规格' },
+                    { key: 'quantity', header: '数量' },
+                    { key: 'status', header: '状态' },
+                  ], '成品检验报告')}
+                  onExportXLS={() => exportTableToXLS(filteredFinals, '成品检验报告', [
+                    { key: 'card_no', header: '流程卡号' },
+                    { key: 'product_name', header: '产品名称' },
+                    { key: 'product_code', header: '产品编码' },
+                    { key: 'material_spec', header: '规格' },
+                    { key: 'quantity', header: '数量' },
+                    { key: 'status', header: '状态' },
+                  ])}
+                  onExportWORD={() => exportTableToWORD(filteredFinals, '成品检验报告', [
+                    { key: 'card_no', header: '流程卡号' },
+                    { key: 'product_name', header: '产品名称' },
+                    { key: 'product_code', header: '产品编码' },
+                    { key: 'material_spec', header: '规格' },
+                    { key: 'quantity', header: '数量' },
+                    { key: 'status', header: '状态' },
+                  ], '成品检验报告')}
+                />
               </div>
             </div>
           </CardContent>
@@ -609,19 +645,39 @@ export default function QualityFinalPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>流程卡号</TableHead>
-                      <TableHead>产品信息</TableHead>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedIds.length === filteredFinals.length && filteredFinals.length > 0}
+                          onCheckedChange={() => {
+                            if (selectedIds.length === filteredFinals.length) {
+                              setSelectedIds([]);
+                            } else {
+                              setSelectedIds(filteredFinals.map(f => f.id));
+                            }
+                          }}
+                        />
+                      </TableHead>
+                      <TableHead className="w-12 text-center">序号</TableHead>
+                      <SortableTableHeader field="card_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>流程卡号</SortableTableHeader>
+                      <SortableTableHeader field="product_name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>产品信息</SortableTableHeader>
                       <TableHead>客户</TableHead>
                       <TableHead>规格要求</TableHead>
                       <TableHead>数量</TableHead>
                       <TableHead>包装方式</TableHead>
-                      <TableHead>状态</TableHead>
+                      <SortableTableHeader field="status" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>状态</SortableTableHeader>
                       <TableHead>操作</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredFinals.map((final) => (
+                    {filteredFinals.map((final, index) => (
                       <TableRow key={final.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.includes(final.id)}
+                            onCheckedChange={() => setSelectedIds(prev => prev.includes(final.id) ? prev.filter(i => i !== final.id) : [...prev, final.id])}
+                          />
+                        </TableCell>
+                        <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                         <TableCell className="font-medium">
                           <div className="flex flex-col">
                             <span>{final.card_no}</span>
@@ -690,7 +746,7 @@ export default function QualityFinalPage() {
                                   <QrCode className="h-4 w-4 mr-2" />
                                   查看二维码
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewDetail(final)}>
                                   <FileText className="h-4 w-4 mr-2" />
                                   终检记录
                                 </DropdownMenuItem>

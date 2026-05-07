@@ -6,6 +6,7 @@ import {
   commonErrors,
   withErrorHandler,
   validateRequestBody,
+  logOperation,
 } from '@/lib/api-response';
 import bcrypt from 'bcryptjs';
 
@@ -168,6 +169,17 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
 
     return newUserId;
+  });
+
+  await logOperation({
+    title: '用户注册',
+    oper_name: username,
+    oper_type: 'auth',
+    oper_method: 'POST',
+    oper_url: '/api/auth/register',
+    oper_param: JSON.stringify({ username, real_name: real_name || '', email: email || '', phone: phone || '' }),
+    oper_result: `用户 ${username} 注册成功`,
+    status: 1,
   });
 
   return successResponse({ userId }, '注册成功');

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, AlertTriangle, FileCheck, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { TableExportToolbar, exportTableToXLS, exportTableToPDF, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 
 interface CertItem {
   id?: number;
@@ -116,6 +119,8 @@ export default function SGSManagementPage() {
   const [editItem, setEditItem] = useState<Partial<Cert>>({});
   const [detailItem, setDetailItem] = useState<Cert | null>(null);
   const [warningData, setWarningData] = useState<{ expired: Cert[]; expiring: Cert[]; total: number }>({ expired: [], expiring: [], total: 0 });
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'cert_no');
 
   const fetchData = async () => {
     try {
@@ -267,6 +272,37 @@ export default function SGSManagementPage() {
               setEditItem({ cert_type: 'RoHS', test_result: 'PENDING', test_org: 'SGS', status: 2, items: getDefaultItems('RoHS') });
               setShowDialog(true);
             }}><Plus className="h-3 w-3 mr-1" />新增认证</Button>
+            <TableExportToolbar
+              selectedCount={selectedIds.length}
+              totalCount={sortedData.length}
+              onSelectAll={() => setSelectedIds(sortedData.filter(i => i.id).map(i => i.id!))}
+              onDeselectAll={() => setSelectedIds([])}
+              onPrint={() => {}}
+              onExportPDF={() => exportTableToPDF(sortedData, 'SGS认证报告', [
+                { key: 'cert_no', header: '证书编号' },
+                { key: 'material_name', header: '物料名称' },
+                { key: 'supplier_name', header: '供应商' },
+                { key: 'cert_type', header: '认证类型' },
+                { key: 'test_result', header: '检测结果' },
+                { key: 'expire_date', header: '有效期至' },
+              ], 'SGS认证报告')}
+              onExportXLS={() => exportTableToXLS(sortedData, 'SGS认证报告', [
+                { key: 'cert_no', header: '证书编号' },
+                { key: 'material_name', header: '物料名称' },
+                { key: 'supplier_name', header: '供应商' },
+                { key: 'cert_type', header: '认证类型' },
+                { key: 'test_result', header: '检测结果' },
+                { key: 'expire_date', header: '有效期至' },
+              ])}
+              onExportWORD={() => exportTableToWORD(sortedData, 'SGS认证报告', [
+                { key: 'cert_no', header: '证书编号' },
+                { key: 'material_name', header: '物料名称' },
+                { key: 'supplier_name', header: '供应商' },
+                { key: 'cert_type', header: '认证类型' },
+                { key: 'test_result', header: '检测结果' },
+                { key: 'expire_date', header: '有效期至' },
+              ], 'SGS认证报告')}
+            />
           </div>
         </div>
 
@@ -287,22 +323,36 @@ export default function SGSManagementPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs">证书编号</TableHead>
-                <TableHead className="text-xs">物料名称</TableHead>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedIds.length === sortedData.length && sortedData.length > 0}
+                    onCheckedChange={() => setSelectedIds(selectedIds.length === sortedData.length ? [] : sortedData.filter(i => i.id).map(i => i.id!))}
+                  />
+                </TableHead>
+                <TableHead className="text-xs w-12 text-center">序号</TableHead>
+                <SortableTableHeader field="cert_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}><span className="text-xs">证书编号</span></SortableTableHeader>
+                <SortableTableHeader field="material_name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}><span className="text-xs">物料名称</span></SortableTableHeader>
                 <TableHead className="text-xs">供应商</TableHead>
                 <TableHead className="text-xs">认证类型</TableHead>
                 <TableHead className="text-xs">检测结果</TableHead>
                 <TableHead className="text-xs">检测机构</TableHead>
                 <TableHead className="text-xs">发证日期</TableHead>
-                <TableHead className="text-xs">有效期至</TableHead>
-                <TableHead className="text-xs">状态</TableHead>
+                <SortableTableHeader field="expire_date" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}><span className="text-xs">有效期至</span></SortableTableHeader>
+                <SortableTableHeader field="status" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}><span className="text-xs">状态</span></SortableTableHeader>
                 <TableHead className="text-xs">检测项</TableHead>
                 <TableHead className="text-xs">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {list.map(item => (
+              {sortedData.map((item, index) => (
                 <TableRow key={item.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={item.id ? selectedIds.includes(item.id) : false}
+                      onCheckedChange={() => { if (item.id) setSelectedIds(prev => prev.includes(item.id!) ? prev.filter(i => i !== item.id!) : [...prev, item.id!]); }}
+                    />
+                  </TableCell>
+                  <TableCell className="text-xs text-center text-muted-foreground">{(page - 1) * 20 + index + 1}</TableCell>
                   <TableCell className="text-xs font-mono">{item.cert_no}</TableCell>
                   <TableCell className="text-xs">{item.material_name || '-'}</TableCell>
                   <TableCell className="text-xs">{item.supplier_name || '-'}</TableCell>
@@ -327,14 +377,14 @@ export default function SGSManagementPage() {
                   <TableCell className="text-xs">{item.item_count ?? 0}项</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleViewDetail(item.id!)}><FileCheck className="h-3 w-3" /></Button>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { if (item.id) handleViewDetail(item.id); }}><FileCheck className="h-3 w-3" /></Button>
                       <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditItem(item); setShowDialog(true); }}><Edit className="h-3 w-3" /></Button>
-                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600" onClick={() => handleDelete(item.id!)}><Trash2 className="h-3 w-3" /></Button>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600" onClick={() => { if (item.id) handleDelete(item.id); }}><Trash2 className="h-3 w-3" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
-              {list.length === 0 && <TableRow><TableCell colSpan={11} className="text-center text-gray-400 py-8">暂无SGS认证记录</TableCell></TableRow>}
+              {sortedData.length === 0 && <TableRow><TableCell colSpan={14} className="text-center text-muted-foreground py-8">暂无SGS认证记录</TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent></Card>

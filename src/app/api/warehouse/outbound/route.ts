@@ -7,6 +7,7 @@ import {
   commonErrors,
   withErrorHandler,
   validateRequestBody,
+  logOperation,
 } from '@/lib/api-response';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { WarehouseStateMachine, OutboundStatus } from '@/lib/warehouse-state-machine';
@@ -216,6 +217,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return { id: orderId, orderNo };
   });
 
+  await logOperation({
+    title: '创建出库单',
+    oper_type: 'warehouse',
+    oper_method: 'POST',
+    oper_url: '/api/warehouse/outbound',
+    oper_param: JSON.stringify({ orderNo: result.orderNo, warehouseCode, warehouseName, operatorName }),
+    oper_result: `出库单 ${result.orderNo} 创建成功`,
+    status: 1,
+  });
+
   return successResponse(result, '出库单创建成功');
 }, '创建出库单失败');
 
@@ -268,6 +279,16 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     ]
   );
 
+  await logOperation({
+    title: '更新出库单',
+    oper_type: 'warehouse',
+    oper_method: 'PUT',
+    oper_url: '/api/warehouse/outbound',
+    oper_param: JSON.stringify({ id, orderDate: updateData.orderDate, warehouseCode: updateData.warehouseCode }),
+    oper_result: `出库单 ${id} 更新成功`,
+    status: 1,
+  });
+
   return successResponse(null, '出库单更新成功');
 }, '更新出库单失败');
 
@@ -309,6 +330,16 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
       'UPDATE inv_outbound_item SET deleted = 1 WHERE order_id = ?',
       [id]
     );
+  });
+
+  await logOperation({
+    title: '删除出库单',
+    oper_type: 'warehouse',
+    oper_method: 'DELETE',
+    oper_url: '/api/warehouse/outbound',
+    oper_param: JSON.stringify({ id }),
+    oper_result: `出库单 ${id} 删除成功`,
+    status: 1,
   });
 
   return successResponse(null, '出库单删除成功');

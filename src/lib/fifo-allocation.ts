@@ -200,7 +200,7 @@ export async function executeFIFODeduction(
           params.operatorName,
         ]
       );
-    } catch {}
+    } catch (e) { console.error('[FIFO分配] 出库批次分配记录写入失败:', e); }
   }
 
   return { deductionDetails, totalCost };
@@ -303,7 +303,7 @@ export async function executeSpecifiedBatchDeduction(
         params.operatorName,
       ]
     );
-  } catch {}
+  } catch (e) { console.error('[指定批次出库] 出库批次分配记录写入失败:', e); }
 
   return {
     deductionDetail: {

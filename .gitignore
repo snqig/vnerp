@@ -120,6 +120,9 @@ test_import_vnpython.py
 vnpython.py
 vnpython.pyw
 skills-lock.json
+temp_*.json
+temp_*.txt
+test-results.json
 
 # Database package files (should not be in repo)
 database/package.json

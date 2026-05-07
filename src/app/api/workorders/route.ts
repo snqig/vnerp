@@ -117,7 +117,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return commonErrors.badRequest('缺少必要参数');
   }
 
-  return await transaction(async (connection) => {
+  const result = await transaction(async (connection) => {
     const [orderRows] = await connection.execute(
       `SELECT id, order_no, status FROM sal_order WHERE order_no = ? AND deleted = 0 FOR UPDATE`,
       [order_no]
@@ -222,12 +222,24 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       ]
     );
 
-    return successResponse({
+    return {
       work_order_id: workOrderId,
       work_order_no: workOrderNo,
       qr_code: qrCode,
-    }, `工单 ${workOrderNo} 创建成功，已生成工单二维码`);
+    };
   });
+
+  await logOperation({
+    title: '创建工单',
+    oper_type: 'production',
+    oper_method: 'POST',
+    oper_url: '/api/workorders',
+    oper_param: JSON.stringify({ order_no, customer_name, work_order_no: result.work_order_no }),
+    oper_result: `工单 ${result.work_order_no} 创建成功`,
+    status: 1,
+  });
+
+  return successResponse(result, `工单 ${result.work_order_no} 创建成功，已生成工单二维码`);
 }, '创建工单失败');
 
 export const PUT = withErrorHandler(async (request: NextRequest) => {
@@ -238,7 +250,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     return commonErrors.badRequest('工单ID不能为空');
   }
 
-  return await transaction(async (connection) => {
+  const result = await transaction(async (connection) => {
     const [woRows] = await connection.execute(
       `SELECT id, work_order_no, order_no, status FROM prod_work_order WHERE work_order_no = ? AND deleted = 0 FOR UPDATE`,
       [id]
@@ -316,8 +328,20 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       }
     }
 
-    return successResponse({ id, status, priority, plan_start_date, plan_end_date }, '工单更新成功');
+    return { id, status, priority, plan_start_date, plan_end_date };
   });
+
+  await logOperation({
+    title: '更新工单',
+    oper_type: 'production',
+    oper_method: 'PUT',
+    oper_url: '/api/workorders',
+    oper_param: JSON.stringify({ id: result.id, status: result.status, priority: result.priority }),
+    oper_result: `工单 ${result.id} 更新成功`,
+    status: 1,
+  });
+
+  return successResponse(result, '工单更新成功');
 }, '更新工单失败');
 
 export const DELETE = withErrorHandler(async (request: NextRequest) => {
@@ -328,7 +352,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return commonErrors.badRequest('工单ID不能为空');
   }
 
-  return await transaction(async (connection) => {
+  const deletedWorkOrderNo = await transaction(async (connection) => {
     const [woRows] = await connection.execute(
       `SELECT id, work_order_no, order_no, status FROM prod_work_order WHERE work_order_no = ? AND deleted = 0 FOR UPDATE`,
       [id]
@@ -363,6 +387,18 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
       }
     }
 
-    return successResponse(null, '工单删除成功');
+    return workOrder.work_order_no;
   });
+
+  await logOperation({
+    title: '删除工单',
+    oper_type: 'production',
+    oper_method: 'DELETE',
+    oper_url: '/api/workorders',
+    oper_param: JSON.stringify({ id }),
+    oper_result: `工单 ${deletedWorkOrderNo} 删除成功`,
+    status: 1,
+  });
+
+  return successResponse(null, '工单删除成功');
 }, '删除工单失败');

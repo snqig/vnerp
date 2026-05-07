@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { TableExportToolbar, exportTableToXLS, exportTableToPDF, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 
 interface SupplierAuditRecord {
   id?: number;
@@ -59,6 +62,8 @@ export default function SupplierAuditPage() {
   const [searchType, setSearchType] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<SupplierAuditRecord>>({});
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'audit_no');
 
   const fetchData = async () => {
     try {
@@ -144,13 +149,51 @@ export default function SupplierAuditPage() {
               <Button onClick={() => { setEditItem({ audit_type: 'initial', audit_result: 'pending', quality_system_score: 0, delivery_score: 0, price_score: 0, service_score: 0, total_score: 0 }); setShowDialog(true); }}>
                 <Plus className="h-4 w-4 mr-2" />新建审核
               </Button>
+              <TableExportToolbar
+                selectedCount={selectedIds.length}
+                totalCount={sortedData.length}
+                onSelectAll={() => setSelectedIds(sortedData.filter(i => i.id).map(i => i.id!))}
+                onDeselectAll={() => setSelectedIds([])}
+                onPrint={() => {}}
+                onExportPDF={() => exportTableToPDF(sortedData, '供应商审核报告', [
+                  { key: 'audit_no', header: '审核编号' },
+                  { key: 'supplier_name', header: '供应商' },
+                  { key: 'audit_type', header: '审核类型' },
+                  { key: 'audit_date', header: '审核日期' },
+                  { key: 'total_score', header: '总分' },
+                  { key: 'audit_result', header: '结果' },
+                ], '供应商审核报告')}
+                onExportXLS={() => exportTableToXLS(sortedData, '供应商审核报告', [
+                  { key: 'audit_no', header: '审核编号' },
+                  { key: 'supplier_name', header: '供应商' },
+                  { key: 'audit_type', header: '审核类型' },
+                  { key: 'audit_date', header: '审核日期' },
+                  { key: 'total_score', header: '总分' },
+                  { key: 'audit_result', header: '结果' },
+                ])}
+                onExportWORD={() => exportTableToWORD(sortedData, '供应商审核报告', [
+                  { key: 'audit_no', header: '审核编号' },
+                  { key: 'supplier_name', header: '供应商' },
+                  { key: 'audit_type', header: '审核类型' },
+                  { key: 'audit_date', header: '审核日期' },
+                  { key: 'total_score', header: '总分' },
+                  { key: 'audit_result', header: '结果' },
+                ], '供应商审核报告')}
+              />
             </div>
 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>审核编号</TableHead>
-                  <TableHead>供应商名称</TableHead>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedIds.length === sortedData.length && sortedData.length > 0}
+                      onCheckedChange={() => setSelectedIds(selectedIds.length === sortedData.length ? [] : sortedData.filter(i => i.id).map(i => i.id!))}
+                    />
+                  </TableHead>
+                  <TableHead className="w-12 text-center">序号</TableHead>
+                  <SortableTableHeader field="audit_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>审核编号</SortableTableHeader>
+                  <SortableTableHeader field="supplier_name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>供应商名称</SortableTableHeader>
                   <TableHead>审核类型</TableHead>
                   <TableHead>审核日期</TableHead>
                   <TableHead>质量体系</TableHead>
@@ -163,8 +206,15 @@ export default function SupplierAuditPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {list.map(item => (
+                {sortedData.map((item, index) => (
                   <TableRow key={item.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={item.id ? selectedIds.includes(item.id) : false}
+                        onCheckedChange={() => { if (item.id) setSelectedIds(prev => prev.includes(item.id!) ? prev.filter(i => i !== item.id!) : [...prev, item.id!]); }}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground">{(page - 1) * 20 + index + 1}</TableCell>
                     <TableCell className="font-mono text-sm">{item.audit_no}</TableCell>
                     <TableCell>{item.supplier_name}</TableCell>
                     <TableCell>{auditTypeMap[item.audit_type] || item.audit_type}</TableCell>
@@ -184,16 +234,16 @@ export default function SupplierAuditPage() {
                         <Button size="sm" variant="ghost" onClick={() => { setEditItem(item); setShowDialog(true); }}>
                           <Edit className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id!)}>
+                        <Button size="sm" variant="ghost" onClick={() => { if (item.id) handleDelete(item.id); }}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
-                {list.length === 0 && (
+                {sortedData.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
+                    <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
                   </TableRow>
                 )}
               </TableBody>

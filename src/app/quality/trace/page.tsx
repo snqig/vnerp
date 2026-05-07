@@ -1,4 +1,4 @@
-﻿'use client';
+﻿﻿﻿﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -51,6 +51,9 @@ import {
   Printer,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
+import { TableExportToolbar, exportTableToXLS, exportTableToPDF, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 
 interface TraceRecord {
   id: number;
@@ -114,6 +117,8 @@ export default function TracePage() {
   const [error, setError] = useState('');
   const [keyword, setKeyword] = useState('');
   const [traceTypeFilter, setTraceTypeFilter] = useState('all');
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(records, 'trace_no');
 
   const fetchRecords = useCallback(async () => {
     try {
@@ -422,6 +427,40 @@ export default function TracePage() {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   刷新
                 </Button>
+                <TableExportToolbar
+                  selectedCount={selectedIds.length}
+                  totalCount={sortedData.length}
+                  onSelectAll={() => setSelectedIds(sortedData.map(r => r.id))}
+                  onDeselectAll={() => setSelectedIds([])}
+                  onPrint={() => {}}
+                  onExportPDF={() => exportTableToPDF(sortedData, '追溯记录报告', [
+                    { key: 'trace_no', header: '追溯单号' },
+                    { key: 'card_no', header: '流程卡号' },
+                    { key: 'work_order_no', header: '工单号' },
+                    { key: 'product_code', header: '成品料号' },
+                    { key: 'trace_type', header: '类型' },
+                    { key: 'operator_name', header: '操作员' },
+                    { key: 'trace_time', header: '追溯时间' },
+                  ], '追溯记录报告')}
+                  onExportXLS={() => exportTableToXLS(sortedData, '追溯记录报告', [
+                    { key: 'trace_no', header: '追溯单号' },
+                    { key: 'card_no', header: '流程卡号' },
+                    { key: 'work_order_no', header: '工单号' },
+                    { key: 'product_code', header: '成品料号' },
+                    { key: 'trace_type', header: '类型' },
+                    { key: 'operator_name', header: '操作员' },
+                    { key: 'trace_time', header: '追溯时间' },
+                  ])}
+                  onExportWORD={() => exportTableToWORD(sortedData, '追溯记录报告', [
+                    { key: 'trace_no', header: '追溯单号' },
+                    { key: 'card_no', header: '流程卡号' },
+                    { key: 'work_order_no', header: '工单号' },
+                    { key: 'product_code', header: '成品料号' },
+                    { key: 'trace_type', header: '类型' },
+                    { key: 'operator_name', header: '操作员' },
+                    { key: 'trace_time', header: '追溯时间' },
+                  ], '追溯记录报告')}
+                />
               </div>
             </div>
           </CardHeader>
@@ -429,26 +468,40 @@ export default function TracePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>追溯单号</TableHead>
-                  <TableHead>流程卡号</TableHead>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedIds.length === sortedData.length && sortedData.length > 0}
+                      onCheckedChange={() => setSelectedIds(selectedIds.length === sortedData.length ? [] : sortedData.map(r => r.id))}
+                    />
+                  </TableHead>
+                  <TableHead className="w-12 text-center">序号</TableHead>
+                  <SortableTableHeader field="trace_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>追溯单号</SortableTableHeader>
+                  <SortableTableHeader field="card_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>流程卡号</SortableTableHeader>
                   <TableHead>工单号</TableHead>
                   <TableHead>成品料号</TableHead>
-                  <TableHead>类型</TableHead>
+                  <SortableTableHeader field="trace_type" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>类型</SortableTableHeader>
                   <TableHead>操作员</TableHead>
-                  <TableHead>追溯时间</TableHead>
+                  <SortableTableHeader field="trace_time" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>追溯时间</SortableTableHeader>
                   <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {records.length === 0 ? (
+                {sortedData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                       暂无追溯记录
                     </TableCell>
                   </TableRow>
                 ) : (
-                  records.map((r) => (
+                  sortedData.map((r, index) => (
                     <TableRow key={r.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.includes(r.id)}
+                          onCheckedChange={() => setSelectedIds(prev => prev.includes(r.id) ? prev.filter(i => i !== r.id) : [...prev, r.id])}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                       <TableCell className="font-mono">{r.trace_no}</TableCell>
                       <TableCell>{r.card_no || '-'}</TableCell>
                       <TableCell>{r.work_order_no || '-'}</TableCell>

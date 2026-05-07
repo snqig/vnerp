@@ -7,6 +7,7 @@ import {
   commonErrors,
   withErrorHandler,
   validateRequestBody,
+  logOperation,
 } from '@/lib/api-response';
 
 // 仓库类型映射
@@ -172,6 +173,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return { id: warehouseId };
   });
 
+  await logOperation({
+    title: '创建仓库',
+    oper_type: 'warehouse',
+    oper_method: 'POST',
+    oper_url: '/api/warehouse',
+    oper_param: JSON.stringify({ code: body.code, name: body.name, type: body.type }),
+    oper_result: `仓库 ${body.name} 创建成功`,
+    status: 1,
+  });
+
   return successResponse(result, '仓库创建成功');
 }, '创建仓库失败');
 
@@ -239,6 +250,16 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     );
   });
 
+  await logOperation({
+    title: '更新仓库',
+    oper_type: 'warehouse',
+    oper_method: 'PUT',
+    oper_url: '/api/warehouse',
+    oper_param: JSON.stringify({ id, code: body.code, name: body.name, type: body.type }),
+    oper_result: `仓库 ${body.name} 更新成功`,
+    status: 1,
+  });
+
   return successResponse(null, '仓库更新成功');
 }, '更新仓库失败');
 
@@ -254,8 +275,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   const warehouseId = parseInt(id);
 
   // 使用事务软删除并记录日志
-  await transaction(async (connection) => {
-    // 获取仓库信息用于日志
+  const warehouseName = await transaction(async (connection) => {
     const [rows] = await connection.query(
       'SELECT warehouse_name as name FROM inv_warehouse WHERE id = ? AND deleted = 0',
       [warehouseId]
@@ -265,20 +285,30 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
       throw new Error('仓库不存在或已被删除');
     }
 
-    const warehouseName = (rows as any[])[0].name;
+    const name = (rows as any[])[0].name;
 
-    // 软删除仓库
     await connection.execute(
       'UPDATE inv_warehouse SET deleted = 1 WHERE id = ?',
       [warehouseId]
     );
 
-    // 记录操作日志
     await connection.execute(
       `INSERT INTO inv_warehouse_log (warehouse_id, operation_type, operation_content)
        VALUES (?, 'delete', ?)`,
-      [warehouseId, `删除仓库: ${warehouseName}`]
+      [warehouseId, `删除仓库: ${name}`]
     );
+
+    return name;
+  });
+
+  await logOperation({
+    title: '删除仓库',
+    oper_type: 'warehouse',
+    oper_method: 'DELETE',
+    oper_url: '/api/warehouse',
+    oper_param: JSON.stringify({ id: warehouseId }),
+    oper_result: `仓库 ${warehouseName} 删除成功`,
+    status: 1,
   });
 
   return successResponse(null, '仓库删除成功');

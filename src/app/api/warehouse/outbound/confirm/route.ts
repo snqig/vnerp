@@ -4,6 +4,7 @@ import {
   successResponse,
   errorResponse,
   withErrorHandler,
+  logOperation,
 } from '@/lib/api-response';
 import { WarehouseStateMachine, OutboundStatus } from '@/lib/warehouse-state-machine';
 import { allocateFIFO, executeFIFODeduction, executeSpecifiedBatchDeduction } from '@/lib/fifo-allocation';
@@ -16,53 +17,36 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('出库单ID不能为空', 400);
   }
 
-  const [order] = await query<{
-    id: number;
-    order_no: string;
-    status: OutboundStatus;
-    warehouse_id: number;
-    warehouse_code: string;
-    warehouse_name: string;
-  }>(
-    `SELECT id, order_no, status, warehouse_id, warehouse_code, warehouse_name
-     FROM inv_outbound_order WHERE id = ? AND deleted = 0`,
-    [id]
-  );
-
-  if (!order) {
-    return errorResponse('出库单不存在', 404);
-  }
-
-  if (!WarehouseStateMachine.canConfirmOutbound(order.status)) {
-    return errorResponse(
-      `当前状态【${WarehouseStateMachine.getOutboundStatusLabel(order.status)}】不允许确认`,
-      400
-    );
-  }
-
-  const items = await query<{
-    id: number;
-    material_id: number;
-    material_code: string;
-    material_name: string;
-    batch_no: string;
-    qty: number;
-    unit: string;
-    location_code: string;
-  }>(
-    `SELECT id, material_id, material_code, material_name, batch_no, qty, unit, location_code
-     FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
-    [id]
-  );
-
-  if (items.length === 0) {
-    return errorResponse('出库单没有明细，不能确认', 400);
-  }
-
   const deductionDetails: any[] = [];
 
   await transaction(async (connection) => {
-    for (const item of items) {
+    const [orderRows]: any = await connection.execute(
+      `SELECT id, order_no, status, warehouse_id, warehouse_code, warehouse_name, version
+       FROM inv_outbound_order WHERE id = ? AND deleted = 0 FOR UPDATE`,
+      [id]
+    );
+
+    if (!orderRows || orderRows.length === 0) {
+      throw new Error('NOT_FOUND:出库单不存在');
+    }
+
+    const orderRow = orderRows[0];
+
+    if (!WarehouseStateMachine.canConfirmOutbound(orderRow.status)) {
+      throw new Error(`BAD_REQUEST:当前状态【${WarehouseStateMachine.getOutboundStatusLabel(orderRow.status)}】不允许确认`);
+    }
+
+    const [itemRows]: any = await connection.execute(
+      `SELECT id, material_id, material_code, material_name, batch_no, qty, unit, location_code
+       FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
+      [id]
+    );
+
+    if (!itemRows || itemRows.length === 0) {
+      throw new Error('BAD_REQUEST:出库单没有明细，不能确认');
+    }
+
+    for (const item of itemRows) {
       const requiredQty = parseFloat(String(item.qty));
 
       if (item.batch_no) {
@@ -71,18 +55,18 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           materialId: item.material_id,
           materialCode: item.material_code,
           materialName: item.material_name,
-          warehouseId: order.warehouse_id,
-          warehouseCode: order.warehouse_code,
+          warehouseId: orderRow.warehouse_id,
+          warehouseCode: orderRow.warehouse_code,
           requiredQty,
           sourceType: 'outbound_order',
           sourceId: id,
-          sourceNo: order.order_no,
+          sourceNo: orderRow.order_no,
           operatorId: operatorId || null,
           operatorName: operatorName || null,
         });
         deductionDetails.push(deductionDetail);
       } else {
-        const allocation = await allocateFIFO(connection, item.material_id, order.warehouse_id, requiredQty);
+        const allocation = await allocateFIFO(connection, item.material_id, orderRow.warehouse_id, requiredQty);
 
         if (allocation.shortage > 0) {
           throw new Error(
@@ -93,9 +77,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         const { deductionDetails: fifoDetails } = await executeFIFODeduction(connection, allocation, {
           sourceType: 'outbound_order',
           sourceId: id,
-          sourceNo: order.order_no,
-          warehouseId: order.warehouse_id,
-          warehouseCode: order.warehouse_code,
+          sourceNo: orderRow.order_no,
+          warehouseId: orderRow.warehouse_id,
+          warehouseCode: orderRow.warehouse_code,
           operatorId: operatorId || null,
           operatorName: operatorName || null,
         });
@@ -114,7 +98,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           available_qty = available_qty - ?,
           update_time = NOW()
         WHERE material_id = ? AND warehouse_id = ?`,
-        [requiredQty, requiredQty, item.material_id, order.warehouse_id]
+        [requiredQty, requiredQty, item.material_id, orderRow.warehouse_id]
       );
     }
 
@@ -128,16 +112,30 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         audit_remark = ?,
         version = version + 1,
         update_time = NOW()
-      WHERE id = ?`,
-      [operatorId, operatorName, remark || '', id]
+      WHERE id = ? AND version = ?`,
+      [operatorId, operatorName, remark || '', id, orderRow.version]
     );
+  }).catch((error) => {
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.startsWith('NOT_FOUND:')) return errorResponse(msg.slice(10), 404);
+    if (msg.startsWith('BAD_REQUEST:')) return errorResponse(msg.slice(12), 400);
+    throw error;
+  });
+
+  await logOperation({
+    title: '确认出库',
+    oper_name: operatorName,
+    oper_type: 'warehouse',
+    oper_method: 'POST',
+    oper_url: '/api/warehouse/outbound/confirm',
+    oper_param: JSON.stringify({ id, operatorId }),
+    oper_result: `出库单确认成功，扣减${deductionDetails.length}个批次`,
+    status: 1,
   });
 
   return successResponse(
     {
       orderId: id,
-      orderNo: order.order_no,
-      status: 'completed',
       deductionDetails,
       totalDeductedBatches: deductionDetails.length,
     },
@@ -153,42 +151,36 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('出库单ID不能为空', 400);
   }
 
-  const [order] = await query<{
-    id: number;
-    order_no: string;
-    status: OutboundStatus;
-    warehouse_id: number;
-  }>(
-    `SELECT id, order_no, status, warehouse_id FROM inv_outbound_order WHERE id = ? AND deleted = 0`,
-    [id]
-  );
-
-  if (!order) {
-    return errorResponse('出库单不存在', 404);
-  }
-
-  if (!WarehouseStateMachine.canTransitionOutbound(order.status, 'pending')) {
-    return errorResponse(
-      WarehouseStateMachine.getTransitionError('outbound', order.status, 'pending'),
-      400
-    );
-  }
-
-  const items = await query<{
-    material_id: number;
-    batch_no: string;
-    qty: number;
-  }>(
-    `SELECT material_id, batch_no, qty FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
-    [id]
-  );
+  let orderNo = '';
 
   await transaction(async (connection) => {
-    for (const item of items) {
-      const batchNos = item.batch_no ? item.batch_no.split(',') : [];
+    const [orderRows]: any = await connection.execute(
+      `SELECT id, order_no, status, warehouse_id, version
+       FROM inv_outbound_order WHERE id = ? AND deleted = 0 FOR UPDATE`,
+      [id]
+    );
+
+    if (!orderRows || orderRows.length === 0) {
+      throw new Error('NOT_FOUND:出库单不存在');
+    }
+
+    const order = orderRows[0];
+    orderNo = order.order_no;
+
+    if (!WarehouseStateMachine.canTransitionOutbound(order.status, 'pending')) {
+      throw new Error(`BAD_REQUEST:${WarehouseStateMachine.getTransitionError('outbound', order.status, 'pending')}`);
+    }
+
+    const [itemRows]: any = await connection.execute(
+      `SELECT material_id, batch_no, qty FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
+      [id]
+    );
+
+    for (const item of (itemRows || [])) {
+      const batchNos = item.batch_no ? item.batch_no.split(',').map((b: string) => b.trim()).filter(Boolean) : [];
 
       if (batchNos.length <= 1) {
-        const [updateResult] = await connection.execute(
+        const [updateResult]: any = await connection.execute(
           `UPDATE inv_inventory_batch SET
             quantity = quantity + ?,
             available_qty = available_qty + ?,
@@ -198,23 +190,42 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
           [item.qty, item.qty, item.batch_no, item.material_id, order.warehouse_id]
         );
 
-        if ((updateResult as any).affectedRows === 0) {
+        if (updateResult.affectedRows === 0) {
           throw new Error(`库存恢复失败，可能已被其他操作修改: ${item.batch_no}`);
         }
       } else {
-        const qtyPerBatch = item.qty / batchNos.length;
-        for (const bNo of batchNos) {
-          const trimmed = bNo.trim();
-          if (!trimmed) continue;
-          await connection.execute(
-            `UPDATE inv_inventory_batch SET
-              quantity = quantity + ?,
-              available_qty = available_qty + ?,
-              version = version + 1,
-              update_time = NOW()
-            WHERE batch_no = ? AND material_id = ? AND warehouse_id = ?`,
-            [qtyPerBatch, qtyPerBatch, trimmed, item.material_id, order.warehouse_id]
-          );
+        const [allocations]: any = await connection.execute(
+          `SELECT batch_no, allocated_qty FROM inv_outbound_batch_allocation
+           WHERE source_id = ? AND material_id = ? AND source_type = 'outbound_order'
+           ORDER BY batch_no`,
+          [id, item.material_id]
+        );
+
+        if (allocations && allocations.length > 0) {
+          for (const alloc of allocations) {
+            await connection.execute(
+              `UPDATE inv_inventory_batch SET
+                quantity = quantity + ?,
+                available_qty = available_qty + ?,
+                version = version + 1,
+                update_time = NOW()
+              WHERE batch_no = ? AND material_id = ? AND warehouse_id = ?`,
+              [alloc.allocated_qty, alloc.allocated_qty, alloc.batch_no, item.material_id, order.warehouse_id]
+            );
+          }
+        } else {
+          const qtyPerBatch = item.qty / batchNos.length;
+          for (const bNo of batchNos) {
+            await connection.execute(
+              `UPDATE inv_inventory_batch SET
+                quantity = quantity + ?,
+                available_qty = available_qty + ?,
+                version = version + 1,
+                update_time = NOW()
+              WHERE batch_no = ? AND material_id = ? AND warehouse_id = ?`,
+              [qtyPerBatch, qtyPerBatch, bNo, item.material_id, order.warehouse_id]
+            );
+          }
         }
       }
 
@@ -256,13 +267,29 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         version = version + 1,
         audit_remark = ?,
         update_time = NOW()
-      WHERE id = ?`,
-      [`撤销出库: ${remark || ''} 操作人: ${operatorName || ''}`, id]
+      WHERE id = ? AND version = ?`,
+      [`撤销出库: ${remark || ''} 操作人: ${operatorName || ''}`, id, order.version]
     );
+  }).catch((error) => {
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.startsWith('NOT_FOUND:')) return errorResponse(msg.slice(10), 404);
+    if (msg.startsWith('BAD_REQUEST:')) return errorResponse(msg.slice(12), 400);
+    throw error;
+  });
+
+  await logOperation({
+    title: '撤销出库',
+    oper_name: operatorName,
+    oper_type: 'warehouse',
+    oper_method: 'PUT',
+    oper_url: '/api/warehouse/outbound/confirm',
+    oper_param: JSON.stringify({ id, operatorId }),
+    oper_result: `出库单 ${orderNo} 撤销成功，库存已恢复`,
+    status: 1,
   });
 
   return successResponse(
-    { orderId: id, orderNo: order.order_no, status: 'pending' },
+    { orderId: id, orderNo, status: 'pending' },
     '出库单撤销成功，库存已恢复'
   );
 }, '撤销出库失败');

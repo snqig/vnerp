@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -125,8 +125,8 @@ export default function StandardCardPage() {
       if (statusFilter !== 'all') {
         params.append('status', statusFilter);
       }
-      if (searchTerm) {
-        params.append('keyword', searchTerm);
+      if (debouncedSearchTerm) {
+        params.append('keyword', debouncedSearchTerm);
       }
 
       const response = await fetch(`/api/standard-cards?${params.toString()}`);
@@ -155,8 +155,6 @@ export default function StandardCardPage() {
           createTime: item.create_time,
           updateTime: item.update_time,
         }));
-        console.log('API返回数据:', result.data.length, '条');
-        console.log('格式化后数据:', formattedCards.length, '条');
         setCards(formattedCards);
         setTotalCount(result.pagination?.total || 0);
       } else {
@@ -170,9 +168,18 @@ export default function StandardCardPage() {
   };
 
   // 从数据库加载标准卡数据
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   useEffect(() => {
     loadCards();
-  }, [currentPage, statusFilter, searchTerm]);
+  }, [currentPage, statusFilter, debouncedSearchTerm]);
 
   // 搜索处理
   const handleSearch = () => {
@@ -184,7 +191,12 @@ export default function StandardCardPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
   
   // 直接使用 API 返回的数据，不再进行客户端筛选
-  const filteredCards = cards;
+  const filteredCards = cards.filter(card => {
+    if (printTypeFilter !== '全部' && card.printType !== printTypeFilter) return false;
+    if (processMethodFilter !== '全部' && card.processMethod !== processMethodFilter) return false;
+    if (materialTypeFilter !== '全部' && card.materialType !== materialTypeFilter) return false;
+    return true;
+  });
 
   const handleView = (card: StandardCardListItem) => {
     window.open(`/sample/standard-card/print?id=${card.id}`, '_blank', 'width=1200,height=800,scrollbars=yes');
@@ -741,10 +753,7 @@ export default function StandardCardPage() {
                 <div className="space-y-3">
                   {approvalStatus.steps.map((step: any, index: number) => (
                     <div key={step.type} className="flex items-center gap-3 p-3 border rounded-lg">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                        ${step.status === 'completed' ? 'bg-green-100 text-green-700' : 
-                          step.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 
-                          'bg-gray-100 text-gray-700'}">
+                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : step.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
                         {index + 1}
                       </div>
                       <div className="flex-1">

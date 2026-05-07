@@ -666,19 +666,19 @@ export default function EmployeePage() {
     }, [employee.id]);
     
     return (
-      <div className="border rounded-lg p-4 bg-white">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm text-gray-500">序号 {index + 1}</span>
+      <div className="border rounded-lg p-4 bg-card">
+        <div className="flex items-start gap-4">
+          <span className="text-sm text-muted-foreground">序号 {index + 1}</span>
           <span className="font-medium">{employee.name}</span>
         </div>
         <div className="flex gap-4">
-          <div className="w-20 h-24 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+          <div className="w-20 h-24 bg-muted rounded flex items-center justify-center overflow-hidden">
             {employee.photo ? (
               <img src={employee.photo} alt={employee.name} className="w-full h-full object-cover" />
             ) : (
-              <UserCircle className="w-10 h-10 text-gray-400" />
-            )}
-          </div>
+              <UserCircle className="w-10 h-10 text-muted-foreground" />
+              )}
+            </div>
           <div className="flex-1 text-sm space-y-1">
             <div>编号: {employee.employee_no}</div>
             <div>部门: {employee.dept_name}</div>
@@ -916,7 +916,7 @@ export default function EmployeePage() {
   const getStatusBadge = (status: number) => {
     const styles: Record<number, string> = {
       1: 'bg-green-100 text-green-800',
-      0: 'bg-gray-100 text-gray-800',
+      0: 'bg-muted text-muted-foreground',
       2: 'bg-yellow-100 text-yellow-800',
       3: 'bg-red-100 text-red-800'
     };
@@ -1091,7 +1091,7 @@ export default function EmployeePage() {
                       variant="ghost" 
                       size="sm" 
                       onClick={() => setSelectedEmployees([])}
-                      className="ml-auto text-gray-500"
+                      className="ml-auto text-muted-foreground"
                     >
                       清除选择
                     </Button>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, FlaskConical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { TableExportToolbar, exportTableToXLS, exportTableToPDF, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 
 interface LabTestRecord {
   id?: number;
@@ -58,6 +61,8 @@ export default function LabTestPage() {
   const [searchType, setSearchType] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<LabTestRecord>>({});
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'test_no');
 
   const fetchData = async () => {
     try {
@@ -136,26 +141,71 @@ export default function LabTestPage() {
               <Button onClick={() => { setEditItem({ test_type: 'color', conclusion: 'pending' }); setShowDialog(true); }}>
                 <Plus className="h-4 w-4 mr-2" />新建测试
               </Button>
+              <TableExportToolbar
+                selectedCount={selectedIds.length}
+                totalCount={sortedData.length}
+                onSelectAll={() => setSelectedIds(sortedData.filter(i => i.id).map(i => i.id!))}
+                onDeselectAll={() => setSelectedIds([])}
+                onPrint={() => {}}
+                onExportPDF={() => exportTableToPDF(sortedData, '实验室测试报告', [
+                  { key: 'test_no', header: '测试编号' },
+                  { key: 'product_name', header: '产品名称' },
+                  { key: 'batch_no', header: '批次号' },
+                  { key: 'test_type', header: '测试类型' },
+                  { key: 'conclusion', header: '结论' },
+                  { key: 'status', header: '状态' },
+                ], '实验室测试报告')}
+                onExportXLS={() => exportTableToXLS(sortedData, '实验室测试报告', [
+                  { key: 'test_no', header: '测试编号' },
+                  { key: 'product_name', header: '产品名称' },
+                  { key: 'batch_no', header: '批次号' },
+                  { key: 'test_type', header: '测试类型' },
+                  { key: 'conclusion', header: '结论' },
+                  { key: 'status', header: '状态' },
+                ])}
+                onExportWORD={() => exportTableToWORD(sortedData, '实验室测试报告', [
+                  { key: 'test_no', header: '测试编号' },
+                  { key: 'product_name', header: '产品名称' },
+                  { key: 'batch_no', header: '批次号' },
+                  { key: 'test_type', header: '测试类型' },
+                  { key: 'conclusion', header: '结论' },
+                  { key: 'status', header: '状态' },
+                ], '实验室测试报告')}
+              />
             </div>
 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>测试编号</TableHead>
-                  <TableHead>产品名称</TableHead>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedIds.length === sortedData.length && sortedData.length > 0}
+                      onCheckedChange={() => setSelectedIds(selectedIds.length === sortedData.length ? [] : sortedData.filter(i => i.id).map(i => i.id!))}
+                    />
+                  </TableHead>
+                  <TableHead className="w-12 text-center">序号</TableHead>
+                  <SortableTableHeader field="test_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>测试编号</SortableTableHeader>
+                  <SortableTableHeader field="product_name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>产品名称</SortableTableHeader>
                   <TableHead>批次号</TableHead>
                   <TableHead>测试类型</TableHead>
                   <TableHead>测试项目</TableHead>
                   <TableHead>测试人</TableHead>
                   <TableHead>测试日期</TableHead>
-                  <TableHead>结论</TableHead>
-                  <TableHead>状态</TableHead>
+                  <SortableTableHeader field="conclusion" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>结论</SortableTableHeader>
+                  <SortableTableHeader field="status" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>状态</SortableTableHeader>
                   <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {list.map(item => (
+                {sortedData.map((item, index) => (
                   <TableRow key={item.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={item.id ? selectedIds.includes(item.id) : false}
+                        onCheckedChange={() => { if (item.id) setSelectedIds(prev => prev.includes(item.id!) ? prev.filter(i => i !== item.id!) : [...prev, item.id!]); }}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground">{(page - 1) * 20 + index + 1}</TableCell>
                     <TableCell className="font-mono text-sm">{item.test_no}</TableCell>
                     <TableCell>{item.product_name}</TableCell>
                     <TableCell>{item.batch_no || '-'}</TableCell>
@@ -178,16 +228,16 @@ export default function LabTestPage() {
                         <Button size="sm" variant="ghost" onClick={() => { setEditItem(item); setShowDialog(true); }}>
                           <Edit className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id!)}>
+                        <Button size="sm" variant="ghost" onClick={() => { if (item.id) handleDelete(item.id); }}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
-                {list.length === 0 && (
+                {sortedData.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
+                    <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
                   </TableRow>
                 )}
               </TableBody>

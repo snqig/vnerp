@@ -11,6 +11,7 @@ import {
 } from '@/lib/api-response';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { randomUUID } from 'crypto';
+import { WarehouseStateMachine } from '@/lib/warehouse-state-machine';
 
 // 获取入库单列表
 export const GET = withErrorHandler(async (request: NextRequest) => {
@@ -190,21 +191,171 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('入库单ID不能为空', 400, 400);
   }
 
-  // 查询入库单
-  const orders = await query(
-    'SELECT * FROM inv_inbound_order WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  if (status === 'approved') {
+    try {
+      await transaction(async (conn) => {
+        const [orderRows]: any = await conn.execute(
+          'SELECT * FROM inv_inbound_order WHERE id = ? AND deleted = 0 FOR UPDATE',
+          [id]
+        );
 
-  if (!orders || (orders as any[]).length === 0) {
-    return commonErrors.notFound('入库单不存在');
-  }
+        if (!orderRows || orderRows.length === 0) {
+          throw new Error('NOT_FOUND');
+        }
 
-  const order = (orders as any[])[0];
+        const order = orderRows[0];
 
-  // 已完成的入库单不能修改
-  if (order.status === 'completed') {
-    return errorResponse('已完成的入库单不能修改', 400, 400);
+        if (!WarehouseStateMachine.canTransitionInbound(order.status, 'completed')) {
+          throw new Error(`INVALID_TRANSITION:${order.status}:completed`);
+        }
+
+        const [updateResult]: any = await conn.execute(
+          'UPDATE inv_inbound_order SET status = ?, update_time = NOW() WHERE id = ? AND status = ?',
+          ['completed', id, order.status]
+        );
+
+        if (updateResult.affectedRows === 0) {
+          throw new Error('VERSION_CONFLICT');
+        }
+
+        const [items]: any = await conn.execute(
+          'SELECT * FROM inv_inbound_item WHERE order_id = ?',
+          [id]
+        );
+
+        const [warehouseRows]: any = await conn.execute(
+          'SELECT id, name FROM inv_warehouse WHERE id = ?',
+          [order.warehouse_id]
+        );
+        const warehouseName = warehouseRows[0]?.name || '';
+
+        for (const item of items) {
+          const [existingInv]: any = await conn.execute(
+            'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
+            [item.material_id, order.warehouse_id]
+          );
+
+          if (existingInv.length > 0) {
+            await conn.execute(
+              'UPDATE inv_inventory SET quantity = quantity + ?, update_time = NOW() WHERE id = ?',
+              [item.quantity, existingInv[0].id]
+            );
+          } else {
+            await conn.execute(
+              `INSERT INTO inv_inventory (material_id, material_code, material_name, warehouse_id, quantity, unit, create_time)
+               VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+              [item.material_id, item.material_code || null, item.material_name || '', order.warehouse_id, item.quantity, item.unit || '件']
+            );
+          }
+
+          const [existingBatch]: any = await conn.execute(
+            'SELECT id, available_qty FROM inv_inventory_batch WHERE batch_no = ? AND material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
+            [item.batch_no || `B${Date.now()}`, item.material_id, order.warehouse_id]
+          );
+
+          if (existingBatch.length > 0) {
+            await conn.execute(
+              'UPDATE inv_inventory_batch SET available_qty = available_qty + ?, update_time = NOW() WHERE id = ?',
+              [item.quantity, existingBatch[0].id]
+            );
+          } else {
+            await conn.execute(
+              `INSERT INTO inv_inventory_batch (batch_no, material_id, material_code, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, status, produce_date, create_time)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'normal', ?, NOW())`,
+              [
+                item.batch_no || `B${Date.now()}`,
+                item.material_id,
+                item.material_code || null,
+                item.material_name || '',
+                order.warehouse_id,
+                item.quantity,
+                item.quantity,
+                item.unit_price || 0,
+                order.inbound_date || new Date().toISOString().slice(0, 10),
+                item.produce_date || null,
+              ]
+            );
+          }
+
+          const qrCode = 'MA-' + randomUUID().replace(/-/g, '').substring(0, 16);
+          await conn.execute(
+            `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, batch_no, material_id, material_code, material_name, specification, quantity, unit, warehouse_id, warehouse_name, supplier_name, production_date, status, extra_data)
+             VALUES (?, 'material', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+            [
+              qrCode, id, order.order_no, item.batch_no || null,
+              item.material_id || null, null, item.material_name || '',
+              item.material_spec || '', item.quantity || 0, item.unit || '',
+              order.warehouse_id || null, warehouseName,
+              order.supplier_name || '', item.produce_date || null,
+              JSON.stringify({ inbound_order_no: order.order_no, inbound_date: order.inbound_date }),
+            ]
+          );
+
+          const transNo = 'TRX' + Date.now() + String(item.id || 0).slice(-4);
+          const totalItemAmount = (Number(item.quantity) || 0) * (Number(item.unit_price) || 0);
+          await conn.execute(
+            `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, account_dr, account_cr, create_time)
+             VALUES (?, 'in', 'inbound', ?, ?, ?, ?, ?, ?, ?, ?, '原材料库存', '应付账款', NOW())`,
+            [transNo, id, item.material_id, item.material_code || '', item.batch_no || '', order.warehouse_id, item.quantity, item.unit_price || 0, totalItemAmount]
+          );
+
+          try {
+            const voucherNo = 'FV' + Date.now() + String(item.id || 0).slice(-4);
+            await conn.execute(
+              `INSERT INTO fin_voucher (voucher_no, voucher_date, source_type, source_id, source_no, debit_account, credit_account, amount, cost_price, quantity, batch_no, material_id, material_name, warehouse_id)
+               VALUES (?, CURDATE(), 'inbound', ?, ?, '原材料库存', '应付账款', ?, ?, ?, ?, ?, ?, ?)`,
+              [voucherNo, id, order.order_no, totalItemAmount, item.unit_price || 0, item.quantity, item.batch_no || '', item.material_id, item.material_name || '', order.warehouse_id]
+            );
+          } catch (e) { console.error('财务凭证创建失败:', e); }
+        }
+
+        const totalAmount = items.reduce((sum: number, item: any) => sum + (Number(item.quantity) || 0) * (Number(item.unit_price) || 0), 0);
+        if (totalAmount > 0 && order.supplier_name) {
+          try {
+            const [supplierRows]: any = await conn.execute(
+              'SELECT id FROM pur_supplier WHERE supplier_name = ? AND deleted = 0 LIMIT 1',
+              [order.supplier_name]
+            );
+            const supplierId = supplierRows.length > 0 ? supplierRows[0].id : null;
+
+            const payableNo = 'AP' + Date.now();
+            await conn.execute(
+              `INSERT INTO fin_payable (payable_no, supplier_id, supplier_name, source_type, source_id, source_no, amount, paid_amount, status, due_date, remark, create_time)
+               VALUES (?, ?, ?, 'inbound', ?, ?, ?, 0, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
+              [payableNo, supplierId, order.supplier_name, id, order.order_no, totalAmount, `采购入库单 ${order.order_no} 自动生成`]
+            );
+          } catch (e) { console.error('应付账款创建失败:', e); }
+        }
+
+        await conn.execute(
+          'UPDATE inv_inbound_order SET inspection_status = 3, finance_posted = 1 WHERE id = ?',
+          [id]
+        );
+      });
+
+    await logOperation({
+      title: '入库单审核',
+      oper_type: '审核',
+      oper_method: 'PUT',
+      oper_url: '/api/warehouse/inbound',
+      oper_param: JSON.stringify({ id, status: 'approved' }),
+      oper_result: `入库单审核通过，已生成物料二维码、批次库存、财务凭证`,
+    });
+
+    return successResponse({ id, status: 'completed' }, '入库单审核成功');
+    } catch (err: any) {
+      if (err.message === 'NOT_FOUND') {
+        return commonErrors.notFound('入库单不存在');
+      }
+      if (err.message === 'VERSION_CONFLICT') {
+        return errorResponse('入库单状态已变更，请刷新后重试', 409, 409);
+      }
+      if (err.message.startsWith('INVALID_TRANSITION:')) {
+        const [, from, to] = err.message.split(':');
+        return errorResponse(WarehouseStateMachine.getTransitionError('inbound', from, to), 400, 400);
+      }
+      throw err;
+    }
   }
 
   const updateFields: string[] = [];
@@ -221,138 +372,53 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   if (updateFields.length > 0) {
-    updateParams.push(id);
-    await query(
-      `UPDATE inv_inbound_order SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
-      updateParams
-    );
-  }
-
-  if (status === 'approved') {
-    await transaction(async (conn) => {
-      const [items]: any = await conn.execute(
-        'SELECT * FROM inv_inbound_item WHERE order_id = ?',
-        [id]
-      );
-
-      const [warehouseRows]: any = await conn.execute(
-        'SELECT id, name FROM inv_warehouse WHERE id = ?',
-        [order.warehouse_id]
-      );
-      const warehouseName = warehouseRows[0]?.name || '';
-
-      for (const item of items) {
-        const [existingInv]: any = await conn.execute(
-          'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
-          [item.material_id, order.warehouse_id]
+    try {
+      await transaction(async (conn) => {
+        const [orderRows]: any = await conn.execute(
+          'SELECT * FROM inv_inbound_order WHERE id = ? AND deleted = 0 FOR UPDATE',
+          [id]
         );
 
-        if (existingInv.length > 0) {
-          await conn.execute(
-            'UPDATE inv_inventory SET quantity = quantity + ?, update_time = NOW() WHERE id = ?',
-            [item.quantity, existingInv[0].id]
-          );
-        } else {
-          await conn.execute(
-            `INSERT INTO inv_inventory (material_id, material_code, material_name, warehouse_id, quantity, unit, create_time)
-             VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-            [item.material_id, item.material_code || null, item.material_name || '', order.warehouse_id, item.quantity, item.unit || '件']
-          );
+        if (!orderRows || orderRows.length === 0) {
+          throw new Error('NOT_FOUND');
         }
 
-        const [existingBatch]: any = await conn.execute(
-          'SELECT id, available_qty FROM inv_inventory_batch WHERE batch_no = ? AND material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
-          [item.batch_no || `B${Date.now()}`, item.material_id, order.warehouse_id]
-        );
+        const order = orderRows[0];
 
-        if (existingBatch.length > 0) {
-          await conn.execute(
-            'UPDATE inv_inventory_batch SET available_qty = available_qty + ?, update_time = NOW() WHERE id = ?',
-            [item.quantity, existingBatch[0].id]
-          );
-        } else {
-          await conn.execute(
-            `INSERT INTO inv_inventory_batch (batch_no, material_id, material_code, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, status, produce_date, create_time)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'normal', ?, NOW())`,
-            [
-              item.batch_no || `B${Date.now()}`,
-              item.material_id,
-              item.material_code || null,
-              item.material_name || '',
-              order.warehouse_id,
-              item.quantity,
-              item.quantity,
-              item.unit_price || 0,
-              order.inbound_date || new Date().toISOString().slice(0, 10),
-              item.produce_date || null,
-            ]
-          );
+        if (order.status === 'completed') {
+          throw new Error('COMPLETED_NO_MODIFY');
         }
 
-        const qrCode = 'MA-' + randomUUID().replace(/-/g, '').substring(0, 16);
-        await conn.execute(
-          `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, batch_no, material_id, material_code, material_name, specification, quantity, unit, warehouse_id, warehouse_name, supplier_name, production_date, status, extra_data)
-           VALUES (?, 'material', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-          [
-            qrCode, id, order.order_no, item.batch_no || null,
-            item.material_id || null, null, item.material_name || '',
-            item.material_spec || '', item.quantity || 0, item.unit || '',
-            order.warehouse_id || null, warehouseName,
-            order.supplier_name || '', item.produce_date || null,
-            JSON.stringify({ inbound_order_no: order.order_no, inbound_date: order.inbound_date }),
-          ]
+        if (status && !WarehouseStateMachine.canTransitionInbound(order.status, status)) {
+          throw new Error(`INVALID_TRANSITION:${order.status}:${status}`);
+        }
+
+        updateParams.push(id, order.status);
+        const [updateResult]: any = await conn.execute(
+          `UPDATE inv_inbound_order SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ? AND status = ?`,
+          updateParams
         );
 
-        const transNo = 'TRX' + Date.now() + String(item.id || 0).slice(-4);
-        const totalItemAmount = (Number(item.quantity) || 0) * (Number(item.unit_price) || 0);
-        await conn.execute(
-          `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, account_dr, account_cr, create_time)
-           VALUES (?, 'in', 'inbound', ?, ?, ?, ?, ?, ?, ?, ?, '原材料库存', '应付账款', NOW())`,
-          [transNo, id, item.material_id, item.material_code || '', item.batch_no || '', order.warehouse_id, item.quantity, item.unit_price || 0, totalItemAmount]
-        );
-
-        try {
-          const voucherNo = 'FV' + Date.now() + String(item.id || 0).slice(-4);
-          await conn.execute(
-            `INSERT INTO fin_voucher (voucher_no, voucher_date, source_type, source_id, source_no, debit_account, credit_account, amount, cost_price, quantity, batch_no, material_id, material_name, warehouse_id)
-             VALUES (?, CURDATE(), 'inbound', ?, ?, '原材料库存', '应付账款', ?, ?, ?, ?, ?, ?, ?)`,
-            [voucherNo, id, order.order_no, totalItemAmount, item.unit_price || 0, item.quantity, item.batch_no || '', item.material_id, item.material_name || '', order.warehouse_id]
-          );
-        } catch {}
+        if (updateResult.affectedRows === 0) {
+          throw new Error('VERSION_CONFLICT');
+        }
+      });
+    } catch (err: any) {
+      if (err.message === 'NOT_FOUND') {
+        return commonErrors.notFound('入库单不存在');
       }
-
-      const totalAmount = items.reduce((sum: number, item: any) => sum + (Number(item.quantity) || 0) * (Number(item.unit_price) || 0), 0);
-      if (totalAmount > 0 && order.supplier_name) {
-        try {
-          const [supplierRows]: any = await conn.execute(
-            'SELECT id FROM pur_supplier WHERE supplier_name = ? AND deleted = 0 LIMIT 1',
-            [order.supplier_name]
-          );
-          const supplierId = supplierRows.length > 0 ? supplierRows[0].id : null;
-
-          const payableNo = 'AP' + Date.now();
-          await conn.execute(
-            `INSERT INTO fin_payable (payable_no, supplier_id, supplier_name, source_type, source_id, source_no, amount, paid_amount, status, due_date, remark, create_time)
-             VALUES (?, ?, ?, 'inbound', ?, ?, ?, 0, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
-            [payableNo, supplierId, order.supplier_name, id, order.order_no, totalAmount, `采购入库单 ${order.order_no} 自动生成`]
-          );
-        } catch {}
+      if (err.message === 'COMPLETED_NO_MODIFY') {
+        return errorResponse('已完成的入库单不能修改', 400, 400);
       }
-
-      await conn.execute(
-        'UPDATE inv_inbound_order SET inspection_status = 3, finance_posted = 1 WHERE id = ?',
-        [id]
-      );
-    });
-
-    await logOperation({
-      title: '入库单审核',
-      oper_type: '审核',
-      oper_method: 'PUT',
-      oper_url: '/api/warehouse/inbound',
-      oper_param: JSON.stringify({ id, status: 'approved' }),
-      oper_result: `入库单 ${order.order_no} 审核通过，已生成物料二维码、批次库存、财务凭证`,
-    });
+      if (err.message === 'VERSION_CONFLICT') {
+        return errorResponse('入库单状态已变更，请刷新后重试', 409, 409);
+      }
+      if (err.message.startsWith('INVALID_TRANSITION:')) {
+        const [, from, to] = err.message.split(':');
+        return errorResponse(WarehouseStateMachine.getTransitionError('inbound', from, to), 400, 400);
+      }
+      throw err;
+    }
   }
 
   return successResponse({ id, status, remark }, '入库单更新成功');

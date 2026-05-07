@@ -24,13 +24,13 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     where += ' AND deleted = 0';
   }
 
-  if (title) { where += ' AND (title LIKE ? OR oper_url LIKE ?)'; params.push(`%${title}%`, `%${title}%`); }
+  if (title) { where += ' AND (module LIKE ? OR operation LIKE ? OR oper_url LIKE ?)'; params.push(`%${title}%`, `%${title}%`, `%${title}%`); }
   if (operName) { where += ' AND oper_name LIKE ?'; params.push(`%${operName}%`); }
 
   const totalRows: any = await query(`SELECT COUNT(*) as total FROM sys_operation_log ${where}`, params);
   const total = totalRows[0]?.total || 0;
 
-  let orderByCol = 'oper_time';
+  let orderByCol = 'create_time';
   try {
     const timeColCheck: any = await query(
       `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sys_operation_log' AND COLUMN_NAME IN ('oper_time', 'create_time') ORDER BY FIELD(COLUMN_NAME, 'oper_time', 'create_time')`
@@ -41,7 +41,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   } catch (e) { /* ignore */ }
 
   const rows: any = await query(
-    `SELECT id, COALESCE(title, module, '') as title, COALESCE(oper_name, username, '') as oper_name, COALESCE(oper_type, operation, '') as oper_type, COALESCE(oper_method, request_method, '') as oper_method, COALESCE(oper_url, request_url, '') as oper_url, COALESCE(oper_ip, ip_address, '') as oper_ip, COALESCE(${orderByCol}, NOW()) as oper_time, status FROM sys_operation_log ${where} ORDER BY ${orderByCol} DESC LIMIT ? OFFSET ?`,
+    `SELECT id, COALESCE(module, '') as title, COALESCE(oper_name, username, '') as oper_name, COALESCE(oper_type, operation, '') as oper_type, COALESCE(oper_method, request_method, '') as oper_method, COALESCE(oper_url, request_url, '') as oper_url, COALESCE(oper_ip, ip_address, '') as oper_ip, COALESCE(${orderByCol}, NOW()) as oper_time, status FROM sys_operation_log ${where} ORDER BY ${orderByCol} DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
 

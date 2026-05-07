@@ -1,36 +1,47 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { randomUUID } from 'crypto';
 
-// 样式合并工具
+let _seq = 0;
+function nextSeq(): string {
+  _seq = (_seq + 1) % 100000;
+  return String(_seq).padStart(5, '0');
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// 生成唯一ID
 export function generateId(prefix: string = ''): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
   return prefix ? `${prefix}_${timestamp}${random}` : `${timestamp}${random}`;
 }
 
-// 生成单据编号
 export function generateOrderNo(prefix: string): string {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-  return `${prefix}${year}${month}${day}${random}`;
+  const seq = nextSeq();
+  return `${prefix}${year}${month}${day}${seq}`;
 }
 
-// 生成批次号
+export function generateTransNo(prefix: string = 'TRX'): string {
+  const now = new Date();
+  const ts = now.getTime();
+  const seq = nextSeq();
+  const rand = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+  return `${prefix}${ts}${seq}${rand}`;
+}
+
 export function generateBatchNo(warehouseCode: string): string {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-  return `${warehouseCode}${year}${month}${day}${random}`;
+  const seq = nextSeq();
+  return `${warehouseCode}${year}${month}${day}${seq}`;
 }
 
 // 生成二维码内容

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Edit, Trash2, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { TableExportToolbar, exportTableToXLS, exportTableToPDF, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 
 interface ComplaintRecord {
   id?: number;
@@ -84,6 +87,8 @@ export default function Complaint8DPage() {
   const [show8DDialog, setShow8DDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<ComplaintRecord>>({});
   const [active8DTab, setActive8DTab] = useState('d1');
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(list, 'complaint_no');
 
   const fetchData = async () => {
     try {
@@ -191,26 +196,71 @@ export default function Complaint8DPage() {
               <Button onClick={() => { setEditItem({ complaint_source: 'customer', defect_type: 'other', severity: 2 }); setShowDialog(true); }}>
                 <Plus className="h-4 w-4 mr-2" />新建客诉
               </Button>
+              <TableExportToolbar
+                selectedCount={selectedIds.length}
+                totalCount={sortedData.length}
+                onSelectAll={() => setSelectedIds(sortedData.filter(i => i.id).map(i => i.id!))}
+                onDeselectAll={() => setSelectedIds([])}
+                onPrint={() => {}}
+                onExportPDF={() => exportTableToPDF(sortedData, '客诉8D报告', [
+                  { key: 'complaint_no', header: '客诉编号' },
+                  { key: 'customer_name', header: '客户名称' },
+                  { key: 'product_name', header: '产品名称' },
+                  { key: 'defect_type', header: '不良类型' },
+                  { key: 'defect_qty', header: '不良数量' },
+                  { key: 'status', header: '状态' },
+                ], '客诉8D报告')}
+                onExportXLS={() => exportTableToXLS(sortedData, '客诉8D报告', [
+                  { key: 'complaint_no', header: '客诉编号' },
+                  { key: 'customer_name', header: '客户名称' },
+                  { key: 'product_name', header: '产品名称' },
+                  { key: 'defect_type', header: '不良类型' },
+                  { key: 'defect_qty', header: '不良数量' },
+                  { key: 'status', header: '状态' },
+                ])}
+                onExportWORD={() => exportTableToWORD(sortedData, '客诉8D报告', [
+                  { key: 'complaint_no', header: '客诉编号' },
+                  { key: 'customer_name', header: '客户名称' },
+                  { key: 'product_name', header: '产品名称' },
+                  { key: 'defect_type', header: '不良类型' },
+                  { key: 'defect_qty', header: '不良数量' },
+                  { key: 'status', header: '状态' },
+                ], '客诉8D报告')}
+              />
             </div>
 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>客诉编号</TableHead>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedIds.length === sortedData.length && sortedData.length > 0}
+                      onCheckedChange={() => setSelectedIds(selectedIds.length === sortedData.length ? [] : sortedData.filter(i => i.id).map(i => i.id!))}
+                    />
+                  </TableHead>
+                  <TableHead className="w-12 text-center">序号</TableHead>
+                  <SortableTableHeader field="complaint_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>客诉编号</SortableTableHeader>
                   <TableHead>来源</TableHead>
-                  <TableHead>客户名称</TableHead>
-                  <TableHead>产品名称</TableHead>
+                  <SortableTableHeader field="customer_name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>客户名称</SortableTableHeader>
+                  <SortableTableHeader field="product_name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>产品名称</SortableTableHeader>
                   <TableHead>不良类型</TableHead>
                   <TableHead>严重程度</TableHead>
                   <TableHead>不良数量</TableHead>
-                  <TableHead>状态</TableHead>
+                  <SortableTableHeader field="status" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>状态</SortableTableHeader>
                   <TableHead>登记日期</TableHead>
                   <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {list.map(item => (
+                {sortedData.map((item, index) => (
                   <TableRow key={item.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={item.id ? selectedIds.includes(item.id) : false}
+                        onCheckedChange={() => { if (item.id) setSelectedIds(prev => prev.includes(item.id!) ? prev.filter(i => i !== item.id!) : [...prev, item.id!]); }}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground">{(page - 1) * 20 + index + 1}</TableCell>
                     <TableCell className="font-mono text-sm">{item.complaint_no}</TableCell>
                     <TableCell>{sourceMap[item.complaint_source] || item.complaint_source}</TableCell>
                     <TableCell>{item.customer_name}</TableCell>
@@ -236,16 +286,16 @@ export default function Complaint8DPage() {
                         <Button size="sm" variant="ghost" onClick={() => { setEditItem(item); setShowDialog(true); }}>
                           <Edit className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id!)}>
+                        <Button size="sm" variant="ghost" onClick={() => { if (item.id) handleDelete(item.id); }}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
-                {list.length === 0 && (
+                {sortedData.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
+                    <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
                   </TableRow>
                 )}
               </TableBody>

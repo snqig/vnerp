@@ -4,6 +4,7 @@ import {
   successResponse,
   errorResponse,
   withErrorHandler,
+  logOperation,
 } from '@/lib/api-response';
 
 interface FIFOAllocationItem {
@@ -296,7 +297,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           obItem.material_id,
           obItem.material_name,
           obItem.qty,
-          obItem.unit_code || '个',
+          obItem.unit || '个',
           obItem.unit_cost,
           obItem.amount,
           obItem.batch_no,
@@ -305,14 +306,20 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       );
     }
 
-    return successResponse({
-      orderId,
-      orderNo,
-      allocations: allAllocations,
-      totalQty,
-      totalAmount,
-      outboundItemCount: allOutboundItems.length,
-    }, 'FIFO出库单创建成功');
+    const result = { orderId, orderNo, allocations: allAllocations, totalQty, totalAmount, outboundItemCount: allOutboundItems.length };
+
+    await logOperation({
+      title: 'FIFO出库',
+      oper_name: operatorName,
+      oper_type: 'warehouse',
+      oper_method: 'POST',
+      oper_url: '/api/warehouse/outbound/fifo',
+      oper_param: JSON.stringify({ warehouseId, outboundType, totalQty, totalAmount }),
+      oper_result: `FIFO出库单 ${orderNo} 创建成功，共${allOutboundItems.length}项`,
+      status: 1,
+    });
+
+    return successResponse(result, 'FIFO出库单创建成功');
   });
 }, 'FIFO出库失败');
 
@@ -325,8 +332,8 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
   }
 
   return await transaction(async (conn) => {
-    const [orders]: any = await conn.query(
-      `SELECT id, order_no, status, warehouse_id, warehouse_code FROM inv_outbound_order WHERE id = ? AND deleted = 0`,
+    const [orders]: any = await conn.execute(
+      `SELECT id, order_no, status, warehouse_id, warehouse_code, version FROM inv_outbound_order WHERE id = ? AND deleted = 0 FOR UPDATE`,
       [orderId]
     );
 
@@ -340,7 +347,7 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
       throw new Error('出库单已完成，不能重复确认');
     }
 
-    const [items]: any = await conn.query(
+    const [items]: any = await conn.execute(
       `SELECT id, material_id, material_name, quantity, unit, batch_no FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
       [orderId]
     );
@@ -355,8 +362,8 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
       const requiredQty = parseFloat(item.quantity);
 
       if (item.batch_no) {
-        const [batch]: any = await conn.query(
-          `SELECT id, batch_no, available_qty, unit_price FROM inv_inventory_batch 
+        const [batch]: any = await conn.execute(
+          `SELECT id, batch_no, available_qty, unit_price, version FROM inv_inventory_batch 
            WHERE batch_no = ? AND material_id = ? AND warehouse_id = ? AND deleted = 0
            FOR UPDATE`,
           [item.batch_no, item.material_id, order.warehouse_id]
@@ -371,15 +378,19 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
           throw new Error(`批次 ${item.batch_no} 库存不足: 可用 ${availableQty}, 需要 ${requiredQty}`);
         }
 
-        await conn.execute(
+        const [batchUpdateResult]: any = await conn.execute(
           `UPDATE inv_inventory_batch SET
             quantity = quantity - ?,
             available_qty = available_qty - ?,
             version = version + 1,
             update_time = NOW()
-          WHERE id = ?`,
-          [requiredQty, requiredQty, batch[0].id]
+          WHERE id = ? AND version = ?`,
+          [requiredQty, requiredQty, batch[0].id, batch[0].version]
         );
+
+        if (batchUpdateResult.affectedRows === 0) {
+          throw new Error(`批次 ${item.batch_no} 已被其他操作修改，请重试`);
+        }
 
         deductionDetails.push({
           batch_id: batch[0].id,
@@ -455,17 +466,25 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
         auditor_name = ?,
         audit_time = NOW(),
         audit_remark = ?,
+        version = version + 1,
         update_time = NOW()
-      WHERE id = ?`,
-      [operatorId, operatorName, remark || '', orderId]
+      WHERE id = ? AND version = ?`,
+      [operatorId, operatorName, remark || '', orderId, order.version]
     );
 
-    return successResponse({
-      orderId,
-      orderNo: order.order_no,
-      status: 'completed',
-      deductionDetails,
-      totalDeductedBatches: deductionDetails.length,
-    }, 'FIFO出库确认成功，库存已按先进先出扣减');
+    const result = { orderId, orderNo: order.order_no, status: 'completed', deductionDetails, totalDeductedBatches: deductionDetails.length };
+
+    await logOperation({
+      title: 'FIFO出库确认',
+      oper_name: operatorName,
+      oper_type: 'warehouse',
+      oper_method: 'PATCH',
+      oper_url: '/api/warehouse/outbound/fifo',
+      oper_param: JSON.stringify({ orderId, operatorId }),
+      oper_result: `FIFO出库单 ${order.order_no} 确认成功，扣减${deductionDetails.length}个批次`,
+      status: 1,
+    });
+
+    return successResponse(result, 'FIFO出库确认成功，库存已按先进先出扣减');
   });
 }, 'FIFO出库确认失败');

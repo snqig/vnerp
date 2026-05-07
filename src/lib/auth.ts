@@ -46,6 +46,12 @@ export async function verifyToken(token: string): Promise<UserInfo | null> {
       new TextEncoder().encode(SECRET_KEY)
     );
 
+    const userId = payload.userId as number;
+    const fullUserInfo = await getUserInfo(userId);
+    if (fullUserInfo) {
+      return fullUserInfo;
+    }
+
     return {
       userId: payload.userId as number,
       username: payload.username as string,

@@ -46,6 +46,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { TableExportToolbar, exportTableToXLS, exportTableToPDF, exportTableToWORD, printTable } from '@/components/ui/table-export-toolbar';
+import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import {
   Search,
   MoreHorizontal,
@@ -383,6 +385,7 @@ export default function QualityProcessPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const fetchProcesses = async () => {
     try {
@@ -482,6 +485,8 @@ export default function QualityProcessPage() {
     }
     return true;
   });
+
+  const { sortField, sortDirection, handleSort, sortedData: sortedProcesses } = useTableSort(filteredProcesses, 'id');
 
   // 查看详情
   const handleViewDetail = (process: QualityProcess) => {
@@ -689,6 +694,37 @@ export default function QualityProcessPage() {
                   <Printer className="h-4 w-4 mr-2" />
                   打印
                 </Button>
+                <TableExportToolbar
+                  selectedCount={selectedIds.length}
+                  totalCount={filteredProcesses.length}
+                  onSelectAll={() => setSelectedIds(filteredProcesses.map(p => p.id))}
+                  onDeselectAll={() => setSelectedIds([])}
+                  onPrint={handlePrint}
+                  onExportPDF={() => exportTableToPDF(filteredProcesses, '过程检验报告', [
+                    { key: 'card_no', header: '流程卡号' },
+                    { key: 'product_name', header: '产品名称' },
+                    { key: 'product_code', header: '产品编码' },
+                    { key: 'material_spec', header: '规格' },
+                    { key: 'quantity', header: '数量' },
+                    { key: 'status', header: '状态' },
+                  ], '过程检验报告')}
+                  onExportXLS={() => exportTableToXLS(filteredProcesses, '过程检验报告', [
+                    { key: 'card_no', header: '流程卡号' },
+                    { key: 'product_name', header: '产品名称' },
+                    { key: 'product_code', header: '产品编码' },
+                    { key: 'material_spec', header: '规格' },
+                    { key: 'quantity', header: '数量' },
+                    { key: 'status', header: '状态' },
+                  ])}
+                  onExportWORD={() => exportTableToWORD(filteredProcesses, '过程检验报告', [
+                    { key: 'card_no', header: '流程卡号' },
+                    { key: 'product_name', header: '产品名称' },
+                    { key: 'product_code', header: '产品编码' },
+                    { key: 'material_spec', header: '规格' },
+                    { key: 'quantity', header: '数量' },
+                    { key: 'status', header: '状态' },
+                  ], '过程检验报告')}
+                />
               </div>
             </div>
           </CardContent>
@@ -709,19 +745,39 @@ export default function QualityProcessPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>流程卡号</TableHead>
-                      <TableHead>产品信息</TableHead>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedIds.length === filteredProcesses.length && filteredProcesses.length > 0}
+                          onCheckedChange={() => {
+                            if (selectedIds.length === filteredProcesses.length) {
+                              setSelectedIds([]);
+                            } else {
+                              setSelectedIds(filteredProcesses.map(p => p.id));
+                            }
+                          }}
+                        />
+                      </TableHead>
+                      <TableHead className="w-12 text-center">序号</TableHead>
+                      <SortableTableHeader field="card_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>流程卡号</SortableTableHeader>
+                      <SortableTableHeader field="product_name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>产品信息</SortableTableHeader>
                       <TableHead>客户</TableHead>
                       <TableHead>规格要求</TableHead>
                       <TableHead>数量</TableHead>
                       <TableHead>质量主管</TableHead>
-                      <TableHead>状态</TableHead>
+                      <SortableTableHeader field="status" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>状态</SortableTableHeader>
                       <TableHead>操作</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredProcesses.map((process) => (
+                    {filteredProcesses.map((process, index) => (
                       <TableRow key={process.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.includes(process.id)}
+                            onCheckedChange={() => setSelectedIds(prev => prev.includes(process.id) ? prev.filter(i => i !== process.id) : [...prev, process.id])}
+                          />
+                        </TableCell>
+                        <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                         <TableCell className="font-medium">
                           <div className="flex flex-col">
                             <span>{process.card_no}</span>

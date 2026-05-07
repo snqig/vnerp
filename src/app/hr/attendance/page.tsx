@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import {
   Calendar,
   Clock,
@@ -42,8 +41,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Sidebar } from '@/components/layout/sidebar';
-import { Header } from '@/components/layout/header';
+import { MainLayout } from '@/components/layout';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -184,7 +182,7 @@ export default function AttendancePage() {
 
   const SortableHeader = ({ field, children }: { field: string; children: React.ReactNode }) => (
     <TableHead
-      className="cursor-pointer select-none border border-gray-300 bg-gray-100 text-center whitespace-nowrap hover:bg-gray-200 transition-colors"
+      className="cursor-pointer select-none border border-border bg-muted text-center whitespace-nowrap hover:bg-muted/80 transition-colors"
       onClick={() => handleSort(field)}
     >
       <div className="flex items-center justify-center gap-1">
@@ -454,65 +452,44 @@ export default function AttendancePage() {
     : 0;
 
   return (
-    <div className="flex h-screen bg-slate-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-auto p-6">
-          <div className="max-w-[1600px] mx-auto space-y-6">
-            {/* 页面标题 */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-between"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-blue-200">
-                  <Calendar className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900">考勤管理</h1>
-                  <p className="text-slate-500">员工考勤记录管理与统计</p>
-                </div>
-              </div>
-            </motion.div>
+    <MainLayout title="考勤管理">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg">
+              <Calendar className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">考勤管理</h1>
+              <p className="text-muted-foreground">员工考勤记录管理与统计</p>
+            </div>
+          </div>
+        </div>
 
-            {/* 功能按钮栏 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-xl shadow-sm border"
-            >
-              <Button onClick={handleAdd} className="gap-2 bg-blue-600 hover:bg-blue-700">
-                <Plus className="w-4 h-4" />
-                新增
-              </Button>
-              <Button onClick={handlePrint} variant="outline" className="gap-2">
-                <Printer className="w-4 h-4" />
-                打印
-              </Button>
-              <div className="w-px h-8 bg-slate-200 mx-2" />
-              <Button onClick={handleRefresh} variant="outline" className="gap-2" disabled={isLoading}>
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                刷新
-              </Button>
-              <Button onClick={handleReset} variant="outline" className="gap-2">
-                <RotateCcw className="w-4 h-4" />
-                重置
-              </Button>
-            </motion.div>
+        <div className="flex flex-wrap items-center gap-3 bg-card p-4 rounded-xl shadow-sm border">
+          <Button onClick={handleAdd} className="gap-2 bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4" />
+            新增
+          </Button>
+          <Button onClick={handlePrint} variant="outline" className="gap-2">
+            <Printer className="w-4 h-4" />
+            打印
+          </Button>
+          <div className="w-px h-8 bg-border mx-2" />
+          <Button onClick={handleRefresh} variant="outline" className="gap-2" disabled={isLoading}>
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            刷新
+          </Button>
+          <Button onClick={handleReset} variant="outline" className="gap-2">
+            <RotateCcw className="w-4 h-4" />
+            重置
+          </Button>
+        </div>
 
-            {/* 查询筛选栏 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-xl shadow-sm border"
-            >
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-slate-500" />
-                <span className="text-sm font-medium text-slate-700">状态：</span>
+        <div className="flex flex-wrap items-center gap-4 bg-card p-4 rounded-xl shadow-sm border">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">状态：</span>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="选择状态" />
@@ -528,8 +505,8 @@ export default function AttendancePage() {
               </div>
               
               <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-slate-500" />
-                <span className="text-sm font-medium text-slate-700">部门：</span>
+                <Building2 className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">部门：</span>
                 <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="选择部门" />
@@ -545,8 +522,8 @@ export default function AttendancePage() {
               </div>
               
               <div className="flex items-center gap-2">
-                <Search className="w-4 h-4 text-slate-500" />
-                <span className="text-sm font-medium text-slate-700">关键字：</span>
+                <Search className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">关键字：</span>
                 <Input
                   placeholder="搜索员工姓名、工号..."
                   value={searchQuery}
@@ -556,8 +533,8 @@ export default function AttendancePage() {
               </div>
               
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-slate-500" />
-                <span className="text-sm font-medium text-slate-700">时间：</span>
+                <Calendar className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">时间：</span>
                 <Select value={dateRange} onValueChange={setDateRange}>
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="时间范围" />
@@ -576,114 +553,83 @@ export default function AttendancePage() {
                   已选择 {selectedRecords.length} 条记录
                 </Badge>
               )}
-            </motion.div>
-
-            {/* 统计卡片 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-cyan-50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-slate-600">考勤率</p>
-                        <p className="text-3xl font-bold text-blue-600 mt-1">{attendanceRate}%</p>
-                        <p className="text-xs text-slate-500 mt-1">整体考勤率</p>
-                      </div>
-                      <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-                        <CheckCircle2 className="w-6 h-6 text-blue-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Card className="border-0 shadow-md bg-gradient-to-br from-green-50 to-emerald-50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-slate-600">正常出勤</p>
-                        <p className="text-3xl font-bold text-green-600 mt-1">{normalRecords}</p>
-                        <p className="text-xs text-slate-500 mt-1">条正常记录</p>
-                      </div>
-                      <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                        <CheckCircle2 className="w-6 h-6 text-green-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Card className="border-0 shadow-md bg-gradient-to-br from-yellow-50 to-amber-50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-slate-600">迟到记录</p>
-                        <p className="text-3xl font-bold text-yellow-600 mt-1">{lateRecords}</p>
-                        <p className="text-xs text-slate-500 mt-1">条迟到记录</p>
-                      </div>
-                      <div className="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center">
-                        <Clock3 className="w-6 h-6 text-yellow-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <Card className="border-0 shadow-md bg-gradient-to-br from-red-50 to-pink-50">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-slate-600">缺勤记录</p>
-                        <p className="text-3xl font-bold text-red-600 mt-1">{absentRecords}</p>
-                        <p className="text-xs text-slate-500 mt-1">条缺勤记录</p>
-                      </div>
-                      <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
-                        <AlertCircle className="w-6 h-6 text-red-600" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
             </div>
 
-            {/* 考勤记录表格 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="border shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between border-b">
-                  <CardTitle>考勤记录</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-500">共 {filteredRecords.length} 条记录</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">考勤率</p>
+                      <p className="text-3xl font-bold text-blue-600 mt-1">{attendanceRate}%</p>
+                      <p className="text-xs text-muted-foreground mt-1">整体考勤率</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-blue-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-md bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">正常出勤</p>
+                      <p className="text-3xl font-bold text-green-600 mt-1">{normalRecords}</p>
+                      <p className="text-xs text-muted-foreground mt-1">条正常记录</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-md bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/50 dark:to-amber-950/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">迟到记录</p>
+                      <p className="text-3xl font-bold text-yellow-600 mt-1">{lateRecords}</p>
+                      <p className="text-xs text-muted-foreground mt-1">条迟到记录</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center">
+                      <Clock3 className="w-6 h-6 text-yellow-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-md bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-950/50 dark:to-pink-950/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">缺勤记录</p>
+                      <p className="text-3xl font-bold text-red-600 mt-1">{absentRecords}</p>
+                      <p className="text-xs text-muted-foreground mt-1">条缺勤记录</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                      <AlertCircle className="w-6 h-6 text-red-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="border shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between border-b">
+                <CardTitle>考勤记录</CardTitle>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">共 {filteredRecords.length} 条记录</span>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
-                    <Table className="border-collapse border border-gray-300">
+                    <Table>
                       <TableHeader>
-                        <TableRow className="bg-gray-100">
-                          <TableHead className="border border-gray-300 bg-gray-100 text-center w-12">
+                        <TableRow>
+                          <TableHead className="text-center w-12">
                             <Checkbox
                               checked={selectedRecords.length === filteredRecords.length && filteredRecords.length > 0}
                               onCheckedChange={toggleSelectAll}
@@ -698,37 +644,37 @@ export default function AttendancePage() {
                           <SortableHeader field="workingHours">工作时长</SortableHeader>
                           <SortableHeader field="overtimeHours">加班时长</SortableHeader>
                           <SortableHeader field="status">状态</SortableHeader>
-                          <TableHead className="border border-gray-300 bg-gray-100 text-center">备注</TableHead>
-                          <TableHead className="border border-gray-300 bg-gray-100 text-center">操作</TableHead>
+                          <TableHead className="text-center">备注</TableHead>
+                          <TableHead className="text-center">操作</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredRecords.map((record) => {
                           const StatusIcon = statusConfig[record.status]?.icon || Clock;
                           return (
-                            <TableRow key={record.id} className="hover:bg-blue-50 even:bg-gray-50/50">
-                              <TableCell className="border border-gray-300 text-center">
+                            <TableRow key={record.id} className="hover:bg-accent/50 even:bg-muted/30">
+                              <TableCell className="text-center">
                                 <Checkbox
                                   checked={selectedRecords.includes(record.id)}
                                   onCheckedChange={() => toggleSelectRecord(record.id)}
                                 />
                               </TableCell>
-                              <TableCell className="border border-gray-300 text-center">{record.date}</TableCell>
-                              <TableCell className="border border-gray-300 text-center font-mono">{record.employeeId}</TableCell>
-                              <TableCell className="border border-gray-300 text-center">{record.employeeName}</TableCell>
-                              <TableCell className="border border-gray-300 text-center">{record.department}</TableCell>
-                              <TableCell className="border border-gray-300 text-center">{record.checkIn || '-'}</TableCell>
-                              <TableCell className="border border-gray-300 text-center">{record.checkOut || '-'}</TableCell>
-                              <TableCell className="border border-gray-300 text-center">{record.workingHours} 小时</TableCell>
-                              <TableCell className="border border-gray-300 text-center">{record.overtimeHours} 小时</TableCell>
-                              <TableCell className="border border-gray-300 text-center">
+                              <TableCell className="text-center">{record.date}</TableCell>
+                              <TableCell className="text-center font-mono">{record.employeeId}</TableCell>
+                              <TableCell className="text-center">{record.employeeName}</TableCell>
+                              <TableCell className="text-center">{record.department}</TableCell>
+                              <TableCell className="text-center">{record.checkIn || '-'}</TableCell>
+                              <TableCell className="text-center">{record.checkOut || '-'}</TableCell>
+                              <TableCell className="text-center">{record.workingHours} 小时</TableCell>
+                              <TableCell className="text-center">{record.overtimeHours} 小时</TableCell>
+                              <TableCell className="text-center">
                                 <div className="flex items-center justify-center gap-1">
                                   <StatusIcon className="w-4 h-4" />
                                   <span>{statusConfig[record.status]?.label || record.status}</span>
                                 </div>
                               </TableCell>
-                              <TableCell className="border border-gray-300 text-center">{record.remark || '-'}</TableCell>
-                              <TableCell className="border border-gray-300 text-center">
+                              <TableCell className="text-center">{record.remark || '-'}</TableCell>
+                              <TableCell className="text-center">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -755,20 +701,17 @@ export default function AttendancePage() {
                   </div>
                   {filteredRecords.length === 0 && (
                     <div className="text-center py-12">
-                      <div className="mx-auto w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                        <Calendar className="w-8 h-8 text-slate-400" />
+                      <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                        <Calendar className="w-8 h-8 text-muted-foreground" />
                       </div>
-                      <p className="text-slate-500">暂无考勤记录</p>
+                      <p className="text-muted-foreground">暂无考勤记录</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
-            </motion.div>
-          </div>
-        </main>
-      </div>
+            </div>
 
-      {/* 新增考勤记录对话框 */}
+          {/* 新增考勤记录对话框 */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-2xl" resizable>
           <DialogHeader>
@@ -862,7 +805,7 @@ export default function AttendancePage() {
                   step="0.1"
                   value={formData.workingHours}
                   readOnly
-                  className="bg-gray-50"
+                  className="bg-muted/50"
                 />
               </div>
               <div className="space-y-2">
@@ -992,7 +935,7 @@ export default function AttendancePage() {
                   step="0.1"
                   value={formData.workingHours}
                   readOnly
-                  className="bg-gray-50"
+                  className="bg-muted/50"
                 />
               </div>
               <div className="space-y-2">
@@ -1047,6 +990,6 @@ export default function AttendancePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </MainLayout>
   );
 }

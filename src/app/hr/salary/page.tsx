@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -62,7 +62,11 @@ import {
   PieChart,
   ChevronLeft,
   ChevronRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
@@ -298,6 +302,9 @@ export default function HRSalaryPage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [selectedSalary, setSelectedSalary] = useState<Salary | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [sortField, setSortField] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const printRef = useRef<HTMLDivElement>(null);
 
   const fetchSalaryData = async () => {
@@ -378,6 +385,62 @@ export default function HRSalaryPage() {
     }
     return true;
   });
+
+  const sortedSalaries = (() => {
+    if (!sortField) return filteredSalaries;
+    return [...filteredSalaries].sort((a, b) => {
+      let aVal: any, bVal: any;
+      switch (sortField) {
+        case 'name': aVal = a.name; bVal = b.name; break;
+        case 'employee_no': aVal = a.employee_no; bVal = b.employee_no; break;
+        case 'dept_name': aVal = a.dept_name; bVal = b.dept_name; break;
+        case 'basic_salary': aVal = a.basic_salary || 0; bVal = b.basic_salary || 0; break;
+        case 'actual_salary': aVal = a.actual_salary || 0; bVal = b.actual_salary || 0; break;
+        default: return 0;
+      }
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      return sortDirection === 'asc' ? String(aVal).localeCompare(String(bVal)) : String(bVal).localeCompare(String(aVal));
+    });
+  })();
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredSalaries.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredSalaries.map(s => s.id));
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const SortableHeader = ({ field, children, className = '' }: { field: string; children: React.ReactNode; className?: string }) => (
+    <TableHead
+      className={`cursor-pointer select-none hover:bg-muted transition-colors ${className}`}
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {sortField === field ? (
+          sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-30" />
+        )}
+      </div>
+    </TableHead>
+  );
 
   // 查看详情
   const handleViewDetail = (salary: Salary) => {
@@ -647,19 +710,33 @@ export default function HRSalaryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>员工信息</TableHead>
-                  <TableHead>部门/职位</TableHead>
-                  <TableHead className="text-right">基本工资</TableHead>
+                  <TableHead className="w-12 text-center">
+                    <Checkbox
+                      checked={selectedIds.length === filteredSalaries.length && filteredSalaries.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead className="w-12 text-center">序号</TableHead>
+                  <SortableHeader field="name">员工信息</SortableHeader>
+                  <SortableHeader field="dept_name">部门/职位</SortableHeader>
+                  <SortableHeader field="basic_salary" className="text-right">基本工资</SortableHeader>
                   <TableHead className="text-right">津贴/奖金</TableHead>
                   <TableHead className="text-right">扣款项</TableHead>
-                  <TableHead className="text-right">实发工资</TableHead>
+                  <SortableHeader field="actual_salary" className="text-right">实发工资</SortableHeader>
                   <TableHead>状态</TableHead>
                   <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredSalaries.map((salary) => (
+                {sortedSalaries.map((salary, index) => (
                   <TableRow key={salary.id}>
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={selectedIds.includes(salary.id)}
+                        onCheckedChange={() => toggleSelect(salary.id)}
+                      />
+                    </TableCell>
+                    <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-medium">{salary.name}</span>
