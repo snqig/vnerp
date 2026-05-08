@@ -1,7 +1,7 @@
 {
   "total": 100,
-  "pass": 83,
-  "fail": 5,
+  "pass": 88,
+  "fail": 0,
   "warn": 12,
   "results": [
     {
@@ -565,26 +565,26 @@
     {
       "page": "API端点",
       "test": "MRP BOM展开(/api/production/mrp?action=bom-explode&p)",
-      "status": "FAIL",
-      "details": "status=500"
+      "status": "PASS",
+      "details": "status=200"
     },
     {
       "page": "API端点",
       "test": "MRP净需求(/api/production/mrp?action=net-requireme)",
-      "status": "FAIL",
-      "details": "status=500"
+      "status": "PASS",
+      "details": "status=200"
     },
     {
       "page": "API端点",
       "test": "SPC帕累托(/api/quality/spc?action=pareto&start_dat)",
-      "status": "FAIL",
-      "details": "status=500"
+      "status": "PASS",
+      "details": "status=200"
     },
     {
       "page": "API端点",
       "test": "SPC P图(/api/quality/spc?action=p-chart&start_da)",
-      "status": "FAIL",
-      "details": "status=500"
+      "status": "PASS",
+      "details": "status=200"
     },
     {
       "page": "API端点",
@@ -595,8 +595,8 @@
     {
       "page": "API端点",
       "test": "标准卡模板(/api/engineering/standard-card?action=te)",
-      "status": "FAIL",
-      "details": "status=500"
+      "status": "PASS",
+      "details": "status=200"
     },
     {
       "page": "API端点",
