@@ -158,20 +158,23 @@ export async function createCardWithVersion(
   let techParams: TechParams = {};
 
   if (templateId) {
-    const [templateRows]: any = await conn.query(
-      `SELECT id, name, category, tech_params, description FROM prd_process_card_templates WHERE id = ? AND deleted = 0`,
-      [templateId]
-    );
-    if (templateRows && templateRows.length > 0) {
-      const template = templateRows[0];
-      try {
-        const templateParams = typeof template.tech_params === 'string'
-          ? JSON.parse(template.tech_params)
-          : template.tech_params;
-        techParams = deepMerge(techParams, templateParams);
-      } catch {
-        techParams = {};
+    try {
+      const [templateRows]: any = await conn.query(
+        `SELECT id, name, category, tech_params, description FROM prd_process_card_templates WHERE id = ? AND deleted = 0`,
+        [templateId]
+      );
+      if (templateRows && templateRows.length > 0) {
+        const template = templateRows[0];
+        try {
+          const templateParams = typeof template.tech_params === 'string'
+            ? JSON.parse(template.tech_params)
+            : template.tech_params;
+          techParams = deepMerge(techParams, templateParams);
+        } catch {
+          techParams = {};
+        }
       }
+    } catch {
     }
   }
 
@@ -402,40 +405,44 @@ export async function getTemplates(
   conn: any,
   category?: string
 ): Promise<ProcessCardTemplate[]> {
-  let sql = `SELECT id, name, category, tech_params, description FROM prd_process_card_templates WHERE deleted = 0`;
-  const params: any[] = [];
+  try {
+    let sql = `SELECT id, name, category, tech_params, description FROM prd_process_card_templates WHERE deleted = 0`;
+    const params: any[] = [];
 
-  if (category) {
-    sql += ` AND category = ?`;
-    params.push(category);
-  }
-
-  sql += ` ORDER BY category, name`;
-
-  const [rows]: any = await conn.query(sql, params);
-
-  if (!rows || rows.length === 0) {
-    return [];
-  }
-
-  return rows.map((row: any) => {
-    let techParams: TechParams = {};
-    try {
-      techParams = typeof row.tech_params === 'string'
-        ? JSON.parse(row.tech_params)
-        : row.tech_params || {};
-    } catch {
-      techParams = {};
+    if (category) {
+      sql += ` AND category = ?`;
+      params.push(category);
     }
 
-    return {
-      id: row.id,
-      name: row.name,
-      category: row.category,
-      tech_params: techParams,
-      description: row.description || '',
-    };
-  });
+    sql += ` ORDER BY category, name`;
+
+    const [rows]: any = await conn.query(sql, params);
+
+    if (!rows || rows.length === 0) {
+      return [];
+    }
+
+    return rows.map((row: any) => {
+      let techParams: TechParams = {};
+      try {
+        techParams = typeof row.tech_params === 'string'
+          ? JSON.parse(row.tech_params)
+          : row.tech_params || {};
+      } catch {
+        techParams = {};
+      }
+
+      return {
+        id: row.id,
+        name: row.name,
+        category: row.category,
+        tech_params: techParams,
+        description: row.description || '',
+      };
+    });
+  } catch {
+    return [];
+  }
 }
 
 export async function convertSampleToMass(

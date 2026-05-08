@@ -1,0 +1,608 @@
+{
+  "total": 100,
+  "pass": 83,
+  "fail": 5,
+  "warn": 12,
+  "results": [
+    {
+      "page": "登录页",
+      "test": "用户名输入框存在",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "登录页",
+      "test": "密码输入框存在",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "登录页",
+      "test": "登录按钮存在",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "登录页",
+      "test": "表单控件完整性",
+      "status": "PASS",
+      "details": "inputs=['text', 'password', 'checkbox']"
+    },
+    {
+      "page": "登录页",
+      "test": "输入交互正常",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "page": "登录页",
+      "test": "登录跳转",
+      "status": "WARN",
+      "details": "url=http://localhost:5000/login"
+    },
+    {
+      "page": "仪表盘",
+      "test": "统计卡片存在",
+      "status": "PASS",
+      "details": "count=22"
+    },
+    {
+      "page": "仪表盘",
+      "test": "导航菜单存在",
+      "status": "WARN",
+      "details": "links=[]"
+    },
+    {
+      "page": "仪表盘",
+      "test": "数据表格存在",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "库存管理",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/warehouse/inventory"
+    },
+    {
+      "page": "库存管理",
+      "test": "数据表格",
+      "status": "WARN",
+      "details": "count=0"
+    },
+    {
+      "page": "库存管理",
+      "test": "操作按钮",
+      "status": "PASS",
+      "details": "count=21"
+    },
+    {
+      "page": "库存管理",
+      "test": "筛选控件",
+      "status": "PASS",
+      "details": "count=2"
+    },
+    {
+      "page": "库存管理",
+      "test": "输入控件",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "库存管理",
+      "test": "深色主题兼容(无bg-gray-100)",
+      "status": "PASS",
+      "details": "found=0"
+    },
+    {
+      "page": "调拨管理",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/warehouse/transfer"
+    },
+    {
+      "page": "调拨管理",
+      "test": "数据表格",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "调拨管理",
+      "test": "操作按钮",
+      "status": "PASS",
+      "details": "count=102"
+    },
+    {
+      "page": "调拨管理",
+      "test": "筛选控件",
+      "status": "WARN",
+      "details": "count=0"
+    },
+    {
+      "page": "调拨管理",
+      "test": "输入控件",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "调拨管理",
+      "test": "深色主题兼容(无bg-gray-100)",
+      "status": "PASS",
+      "details": "found=0"
+    },
+    {
+      "page": "入库管理",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/warehouse/inbound"
+    },
+    {
+      "page": "入库管理",
+      "test": "数据表格",
+      "status": "WARN",
+      "details": "count=0"
+    },
+    {
+      "page": "入库管理",
+      "test": "操作按钮",
+      "status": "PASS",
+      "details": "count=429"
+    },
+    {
+      "page": "入库管理",
+      "test": "筛选控件",
+      "status": "WARN",
+      "details": "count=0"
+    },
+    {
+      "page": "入库管理",
+      "test": "输入控件",
+      "status": "WARN",
+      "details": "count=0"
+    },
+    {
+      "page": "入库管理",
+      "test": "深色主题兼容(无bg-gray-100)",
+      "status": "PASS",
+      "details": "found=0"
+    },
+    {
+      "page": "出库管理",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/warehouse/outbound"
+    },
+    {
+      "page": "出库管理",
+      "test": "数据表格",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "出库管理",
+      "test": "操作按钮",
+      "status": "PASS",
+      "details": "count=33"
+    },
+    {
+      "page": "出库管理",
+      "test": "筛选控件",
+      "status": "PASS",
+      "details": "count=2"
+    },
+    {
+      "page": "出库管理",
+      "test": "输入控件",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "出库管理",
+      "test": "深色主题兼容(无bg-gray-100)",
+      "status": "PASS",
+      "details": "found=0"
+    },
+    {
+      "page": "盘点管理",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/warehouse/stocktaking"
+    },
+    {
+      "page": "盘点管理",
+      "test": "数据表格",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "盘点管理",
+      "test": "操作按钮",
+      "status": "PASS",
+      "details": "count=105"
+    },
+    {
+      "page": "盘点管理",
+      "test": "筛选控件",
+      "status": "WARN",
+      "details": "count=0"
+    },
+    {
+      "page": "盘点管理",
+      "test": "输入控件",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "盘点管理",
+      "test": "深色主题兼容(无bg-gray-100)",
+      "status": "PASS",
+      "details": "found=0"
+    },
+    {
+      "page": "库存调整",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/warehouse/stock-adjust"
+    },
+    {
+      "page": "库存调整",
+      "test": "数据表格",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "库存调整",
+      "test": "操作按钮",
+      "status": "PASS",
+      "details": "count=105"
+    },
+    {
+      "page": "库存调整",
+      "test": "筛选控件",
+      "status": "WARN",
+      "details": "count=0"
+    },
+    {
+      "page": "库存调整",
+      "test": "输入控件",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "库存调整",
+      "test": "深色主题兼容(无bg-gray-100)",
+      "status": "PASS",
+      "details": "found=0"
+    },
+    {
+      "page": "生产入库",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/warehouse/production-inbound"
+    },
+    {
+      "page": "生产入库",
+      "test": "数据表格",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "生产入库",
+      "test": "操作按钮",
+      "status": "PASS",
+      "details": "count=62"
+    },
+    {
+      "page": "生产入库",
+      "test": "筛选控件",
+      "status": "WARN",
+      "details": "count=0"
+    },
+    {
+      "page": "生产入库",
+      "test": "输入控件",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "生产入库",
+      "test": "深色主题兼容(无bg-gray-100)",
+      "status": "PASS",
+      "details": "found=0"
+    },
+    {
+      "page": "销售出库",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/warehouse/sales-outbound"
+    },
+    {
+      "page": "销售出库",
+      "test": "数据表格",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "销售出库",
+      "test": "操作按钮",
+      "status": "PASS",
+      "details": "count=71"
+    },
+    {
+      "page": "销售出库",
+      "test": "筛选控件",
+      "status": "WARN",
+      "details": "count=0"
+    },
+    {
+      "page": "销售出库",
+      "test": "输入控件",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "销售出库",
+      "test": "深色主题兼容(无bg-gray-100)",
+      "status": "PASS",
+      "details": "found=0"
+    },
+    {
+      "page": "仓库设置",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/warehouse/setup"
+    },
+    {
+      "page": "仓库设置",
+      "test": "数据表格",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "仓库设置",
+      "test": "操作按钮",
+      "status": "PASS",
+      "details": "count=39"
+    },
+    {
+      "page": "仓库设置",
+      "test": "筛选控件",
+      "status": "WARN",
+      "details": "count=0"
+    },
+    {
+      "page": "仓库设置",
+      "test": "输入控件",
+      "status": "PASS",
+      "details": "count=1"
+    },
+    {
+      "page": "仓库设置",
+      "test": "深色主题兼容(无bg-gray-100)",
+      "status": "PASS",
+      "details": "found=0"
+    },
+    {
+      "page": "工单管理",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/production/workorder"
+    },
+    {
+      "page": "工单管理",
+      "test": "Tab视图切换",
+      "status": "PASS",
+      "details": "count=5"
+    },
+    {
+      "page": "排产管理",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/production/schedule"
+    },
+    {
+      "page": "排产管理",
+      "test": "Tab视图切换",
+      "status": "PASS",
+      "details": "count=5"
+    },
+    {
+      "page": "排产管理",
+      "test": "甘特图视图按钮",
+      "status": "PASS",
+      "details": "found=1"
+    },
+    {
+      "page": "排产管理",
+      "test": "列表视图切换",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "page": "MRP物料需求",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/production/mrp"
+    },
+    {
+      "page": "MRP物料需求",
+      "test": "Tab视图切换",
+      "status": "PASS",
+      "details": "count=3"
+    },
+    {
+      "page": "MRP物料需求",
+      "test": "MRP运行按钮",
+      "status": "PASS",
+      "details": "found=1"
+    },
+    {
+      "page": "MRP物料需求",
+      "test": "BOM展开Tab",
+      "status": "PASS",
+      "details": "found=1"
+    },
+    {
+      "page": "MRP物料需求",
+      "test": "时间分桶Tab",
+      "status": "PASS",
+      "details": "found=1"
+    },
+    {
+      "page": "SPC分析",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "page": "SPC分析",
+      "test": "Xbar-R控制图Tab",
+      "status": "PASS",
+      "details": "found=1"
+    },
+    {
+      "page": "SPC分析",
+      "test": "帕累托分析Tab",
+      "status": "PASS",
+      "details": "found=1"
+    },
+    {
+      "page": "SPC分析",
+      "test": "P控制图Tab",
+      "status": "PASS",
+      "details": "found=1"
+    },
+    {
+      "page": "SPC分析",
+      "test": "生成图表按钮",
+      "status": "PASS",
+      "details": "found=1"
+    },
+    {
+      "page": "业务流转",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "page": "业务流转",
+      "test": "流转链路Tab",
+      "status": "PASS",
+      "details": "found=1"
+    },
+    {
+      "page": "业务流转",
+      "test": "表间关联Tab",
+      "status": "PASS",
+      "details": "found=1"
+    },
+    {
+      "page": "业务流转",
+      "test": "系统架构Tab",
+      "status": "PASS",
+      "details": "found=1"
+    },
+    {
+      "page": "业务流转",
+      "test": "流转节点存在",
+      "status": "PASS",
+      "details": "count=39"
+    },
+    {
+      "page": "用户管理",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/settings/users"
+    },
+    {
+      "page": "样品管理",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/sample/management"
+    },
+    {
+      "page": "刀模管理",
+      "test": "页面加载",
+      "status": "PASS",
+      "details": "path=/prepress/die-template"
+    },
+    {
+      "page": "深色模式",
+      "test": "仓库调拨-无bg-gray-100",
+      "status": "PASS",
+      "details": "found=0"
+    },
+    {
+      "page": "深色模式",
+      "test": "仓库调拨-无border-gray-300",
+      "status": "PASS",
+      "details": "found=0"
+    },
+    {
+      "page": "深色模式",
+      "test": "仓库调拨-使用bg-muted主题变量",
+      "status": "PASS",
+      "details": "count=32"
+    },
+    {
+      "page": "深色模式",
+      "test": "仓库调拨-使用border-border主题变量",
+      "status": "PASS",
+      "details": "count=195"
+    },
+    {
+      "page": "响应式",
+      "test": "移动端仪表盘-无水平溢出",
+      "status": "PASS",
+      "details": "width=375"
+    },
+    {
+      "page": "响应式",
+      "test": "移动端库存页-可访问",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "page": "API端点",
+      "test": "MRP BOM展开(/api/production/mrp?action=bom-explode&p)",
+      "status": "FAIL",
+      "details": "status=500"
+    },
+    {
+      "page": "API端点",
+      "test": "MRP净需求(/api/production/mrp?action=net-requireme)",
+      "status": "FAIL",
+      "details": "status=500"
+    },
+    {
+      "page": "API端点",
+      "test": "SPC帕累托(/api/quality/spc?action=pareto&start_dat)",
+      "status": "FAIL",
+      "details": "status=500"
+    },
+    {
+      "page": "API端点",
+      "test": "SPC P图(/api/quality/spc?action=p-chart&start_da)",
+      "status": "FAIL",
+      "details": "status=500"
+    },
+    {
+      "page": "API端点",
+      "test": "标准卡列表(/api/engineering/standard-card?action=li)",
+      "status": "PASS",
+      "details": "status=200"
+    },
+    {
+      "page": "API端点",
+      "test": "标准卡模板(/api/engineering/standard-card?action=te)",
+      "status": "FAIL",
+      "details": "status=500"
+    },
+    {
+      "page": "API端点",
+      "test": "排产统计(/api/production/schedule?action=stats)",
+      "status": "PASS",
+      "details": "status=200"
+    }
+  ]
+}

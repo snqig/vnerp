@@ -83,7 +83,7 @@ export async function explodeBOM(
   }
 
   const leadTimeRows: any = await conn.query(
-    `SELECT id, lead_time_days FROM inv_material WHERE id = ? AND deleted = 0`,
+    `SELECT id, 7 AS lead_time_days FROM inv_material WHERE id = ? AND deleted = 0`,
     [productId]
   );
   const rootLeadTime = leadTimeRows.length > 0 ? Number(leadTimeRows[0].lead_time_days || 7) : 7;
@@ -167,7 +167,7 @@ export async function explodeBOM(
       const childCircularKey = `${line.material_id}:${childPath}`;
 
       const matInfoRows: any = await conn.query(
-        `SELECT id, lead_time_days FROM inv_material WHERE id = ? AND deleted = 0`,
+        `SELECT id, 7 AS lead_time_days FROM inv_material WHERE id = ? AND deleted = 0`,
         [line.material_id]
       );
       const childLeadTime = matInfoRows.length > 0 ? Number(matInfoRows[0].lead_time_days || 7) : 7;
@@ -237,7 +237,7 @@ export async function calculateTimeBuckets(
   }
 
   const matInfoRows: any = await conn.query(
-    `SELECT id, lead_time_days FROM inv_material WHERE id = ? AND deleted = 0`,
+    `SELECT id, 7 AS lead_time_days FROM inv_material WHERE id = ? AND deleted = 0`,
     [materialId]
   );
   const leadTimeDays = matInfoRows.length > 0 ? Number(matInfoRows[0].lead_time_days || 7) : 7;
@@ -252,13 +252,13 @@ export async function calculateTimeBuckets(
 
   const requirementRows: any = await conn.query(
     `SELECT
-       DATE(bl.create_time) as req_date,
-       COALESCE(SUM(bl.consumption_qty * wo.plan_qty * (1 + bl.loss_rate / 100)), 0) as total_req
+       DATE(wo.plan_start_date) as req_date,
+       COALESCE(SUM(bl.consumption_qty * wo.quantity * (1 + bl.loss_rate / 100)), 0) as total_req
      FROM prod_work_order wo
-     INNER JOIN bom_header bh ON bh.product_id = wo.material_id AND bh.status = 30 AND bh.deleted = 0
+     INNER JOIN bom_header bh ON bh.id = wo.bom_id AND bh.status = 30 AND bh.deleted = 0
      INNER JOIN bom_line bl ON bl.bom_id = bh.id AND bl.material_id = ?
      WHERE wo.deleted = 0
-       AND wo.status IN (10, 20, 30)
+       AND wo.status IN ('pending', 'confirmed', 'producing')
        AND wo.plan_start_date IS NOT NULL
        AND wo.plan_start_date >= ?
        AND wo.plan_start_date <= ?
@@ -274,18 +274,18 @@ export async function calculateTimeBuckets(
 
   const receiptRows: any = await conn.query(
     `SELECT
-       DATE(po.expected_date) as receipt_date,
+       DATE(po.delivery_date) as receipt_date,
        COALESCE(SUM(pol.order_qty - pol.received_qty), 0) as total_receipt
      FROM pur_purchase_order po
      INNER JOIN pur_purchase_order_line pol ON pol.po_id = po.id
      WHERE pol.material_id = ?
        AND po.deleted = 0
-       AND po.status IN (1, 2, 3, 5)
-       AND po.expected_date IS NOT NULL
-       AND po.expected_date >= ?
-       AND po.expected_date <= ?
+       AND po.status IN (20, 30, 40)
+       AND po.delivery_date IS NOT NULL
+       AND po.delivery_date >= ?
+       AND po.delivery_date <= ?
        AND pol.order_qty > pol.received_qty
-     GROUP BY DATE(po.expected_date)`,
+     GROUP BY DATE(po.delivery_date)`,
     [materialId, startDate, endDate]
   );
 
@@ -452,9 +452,10 @@ export async function calculateNetRequirements(
   const placeholders = workOrderIds.map(() => '?').join(',');
 
   const workOrders: any = await conn.query(
-    `SELECT id, work_order_no, material_id, plan_qty, plan_start_date, bom_id
-     FROM prod_work_order
-     WHERE id IN (${placeholders}) AND deleted = 0`,
+    `SELECT wo.id, wo.work_order_no, wo.quantity, wo.plan_start_date, bh.product_id, bh.id as bom_id
+     FROM prod_work_order wo
+     LEFT JOIN bom_header bh ON bh.id = wo.bom_id AND bh.status = 30 AND bh.deleted = 0
+     WHERE wo.id IN (${placeholders}) AND wo.deleted = 0`,
     workOrderIds
   );
 
@@ -472,7 +473,8 @@ export async function calculateNetRequirements(
   }>();
 
   for (const wo of workOrders) {
-    const bomTree = await explodeBOM(conn, wo.material_id, Number(wo.plan_qty || 0));
+    if (!wo.product_id) continue;
+    const bomTree = await explodeBOM(conn, wo.product_id, Number(wo.quantity || 0));
 
     const leafMaterials = collectLeafMaterials(bomTree);
 
@@ -533,14 +535,14 @@ export async function calculateNetRequirements(
        INNER JOIN pur_purchase_order po ON po.id = pol.po_id
        WHERE pol.material_id = ?
          AND po.deleted = 0
-         AND po.status IN (3, 5)
+         AND po.status IN (30, 40)
          AND pol.order_qty > pol.received_qty`,
       [materialId]
     );
     const inTransitQty = Number(inTransitRows.length > 0 ? inTransitRows[0].total_in_transit : 0);
 
     const matInfoRows: any = await conn.query(
-      `SELECT id, material_code, material_name, unit, safety_stock, purchase_price, lead_time_days
+      `SELECT id, material_code, material_name, unit, safety_stock, purchase_price, 7 AS lead_time_days
        FROM inv_material WHERE id = ? AND deleted = 0`,
       [materialId]
     );
@@ -867,7 +869,10 @@ export async function runFullMRP(
 
   const placeholders = workOrderIds.map(() => '?').join(',');
   const workOrders: any = await conn.query(
-    `SELECT id, material_id, plan_qty FROM prod_work_order WHERE id IN (${placeholders}) AND deleted = 0`,
+    `SELECT wo.id, wo.quantity, bh.product_id
+     FROM prod_work_order wo
+     LEFT JOIN bom_header bh ON bh.id = wo.bom_id AND bh.status = 30 AND bh.deleted = 0
+     WHERE wo.id IN (${placeholders}) AND wo.deleted = 0`,
     workOrderIds
   );
 
@@ -886,7 +891,8 @@ export async function runFullMRP(
   };
 
   for (const wo of workOrders) {
-    const bomTree = await explodeBOM(conn, wo.material_id, Number(wo.plan_qty || 0));
+    if (!wo.product_id) continue;
+    const bomTree = await explodeBOM(conn, wo.product_id, Number(wo.quantity || 0));
     if (combinedBomTree.children) {
       combinedBomTree.children.push(bomTree);
     }

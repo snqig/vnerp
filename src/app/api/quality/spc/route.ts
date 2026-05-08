@@ -31,7 +31,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const endDate = searchParams.get('end_date') || new Date().toISOString().slice(0, 10);
     const materialId = searchParams.get('material_id');
 
-    let whereClause = "WHERE inspection_date BETWEEN ? AND ?";
+    let whereClause = "WHERE DATE(create_time) BETWEEN ? AND ?";
     const params: any[] = [startDate, endDate];
     if (materialId) {
       whereClause += " AND material_id = ?";
@@ -64,7 +64,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
 
     const data: any = await query(
-      `SELECT DATE(inspection_date) as period, COUNT(*) as inspected, SUM(CASE WHEN result = 'NG' OR result = 'unqualified' THEN 1 ELSE 0 END) as defective FROM qc_inspection ${whereClause} GROUP BY DATE(inspection_date) ORDER BY period`,
+      `SELECT DATE(inspection_date) as period, COUNT(*) as inspected, SUM(CASE WHEN inspection_result = 2 THEN 1 ELSE 0 END) as defective FROM qc_inspection ${whereClause} GROUP BY DATE(inspection_date) ORDER BY period`,
       params
     );
 
