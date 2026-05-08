@@ -631,7 +631,7 @@ export default function QualityFinalPage() {
                         <span className="text-muted-foreground">印刷方式:</span>
                         <span>{selectedFinal.print_type}</span>
                         <span className="text-muted-foreground">计划数量:</span>
-                        <span>{selectedFinal.plan_qty.toLocaleString()}</span>
+                        <span>{(selectedFinal.plan_qty ?? 0).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -726,7 +726,7 @@ export default function QualityFinalPage() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">计划数量:</span>
-                        <span className="ml-2">{selectedFinal.plan_qty.toLocaleString()}</span>
+                        <span className="ml-2">{(selectedFinal.plan_qty ?? 0).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -944,7 +944,7 @@ export default function QualityFinalPage() {
                         <TableCell>{final.product_name}</TableCell>
                         <TableCell>{final.customer_name}</TableCell>
                         <TableCell>{final.finished_size}</TableCell>
-                        <TableCell>{final.plan_qty.toLocaleString()}</TableCell>
+                        <TableCell>{(final.plan_qty ?? 0).toLocaleString()}</TableCell>
                         <TableCell>{getStatusBadge(final.burdening_status)}</TableCell>
                       </TableRow>
                     ))}
@@ -1022,7 +1022,7 @@ export default function QualityFinalPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">数量:</span>
-                    <span>{selectedFinal.plan_qty.toLocaleString()}</span>
+                    <span>{(selectedFinal.plan_qty ?? 0).toLocaleString()}</span>
                   </div>
                 </div>
 
