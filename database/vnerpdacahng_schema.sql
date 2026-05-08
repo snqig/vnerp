@@ -985,7 +985,7 @@ CREATE TABLE `qc_unqualified` (
 
 -- 初始化管理员用户(密码需要加密后存储)
 INSERT INTO `sys_user` (`username`, `password`, `real_name`, `status`, `create_time`) VALUES
-('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EO', '系统管理员', 1, NOW());
+('admin', '$2b$10$exPRft/Zkzh5o1QmCaKy/uVilWGDosF8un/6yA6jEIneEZNJ319F2', '系统管理员', 1, NOW());
 
 -- 初始化部门
 INSERT INTO `sys_department` (`dept_name`, `dept_code`, `sort_order`, `status`, `create_time`) VALUES

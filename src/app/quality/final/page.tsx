@@ -531,7 +531,7 @@ export default function QualityFinalPage() {
                             <span>公差: {final.tolerance}</span>
                           </div>
                         </TableCell>
-                        <TableCell>{final.plan_qty.toLocaleString()}</TableCell>
+                        <TableCell>{(final.plan_qty ?? 0).toLocaleString()}</TableCell>
                         <TableCell>
                           <div className="flex flex-col text-sm">
                             <span>{final.packing_type}</span>

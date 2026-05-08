@@ -58,13 +58,13 @@ export async function GET(request: NextRequest) {
     let alerts: any[] = [];
     try {
       const inkRows: any = await query(`
-        SELECT COUNT(*) as total FROM dcprint_ink_opening WHERE deleted = 0 AND status = 1 AND DATEDIFF(expire_time, NOW()) <= 1
+        SELECT COUNT(*) as total FROM ink_opening_record WHERE deleted = 0 AND status = 1 AND DATEDIFF(expire_time, NOW()) <= 1
       `);
       const inkAlert = Array.isArray(inkRows) && inkRows.length > 0 ? Number(inkRows[0].total || 0) : 0;
       if (inkAlert > 0) alerts.push({ type: 'quality', message: `${inkAlert}罐油墨即将过期`, severity: 'high', time: '刚刚' });
 
       const dieRows: any = await query(`
-        SELECT COUNT(*) as total FROM prepress_die_template WHERE deleted = 0 AND status = 1 AND usage_percent >= 80
+        SELECT COUNT(*) as total FROM prd_die_template WHERE deleted = 0 AND status = 1 AND max_usage > 0 AND (current_usage / max_usage) >= 0.8
       `);
       const dieAlert = Array.isArray(dieRows) && dieRows.length > 0 ? Number(dieRows[0].total || 0) : 0;
       if (dieAlert > 0) alerts.push({ type: 'production', message: `${dieAlert}个刀模/网版使用率超80%`, severity: 'medium', time: '刚刚' });

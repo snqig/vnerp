@@ -44,10 +44,10 @@ CREATE TABLE IF NOT EXISTS `sys_login_log` (
   KEY `idx_create_time` (`create_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录日志表';
 
--- 插入超级管理员用户 (密码: admin 使用 bcrypt 加密)
--- 密码: admin -> $2b$10$YourHashedPasswordHere
+-- 插入超级管理员用户 (密码: admin123 使用 bcrypt 加密)
+-- 密码: admin123 -> $2b$10$exPRft/Zkzh5o1QmCaKy/uVilWGDosF8un/6yA6jEIneEZNJ319F2
 INSERT INTO `sys_user` (`username`, `password`, `real_name`, `email`, `phone`, `status`, `dept_id`, `role_id`) VALUES
-('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjNvl7xPLP1mNV9C', '超级管理员', 'admin@dachang.com', '13800138000', 1, 1, 1)
+('admin', '$2b$10$exPRft/Zkzh5o1QmCaKy/uVilWGDosF8un/6yA6jEIneEZNJ319F2', '超级管理员', 'admin@dachang.com', '13800138000', 1, 1, 1)
 ON DUPLICATE KEY UPDATE 
-  `password` = '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjNvl7xPLP1mNV9C',
+  `password` = '$2b$10$exPRft/Zkzh5o1QmCaKy/uVilWGDosF8un/6yA6jEIneEZNJ319F2',
   `status` = 1;

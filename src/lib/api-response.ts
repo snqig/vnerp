@@ -11,6 +11,7 @@ export function sanitizeInput(input: string): string {
 
 export function sanitizeObject<T>(obj: T): T {
   if (typeof obj === 'string') return sanitizeInput(obj) as T;
+  if (obj instanceof Date) return (obj as Date).toISOString().slice(0, 10) as T;
   if (Array.isArray(obj)) return obj.map(item => sanitizeObject(item)) as T;
   if (obj && typeof obj === 'object') {
     const sanitized: any = {};
