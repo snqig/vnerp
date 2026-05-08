@@ -3,6 +3,24 @@ import { InboundOrder, InboundOrderProps } from '@/domain/warehouse/aggregates/I
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
+const DB_TO_DOMAIN_STATUS: Record<string, string> = {
+  draft: 'draft',
+  pending: 'pending',
+  approved: 'completed',
+  completed: 'completed',
+  cancelled: 'cancelled',
+};
+
+const DOMAIN_TO_DB_STATUS: Record<string, string> = {
+  draft: 'draft',
+  pending: 'pending',
+  completed: 'approved',
+  cancelled: 'cancelled',
+};
+
+const ITEM_COLUMNS = `id, order_id, material_id, material_name, material_spec,
+                      batch_no, quantity, unit, unit_price, total_price, warehouse_location, produce_date`;
+
 export class MysqlInboundOrderRepository implements IInboundOrderRepository {
   async findById(id: number): Promise<InboundOrder | null> {
     const orders = await query<any>(
@@ -14,16 +32,14 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
 
     const order = orders[0];
     const items = await query<any>(
-      `SELECT id, order_id, material_id, material_code, material_name, material_spec,
-              batch_no, quantity, unit, unit_price, total_price, warehouse_location, produce_date
-       FROM inv_inbound_item WHERE order_id = ?`,
+      `SELECT ${ITEM_COLUMNS} FROM inv_inbound_item WHERE order_id = ?`,
       [id]
     );
 
     const props: InboundOrderProps = {
       id: order.id,
       orderNo: order.order_no,
-      status: order.status,
+      status: (DB_TO_DOMAIN_STATUS[order.status] || order.status) as any,
       warehouseId: order.warehouse_id,
       supplierName: order.supplier_name || '',
       orderType: order.order_type,
@@ -33,7 +49,6 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
         id: item.id,
         orderId: item.order_id,
         materialId: item.material_id,
-        materialCode: item.material_code,
         materialName: item.material_name,
         materialSpec: item.material_spec,
         batchNo: item.batch_no || '',
@@ -45,8 +60,6 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
       })),
       totalAmount: order.total_amount,
       totalQuantity: order.total_quantity,
-      inspectionStatus: order.inspection_status,
-      financePosted: order.finance_posted,
       createTime: order.create_time,
       updateTime: order.update_time,
     };
@@ -74,9 +87,10 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     }
 
     if (status) {
+      const dbStatus = DOMAIN_TO_DB_STATUS[status] || status;
       sql += ` AND o.status = ?`;
       countSql += ` AND o.status = ?`;
-      params.push(status);
+      params.push(dbStatus);
     }
 
     if (filters?.startDate) {
@@ -99,9 +113,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
       const orderIds = result.data.map((o: any) => o.id);
       const placeholders = orderIds.map(() => '?').join(',');
       const items = await query(
-        `SELECT id, order_id, material_id, material_code, material_name, material_spec,
-                batch_no, quantity, unit, unit_price, total_price, warehouse_location, produce_date
-         FROM inv_inbound_item WHERE order_id IN (${placeholders})`,
+        `SELECT ${ITEM_COLUMNS} FROM inv_inbound_item WHERE order_id IN (${placeholders})`,
         orderIds
       );
 
@@ -122,7 +134,7 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
       data: result.data.map((o: any) => InboundOrder.reconstitute({
         id: o.id,
         orderNo: o.order_no,
-        status: o.status,
+        status: (DB_TO_DOMAIN_STATUS[o.status] || o.status) as any,
         warehouseId: o.warehouse_id,
         supplierName: o.supplier_name || '',
         orderType: o.order_type,
@@ -132,7 +144,6 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
           id: item.id,
           orderId: item.order_id,
           materialId: item.material_id,
-          materialCode: item.material_code,
           materialName: item.material_name,
           materialSpec: item.material_spec,
           batchNo: item.batch_no || '',
@@ -161,9 +172,10 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
          (order_no, order_type, warehouse_id, supplier_name, total_amount, total_quantity, status, inbound_date, remark, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
-          orderNo, order.orderType, order.warehouseId, order.supplierName,
-          order.totalAmount.amount, order.totalQuantity, order.status.value,
-          order.inboundDate, order.remark,
+          orderNo, order.orderType || 'purchase', order.warehouseId, order.supplierName || null,
+          order.totalAmount.amount, order.totalQuantity,
+          DOMAIN_TO_DB_STATUS[order.status.value] || order.status.value,
+          order.inboundDate || null, order.remark || null,
         ]
       );
 
@@ -175,9 +187,9 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
            (order_id, material_id, material_name, material_spec, batch_no, quantity, unit, unit_price, total_price, warehouse_location, produce_date, create_time)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
           [
-            orderId, item.materialId, item.materialName, item.materialSpec,
-            item.batchNo, item.quantity, item.unit, item.unitPrice,
-            item.totalPrice, item.warehouseLocation, item.produceDate,
+            orderId, item.materialId, item.materialName || null, item.materialSpec || null,
+            item.batchNo || null, item.quantity, item.unit || null, item.unitPrice || 0,
+            item.totalPrice || 0, item.warehouseLocation || null, item.produceDate || null,
           ]
         );
       }
@@ -187,18 +199,23 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
   }
 
   async updateStatus(id: number, status: string, currentStatus: string): Promise<boolean> {
-    const [result]: any = await execute(
+    const dbStatus = DOMAIN_TO_DB_STATUS[status] || status;
+    const dbCurrentStatus = DOMAIN_TO_DB_STATUS[currentStatus] || currentStatus;
+    const result = await execute(
       'UPDATE inv_inbound_order SET status = ?, update_time = NOW() WHERE id = ? AND status = ?',
-      [status, id, currentStatus]
+      [dbStatus, id, dbCurrentStatus]
     );
     return result.affectedRows > 0;
   }
 
   async updateInspectionAndFinance(id: number, inspectionStatus: number, financePosted: boolean): Promise<void> {
-    await execute(
-      'UPDATE inv_inbound_order SET inspection_status = ?, finance_posted = ? WHERE id = ?',
-      [inspectionStatus, financePosted ? 1 : 0, id]
-    );
+    try {
+      await execute(
+        'UPDATE inv_inbound_order SET qc_status = ? WHERE id = ?',
+        [inspectionStatus === 3 ? 'pass' : 'pending', id]
+      );
+    } catch {
+    }
   }
 
   async softDelete(id: number): Promise<void> {

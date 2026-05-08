@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
       const rows: any = await query(`
         SELECT
           COUNT(*) as total_inspections,
-          SUM(CASE WHEN inspect_result = 'pass' OR inspect_result = '1' THEN 1 ELSE 0 END) as passed
-        FROM qms_inspect_record WHERE deleted = 0 AND DATE(inspect_time) = CURDATE()
+          SUM(CASE WHEN inspection_result = 1 THEN 1 ELSE 0 END) as passed
+        FROM qc_inspection WHERE deleted = 0 AND DATE(inspection_date) = CURDATE()
       `);
       if (Array.isArray(rows) && rows.length > 0) {
         const totalInspect = Number(rows[0].total_inspections || 0);
@@ -77,8 +77,8 @@ export async function GET(request: NextRequest) {
           COUNT(*) as total_opened,
           SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as in_use,
           SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as expired,
-          SUM(CASE WHEN DATEDIFF(expiry_date, NOW()) <= 3 AND status = 1 THEN 1 ELSE 0 END) as expiring_soon
-        FROM dcprint_ink_opening WHERE deleted = 0
+          SUM(CASE WHEN DATEDIFF(expire_time, NOW()) <= 3 AND status = 1 THEN 1 ELSE 0 END) as expiring_soon
+        FROM ink_opening_record WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) inkStats = rows[0];
     } catch (e) { console.error('inkStats query failed:', e); }
@@ -88,13 +88,18 @@ export async function GET(request: NextRequest) {
       const rows: any = await query(`
         SELECT
           COUNT(*) as total,
-          SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as normal,
-          SUM(CASE WHEN usage_percent >= 80 AND status = 1 THEN 1 ELSE 0 END) as warning,
-          SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as locked,
-          SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END) as scrapped
-        FROM prepress_die_template WHERE deleted = 0
+          SUM(CASE WHEN status = 1 AND max_usage > 0 AND (current_usage / max_usage) >= 0.8 THEN 1 ELSE 0 END) as warning,
+          SUM(CASE WHEN die_status = 2 OR status = 2 THEN 1 ELSE 0 END) as locked,
+          SUM(CASE WHEN die_status = 3 OR status = 3 THEN 1 ELSE 0 END) as scrapped
+        FROM prd_die_template WHERE deleted = 0
       `);
-      if (Array.isArray(rows) && rows.length > 0) dieStats = rows[0];
+      if (Array.isArray(rows) && rows.length > 0) {
+        dieStats.total = rows[0].total;
+        dieStats.warning = rows[0].warning || 0;
+        dieStats.locked = rows[0].locked || 0;
+        dieStats.scrapped = rows[0].scrapped || 0;
+        dieStats.normal = dieStats.total - dieStats.warning - dieStats.locked - dieStats.scrapped;
+      }
     } catch (e) { console.error('dieStats query failed:', e); }
 
     const totalEquip = Number(equipStats?.total || 0);

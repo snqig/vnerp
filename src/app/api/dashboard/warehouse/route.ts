@@ -7,9 +7,9 @@ export async function GET(request: NextRequest) {
     try {
       const rows: any = await query(`
         SELECT COUNT(*) as total,
-          SUM(CASE WHEN stock_qty <= min_stock THEN 1 ELSE 0 END) as low_stock,
-          COALESCE(SUM(stock_qty * unit_price), 0) as total_value
-        FROM inv_material WHERE deleted = 0 AND status = 1
+          SUM(CASE WHEN safety_stock > 0 AND quantity <= safety_stock THEN 1 ELSE 0 END) as low_stock,
+          COALESCE(SUM(quantity * COALESCE(unit_cost, cost_price, price, 0)), 0) as total_value
+        FROM inv_inventory WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) {
         overview.totalItems = Number(rows[0].total || 0);
@@ -28,8 +28,11 @@ export async function GET(request: NextRequest) {
     let categoryDistribution: any[] = [];
     try {
       const rows: any = await query(`
-        SELECT material_type, COUNT(*) as count, COALESCE(SUM(stock_qty * unit_price), 0) as value
-        FROM inv_material WHERE deleted = 0 AND status = 1 GROUP BY material_type ORDER BY count DESC
+        SELECT m.material_type, COUNT(DISTINCT m.id) as count,
+          COALESCE(SUM(i.quantity * COALESCE(i.unit_cost, m.cost_price, m.price, 0)), 0) as value
+        FROM inv_material m
+        LEFT JOIN inv_inventory i ON m.id = i.material_id AND i.deleted = 0
+        WHERE m.deleted = 0 AND m.status = 1 GROUP BY m.material_type ORDER BY count DESC
       `);
       categoryDistribution = Array.isArray(rows) ? rows : [];
     } catch (e) { console.error('warehouse category failed:', e); }
@@ -37,9 +40,12 @@ export async function GET(request: NextRequest) {
     let lowStockItems: any[] = [];
     try {
       const rows: any = await query(`
-        SELECT material_code, material_name, stock_qty, min_stock, unit, specification
-        FROM inv_material WHERE deleted = 0 AND status = 1 AND stock_qty <= min_stock
-        ORDER BY (stock_qty / NULLIF(min_stock, 0)) ASC LIMIT 10
+        SELECT m.material_code, m.material_name, COALESCE(i.quantity, 0) as stock_qty,
+          m.safety_stock as min_stock, m.unit, m.specification
+        FROM inv_material m
+        LEFT JOIN inv_inventory i ON m.id = i.material_id AND i.deleted = 0
+        WHERE m.deleted = 0 AND m.status = 1 AND COALESCE(i.quantity, 0) <= m.safety_stock
+        ORDER BY (COALESCE(i.quantity, 0) / NULLIF(m.safety_stock, 0)) ASC LIMIT 10
       `);
       lowStockItems = Array.isArray(rows) ? rows : [];
     } catch (e) { console.error('warehouse lowStock failed:', e); }
@@ -47,8 +53,11 @@ export async function GET(request: NextRequest) {
     let recentTransactions: any[] = [];
     try {
       const rows: any = await query(`
-        SELECT transaction_type, material_code, material_name, quantity, unit, create_time, remark
-        FROM inv_inventory_transaction WHERE deleted = 0 ORDER BY create_time DESC LIMIT 10
+        SELECT t.trans_type as transaction_type, t.material_code,
+          m.material_name, t.quantity, t.unit, t.create_time, t.remark
+        FROM inv_inventory_transaction t
+        LEFT JOIN inv_material m ON t.material_id = m.id
+        ORDER BY t.create_time DESC LIMIT 10
       `);
       recentTransactions = Array.isArray(rows) ? rows : [];
     } catch (e) { console.error('warehouse transactions failed:', e); }
@@ -56,8 +65,8 @@ export async function GET(request: NextRequest) {
     let warehouseOccupancy: any[] = [];
     try {
       const rows: any = await query(`
-        SELECT w.warehouse_name, COUNT(DISTINCT i.material_code) as item_count,
-          COALESCE(SUM(i.stock_qty), 0) as total_qty
+        SELECT w.warehouse_name, COUNT(DISTINCT i.material_id) as item_count,
+          COALESCE(SUM(i.quantity), 0) as total_qty
         FROM inv_warehouse w
         LEFT JOIN inv_inventory i ON w.id = i.warehouse_id AND i.deleted = 0
         WHERE w.deleted = 0 GROUP BY w.id, w.warehouse_name

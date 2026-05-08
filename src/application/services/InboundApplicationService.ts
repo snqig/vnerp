@@ -44,10 +44,10 @@ export class InboundApplicationService {
     const order = await this.getOrderById(id);
 
     const warehouseRows: any = await query(
-      'SELECT name FROM inv_warehouse WHERE id = ?',
+      'SELECT warehouse_name FROM inv_warehouse WHERE id = ?',
       [order.warehouseId]
     );
-    const warehouseName = warehouseRows?.[0]?.name || '';
+    const warehouseName = warehouseRows?.[0]?.warehouse_name || '';
 
     const previousStatus = order.status.value;
     order.approve(warehouseName);
