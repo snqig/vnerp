@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
-import { runAllFixes, fixRequestItemMaterialId, fixAttendanceEmpId, fixInventoryBatchConsistency } from '@/lib/services/data-fix-tool';
+import { runAllFixes, fixRequestItemMaterialId, fixAttendanceEmpId, fixInventoryBatchConsistency, fixExpiredBatches, scanGhostData } from '@/lib/services/data-fix-tool';
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
@@ -18,12 +18,22 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       return successResponse(await fixAttendanceEmpId(), '考勤员工ID修复完成');
     case 'inventory_batch':
       return successResponse(await fixInventoryBatchConsistency(), '库存批次一致性修复完成');
+    case 'expired_batches':
+      return successResponse(await fixExpiredBatches(), '过期批次标记完成');
     default:
       return errorResponse('未知的修复类型', 400);
   }
 });
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const mode = searchParams.get('mode') || 'fix';
+
+  if (mode === 'scan') {
+    const ghostResults = await scanGhostData();
+    return successResponse(ghostResults, '幽灵数据巡检完成');
+  }
+
   const results = await runAllFixes();
   return successResponse(results, '脏数据巡检修复完成');
 });

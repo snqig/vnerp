@@ -82,6 +82,34 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   const { material_id, material_code, material_name, batch_no, label_id, ink_type, open_time, expire_hours, remaining_qty, unit, operator_id, operator_name, remark, workorder_id, workorder_no } = body;
 
+  if (batch_no) {
+    const expiredOpening: any = await queryOne(
+      `SELECT id, record_no, expire_time FROM ink_opening_record
+       WHERE batch_no = ? AND material_id = ? AND status = 1 AND deleted = 0 AND expire_time < NOW()
+       ORDER BY expire_time DESC LIMIT 1`,
+      [batch_no, material_id]
+    );
+    if (expiredOpening) {
+      return errorResponse(
+        `该批次油墨已有过期开盖记录(${expiredOpening.record_no}，过期时间: ${expiredOpening.expire_time})，请先报废后再重新开盖`,
+        400, 400
+      );
+    }
+
+    const activeOpening: any = await queryOne(
+      `SELECT id, record_no, expire_time FROM ink_opening_record
+       WHERE batch_no = ? AND material_id = ? AND status = 1 AND deleted = 0 AND expire_time >= NOW()
+       ORDER BY expire_time DESC LIMIT 1`,
+      [batch_no, material_id]
+    );
+    if (activeOpening) {
+      return errorResponse(
+        `该批次油墨已有生效中的开盖记录(${activeOpening.record_no}，过期时间: ${activeOpening.expire_time})，请勿重复开盖`,
+        409, 409
+      );
+    }
+  }
+
   const INK_SHELF_LIFE: Record<string, number> = {
     solvent: 168,
     uv: 720,

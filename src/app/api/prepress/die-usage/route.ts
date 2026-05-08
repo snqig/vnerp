@@ -99,9 +99,26 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     if (die.die_status === 'scrap') return errorResponse('已报废的刀模/网版不能继续使用', 400, 400);
     if (die.die_status === 're_rule_needed') return errorResponse('需重做的刀模/网版请先保养后再使用', 400, 400);
 
+    if (die.max_impressions > 0 && die.cumulative_impressions >= die.max_impressions) {
+      return errorResponse(
+        `刀模/网版已达最大使用次数(${die.cumulative_impressions}/${die.max_impressions})，请更换或保养后再使用`,
+        400, 400
+      );
+    }
+
     const actualImpressions = body.actual_qty
       ? Math.ceil(parseInt(body.actual_qty) / (die.pieces_per_impression || 1))
       : impressionsToAdd;
+
+    if (die.max_impressions > 0) {
+      const projectedCumulative = die.cumulative_impressions + actualImpressions;
+      if (projectedCumulative > die.max_impressions * 1.05) {
+        return errorResponse(
+          `本次使用后累计次数(${projectedCumulative})将远超最大限制(${die.max_impressions})，请确认使用次数是否正确`,
+          400, 400
+        );
+      }
+    }
 
     const newCumulative = die.cumulative_impressions + actualImpressions;
     const newDieStatus = computeDieStatus(newCumulative, die.max_impressions, die.warning_threshold);

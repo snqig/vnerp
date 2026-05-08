@@ -41,6 +41,12 @@ export class DomainEventOutbox {
   }
 
   static async markForRetry(id: number): Promise<void> {
+    if (id === 0) {
+      await execute(
+        `UPDATE domain_event_outbox SET status = 'pending', error_message = NULL WHERE status = 'failed' AND retry_count < 3`
+      );
+      return;
+    }
     await execute(
       `UPDATE domain_event_outbox SET status = 'pending', error_message = NULL WHERE id = ? AND retry_count < 3`,
       [id]

@@ -4,13 +4,14 @@ import {
   paginatedResponse,
   errorResponse,
   commonErrors,
-  validateRequestBody,
 } from '@/lib/api-response';
 import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { InboundApplicationService } from '@/application/services/InboundApplicationService';
 import { MysqlInboundOrderRepository } from '@/infrastructure/repositories/MysqlInboundOrderRepository';
 import { registerEventHandlers } from '@/infrastructure/config/EventRegistry';
+import { createInboundOrderSchema, updateInboundOrderSchema } from '@/lib/validations/inbound';
+import { ZodError } from 'zod/v4';
 
 function getInboundService(): InboundApplicationService {
   const eventBus = registerEventHandlers();
@@ -70,31 +71,33 @@ export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo
 export const POST = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const body = await request.json();
 
-  const validation = validateRequestBody(body, ['items']);
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
-
-  if (!Array.isArray(body.items) || body.items.length === 0) {
-    return errorResponse('入库项不能为空', 400, 400);
+  let validated: any;
+  try {
+    validated = createInboundOrderSchema.parse(body);
+  } catch (e) {
+    if (e instanceof ZodError) {
+      const messages = e.issues.map((iss: any) => `${iss.path.join('.')}: ${iss.message}`).join('; ');
+      return errorResponse(`输入校验失败: ${messages}`, 422, 422);
+    }
+    throw e;
   }
 
   const service = getInboundService();
   const result = await service.createOrder({
-    warehouseId: body.warehouse_id,
-    supplierName: body.supplier_name || '',
-    inboundDate: body.inbound_date,
-    remark: body.remark,
+    warehouseId: validated.warehouse_id,
+    supplierName: validated.supplier_name || '',
+    inboundDate: validated.inbound_date,
+    remark: validated.remark,
     operatorId: userInfo.userId,
-    items: body.items.map((item: any) => ({
-      materialId: item.material_id || 0,
+    items: validated.items.map((item: any) => ({
+      materialId: item.material_id,
       materialCode: item.material_code,
-      materialName: item.material_name || '',
+      materialName: item.material_name,
       materialSpec: item.material_spec,
-      batchNo: item.batch_no || '',
-      quantity: item.quantity || 0,
-      unit: item.unit || '件',
-      unitPrice: item.unit_price || 0,
+      batchNo: item.batch_no,
+      quantity: item.quantity,
+      unit: item.unit,
+      unitPrice: item.unit_price,
       warehouseLocation: item.warehouse_location,
       produceDate: item.produce_date,
     })),
@@ -105,11 +108,19 @@ export const POST = withAuthAndErrorHandler(async (request: NextRequest, userInf
 
 export const PUT = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const body = await request.json();
-  const { id, action, status, remark } = body;
 
-  if (!id) {
-    return errorResponse('入库单ID不能为空', 400, 400);
+  let validated: any;
+  try {
+    validated = updateInboundOrderSchema.parse(body);
+  } catch (e) {
+    if (e instanceof ZodError) {
+      const messages = e.issues.map((iss: any) => `${iss.path.join('.')}: ${iss.message}`).join('; ');
+      return errorResponse(`输入校验失败: ${messages}`, 422, 422);
+    }
+    throw e;
   }
+
+  const { id, action, status, remark } = validated;
 
   const service = getInboundService();
 

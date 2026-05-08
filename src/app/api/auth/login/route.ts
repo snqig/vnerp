@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -31,6 +32,27 @@ function getClientIP(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const clientIP = getClientIP(request);
+    const rateResult = checkRateLimit(clientIP, {
+      windowMs: 15 * 60 * 1000,
+      maxRequests: 20,
+      keyPrefix: 'login',
+    });
+
+    if (!rateResult.allowed) {
+      return NextResponse.json({
+        success: false,
+        message: `请求过于频繁，请${Math.ceil(rateResult.retryAfterMs / 60000)}分钟后再试`
+      }, {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil(rateResult.retryAfterMs / 1000)),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(Math.ceil(rateResult.resetTime / 1000)),
+        }
+      });
+    }
+
     const body = await request.json();
     const { username, password } = body;
 

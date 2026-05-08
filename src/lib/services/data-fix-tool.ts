@@ -151,6 +151,86 @@ export async function fixBomLineMaterialRef(): Promise<FixResult> {
   }
 }
 
+export async function scanGhostData(): Promise<FixResult[]> {
+  const results: FixResult[] = [];
+
+  try {
+    const [outboundGhost]: any = await query(`
+      SELECT COUNT(*) as cnt FROM inv_outbound_batch_allocation oba
+      JOIN inv_inventory_batch ib ON oba.batch_id = ib.id
+      WHERE ib.deleted = 1
+    `);
+    results.push({
+      fixName: 'scanGhost_outbound_deleted_batch',
+      affectedRows: outboundGhost?.[0]?.cnt || 0,
+      detail: `出库分配引用已删除批次: ${outboundGhost?.[0]?.cnt || 0}条`,
+    });
+  } catch (e: any) {
+    results.push({ fixName: 'scanGhost_outbound_deleted_batch', affectedRows: 0, detail: `扫描失败: ${e.message}` });
+  }
+
+  try {
+    const [processCardGhost]: any = await query(`
+      SELECT COUNT(*) as cnt FROM prd_process_card pc
+      LEFT JOIN prod_work_order wo ON pc.work_order_id = wo.id
+      WHERE wo.deleted = 1 OR wo.id IS NULL
+    `);
+    results.push({
+      fixName: 'scanGhost_processcard_deleted_workorder',
+      affectedRows: processCardGhost?.[0]?.cnt || 0,
+      detail: `工艺卡引用已删除工单: ${processCardGhost?.[0]?.cnt || 0}条`,
+    });
+  } catch (e: any) {
+    results.push({ fixName: 'scanGhost_processcard_deleted_workorder', affectedRows: 0, detail: `扫描失败: ${e.message}` });
+  }
+
+  try {
+    const [payableGhost]: any = await query(`
+      SELECT COUNT(*) as cnt FROM fin_payable fp
+      LEFT JOIN inv_inbound_order io ON fp.source_id = io.id
+      WHERE fp.source_type = 'inbound' AND (io.deleted = 1 OR io.id IS NULL)
+    `);
+    results.push({
+      fixName: 'scanGhost_payable_deleted_inbound',
+      affectedRows: payableGhost?.[0]?.cnt || 0,
+      detail: `应付账款引用已删除入库单: ${payableGhost?.[0]?.cnt || 0}条`,
+    });
+  } catch (e: any) {
+    results.push({ fixName: 'scanGhost_payable_deleted_inbound', affectedRows: 0, detail: `扫描失败: ${e.message}` });
+  }
+
+  try {
+    const [expiredNormal]: any = await query(`
+      SELECT COUNT(*) as cnt FROM inv_inventory_batch
+      WHERE expire_date IS NOT NULL AND expire_date < CURDATE() AND status = 'normal' AND deleted = 0
+    `);
+    results.push({
+      fixName: 'scanGhost_expired_normal_batch',
+      affectedRows: expiredNormal?.[0]?.cnt || 0,
+      detail: `已过期但状态仍为normal的批次: ${expiredNormal?.[0]?.cnt || 0}条`,
+    });
+  } catch (e: any) {
+    results.push({ fixName: 'scanGhost_expired_normal_batch', affectedRows: 0, detail: `扫描失败: ${e.message}` });
+  }
+
+  return results;
+}
+
+export async function fixExpiredBatches(): Promise<FixResult> {
+  try {
+    const [res]: any = await execute(
+      `UPDATE inv_inventory_batch SET status = 'expired', update_time = NOW() WHERE expire_date IS NOT NULL AND expire_date < CURDATE() AND status = 'normal' AND deleted = 0`
+    );
+    return {
+      fixName: 'fixExpiredBatches',
+      affectedRows: res.affectedRows,
+      detail: `标记过期批次: ${res.affectedRows}行`,
+    };
+  } catch (e: any) {
+    return { fixName: 'fixExpiredBatches', affectedRows: 0, detail: `修复失败: ${e.message}` };
+  }
+}
+
 export async function runAllFixes(): Promise<FixResult[]> {
   const results: FixResult[] = [];
 
@@ -159,6 +239,7 @@ export async function runAllFixes(): Promise<FixResult[]> {
   results.push(await fixInventoryBatchConsistency());
   results.push(await fixPurchaseOrderLineMaterialRef());
   results.push(await fixBomLineMaterialRef());
+  results.push(await fixExpiredBatches());
 
   await execute(`
     INSERT INTO sys_daily_check_log (check_date, check_type, error_count, error_detail, status)
