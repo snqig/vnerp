@@ -30,12 +30,12 @@ export async function GET(request: NextRequest) {
         status,
         permission,
         component,
-        keep_alive,
-        hidden,
+        is_cache as keep_alive,
+        is_visible as hidden,
         create_time,
         update_time
       FROM sys_menu
-      WHERE deleted = 0
+      WHERE status = 1
     `;
     const params: any[] = [];
 

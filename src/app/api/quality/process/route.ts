@@ -84,7 +84,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       sc.tolerance,
       sc.quality_manager as qualityManager
     FROM prd_process_card pc
-    LEFT JOIN prd_standard_card sc ON pc.product_code = sc.id
+    LEFT JOIN prd_standard_card sc ON CAST(pc.product_code AS UNSIGNED) = sc.id
     WHERE pc.deleted = 0 AND pc.burdening_status >= 1
   `;
 

@@ -29,7 +29,11 @@ export class Money {
     if (this.currency !== other.currency) {
       throw new DomainError('币种不一致，无法相减');
     }
-    return new Money(Math.round((this.amount - other.amount) * 100) / 100, this.currency);
+    const result = Math.round((this.amount - other.amount) * 100) / 100;
+    if (result < 0) {
+      throw new DomainError('金额相减结果不能为负数');
+    }
+    return new Money(result, this.currency);
   }
 
   multiply(factor: number): Money {

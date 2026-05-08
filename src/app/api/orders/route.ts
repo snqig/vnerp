@@ -54,10 +54,19 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const order = (orders as any[])[0];
     
     // 获取订单明细
-    const items = await query(
+    let items = await query(
       'SELECT * FROM sal_order_item WHERE order_id = ?',
       [order.id]
     );
+
+    if (!items || (items as any[]).length === 0) {
+      items = await query(
+        `SELECT od.material_name, od.quantity, od.unit, od.unit_price, od.total_amount as total_price
+         FROM sal_order_detail od
+         WHERE od.order_id = ?`,
+        [order.id]
+      );
+    }
 
     const orderData = {
       id: order.id,
@@ -104,10 +113,19 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   const orderList = await Promise.all(
     (orders as any[]).map(async (order: any) => {
-      const items = await query(
+      let items = await query(
         'SELECT * FROM sal_order_item WHERE order_id = ?',
         [order.id]
       );
+
+      if (!items || (items as any[]).length === 0) {
+        items = await query(
+          `SELECT od.material_name, od.quantity, od.unit, od.unit_price, od.total_amount as total_price
+           FROM sal_order_detail od
+           WHERE od.order_id = ?`,
+          [order.id]
+        );
+      }
 
       return {
         id: order.id,

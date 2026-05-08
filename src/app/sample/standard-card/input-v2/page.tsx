@@ -535,7 +535,7 @@ function InputV2PageContent() {
                       ? 'bg-blue-500 text-white'
                       : isCompleted
                       ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-muted text-muted-foreground hover:bg-accent'
                   }`}
                 >
                   {isCompleted ? (
@@ -632,7 +632,7 @@ function InputV2PageContent() {
                             {filteredCustomers.map((customer) => (
                               <div
                                 key={customer.id}
-                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                                className="px-4 py-2 hover:bg-accent/50 cursor-pointer border-b last:border-b-0"
                                 onClick={() => handleSelectCustomer(customer)}
                               >
                                 <div className="font-medium">{customer.customerName}</div>

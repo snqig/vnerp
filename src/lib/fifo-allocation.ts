@@ -45,22 +45,19 @@ export async function allocateFIFO(
   conn: any,
   materialId: number,
   warehouseId: number,
-  requiredQty: number
+  requiredQty: number,
+  options?: { allowExpired?: boolean }
 ): Promise<FIFOAllocationResult> {
+  const allowExpired = options?.allowExpired ?? false;
+
   const [batches]: any = await conn.query(
     `SELECT
       id, batch_no, material_id, material_code, material_name,
       available_qty, unit_price, inbound_date, unit, expire_date, opened_at, version
     FROM inv_inventory_batch
     WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 'normal'
+    ${allowExpired ? '' : 'AND (expire_date IS NULL OR expire_date >= CURDATE())'}
     ORDER BY
-      CASE
-        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 0 THEN 0
-        WHEN opened_at IS NOT NULL THEN 1
-        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 30 THEN 2
-        WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 60 THEN 3
-        ELSE 4
-      END,
       CASE WHEN opened_at IS NOT NULL THEN opened_at ELSE inbound_date END ASC,
       expire_date ASC,
       inbound_date ASC,

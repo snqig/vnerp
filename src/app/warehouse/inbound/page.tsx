@@ -877,7 +877,7 @@ export default function InboundManagementPage() {
                     ? `${firstItem.material_spec} / ${firstItem.quantity || 0} ${firstItem.unit || ''}`
                     : `共 ${record.total_quantity || 0} 件`;
                   return (
-                    <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted transition-colors">
                       <div className="flex items-center gap-3 mr-4">
                         <Checkbox
                           checked={selectedRecords.includes(record.id)}

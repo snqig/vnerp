@@ -80,8 +80,15 @@ function buildQueryConditions(params: {
   }
 
   if (params.status !== undefined && params.status !== '') {
-    sql += ` AND status = ?`;
-    values.push(parseInt(params.status));
+    const statusNum = parseInt(params.status);
+    if (!isNaN(statusNum)) {
+      sql += ` AND status = ?`;
+      values.push(statusNum);
+    } else if (params.status === 'active') {
+      sql += ` AND status = 1`;
+    } else if (params.status === 'inactive') {
+      sql += ` AND status = 0`;
+    }
   }
 
   sql += ` ORDER BY create_time DESC`;

@@ -897,7 +897,7 @@ export default function QualityProcessPage() {
                         <span className="text-muted-foreground">印刷方式:</span>
                         <span>{selectedProcess.print_type}</span>
                         <span className="text-muted-foreground">计划数量:</span>
-                        <span>{selectedProcess.plan_qty.toLocaleString()}</span>
+                        <span>{(selectedProcess.plan_qty ?? 0).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -992,7 +992,7 @@ export default function QualityProcessPage() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">计划数量:</span>
-                        <span className="ml-2">{selectedProcess.plan_qty.toLocaleString()}</span>
+                        <span className="ml-2">{(selectedProcess.plan_qty ?? 0).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -1205,7 +1205,7 @@ export default function QualityProcessPage() {
                         <TableCell>{process.product_name}</TableCell>
                         <TableCell>{process.customer_name}</TableCell>
                         <TableCell>{process.finished_size}</TableCell>
-                        <TableCell>{process.plan_qty.toLocaleString()}</TableCell>
+                        <TableCell>{(process.plan_qty ?? 0).toLocaleString()}</TableCell>
                         <TableCell>{getStatusBadge(process.burdening_status)}</TableCell>
                       </TableRow>
                     ))}
@@ -1286,7 +1286,7 @@ export default function QualityProcessPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">数量:</span>
-                    <span>{selectedProcess.plan_qty.toLocaleString()}</span>
+                    <span>{(selectedProcess.plan_qty ?? 0).toLocaleString()}</span>
                   </div>
                 </div>
 

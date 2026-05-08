@@ -11,7 +11,7 @@ import {
 
 interface CEOData {
   overview: { todayOrders: number; todayProduction: number; todayDelivery: number; inventoryValue: number; orderChange: number; productionChange: number; deliveryChange: number; inventoryChange: number };
-  production: { efficiency: number; activeOrders: number; completedToday: number; warningCount: number; equipmentStatus: { name: string; status: string; efficiency: number }[]; activeWorkOrders?: { work_order_no: string; product_name: string; process_name: string; progress: number; status: string }[] };
+  production: { efficiency: number; activeOrders: number; completedToday: number; warningCount: number; equipmentStatus: { name: string; status: string; efficiency: number }[]; activeWorkOrders?: { work_order_no: string; product_name: string; customer_name: string; status: string; priority: string }[] };
   quality: { passRate: number; totalInspections: number; passedInspections: number; failedInspections: number; recentDefects: any[] };
   finance: { totalReceivable: number; totalPayable: number; monthRevenue: number; monthExpense: number; revenueChange: number; expenseChange: number };
   inventory: { totalItems: number; lowStock: number; totalValue: number; warehouseUtilization: number };
@@ -614,13 +614,12 @@ export default function CEODashboard() {
                     <div className="space-y-1">
                       {activeWorkOrders.map((wo, i) => (
                         <div key={i} className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/5 hover:bg-white/10 transition-colors">
-                          <div className={`w-1.5 h-1.5 rounded-full ${wo.status === 'running' ? 'bg-green-400 animate-pulse' : wo.status === 'paused' ? 'bg-yellow-400' : 'bg-blue-400'}`} />
+                          <div className={`w-1.5 h-1.5 rounded-full ${wo.status === 'producing' ? 'bg-green-400 animate-pulse' : 'bg-blue-400'}`} />
                           <span className="text-xs font-mono text-cyan-300 w-20 truncate">{wo.work_order_no}</span>
                           <span className="text-xs text-white/60 flex-1 truncate">{wo.product_name}</span>
-                          <div className="w-12 bg-white/10 rounded-full h-1.5 overflow-hidden">
-                            <div className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full rounded-full" style={{ width: `${wo.progress}%` }} />
-                          </div>
-                          <span className="text-xs text-white/50 w-8 text-right">{wo.progress}%</span>
+                          <span className={`text-xs ${wo.priority === 'urgent' ? 'text-red-400' : wo.priority === 'high' ? 'text-yellow-400' : 'text-white/40'}`}>
+                            {wo.priority === 'urgent' ? '紧急' : wo.priority === 'high' ? '高' : wo.priority === 'normal' ? '普通' : '低'}
+                          </span>
                         </div>
                       ))}
                     </div>

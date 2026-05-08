@@ -57,6 +57,6 @@ export class InboundItem {
   }
 
   get totalPrice(): number {
-    return this.quantity * this.unitPrice;
+    return Math.round(this.quantity * this.unitPrice * 100) / 100;
   }
 }

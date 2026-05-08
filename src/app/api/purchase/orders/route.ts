@@ -61,10 +61,20 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const params: any[] = [];
 
   if (keyword) {
-    const keywordCondition = ` AND (po.po_no LIKE ? OR po.supplier_name LIKE ?)`;
+    const keywordCondition = `
+      AND (
+        po.po_no LIKE ?
+        OR po.supplier_name LIKE ?
+        OR po.order_date LIKE ?
+        OR EXISTS (
+          SELECT 1 FROM pur_purchase_order_line pol
+          WHERE pol.po_id = po.id AND (pol.material_code LIKE ? OR pol.material_name LIKE ?)
+        )
+      )
+    `;
     sql += keywordCondition;
     countSql += keywordCondition;
-    params.push(`%${keyword}%`, `%${keyword}%`);
+    params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
   }
 
   if (status) {

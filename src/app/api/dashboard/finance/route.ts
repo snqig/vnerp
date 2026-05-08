@@ -72,8 +72,10 @@ export async function GET(request: NextRequest) {
     let topPayables: any[] = [];
     try {
       const rows: any = await query(`
-        SELECT supplier_name, COALESCE(SUM(amount), 0) as total, COUNT(*) as count
-        FROM fin_payable WHERE deleted = 0 AND status = 1 GROUP BY supplier_name ORDER BY total DESC LIMIT 5
+        SELECT s.supplier_name, COALESCE(SUM(p.amount), 0) as total, COUNT(*) as count
+        FROM fin_payable p
+        LEFT JOIN pur_supplier s ON p.supplier_id = s.id
+        WHERE p.deleted = 0 AND p.status = 1 GROUP BY s.supplier_name ORDER BY total DESC LIMIT 5
       `);
       topPayables = Array.isArray(rows) ? rows : [];
     } catch (e) { console.error('finance topPayables failed:', e); }

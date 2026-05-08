@@ -250,7 +250,7 @@ export default function QualityFinalPage() {
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      setFinals(finals.map(f => 
+      setFinals(finals.map((f: FinalInspect) => 
         f.id === selectedFinal.id 
           ? { ...f, burdening_status: 3 }
           : f
@@ -426,7 +426,7 @@ export default function QualityFinalPage() {
                 <TableExportToolbar
                   selectedCount={selectedIds.length}
                   totalCount={filteredFinals.length}
-                  onSelectAll={() => setSelectedIds(filteredFinals.map(f => f.id))}
+                  onSelectAll={() => setSelectedIds(filteredFinals.map((f: FinalInspect) => f.id))}
                   onDeselectAll={() => setSelectedIds([])}
                   onPrint={handlePrint}
                   onExportPDF={() => exportTableToPDF(filteredFinals, '成品检验报告', [
@@ -480,7 +480,7 @@ export default function QualityFinalPage() {
                             if (selectedIds.length === filteredFinals.length) {
                               setSelectedIds([]);
                             } else {
-                              setSelectedIds(filteredFinals.map(f => f.id));
+                              setSelectedIds(filteredFinals.map((f: FinalInspect) => f.id));
                             }
                           }}
                         />
@@ -497,12 +497,12 @@ export default function QualityFinalPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredFinals.map((final, index) => (
+                    {filteredFinals.map((final: FinalInspect, index: number) => (
                       <TableRow key={final.id}>
                         <TableCell>
                           <Checkbox
                             checked={selectedIds.includes(final.id)}
-                            onCheckedChange={() => setSelectedIds(prev => prev.includes(final.id) ? prev.filter(i => i !== final.id) : [...prev, final.id])}
+                            onCheckedChange={() => setSelectedIds((prev: number[]) => prev.includes(final.id) ? prev.filter((i: number) => i !== final.id) : [...prev, final.id])}
                           />
                         </TableCell>
                         <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
@@ -661,13 +661,13 @@ export default function QualityFinalPage() {
                   <div className="space-y-3">
                     <h4 className="font-semibold text-sm text-muted-foreground">工艺流程</h4>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {selectedFinal.process_flow1?.split('-').map((step, index, arr) => (
+                      {selectedFinal.process_flow1?.split('-').map((step: string, index: number, arr: string[]) => (
                         <div key={index} className="flex items-center">
                           <Badge variant="outline">{step}</Badge>
                           {index < arr.length - 1 && <span className="mx-1 text-muted-foreground">→</span>}
                         </div>
                       ))}
-                      {selectedFinal.process_flow2?.split('-').map((step, index, arr) => (
+                      {selectedFinal.process_flow2?.split('-').map((step: string, index: number, arr: string[]) => (
                         <div key={`2-${index}`} className="flex items-center">
                           <span className="mx-1 text-muted-foreground">→</span>
                           <Badge variant="outline">{step}</Badge>

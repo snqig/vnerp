@@ -1104,7 +1104,7 @@ export default function EmployeePage() {
                           onCheckedChange={toggleSelectAll}
                         />
                       </TableHead>
-                      <TableHead className="w-16 cursor-pointer hover:bg-gray-100" onClick={() => handleSort('id')}>
+                      <TableHead className="w-16 cursor-pointer hover:bg-muted/50" onClick={() => handleSort('id')}>
                         <div className="flex items-center gap-1">
                           序号
                           {sortConfig.key === 'id' && (
@@ -1113,7 +1113,7 @@ export default function EmployeePage() {
                         </div>
                       </TableHead>
                       <TableHead>照片</TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('employee_no')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('employee_no')}>
                         <div className="flex items-center gap-1">
                           员工编号
                           {sortConfig.key === 'employee_no' && (
@@ -1121,7 +1121,7 @@ export default function EmployeePage() {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('name')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('name')}>
                         <div className="flex items-center gap-1">
                           姓名
                           {sortConfig.key === 'name' && (
@@ -1129,7 +1129,7 @@ export default function EmployeePage() {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('gender')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('gender')}>
                         <div className="flex items-center gap-1">
                           性别
                           {sortConfig.key === 'gender' && (
@@ -1137,7 +1137,7 @@ export default function EmployeePage() {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('age')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('age')}>
                         <div className="flex items-center gap-1">
                           年龄
                           {sortConfig.key === 'age' && (
@@ -1145,7 +1145,7 @@ export default function EmployeePage() {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('dept_name')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('dept_name')}>
                         <div className="flex items-center gap-1">
                           部门
                           {sortConfig.key === 'dept_name' && (
@@ -1153,7 +1153,7 @@ export default function EmployeePage() {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('section')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('section')}>
                         <div className="flex items-center gap-1">
                           课室
                           {sortConfig.key === 'section' && (
@@ -1161,7 +1161,7 @@ export default function EmployeePage() {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('position')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('position')}>
                         <div className="flex items-center gap-1">
                           职位
                           {sortConfig.key === 'position' && (
@@ -1169,7 +1169,7 @@ export default function EmployeePage() {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('entry_date')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('entry_date')}>
                         <div className="flex items-center gap-1">
                           入职日期
                           {sortConfig.key === 'entry_date' && (
@@ -1177,7 +1177,7 @@ export default function EmployeePage() {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('education')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('education')}>
                         <div className="flex items-center gap-1">
                           学历
                           {sortConfig.key === 'education' && (
@@ -1185,7 +1185,7 @@ export default function EmployeePage() {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('native_place')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('native_place')}>
                         <div className="flex items-center gap-1">
                           籍贯
                           {sortConfig.key === 'native_place' && (
@@ -1193,7 +1193,7 @@ export default function EmployeePage() {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('phone')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('phone')}>
                         <div className="flex items-center gap-1">
                           联系方式
                           {sortConfig.key === 'phone' && (
@@ -1201,7 +1201,7 @@ export default function EmployeePage() {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-gray-100" onClick={() => handleSort('status')}>
+                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('status')}>
                         <div className="flex items-center gap-1">
                           状态
                           {sortConfig.key === 'status' && (

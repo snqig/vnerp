@@ -311,7 +311,7 @@ export default function PermissionsSettingsPage() {
                           className={`p-3 rounded-lg cursor-pointer transition-colors ${
                             selectedRole.id === role.id
                               ? 'bg-blue-50 border-2 border-blue-200'
-                              : 'hover:bg-gray-50 border-2 border-transparent'
+                              : 'hover:bg-muted border-2 border-transparent'
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -388,7 +388,7 @@ export default function PermissionsSettingsPage() {
                                 className={`flex items-start gap-3 p-3 rounded-lg border ${
                                   selectedRole.isSystem
                                     ? 'opacity-60'
-                                    : 'hover:bg-gray-50 cursor-pointer'
+                                    : 'hover:bg-muted cursor-pointer'
                                 }`}
                                 onClick={() => togglePermission(perm.id)}
                               >

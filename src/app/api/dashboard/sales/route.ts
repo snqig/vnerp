@@ -41,8 +41,10 @@ export async function GET(request: NextRequest) {
     let topCustomers: any[] = [];
     try {
       const rows: any = await query(`
-        SELECT customer_name, COUNT(*) as order_count, COALESCE(SUM(total_amount), 0) as total_amount
-        FROM sal_order WHERE deleted = 0 GROUP BY customer_name ORDER BY total_amount DESC LIMIT 5
+        SELECT c.customer_name, COUNT(*) as order_count, COALESCE(SUM(o.total_amount), 0) as total_amount
+        FROM sal_order o
+        LEFT JOIN crm_customer c ON o.customer_id = c.id
+        WHERE o.deleted = 0 GROUP BY c.customer_name ORDER BY total_amount DESC LIMIT 5
       `);
       topCustomers = Array.isArray(rows) ? rows : [];
     } catch (e) { console.error('sales topCustomers failed:', e); }
@@ -59,8 +61,10 @@ export async function GET(request: NextRequest) {
     let recentOrders: any[] = [];
     try {
       const rows: any = await query(`
-        SELECT id, order_no, customer_name, total_amount, status, delivery_date, create_time
-        FROM sal_order WHERE deleted = 0 ORDER BY create_time DESC LIMIT 10
+        SELECT o.id, o.order_no, c.customer_name, o.total_amount, o.status, o.delivery_date, o.create_time
+        FROM sal_order o
+        LEFT JOIN crm_customer c ON o.customer_id = c.id
+        WHERE o.deleted = 0 ORDER BY o.create_time DESC LIMIT 10
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
     } catch (e) { console.error('sales recentOrders failed:', e); }

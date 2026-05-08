@@ -7,6 +7,7 @@ import {
   InboundOrderCancelledEvent,
   InboundOrderCreatedEvent,
   InboundOrderSubmittedEvent,
+  InboundOrderUnapprovedEvent,
 } from '../events/InboundOrderEvents';
 
 export interface InboundOrderProps {
@@ -19,6 +20,7 @@ export interface InboundOrderProps {
   orderType?: string;
   inboundDate?: string;
   remark?: string;
+  operatorId?: number;
   items: InboundItemProps[];
   totalAmount?: number;
   totalQuantity?: number;
@@ -201,6 +203,24 @@ export class InboundOrder {
       new InboundOrderCancelledEvent({
         orderId: this.id!,
         orderNo: this.orderNo,
+      })
+    );
+  }
+
+  unapprove(): void {
+    this._status = this._status.transitionTo('pending');
+    this._inspectionStatus = 0;
+    this._financePosted = false;
+    this._domainEvents.push(
+      new InboundOrderUnapprovedEvent({
+        orderId: this.id!,
+        orderNo: this.orderNo,
+        warehouseId: this.warehouseId,
+        items: this._items.map(item => ({
+          materialId: item.materialId,
+          batchNo: item.batchNo,
+          quantity: item.quantity,
+        })),
       })
     );
   }

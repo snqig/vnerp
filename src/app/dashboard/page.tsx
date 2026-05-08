@@ -247,7 +247,7 @@ export default function DashboardPage() {
                       const Icon = iconMap[a.type] || Activity;
                       const colorMap: Record<string, string> = { high: 'text-red-600 bg-red-50', medium: 'text-orange-600 bg-orange-50', low: 'text-blue-600 bg-blue-50' };
                       return (
-                        <div key={i} className="flex items-start space-x-4 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                        <div key={i} className="flex items-start space-x-4 p-3 rounded-lg border hover:bg-muted transition-colors">
                           <div className={`p-2 rounded-lg ${colorMap[a.severity] || 'text-gray-600 bg-gray-50'}`}>
                             <Icon className="h-4 w-4" />
                           </div>
@@ -270,7 +270,7 @@ export default function DashboardPage() {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Link href="/dashboard/production">
-            <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
+            <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-blue-100 rounded-lg"><Factory className="h-5 w-5 text-blue-600" /></div>
@@ -281,7 +281,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           <Link href="/dashboard/warehouse">
-            <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
+            <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-green-100 rounded-lg"><Package className="h-5 w-5 text-green-600" /></div>
@@ -292,7 +292,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           <Link href="/dashboard/sales">
-            <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
+            <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-orange-100 rounded-lg"><DollarSign className="h-5 w-5 text-orange-600" /></div>
@@ -303,7 +303,7 @@ export default function DashboardPage() {
             </Card>
           </Link>
           <Link href="/dashboard/quality">
-            <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
+            <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-purple-100 rounded-lg"><CheckCircle className="h-5 w-5 text-purple-600" /></div>

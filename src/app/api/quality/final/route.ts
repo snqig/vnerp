@@ -54,19 +54,19 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       pc.create_user_name as createUserName,
       pc.create_time as createTime,
       pc.update_time as updateTime,
-      sc.customer_name as customerName,
-      sc.customer_code as customerCode,
-      sc.process_flow1 as processFlow1,
-      sc.process_flow2 as processFlow2,
-      sc.print_type as printType,
-      sc.finished_size as finishedSize,
-      sc.tolerance,
-      sc.quality_manager as qualityManager,
-      sc.packing_type as packingType,
-      sc.slice_per_box as slicePerBox,
-      sc.slice_per_bundle as slicePerBundle
+      COALESCE(sc.customer_name, pc.customer_name) as customerName,
+      COALESCE(sc.customer_code, '') as customerCode,
+      COALESCE(sc.process_flow1, '') as processFlow1,
+      COALESCE(sc.process_flow2, '') as processFlow2,
+      COALESCE(sc.print_type, pc.material_spec) as printType,
+      COALESCE(sc.finished_size, '') as finishedSize,
+      COALESCE(sc.tolerance, '') as tolerance,
+      COALESCE(sc.quality_manager, '') as qualityManager,
+      COALESCE(sc.packing_type, '') as packingType,
+      COALESCE(sc.slice_per_box, '') as slicePerBox,
+      COALESCE(sc.slice_per_bundle, '') as slicePerBundle
     FROM prd_process_card pc
-    LEFT JOIN prd_standard_card sc ON pc.product_code = sc.id
+    LEFT JOIN prd_standard_card sc ON CAST(pc.product_code AS UNSIGNED) = sc.id
     WHERE pc.deleted = 0 AND pc.burdening_status >= 2
   `;
 

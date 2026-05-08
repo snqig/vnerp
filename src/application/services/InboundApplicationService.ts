@@ -2,7 +2,9 @@ import { IInboundOrderRepository } from '@/domain/warehouse/repositories/IInboun
 import { InboundOrder, InboundOrderProps } from '@/domain/warehouse/aggregates/InboundOrder';
 import { DomainError, NotFoundError, VersionConflictError, InvalidTransitionError } from '@/domain/shared/DomainTypes';
 import { EventBus } from '@/infrastructure/event-bus/EventBus';
-import { query } from '@/lib/db';
+import { DomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutbox';
+import { query, transaction } from '@/lib/db';
+import { secureLog } from '@/lib/logger';
 
 export class InboundApplicationService {
   constructor(
@@ -31,11 +33,9 @@ export class InboundApplicationService {
     const order = InboundOrder.create(props);
     const result = await this.orderRepo.save(order);
 
-    const events = order.getDomainEvents();
-    for (const event of events) {
-      await this.eventBus.publish(event);
+    if (order.id) {
+      await this.persistAndPublishEvents(order.id, order);
     }
-    order.clearDomainEvents();
 
     return result;
   }
@@ -52,20 +52,26 @@ export class InboundApplicationService {
     const previousStatus = order.status.value;
     order.approve(warehouseName);
 
-    const updated = await this.orderRepo.updateStatus(id, 'completed', previousStatus);
-    if (!updated) {
-      const currentOrder = await this.orderRepo.findById(id);
-      if (!currentOrder) throw new NotFoundError('入库单不存在');
-      throw new VersionConflictError();
-    }
+    await transaction(async (conn) => {
+      const [result]: any = await conn.execute(
+        "UPDATE inv_inbound_order SET status = 'approved', update_time = NOW() WHERE id = ? AND status = ?",
+        [id, previousStatus === 'completed' ? 'approved' : previousStatus]
+      );
+      if (result.affectedRows === 0) {
+        throw new VersionConflictError();
+      }
 
-    await this.orderRepo.updateInspectionAndFinance(id, 3, true);
+      await conn.execute(
+        "UPDATE inv_inbound_order SET qc_status = 'pass', update_time = NOW() WHERE id = ?",
+        [id]
+      );
 
-    const events = order.getDomainEvents();
-    for (const event of events) {
-      await this.eventBus.publish(event);
-    }
+      const events = order.getDomainEvents();
+      await DomainEventOutbox.saveEvents(conn, 'InboundOrder', id, events);
+    });
+
     order.clearDomainEvents();
+    this.publishOutboxEventsAsync(id);
 
     return { id, status: 'completed' };
   }
@@ -81,11 +87,7 @@ export class InboundApplicationService {
       throw new VersionConflictError();
     }
 
-    const events = order.getDomainEvents();
-    for (const event of events) {
-      await this.eventBus.publish(event);
-    }
-    order.clearDomainEvents();
+    await this.persistAndPublishEvents(id, order);
 
     return { id, status: 'pending' };
   }
@@ -101,11 +103,7 @@ export class InboundApplicationService {
       throw new VersionConflictError();
     }
 
-    const events = order.getDomainEvents();
-    for (const event of events) {
-      await this.eventBus.publish(event);
-    }
-    order.clearDomainEvents();
+    await this.persistAndPublishEvents(id, order);
 
     return { id, status: 'cancelled' };
   }
@@ -118,5 +116,59 @@ export class InboundApplicationService {
     }
 
     await this.orderRepo.softDelete(id);
+  }
+
+  async unapproveOrder(id: number): Promise<{ id: number; status: string }> {
+    const order = await this.getOrderById(id);
+
+    const previousStatus = order.status.value;
+    order.unapprove();
+
+    const updated = await this.orderRepo.updateStatus(id, 'pending', previousStatus);
+    if (!updated) {
+      throw new VersionConflictError();
+    }
+
+    await this.persistAndPublishEvents(id, order);
+
+    return { id, status: 'pending' };
+  }
+
+  private async persistAndPublishEvents(aggregateId: number, order: InboundOrder): Promise<void> {
+    const events = order.getDomainEvents();
+    if (events.length === 0) return;
+
+    await transaction(async (conn) => {
+      await DomainEventOutbox.saveEvents(conn, 'InboundOrder', aggregateId, events);
+    });
+
+    order.clearDomainEvents();
+    this.publishOutboxEventsAsync(aggregateId);
+  }
+
+  private publishOutboxEventsAsync(aggregateId: number): void {
+    setImmediate(async () => {
+      try {
+        const pendingEvents = await DomainEventOutbox.fetchPendingEvents();
+        for (const eventRow of pendingEvents) {
+          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'InboundOrder') continue;
+          try {
+            const event = JSON.parse(eventRow.payload);
+            const domainEvent = { ...event, occurredAt: new Date(event.occurredAt) };
+            await this.eventBus.publish(domainEvent);
+            await DomainEventOutbox.markAsProcessed(eventRow.id);
+          } catch (error: any) {
+            secureLog('error', 'Outbox event publish failed', {
+              eventId: eventRow.id,
+              eventType: eventRow.event_type,
+              error: error.message,
+            });
+            await DomainEventOutbox.markAsFailed(eventRow.id, error.message);
+          }
+        }
+      } catch (error) {
+        secureLog('error', 'Outbox processing failed', { aggregateId, error: String(error) });
+      }
+    });
   }
 }

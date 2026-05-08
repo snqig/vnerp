@@ -100,14 +100,14 @@ const DIE_STATUS_MAP: Record<string, { label: string; color: string }> = {
   in_use: { label: '使用中', color: 'bg-blue-100 text-blue-800' },
   maintenance_needed: { label: '需保养', color: 'bg-yellow-100 text-yellow-800' },
   re_rule_needed: { label: '需重做', color: 'bg-orange-100 text-orange-800' },
-  scrap: { label: '已报废', color: 'bg-gray-100 text-gray-800' },
+  scrap: { label: '已报废', color: 'bg-secondary text-secondary-foreground' },
 };
 
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
   1: { label: '正常', color: 'bg-green-100 text-green-800' },
   2: { label: '预警', color: 'bg-yellow-100 text-yellow-800' },
   3: { label: '已锁定', color: 'bg-red-100 text-red-800' },
-  4: { label: '报废', color: 'bg-gray-100 text-gray-800' },
+  4: { label: '报废', color: 'bg-secondary text-secondary-foreground' },
 };
 
 const MAINTENANCE_TYPE_MAP: Record<string, { label: string; color: string }> = {
@@ -720,7 +720,7 @@ export default function DieTemplatePage() {
         <div className="grid gap-4 md:grid-cols-6">
           <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('all')}>
             <CardContent className="pt-4">
-              <div className="text-sm text-gray-500">总数</div>
+              <div className="text-sm text-muted-foreground">总数</div>
               <div className="text-2xl font-bold">{dashboardStats.total_count || 0}</div>
             </CardContent>
           </Card>
@@ -730,7 +730,7 @@ export default function DieTemplatePage() {
               <div className="text-2xl font-bold text-green-600">{dashboardStats.available_count || 0}</div>
             </CardContent>
           </Card>
-          <Card className="border-yellow-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('maintenance_needed')}>
+          <Card className="border-yellow-500/30 dark:border-yellow-400/30 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('maintenance_needed')}>
             <CardContent className="pt-4">
               <div className="text-sm text-yellow-600">需保养</div>
               <div className="text-2xl font-bold text-yellow-600">{dashboardStats.warning_count || 0}</div>
@@ -744,8 +744,8 @@ export default function DieTemplatePage() {
           </Card>
           <Card className="border-gray-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('scrap')}>
             <CardContent className="pt-4">
-              <div className="text-sm text-gray-500">已报废</div>
-              <div className="text-2xl font-bold text-gray-500">{dashboardStats.scrap_count || 0}</div>
+              <div className="text-sm text-muted-foreground">已报废</div>
+              <div className="text-2xl font-bold text-muted-foreground">{dashboardStats.scrap_count || 0}</div>
             </CardContent>
           </Card>
           <Card className="border-blue-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('maintenance_due')}>
@@ -757,13 +757,13 @@ export default function DieTemplatePage() {
         </div>
 
         {warningList.length > 0 && (
-          <Card className="border-yellow-200 bg-yellow-50">
+          <Card className="border-yellow-500/30 bg-yellow-500/10 dark:border-yellow-400/30 dark:bg-yellow-900/15">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-yellow-700">
+              <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
                 <AlertTriangle className="h-5 w-5" />
                 寿命预警 ({warningList.length})
               </CardTitle>
-              <CardDescription className="text-yellow-600">
+              <CardDescription className="text-yellow-600 dark:text-yellow-300">
                 以下刀模/网版已达到预警使用次数，请注意及时保养或更换！
               </CardDescription>
             </CardHeader>
@@ -787,27 +787,27 @@ export default function DieTemplatePage() {
                       <TableCell className="font-mono">{item.template_code}</TableCell>
                       <TableCell>{item.template_name}</TableCell>
                       <TableCell>
-                        <Badge className={(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.color || 'bg-gray-100'}>
+                        <Badge className={(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.color || 'bg-secondary'}>
                           {(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.label || '-'}
                         </Badge>
                       </TableCell>
                       <TableCell>{item.cumulative_impressions || item.current_usage} / {item.max_impressions || item.max_usage}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                             <div className={`h-full ${getUsageBarColor(item)}`} style={{ width: `${getUsagePercent(item)}%` }} />
                           </div>
                           <span className="text-sm font-medium">{getUsagePercent(item)}%</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color || 'bg-gray-100'}>
+                        <Badge className={(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color || 'bg-secondary'}>
                           {(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label || '-'}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                             <div className={`h-full ${getMaintenanceBarColor(item)}`} style={{ width: `${getMaintenanceProgress(item)}%` }} />
                           </div>
                           <span className="text-xs">{getMaintenanceProgress(item)}%</span>
@@ -965,7 +965,7 @@ export default function DieTemplatePage() {
                         <TableCell className="font-mono">{item.template_code}</TableCell>
                         <TableCell className="font-medium">{item.template_name}</TableCell>
                         <TableCell>
-                          <Badge className={(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.color || 'bg-gray-100'}>
+                          <Badge className={(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.color || 'bg-secondary'}>
                             {(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.label || '-'}
                           </Badge>
                         </TableCell>
@@ -978,20 +978,20 @@ export default function DieTemplatePage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                               <div className={`h-full ${getUsageBarColor(item)}`} style={{ width: `${getUsagePercent(item)}%` }} />
                             </div>
                             <span className="text-sm font-medium">{getUsagePercent(item)}%</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color || 'bg-gray-100'}>
+                          <Badge className={(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color || 'bg-secondary'}>
                             {(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label || '-'}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                               <div className={`h-full ${getMaintenanceBarColor(item)}`} style={{ width: `${getMaintenanceProgress(item)}%` }} />
                             </div>
                             <span className="text-xs">{item.maintenance_count || 0}次</span>
@@ -1064,7 +1064,7 @@ export default function DieTemplatePage() {
                           <TableCell className="font-mono">{record.die_code}</TableCell>
                           <TableCell>{record.template_name}</TableCell>
                           <TableCell>
-                            <Badge className={MAINTENANCE_TYPE_MAP[record.maintenance_type]?.color || 'bg-gray-100'}>
+                            <Badge className={MAINTENANCE_TYPE_MAP[record.maintenance_type]?.color || 'bg-secondary'}>
                               {MAINTENANCE_TYPE_MAP[record.maintenance_type]?.label || record.maintenance_type}
                             </Badge>
                           </TableCell>
@@ -1073,7 +1073,7 @@ export default function DieTemplatePage() {
                           <TableCell>{record.cost ? `¥${record.cost}` : '-'}</TableCell>
                           <TableCell>{record.technician_name || '-'}</TableCell>
                           <TableCell>
-                            <Badge className={MAINTENANCE_STATUS_MAP[record.status]?.color || 'bg-gray-100'}>
+                            <Badge className={MAINTENANCE_STATUS_MAP[record.status]?.color || 'bg-secondary'}>
                               {MAINTENANCE_STATUS_MAP[record.status]?.label || record.status}
                             </Badge>
                           </TableCell>
@@ -1265,16 +1265,16 @@ export default function DieTemplatePage() {
               {selectedItem && (
                 <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">当前累计</span>
+                    <span className="text-muted-foreground">当前累计</span>
                     <span className="font-medium">{selectedItem.cumulative_impressions || selectedItem.current_usage} / {selectedItem.max_impressions || selectedItem.max_usage}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">使用率</span>
+                    <span className="text-muted-foreground">使用率</span>
                     <span className="font-medium">{getUsagePercent(selectedItem)}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">生命周期</span>
-                    <Badge className={(DIE_STATUS_MAP[selectedItem.die_status] || STATUS_MAP[selectedItem.status])?.color || 'bg-gray-100'}>
+                    <span className="text-muted-foreground">生命周期</span>
+                    <Badge className={(DIE_STATUS_MAP[selectedItem.die_status] || STATUS_MAP[selectedItem.status])?.color || 'bg-secondary'}>
                       {(DIE_STATUS_MAP[selectedItem.die_status] || STATUS_MAP[selectedItem.status])?.label || '-'}
                     </Badge>
                   </div>
@@ -1304,15 +1304,15 @@ export default function DieTemplatePage() {
               {selectedItem && (
                 <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">累计使用</span>
+                    <span className="text-muted-foreground">累计使用</span>
                     <span className="font-medium">{selectedItem.cumulative_impressions || selectedItem.current_usage} / {selectedItem.max_impressions || selectedItem.max_usage}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">已保养次数</span>
+                    <span className="text-muted-foreground">已保养次数</span>
                     <span className="font-medium">{selectedItem.maintenance_count || 0}次</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">距上次保养</span>
+                    <span className="text-muted-foreground">距上次保养</span>
                     <span className="font-medium">{(selectedItem.cumulative_impressions || 0) - (selectedItem.last_maintenance_impressions || 0)}次</span>
                   </div>
                 </div>
@@ -1369,31 +1369,31 @@ export default function DieTemplatePage() {
             {detailData && (
               <div className="space-y-4 py-4">
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div><span className="text-gray-500">编号：</span>{detailData.template_code}</div>
-                  <div><span className="text-gray-500">名称：</span>{detailData.template_name}</div>
-                  <div><span className="text-gray-500">资产类型：</span>
-                    <Badge className={(ASSET_TYPE_MAP[detailData.asset_type] || TYPE_MAP[detailData.template_type])?.color || 'bg-gray-100'}>
+                  <div><span className="text-muted-foreground">编号：</span>{detailData.template_code}</div>
+                  <div><span className="text-muted-foreground">名称：</span>{detailData.template_name}</div>
+                  <div><span className="text-muted-foreground">资产类型：</span>
+                    <Badge className={(ASSET_TYPE_MAP[detailData.asset_type] || TYPE_MAP[detailData.template_type])?.color || 'bg-secondary'}>
                       {(ASSET_TYPE_MAP[detailData.asset_type] || TYPE_MAP[detailData.template_type])?.label || '-'}
                     </Badge>
                   </div>
-                  <div><span className="text-gray-500">生命周期：</span>
-                    <Badge className={(DIE_STATUS_MAP[detailData.die_status] || STATUS_MAP[detailData.status])?.color || 'bg-gray-100'}>
+                  <div><span className="text-muted-foreground">生命周期：</span>
+                    <Badge className={(DIE_STATUS_MAP[detailData.die_status] || STATUS_MAP[detailData.status])?.color || 'bg-secondary'}>
                       {(DIE_STATUS_MAP[detailData.die_status] || STATUS_MAP[detailData.status])?.label || '-'}
                     </Badge>
                   </div>
-                  <div><span className="text-gray-500">规格：</span>{detailData.specification || '-'}</div>
-                  <div><span className="text-gray-500">材质：</span>{detailData.material || '-'}</div>
-                  <div><span className="text-gray-500">布局：</span>{detailData.layout_type === 'multi_row' ? '多排' : '单排'}</div>
-                  <div><span className="text-gray-500">单次出件：</span>{detailData.pieces_per_impression || 1}</div>
+                  <div><span className="text-muted-foreground">规格：</span>{detailData.specification || '-'}</div>
+                  <div><span className="text-muted-foreground">材质：</span>{detailData.material || '-'}</div>
+                  <div><span className="text-muted-foreground">布局：</span>{detailData.layout_type === 'multi_row' ? '多排' : '单排'}</div>
+                  <div><span className="text-muted-foreground">单次出件：</span>{detailData.pieces_per_impression || 1}</div>
                 </div>
                 <div className="border-t pt-3">
                   <h4 className="font-medium mb-2">寿命信息</h4>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">使用率</span>
+                      <span className="text-sm text-muted-foreground">使用率</span>
                       <span className="text-sm font-medium">{getUsagePercent(detailData)}%</span>
                     </div>
-                    <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
                       <div className={`h-full ${getUsageBarColor(detailData)}`} style={{ width: `${getUsagePercent(detailData)}%` }} />
                     </div>
                     <div className="text-xs text-gray-400">
@@ -1404,30 +1404,30 @@ export default function DieTemplatePage() {
                 <div className="border-t pt-3">
                   <h4 className="font-medium mb-2">保养信息</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div><span className="text-gray-500">已保养：</span>{detailData.maintenance_count || 0}次</div>
-                    <div><span className="text-gray-500">间隔：</span>{detailData.maintenance_interval || '-'}次</div>
-                    <div><span className="text-gray-500">上次保养：</span>{detailData.last_maintenance_date || '-'}</div>
-                    <div><span className="text-gray-500">最后使用：</span>{detailData.last_used_date || '-'}</div>
+                    <div><span className="text-muted-foreground">已保养：</span>{detailData.maintenance_count || 0}次</div>
+                    <div><span className="text-muted-foreground">间隔：</span>{detailData.maintenance_interval || '-'}次</div>
+                    <div><span className="text-muted-foreground">上次保养：</span>{detailData.last_maintenance_date || '-'}</div>
+                    <div><span className="text-muted-foreground">最后使用：</span>{detailData.last_used_date || '-'}</div>
                   </div>
                   <div className="mt-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">保养进度</span>
+                      <span className="text-sm text-muted-foreground">保养进度</span>
                       <span className="text-sm">{getMaintenanceProgress(detailData)}%</span>
                     </div>
-                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mt-1">
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden mt-1">
                       <div className={`h-full ${getMaintenanceBarColor(detailData)}`} style={{ width: `${getMaintenanceProgress(detailData)}%` }} />
                     </div>
                   </div>
                 </div>
                 <div className="border-t pt-3 grid grid-cols-2 gap-2 text-sm">
-                  <div><span className="text-gray-500">单价：</span>¥{detailData.unit_price || 0}</div>
-                  <div><span className="text-gray-500">存放位置：</span>{detailData.storage_location || '-'}</div>
-                  <div><span className="text-gray-500">购买日期：</span>{detailData.purchase_date || '-'}</div>
-                  <div><span className="text-gray-500">二维码：</span>{detailData.qr_code || '-'}</div>
+                  <div><span className="text-muted-foreground">单价：</span>¥{detailData.unit_price || 0}</div>
+                  <div><span className="text-muted-foreground">存放位置：</span>{detailData.storage_location || '-'}</div>
+                  <div><span className="text-muted-foreground">购买日期：</span>{detailData.purchase_date || '-'}</div>
+                  <div><span className="text-muted-foreground">二维码：</span>{detailData.qr_code || '-'}</div>
                 </div>
                 {detailData.remark && (
                   <div className="border-t pt-3 text-sm">
-                    <span className="text-gray-500">备注：</span>{detailData.remark}
+                    <span className="text-muted-foreground">备注：</span>{detailData.remark}
                   </div>
                 )}
               </div>
@@ -1462,13 +1462,13 @@ export default function DieTemplatePage() {
                     <TableCell className="font-mono">{item.template_code}</TableCell>
                     <TableCell>{item.template_name}</TableCell>
                     <TableCell>
-                      <Badge className={(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.color || 'bg-gray-100'}>
+                      <Badge className={(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.color || 'bg-secondary'}>
                         {(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.label || '-'}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
                           <div className={`h-full ${getUsageBarColor(item)}`} style={{ width: `${getUsagePercent(item)}%` }} />
                         </div>
                         <span className="text-sm font-medium">{getUsagePercent(item)}%</span>
@@ -1478,13 +1478,13 @@ export default function DieTemplatePage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color || 'bg-gray-100'}>
+                      <Badge className={(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color || 'bg-secondary'}>
                         {(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label || '-'}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                           <div className={`h-full ${getMaintenanceBarColor(item)}`} style={{ width: `${getMaintenanceProgress(item)}%` }} />
                         </div>
                         <span className="text-xs">{getMaintenanceProgress(item)}%</span>

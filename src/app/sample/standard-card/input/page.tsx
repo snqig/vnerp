@@ -219,7 +219,7 @@ const FileUploadCell = ({
           <button
             type="button"
             onClick={handleClear}
-            className="p-0.5 hover:bg-gray-100 rounded"
+            className="p-0.5 hover:bg-accent/50 rounded"
           >
             <X className="h-3 w-3 text-gray-400" />
           </button>

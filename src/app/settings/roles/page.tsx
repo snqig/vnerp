@@ -289,7 +289,7 @@ export default function RolesPage() {
   const renderMenuTree = (menuList: Menu[], level = 0) => {
     return menuList.map(menu => (
       <div key={menu.id} className={`${level > 0 ? 'ml-6' : ''}`}>
-        <div className="flex items-center gap-2 py-1 hover:bg-gray-50 rounded px-2">
+        <div className="flex items-center gap-2 py-1 hover:bg-muted rounded px-2">
           <Checkbox 
             checked={selectedMenus.includes(menu.id)}
             onCheckedChange={() => toggleMenuSelection(menu.id)}
@@ -312,7 +312,7 @@ export default function RolesPage() {
       case 1:
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">启用</Badge>;
       case 0:
-        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">停用</Badge>;
+        return <Badge className="bg-muted text-muted-foreground hover:bg-muted">停用</Badge>;
       default:
         return <Badge variant="secondary">未知</Badge>;
     }

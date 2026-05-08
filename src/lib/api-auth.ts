@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractToken, verifyToken, getUserInfo, hasPermission, validateResourceAccess, UserInfo } from './auth';
 import { errorResponse } from './api-response';
 
+export type { UserInfo } from './auth';
+
 // 需要认证的API包装器
 export function withAuth(
   handler: (request: NextRequest, userInfo: UserInfo) => Promise<NextResponse>,

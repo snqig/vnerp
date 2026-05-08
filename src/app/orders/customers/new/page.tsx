@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MainLayout } from '@/components/layout';
+import dynamic from 'next/dynamic';
+
+const MainLayout = dynamic(() => import('@/components/layout').then(m => ({ default: m.MainLayout })), { ssr: false });
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

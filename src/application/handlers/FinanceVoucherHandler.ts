@@ -11,46 +11,34 @@ export class FinanceVoucherHandler implements EventHandler<InboundOrderApprovedE
       for (const item of items) {
         const totalItemAmount = item.quantity * item.unitPrice;
 
-        try {
-          const voucherNo = 'FV' + Date.now() + String(item.id || 0).slice(-4);
-          await conn.execute(
-            `INSERT INTO fin_voucher (voucher_no, voucher_date, source_type, source_id, source_no, debit_account, credit_account, amount, cost_price, quantity, batch_no, material_id, material_name, warehouse_id)
-             VALUES (?, CURDATE(), 'inbound', ?, ?, '原材料库存', '应付账款', ?, ?, ?, ?, ?, ?, ?)`,
-            [voucherNo, orderId, orderNo, totalItemAmount, item.unitPrice || 0, item.quantity, item.batchNo, item.materialId, item.materialName, warehouseId]
-          );
-        } catch (e) {
-          secureLog('error', 'Failed to create finance voucher', { orderNo, itemId: item.id });
-        }
+        const voucherNo = 'FV' + Date.now() + String(item.id || 0).slice(-4);
+        await conn.execute(
+          `INSERT INTO fin_voucher (voucher_no, voucher_date, source_type, source_id, source_no, debit_account, credit_account, amount, cost_price, quantity, batch_no, material_id, material_name, warehouse_id)
+           VALUES (?, CURDATE(), 'inbound', ?, ?, '原材料库存', '应付账款', ?, ?, ?, ?, ?, ?, ?)`,
+          [voucherNo, orderId, orderNo, totalItemAmount, item.unitPrice || 0, item.quantity, item.batchNo, item.materialId, item.materialName, warehouseId]
+        );
 
         const transNo = 'TRX' + Date.now() + String(item.id || 0).slice(-4);
-        try {
-          await conn.execute(
-            `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, account_dr, account_cr, create_time)
-             VALUES (?, 'in', 'inbound', ?, ?, ?, ?, ?, ?, ?, ?, '原材料库存', '应付账款', NOW())`,
-            [transNo, orderId, item.materialId, item.materialCode || '', item.batchNo, warehouseId, item.quantity, item.unitPrice || 0, totalItemAmount]
-          );
-        } catch (e) {
-          secureLog('error', 'Failed to create inventory transaction', { orderNo, itemId: item.id });
-        }
+        await conn.execute(
+          `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, account_dr, account_cr, create_time)
+           VALUES (?, 'in', 'inbound', ?, ?, ?, ?, ?, ?, ?, ?, '原材料库存', '应付账款', NOW())`,
+          [transNo, orderId, item.materialId, item.materialCode || '', item.batchNo, warehouseId, item.quantity, item.unitPrice || 0, totalItemAmount]
+        );
       }
 
       if (totalAmount > 0 && supplierName) {
-        try {
-          const [supplierRows]: any = await conn.execute(
-            'SELECT id FROM pur_supplier WHERE supplier_name = ? AND deleted = 0 LIMIT 1',
-            [supplierName]
-          );
-          const supplierId = supplierRows.length > 0 ? supplierRows[0].id : null;
+        const [supplierRows]: any = await conn.execute(
+          'SELECT id FROM pur_supplier WHERE supplier_name = ? AND deleted = 0 LIMIT 1',
+          [supplierName]
+        );
+        const supplierId = supplierRows.length > 0 ? supplierRows[0].id : null;
 
-          const payableNo = 'AP' + Date.now();
-          await conn.execute(
-            `INSERT INTO fin_payable (payable_no, supplier_id, supplier_name, source_type, source_id, source_no, amount, paid_amount, status, due_date, remark, create_time)
-             VALUES (?, ?, ?, 'inbound', ?, ?, ?, 0, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
-            [payableNo, supplierId, supplierName, orderId, orderNo, totalAmount, `采购入库单 ${orderNo} 自动生成`]
-          );
-        } catch (e) {
-          secureLog('error', 'Failed to create payable', { orderNo });
-        }
+        const payableNo = 'AP' + Date.now();
+        await conn.execute(
+          `INSERT INTO fin_payable (payable_no, supplier_id, supplier_name, source_type, source_id, source_no, amount, paid_amount, status, due_date, remark, create_time)
+           VALUES (?, ?, ?, 'inbound', ?, ?, ?, 0, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
+          [payableNo, supplierId, supplierName, orderId, orderNo, totalAmount, `采购入库单 ${orderNo} 自动生成`]
+        );
       }
     });
 

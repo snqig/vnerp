@@ -260,7 +260,7 @@ export default function ProductionDashboard() {
                         <div><span className="text-white/40">客户: </span><span className="text-white/70">{order.customer}</span></div>
                         <div><span className="text-white/40">产品: </span><span className="text-white/70">{order.productName}</span></div>
                         <div><span className="text-white/40">工序: </span><span className="text-white/70">{order.process || '-'}</span></div>
-                        <div><span className="text-white/40">数量: </span><span className="text-white/70">{order.completedQty.toLocaleString()} / {order.planQty.toLocaleString()}</span></div>
+                        <div><span className="text-white/40">数量: </span><span className="text-white/70">{(order.completedQty ?? 0).toLocaleString()} / {(order.planQty ?? 0).toLocaleString()}</span></div>
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-xs">

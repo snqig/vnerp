@@ -187,7 +187,7 @@ export function WarehouseCategoryManager() {
   const getStatusBadge = (status: number) => {
     return status === 1 
       ? <Badge className="bg-green-100 text-green-800">启用</Badge>
-      : <Badge className="bg-gray-100 text-gray-800">停用</Badge>;
+      : <Badge className="bg-secondary text-secondary-foreground">停用</Badge>;
   };
 
   // 使用率计算
@@ -204,11 +204,11 @@ export function WarehouseCategoryManager() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">总分类数</p>
+                <p className="text-sm text-muted-foreground">总分类数</p>
                 <p className="text-2xl font-bold">{stats.total}</p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <Warehouse className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-blue-500/10 rounded-full dark:bg-blue-400/15">
+                <Warehouse className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
           </CardContent>
@@ -217,24 +217,11 @@ export function WarehouseCategoryManager() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">启用分类</p>
-                <p className="text-2xl font-bold text-green-600">{stats.active}</p>
+                <p className="text-sm text-muted-foreground">启用分类</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <Package className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">仓库总数</p>
-                <p className="text-2xl font-bold text-purple-600">{stats.totalWarehouses}</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <Warehouse className="w-6 h-6 text-purple-600" />
+              <div className="p-3 bg-green-500/10 rounded-full dark:bg-green-400/15">
+                <Package className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </CardContent>
@@ -243,11 +230,24 @@ export function WarehouseCategoryManager() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">可用仓库</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.activeWarehouses}</p>
+                <p className="text-sm text-muted-foreground">仓库总数</p>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.totalWarehouses}</p>
               </div>
-              <div className="p-3 bg-orange-100 rounded-full">
-                <Package className="w-6 h-6 text-orange-600" />
+              <div className="p-3 bg-purple-500/10 rounded-full dark:bg-purple-400/15">
+                <Warehouse className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">可用仓库</p>
+                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.activeWarehouses}</p>
+              </div>
+              <div className="p-3 bg-orange-500/10 rounded-full dark:bg-orange-400/15">
+                <Package className="w-6 h-6 text-orange-600 dark:text-orange-400" />
               </div>
             </div>
           </CardContent>
@@ -305,29 +305,29 @@ export function WarehouseCategoryManager() {
               <TableBody>
                 {categories.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       暂无仓库分类数据
                     </TableCell>
                   </TableRow>
                 ) : (
                   categories.map((category) => (
-                    <TableRow key={category.id} className="hover:bg-gray-50">
+                    <TableRow key={category.id} className="hover:bg-muted">
                         <TableCell className="font-medium">{category.code}</TableCell>
                         <TableCell>
                           <div>
-                            <span className="font-medium text-gray-900">{category.name}</span>
+                            <span className="font-medium text-foreground">{category.name}</span>
                             {category.description && (
-                              <p className="text-xs text-gray-500 mt-1 line-clamp-1">{category.description}</p>
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{category.description}</p>
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary" className={(category.warehouse_count || 0) > 0 ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-500'}>
+                          <Badge variant="secondary" className={(category.warehouse_count || 0) > 0 ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 dark:bg-blue-400/15 dark:text-blue-400' : 'bg-gray-100 text-muted-foreground'}>
                             {category.warehouse_count || 0} 个仓库
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-muted-foreground/80">
                             {(category.total_capacity || 0) > 0 ? `${(category.total_capacity || 0).toLocaleString()} / ${(category.total_used_capacity || 0).toLocaleString()}` : '-'}
                           </span>
                         </TableCell>
@@ -335,18 +335,18 @@ export function WarehouseCategoryManager() {
                           <div className="flex items-center gap-2">
                             {(category.total_capacity || 0) > 0 ? (
                               <>
-                                <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                                   <div 
                                     className="h-full bg-blue-500 rounded-full"
                                     style={{ width: `${getUsageRate(category.total_used_capacity || 0, category.total_capacity || 0)}%` }}
                                   />
                                 </div>
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-muted-foreground">
                                   {getUsageRate(category.total_used_capacity || 0, category.total_capacity || 0)}%
                                 </span>
                               </>
                             ) : (
-                              <span className="text-xs text-gray-400">-</span>
+                              <span className="text-xs text-muted-foreground/60">-</span>
                             )}
                           </div>
                         </TableCell>

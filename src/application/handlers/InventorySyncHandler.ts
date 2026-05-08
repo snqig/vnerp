@@ -7,8 +7,10 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
   async handle(event: InboundOrderApprovedEvent): Promise<void> {
     const { warehouseId, items, orderNo } = event.payload;
 
+    const sortedItems = [...items].sort((a, b) => a.materialId - b.materialId);
+
     await transaction(async (conn) => {
-      for (const item of items) {
+      for (const item of sortedItems) {
         const [existingInv]: any = await conn.execute(
           'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
           [item.materialId, warehouseId]
@@ -34,8 +36,8 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
 
         if (existingBatch.length > 0) {
           await conn.execute(
-            'UPDATE inv_inventory_batch SET available_qty = available_qty + ?, update_time = NOW() WHERE id = ?',
-            [item.quantity, existingBatch[0].id]
+            'UPDATE inv_inventory_batch SET available_qty = available_qty + ?, quantity = quantity + ?, update_time = NOW() WHERE id = ?',
+            [item.quantity, item.quantity, existingBatch[0].id]
           );
         } else {
           await conn.execute(

@@ -66,3 +66,21 @@ export class InboundOrderSubmittedEvent implements DomainEvent {
     }
   ) {}
 }
+
+export class InboundOrderUnapprovedEvent implements DomainEvent {
+  readonly eventType = 'inbound.unapproved';
+  readonly occurredAt = new Date();
+
+  constructor(
+    public readonly payload: {
+      orderId: number;
+      orderNo: string;
+      warehouseId: number;
+      items: Array<{
+        materialId: number;
+        batchNo: string;
+        quantity: number;
+      }>;
+    }
+  ) {}
+}

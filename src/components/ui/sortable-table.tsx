@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { TableHead } from '@/components/ui/table';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
@@ -72,5 +73,3 @@ export function useTableSort<T>(data: T[], defaultField: string = '') {
 
   return { sortField, sortDirection, handleSort, sortedData };
 }
-
-import { useState } from 'react';

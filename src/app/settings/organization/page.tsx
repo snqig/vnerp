@@ -348,7 +348,7 @@ export default function OrganizationPage() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                       activeTab === item.key
                         ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        : 'text-foreground hover:bg-muted'
                     }`}
                   >
                     <Icon className="w-4 h-4" />

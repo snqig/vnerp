@@ -1,5 +1,6 @@
 import { getEventBus, EventBus } from '@/infrastructure/event-bus/EventBus';
 import { InventorySyncHandler } from '@/application/handlers/InventorySyncHandler';
+import { InventoryRollbackHandler } from '@/application/handlers/InventoryRollbackHandler';
 import { FinanceVoucherHandler } from '@/application/handlers/FinanceVoucherHandler';
 import { QrCodeGenerationHandler } from '@/application/handlers/QrCodeGenerationHandler';
 import { AuditLogHandler } from '@/application/handlers/AuditLogHandler';
@@ -18,6 +19,10 @@ export function registerEventHandlers(): EventBus {
   eventBus.subscribe('inbound.approved', new QrCodeGenerationHandler());
   eventBus.subscribe('inbound.approved', new AuditLogHandler());
   eventBus.subscribe('inbound.approved', new CacheInvalidationHandler());
+
+  eventBus.subscribe('inbound.unapproved', new InventoryRollbackHandler());
+  eventBus.subscribe('inbound.unapproved', new AuditLogHandler());
+  eventBus.subscribe('inbound.unapproved', new CacheInvalidationHandler());
 
   eventBus.subscribe('inbound.cancelled', new AuditLogHandler());
   eventBus.subscribe('inbound.cancelled', new CacheInvalidationHandler());

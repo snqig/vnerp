@@ -46,16 +46,16 @@ export async function GET(request: NextRequest) {
 
     try {
       const woRows: any = await query(`
-        SELECT work_order_no, product_name, process_name, progress, status
-        FROM prod_work_order WHERE deleted = 0 AND status IN (1,2,3)
+        SELECT work_order_no, product_name, customer_name, status, priority
+        FROM prod_work_order WHERE deleted = 0 AND status IN ('pending','producing')
         ORDER BY update_time DESC LIMIT 20
       `);
       production.activeWorkOrders = Array.isArray(woRows) ? woRows.map((r: any) => ({
         work_order_no: r.work_order_no || '',
         product_name: r.product_name || '',
-        process_name: r.process_name || '',
-        progress: Number(r.progress || 0),
-        status: r.status === 1 ? 'pending' : r.status === 2 ? 'running' : r.status === 3 ? 'paused' : 'done',
+        customer_name: r.customer_name || '',
+        status: r.status,
+        priority: r.priority,
       })) : [];
     } catch (e) { console.error('ceo activeWorkOrders failed:', e); }
 
@@ -75,8 +75,8 @@ export async function GET(request: NextRequest) {
 
     try {
       const rows: any = await query(`
-        SELECT COUNT(*) as total FROM prod_work_order WHERE deleted = 0 AND status IN (1,2,3) AND progress < 100
-        AND (plan_end_time < NOW() OR priority = 1)
+        SELECT COUNT(*) as total FROM prod_work_order WHERE deleted = 0 AND status IN ('pending','producing')
+        AND (plan_end_date < CURDATE() OR priority = 'urgent')
       `);
       if (Array.isArray(rows) && rows.length > 0) production.warningCount = Number(rows[0].total || 0);
     } catch (e) { console.error('ceo warningCount failed:', e); }
@@ -168,14 +168,14 @@ export async function GET(request: NextRequest) {
     let workshopDaily: any[] = [];
     try {
       const rows: any = await query(`
-        SELECT process_name, SUM(plan_qty) as total_qty, SUM(completed_qty) as completed_qty
+        SELECT product_name, SUM(plan_qty) as total_qty
         FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE()
-        GROUP BY process_name ORDER BY total_qty DESC
+        GROUP BY product_name ORDER BY total_qty DESC
       `);
       workshopDaily = Array.isArray(rows) ? rows.map((r: any) => ({
-        name: r.process_name || '',
+        name: r.product_name || '',
         total: Number(r.total_qty || 0),
-        completed: Number(r.completed_qty || 0),
+        completed: Number(r.total_qty || 0),
       })) : [];
     } catch (e) { console.error('ceo workshopDaily failed:', e); }
 
@@ -220,9 +220,9 @@ export async function GET(request: NextRequest) {
 
     let shiftData: any = { dayShift: { plan: 0, actual: 0, rate: 0 }, middleShift: { plan: 0, actual: 0, rate: 0 }, nightShift: { plan: 0, actual: 0, rate: 0 } };
     try {
-      const dayRows: any = await query(`SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(completed_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND HOUR(create_time) BETWEEN 8 AND 15`);
-      const midRows: any = await query(`SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(completed_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND HOUR(create_time) BETWEEN 16 AND 23`);
-      const nightRows: any = await query(`SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(completed_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND (HOUR(create_time) < 8 OR HOUR(create_time) > 23)`);
+      const dayRows: any = await query(`SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(plan_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND HOUR(create_time) BETWEEN 8 AND 15`);
+      const midRows: any = await query(`SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(plan_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND HOUR(create_time) BETWEEN 16 AND 23`);
+      const nightRows: any = await query(`SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(plan_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND (HOUR(create_time) < 8 OR HOUR(create_time) > 23)`);
       if (Array.isArray(dayRows) && dayRows.length > 0) {
         shiftData.dayShift.plan = Number(dayRows[0].plan || 0);
         shiftData.dayShift.actual = Number(dayRows[0].actual || 0);
@@ -247,11 +247,11 @@ export async function GET(request: NextRequest) {
     let processRelations: any[] = [];
     try {
       const rows: any = await query(`
-        SELECT DISTINCT process_name
-        FROM prd_process_card WHERE deleted = 0 AND process_name IS NOT NULL AND process_name != ''
-        ORDER BY process_name
+        SELECT DISTINCT product_name
+        FROM prd_process_card WHERE deleted = 0 AND product_name IS NOT NULL AND product_name != ''
+        ORDER BY product_name
       `);
-      processRelations = Array.isArray(rows) ? rows.map((r: any) => r.process_name) : [];
+      processRelations = Array.isArray(rows) ? rows.map((r: any) => r.product_name) : [];
     } catch (e) { console.error('ceo processRelations failed:', e); }
 
     return NextResponse.json({

@@ -631,7 +631,7 @@ export default function PurchaseOrdersPage() {
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex flex-1 gap-4 items-center w-full md:w-auto">
                 <SearchInput
-                  placeholder="搜索采购单号、供应商..."
+                  placeholder="搜索采购单号/供应商/日期/物料..."
                   value={keyword}
                   onChange={setKeyword}
                   onSearch={(kw) => { setPage(1); fetchOrders(kw); }}

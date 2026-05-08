@@ -4,9 +4,9 @@ import {
   paginatedResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { InboundApplicationService } from '@/application/services/InboundApplicationService';
 import { MysqlInboundOrderRepository } from '@/infrastructure/repositories/MysqlInboundOrderRepository';
@@ -18,7 +18,7 @@ function getInboundService(): InboundApplicationService {
   return new InboundApplicationService(orderRepo, eventBus);
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status') || '';
@@ -65,9 +65,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }));
 
   return paginatedResponse(serializedData, result.pagination);
-});
+}, { permission: 'warehouse:inbound:list' });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const body = await request.json();
 
   const validation = validateRequestBody(body, ['items']);
@@ -85,6 +85,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     supplierName: body.supplier_name || '',
     inboundDate: body.inbound_date,
     remark: body.remark,
+    operatorId: userInfo.userId,
     items: body.items.map((item: any) => ({
       materialId: item.material_id || 0,
       materialCode: item.material_code,
@@ -100,9 +101,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse({ order_id: result.id, order_no: result.orderNo }, '入库单创建成功');
-}, '创建入库单失败');
+}, { permission: 'warehouse:inbound:create' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const body = await request.json();
   const { id, action, status, remark } = body;
 
@@ -128,6 +129,11 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       return successResponse(result, '入库单取消成功');
     }
 
+    if (action === 'unapprove') {
+      const result = await service.unapproveOrder(id);
+      return successResponse(result, '入库单反审核成功');
+    }
+
     if (remark !== undefined) {
       const { execute } = await import('@/lib/db');
       await execute(
@@ -150,9 +156,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     }
     throw error;
   }
-}, '更新入库单失败');
+}, { permission: 'warehouse:inbound:edit' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -174,4 +180,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     }
     throw error;
   }
-}, '删除入库单失败');
+}, { permission: 'warehouse:inbound:delete' });

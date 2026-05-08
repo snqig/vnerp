@@ -68,7 +68,7 @@ function buildDepartmentTree(departments: Department[]): Department[] {
 function getStatusBadge(status: number) {
   return status === 1 
     ? <Badge className="bg-green-100 text-green-800 hover:bg-green-100">启用</Badge>
-    : <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">停用</Badge>;
+    : <Badge className="bg-muted text-muted-foreground hover:bg-muted">停用</Badge>;
 }
 
 // 渲染部门行

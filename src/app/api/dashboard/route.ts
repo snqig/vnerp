@@ -32,7 +32,9 @@ export async function GET(request: NextRequest) {
     let inventoryAlert = 0;
     try {
       const rows: any = await query(`
-        SELECT COUNT(*) as total FROM inv_material WHERE deleted = 0 AND status = 1 AND stock_qty <= min_stock
+        SELECT COUNT(*) as total FROM inv_inventory i
+        JOIN inv_material m ON i.material_id = m.id
+        WHERE i.deleted = 0 AND m.status = 1 AND i.quantity <= COALESCE(m.safety_stock, 0)
       `);
       if (Array.isArray(rows) && rows.length > 0) inventoryAlert = Number(rows[0].total || 0);
     } catch (e) { console.error('inventoryAlert failed:', e); }

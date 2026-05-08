@@ -239,7 +239,7 @@ export default function SPCPage() {
   const buildXbarChartData = () => {
     if (!xbarResult) return [];
     const oocXbar = new Set(
-      xbarResult.out_of_control_points.filter(p => p.type === 'x_bar').map(p => p.subgroup_id)
+      xbarResult.out_of_control_points.filter((p: OutOfControlPoint) => p.type === 'x_bar').map((p: OutOfControlPoint) => p.subgroup_id)
     );
     return xbarResult.data_points.map(dp => ({
       subgroup: `#${dp.subgroup_id}`,
@@ -251,7 +251,7 @@ export default function SPCPage() {
   const buildRChartData = () => {
     if (!xbarResult) return [];
     const oocRange = new Set(
-      xbarResult.out_of_control_points.filter(p => p.type === 'range').map(p => p.subgroup_id)
+      xbarResult.out_of_control_points.filter((p: OutOfControlPoint) => p.type === 'range').map((p: OutOfControlPoint) => p.subgroup_id)
     );
     return xbarResult.data_points.map(dp => ({
       subgroup: `#${dp.subgroup_id}`,
@@ -298,7 +298,7 @@ export default function SPCPage() {
                           <SelectValue placeholder="选择物料" />
                         </SelectTrigger>
                         <SelectContent>
-                          {materials.map(m => (
+                          {materials.map((m: Material) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               {m.material_code} - {m.material_name}
                             </SelectItem>
@@ -321,11 +321,11 @@ export default function SPCPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>开始日期</Label>
-                      <Input type="date" value={xbarStartDate} onChange={e => setXbarStartDate(e.target.value)} />
+                      <Input type="date" value={xbarStartDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setXbarStartDate(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label>结束日期</Label>
-                      <Input type="date" value={xbarEndDate} onChange={e => setXbarEndDate(e.target.value)} />
+                      <Input type="date" value={xbarEndDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setXbarEndDate(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label>子组大小</Label>
@@ -430,7 +430,7 @@ export default function SPCPage() {
                         </CardHeader>
                         <CardContent>
                           <div className="flex flex-wrap gap-2">
-                            {xbarResult.out_of_control_points.map((p, idx) => (
+                            {xbarResult.out_of_control_points.map((p: OutOfControlPoint, idx: number) => (
                               <Badge key={idx} className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
                                 子组#{p.subgroup_id} {p.type === 'x_bar' ? 'X均值' : '极差'}={p.value.toFixed(4)}
                               </Badge>
@@ -590,15 +590,15 @@ export default function SPCPage() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {xbarResult.data_points.map((dp, idx) => {
-                                const isOocXbar = xbarResult.out_of_control_points.some(p => p.subgroup_id === dp.subgroup_id && p.type === 'x_bar');
-                                const isOocRange = xbarResult.out_of_control_points.some(p => p.subgroup_id === dp.subgroup_id && p.type === 'range');
+                              {xbarResult.data_points.map((dp: SPCDataPoint, idx: number) => {
+                                const isOocXbar = xbarResult.out_of_control_points.some((p: OutOfControlPoint) => p.subgroup_id === dp.subgroup_id && p.type === 'x_bar');
+                                const isOocRange = xbarResult.out_of_control_points.some((p: OutOfControlPoint) => p.subgroup_id === dp.subgroup_id && p.type === 'range');
                                 return (
                                   <TableRow key={idx} className={(isOocXbar || isOocRange) ? 'bg-red-50 dark:bg-red-950/20' : ''}>
                                     <TableCell className="font-medium">#{dp.subgroup_id}</TableCell>
                                     <TableCell className="text-sm">{dp.timestamp?.substring(0, 19) || '-'}</TableCell>
                                     <TableCell className="text-sm font-mono">
-                                      [{dp.values.map(v => v.toFixed(2)).join(', ')}]
+                                      [{dp.values.map((v: number) => v.toFixed(2)).join(', ')}]
                                     </TableCell>
                                     <TableCell className="text-right">{dp.x_bar.toFixed(4)}</TableCell>
                                     <TableCell className="text-right">{dp.range.toFixed(4)}</TableCell>
@@ -647,11 +647,11 @@ export default function SPCPage() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div className="space-y-2">
                       <Label>开始日期</Label>
-                      <Input type="date" value={paretoStartDate} onChange={e => setParetoStartDate(e.target.value)} />
+                      <Input type="date" value={paretoStartDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setParetoStartDate(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label>结束日期</Label>
-                      <Input type="date" value={paretoEndDate} onChange={e => setParetoEndDate(e.target.value)} />
+                      <Input type="date" value={paretoEndDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setParetoEndDate(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label>物料（可选）</Label>
@@ -661,7 +661,7 @@ export default function SPCPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">全部物料</SelectItem>
-                          {materials.map(m => (
+                          {materials.map((m: Material) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               {m.material_code} - {m.material_name}
                             </SelectItem>
@@ -776,7 +776,7 @@ export default function SPCPage() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {paretoResult.map((item, idx) => (
+                              {paretoResult.map((item: ParetoItem, idx: number) => (
                                 <TableRow key={idx} className={item.cumulative_percentage <= 80 ? 'bg-red-50 dark:bg-red-950/20' : ''}>
                                   <TableCell className="font-medium">{item.defect_type}</TableCell>
                                   <TableCell className="text-right">{item.count}</TableCell>
@@ -824,11 +824,11 @@ export default function SPCPage() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div className="space-y-2">
                       <Label>开始日期</Label>
-                      <Input type="date" value={pChartStartDate} onChange={e => setPChartStartDate(e.target.value)} />
+                      <Input type="date" value={pChartStartDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPChartStartDate(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label>结束日期</Label>
-                      <Input type="date" value={pChartEndDate} onChange={e => setPChartEndDate(e.target.value)} />
+                      <Input type="date" value={pChartEndDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPChartEndDate(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label>物料（可选）</Label>
@@ -838,7 +838,7 @@ export default function SPCPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">全部物料</SelectItem>
-                          {materials.map(m => (
+                          {materials.map((m: Material) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               {m.material_code} - {m.material_name}
                             </SelectItem>
@@ -885,7 +885,7 @@ export default function SPCPage() {
                         </CardHeader>
                         <CardContent>
                           <div className="flex flex-wrap gap-2">
-                            {pChartResult.out_of_control_points.map((p, idx) => (
+                            {pChartResult.out_of_control_points.map((p: { period: string; rate: number; limit: number }, idx: number) => (
                               <Badge key={idx} className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
                                 {p.period} 不良率={(p.rate * 100).toFixed(2)}%
                               </Badge>
@@ -906,10 +906,10 @@ export default function SPCPage() {
                         <div className="h-[400px]">
                           <ResponsiveContainer width="100%" height="100%">
                             <ComposedChart
-                              data={pChartResult.data_points.map(dp => ({
+                              data={pChartResult.data_points.map((dp: PChartDataPoint) => ({
                                 period: dp.period,
                                 defective_rate: Math.round(dp.defective_rate * 10000) / 100,
-                                is_ooc: pChartResult.out_of_control_points.some(ooc => ooc.period === dp.period),
+                                is_ooc: pChartResult.out_of_control_points.some((ooc: { period: string; rate: number; limit: number }) => ooc.period === dp.period),
                               }))}
                               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                             >
@@ -989,13 +989,13 @@ export default function SPCPage() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {pChartResult.data_points.map((dp, idx) => {
-                                const isOoc = pChartResult.out_of_control_points.some(ooc => ooc.period === dp.period);
+                              {pChartResult.data_points.map((dp: PChartDataPoint, idx: number) => {
+                                const isOoc = pChartResult.out_of_control_points.some((ooc: { period: string; rate: number; limit: number }) => ooc.period === dp.period);
                                 return (
                                   <TableRow key={idx} className={isOoc ? 'bg-red-50 dark:bg-red-950/20' : ''}>
                                     <TableCell className="font-medium">{dp.period}</TableCell>
-                                    <TableCell className="text-right">{dp.inspected.toLocaleString()}</TableCell>
-                                    <TableCell className="text-right">{dp.defective.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">{(dp.inspected ?? 0).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">{(dp.defective ?? 0).toLocaleString()}</TableCell>
                                     <TableCell className="text-right font-semibold">
                                       {(dp.defective_rate * 100).toFixed(2)}%
                                     </TableCell>

@@ -835,7 +835,7 @@ export default function ProductionSchedulePage() {
                           daySchedules.map((s) => (
                             <div
                               key={s.id}
-                              className="text-xs p-2 rounded bg-gray-50 cursor-pointer hover:bg-gray-100"
+                              className="text-xs p-2 rounded bg-muted cursor-pointer hover:bg-muted/80"
                               onClick={() => handleViewDetail(s)}
                             >
                               <div className="font-medium truncate">{s.product_name}</div>
