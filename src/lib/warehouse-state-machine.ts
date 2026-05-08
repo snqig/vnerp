@@ -2,6 +2,8 @@
 // 定义入库单和出库单的状态流转规则
 
 // 入库单状态
+import { secureLog } from '@/lib/logger';
+
 export type InboundStatus =
   | 'draft'        // 草稿
   | 'pending'      // 待审核
@@ -199,6 +201,11 @@ export interface InventoryTransaction {
 export class InventoryTransactionLogger {
   static async log(transaction: InventoryTransaction): Promise<void> {
     // 这里可以将日志保存到数据库或发送到日志服务
-    console.log(`[InventoryTransaction] ${transaction.transType}: ${transaction.materialName} ${transaction.quantity > 0 ? '+' : ''}${transaction.quantity} ${transaction.materialCode}`);
+    secureLog('debug', 'Inventory transaction', { 
+      transType: transaction.transType, 
+      materialName: transaction.materialName, 
+      quantity: transaction.quantity, 
+      materialCode: transaction.materialCode 
+    });
   }
 }

@@ -117,6 +117,14 @@ Desktop.ini
 .coze-logs
 .agents/
 .obsidian/
+.trae/
+agency-agents/
+
+# AI generated debug/temp files
+deepseek_*.md
+test-screenshots/
+test-*.py
+test-*.json
 
 # Backup directories
 backups/

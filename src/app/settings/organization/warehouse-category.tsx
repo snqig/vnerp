@@ -104,9 +104,6 @@ export function WarehouseCategoryManager() {
 
   // 保存仓库分类
   const saveCategory = async () => {
-    console.log('saveCategory函数被调用', form);
-    
-    // 表单验证
     if (!form.code || !form.code.trim()) {
       toast.error('请输入分类编码');
       return;
@@ -134,17 +131,13 @@ export function WarehouseCategoryManager() {
         status: form.status ?? 1
       };
       
-      console.log('发送请求:', method, requestBody);
-      
       const response = await fetch('/api/organization/warehouse-category', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
       });
       
-      console.log('响应状态:', response.status);
       const result = await response.json();
-      console.log('响应结果:', result);
       
       if (result.success) {
         toast.success(editing ? '分类更新成功' : '分类创建成功');

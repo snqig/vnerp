@@ -1,4 +1,5 @@
 import mysql from 'mysql2/promise';
+import { secureLog } from '@/lib/logger';
 
 // SECURITY: All database queries in this module use parameterized prepared statements
 // via mysql2's pool.query() and pool.execute() with placeholder values (?).
@@ -34,7 +35,7 @@ const globalForDb = globalThis as unknown as {
 export function getPool(): mysql.Pool {
   if (!globalForDb.pool) {
     if (DEBUG_DB) {
-      console.log('[DB] Creating new MySQL pool with config:', {
+      secureLog('debug', 'MySQL pool created', {
         host: dbConfig.host,
         port: dbConfig.port,
         user: dbConfig.user,
@@ -56,11 +57,11 @@ export async function query<T = any>(sql: string, values?: any[]): Promise<T[]> 
       const pool = getPool();
       if (DEBUG_DB) {
         const sqlStr = typeof sql === 'string' ? sql : String(sql);
-        console.log('[DB] Executing query:', sqlStr.substring(0, 100), 'values:', values);
+        secureLog('debug', 'DB query', { sql: sqlStr.substring(0, 100), valueCount: values?.length });
       }
       const [rows] = await pool.query(sql, values);
       if (DEBUG_DB) {
-        console.log('[DB] Query returned', (rows as any[]).length, 'rows');
+        secureLog('debug', 'DB query result', { rowCount: (rows as any[]).length });
       }
       return rows as T[];
     } catch (error: any) {
@@ -88,9 +89,8 @@ export async function execute(sql: string, values?: any[]): Promise<mysql.Result
   try {
     const pool = getPool();
     if (DEBUG_DB) {
-      // 确保 sql 是字符串类型
       const sqlStr = typeof sql === 'string' ? sql : String(sql);
-      console.log('[DB] Executing execute:', sqlStr.substring(0, 100));
+      secureLog('debug', 'DB execute', { sql: sqlStr.substring(0, 100) });
     }
     const [result] = await pool.execute(sql, values);
     return result as mysql.ResultSetHeader;

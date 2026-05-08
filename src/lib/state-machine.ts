@@ -1,6 +1,8 @@
 // 品质检验状态机
 // 定义检验状态流转规则
 
+import { secureLog } from '@/lib/logger';
+
 export type InspectStatus = 
   | 'pending'      // 待检验
   | 'inspecting'   // 检验中
@@ -188,7 +190,7 @@ export class StateTransitionLogger {
     };
 
     // 这里可以保存到数据库
-    console.log(`[StateTransition] ${entityType} #${entityId}: ${fromStatus} -> ${toStatus}`);
+    secureLog('debug', 'State transition', { entityType, entityId, fromStatus, toStatus });
     
     return transition;
   }

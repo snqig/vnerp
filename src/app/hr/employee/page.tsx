@@ -272,8 +272,6 @@ export default function EmployeePage() {
         employee_no: form.employee_no || generateEmployeeNo()
       };
 
-      console.log('提交数据:', submitData);
-
       const method = editing ? 'PUT' : 'POST';
       const response = await fetch('/api/organization/employee', {
         method,

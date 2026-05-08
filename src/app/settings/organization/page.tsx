@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -892,7 +892,6 @@ export default function OrganizationPage() {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('保存按钮被点击');
                 saveRole();
               }} 
               className="bg-blue-600 hover:bg-blue-700"

@@ -7,6 +7,7 @@ import {
   withErrorHandler,
 } from '@/lib/api-response';
 import { jwtVerify } from 'jose';
+import { secureLog } from '@/lib/logger';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -42,20 +43,16 @@ async function verifyToken(token: string) {
 export const POST = withErrorHandler(async (request: NextRequest) => {
   // 获取token
   const authHeader = request.headers.get('authorization');
-  console.log('Authorization header:', authHeader);
+  secureLog('debug', 'Menu sort auth', { hasAuth: !!authHeader });
   const token = authHeader?.replace('Bearer ', '');
-  console.log('Extracted token:', token);
 
   if (!token) {
-    console.log('No token provided');
     return commonErrors.unauthorized('未登录');
   }
 
-  // 验证token
   const payload = await verifyToken(token);
-  console.log('Token payload:', payload);
+  secureLog('debug', 'Menu sort token verified', { userId: payload?.userId });
   if (!payload) {
-    console.log('Invalid token');
     return commonErrors.unauthorized('登录已过期');
   }
 

@@ -223,16 +223,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const { companyName } = useCompanyName();
   const { toast } = useToast();
 
-  // 调试日志
-  useEffect(() => {
-    console.log('[Sidebar] 状态变化:', { 
-      isLoading, 
-      isAuthenticated, 
-      hasUser: !!user, 
-      username: user?.username,
-      menuCount: Array.isArray(menus) ? menus.length : 0 
-    });
-  }, [isLoading, isAuthenticated, user, menus]);
+
 
   // 从 localStorage 加载排序
   useEffect(() => {
@@ -271,9 +262,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const debouncedSaveToDatabase = useCallback((orders: MenuItem[]) => {
     // 与AuthContext保持一致的令牌获取逻辑
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    console.log('Token for menu sort:', token);
     if (!token) {
-      console.log('未登录，跳过数据库保存');
       return;
     }
 
@@ -282,8 +271,6 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
       sort_order: index + 1
     }));
 
-    console.log('Menu sort data:', orderData);
-    
     fetch('/api/menu/sort-order', {
       method: 'POST',
       headers: {
@@ -292,16 +279,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
       },
       body: JSON.stringify({ orders: orderData }),
     })
-    .then(response => {
-      console.log('Menu sort response status:', response.status);
-      if (!response.ok) {
-        console.error('保存菜单排序失败:', response.status);
-      } else {
-        console.log('菜单排序保存成功');
-      }
-    })
-    .catch(error => {
-      console.error('保存菜单排序请求失败:', error.message);
+    .catch(() => {
     });
   }, []);
 
@@ -587,10 +565,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      console.log('[Sidebar] 点击退出登录');
-                      logout();
-                    }}
+                    onClick={logout}
                     className="text-muted-foreground hover:text-red-600"
                   >
                     退出

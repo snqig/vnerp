@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -168,12 +168,10 @@ export default function MaterialLabelsPage() {
 
   // 打开分切对话框
   const handleOpenCutDialog = (label: MaterialLabel) => {
-    console.log('Opening cut dialog for label:', label);
     setSelectedLabel(label);
     setCutWidthStr('');
     setCutRemark('');
     setCuttingDialogOpen(true);
-    console.log('Cutting dialog opened:', cuttingDialogOpen);
   };
 
   // 执行分切操作
@@ -400,7 +398,6 @@ export default function MaterialLabelsPage() {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                console.log('Cut button clicked for label:', label);
                                 handleOpenCutDialog(label);
                               }}
                               disabled={label.isCut === 1}

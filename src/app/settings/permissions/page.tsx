@@ -277,7 +277,6 @@ export default function PermissionsSettingsPage() {
     const enabledPermissions = Object.entries(rolePermissions)
       .filter(([, enabled]) => enabled)
       .map(([id]) => id);
-    console.log('保存角色权限:', selectedRole.name, enabledPermissions);
     alert(`已保存 ${selectedRole.name} 的权限设置`);
   };
 
