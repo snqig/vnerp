@@ -1,0 +1,251 @@
+import { IPurchaseOrderRepository, Pagination, PaginatedResult } from '@/domain/purchase/repositories/IPurchaseOrderRepository';
+import { PurchaseOrder, PurchaseOrderProps } from '@/domain/purchase/aggregates/PurchaseOrder';
+import { PurchaseOrderStatus } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
+import { query, execute, transaction, queryPaginated } from '@/lib/db';
+import { generateDocumentNo } from '@/lib/document-numbering';
+
+const LINE_COLUMNS = `id, po_id, line_no, material_id, material_code, material_name, material_spec,
+                      unit, order_qty, received_qty, returned_qty, unit_price, amount,
+                      tax_rate, tax_amount, line_total, require_date, remark`;
+
+export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
+  async findById(id: number): Promise<PurchaseOrder | null> {
+    const orders = await query<any>(
+      'SELECT * FROM pur_purchase_order WHERE id = ? AND deleted = 0',
+      [id]
+    );
+
+    if (!orders || orders.length === 0) return null;
+
+    const order = orders[0];
+    const lines = await query<any>(
+      `SELECT ${LINE_COLUMNS} FROM pur_purchase_order_line WHERE po_id = ? ORDER BY line_no ASC`,
+      [id]
+    );
+
+    return PurchaseOrder.reconstitute(this.mapToProps(order, lines));
+  }
+
+  async findByOrderNo(orderNo: string): Promise<PurchaseOrder | null> {
+    const orders = await query<any>(
+      'SELECT * FROM pur_purchase_order WHERE po_no = ? AND deleted = 0',
+      [orderNo]
+    );
+
+    if (!orders || orders.length === 0) return null;
+
+    const order = orders[0];
+    const lines = await query<any>(
+      `SELECT ${LINE_COLUMNS} FROM pur_purchase_order_line WHERE po_id = ? ORDER BY line_no ASC`,
+      [order.id]
+    );
+
+    return PurchaseOrder.reconstitute(this.mapToProps(order, lines));
+  }
+
+  async findByStatus(
+    status: string,
+    pagination: Pagination,
+    filters?: {
+      keyword?: string;
+      supplierId?: number;
+      startDate?: string;
+      endDate?: string;
+    }
+  ): Promise<PaginatedResult<PurchaseOrder>> {
+    let sql = `SELECT o.* FROM pur_purchase_order o WHERE o.deleted = 0`;
+    let countSql = `SELECT COUNT(*) as total FROM pur_purchase_order o WHERE o.deleted = 0`;
+    const params: any[] = [];
+
+    if (status) {
+      const dbCode = status === 'all' ? null : PurchaseOrderStatus.from(status).toDbCode();
+      if (dbCode !== null) {
+        sql += ' AND o.status = ?';
+        countSql += ' AND o.status = ?';
+        params.push(dbCode);
+      }
+    }
+
+    if (filters?.keyword) {
+      const condition = ` AND (o.po_no LIKE ? OR o.supplier_name LIKE ?)`;
+      sql += condition;
+      countSql += condition;
+      params.push(`%${filters.keyword}%`, `%${filters.keyword}%`);
+    }
+
+    if (filters?.supplierId) {
+      sql += ' AND o.supplier_id = ?';
+      countSql += ' AND o.supplier_id = ?';
+      params.push(filters.supplierId);
+    }
+
+    if (filters?.startDate) {
+      sql += ' AND o.order_date >= ?';
+      countSql += ' AND o.order_date >= ?';
+      params.push(filters.startDate);
+    }
+
+    if (filters?.endDate) {
+      sql += ' AND o.order_date <= ?';
+      countSql += ' AND o.order_date <= ?';
+      params.push(filters.endDate);
+    }
+
+    sql += ' ORDER BY o.create_time DESC';
+
+    const result = await queryPaginated(sql, countSql, params, pagination);
+
+    if (result.data.length > 0) {
+      const orderIds = result.data.map((o: any) => o.id);
+      const placeholders = orderIds.map(() => '?').join(',');
+      const lines = await query(
+        `SELECT ${LINE_COLUMNS} FROM pur_purchase_order_line WHERE po_id IN (${placeholders}) ORDER BY line_no ASC`,
+        orderIds
+      );
+
+      const linesMap = new Map<number, any[]>();
+      for (const line of lines as any[]) {
+        if (!linesMap.has(line.po_id)) {
+          linesMap.set(line.po_id, []);
+        }
+        linesMap.get(line.po_id)!.push(line);
+      }
+
+      for (const order of result.data as any[]) {
+        order._lines = linesMap.get(order.id) || [];
+      }
+    }
+
+    return {
+      data: result.data.map((o: any) => {
+        const lines = o._lines || [];
+        return PurchaseOrder.reconstitute(this.mapToProps(o, lines));
+      }),
+      pagination: result.pagination,
+    };
+  }
+
+  async save(order: PurchaseOrder): Promise<{ id: number; orderNo: string }> {
+    const orderNo = await generateDocumentNo('purchase_order');
+    const lines = order.lines;
+
+    return await transaction(async (conn) => {
+      const [orderResult]: any = await conn.execute(
+        `INSERT INTO pur_purchase_order
+         (po_no, supplier_id, supplier_name, supplier_code, order_date, delivery_date,
+          currency, exchange_rate, total_amount, total_quantity, tax_rate, tax_amount, grand_total,
+          status, over_receipt_tolerance, payment_terms, delivery_address, remark, create_by, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          orderNo, order.supplierId, order.supplierName, order.supplierCode,
+          order.orderDate, order.deliveryDate || null,
+          order.currency, order.exchangeRate,
+          order.totalAmount, order.totalQuantity, order.taxRate, order.taxAmount, order.grandTotal,
+          order.status.toDbCode(),
+          order.overReceiptTolerance, order.paymentTerms, order.deliveryAddress,
+          order.remark, order.createBy || null,
+        ]
+      );
+
+      const orderId = orderResult.insertId;
+
+      for (const line of lines) {
+        await conn.execute(
+          `INSERT INTO pur_purchase_order_line
+           (po_id, line_no, material_id, material_code, material_name, material_spec,
+            unit, order_qty, received_qty, returned_qty, unit_price, amount,
+            tax_rate, tax_amount, line_total, require_date, remark, create_time)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          [
+            orderId, line.lineNo, line.materialId, line.materialCode, line.materialName,
+            line.materialSpec, line.unit, line.orderQty, line.receivedQty, line.returnedQty,
+            line.unitPrice, line.amount, line.taxRate, line.taxAmount, line.lineTotal,
+            line.requireDate || null, line.remark || null,
+          ]
+        );
+      }
+
+      return { id: orderId, orderNo };
+    });
+  }
+
+  async updateStatus(id: number, status: string, currentStatus: string): Promise<boolean> {
+    const dbStatus = PurchaseOrderStatus.from(status).toDbCode();
+    const dbCurrentStatus = PurchaseOrderStatus.from(currentStatus).toDbCode();
+    const result = await execute(
+      'UPDATE pur_purchase_order SET status = ?, update_time = NOW() WHERE id = ? AND status = ?',
+      [dbStatus, id, dbCurrentStatus]
+    );
+    return result.affectedRows > 0;
+  }
+
+  async updateReceivedQty(lineId: number, receivedQty: number): Promise<void> {
+    await execute(
+      'UPDATE pur_purchase_order_line SET received_qty = ?, update_time = NOW() WHERE id = ?',
+      [receivedQty, lineId]
+    );
+  }
+
+  async updateAuditInfo(id: number, auditBy: number, auditTime: string): Promise<void> {
+    await execute(
+      'UPDATE pur_purchase_order SET audit_by = ?, audit_time = ?, update_time = NOW() WHERE id = ?',
+      [auditBy, auditTime, id]
+    );
+  }
+
+  async softDelete(id: number): Promise<void> {
+    await execute(
+      'UPDATE pur_purchase_order SET deleted = 1, update_time = NOW() WHERE id = ?',
+      [id]
+    );
+  }
+
+  private mapToProps(order: any, lines: any[]): PurchaseOrderProps {
+    return {
+      id: order.id,
+      orderNo: order.po_no,
+      status: PurchaseOrderStatus.fromDbCode(order.status).value,
+      supplierId: order.supplier_id,
+      supplierName: order.supplier_name || '',
+      supplierCode: order.supplier_code || '',
+      orderDate: order.order_date || '',
+      deliveryDate: order.delivery_date || '',
+      currency: order.currency || 'CNY',
+      exchangeRate: order.exchange_rate || 1.0,
+      taxRate: order.tax_rate || 13,
+      totalAmount: order.total_amount,
+      totalQuantity: order.total_quantity,
+      taxAmount: order.tax_amount,
+      grandTotal: order.grand_total,
+      overReceiptTolerance: order.over_receipt_tolerance || 0,
+      paymentTerms: order.payment_terms || '',
+      deliveryAddress: order.delivery_address || '',
+      remark: order.remark || '',
+      createBy: order.create_by,
+      auditBy: order.audit_by,
+      auditTime: order.audit_time,
+      lines: (lines || []).map((line: any) => ({
+        id: line.id,
+        orderId: line.po_id,
+        lineNo: line.line_no,
+        materialId: line.material_id,
+        materialCode: line.material_code || '',
+        materialName: line.material_name || '',
+        materialSpec: line.material_spec || '',
+        unit: line.unit || '件',
+        orderQty: line.order_qty,
+        receivedQty: line.received_qty || 0,
+        returnedQty: line.returned_qty || 0,
+        unitPrice: line.unit_price || 0,
+        amount: line.amount || 0,
+        taxRate: line.tax_rate || 13,
+        taxAmount: line.tax_amount || 0,
+        lineTotal: line.line_total || 0,
+        requireDate: line.require_date,
+        remark: line.remark,
+      })),
+      createTime: order.create_time,
+      updateTime: order.update_time,
+    };
+  }
+}
