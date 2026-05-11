@@ -5,6 +5,9 @@ import { FinanceVoucherHandler } from '@/application/handlers/FinanceVoucherHand
 import { QrCodeGenerationHandler } from '@/application/handlers/QrCodeGenerationHandler';
 import { AuditLogHandler } from '@/application/handlers/AuditLogHandler';
 import { CacheInvalidationHandler } from '@/application/handlers/CacheInvalidationHandler';
+import { PurchaseApprovedHandler } from '@/application/handlers/PurchaseApprovedHandler';
+import { PurchaseReceivedHandler } from '@/application/handlers/PurchaseReceivedHandler';
+import { PurchasePayableHandler } from '@/application/handlers/PurchasePayableHandler';
 
 let registered = false;
 
@@ -29,6 +32,16 @@ export function registerEventHandlers(): EventBus {
 
   eventBus.subscribe('inbound.created', new AuditLogHandler());
   eventBus.subscribe('inbound.submitted', new AuditLogHandler());
+
+  eventBus.subscribe('purchase.created', new AuditLogHandler());
+  eventBus.subscribe('purchase.submitted', new AuditLogHandler());
+  eventBus.subscribe('purchase.approved', new PurchaseApprovedHandler());
+  eventBus.subscribe('purchase.approved', new AuditLogHandler());
+  eventBus.subscribe('purchase.approved', new CacheInvalidationHandler());
+  eventBus.subscribe('purchase.received', new PurchaseReceivedHandler());
+  eventBus.subscribe('purchase.received', new PurchasePayableHandler());
+  eventBus.subscribe('purchase.received', new AuditLogHandler());
+  eventBus.subscribe('purchase.closed', new AuditLogHandler());
 
   return eventBus;
 }
