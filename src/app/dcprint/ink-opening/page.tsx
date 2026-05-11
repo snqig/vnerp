@@ -43,9 +43,9 @@ const INK_TYPE_MAP: Record<string, { label: string; color: string }> = {
 };
 
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: '使用中', color: 'bg-green-100 text-green-800' },
-  2: { label: '已过期', color: 'bg-red-100 text-red-800' },
-  3: { label: '已报废', color: 'bg-gray-100 text-gray-800' },
+  1: { label: '使用中', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  2: { label: '已过期', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+  3: { label: '已报废', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
 };
 
 const EXPIRE_HOURS_OPTIONS = [

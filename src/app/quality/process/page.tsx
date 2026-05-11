@@ -104,6 +104,17 @@ interface QualityStats {
   week: number;
 }
 
+// 检验记录接口
+interface InspectRecord {
+  id: number;
+  inspectNo: string;
+  inspectType: string;
+  result: '合格' | '不合格';
+  inspector: string;
+  inspectTime: string;
+  remark?: string;
+}
+
 // 检验项目
 const inspectItems = [
   { id: 'size', name: '尺寸检验', required: true },
@@ -117,12 +128,12 @@ const inspectItems = [
 // 获取状态标签
 const getStatusBadge = (status: number) => {
   const statusMap: Record<number, { label: string; className: string }> = {
-    0: { label: '待排产', className: 'bg-gray-100 text-gray-700' },
-    1: { label: '待检验', className: 'bg-blue-100 text-blue-700' },
-    2: { label: '检验中', className: 'bg-orange-100 text-orange-700' },
-    3: { label: '已检验', className: 'bg-green-100 text-green-700' },
+    0: { label: '待排产', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+    1: { label: '待检验', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+    2: { label: '检验中', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
+    3: { label: '已检验', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
   };
-  const config = statusMap[status] || { label: '未知', className: 'bg-gray-100 text-gray-700' };
+  const config = statusMap[status] || { label: '未知', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -454,7 +465,7 @@ export default function QualityProcessPage() {
   const [isQRCodeOpen, setIsQRCodeOpen] = useState(false);
   const [isRecordsOpen, setIsRecordsOpen] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
-  const [inspectRecords, setInspectRecords] = useState<any[]>([]);
+  const [inspectRecords, setInspectRecords] = useState<InspectRecord[]>([]);
   const printRef = useRef<HTMLDivElement>(null);
 
   // 模拟检验记录数据

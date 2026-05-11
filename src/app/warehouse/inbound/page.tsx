@@ -62,9 +62,88 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { LucideIcon } from 'lucide-react';
+
+// 接口定义（符合 inv_production_inbound 表结构）
+interface InboundRecord {
+  id: number;
+  inbound_no: string;
+  inbound_type: number;
+  warehouse_id: number;
+  warehouse_name: string;
+  material_id: number;
+  material_name: string;
+  material_code: string;
+  specification: string;
+  quantity: number;
+  unit: string;
+  location: string;
+  supplier_id: number;
+  supplier_name: string;
+  operator_id: number;
+  operator_name: string;
+  inbound_date: string;
+  status: number;
+  remark?: string;
+}
+
+interface Warehouse {
+  id: number;
+  warehouse_name: string;
+  warehouse_code: string;
+}
+
+interface WarehouseCategory {
+  id: number;
+  category_name: string;
+  category_code: string;
+}
+
+interface Supplier {
+  id: number;
+  supplier_name: string;
+  supplier_code: string;
+}
+
+interface PurchaseOrder {
+  id: number;
+  order_no: string;
+  supplier_name: string;
+  total_amount: number;
+  status: number;
+}
+
+interface PrintLabel {
+  id: string;
+  labelNo: string;
+  materialName: string;
+  materialSpec: string;
+  quantity: number;
+  unit: string;
+  batchNo?: string;
+}
+
+interface LabelItem {
+  id: string;
+  labelNo: string;
+  materialName: string;
+  materialSpec?: string;
+  quantity: number;
+  unit: string;
+}
+
+interface ScanResult {
+  id: string;
+  materialName: string;
+  materialCode: string;
+  specification: string;
+  supplier: string;
+  inboundTime: string;
+  status: 'IN' | 'OUT';
+}
 
 // 状态配置
-const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
+const statusConfig: Record<string, { label: string; color: string; icon: LucideIcon }> = {
   draft: { label: '草稿', color: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-800', icon: Clock },
   pending: { label: '待审核', color: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800', icon: AlertCircle },
   approved: { label: '已审核', color: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800', icon: CheckCircle2 },
@@ -108,16 +187,16 @@ export default function InboundManagementPage() {
   const [isLoading, setIsLoading] = useState(false);
   
   // 数据状态
-  const [inboundRecords, setInboundRecords] = useState<any[]>([]);
+  const [inboundRecords, setInboundRecords] = useState<InboundRecord[]>([]);
   const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
-  const [warehouses, setWarehouses] = useState<any[]>([]);
-  const [warehouseCategories, setWarehouseCategories] = useState<any[]>([]);
-  const [suppliers, setSuppliers] = useState<any[]>([]);
-  const [poSearchResults, setPoSearchResults] = useState<any[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [warehouseCategories, setWarehouseCategories] = useState<WarehouseCategory[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [poSearchResults, setPoSearchResults] = useState<PurchaseOrder[]>([]);
   const [poSearchLoading, setPoSearchLoading] = useState(false);
   const [poDropdownVisible, setPoDropdownVisible] = useState(false);
   const poSearchTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // 对话框状态
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -132,18 +211,18 @@ export default function InboundManagementPage() {
   const [isCuttingDialogOpen, setIsCuttingDialogOpen] = useState(false);
   const [isCuttingResultOpen, setIsCuttingResultOpen] = useState(false);
   const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
-  const [printLabels, setPrintLabels] = useState<any[]>([]);
-  const [currentRecord, setCurrentRecord] = useState<any>(null);
-  const [currentLabel, setCurrentLabel] = useState<any>(null);
+  const [printLabels, setPrintLabels] = useState<PrintLabel[]>([]);
+  const [currentRecord, setCurrentRecord] = useState<InboundRecord | null>(null);
+  const [currentLabel, setCurrentLabel] = useState<PrintLabel | null>(null);
   
   // 标签数据
-  const [labelList, setLabelList] = useState<any[]>([]);
+  const [labelList, setLabelList] = useState<LabelItem[]>([]);
   const [selectedLabels, setSelectedLabels] = useState<Set<string>>(new Set());
-  
+
   // 二维码状态
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [qrCodeLabelId, setQrCodeLabelId] = useState<string>('');
-  const [scanResult, setScanResult] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   
   // 分切状态
   const [cuttingForm, setCuttingForm] = useState({
@@ -1230,7 +1309,7 @@ export default function InboundManagementPage() {
             const specWidth = parseSpecWidth(currentLabel.material_spec || currentLabel.specification || '');
             return (
               <div className="space-y-4 py-4">
-                <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+                <div className="bg-slate-50 dark:bg-gray-800 rounded-lg p-4 space-y-2">
                   <div className="flex items-center gap-2 mb-2">
                     <Package className="h-4 w-4 text-blue-600" />
                     <span className="font-medium">源标签信息</span>
@@ -1369,8 +1448,8 @@ export default function InboundManagementPage() {
                   <div key={label.id || index} className={`border-2 rounded-lg p-3 ${isRemainder ? 'border-yellow-400 bg-yellow-50/30' : 'border-orange-300 bg-orange-50/30'}`} style={{ minHeight: '200px' }}>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <h3 className="font-bold text-sm text-gray-900">{label.labelNo}</h3>
-                        <p className="text-sm font-medium text-gray-800 mt-0.5">{label.materialName}</p>
+                        <h3 className="font-bold text-sm text-gray-900 dark:text-gray-100">{label.labelNo}</h3>
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mt-0.5">{label.materialName}</p>
                       </div>
                       <Badge className={`${isRemainder ? 'bg-yellow-100 text-yellow-700' : 'bg-orange-100 text-orange-700'} text-xs shrink-0 ml-2`}>
                         {isRemainder ? '余料' : '分切'}
@@ -1624,8 +1703,8 @@ export default function InboundManagementPage() {
                   <div key={label.id || index} className="border-2 border-gray-800 rounded-lg p-3 print-label-card" style={{ minHeight: '180px' }}>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <h3 className="font-bold text-base text-gray-900">{label.labelNo}</h3>
-                        <p className="text-sm font-medium text-gray-800 mt-1">{label.materialName}</p>
+                        <h3 className="font-bold text-base text-gray-900 dark:text-gray-100">{label.labelNo}</h3>
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mt-1">{label.materialName}</p>
                       </div>
                       <Badge className="bg-green-100 text-green-700 text-xs shrink-0 ml-2">已入库</Badge>
                     </div>

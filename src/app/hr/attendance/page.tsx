@@ -48,11 +48,11 @@ import { toast } from 'sonner';
 
 // 状态类型
 const statusOptions = [
-  { value: 'all', label: '全部', color: 'bg-gray-100 text-gray-700' },
-  { value: 'normal', label: '正常', color: 'bg-green-100 text-green-700' },
-  { value: 'late', label: '迟到', color: 'bg-yellow-100 text-yellow-700' },
-  { value: 'absent', label: '缺勤', color: 'bg-red-100 text-red-700' },
-  { value: 'leave', label: '请假', color: 'bg-blue-100 text-blue-700' },
+  { value: 'all', label: '全部', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+  { value: 'normal', label: '正常', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+  { value: 'late', label: '迟到', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
+  { value: 'absent', label: '缺勤', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+  { value: 'leave', label: '请假', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
 ];
 
 // 部门选项
@@ -69,6 +69,21 @@ const departmentOptions = [
   { value: '其他', label: '其他' },
   { value: '采购', label: '采购' },
 ];
+
+// 考勤记录接口
+interface AttendanceRecord {
+  id: number;
+  attendanceDate: string;
+  employeeId: string;
+  employeeName: string;
+  departmentName: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  status: 'normal' | 'late' | 'absent' | 'leave';
+  workingHours?: number;
+  overtimeHours?: number;
+  remark?: string;
+}
 
 // 示例考勤记录数据
 const statusConfig: Record<string, { label: string; color: string; icon: React.ComponentType<any> }> = {
@@ -88,13 +103,13 @@ export default function AttendancePage() {
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
-  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [selectedRecords, setSelectedRecords] = useState<number[]>([]);
-  
+
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentRecord, setCurrentRecord] = useState<any>(null);
+  const [currentRecord, setCurrentRecord] = useState<AttendanceRecord | null>(null);
   
   const [formData, setFormData] = useState({
     attendanceDate: '',

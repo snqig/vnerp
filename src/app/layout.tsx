@@ -4,6 +4,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProviderComponent } from '@/components/ui/toast';
 import { SnowAdminThemeProvider } from '@/hooks/useSnowAdminTheme';
 import { query } from '@/lib/db';
+import SystemConfigInitializer from '@/components/SystemConfigInitializer';
 
 // 公司名称缓存（避免每次请求都查询数据库）
 let cachedCompanyName: string | null = null;
@@ -64,6 +65,7 @@ export default function RootLayout({
       <body className="antialiased" suppressHydrationWarning>
         <SnowAdminThemeProvider>
           <AuthProvider>
+            <SystemConfigInitializer />
             <ToastProviderComponent>
               {children}
             </ToastProviderComponent>

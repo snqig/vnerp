@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -11,74 +11,122 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, RefreshCw, Truck, Eye, Edit, Trash2, Printer } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  RefreshCw,
+  Truck,
+  Eye,
+  Edit,
+  Trash2,
+  Printer,
+  QrCode,
+  Package,
+  AlertTriangle,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
-interface DeliveryOrder {
+// ============================================================
+// 发货类型定义（符合设计文档 3.1 节）
+// ============================================================
+type ShipmentType = 'normal' | 'partial' | 'return' | 're_ship';
+
+// ============================================================
+// 数据接口定义（符合设计文档第4节数据结构）
+// ============================================================
+
+// 发货单主表接口（shipments 表）
+interface Shipment {
   id: number;
-  delivery_no: string;
-  order_id: number;
-  order_no: string;
-  customer_id: number;
-  customer_name: string;
-  delivery_date: string;
-  contact_name: string;
-  contact_phone: string;
-  delivery_address: string;
-  warehouse_id: number;
-  logistics_company: string;
-  tracking_no: string;
-  total_qty: number;
-  total_amount: number;
-  sign_status: number;
-  sign_person: string;
-  sign_time: string;
-  status: number;
-  remark: string;
-  create_time: string;
+  shipment_no: string;                    // 格式：SH+YYYYMMDD+4位序号
+  sales_order_id: number;                // 关联销售订单 ID
+  sales_order_no?: string;               // 销售订单编号
+  type: ShipmentType;                    // 发货类型：normal/partial/return/re_ship
+  status: number;                        // 状态：1=草稿 2=待审批 3=待发货 4=部分发货 5=已发货 6=已取消
+  customer_id: number;                   // 客户 ID
+  customer_name?: string;                // 客户名称（冗余字段）
+  warehouse_id: number;                  // 仓库 ID
+  total_quantity: number;                // 发货总数量
+  shipped_quantity: number;              // 已发货数量
+  logistics_company?: string;            // 物流公司
+  tracking_no?: string;                  // 物流单号
+  applicant_id?: number;                 // 申请人 ID
+  approver_id?: number;                  // 审批人 ID
+  ship_time?: string;                    // 发货时间
+  remark?: string;                       // 备注
+  parent_shipment_id?: number;           // 父发货单 ID（补发时关联）
+  create_time?: string;
+  update_time?: string;
 }
 
-interface DeliveryItem {
+// 发货单明细表接口（shipment_items 表）
+interface ShipmentItem {
   id?: number;
-  material_id: number;
-  material_name: string;
-  material_spec: string;
-  quantity: number;
-  unit: string;
-  unit_price: number;
-  amount: number;
-  batch_no: string;
+  shipment_id: number;                   // 发货单 ID
+  material_id: number;                   // 成品 ID
+  material_name?: string;                // 成品名称
+  specification?: string;                // 规格
+  quantity: number;                      // 发货数量
+  shipped_quantity: number;              // 已发货数量
+  unit?: string;                         // 单位
+  qr_code?: string;                      // 成品二维码编码
+  batch_no?: string;                     // 成品批次号
+  warehouse_location?: string;           // 库位
+  recommended_qr_codes?: string[];       // FIFO 推荐的二维码列表
 }
 
-const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: '待发货', color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: '已发货', color: 'bg-blue-100 text-blue-800' },
-  3: { label: '已签收', color: 'bg-green-100 text-green-800' },
-  4: { label: '已取消', color: 'bg-gray-100 text-gray-800' },
+interface Customer {
+  id: number;
+  customer_name: string;
+  customer_code: string;
+}
+
+// ============================================================
+// 常量映射（符合设计文档要求）
+// ============================================================
+
+// 发货类型映射
+const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> = {
+  normal: { label: '正常发货', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+  partial: { label: '部分发货', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
+  return: { label: '退货发货', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' },
+  re_ship: { label: '补发发货', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
 };
 
-const SIGN_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: '未签收', color: 'bg-gray-100 text-gray-800' },
-  1: { label: '已签收', color: 'bg-green-100 text-green-800' },
-  2: { label: '部分签收', color: 'bg-yellow-100 text-yellow-800' },
-  3: { label: '拒收', color: 'bg-red-100 text-red-800' },
+// 发货状态映射（符合设计文档 4.1 节：6种状态）
+const STATUS_MAP: Record<number, { label: string; color: string }> = {
+  1: { label: '草稿', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  2: { label: '待审批', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' },
+  3: { label: '待发货', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+  4: { label: '部分发货', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
+  5: { label: '已发货', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  6: { label: '已取消', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
 };
 
 export default function DeliveryPage() {
-  const [list, setList] = useState<DeliveryOrder[]>([]);
+  const [list, setList] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [shipDialogOpen, setShipDialogOpen] = useState(false); // 扫码发货对话框
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState<Partial<DeliveryOrder> & { items: DeliveryItem[] }>({
-    items: [{ material_id: 0, material_name: '', material_spec: '', quantity: 0, unit: '张', unit_price: 0, amount: 0, batch_no: '' }]
+  const [form, setForm] = useState<Partial<Shipment> & { items: ShipmentItem[] }>({
+    type: 'normal',
+    items: [{ material_id: 0, material_name: '', specification: '', quantity: 0, unit: 'pcs', shipped_quantity: 0 }]
   });
-  const [detailData, setDetailData] = useState<DeliveryOrder | null>(null);
-  const [detailItems, setDetailItems] = useState<DeliveryItem[]>([]);
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [detailData, setDetailData] = useState<Shipment | null>(null);
+  const [detailItems, setDetailItems] = useState<ShipmentItem[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [total, setTotal] = useState(0);
+  const [shipForm, setShipForm] = useState<{ // 扫码发货表单
+    shipment_id: number;
+    items: Array<{ material_id: number; qr_code: string; quantity: number }>;
+    logistics_company: string;
+    tracking_no: string;
+  }>({ shipment_id: 0, items: [], logistics_company: '', tracking_no: '' });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -86,6 +134,7 @@ export default function DeliveryPage() {
       const params = new URLSearchParams();
       if (keyword) params.append('keyword', keyword);
       if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (typeFilter !== 'all') params.append('type', typeFilter);
       const res = await fetch(`/api/sales/delivery?${params.toString()}`);
       const result = await res.json();
       if (result.success) {
@@ -94,11 +143,11 @@ export default function DeliveryPage() {
       }
     } catch (e) {
       console.error(e);
-      toast.error('获取送货单列表失败');
+      toast.error('获取发货单列表失败');
     } finally {
       setLoading(false);
     }
-  }, [keyword, statusFilter]);
+  }, [keyword, statusFilter, typeFilter]);
 
   const fetchCustomers = useCallback(async () => {
     try {
@@ -117,7 +166,7 @@ export default function DeliveryPage() {
   const addItem = () => {
     setForm(prev => ({
       ...prev,
-      items: [...(prev.items || []), { material_id: 0, material_name: '', material_spec: '', quantity: 0, unit: '张', unit_price: 0, amount: 0, batch_no: '' }]
+      items: [...(prev.items || []), { material_id: 0, material_name: '', specification: '', quantity: 0, unit: 'pcs', shipped_quantity: 0 }]
     }));
   };
 
@@ -132,22 +181,25 @@ export default function DeliveryPage() {
     setForm(prev => {
       const items = [...(prev.items || [])];
       items[index] = { ...items[index], [field]: value };
-      if (field === 'quantity' || field === 'unit_price') {
-        const qty = field === 'quantity' ? value : items[index].quantity;
-        const price = field === 'unit_price' ? value : items[index].unit_price;
-        items[index].amount = (parseFloat(qty) || 0) * (parseFloat(price) || 0);
-      }
       return { ...prev, items };
     });
   };
 
   const saveDelivery = async () => {
+    if (!form.sales_order_id) {
+      toast.error('请选择销售订单');
+      return;
+    }
     if (!form.customer_id) {
       toast.error('请选择客户');
       return;
     }
-    if (!form.items || form.items.length === 0) {
-      toast.error('请添加送货明细');
+    if (!form.warehouse_id) {
+      toast.error('请选择仓库');
+      return;
+    }
+    if (!form.items || form.items.length === 0 || form.items.some(i => !i.material_id || !i.quantity)) {
+      toast.error('请完善发货明细（成品和数量不能为空）');
       return;
     }
     try {
@@ -158,7 +210,7 @@ export default function DeliveryPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast.success('送货单创建成功');
+        toast.success('发货单创建成功');
         setDialogOpen(false);
         fetchData();
       } else {
@@ -166,7 +218,142 @@ export default function DeliveryPage() {
       }
     } catch (e) {
       console.error(e);
-      toast.error('保存送货单失败');
+      toast.error('保存发货单失败');
+    }
+  };
+
+  // 扫码发货功能（符合设计文档 5.2 节）
+  const openShipDialog = (shipment: Shipment) => {
+    setDetailData(shipment);
+    setShipForm({
+      shipment_id: shipment.id,
+      items: (shipment as any).items?.map((item: ShipmentItem) => ({
+        material_id: item.material_id,
+        qr_code: '',
+        quantity: item.quantity - item.shipped_quantity,
+      })) || [],
+      logistics_company: shipment.logistics_company || '',
+      tracking_no: shipment.tracking_no || '',
+    });
+    setShipDialogOpen(true);
+  };
+
+  const addShipItem = () => {
+    setShipForm(prev => ({
+      ...prev,
+      items: [...prev.items, { material_id: 0, qr_code: '', quantity: 1 }]
+    }));
+  };
+
+  const updateShipItem = (index: number, field: string, value: any) => {
+    setShipForm(prev => {
+      const items = [...prev.items];
+      items[index] = { ...items[index], [field]: value };
+      return { ...prev, items };
+    });
+  };
+
+  const removeShipItem = (index: number) => {
+    setShipForm(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const executeShipping = async () => {
+    if (!shipForm.items.length || shipForm.items.some(i => !i.qr_code || !i.quantity)) {
+      toast.error('请填写完整的扫码信息（二维码和数量）');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/sales/delivery/${shipForm.shipment_id}/ship`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: shipForm.items,
+          logistics_company: shipForm.logistics_company,
+          tracking_no: shipForm.tracking_no,
+        })
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast.success(`发货成功！已发 ${result.data.shipped_quantity} 件`);
+        setShipDialogOpen(false);
+        fetchData();
+      } else {
+        toast.error(result.message || '发货失败');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('执行发货操作失败');
+    }
+  };
+
+  // 提交部分发货申请（符合设计文档 5.3 节）
+  const submitPartialShipment = async () => {
+    const salesOrderId = prompt('请输入销售订单ID：');
+    if (!salesOrderId) return;
+
+    const quantity = prompt('请输入部分发货数量：');
+    if (!quantity || parseFloat(quantity) <= 0) {
+      toast.error('发货数量必须大于0');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/sales/delivery/partial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sales_order_id: parseInt(salesOrderId),
+          quantity: parseFloat(quantity),
+          remark: `部分发货申请`,
+        })
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast.success('部分发货申请提交成功，等待审批');
+        fetchData();
+      } else {
+        toast.error(result.message || '提交失败');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('提交部分发货申请失败');
+    }
+  };
+
+  // 提交补发申请（符合设计文档 5.4 节）
+  const submitReShip = async (parentShipmentId: number) => {
+    const quantity = prompt('请输入补发数量：');
+    if (!quantity || parseFloat(quantity) <= 0) {
+      toast.error('补发数量必须大于0');
+      return;
+    }
+
+    const reason = prompt('请输入补发原因（可选）：') || '';
+
+    try {
+      const res = await fetch('/api/sales/delivery/re-ship', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parent_shipment_id: parentShipmentId,
+          quantity: parseFloat(quantity),
+          reason,
+        })
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast.success('补发申请提交成功，等待审批');
+        fetchData();
+      } else {
+        toast.error(result.message || '提交失败');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('提交补发申请失败');
     }
   };
 
@@ -191,7 +378,7 @@ export default function DeliveryPage() {
   };
 
   const deleteDelivery = async (id: number) => {
-    if (!confirm('确定要删除该送货单吗？')) return;
+    if (!confirm('确定要删除该发货单吗？')) return;
     try {
       const res = await fetch(`/api/sales/delivery?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
@@ -207,9 +394,19 @@ export default function DeliveryPage() {
     }
   };
 
-  const viewDetail = async (order: DeliveryOrder) => {
-    setDetailData(order);
-    setDetailOpen(true);
+  const viewDetail = async (shipment: Shipment) => {
+    try {
+      const res = await fetch(`/api/sales/delivery?id=${shipment.id}`);
+      const result = await res.json();
+      if (result.success) {
+        setDetailData(result.data);
+        setDetailItems(result.data?.items || []);
+        setDetailOpen(true);
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('获取详情失败');
+    }
   };
 
   const calcTotal = () => {

@@ -121,34 +121,34 @@ interface ScheduleStats {
 // 获取状态标签
 const getStatusBadge = (status: number) => {
   const statusMap: Record<number, { label: string; className: string }> = {
-    1: { label: '待排产', className: 'bg-gray-100 text-gray-700' },
-    2: { label: '已排产', className: 'bg-blue-100 text-blue-700' },
-    3: { label: '生产中', className: 'bg-orange-100 text-orange-700' },
-    4: { label: '已完成', className: 'bg-green-100 text-green-700' },
-    5: { label: '已取消', className: 'bg-red-100 text-red-700' },
+    1: { label: '待排产', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+    2: { label: '已排产', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+    3: { label: '生产中', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
+    4: { label: '已完成', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+    5: { label: '已取消', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
   };
-  const config = statusMap[status] || { label: '未知', className: 'bg-gray-100 text-gray-700' };
+  const config = statusMap[status] || { label: '未知', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
 // 获取优先级标签
 const getPriorityBadge = (priority: number) => {
   const priorityMap: Record<number, { label: string; className: string }> = {
-    1: { label: '紧急', className: 'bg-red-100 text-red-700' },
-    2: { label: '正常', className: 'bg-blue-100 text-blue-700' },
-    3: { label: '低', className: 'bg-gray-100 text-gray-700' },
+    1: { label: '紧急', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+    2: { label: '正常', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+    3: { label: '低', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
   };
-  const config = priorityMap[priority] || { label: '正常', className: 'bg-blue-100 text-blue-700' };
+  const config = priorityMap[priority] || { label: '正常', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
 // 获取车间标签
 const getWorkshopBadge = (workshop: string) => {
   const workshopMap: Record<string, { label: string; className: string }> = {
-    'die_cut': { label: '模切', className: 'bg-purple-100 text-purple-700' },
-    'trademark': { label: '商标', className: 'bg-indigo-100 text-indigo-700' },
+    'die_cut': { label: '模切', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
+    'trademark': { label: '商标', className: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300' },
   };
-  const config = workshopMap[workshop] || { label: workshop, className: 'bg-gray-100 text-gray-700' };
+  const config = workshopMap[workshop] || { label: workshop, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 

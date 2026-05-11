@@ -254,18 +254,18 @@ export default function ProcessCardsPage() {
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string }> = {
-      pending: { label: '未配料', className: 'bg-yellow-100 text-yellow-700' },
-      completed: { label: '已配料', className: 'bg-green-100 text-green-700' },
+      pending: { label: '未配料', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
+      completed: { label: '已配料', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
     };
-    const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700' };
+    const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
   const getLockBadge = (status: string) => {
     return status === 'locked' ? (
-      <Badge className="bg-red-100 text-red-700">已锁</Badge>
+      <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">已锁</Badge>
     ) : (
-      <Badge className="bg-green-100 text-green-700">未锁</Badge>
+      <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">未锁</Badge>
     );
   };
 

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, paginatedResponse, withErrorHandler, errorResponse } from '@/lib/api-response';
 import { StateMachineValidator, InspectStatus, StateTransitionLogger } from '@/lib/state-machine';
+import { generateDocNo, getQiPrefix } from '@/lib/global-config';
 
 // 本地分页查询辅助函数
 async function queryPaginatedLocal(
@@ -147,12 +148,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 生成检验编号
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const random = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-  const inspectNo = `QI${year}${month}${day}${random}`;
+  const inspectNo = generateDocNo(getQiPrefix());
 
   // 插入到品质检验表 qc_process_inspection
   await query(

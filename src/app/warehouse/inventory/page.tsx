@@ -44,21 +44,21 @@ import {
 
 const getStatusBadge = (status: string) => {
   const statusMap: Record<string, { label: string; className: string }> = {
-    normal: { label: '正常', className: 'bg-green-100 text-green-700' },
-    frozen: { label: '冻结', className: 'bg-orange-100 text-orange-700' },
-    expired: { label: '过期', className: 'bg-red-100 text-red-700' },
+    normal: { label: '正常', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+    frozen: { label: '冻结', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
+    expired: { label: '过期', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
   };
-  const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700' };
+  const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
 const getAlertBadge = (alertLevel: string) => {
   const alertMap: Record<string, { label: string; className: string }> = {
-    normal: { label: '正常', className: 'bg-green-100 text-green-700' },
-    warning: { label: '预警', className: 'bg-yellow-100 text-yellow-700' },
-    critical: { label: '紧急', className: 'bg-red-100 text-red-700' },
+    normal: { label: '正常', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+    warning: { label: '预警', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
+    critical: { label: '紧急', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
   };
-  const config = alertMap[alertLevel] || { label: alertLevel, className: 'bg-gray-100 text-gray-700' };
+  const config = alertMap[alertLevel] || { label: alertLevel, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -87,8 +87,8 @@ export default function InventoryPage() {
   const sortedInventory = useMemo(() => {
     if (!sortField || !sortOrder) return inventoryItems;
     return [...inventoryItems].sort((a, b) => {
-      const aVal = String((a as any)[sortField] ?? '').toLowerCase();
-      const bVal = String((b as any)[sortField] ?? '').toLowerCase();
+      const aVal = String((a as Record<string, unknown>)[sortField] ?? '').toLowerCase();
+      const bVal = String((b as Record<string, unknown>)[sortField] ?? '').toLowerCase();
       if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
       return 0;

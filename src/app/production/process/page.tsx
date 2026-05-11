@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -89,14 +89,14 @@ interface ProcessCard {
 }
 
 const STATUS_MAP: Record<number, { label: string; className: string }> = {
-  0: { label: '待排产', className: 'bg-gray-100 text-gray-700' },
-  1: { label: '已排产', className: 'bg-blue-100 text-blue-700' },
-  2: { label: '生产中', className: 'bg-orange-100 text-orange-700' },
-  3: { label: '已完成', className: 'bg-green-100 text-green-700' },
+  0: { label: '待排产', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+  1: { label: '已排产', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  2: { label: '生产中', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
+  3: { label: '已完成', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
 };
 
 const getStatusBadge = (status: number) => {
-  const config = STATUS_MAP[status] || { label: '未知', className: 'bg-gray-100 text-gray-700' };
+  const config = STATUS_MAP[status] || { label: '未知', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -486,10 +486,10 @@ export default function ProductionProcessPage() {
                         <div key={index} className="flex items-center">
                           <div className={`px-3 py-1 rounded-full text-sm ${
                             index < currentStep
-                              ? 'bg-green-100 text-green-700'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                               : index === currentStep
-                                ? 'bg-orange-100 text-orange-700'
-                                : 'bg-gray-100 text-gray-700'
+                                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                                : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
                           }`}>
                             {step}
                           </div>
@@ -590,10 +590,10 @@ export default function ProductionProcessPage() {
                             onClick={() => setCurrentStep(index)}
                             className={`px-3 py-1 rounded-full text-sm transition-colors ${
                               index < currentStep
-                                ? 'bg-green-100 text-green-700'
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                                 : index === currentStep
-                                  ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-300'
-                                  : 'bg-gray-100 text-gray-700'
+                                  ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-300 dark:bg-orange-900/30 dark:text-orange-300'
+                                  : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
                             }`}
                           >
                             {step}

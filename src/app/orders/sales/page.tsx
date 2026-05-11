@@ -112,15 +112,15 @@ interface Material {
 }
 
 const STATUS_MAP: Record<number, { label: string; className: string }> = {
-  1: { label: '待确认', className: 'bg-gray-100 text-gray-700' },
-  2: { label: '已确认', className: 'bg-blue-100 text-blue-700' },
-  3: { label: '部分发货', className: 'bg-orange-100 text-orange-700' },
-  4: { label: '已完成', className: 'bg-green-100 text-green-700' },
-  5: { label: '已取消', className: 'bg-red-100 text-red-700' },
+  1: { label: '待确认', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+  2: { label: '已确认', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  3: { label: '部分发货', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
+  4: { label: '已完成', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+  5: { label: '已取消', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
 };
 
 const getStatusBadge = (status: number) => {
-  const config = STATUS_MAP[status] || { label: `未知(${status})`, className: 'bg-gray-100 text-gray-700' };
+  const config = STATUS_MAP[status] || { label: `未知(${status})`, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -244,8 +244,8 @@ export default function SalesOrdersPage() {
 
     if (sortField && sortOrder) {
       filtered.sort((a, b) => {
-        let aVal: any = a[sortField];
-        let bVal: any = b[sortField];
+        let aVal: string | number = a[sortField];
+        let bVal: string | number = b[sortField];
 
         if (sortField === 'total_amount') {
           aVal = Number(aVal) || 0;
@@ -1096,10 +1096,10 @@ export default function SalesOrdersPage() {
                         {isExpanded && (
                           <TableRow key={`${order.id}-detail`}>
                             <TableCell colSpan={9} className="p-0">
-                              <div className="bg-slate-50 border-t">
+                              <div className="bg-slate-50 dark:bg-gray-800 border-t">
                                 <Table>
                                   <TableHeader>
-                                    <TableRow className="bg-slate-100/50 hover:bg-slate-100/50">
+                                    <TableRow className="bg-slate-100/50 hover:bg-slate-100/50 dark:bg-gray-700/30 dark:hover:bg-gray-700/50">
                                       <TableHead className="pl-8 text-xs font-normal text-muted-foreground">产品名称</TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground text-right">数量</TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground">单位</TableHead>
@@ -1109,7 +1109,7 @@ export default function SalesOrdersPage() {
                                   </TableHeader>
                                   <TableBody>
                                     {lines.length > 0 ? lines.map((item, idx) => (
-                                      <TableRow key={idx} className="bg-transparent hover:bg-white/60">
+                                      <TableRow key={idx} className="bg-transparent hover:bg-white/60 dark:hover:bg-gray-700/30">
                                         <TableCell className="pl-8 text-sm">{item.material_name || '-'}</TableCell>
                                         <TableCell className="text-sm text-right">{item.quantity ?? 0}</TableCell>
                                         <TableCell className="text-sm">{item.unit || '-'}</TableCell>

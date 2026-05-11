@@ -50,6 +50,16 @@ interface DieTemplate {
   create_time: string;
 }
 
+interface DashboardStats {
+  totalTemplates?: number;
+  warningCount?: number;
+  inUseCount?: number;
+  availableCount?: number;
+  maintenanceCount?: number;
+  totalImpressions?: number;
+  avgUsageRate?: number;
+}
+
 interface MaintenanceRecord {
   id: number;
   maintenance_no: string;
@@ -127,7 +137,7 @@ export default function DieTemplatePage() {
   const { toast } = useToast();
   const [list, setList] = useState<DieTemplate[]>([]);
   const [warningList, setWarningList] = useState<DieTemplate[]>([]);
-  const [dashboardStats, setDashboardStats] = useState<any>({});
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({});
   const [maintenanceList, setMaintenanceList] = useState<MaintenanceRecord[]>([]);
   const [usageLogList, setUsageLogList] = useState<UsageLog[]>([]);
   const [loading, setLoading] = useState(false);
@@ -254,8 +264,8 @@ export default function DieTemplatePage() {
 
   const sortedList = [...list].sort((a, b) => {
     if (!sortField) return 0;
-    const aVal = (a as any)[sortField];
-    const bVal = (b as any)[sortField];
+    const aVal = (a as Record<string, unknown>)[sortField];
+    const bVal = (b as Record<string, unknown>)[sortField];
     if (aVal == null && bVal == null) return 0;
     if (aVal == null) return 1;
     if (bVal == null) return -1;
@@ -742,7 +752,7 @@ export default function DieTemplatePage() {
               <div className="text-2xl font-bold text-orange-600">{dashboardStats.locked_count || 0}</div>
             </CardContent>
           </Card>
-          <Card className="border-gray-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('scrap')}>
+          <Card className="border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('scrap')}>
             <CardContent className="pt-4">
               <div className="text-sm text-muted-foreground">已报废</div>
               <div className="text-2xl font-bold text-muted-foreground">{dashboardStats.scrap_count || 0}</div>

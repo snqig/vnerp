@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -49,6 +49,12 @@ interface ReturnItem {
   batch_no: string;
 }
 
+interface Customer {
+  id: number;
+  customer_name: string;
+  customer_code: string;
+}
+
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
   1: { label: '待审核', color: 'bg-yellow-100 text-yellow-800' },
   2: { label: '已审核', color: 'bg-blue-100 text-blue-800' },
@@ -64,9 +70,9 @@ const RETURN_TYPE_MAP: Record<number, string> = {
 };
 
 const INSPECTION_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: '未质检', color: 'bg-gray-100 text-gray-800' },
-  1: { label: '质检中', color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: '已质检', color: 'bg-green-100 text-green-800' },
+  0: { label: '未质检', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  1: { label: '质检中', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' },
+  2: { label: '已质检', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
 };
 
 export default function ReturnPage() {
@@ -81,7 +87,7 @@ export default function ReturnPage() {
     return_type: 1
   });
   const [detailData, setDetailData] = useState<ReturnOrder | null>(null);
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [total, setTotal] = useState(0);
 
   const fetchData = useCallback(async () => {

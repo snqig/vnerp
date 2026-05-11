@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -255,7 +255,7 @@ export default function CreateBOMPage() {
     <MainLayout title="创建BOM">
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">创建BOM</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">创建BOM</h1>
         <Button onClick={() => router.back()} variant="secondary">
           <X className="h-4 w-4 mr-2" />
           返回

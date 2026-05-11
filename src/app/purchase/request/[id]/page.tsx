@@ -52,19 +52,19 @@ interface RequestItem {
 }
 
 const statusMap: Record<number, { label: string; color: string }> = {
-  0: { label: '草稿', color: 'bg-gray-100 text-gray-700' },
-  1: { label: '待审批', color: 'bg-yellow-100 text-yellow-700' },
-  2: { label: '已批准', color: 'bg-green-100 text-green-700' },
-  3: { label: '已拒绝', color: 'bg-red-100 text-red-700' },
-  4: { label: '已转采购', color: 'bg-blue-100 text-blue-700' },
-  5: { label: '已完成', color: 'bg-purple-100 text-purple-700' },
+  0: { label: '草稿', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+  1: { label: '待审批', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
+  2: { label: '已批准', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+  3: { label: '已拒绝', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+  4: { label: '已转采购', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  5: { label: '已完成', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
 };
 
 const priorityMap: Record<number, { label: string; color: string }> = {
-  0: { label: '低', color: 'bg-gray-100 text-gray-700' },
-  1: { label: '中', color: 'bg-blue-100 text-blue-700' },
-  2: { label: '高', color: 'bg-orange-100 text-orange-700' },
-  3: { label: '紧急', color: 'bg-red-100 text-red-700' },
+  0: { label: '低', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+  1: { label: '中', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  2: { label: '高', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
+  3: { label: '紧急', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
 };
 
 export default function PurchaseRequestDetailPage() {

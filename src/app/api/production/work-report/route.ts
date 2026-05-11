@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors, withErrorHandler, validateRequestBody } from '@/lib/api-response';
+import { getWrPrefix, generateDocNo } from '@/lib/global-config';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -45,7 +46,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   const result = await transaction(async (conn) => {
-    const reportNo = `WR${Date.now()}`;
+    const reportNo = generateDocNo(getWrPrefix());
 
     const completedQty = parseFloat(body.completed_qty) || 0;
     const qualifiedQty = parseFloat(body.qualified_qty) || 0;

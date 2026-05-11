@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -36,10 +36,10 @@ interface Equipment {
 
 const EQUIPMENT_TYPES: Record<number, string> = { 1: '印刷机', 2: '覆膜机', 3: '模切机', 4: '全检机', 5: '其他' };
 const CURRENT_STATUS: Record<number, { label: string; color: string }> = {
-  1: { label: '运行', color: 'bg-green-100 text-green-800' },
-  2: { label: '待机', color: 'bg-yellow-100 text-yellow-800' },
-  3: { label: '维修', color: 'bg-red-100 text-red-800' },
-  4: { label: '停机', color: 'bg-gray-100 text-gray-800' },
+  1: { label: '运行', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  2: { label: '待机', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' },
+  3: { label: '维修', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+  4: { label: '停机', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
 };
 
 export default function EquipmentPage() {

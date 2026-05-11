@@ -12,7 +12,7 @@ import {
 interface CEOData {
   overview: { todayOrders: number; todayProduction: number; todayDelivery: number; inventoryValue: number; orderChange: number; productionChange: number; deliveryChange: number; inventoryChange: number };
   production: { efficiency: number; activeOrders: number; completedToday: number; warningCount: number; equipmentStatus: { name: string; status: string; efficiency: number }[]; activeWorkOrders?: { work_order_no: string; product_name: string; customer_name: string; status: string; priority: string }[] };
-  quality: { passRate: number; totalInspections: number; passedInspections: number; failedInspections: number; recentDefects: any[] };
+  quality: { passRate: number; totalInspections: number; passedInspections: number; failedInspections: number; recentDefects: DefectItem[] };
   finance: { totalReceivable: number; totalPayable: number; monthRevenue: number; monthExpense: number; revenueChange: number; expenseChange: number };
   inventory: { totalItems: number; lowStock: number; totalValue: number; warehouseUtilization: number };
   orderTrend: { date: string; count: number }[];
@@ -25,6 +25,14 @@ interface CEOData {
   powerConsumption: { date: string; power: number }[];
   materialUsage: { date: string; usage: number }[];
   processRelations: string[];
+}
+
+interface DefectItem {
+  id?: number;
+  product_name?: string;
+  defect_type?: string;
+  quantity?: number;
+  description?: string;
 }
 
 export default function CEODashboard() {

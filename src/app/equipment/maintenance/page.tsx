@@ -32,6 +32,29 @@ interface MaintenancePlan {
   remark: string;
 }
 
+interface EquipmentItem {
+  id: number;
+  equipment_code: string;
+  equipment_name: string;
+  equipment_type?: string;
+  status?: number;
+}
+
+interface MaintenanceForm {
+  plan_id?: number;
+  equipment_id?: number;
+  maintenance_type?: number;
+  fault_desc?: string;
+  maintenance_content?: string;
+  start_time?: string;
+  end_time?: string;
+  downtime_hours?: number;
+  cost?: number;
+  responsible_id?: number;
+  result?: number;
+  remark?: string;
+}
+
 interface MaintenanceRecord {
   id: number;
   record_no: string;
@@ -77,8 +100,8 @@ export default function EquipmentMaintenancePage() {
   const [searchNo, setSearchNo] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<'plan' | 'record'>('plan');
-  const [form, setForm] = useState<any>({});
-  const [equipmentList, setEquipmentList] = useState<any[]>([]);
+  const [form, setForm] = useState<MaintenanceForm>({});
+  const [equipmentList, setEquipmentList] = useState<EquipmentItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchEquipment = useCallback(async () => {

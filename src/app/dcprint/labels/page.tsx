@@ -78,21 +78,21 @@ interface MaterialLabel {
 // 状态徽章
 const getStatusBadge = (status: string) => {
   const statusMap: Record<string, { label: string; className: string }> = {
-    active: { label: '正常', className: 'bg-green-100 text-green-700' },
-    frozen: { label: '冻结', className: 'bg-orange-100 text-orange-700' },
-    cut: { label: '已分切', className: 'bg-blue-100 text-blue-700' },
-    disabled: { label: '禁用', className: 'bg-gray-100 text-gray-700' },
+    active: { label: '正常', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+    frozen: { label: '冻结', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
+    cut: { label: '已分切', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+    disabled: { label: '禁用', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
   };
-  const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700' };
+  const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
 // 是否徽章
 const getYesNoBadge = (value: number) => {
   return value === 1 ? (
-    <Badge className="bg-green-100 text-green-700">是</Badge>
+    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">是</Badge>
   ) : (
-    <Badge className="bg-gray-100 text-gray-700">否</Badge>
+    <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">否</Badge>
   );
 };
 

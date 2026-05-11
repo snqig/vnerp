@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -34,17 +34,31 @@ interface Reconciliation {
   create_time: string;
 }
 
+interface ReconciliationDetailItem {
+  id?: number;
+  reconciliation_id?: number;
+  type: 'delivery' | 'return';
+  ref_no: string;
+  amount: number;
+}
+
+interface Customer {
+  id: number;
+  customer_name: string;
+  customer_code: string;
+}
+
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: '草稿', color: 'bg-gray-100 text-gray-800' },
-  2: { label: '已发送', color: 'bg-blue-100 text-blue-800' },
-  3: { label: '已确认', color: 'bg-green-100 text-green-800' },
-  4: { label: '已关闭', color: 'bg-gray-100 text-gray-800' },
+  1: { label: '草稿', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  2: { label: '已发送', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+  3: { label: '已确认', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  4: { label: '已关闭', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
 };
 
 const CONFIRM_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: '未确认', color: 'bg-gray-100 text-gray-800' },
-  1: { label: '已确认', color: 'bg-green-100 text-green-800' },
-  2: { label: '有异议', color: 'bg-red-100 text-red-800' },
+  0: { label: '未确认', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  1: { label: '已确认', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  2: { label: '有异议', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
 };
 
 export default function ReconciliationPage() {
@@ -55,8 +69,8 @@ export default function ReconciliationPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailData, setDetailData] = useState<Reconciliation | null>(null);
-  const [detailItems, setDetailItems] = useState<any[]>([]);
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [detailItems, setDetailItems] = useState<ReconciliationDetailItem[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [form, setForm] = useState({
     customer_id: 0,
     customer_name: '',

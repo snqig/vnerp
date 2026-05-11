@@ -56,35 +56,74 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-// 标准卡列表项接口（基于 prd_standard_card 表）
+// 标准卡列表项接口（符合设计文档 5.1 节 standard_cards 表结构）
 interface StandardCardListItem {
   id: number;
-  cardNo: string;
-  customerName: string;
-  customerCode: string;
-  productName: string;
-  version: string;
-  date: string;
-  finishedSize: string;
+  card_no: string;                    // 格式：SC+类型代码+YYYYMMDD+3位序号
+  name: string;                       // 标准卡名称
+  type: string;                       // 类型：color/process/quality/comprehensive
+  version: string;                    // 版本号
+  material_id?: number;               // 适用产品 ID
+  status: number;                     // 状态：1=草稿 2=待审核 3=已生效 4=已失效
+
+  // 扩展字段（兼容丝网印刷行业特性）
+  customer_name: string;
+  customer_code: string;
+  product_name: string;
+
+  // 工艺参数
+  finished_size: string;
   tolerance: string;
-  materialName: string;
-  materialType: string;
-  layoutType: string;
-  printType: string;
-  processMethod: string;
-  glueType: string;
-  packingType: string;
-  status: number;
-  createTime: string;
-  updateTime: string;
+  material_name: string;
+  material_type: string;
+  layout_type: string;
+  print_type: string;
+  process_method: string;
+  glue_type: string;
+  packing_type: string;
+
+  create_time: string;
+  update_time: string;
 }
 
-// 状态映射
+// 标准卡类型定义（符合设计文档第3节）
+type StandardCardType = 'color' | 'process' | 'quality' | 'comprehensive';
+
+// 标准卡类型映射
+const typeMap: Record<StandardCardType, { label: string; color: string }> = {
+  color: {
+    label: '颜色标准卡',
+    color: 'bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-700'
+  },
+  process: {
+    label: '工艺标准卡',
+    color: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700'
+  },
+  quality: {
+    label: '质量标准卡',
+    color: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700'
+  },
+  comprehensive: {
+    label: '综合标准卡',
+    color: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700'
+  }
+};
+
+// 审核状态接口
+interface ApprovalStatus {
+  currentStep?: number;
+  totalSteps?: number;
+  canApprove?: boolean;
+  canReject?: boolean;
+  message?: string;
+}
+
+// 状态映射（符合设计文档 5.1 节：草稿、待审核、已生效、已失效）
 const statusMap: Record<number, { label: string; color: string }> = {
-  1: { label: '草稿', color: 'bg-gray-100 text-gray-800 border-gray-200' },
-  2: { label: '待审核', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  3: { label: '已启用', color: 'bg-green-100 text-green-800 border-green-200' },
-  4: { label: '已归档', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  1: { label: '草稿', color: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' },
+  2: { label: '待审核', color: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700' },
+  3: { label: '已生效', color: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700' },
+  4: { label: '已失效', color: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700' },
 };
 
 // 印刷类型选项
@@ -109,7 +148,7 @@ export default function StandardCardPage() {
   const [cardToDelete, setCardToDelete] = useState<StandardCardListItem | null>(null);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [cardToApprove, setCardToApprove] = useState<StandardCardListItem | null>(null);
-  const [approvalStatus, setApprovalStatus] = useState<any>(null);
+  const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus | null>(null);
   const [loadingApproval, setLoadingApproval] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -391,7 +430,7 @@ export default function StandardCardPage() {
                 <p className="text-2xl font-bold">
                   {cards.filter((c) => c.status === 3).length}
                 </p>
-                <p className="text-xs text-muted-foreground">已启用</p>
+                <p className="text-xs text-muted-foreground">已生效</p>
               </div>
             </CardContent>
           </Card>
@@ -423,14 +462,14 @@ export default function StandardCardPage() {
           </Card>
           <Card>
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-3 bg-slate-100 rounded-lg">
-                <Palette className="h-5 w-5 text-slate-600" />
+              <div className="p-3 bg-red-100 rounded-lg">
+                <Palette className="h-5 w-5 text-red-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold">
                   {cards.filter((c) => c.status === 4).length}
                 </p>
-                <p className="text-xs text-muted-foreground">已归档</p>
+                <p className="text-xs text-muted-foreground">已失效</p>
               </div>
             </CardContent>
           </Card>
@@ -533,16 +572,15 @@ export default function StandardCardPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="w-[130px]">标准卡编号</TableHead>
-                    <TableHead className="w-[160px]">客户信息</TableHead>
-                    <TableHead className="w-[140px]">产品名称</TableHead>
+                    <TableHead className="w-[120px]">标准卡编号</TableHead>
+                    <TableHead className="w-[120px]">标准卡名称</TableHead>
+                    <TableHead className="w-[80px]">类型</TableHead>
+                    <TableHead className="w-[100px]">客户</TableHead>
+                    <TableHead className="w-[110px]">产品</TableHead>
                     <TableHead className="w-[60px]">版本</TableHead>
-                    <TableHead className="w-[100px]">日期</TableHead>
+                    <TableHead className="w-[90px]">日期</TableHead>
                     <TableHead className="w-[100px]">成品尺寸</TableHead>
-                    <TableHead className="w-[120px]">材料名称</TableHead>
-                    <TableHead className="w-[80px]">材料类型</TableHead>
                     <TableHead className="w-[80px]">印刷类型</TableHead>
-                    <TableHead className="w-[70px]">加工方式</TableHead>
                     <TableHead className="w-[70px]">状态</TableHead>
                     <TableHead className="w-[70px] text-center">操作</TableHead>
                   </TableRow>
@@ -550,7 +588,7 @@ export default function StandardCardPage() {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={12} className="h-32 text-center text-muted-foreground">
+                      <TableCell colSpan={11} className="h-32 text-center text-muted-foreground">
                         <div className="flex items-center justify-center gap-2">
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                           加载中...
@@ -559,7 +597,7 @@ export default function StandardCardPage() {
                     </TableRow>
                   ) : filteredCards.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={12} className="h-32 text-center text-muted-foreground">
+                      <TableCell colSpan={11} className="h-32 text-center text-muted-foreground">
                         暂无数据
                       </TableCell>
                     </TableRow>
@@ -567,19 +605,29 @@ export default function StandardCardPage() {
                     filteredCards.map((card) => (
                       <TableRow key={card.id} className="group hover:bg-muted/30">
                         <TableCell className="font-mono text-sm font-medium">
-                          {card.cardNo}
+                          {card.card_no}
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium truncate max-w-[120px] block" title={card.name}>
+                            {card.name}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-xs ${typeMap[card.type as StandardCardType]?.color || 'bg-gray-100'}`}>
+                            {typeMap[card.type as StandardCardType]?.label || card.type}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span className="font-medium truncate max-w-[140px]" title={card.customerName}>
-                              {card.customerName}
+                            <span className="font-medium truncate max-w-[100px]" title={card.customer_name}>
+                              {card.customer_name}
                             </span>
-                            <span className="text-xs text-muted-foreground">{card.customerCode}</span>
+                            <span className="text-xs text-muted-foreground">{card.customer_code}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="truncate max-w-[120px] block" title={card.productName}>
-                            {card.productName}
+                          <span className="truncate max-w-[110px] block" title={card.product_name}>
+                            {card.product_name}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -590,32 +638,17 @@ export default function StandardCardPage() {
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <Calendar className="h-3 w-3" />
-                            {card.date}
+                            {card.create_time?.split(' ')[0] || '-'}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm">
                             <Ruler className="h-3 w-3 text-muted-foreground" />
-                            {card.finishedSize}
+                            {card.finished_size || '-'}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="truncate max-w-[100px] block" title={card.materialName}>
-                            {card.materialName}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="text-xs">
-                            {card.materialType}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm">{card.printType}</span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-xs">
-                            {card.processMethod}
-                          </Badge>
+                          <span className="text-sm">{card.print_type || '-'}</span>
                         </TableCell>
                         <TableCell>{getStatusBadge(card.status)}</TableCell>
                         <TableCell>

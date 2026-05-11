@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿'use client';
+﻿﻿﻿﻿﻿﻿﻿﻿﻿'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -78,7 +78,7 @@ interface WorkOrderItem {
   material_code: string;
   required_qty: number;
   unit: string;
-  status: string;
+  status: number;
 }
 
 interface WorkOrder {
@@ -89,10 +89,10 @@ interface WorkOrder {
   customer_name: string;
   product_name: string;
   product_id: number;
-  quantity: number;
+  plan_quantity: number;
   unit: string;
-  status: string;
-  priority: string;
+  status: number;
+  priority: number;
   plan_start_date: string;
   plan_end_date: string;
   actual_start_date: string | null;
@@ -105,27 +105,27 @@ interface WorkOrder {
 }
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  pending: { label: '待确认', className: 'bg-gray-100 text-gray-700' },
-  confirmed: { label: '已确认', className: 'bg-blue-100 text-blue-700' },
-  producing: { label: '生产中', className: 'bg-orange-100 text-orange-700' },
-  completed: { label: '已完成', className: 'bg-green-100 text-green-700' },
-  cancelled: { label: '已取消', className: 'bg-red-100 text-red-700' },
+  pending: { label: '待确认', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+  confirmed: { label: '已确认', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  producing: { label: '生产中', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
+  completed: { label: '已完成', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+  cancelled: { label: '已取消', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
 };
 
 const PRIORITY_MAP: Record<string, { label: string; className: string }> = {
-  urgent: { label: '紧急', className: 'bg-red-100 text-red-700' },
-  high: { label: '高', className: 'bg-orange-100 text-orange-700' },
-  normal: { label: '中', className: 'bg-blue-100 text-blue-700' },
-  low: { label: '低', className: 'bg-gray-100 text-gray-700' },
+  urgent: { label: '紧急', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+  high: { label: '高', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
+  normal: { label: '中', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  low: { label: '低', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
 };
 
 const getStatusBadge = (status: string) => {
-  const config = STATUS_MAP[status] || { label: status, className: 'bg-gray-100 text-gray-700' };
+  const config = STATUS_MAP[status] || { label: status, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
 const getPriorityBadge = (priority: string) => {
-  const config = PRIORITY_MAP[priority] || { label: priority, className: 'bg-gray-100 text-gray-700' };
+  const config = PRIORITY_MAP[priority] || { label: priority, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -154,15 +154,15 @@ export default function WorkOrderPage() {
   const sortedWorkOrders = useMemo(() => {
     if (!sortField || !sortOrder) return workOrders;
     return [...workOrders].sort((a, b) => {
-      const aVal = String((a as any)[sortField] ?? '').toLowerCase();
-      const bVal = String((b as any)[sortField] ?? '').toLowerCase();
+      const aVal = String((a as Record<string, unknown>)[sortField] ?? '').toLowerCase();
+      const bVal = String((b as Record<string, unknown>)[sortField] ?? '').toLowerCase();
       if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
   }, [workOrders, sortField, sortOrder]);
-  const [salesOrders, setSalesOrders] = useState<any[]>([]);
-  const [bomList, setBomList] = useState<any[]>([]);
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
+  const [bomList, setBomList] = useState<BOMItem[]>([]);
   const [newOrder, setNewOrder] = useState({
     order_no: '',
     bom_id: '',

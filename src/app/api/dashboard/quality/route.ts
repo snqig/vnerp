@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getConfig } from '@/lib/global-config';
 
 export async function GET(request: NextRequest) {
   try {
+    const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
+
     let overview: any = { totalInspections: 0, passRate: 96.8, todayInspections: 0, todayPassRate: 0, pendingInspections: 0, defectRate: 3.2, passedInspections: 0, failedInspections: 0 };
     try {
       const rows: any = await query(`SELECT COUNT(*) as total FROM qc_inspection WHERE deleted = 0`);
@@ -39,7 +42,7 @@ export async function GET(request: NextRequest) {
       const rows: any = await query(`
         SELECT DATE(inspection_date) as date, COUNT(*) as total,
           SUM(CASE WHEN inspection_result = 2 THEN 1 ELSE 0 END) as defects
-        FROM qc_inspection WHERE deleted = 0 AND inspection_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        FROM qc_inspection WHERE deleted = 0 AND inspection_date >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
         GROUP BY DATE(inspection_date) ORDER BY date
       `);
       defectTrend = Array.isArray(rows) ? rows : [];

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getConfig } from '@/lib/global-config';
 
 export async function GET(request: NextRequest) {
   try {
+    const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
+
     let overview: any = { todayOrders: 0, todayProduction: 0, todayDelivery: 0, inventoryValue: 0, orderChange: 0, productionChange: 0, deliveryChange: 0, inventoryChange: 0 };
     try {
       const rows: any = await query(`SELECT COUNT(*) as total FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE()`);
@@ -149,7 +152,7 @@ export async function GET(request: NextRequest) {
     try {
       const rows: any = await query(`
         SELECT DATE(create_time) as date, COUNT(*) as count
-        FROM sal_order WHERE deleted = 0 AND create_time >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        FROM sal_order WHERE deleted = 0 AND create_time >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
         GROUP BY DATE(create_time) ORDER BY date
       `);
       orderTrend = Array.isArray(rows) ? rows : [];

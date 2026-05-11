@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, paginatedResponse, withErrorHandler } from '@/lib/api-response';
+import { generateDocNo, getFprPrefix } from '@/lib/global-config';
 
 // 本地分页查询辅助函数
 async function queryPaginatedLocal(
@@ -107,12 +108,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   } = body;
 
   // 生成终检编号
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const random = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-  const finalNo = `FI${year}${month}${day}${random}`;
+  const finalNo = generateDocNo(getFprPrefix());
 
   // 插入终检记录到 qc_final_inspection 表
   await query(

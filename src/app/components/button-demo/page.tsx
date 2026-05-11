@@ -138,7 +138,7 @@ export default function ButtonDemoPage() {
                             type="checkbox"
                             checked={fullWidth}
                             onChange={(e) => setFullWidth(e.target.checked)}
-                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                            className="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary"
                           />
                           <span className="text-sm">全宽</span>
                         </label>
@@ -147,7 +147,7 @@ export default function ButtonDemoPage() {
                             type="checkbox"
                             checked={disabled}
                             onChange={(e) => setDisabled(e.target.checked)}
-                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                            className="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary"
                           />
                           <span className="text-sm">禁用</span>
                         </label>

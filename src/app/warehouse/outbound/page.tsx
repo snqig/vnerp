@@ -48,6 +48,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+
+interface OutboundRecord {
+  id: string;
+  date: string;
+  materialName: string;
+  spec: string;
+  quantity: number;
+  unit: string;
+  warehouse: string;
+  location: string;
+  operator: string;
+  status: string;
+  auditStatus: string;
+  type: string;
+  remark: string;
+  isRawMaterial: boolean;
+  materialCode: string;
+  width?: number;
+  batchNo?: string;
+}
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
@@ -105,7 +125,7 @@ const materials = [
 ];
 
 // 出库记录数据
-const initialOutboundRecords: any[] = [
+const initialOutboundRecords: OutboundRecord[] = [
   {
     id: 'CK20250303001',
     date: '2025-03-03',
@@ -679,7 +699,7 @@ export default function OutboundManagementPage() {
             >
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-slate-500" />
-                <span className="text-sm font-medium text-slate-700">状态：</span>
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">状态：</span>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="选择状态" />
@@ -693,10 +713,10 @@ export default function OutboundManagementPage() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Search className="w-4 h-4 text-slate-500" />
-                <span className="text-sm font-medium text-slate-700">关键字：</span>
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">关键字：</span>
                 <Input
                   placeholder="搜索品名、单号、备注..."
                   value={searchQuery}
@@ -704,10 +724,10 @@ export default function OutboundManagementPage() {
                   className="w-64"
                 />
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-slate-500" />
-                <span className="text-sm font-medium text-slate-700">时间：</span>
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">时间：</span>
                 <Select value={dateRange} onValueChange={setDateRange}>
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="时间范围" />
@@ -1317,17 +1337,17 @@ export default function OutboundManagementPage() {
               {/* 分配明细表 */}
               {fifoAllocation.allocation_plan && fifoAllocation.allocation_plan.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-slate-700 mb-2">分配明细（按入库日期从早到晚）</h4>
+                  <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">分配明细（按入库日期从早到晚）</h4>
                   <div className="border rounded-lg overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="bg-slate-50">批次号</TableHead>
-                          <TableHead className="bg-slate-50">入库日期</TableHead>
-                          <TableHead className="bg-slate-50">可用数量</TableHead>
-                          <TableHead className="bg-slate-50">分配数量</TableHead>
-                          <TableHead className="bg-slate-50">单价</TableHead>
-                          <TableHead className="bg-slate-50">分配金额</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">批次号</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">入库日期</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">可用数量</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">分配数量</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">单价</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">分配金额</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1350,17 +1370,17 @@ export default function OutboundManagementPage() {
               {/* 可用批次列表 */}
               {fifoAllocation.batches && fifoAllocation.batches.length > 0 && !fifoAllocation.allocation_plan?.length && (
                 <div>
-                  <h4 className="text-sm font-medium text-slate-700 mb-2">可用批次（按入库日期排序）</h4>
+                  <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">可用批次（按入库日期排序）</h4>
                   <div className="border rounded-lg overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="bg-slate-50">批次号</TableHead>
-                          <TableHead className="bg-slate-50">入库日期</TableHead>
-                          <TableHead className="bg-slate-50">总数量</TableHead>
-                          <TableHead className="bg-slate-50">可用数量</TableHead>
-                          <TableHead className="bg-slate-50">单价</TableHead>
-                          <TableHead className="bg-slate-50">状态</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">批次号</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">入库日期</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">总数量</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">可用数量</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">单价</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">状态</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

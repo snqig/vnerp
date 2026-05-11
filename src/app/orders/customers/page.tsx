@@ -1,4 +1,4 @@
-﻿﻿'use client';
+﻿'use client';
 
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -102,10 +102,10 @@ const customerTypeMap: Record<number, { label: string; color: string }> = {
 
 // 跟进状态映射
 const followUpStatusMap: Record<number, { label: string; color: string }> = {
-  1: { label: '潜在客户', color: 'bg-gray-100 text-gray-800 border-gray-200' },
-  2: { label: '意向客户', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  3: { label: '成交客户', color: 'bg-green-100 text-green-800 border-green-200' },
-  4: { label: '流失客户', color: 'bg-red-100 text-red-800 border-red-200' },
+  1: { label: '潜在客户', color: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' },
+  2: { label: '意向客户', color: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700' },
+  3: { label: '成交客户', color: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700' },
+  4: { label: '流失客户', color: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700' },
 };
 
 // 状态映射
@@ -381,8 +381,8 @@ export default function CustomersPage() {
   const filteredCustomers = useMemo(() => {
     if (!sortField || !sortOrder) return customers;
     return [...customers].sort((a, b) => {
-      const aVal = (a as any)[sortField];
-      const bVal = (b as any)[sortField];
+      const aVal = (a as Record<string, unknown>)[sortField];
+      const bVal = (b as Record<string, unknown>)[sortField];
       const aStr = String(aVal ?? '').toLowerCase();
       const bStr = String(bVal ?? '').toLowerCase();
       if (aStr < bStr) return sortOrder === 'asc' ? -1 : 1;

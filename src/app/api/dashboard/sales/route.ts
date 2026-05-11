@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getConfig } from '@/lib/global-config';
 
 export async function GET(request: NextRequest) {
   try {
+    const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
+
     let overview: any = { totalOrders: 0, todayOrders: 0, monthRevenue: 0, pendingDelivery: 0, completedOrders: 0, orderChange: 0 };
     try {
       const rows: any = await query(`
@@ -23,7 +26,7 @@ export async function GET(request: NextRequest) {
     try {
       const rows: any = await query(`
         SELECT COALESCE(SUM(total_amount), 0) as total FROM sal_order
-        WHERE deleted = 0 AND DATE(create_time) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        WHERE deleted = 0 AND DATE(create_time) >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
       `);
       if (Array.isArray(rows) && rows.length > 0) overview.monthRevenue = Number(rows[0].total || 0);
     } catch (e) { console.error('sales revenue failed:', e); }
@@ -32,7 +35,7 @@ export async function GET(request: NextRequest) {
     try {
       const rows: any = await query(`
         SELECT DATE(create_time) as date, COUNT(*) as count, COALESCE(SUM(total_amount), 0) as amount
-        FROM sal_order WHERE deleted = 0 AND create_time >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        FROM sal_order WHERE deleted = 0 AND create_time >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
         GROUP BY DATE(create_time) ORDER BY date
       `);
       orderTrend = Array.isArray(rows) ? rows : [];

@@ -826,10 +826,10 @@ export default function ProductsPage() {
                       <TableCell><Badge variant="outline">{v.version}</Badge></TableCell>
                       <TableCell>
                         <Badge className={
-                          v.change_type === 'CREATE' ? 'bg-green-100 text-green-700' :
-                          v.change_type === 'PUBLISH' ? 'bg-blue-100 text-blue-700' :
-                          v.change_type === 'DISABLE' ? 'bg-red-100 text-red-700' :
-                          'bg-gray-100 text-gray-700'
+                          v.change_type === 'CREATE' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                          v.change_type === 'PUBLISH' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                          v.change_type === 'DISABLE' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
+                          'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
                         }>
                           {v.change_type === 'CREATE' ? '新建' :
                            v.change_type === 'PUBLISH' ? '发布' :

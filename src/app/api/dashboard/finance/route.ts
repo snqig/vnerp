@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getConfig } from '@/lib/global-config';
 
 export async function GET(request: NextRequest) {
   try {
+    const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
+    const aging30Days = Number(getConfig('aging_30_days') || 30);
+    const aging60Days = Number(getConfig('aging_60_days') || 60);
+    const aging90Days = Number(getConfig('aging_90_days') || 90);
+
     let overview: any = { totalReceivable: 0, totalPayable: 0, monthRevenue: 0, monthExpense: 0, revenueChange: 0, expenseChange: 0, netProfit: 0 };
     try {
       const recRows: any = await query(`SELECT COALESCE(SUM(amount), 0) as total FROM fin_receivable WHERE deleted = 0 AND status = 1`);
@@ -13,8 +19,8 @@ export async function GET(request: NextRequest) {
     } catch (e) { console.error('finance overview failed:', e); }
 
     try {
-      const revRows: any = await query(`SELECT COALESCE(SUM(amount), 0) as total FROM fin_receipt_record WHERE deleted = 0 AND DATE(receipt_date) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)`);
-      const expRows: any = await query(`SELECT COALESCE(SUM(amount), 0) as total FROM fin_payment_record WHERE deleted = 0 AND DATE(payment_date) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)`);
+      const revRows: any = await query(`SELECT COALESCE(SUM(amount), 0) as total FROM fin_receipt_record WHERE deleted = 0 AND DATE(receipt_date) >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)`);
+      const expRows: any = await query(`SELECT COALESCE(SUM(amount), 0) as total FROM fin_payment_record WHERE deleted = 0 AND DATE(payment_date) >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)`);
       if (Array.isArray(revRows) && revRows.length > 0) overview.monthRevenue = Number(revRows[0].total || 0);
       if (Array.isArray(expRows) && expRows.length > 0) overview.monthExpense = Number(expRows[0].total || 0);
     } catch (e) { console.error('finance monthly failed:', e); }
@@ -23,7 +29,7 @@ export async function GET(request: NextRequest) {
     try {
       const rows: any = await query(`
         SELECT DATE(receipt_date) as date, COALESCE(SUM(amount), 0) as amount
-        FROM fin_receipt_record WHERE deleted = 0 AND receipt_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        FROM fin_receipt_record WHERE deleted = 0 AND receipt_date >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
         GROUP BY DATE(receipt_date) ORDER BY date
       `);
       revenueTrend = Array.isArray(rows) ? rows : [];
@@ -33,7 +39,7 @@ export async function GET(request: NextRequest) {
     try {
       const rows: any = await query(`
         SELECT DATE(payment_date) as date, COALESCE(SUM(amount), 0) as amount
-        FROM fin_payment_record WHERE deleted = 0 AND payment_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        FROM fin_payment_record WHERE deleted = 0 AND payment_date >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
         GROUP BY DATE(payment_date) ORDER BY date
       `);
       expenseTrend = Array.isArray(rows) ? rows : [];
@@ -44,10 +50,10 @@ export async function GET(request: NextRequest) {
       const rows: any = await query(`
         SELECT
           CASE
-            WHEN DATEDIFF(CURDATE(), create_time) <= 30 THEN '0-30天'
-            WHEN DATEDIFF(CURDATE(), create_time) <= 60 THEN '31-60天'
-            WHEN DATEDIFF(CURDATE(), create_time) <= 90 THEN '61-90天'
-            ELSE '90天以上'
+            WHEN DATEDIFF(CURDATE(), create_time) <= ${aging30Days} THEN '0-${aging30Days}天'
+            WHEN DATEDIFF(CURDATE(), create_time) <= ${aging60Days} THEN '${aging30Days + 1}-${aging60Days}天'
+            WHEN DATEDIFF(CURDATE(), create_time) <= ${aging90Days} THEN '${aging60Days + 1}-${aging90Days}天'
+            ELSE '${aging90Days}天以上'
           END as aging,
           COUNT(*) as count,
           COALESCE(SUM(amount), 0) as total

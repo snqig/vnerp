@@ -18,6 +18,18 @@ interface Dept { id: number; dept_name: string; }
 interface Employee { id: number; name: string; employee_no: string; }
 interface UserItem { id: number; username: string; real_name: string; email: string; phone: string; department_id: number; dept_name: string; status: number; first_login: number; roles: Role[]; }
 
+interface UserFormData {
+  id?: number;
+  username: string;
+  real_name: string;
+  email: string;
+  phone: string;
+  department_id: number | null;
+  role_ids: number[];
+  status: number;
+  password?: string;
+}
+
 export default function UserManagementPage() {
   const { toast } = useToast();
   const [list, setList] = useState<UserItem[]>([]);
@@ -60,7 +72,7 @@ export default function UserManagementPage() {
 
     try {
       const method = editItem.id ? 'PUT' : 'POST';
-      const body: any = {
+      const body: UserFormData = {
         id: editItem.id,
         username: editItem.username,
         real_name: editItem.real_name,

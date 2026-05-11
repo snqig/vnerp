@@ -61,8 +61,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     if (!items || (items as any[]).length === 0) {
       items = await query(
-        `SELECT od.material_name, od.quantity, od.unit, od.unit_price, od.total_amount as total_price
+        `SELECT od.material_id, m.material_name, od.quantity, od.unit, od.unit_price, od.total_amount as total_price
          FROM sal_order_detail od
+         LEFT JOIN inv_material m ON od.material_id = m.id
          WHERE od.order_id = ?`,
         [order.id]
       );
@@ -79,11 +80,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       total_amount: parseFloat(order.total_amount),
       total_with_tax: order.total_with_tax ? parseFloat(order.total_with_tax) : undefined,
       items: (items as any[]).map((item: any) => ({
-        material_name: item.material_name,
+        material_name: item.material_name || '',
         quantity: parseFloat(item.quantity),
-        unit: item.unit,
+        unit: item.unit || '',
         unit_price: parseFloat(item.unit_price),
-        total_price: parseFloat(item.total_price),
+        total_price: parseFloat(item.total_price || item.total_amount || 0),
       })),
       remark: order.remark,
       create_time: order.create_time,
@@ -120,8 +121,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
       if (!items || (items as any[]).length === 0) {
         items = await query(
-          `SELECT od.material_name, od.quantity, od.unit, od.unit_price, od.total_amount as total_price
+          `SELECT od.material_id, m.material_name, od.quantity, od.unit, od.unit_price, od.total_amount as total_price
            FROM sal_order_detail od
+           LEFT JOIN inv_material m ON od.material_id = m.id
            WHERE od.order_id = ?`,
           [order.id]
         );
@@ -138,11 +140,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         total_amount: parseFloat(order.total_amount),
         total_with_tax: order.total_with_tax ? parseFloat(order.total_with_tax) : undefined,
         items: (items as any[]).map((item: any) => ({
-          material_name: item.material_name,
+          material_name: item.material_name || '',
           quantity: parseFloat(item.quantity),
-          unit: item.unit,
+          unit: item.unit || '',
           unit_price: parseFloat(item.unit_price),
-          total_price: parseFloat(item.total_price),
+          total_price: parseFloat(item.total_price || item.total_amount || 0),
         })),
         remark: order.remark,
         create_time: order.create_time,

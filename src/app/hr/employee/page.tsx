@@ -1227,7 +1227,7 @@ export default function EmployeePage() {
                           <img 
                             src={emp.photo} 
                             alt={emp.name}
-                            className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                            className="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-600"
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
@@ -1309,7 +1309,7 @@ export default function EmployeePage() {
                   className="hidden"
                 />
                 {form.photo ? (
-                  <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden border-2 border-gray-200">
+                  <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600">
                     <img 
                       src={form.photo} 
                       alt="员工照片" 
@@ -1327,7 +1327,7 @@ export default function EmployeePage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingPhoto}
-                    className="w-full aspect-[3/4] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-blue-400 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                    className="w-full aspect-[3/4] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-blue-400 dark:hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors disabled:opacity-50"
                   >
                     {uploadingPhoto ? (
                       <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />

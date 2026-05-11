@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { withErrorHandler, successResponse, logOperation } from '@/lib/api-response';
 import { randomUUID } from 'crypto';
+import { getMrPrefix, generateDocNo } from '@/lib/global-config';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -34,7 +35,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     warehouse_id, location_id, expire_time, remark } = body;
 
   const now = new Date();
-  const recordNo = 'MR' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  const recordNo = generateDocNo(getMrPrefix());
 
   const result: any = await execute(
     'INSERT INTO ink_mixed_record (record_no, base_ink_id, base_ink_code, base_ink_name, mix_ratio, color_name, color_code, company_id, company_name, mix_time, operator_id, operator_name, quantity, unit, warehouse_id, location_id, status, expire_time, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)',

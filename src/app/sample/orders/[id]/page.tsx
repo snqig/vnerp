@@ -53,16 +53,16 @@ interface SampleOrder {
 }
 
 const statusMap: Record<number, { label: string; color: string }> = {
-  0: { label: '待处理', color: 'bg-gray-100 text-gray-700' },
-  1: { label: '进行中', color: 'bg-blue-100 text-blue-700' },
-  2: { label: '已完成', color: 'bg-green-100 text-green-700' },
-  3: { label: '已取消', color: 'bg-red-100 text-red-700' },
+  0: { label: '待处理', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+  1: { label: '进行中', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  2: { label: '已完成', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+  3: { label: '已取消', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
 };
 
 const sampleTypeColors: Record<string, string> = {
-  '设变': 'bg-purple-100 text-purple-700',
-  '测试': 'bg-blue-100 text-blue-700',
-  '新款': 'bg-green-100 text-green-700',
+  '设变': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  '测试': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  '新款': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
 };
 
 export default function SampleOrderDetailPage() {

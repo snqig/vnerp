@@ -774,9 +774,9 @@ export default function HRSalaryPage() {
                     </TableCell>
                     <TableCell>
                       {salary.actual_salary ? (
-                        <Badge className="bg-green-100 text-green-700">已发放</Badge>
+                        <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">已发放</Badge>
                       ) : (
-                        <Badge className="bg-gray-100 text-gray-700">未录入</Badge>
+                        <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">未录入</Badge>
                       )}
                     </TableCell>
                     <TableCell>

@@ -90,7 +90,7 @@ interface PurchaseOrder {
   create_time: string;
   update_time: string;
   audit_time: string | null;
-  lines?: any[];
+  lines?: OrderItem[];
 }
 
 interface Supplier {
@@ -130,7 +130,7 @@ const PO_STATUS = {
 } as const;
 
 const getStatusBadge = (status: number) => {
-  const config = STATUS_MAP[status] || { label: `未知(${status})`, className: 'bg-gray-100 text-gray-700' };
+  const config = STATUS_MAP[status] || { label: `未知(${status})`, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -397,7 +397,7 @@ export default function PurchaseOrdersPage() {
       const headers = Object.keys(data[0] || {});
       const csvContent = [
         headers.join('\t'),
-        ...data.map(row => headers.map(h => (row as any)[h] ?? '').join('\t'))
+        ...data.map(row => headers.map(h => (row as Record<string, unknown>)[h] ?? '').join('\t'))
       ].join('\n');
       const bom = '\uFEFF';
       const blob = new Blob([bom + csvContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
@@ -414,7 +414,7 @@ export default function PurchaseOrdersPage() {
       const headers = Object.keys(data[0] || {});
       const thCells = headers.map(h => `<th>${h}</th>`).join('');
       const rows = data.map(row =>
-        '<tr>' + headers.map(h => `<td>${(row as any)[h] ?? ''}</td>`).join('') + '</tr>'
+        '<tr>' + headers.map(h => `<td>${(row as Record<string, unknown>)[h] ?? ''}</td>`).join('') + '</tr>'
       ).join('');
       printWindow.document.write(`<!DOCTYPE html><html><head><title>采购订单导出</title>
 <style>
@@ -437,7 +437,7 @@ export default function PurchaseOrdersPage() {
       const headers = Object.keys(data[0] || {});
       const thCells = headers.map(h => `<th style="border:1px solid #333;padding:6px;background:#f0f0f0">${h}</th>`).join('');
       const rows = data.map(row =>
-        '<tr>' + headers.map(h => `<td style="border:1px solid #333;padding:6px">${(row as any)[h] ?? ''}</td>`).join('') + '</tr>'
+        '<tr>' + headers.map(h => `<td style="border:1px solid #333;padding:6px">${(row as Record<string, unknown>)[h] ?? ''}</td>`).join('') + '</tr>'
       ).join('');
       const htmlContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head><meta charset="utf-8"><title>采购订单</title></head>
@@ -495,8 +495,8 @@ export default function PurchaseOrdersPage() {
   const sortedOrders = useMemo(() => {
     if (!sortField || !sortOrder) return orders;
     return [...orders].sort((a, b) => {
-      let aVal: any = (a as any)[sortField];
-      let bVal: any = (b as any)[sortField];
+      let aVal: string | number = (a as Record<string, unknown>)[sortField] as string | number;
+      let bVal: string | number = (b as Record<string, unknown>)[sortField] as string | number;
       if (sortField === 'total_amount' || sortField === 'grand_total' || sortField === 'total_quantity' || sortField === 'status') {
         aVal = Number(aVal) || 0;
         bVal = Number(bVal) || 0;

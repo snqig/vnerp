@@ -298,7 +298,7 @@ export default function RolesPage() {
           {menu.path && <span className="text-xs text-gray-400">({menu.path})</span>}
         </div>
         {menu.children && menu.children.length > 0 && (
-          <div className="border-l-2 border-gray-200 ml-4">
+          <div className="border-l-2 border-gray-200 dark:border-gray-700 ml-4">
             {renderMenuTree(menu.children, level + 1)}
           </div>
         )}
@@ -558,7 +558,7 @@ export default function RolesPage() {
                 <div className="space-y-4 max-h-[400px] overflow-y-auto">
                   {permissionModules.map(module => (
                     <div key={module.id} className="border rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
                         <Checkbox 
                           checked={module.permissions.every(p => selectedPermissions.includes(p.id))}
                           onCheckedChange={(checked) => {

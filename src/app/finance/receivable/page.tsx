@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -19,6 +19,18 @@ interface Receivable {
   balance: number; due_date: string; status: number; remark: string;
 }
 
+interface ReceivableDetail extends Receivable {
+  create_time?: string;
+  update_time?: string;
+  receipt_records?: Array<{
+    id: number;
+    receipt_no: string;
+    amount: number;
+    receipt_date: string;
+    remark?: string;
+  }>;
+}
+
 const statusMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   1: { label: '未收款', variant: 'outline' }, 2: { label: '部分收款', variant: 'secondary' },
   3: { label: '已收款', variant: 'default' }, 9: { label: '已取消', variant: 'destructive' },
@@ -32,7 +44,7 @@ export default function ReceivablePage() {
   const [keyword, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showDialog, setShowDialog] = useState(false);
-  const [detailItem, setDetailItem] = useState<any>(null);
+  const [detailItem, setDetailItem] = useState<ReceivableDetail | null>(null);
   const [receiptForm, setReceiptForm] = useState({ amount: 0, receipt_date: '', remark: '' });
 
   const fetchData = useCallback(async () => {

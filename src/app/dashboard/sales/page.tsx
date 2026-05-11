@@ -18,6 +18,10 @@ interface SalesData {
   statusDistribution: { status: number; count: number }[];
 }
 
+interface ChartDataItem {
+  [key: string]: string | number;
+}
+
 function LineChart({ data, width = 400, height = 150 }: { data: { date: string; count: number; amount: number }[]; width?: number; height?: number }) {
   if (data.length === 0) return null;
   const padding = { top: 20, right: 20, bottom: 30, left: 40 };
@@ -54,7 +58,7 @@ function LineChart({ data, width = 400, height = 150 }: { data: { date: string; 
   );
 }
 
-function HorizontalBarChart({ data, valueKey, labelKey }: { data: any[]; valueKey: string; labelKey: string }) {
+function HorizontalBarChart({ data, valueKey, labelKey }: { data: ChartDataItem[]; valueKey: string; labelKey: string }) {
   if (data.length === 0) return null;
   const maxVal = Math.max(...data.map(d => d[valueKey]), 1);
   return (

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getTrPrefix, generateDocNo } from '@/lib/global-config';
 
 // 获取生产流程列表
 export async function GET(request: NextRequest) {
@@ -84,13 +85,13 @@ export async function PUT(request: NextRequest) {
     // 记录流程追踪
     await query(
       `INSERT INTO inv_trace_record (
-        trace_no, card_id, card_no, trace_type, 
+        trace_no, card_id, card_no, trace_type,
         operator_id, operator_name, trace_time, remark, create_time
       ) VALUES (
-        CONCAT('TR', DATE_FORMAT(NOW(), '%Y%m%d'), LPAD(FLOOR(RAND() * 1000), 3, '0')),
+        ?,
         ?, ?, ?, ?, ?, NOW(), ?, NOW()
       )`,
-      [id, cardNo, currentProcess, operatorId, operatorName, remark]
+      [generateDocNo(getTrPrefix()), id, cardNo, currentProcess, operatorId, operatorName, remark]
     );
 
     return NextResponse.json({

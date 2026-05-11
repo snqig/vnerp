@@ -19,6 +19,7 @@ interface WorkReport {
   report_no: string;
   work_order_id: number;
   work_order_no: string;
+  report_type: number;
   process_name: string;
   process_seq: number;
   equipment_id: number;
@@ -27,14 +28,14 @@ interface WorkReport {
   operator_name: string;
   plan_qty: number;
   completed_qty: number;
-  qualified_qty: number;
-  defective_qty: number;
+  good_qty: number;
+  defect_qty: number;
   scrap_qty: number;
   start_time: string;
   end_time: string;
   work_hours: number;
   is_first_piece: number;
-  first_piece_status: string;
+  first_piece_status: number;
   remark: string;
 }
 
@@ -64,16 +65,46 @@ interface DieTemplate {
   warning_threshold: number;
 }
 
+interface SummaryStats {
+  todayCount?: number;
+  weekCount?: number;
+  monthCount?: number;
+  totalHours?: number;
+  avgEfficiency?: number;
+}
+
+interface WorkReportForm {
+  work_order_id?: number;
+  equipment_id?: number;
+  employee_id?: number;
+  report_date: string;
+  start_time: string;
+  end_time: string;
+  output_qty: number;
+  qualified_qty: number;
+  scrap_qty: number;
+  work_hours: number;
+  remark?: string;
+}
+
 export default function ProductionReportPage() {
   const [list, setList] = useState<WorkReport[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [summaryStats, setSummaryStats] = useState<any>({});
+  const [summaryStats, setSummaryStats] = useState<SummaryStats>({});
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState<any>({});
+  const [form, setForm] = useState<WorkReportForm>({
+    report_date: new Date().toISOString().split('T')[0],
+    start_time: '',
+    end_time: '',
+    output_qty: 0,
+    qualified_qty: 0,
+    scrap_qty: 0,
+    work_hours: 0,
+  });
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
   const [dieTemplateList, setDieTemplateList] = useState<DieTemplate[]>([]);
@@ -241,7 +272,7 @@ export default function ProductionReportPage() {
                     { key: 'workorder', label: '3. 扫工单码', icon: QrCode, value: scannedCodes.workorder },
                   ].map((step, i) => (
                     <div key={step.key} className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
-                      step.value ? 'bg-green-50 border-green-300' : i === 0 || (i === 1 && scannedCodes.employee) || (i === 2 && scannedCodes.equipment) ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'
+                      step.value ? 'bg-green-50 border-green-300 dark:bg-green-950/30 dark:border-green-700' : i === 0 || (i === 1 && scannedCodes.employee) || (i === 2 && scannedCodes.equipment) ? 'bg-blue-50 border-blue-300 dark:bg-blue-950/30 dark:border-blue-700' : 'bg-white border-gray-200 dark:bg-slate-800 dark:border-gray-600'
                     }`}>
                       <div className={`p-2 rounded-full ${step.value ? 'bg-green-500' : 'bg-blue-500'}`}>
                         <step.icon className="h-4 w-4 text-white" />
