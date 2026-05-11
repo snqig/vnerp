@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors, withErrorHandler, validateRequestBody, logOperation } from '@/lib/api-response';
 import { randomUUID } from 'crypto';
-import { getConfig } from '@/lib/global-config';
+import { getConfig, isInkUnopenedShelfLife, getInkOpenedShelfLife } from '@/lib/global-config';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -112,9 +112,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   const INK_SHELF_LIFE: Record<string, number> = {
-    solvent: getConfig('ink_unopened_shelf_life') || 168,
-    uv: getConfig('ink_unopened_shelf_life') * 4 || 720,
-    water: getConfig('ink_opened_shelf_life') || 96,
+    solvent: isInkUnopenedShelfLife(),
+    uv: isInkUnopenedShelfLife() * 4,
+    water: getInkOpenedShelfLife(),
   };
 
   const result = await transaction(async (conn) => {
@@ -122,9 +122,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     let actualExpireHours = expire_hours;
     if (!actualExpireHours && ink_type) {
-      actualExpireHours = INK_SHELF_LIFE[ink_type] || 168;
+      actualExpireHours = INK_SHELF_LIFE[ink_type] || isInkUnopenedShelfLife();
     } else if (!actualExpireHours) {
-      actualExpireHours = 168;
+      actualExpireHours = isInkUnopenedShelfLife();
     }
 
     const expireTime = new Date(new Date(open_time).getTime() + actualExpireHours * 3600000).toISOString().slice(0, 19).replace('T', ' ');

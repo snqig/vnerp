@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
 import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
-import { getMrPrefix, generateDocNo } from '@/lib/global-config';
+import { getMrPrefix, getMpPrefix, generateDocNo } from '@/lib/global-config';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -58,7 +58,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     if (!equipment_id) return errorResponse('设备ID不能为空', 400, 400);
 
     const now = new Date();
-    const planNo = 'MP' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    const planNo = generateDocNo(getMpPrefix());
 
     const result: any = await execute(
       'INSERT INTO eqp_maintenance_plan (plan_no, equipment_id, maintenance_type, cycle_type, cycle_value, plan_date, responsible_id, content, status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)',

@@ -19,6 +19,30 @@ interface SystemConfigItem {
 
 const DEFAULT_CONFIGS: SystemConfigItem[] = [
   {
+    config_key: 'doc_date_format',
+    config_value: 'YYYYMMDD',
+    config_type: 'string',
+    category: '单据编码规则',
+    display_name: '单据日期格式',
+    description: '所有单据编号中的日期格式',
+    sort_order: 0,
+    is_required: true,
+    approval_required: false,
+    status: 1
+  },
+  {
+    config_key: 'serial_number_length',
+    config_value: '4',
+    config_type: 'number',
+    category: '单据编码规则',
+    display_name: '流水号长度',
+    description: '所有单据末尾流水号位数(2-6)',
+    sort_order: 0,
+    is_required: true,
+    approval_required: false,
+    status: 1
+  },
+  {
     config_key: 'wo_prefix',
     config_value: 'WO',
     config_type: 'string',
@@ -115,6 +139,66 @@ const DEFAULT_CONFIGS: SystemConfigItem[] = [
     status: 1
   },
   {
+    config_key: 'sc_prefix',
+    config_value: 'SC',
+    config_type: 'string',
+    category: '单据编码规则',
+    display_name: '标准卡编码前缀',
+    description: '标准卡编号前缀(颜色SCC/工艺SCP/质量SCQ/综合SCZ)',
+    sort_order: 9,
+    is_required: true,
+    approval_required: true,
+    status: 1
+  },
+  {
+    config_key: 'mp_prefix',
+    config_value: 'MP',
+    config_type: 'string',
+    category: '单据编码规则',
+    display_name: '设备保养单前缀',
+    description: '设备保养计划编号前缀',
+    sort_order: 10,
+    is_required: true,
+    approval_required: true,
+    status: 1
+  },
+  {
+    config_key: 'bf_prefix',
+    config_value: 'BF',
+    config_type: 'string',
+    category: '单据编码规则',
+    display_name: '设备报废单前缀',
+    description: '设备报废申请编号前缀',
+    sort_order: 11,
+    is_required: true,
+    approval_required: true,
+    status: 1
+  },
+  {
+    config_key: 'jd_prefix',
+    config_value: 'JD',
+    config_type: 'string',
+    category: '单据编码规则',
+    display_name: '设备校准单前缀',
+    description: '设备校准记录编号前缀',
+    sort_order: 12,
+    is_required: true,
+    approval_required: true,
+    status: 1
+  },
+  {
+    config_key: 'wx_prefix',
+    config_value: 'WX',
+    config_type: 'string',
+    category: '单据编码规则',
+    display_name: '设备维修单前缀',
+    description: '设备维修工单编号前缀',
+    sort_order: 13,
+    is_required: true,
+    approval_required: true,
+    status: 1
+  },
+  {
     config_key: 'mould_life_days',
     config_value: '90',
     config_type: 'number',
@@ -148,6 +232,18 @@ const DEFAULT_CONFIGS: SystemConfigItem[] = [
     sort_order: 12,
     is_required: true,
     approval_required: false,
+    status: 1
+  },
+  {
+    config_key: 'mould_scrap_rule',
+    config_value: 'both',
+    config_type: 'string',
+    category: '刀模/网版寿命管理',
+    display_name: '刀模报废判定规则',
+    description: '报废规则：both=到期+超次数自动报废, date_only=仅到期, times_only=仅超次数',
+    sort_order: 12,
+    is_required: true,
+    approval_required: true,
     status: 1
   },
   {
@@ -223,6 +319,78 @@ const DEFAULT_CONFIGS: SystemConfigItem[] = [
     status: 1
   },
   {
+    config_key: 'ink_warn_days',
+    config_value: '7',
+    config_type: 'number',
+    category: '油墨保质期管理',
+    display_name: '油墨预警天数',
+    description: '油墨到期前多少天开始预警',
+    sort_order: 23,
+    is_required: true,
+    approval_required: false,
+    status: 1
+  },
+  {
+    config_key: 'pet_film_shelf_life',
+    config_value: '360',
+    config_type: 'number',
+    category: '原材料保质期管理',
+    display_name: 'PET/PVC薄膜保质期(天)',
+    description: 'PET/PVC薄膜的有效保质期天数',
+    sort_order: 24,
+    is_required: true,
+    approval_required: true,
+    status: 1
+  },
+  {
+    config_key: 'solvent_shelf_life',
+    config_value: '180',
+    config_type: 'number',
+    category: '原材料保质期管理',
+    display_name: '溶剂保质期(天)',
+    description: '印刷溶剂的有效保质期天数',
+    sort_order: 25,
+    is_required: true,
+    approval_required: true,
+    status: 1
+  },
+  {
+    config_key: 'glue_shelf_life',
+    config_value: '90',
+    config_type: 'number',
+    category: '原材料保质期管理',
+    display_name: '辅料/胶水保质期(天)',
+    description: '胶水和辅料的保质期天数',
+    sort_order: 26,
+    is_required: true,
+    approval_required: true,
+    status: 1
+  },
+  {
+    config_key: 'mesh_shelf_life',
+    config_value: '180',
+    config_type: 'number',
+    category: '原材料保质期管理',
+    display_name: '网布保质期(天)',
+    description: '丝印网布的保质期天数',
+    sort_order: 27,
+    is_required: true,
+    approval_required: true,
+    status: 1
+  },
+  {
+    config_key: 'material_warn_days',
+    config_value: '30',
+    config_type: 'number',
+    category: '原材料保质期管理',
+    display_name: '原材料预警天数',
+    description: '所有原材料统一预警提前天数',
+    sort_order: 28,
+    is_required: true,
+    approval_required: false,
+    status: 1
+  },
+  {
     config_key: 'film_split_length',
     config_value: '10',
     config_type: 'number',
@@ -254,6 +422,30 @@ const DEFAULT_CONFIGS: SystemConfigItem[] = [
     display_name: '溶剂拆分容积(L)',
     description: '整桶溶剂拆分成小料的容积单位',
     sort_order: 32,
+    is_required: true,
+    approval_required: true,
+    status: 1
+  },
+  {
+    config_key: 'pvc_split_length',
+    config_value: '10',
+    config_type: 'number',
+    category: '小料拆分标准',
+    display_name: 'PVC薄膜拆分长度(米)',
+    description: '整卷PVC薄膜拆分成小料的长度单位',
+    sort_order: 33,
+    is_required: true,
+    approval_required: true,
+    status: 1
+  },
+  {
+    config_key: 'mesh_split_length',
+    config_value: '10',
+    config_type: 'number',
+    category: '小料拆分标准',
+    display_name: '网布拆分长度(米)',
+    description: '整卷网布拆分成小料的长度单位',
+    sort_order: 34,
     is_required: true,
     approval_required: true,
     status: 1

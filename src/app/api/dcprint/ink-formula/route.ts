@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { isInkUnopenedShelfLife } from '@/lib/global-config';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -80,7 +81,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
       [formulaNo, formula_name, pantone_code || null, color_name || null, color_code || null,
        ink_type || 'solvent', base_ink_type || null, total_weight || null, unit || 'kg',
-       shelf_life_hours || 168, remark || null]
+       shelf_life_hours || isInkUnopenedShelfLife(), remark || null]
     );
     const formulaId = insertResult.insertId;
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { getJdPrefix, generateDocNo } from '@/lib/global-config';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -24,7 +25,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   const { equipment_id, equipment_code, equipment_name, calibration_date, next_calibration_date, calibration_org, calibration_result, certificate_no, calibration_cost, remark } = body;
   const now = new Date();
-  const calibrationNo = 'JD' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  const calibrationNo = generateDocNo(getJdPrefix());
 
   const result: any = await execute(
     'INSERT INTO eqp_calibration (calibration_no, equipment_id, equipment_code, equipment_name, calibration_date, next_calibration_date, calibration_org, calibration_result, certificate_no, calibration_cost, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',

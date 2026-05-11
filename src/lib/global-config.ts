@@ -23,6 +23,9 @@ let configCache: ConfigCache | null = null;
 const CACHE_TTL = 5 * 60 * 1000;
 
 const DEFAULT_CONFIGS: Record<string, any> = {
+  doc_date_format: 'YYYYMMDD',
+  serial_number_length: 4,
+
   wo_prefix: 'WO',
   sample_prefix: 'SAMPLE',
   mr_prefix: 'MR',
@@ -31,10 +34,16 @@ const DEFAULT_CONFIGS: Record<string, any> = {
   po_prefix: 'PO',
   ir_prefix: 'IC',
   tr_prefix: 'TR',
+  sc_prefix: 'SC',
+  mp_prefix: 'MP',
+  bf_prefix: 'BF',
+  jd_prefix: 'JD',
+  wx_prefix: 'WX',
 
   mould_life_days: 90,
   mould_max_times: 5000,
   mould_warn_days: 15,
+  mould_scrap_rule: 'both',
 
   screen_life_days: 60,
   screen_max_times: 3000,
@@ -43,10 +52,19 @@ const DEFAULT_CONFIGS: Record<string, any> = {
   ink_unopened_shelf_life: 180,
   ink_opened_shelf_life: 30,
   mixed_ink_expiry_hours: 24,
+  ink_warn_days: 7,
+
+  pet_film_shelf_life: 360,
+  solvent_shelf_life: 180,
+  glue_shelf_life: 90,
+  mesh_shelf_life: 180,
+  material_warn_days: 30,
 
   film_split_length: 10,
+  pvc_split_length: 10,
   ink_split_weight: 1,
   solvent_split_volume: 5,
+  mesh_split_length: 10,
 
   fifo_enabled: true,
   allow_whole_material_issue: false,
@@ -59,6 +77,12 @@ const DEFAULT_CONFIGS: Record<string, any> = {
 
   require_approval_for_config_change: true,
   approval_role_id: 1,
+
+  dashboard_trend_days: 30,
+  aging_30_days: 30,
+  aging_60_days: 60,
+  aging_90_days: 90,
+  stocktaking_diff_threshold: 100,
 };
 
 function getConfigFromCache(): Record<string, any> | null {
@@ -221,11 +245,77 @@ export function requireApprovalForConfigChange(): boolean {
   return Boolean(getConfig('require_approval_for_config_change'));
 }
 
+export function getScPrefix(): string {
+  return getConfig('sc_prefix');
+}
+
+export function getMpPrefix(): string {
+  return getConfig('mp_prefix');
+}
+
+export function getBfPrefix(): string {
+  return getConfig('bf_prefix');
+}
+
+export function getJdPrefix(): string {
+  return getConfig('jd_prefix');
+}
+
+export function getWxPrefix(): string {
+  return getConfig('wx_prefix');
+}
+
+export function getMouldScrapRule(): string {
+  return getConfig('mould_scrap_rule') || 'both';
+}
+
+export function getInkWarnDays(): number {
+  return Number(getConfig('ink_warn_days'));
+}
+
+export function getPetFilmShelfLife(): number {
+  return Number(getConfig('pet_film_shelf_life'));
+}
+
+export function getSolventShelfLife(): number {
+  return Number(getConfig('solvent_shelf_life'));
+}
+
+export function getGlueShelfLife(): number {
+  return Number(getConfig('glue_shelf_life'));
+}
+
+export function getMeshShelfLife(): number {
+  return Number(getConfig('mesh_shelf_life'));
+}
+
+export function getMaterialWarnDays(): number {
+  return Number(getConfig('material_warn_days'));
+}
+
+export function getPvcSplitLength(): number {
+  return Number(getConfig('pvc_split_length'));
+}
+
+export function getMeshSplitLength(): number {
+  return Number(getConfig('mesh_split_length'));
+}
+
+export function getDocDateFormat(): string {
+  return getConfig('doc_date_format') || 'YYYYMMDD';
+}
+
+export function getSerialNumberLength(): number {
+  return Number(getConfig('serial_number_length') || 4);
+}
+
 export function generateDocNo(prefix: string): string {
   const now = new Date();
   const dateStr = now.getFullYear() +
     String(now.getMonth() + 1).padStart(2, '0') +
     String(now.getDate()).padStart(2, '0');
-  const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  const serialLen = getSerialNumberLength();
+  const maxSerial = Math.pow(10, serialLen);
+  const random = String(Math.floor(Math.random() * (maxSerial - 1)) + 1).padStart(serialLen, '0');
   return `${prefix}${dateStr}${random}`;
 }
