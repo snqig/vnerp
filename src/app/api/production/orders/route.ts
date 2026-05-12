@@ -11,15 +11,15 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let sql = `
     SELECT wo.*
-    FROM prod_work_order wo
+    FROM prd_work_order wo
     WHERE wo.deleted = 0
   `;
   const values: any[] = [];
 
   if (keyword) {
-    sql += ` AND (wo.work_order_no LIKE ? OR wo.product_name LIKE ? OR wo.customer_name LIKE ?)`;
+    sql += ` AND (wo.work_order_no LIKE ? OR wo.product_name LIKE ?)`;
     const likeKeyword = `%${keyword}%`;
-    values.push(likeKeyword, likeKeyword, likeKeyword);
+    values.push(likeKeyword, likeKeyword);
   }
 
   if (status) {
@@ -35,11 +35,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const result = (orders as any[]).map((order: any) => ({
     id: order.id,
     work_order_no: order.work_order_no,
-    order_id: order.order_id,
+    order_id: order.sales_order_id,
     order_no: order.order_no,
-    customer_name: order.customer_name,
     product_name: order.product_name,
-    quantity: parseFloat(order.quantity || '0'),
+    plan_qty: parseFloat(order.plan_qty || '0'),
     unit: order.unit,
     status: order.status,
     priority: order.priority,
@@ -52,11 +51,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     update_time: order.update_time,
   }));
 
-  let countSql = `SELECT COUNT(*) as total FROM prod_work_order wo WHERE wo.deleted = 0`;
+  let countSql = `SELECT COUNT(*) as total FROM prd_work_order wo WHERE wo.deleted = 0`;
   const countValues: any[] = [];
   if (keyword) {
-    countSql += ` AND (wo.work_order_no LIKE ? OR wo.product_name LIKE ? OR wo.customer_name LIKE ?)`;
-    countValues.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
+    countSql += ` AND (wo.work_order_no LIKE ? OR wo.product_name LIKE ?)`;
+    countValues.push(`%${keyword}%`, `%${keyword}%`);
   }
   if (status) {
     countSql += ` AND wo.status = ?`;

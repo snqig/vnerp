@@ -344,7 +344,7 @@ export async function autoScheduleWorkOrders(
     const result = calculateScheduleWithColorDependencies(wo, equipmentList, existingSchedules, startDate);
     results.push(result);
 
-    secureLog.info('自动排程完成', {
+    secureLog('info', '自动排程完成', {
       workOrderNo: wo.work_order_no,
       colorSeqCount: wo.color_sequences.length,
       scheduledCount: result.color_sequences.filter((s) => s.status === 'scheduled').length,
@@ -392,7 +392,7 @@ export async function saveScheduleResult(
 
     return true;
   } catch (error: any) {
-    secureLog.error('保存排程结果失败', { error: error.message, workOrderId: result.work_order_id });
+    secureLog('error', '保存排程结果失败', { error: error.message, workOrderId: result.work_order_id });
     return false;
   }
 }
