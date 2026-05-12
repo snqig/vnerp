@@ -8,6 +8,8 @@ import { CacheInvalidationHandler } from '@/application/handlers/CacheInvalidati
 import { PurchaseApprovedHandler } from '@/application/handlers/PurchaseApprovedHandler';
 import { PurchaseReceivedHandler } from '@/application/handlers/PurchaseReceivedHandler';
 import { PurchasePayableHandler } from '@/application/handlers/PurchasePayableHandler';
+import { SalesShippedHandler } from '@/application/handlers/SalesShippedHandler';
+import { SalesReceivableHandler } from '@/application/handlers/SalesReceivableHandler';
 
 let registered = false;
 
@@ -42,6 +44,24 @@ export function registerEventHandlers(): EventBus {
   eventBus.subscribe('purchase.received', new PurchasePayableHandler());
   eventBus.subscribe('purchase.received', new AuditLogHandler());
   eventBus.subscribe('purchase.closed', new AuditLogHandler());
+
+  eventBus.subscribe('sales.created', new AuditLogHandler());
+  eventBus.subscribe('sales.submitted', new AuditLogHandler());
+  eventBus.subscribe('sales.approved', new AuditLogHandler());
+  eventBus.subscribe('sales.approved', new CacheInvalidationHandler());
+  eventBus.subscribe('sales.shipped', new SalesShippedHandler());
+  eventBus.subscribe('sales.shipped', new SalesReceivableHandler());
+  eventBus.subscribe('sales.shipped', new AuditLogHandler());
+  eventBus.subscribe('sales.shipped', new CacheInvalidationHandler());
+  eventBus.subscribe('sales.closed', new AuditLogHandler());
+
+  eventBus.subscribe('workorder.created', new AuditLogHandler());
+  eventBus.subscribe('workorder.released', new AuditLogHandler());
+  eventBus.subscribe('workorder.started', new AuditLogHandler());
+  eventBus.subscribe('workorder.material_issued', new AuditLogHandler());
+  eventBus.subscribe('workorder.completed', new AuditLogHandler());
+  eventBus.subscribe('workorder.completed', new CacheInvalidationHandler());
+  eventBus.subscribe('workorder.closed', new AuditLogHandler());
 
   return eventBus;
 }

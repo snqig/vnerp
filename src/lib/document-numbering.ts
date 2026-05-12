@@ -57,7 +57,28 @@ export async function getNumberingConfig(): Promise<DocumentNumberingConfig> {
   }
 }
 
-export type DocumentType = 'sales_order' | 'purchase_order' | 'work_order' | 'sample' | 'purchase_request' | 'inbound' | 'outbound';
+export type DocumentType = 
+  | 'sales_order' 
+  | 'purchase_order' 
+  | 'work_order' 
+  | 'sample' 
+  | 'purchase_request' 
+  | 'inbound' 
+  | 'outbound'
+  // 采购全流程新增
+  | 'inquiry'           // 询价单
+  | 'arrival_notice'    // 到货通知单
+  | 'iqc'               // IQC质检单
+  | 'purchase_reconcile' // 对账单
+  | 'purchase_settlement' // 结算单
+  // 生产全流程新增
+  | 'material_pick'     // 领料单
+  | 'material_return'   // 退料单
+  | 'process_report'    // 工序汇报单
+  | 'finish_inbound'    // 完工入库单
+  // 批次管理新增
+  | 'batch'             // 批次号
+  ;
 
 const DOCUMENT_PREFIX_MAP: Record<DocumentType, keyof DocumentNumberingConfig> = {
   sales_order: 'sales_order_prefix',

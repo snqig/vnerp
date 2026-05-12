@@ -1032,3 +1032,119 @@ INSERT INTO `sys_config` (`config_name`, `config_key`, `config_value`, `config_t
 ('系统版本', 'sys.version', 'v1.0.0', 1, '系统版本号'),
 ('版权信息', 'sys.copyright', '© 2024 All Rights Reserved', 1, '版权信息'),
 ('默认密码', 'sys.default.password', '123456', 1, '用户默认密码');
+
+-- ========================================================
+-- 10. 生产排程核心表（P0-2 甘特图 + 有限产能）
+-- ========================================================
+
+-- 设备表（产线/机台）
+CREATE TABLE `eqp_equipment` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '设备ID',
+  `equipment_code` VARCHAR(50) NOT NULL COMMENT '设备编码',
+  `equipment_name` VARCHAR(100) NOT NULL COMMENT '设备名称',
+  `equipment_type` VARCHAR(50) NOT NULL COMMENT '设备类型: printing-印刷机, die_cut-模切机, trademark-商标机, packaging-包装机',
+  `workshop` VARCHAR(50) NOT NULL COMMENT '所属车间: die_cut, trademark, printing, packaging',
+  `capacity_per_hour` DECIMAL(10,2) DEFAULT 100 COMMENT '每小时产能（件/小时）',
+  `max_colors` INT DEFAULT 1 COMMENT '最大支持色数',
+  `setup_time_minutes` INT DEFAULT 30 COMMENT '换型/准备时间（分钟）',
+  `status` VARCHAR(20) DEFAULT 'available' COMMENT '状态: available-可用, maintenance-维护, offline-离线',
+  `remark` VARCHAR(255) COMMENT '备注',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记: 0-未删除, 1-已删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_equipment_code` (`equipment_code`),
+  KEY `idx_type` (`equipment_type`),
+  KEY `idx_workshop` (`workshop`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='设备表';
+
+-- 生产排程主表
+CREATE TABLE `prd_schedule` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '排程ID',
+  `schedule_no` VARCHAR(50) NOT NULL COMMENT '排产单号',
+  `order_id` BIGINT UNSIGNED COMMENT '销售订单ID',
+  `order_no` VARCHAR(50) COMMENT '销售订单号',
+  `work_order_id` BIGINT UNSIGNED COMMENT '生产工单ID',
+  `work_order_no` VARCHAR(50) COMMENT '生产工单号',
+  `product_id` BIGINT UNSIGNED COMMENT '产品ID',
+  `product_code` VARCHAR(50) COMMENT '产品编码',
+  `product_name` VARCHAR(100) NOT NULL COMMENT '产品名称',
+  `workshop` VARCHAR(50) NOT NULL COMMENT '车间: die_cut, trademark, printing, packaging',
+  `planned_qty` DECIMAL(18,4) NOT NULL DEFAULT 0 COMMENT '计划数量',
+  `completed_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '已完成数量',
+  `planned_start` DATETIME COMMENT '计划开始时间',
+  `planned_end` DATETIME COMMENT '计划结束时间',
+  `actual_start` DATETIME COMMENT '实际开始时间',
+  `actual_end` DATETIME COMMENT '实际结束时间',
+  `priority` TINYINT DEFAULT 2 COMMENT '优先级: 1-紧急, 2-正常, 3-低',
+  `status` TINYINT DEFAULT 1 COMMENT '状态: 1-待排产, 2-已排产, 3-生产中, 4-已完成, 5-已取消',
+  `scheduler` VARCHAR(50) COMMENT '排产人',
+  `remark` TEXT COMMENT '备注',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记: 0-未删除, 1-已删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_schedule_no` (`schedule_no`),
+  KEY `idx_work_order` (`work_order_id`),
+  KEY `idx_product` (`product_id`),
+  KEY `idx_workshop` (`workshop`),
+  KEY `idx_status` (`status`),
+  KEY `idx_planned_start` (`planned_start`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='生产排程主表';
+
+-- 排程明细表（色序工序级排程）
+CREATE TABLE `prd_schedule_detail` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `schedule_id` BIGINT UNSIGNED NOT NULL COMMENT '排程ID',
+  `work_order_id` BIGINT UNSIGNED NOT NULL COMMENT '工单ID',
+  `color_seq_no` INT NOT NULL COMMENT '色序号',
+  `color_name` VARCHAR(50) COMMENT '颜色名称',
+  `equipment_id` BIGINT UNSIGNED COMMENT '设备ID',
+  `equipment_name` VARCHAR(100) COMMENT '设备名称',
+  `planned_start` DATETIME COMMENT '计划开始时间',
+  `planned_end` DATETIME COMMENT '计划结束时间',
+  `actual_start` DATETIME COMMENT '实际开始时间',
+  `actual_end` DATETIME COMMENT '实际结束时间',
+  `duration_hours` DECIMAL(8,2) COMMENT '预计耗时（小时）',
+  `status` TINYINT DEFAULT 1 COMMENT '状态: 1-待排, 2-已排, 3-生产中, 4-已完成',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_work_order_seq` (`work_order_id`, `color_seq_no`),
+  KEY `idx_schedule` (`schedule_id`),
+  KEY `idx_equipment` (`equipment_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='排程明细表（色序级）';
+
+-- 工单色序表（多色套印工艺）
+CREATE TABLE `prd_work_order_color_seq` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `work_order_id` BIGINT UNSIGNED NOT NULL COMMENT '工单ID',
+  `seq_no` INT NOT NULL COMMENT '色序号: 1,2,3...',
+  `color_name` VARCHAR(50) NOT NULL COMMENT '颜色名称: 红,黄,蓝,黑...',
+  `screen_plate_id` BIGINT UNSIGNED COMMENT '网版ID',
+  `ink_formula_id` BIGINT UNSIGNED COMMENT '油墨配方ID',
+  `estimated_duration_hours` DECIMAL(8,2) DEFAULT 4 COMMENT '预计耗时（小时）',
+  `equipment_type_required` VARCHAR(50) NOT NULL COMMENT '所需设备类型: printing, die_cut...',
+  `depends_on_seq` INT COMMENT '依赖前序色序号（前序完成后才能开始）',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_work_order_seq` (`work_order_id`, `seq_no`),
+  KEY `idx_work_order` (`work_order_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='工单色序表（多色套印）';
+
+-- 初始化设备数据
+INSERT INTO `eqp_equipment` (`equipment_code`, `equipment_name`, `equipment_type`, `workshop`, `capacity_per_hour`, `max_colors`, `setup_time_minutes`, `status`) VALUES
+('PT001', '全自动丝印机A', 'printing', 'printing', 500, 6, 45, 'available'),
+('PT002', '全自动丝印机B', 'printing', 'printing', 450, 4, 45, 'available'),
+('PT003', '半自动丝印机C', 'printing', 'printing', 300, 2, 30, 'available'),
+('PT004', '半自动丝印机D', 'printing', 'printing', 300, 2, 30, 'available'),
+('DC001', '数控模切机A', 'die_cut', 'die_cut', 800, 1, 20, 'available'),
+('DC002', '数控模切机B', 'die_cut', 'die_cut', 800, 1, 20, 'available'),
+('DC003', '平压模切机C', 'die_cut', 'die_cut', 600, 1, 15, 'available'),
+('TM001', '商标印刷机A', 'trademark', 'trademark', 400, 4, 30, 'available'),
+('TM002', '商标印刷机B', 'trademark', 'trademark', 400, 4, 30, 'available'),
+('TM003', '商标模切机C', 'trademark', 'trademark', 600, 1, 20, 'available'),
+('PK001', '自动包装线A', 'packaging', 'packaging', 1000, 1, 10, 'available'),
+('PK002', '自动包装线B', 'packaging', 'packaging', 1000, 1, 10, 'available');

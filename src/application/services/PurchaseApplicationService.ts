@@ -1,5 +1,6 @@
 import { IPurchaseOrderRepository } from '@/domain/purchase/repositories/IPurchaseOrderRepository';
 import { PurchaseOrder, PurchaseOrderProps } from '@/domain/purchase/aggregates/PurchaseOrder';
+import { PurchaseOrderStatus } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { EventBus } from '@/infrastructure/event-bus/EventBus';
 import { DomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutbox';
@@ -70,7 +71,7 @@ export class PurchaseApplicationService {
     await transaction(async (conn) => {
       const [result]: any = await conn.execute(
         'UPDATE pur_purchase_order SET status = ?, audit_by = ?, audit_time = NOW(), update_time = NOW() WHERE id = ? AND status = ?',
-        [order.status.toDbCode(), auditBy, id, new (await import('@/domain/purchase/value-objects/PurchaseOrderStatus')).PurchaseOrderStatus.from(previousStatus).toDbCode()]
+        [order.status.toDbCode(), auditBy, id, PurchaseOrderStatus.from(previousStatus).toDbCode()]
       );
       if (result.affectedRows === 0) {
         throw new VersionConflictError();
@@ -101,7 +102,7 @@ export class PurchaseApplicationService {
         [
           order.status.toDbCode(),
           id,
-          new (await import('@/domain/purchase/value-objects/PurchaseOrderStatus')).PurchaseOrderStatus.from(previousStatus).toDbCode(),
+          PurchaseOrderStatus.from(previousStatus).toDbCode(),
         ]
       );
       if (result.affectedRows === 0) {

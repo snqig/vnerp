@@ -37,6 +37,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       customer_require_date,
       actual_delivery_date,
       delivery_status,
+      CASE delivery_status
+        WHEN 'pending' THEN '待审批'
+        WHEN 'approved' THEN '已通过'
+        WHEN 'rejected' THEN '已拒绝'
+        WHEN 'producing' THEN '生产中'
+        WHEN 'completed' THEN '已完成'
+        WHEN 'delivered' THEN '已交付'
+        WHEN 'signed' THEN '已签收'
+        ELSE delivery_status
+      END AS delivery_status_label,
       remark,
       create_time,
       update_time

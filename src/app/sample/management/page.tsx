@@ -47,19 +47,20 @@ interface SampleOrder {
   customer_require_date: string;
   actual_delivery_date: string;
   delivery_status: string;
+  delivery_status_label?: string;
   remark: string;
   create_time: string;
   update_time: string;
 }
 
-const statusLabelMap: Record<string, string> = {
-  pending: '待审批',
-  approved: '已通过',
-  rejected: '已拒绝',
-  completed: '已完成',
-  producing: '生产中',
-  delivered: '已交付',
-  signed: '已签收',
+const statusColorMap: Record<string, { className: string }> = {
+  pending: { className: 'bg-yellow-100 text-yellow-700' },
+  approved: { className: 'bg-green-100 text-green-700' },
+  rejected: { className: 'bg-red-100 text-red-700' },
+  producing: { className: 'bg-purple-100 text-purple-700' },
+  completed: { className: 'bg-blue-100 text-blue-700' },
+  delivered: { className: 'bg-cyan-100 text-cyan-700' },
+  signed: { className: 'bg-emerald-100 text-emerald-700' },
 };
 
 const emptyForm = {
@@ -127,20 +128,13 @@ export default function SampleManagementPage() {
     return sortDir === 'asc' ? cmp : -cmp;
   });
 
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; className: string }> = {
-      pending: { label: '待审批', className: 'bg-yellow-100 text-yellow-700' },
-      approved: { label: '已通过', className: 'bg-green-100 text-green-700' },
-      rejected: { label: '已拒绝', className: 'bg-red-100 text-red-700' },
-      completed: { label: '已完成', className: 'bg-blue-100 text-blue-700' },
-      producing: { label: '生产中', className: 'bg-purple-100 text-purple-700' },
-      delivered: { label: '已交付', className: 'bg-cyan-100 text-cyan-700' },
-      signed: { label: '已签收', className: 'bg-emerald-100 text-emerald-700' },
-    };
-    const config = statusMap[status] || statusMap.pending;
+  const getStatusBadge = (item: SampleOrder) => {
+    const status = item.delivery_status || 'pending';
+    const label = item.delivery_status_label || status;
+    const colorConfig = statusColorMap[status] || statusColorMap.pending;
     return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${config.className}`}>
-        {config.label}
+      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colorConfig.className}`}>
+        {label}
       </span>
     );
   };
@@ -385,7 +379,7 @@ export default function SampleManagementPage() {
                         <td className="p-4">{item.quantity || 0}</td>
                         <td className="p-4 text-muted-foreground">{formatDate(item.notify_date)}</td>
                         <td className="p-4 text-muted-foreground">{formatDate(item.customer_require_date)}</td>
-                        <td className="p-4">{getStatusBadge(item.delivery_status)}</td>
+                        <td className="p-4">{getStatusBadge(item)}</td>
                         <td className="p-4 text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -448,7 +442,7 @@ export default function SampleManagementPage() {
               <div><Label className="text-muted-foreground">通知日期</Label><p>{formatDate(detailItem.notify_date)}</p></div>
               <div><Label className="text-muted-foreground">要求交付日期</Label><p>{formatDate(detailItem.customer_require_date)}</p></div>
               <div><Label className="text-muted-foreground">实际交付日期</Label><p>{formatDate(detailItem.actual_delivery_date) || '-'}</p></div>
-              <div><Label className="text-muted-foreground">状态</Label><p>{getStatusBadge(detailItem.delivery_status)}</p></div>
+              <div><Label className="text-muted-foreground">状态</Label><p>{getStatusBadge(detailItem)}</p></div>
               <div className="col-span-2"><Label className="text-muted-foreground">备注</Label><p>{detailItem.remark || '-'}</p></div>
               <div><Label className="text-muted-foreground">创建时间</Label><p className="text-sm text-muted-foreground">{formatDate(detailItem.create_time)}</p></div>
               <div><Label className="text-muted-foreground">更新时间</Label><p className="text-sm text-muted-foreground">{formatDate(detailItem.update_time)}</p></div>

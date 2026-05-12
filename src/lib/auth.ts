@@ -90,14 +90,29 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
   const roleCodes = (roles as any[]).map(r => r.role_code);
   const dataScopes = (roles as any[]).map(r => r.data_scope).filter(Boolean);
 
-  // 确定数据权限范围（取最宽松的范围）
+  // 确定数据权限范围（最小权限原则：取最严格的范围）
   let dataScope: DataScope = { type: 'self' };
-  if (dataScopes.includes('all')) {
-    dataScope = { type: 'all' };
-  } else if (dataScopes.includes('dept_and_self')) {
-    dataScope = { type: 'dept_and_self', deptIds: user.department_id ? [user.department_id] : [] };
-  } else if (dataScopes.includes('dept')) {
-    dataScope = { type: 'dept', deptIds: user.department_id ? [user.department_id] : [] };
+  if (dataScopes.length > 0) {
+    const scopePriority: Record<string, number> = {
+      'self': 1,
+      'dept': 2,
+      'dept_and_self': 3,
+      'all': 4,
+    };
+
+    const minPriority = Math.min(...dataScopes.map(s => scopePriority[s] || 0));
+    const mostRestrictive = Object.entries(scopePriority)
+      .find(([_, p]) => p === minPriority)?.[0] || 'self';
+
+    if (mostRestrictive === 'all') {
+      dataScope = { type: 'all' };
+    } else if (mostRestrictive === 'dept_and_self') {
+      dataScope = { type: 'dept_and_self', deptIds: user.department_id ? [user.department_id] : [] };
+    } else if (mostRestrictive === 'dept') {
+      dataScope = { type: 'dept', deptIds: user.department_id ? [user.department_id] : [] };
+    } else {
+      dataScope = { type: 'self' };
+    }
   }
 
   // 查询用户权限
