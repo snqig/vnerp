@@ -42,8 +42,14 @@ export class PurchaseReceivedHandler implements EventHandler<PurchaseOrderReceiv
             `INSERT INTO inv_inventory_batch (batch_no, material_id, material_code, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, status, create_time)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), 'normal', NOW())`,
             [
-              item.batchNo, item.materialId, item.materialCode, item.materialName,
-              item.warehouseId, item.quantity, item.quantity, item.unitPrice,
+              item.batchNo,
+              item.materialId,
+              item.materialCode,
+              item.materialName,
+              item.warehouseId,
+              item.quantity,
+              item.quantity,
+              item.unitPrice,
             ]
           );
         }
@@ -52,7 +58,17 @@ export class PurchaseReceivedHandler implements EventHandler<PurchaseOrderReceiv
         await conn.execute(
           `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, create_time)
            VALUES (?, 'in', 'purchase', ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-          [transNo, orderId, item.materialId, item.materialCode, item.batchNo, item.warehouseId, item.quantity, item.unitPrice, item.quantity * item.unitPrice]
+          [
+            transNo,
+            orderId,
+            item.materialId,
+            item.materialCode,
+            item.batchNo,
+            item.warehouseId,
+            item.quantity,
+            item.unitPrice,
+            item.quantity * item.unitPrice,
+          ]
         );
       }
     });

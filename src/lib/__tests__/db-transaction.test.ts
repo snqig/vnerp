@@ -19,7 +19,7 @@ async function transactionWithRetry<T>(
         throw error;
       }
       const delay = Math.min(100 * Math.pow(2, attempt) + Math.random() * 50, 1000);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
   throw lastError;
@@ -35,7 +35,8 @@ describe('transactionWithRetry', () => {
 
   it('should retry on optimistic lock failure with "已被其他操作修改"', async () => {
     const lockError = new Error('批次B001已被其他操作修改，请重试');
-    const callback = vi.fn()
+    const callback = vi
+      .fn()
       .mockRejectedValueOnce(lockError)
       .mockResolvedValueOnce({ success: true });
 
@@ -46,7 +47,8 @@ describe('transactionWithRetry', () => {
 
   it('should retry on optimistic lock failure with "version" keyword', async () => {
     const versionError = new Error('version conflict detected');
-    const callback = vi.fn()
+    const callback = vi
+      .fn()
       .mockRejectedValueOnce(versionError)
       .mockResolvedValueOnce({ success: true });
 
@@ -57,7 +59,8 @@ describe('transactionWithRetry', () => {
 
   it('should retry on optimistic lock failure with "affectedRows" keyword', async () => {
     const affectedError = new Error('affectedRows is 0, update failed');
-    const callback = vi.fn()
+    const callback = vi
+      .fn()
       .mockRejectedValueOnce(affectedError)
       .mockResolvedValueOnce({ success: true });
 
@@ -84,7 +87,8 @@ describe('transactionWithRetry', () => {
 
   it('should respect maxRetries parameter', async () => {
     const lockError = new Error('已被其他操作修改');
-    const callback = vi.fn()
+    const callback = vi
+      .fn()
       .mockRejectedValueOnce(lockError)
       .mockRejectedValueOnce(lockError)
       .mockResolvedValueOnce({ success: true });
@@ -96,7 +100,8 @@ describe('transactionWithRetry', () => {
 
   it('should use exponential backoff between retries', async () => {
     const lockError = new Error('已被其他操作修改');
-    const callback = vi.fn()
+    const callback = vi
+      .fn()
       .mockRejectedValueOnce(lockError)
       .mockResolvedValueOnce({ success: true });
 

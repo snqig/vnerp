@@ -11,7 +11,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let sql = `
     SELECT wo.*
-    FROM prd_work_order wo
+    FROM prod_work_order wo
     WHERE wo.deleted = 0
   `;
   const values: any[] = [];
@@ -51,7 +51,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     update_time: order.update_time,
   }));
 
-  let countSql = `SELECT COUNT(*) as total FROM prd_work_order wo WHERE wo.deleted = 0`;
+  let countSql = `SELECT COUNT(*) as total FROM prod_work_order wo WHERE wo.deleted = 0`;
   const countValues: any[] = [];
   if (keyword) {
     countSql += ` AND (wo.work_order_no LIKE ? OR wo.product_name LIKE ?)`;

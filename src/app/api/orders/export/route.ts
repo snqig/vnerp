@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import {
-  commonErrors,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { commonErrors, withErrorHandler } from '@/lib/api-response';
 
 const STATUS_MAP: Record<string, string> = {
   '1': '待确认',
@@ -36,7 +33,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     const BOM = '\uFEFF';
     const headers = ['订单号', '客户名称', '订单日期', '交货日期', '订单金额', '状态', '备注'];
-    const rows = (orders as any[]).map(order => [
+    const rows = (orders as any[]).map((order) => [
       `"${order.order_no || ''}"`,
       `"${order.customer_name || ''}"`,
       order.order_date || '',
@@ -46,7 +43,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       `"${(order.remark || '').replace(/"/g, '""')}"`,
     ]);
 
-    const csvContent = BOM + [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const csvContent = BOM + [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
 
     return new NextResponse(csvContent, {
       headers: {
@@ -71,10 +68,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   const order = (orders as any[])[0];
 
-  const items = await query(
-    'SELECT * FROM sal_order_item WHERE order_id = ?',
-    [order.id]
-  );
+  const items = await query('SELECT * FROM sal_order_item WHERE order_id = ?', [order.id]);
 
   const statusLabel = STATUS_MAP[String(order.status)] || order.status;
 
@@ -119,7 +113,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       </tr>
     </thead>
     <tbody>
-      ${(items as any[]).map(item => `
+      ${(items as any[])
+        .map(
+          (item) => `
         <tr>
           <td>${item.material_name || ''}</td>
           <td style="text-align:right">${item.quantity}</td>
@@ -127,7 +123,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           <td style="text-align:right">¥${Number(item.unit_price || 0).toFixed(2)}</td>
           <td style="text-align:right">¥${Number(item.total_price || 0).toFixed(2)}</td>
         </tr>
-      `).join('')}
+      `
+        )
+        .join('')}
     </tbody>
   </table>
   <div class="total">订单总金额：¥${Number(order.total_amount || 0).toFixed(2)}</div>

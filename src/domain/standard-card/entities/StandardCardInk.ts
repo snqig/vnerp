@@ -56,7 +56,7 @@ export class StandardCardInk {
       colorName: this.colorName,
       ratio: this.ratio,
       unitConsumption: this.unitConsumption,
-      remark: this.remark
+      remark: this.remark,
     };
   }
 }

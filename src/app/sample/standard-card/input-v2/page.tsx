@@ -33,6 +33,18 @@ import {
   ChevronDown,
 } from 'lucide-react';
 
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 interface PrintSequence {
   id: number;
   color: string;
@@ -224,7 +236,7 @@ function InputV2PageContent() {
 
   const [isSaving, setIsSaving] = useState(false);
   const [savedCardId, setSavedCardId] = useState<number | null>(null);
-  
+
   // 客户列表数据
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [customerSearchTerm, setCustomerSearchTerm] = useState('');
@@ -325,9 +337,10 @@ function InputV2PageContent() {
   };
 
   // 筛选客户
-  const filteredCustomers = customers.filter(c => 
-    c.customerName.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
-    c.customerCode.toLowerCase().includes(customerSearchTerm.toLowerCase())
+  const filteredCustomers = customers.filter(
+    (c) =>
+      c.customerName.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+      c.customerCode.toLowerCase().includes(customerSearchTerm.toLowerCase())
   );
 
   // 选择客户
@@ -342,7 +355,7 @@ function InputV2PageContent() {
   const saveToDatabase = async (): Promise<boolean> => {
     try {
       setIsSaving(true);
-      
+
       // 转换 formData 为 API 期望的字段格式
       const saveData = {
         card_no: formData.cardNo || `SC${Date.now()}`,
@@ -417,18 +430,16 @@ function InputV2PageContent() {
         approver: formData.approver,
         status: 1,
       };
-      
+
       const url = '/api/standard-cards';
       const method = isEditMode && editId ? 'PUT' : 'POST';
-      const body = isEditMode && editId 
-        ? JSON.stringify({ ...saveData, id: parseInt(editId) })
-        : JSON.stringify(saveData);
-      
-      const response = await fetch(url, {
+      const body =
+        isEditMode && editId
+          ? JSON.stringify({ ...saveData, id: parseInt(editId) })
+          : JSON.stringify(saveData);
+
+      const response = await authFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body,
       });
 
@@ -467,15 +478,13 @@ function InputV2PageContent() {
   };
 
   const updateField = (field: keyof FormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const updateSequence = (index: number, field: keyof PrintSequence, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      sequences: prev.sequences.map((seq, i) =>
-        i === index ? { ...seq, [field]: value } : seq
-      ),
+      sequences: prev.sequences.map((seq, i) => (i === index ? { ...seq, [field]: value } : seq)),
     }));
   };
 
@@ -506,11 +515,17 @@ function InputV2PageContent() {
             )}
             <Button variant="outline" onClick={handleSave} disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? (isEditMode ? '更新中...' : '保存中...') : (isEditMode ? '更新' : '保存')}
+              {isSaving ? (isEditMode ? '更新中...' : '保存中...') : isEditMode ? '更新' : '保存'}
             </Button>
             <Button onClick={handleSaveAndPreview} disabled={isSaving}>
               <Printer className="h-4 w-4 mr-2" />
-              {isSaving ? (isEditMode ? '更新中...' : '保存中...') : (isEditMode ? '更新并预览' : '保存并预览')}
+              {isSaving
+                ? isEditMode
+                  ? '更新中...'
+                  : '保存中...'
+                : isEditMode
+                  ? '更新并预览'
+                  : '保存并预览'}
             </Button>
           </div>
         </div>
@@ -525,7 +540,9 @@ function InputV2PageContent() {
           ].map((step, index) => {
             const Icon = step.icon;
             const isActive = activeTab === step.id;
-            const isCompleted = ['basic', 'material', 'print'].indexOf(activeTab) > ['basic', 'material', 'print'].indexOf(step.id);
+            const isCompleted =
+              ['basic', 'material', 'print'].indexOf(activeTab) >
+              ['basic', 'material', 'print'].indexOf(step.id);
             return (
               <div key={step.id} className="flex items-center">
                 <button
@@ -534,8 +551,8 @@ function InputV2PageContent() {
                     isActive
                       ? 'bg-blue-500 text-white'
                       : isCompleted
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-muted text-muted-foreground hover:bg-accent'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-muted text-muted-foreground hover:bg-accent'
                   }`}
                 >
                   {isCompleted ? (
@@ -545,9 +562,7 @@ function InputV2PageContent() {
                   )}
                   {step.label}
                 </button>
-                {index < 3 && (
-                  <div className="w-8 h-px bg-gray-300 mx-2" />
-                )}
+                {index < 3 && <div className="w-8 h-px bg-gray-300 mx-2" />}
               </div>
             );
           })}
@@ -637,7 +652,8 @@ function InputV2PageContent() {
                               >
                                 <div className="font-medium">{customer.customerName}</div>
                                 <div className="text-xs text-muted-foreground">
-                                  编码: {customer.customerCode} | 联系人: {customer.contactName || '-'}
+                                  编码: {customer.customerCode} | 联系人:{' '}
+                                  {customer.contactName || '-'}
                                 </div>
                               </div>
                             ))}
@@ -694,9 +710,7 @@ function InputV2PageContent() {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={() => setActiveTab('material')}>
-                    下一步：材料规格
-                  </Button>
+                  <Button onClick={() => setActiveTab('material')}>下一步：材料规格</Button>
                 </div>
               </CardContent>
             </Card>
@@ -752,13 +766,23 @@ function InputV2PageContent() {
                     <div className="flex gap-2">
                       <Input
                         value={formData.sheetSpecs.width}
-                        onChange={(e) => updateField('sheetSpecs', { ...formData.sheetSpecs, width: e.target.value })}
+                        onChange={(e) =>
+                          updateField('sheetSpecs', {
+                            ...formData.sheetSpecs,
+                            width: e.target.value,
+                          })
+                        }
                         placeholder="宽(mm)"
                       />
                       <span className="flex items-center">×</span>
                       <Input
                         value={formData.sheetSpecs.length}
-                        onChange={(e) => updateField('sheetSpecs', { ...formData.sheetSpecs, length: e.target.value })}
+                        onChange={(e) =>
+                          updateField('sheetSpecs', {
+                            ...formData.sheetSpecs,
+                            length: e.target.value,
+                          })
+                        }
                         placeholder="长(mm)"
                       />
                     </div>
@@ -771,7 +795,8 @@ function InputV2PageContent() {
                           key={num}
                           value={formData.coreType?.includes(num) ? num : ''}
                           onChange={(e) => {
-                            const currentTypes = formData.coreType?.split(',').filter(Boolean) || [];
+                            const currentTypes =
+                              formData.coreType?.split(',').filter(Boolean) || [];
                             let newTypes;
                             if (e.target.value) {
                               if (!currentTypes.includes(num)) {
@@ -780,7 +805,7 @@ function InputV2PageContent() {
                                 newTypes = currentTypes;
                               }
                             } else {
-                              newTypes = currentTypes.filter(t => t !== num);
+                              newTypes = currentTypes.filter((t) => t !== num);
                             }
                             updateField('coreType', newTypes.join(','));
                           }}
@@ -823,9 +848,7 @@ function InputV2PageContent() {
                   <Button variant="outline" onClick={() => setActiveTab('basic')}>
                     上一步
                   </Button>
-                  <Button onClick={() => setActiveTab('print')}>
-                    下一步：印刷信息
-                  </Button>
+                  <Button onClick={() => setActiveTab('print')}>下一步：印刷信息</Button>
                 </div>
               </CardContent>
             </Card>
@@ -922,9 +945,7 @@ function InputV2PageContent() {
                   <Button variant="outline" onClick={() => setActiveTab('material')}>
                     上一步
                   </Button>
-                  <Button onClick={() => setActiveTab('process')}>
-                    下一步：工艺流程
-                  </Button>
+                  <Button onClick={() => setActiveTab('process')}>下一步：工艺流程</Button>
                 </div>
               </CardContent>
             </Card>

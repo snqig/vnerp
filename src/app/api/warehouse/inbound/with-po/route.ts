@@ -1,11 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  commonErrors,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
 
 // 采购单状态常量
 const PO_STATUS = {
@@ -150,7 +145,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
 
     // 2. 查询采购单行信息（加锁）
-    const poLineIds = items.map(item => item.po_line_id).filter(Boolean);
+    const poLineIds = items.map((item) => item.po_line_id).filter(Boolean);
     if (poLineIds.length === 0) {
       throw new Error('入库项必须关联采购单行');
     }
@@ -232,14 +227,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       [
         grnNo,
         poId,
-     grnNo,
-      poData.po_no,
-      warehouse_id,
-      poData.supplier_name,
-      totalAmount,
-      totalQuantity,
-      inbound_date || new Date().toISOString().slice(0, 10),
-      delivery_no || '',
+        grnNo,
+        poData.po_no,
+        warehouse_id,
+        poData.supplier_name,
+        totalAmount,
+        totalQuantity,
+        inbound_date || new Date().toISOString().slice(0, 10),
+        delivery_no || '',
         remark || '',
       ]
     );
@@ -277,13 +272,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       );
     }
 
-    return successResponse({
-      grn_id: grnId,
-      grn_no: grnNo,
-      po_no: poData.po_no,
-      total_quantity: totalQuantity,
-      total_amount: totalAmount,
-    }, '入库单创建成功（关联采购单）');
+    return successResponse(
+      {
+        grn_id: grnId,
+        grn_no: grnNo,
+        po_no: poData.po_no,
+        total_quantity: totalQuantity,
+        total_amount: totalAmount,
+      },
+      '入库单创建成功（关联采购单）'
+    );
   });
 }, '创建入库单失败');
 
@@ -395,10 +393,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
           newPoStatus = PO_STATUS.PARTIALLY_RECEIVED;
         }
 
-        await connection.execute(
-          `UPDATE pur_purchase_order SET status = ? WHERE id = ?`,
-          [newPoStatus, grn.po_id]
-        );
+        await connection.execute(`UPDATE pur_purchase_order SET status = ? WHERE id = ?`, [
+          newPoStatus,
+          grn.po_id,
+        ]);
       }
 
       const transNo = `TRX${Date.now()}`;

@@ -1,0 +1,28 @@
+{
+  "tool": "generate_line_chart",
+  "args": {
+    "data": [
+      {"time": "2025-01-01", "value": 120, "group": "入库"},
+      {"time": "2025-01-02", "value": 85, "group": "入库"},
+      {"time": "2025-01-03", "value": 150, "group": "入库"},
+      {"time": "2025-01-04", "value": 95, "group": "入库"},
+      {"time": "2025-01-05", "value": 110, "group": "入库"},
+      {"time": "2025-01-06", "value": 130, "group": "入库"},
+      {"time": "2025-01-07", "value": 75, "group": "入库"},
+      {"time": "2025-01-01", "value": 80, "group": "出库"},
+      {"time": "2025-01-02", "value": 95, "group": "出库"},
+      {"time": "2025-01-03", "value": 110, "group": "出库"},
+      {"time": "2025-01-04", "value": 75, "group": "出库"},
+      {"time": "2025-01-05", "value": 100, "group": "出库"},
+      {"time": "2025-01-06", "value": 85, "group": "出库"},
+      {"time": "2025-01-07", "value": 120, "group": "出库"}
+    ],
+    "title": "出入库趋势",
+    "axisXTitle": "日期",
+    "axisYTitle": "数量",
+    "theme": "default",
+    "style": {
+      "palette": ["#1890ff", "#52c41a"]
+    }
+  }
+}

@@ -46,7 +46,18 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { formula_no, formula_name, total_qty, unit, mixed_date, expire_date, operator_id, operator_name, remark, details } = body;
+  const {
+    formula_no,
+    formula_name,
+    total_qty,
+    unit,
+    mixed_date,
+    expire_date,
+    operator_id,
+    operator_name,
+    remark,
+    details,
+  } = body;
 
   if (!total_qty || !mixed_date || !details || !Array.isArray(details) || details.length === 0) {
     return errorResponse('缺少必填字段: total_qty, mixed_date, details', 400, 400);
@@ -59,7 +70,18 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const [insertResult]: any = await conn.execute(
       `INSERT INTO ink_mixed_batch (batch_no, formula_no, formula_name, total_qty, unit, mixed_date, expire_date, operator_id, operator_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-      [batchNo, formula_no || null, formula_name || null, total_qty, unit || 'kg', mixed_date, expire_date || null, operator_id || null, operator_name || null, remark || null]
+      [
+        batchNo,
+        formula_no || null,
+        formula_name || null,
+        total_qty,
+        unit || 'kg',
+        mixed_date,
+        expire_date || null,
+        operator_id || null,
+        operator_name || null,
+        remark || null,
+      ]
     );
     const mixedBatchId = insertResult.insertId;
 
@@ -79,7 +101,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
       const sourceBatch = sourceBatchRows[0];
       if (Number(sourceBatch.available_qty) < Number(detail.used_qty)) {
-        throw new Error(`原墨 ${sourceBatch.material_name} 批次 ${detail.source_batch_no} 库存不足: 可用 ${sourceBatch.available_qty}, 需用 ${detail.used_qty}`);
+        throw new Error(
+          `原墨 ${sourceBatch.material_name} 批次 ${detail.source_batch_no} 库存不足: 可用 ${sourceBatch.available_qty}, 需用 ${detail.used_qty}`
+        );
       }
 
       await conn.execute(
@@ -90,7 +114,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       await conn.execute(
         `INSERT INTO ink_mixed_batch_detail (mixed_batch_id, source_batch_no, source_label_no, material_id, material_name, used_qty, unit)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [mixedBatchId, detail.source_batch_no, detail.source_label_no || null, detail.material_id || null, detail.material_name || '', detail.used_qty, detail.unit || 'kg']
+        [
+          mixedBatchId,
+          detail.source_batch_no,
+          detail.source_label_no || null,
+          detail.material_id || null,
+          detail.material_name || '',
+          detail.used_qty,
+          detail.unit || 'kg',
+        ]
       );
 
       const transNo = 'TRX' + Date.now() + String(detail.source_batch_no).slice(-4);
@@ -111,7 +143,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     await conn.execute(
       `INSERT INTO inv_inventory_batch (batch_no, material_id, material_code, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, status, produce_date, create_time)
        VALUES (?, NULL, NULL, ?, ?, ?, ?, 0, ?, 'normal', ?, NOW())`,
-      [batchNo, formula_name || `调色油墨-${batchNo}`, warehouseId, total_qty, total_qty, mixed_date, mixed_date]
+      [
+        batchNo,
+        formula_name || `调色油墨-${batchNo}`,
+        warehouseId,
+        total_qty,
+        total_qty,
+        mixed_date,
+        mixed_date,
+      ]
     );
 
     return { id: mixedBatchId, batch_no: batchNo };
@@ -157,8 +197,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       await conn.execute('UPDATE ink_mixed_batch SET status = 3 WHERE id = ?', [id]);
     });
   } else {
-    if (status !== undefined) await execute('UPDATE ink_mixed_batch SET status = ? WHERE id = ?', [status, id]);
-    if (remark !== undefined) await execute('UPDATE ink_mixed_batch SET remark = ? WHERE id = ?', [remark, id]);
+    if (status !== undefined)
+      await execute('UPDATE ink_mixed_batch SET status = ? WHERE id = ?', [status, id]);
+    if (remark !== undefined)
+      await execute('UPDATE ink_mixed_batch SET remark = ? WHERE id = ?', [remark, id]);
   }
 
   return successResponse(null, '更新成功');

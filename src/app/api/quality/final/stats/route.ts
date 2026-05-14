@@ -42,9 +42,10 @@ export async function GET(request: NextRequest) {
       WHERE deleted = 0 AND burdening_status >= 2`
     );
 
-    const passRate = passRateResult.total > 0 
-      ? Math.round((passRateResult.passed / passRateResult.total) * 100) 
-      : 0;
+    const passRate =
+      passRateResult.total > 0
+        ? Math.round((passRateResult.passed / passRateResult.total) * 100)
+        : 0;
 
     return NextResponse.json({
       success: true,
@@ -59,9 +60,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('获取终检统计失败:', error);
-    return NextResponse.json(
-      { success: false, message: '获取终检统计失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: '获取终检统计失败' }, { status: 500 });
   }
 }

@@ -6,22 +6,26 @@ import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 
 const financeService = new FinanceApplicationService();
 
-export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
-  const { searchParams } = new URL(request.url);
-  const customerId = searchParams.get('customerId');
-  const status = searchParams.get('status');
-  const startDate = searchParams.get('startDate') || '';
-  const endDate = searchParams.get('endDate') || '';
-  const page = parseInt(searchParams.get('page') || '1');
-  const pageSize = parseInt(searchParams.get('pageSize') || '10');
+export const GET = withAuthAndErrorHandler(
+  async (request: NextRequest, userInfo: UserInfo) => {
+    const { searchParams } = new URL(request.url);
+    const customerId = searchParams.get('customerId');
+    const status = searchParams.get('status');
+    const startDate = searchParams.get('startDate') || '';
+    const endDate = searchParams.get('endDate') || '';
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
-  const result = await financeService.getReceivableList({
-    page, pageSize,
-    customerId: customerId ? parseInt(customerId) : undefined,
-    status: status ? parseInt(status) : undefined,
-    startDate: startDate || undefined,
-    endDate: endDate || undefined,
-  });
+    const result = await financeService.getReceivableList({
+      page,
+      pageSize,
+      customerId: customerId ? parseInt(customerId) : undefined,
+      status: status ? parseInt(status) : undefined,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+    });
 
-  return paginatedResponse(result.data, result.pagination);
-}, { permission: 'finance:view' });
+    return paginatedResponse(result.data, result.pagination);
+  },
+  { permission: 'finance:view' }
+);

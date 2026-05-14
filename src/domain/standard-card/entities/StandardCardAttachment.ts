@@ -80,7 +80,7 @@ export class StandardCardAttachment {
       remark: this.remark,
       uploadedBy: this.uploadedBy,
       uploadedByName: this.uploadedByName,
-      uploadedAt: this.uploadedAt
+      uploadedAt: this.uploadedAt,
     };
   }
 }

@@ -159,17 +159,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
 
   // 验证必填字段
-  const validation = validateRequestBody(body, [
-    'labelNo',
-    'materialCode',
-  ]);
+  const validation = validateRequestBody(body, ['labelNo', 'materialCode']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   const {
@@ -197,10 +190,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   } = body;
 
   // 生成二维码内容（如果没有提供）
-  const finalQrCode = qrCode || JSON.stringify({
-    ID: labelNo,
-    TYPE: parentLabelId ? '1' : '0', // 0-母材, 1-分切后
-  });
+  const finalQrCode =
+    qrCode ||
+    JSON.stringify({
+      ID: labelNo,
+      TYPE: parentLabelId ? '1' : '0', // 0-母材, 1-分切后
+    });
 
   // 插入数据
   const result = await execute(
@@ -212,19 +207,38 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       is_main_material, parent_label_id, status, deleted
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0)`,
     [
-      labelNo, finalQrCode, purchaseOrderNo, supplierName, receiveDate,
-      materialCode, materialName, specification, unit, batchNo,
-      quantity, packageQty, width, lengthPerRoll, remark,
-      colorCode, mixRemark, warehouseId, locationId,
-      isMainMaterial ? 1 : 0, parentLabelId,
+      labelNo,
+      finalQrCode,
+      purchaseOrderNo,
+      supplierName,
+      receiveDate,
+      materialCode,
+      materialName,
+      specification,
+      unit,
+      batchNo,
+      quantity,
+      packageQty,
+      width,
+      lengthPerRoll,
+      remark,
+      colorCode,
+      mixRemark,
+      warehouseId,
+      locationId,
+      isMainMaterial ? 1 : 0,
+      parentLabelId,
     ]
   );
 
-  return successResponse({
-    id: result.insertId,
-    labelNo,
-    message: '物料标签创建成功',
-  }, '物料标签创建成功');
+  return successResponse(
+    {
+      id: result.insertId,
+      labelNo,
+      message: '物料标签创建成功',
+    },
+    '物料标签创建成功'
+  );
 }, '创建物料标签失败');
 
 // PUT - 更新物料标签
@@ -239,11 +253,28 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const params: any[] = [];
 
   const fields = [
-    'qrCode', 'purchaseOrderNo', 'supplierName', 'receiveDate',
-    'materialCode', 'materialName', 'specification', 'unit', 'batchNo',
-    'quantity', 'packageQty', 'width', 'lengthPerRoll', 'remark',
-    'colorCode', 'mixRemark', 'warehouseId', 'locationId',
-    'isMainMaterial', 'isUsed', 'isCut', 'status',
+    'qrCode',
+    'purchaseOrderNo',
+    'supplierName',
+    'receiveDate',
+    'materialCode',
+    'materialName',
+    'specification',
+    'unit',
+    'batchNo',
+    'quantity',
+    'packageQty',
+    'width',
+    'lengthPerRoll',
+    'remark',
+    'colorCode',
+    'mixRemark',
+    'warehouseId',
+    'locationId',
+    'isMainMaterial',
+    'isUsed',
+    'isCut',
+    'status',
   ];
 
   fields.forEach((field) => {
@@ -276,10 +307,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('缺少标签ID', 400, 400);
   }
 
-  await execute(
-    'UPDATE inv_material_label SET deleted = 1 WHERE id = ?',
-    [id]
-  );
+  await execute('UPDATE inv_material_label SET deleted = 1 WHERE id = ?', [id]);
 
   return successResponse(null, '物料标签删除成功');
 }, '删除物料标签失败');

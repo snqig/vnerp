@@ -1,13 +1,7 @@
 import { secureLog } from '@/lib/logger';
 import { execute } from '@/lib/db';
 
-export type InspectStatus =
-  | 'pending'
-  | 'inspecting'
-  | 'pass'
-  | 'fail'
-  | 'rework'
-  | 'scrap';
+export type InspectStatus = 'pending' | 'inspecting' | 'pass' | 'fail' | 'rework' | 'scrap';
 
 export type ProcessStatus =
   | 'created'
@@ -256,7 +250,10 @@ export class EnhancedStateMachineValidator {
     const transition = config.allowedTransitions.find((t) => t.to === to);
 
     if (!transition) {
-      return { allowed: false, reason: `不允许从"${config.label}"流转到"${inspectStateMachine[to].label}"` };
+      return {
+        allowed: false,
+        reason: `不允许从"${config.label}"流转到"${inspectStateMachine[to].label}"`,
+      };
     }
 
     if (transition.condition && !transition.condition(context)) {
@@ -280,7 +277,10 @@ export class EnhancedStateMachineValidator {
     const transition = config.allowedTransitions.find((t) => t.to === to);
 
     if (!transition) {
-      return { allowed: false, reason: `不允许从"${config.label}"流转到"${processStateMachine[to].label}"` };
+      return {
+        allowed: false,
+        reason: `不允许从"${config.label}"流转到"${processStateMachine[to].label}"`,
+      };
     }
 
     if (transition.condition && !transition.condition(context)) {
@@ -315,9 +315,7 @@ export class EnhancedStateMachineValidator {
 }
 
 export class StateTransitionLogger {
-  static async logTransition(
-    record: TransitionRecord
-  ): Promise<number> {
+  static async logTransition(record: TransitionRecord): Promise<number> {
     try {
       const [result]: any = await execute(
         `INSERT INTO sys_state_transition_log

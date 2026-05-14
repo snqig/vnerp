@@ -1,0 +1,12 @@
+{
+  "tool": "generate_liquid_chart",
+  "args": {
+    "percent": 0.75,
+    "title": "A仓 - 仓库利用率 75%",
+    "shape": "circle",
+    "theme": "default",
+    "style": {
+      "color": "#1890ff"
+    }
+  }
+}

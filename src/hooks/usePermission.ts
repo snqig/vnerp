@@ -22,9 +22,7 @@ const permissionModules = [
   {
     id: 'dashboard',
     name: '仪表盘',
-    permissions: [
-      { id: 'dashboard:view', name: '查看仪表盘' },
-    ],
+    permissions: [{ id: 'dashboard:view', name: '查看仪表盘' }],
   },
   {
     id: 'order',
@@ -128,8 +126,8 @@ const permissionModules = [
 // 获取所有权限列表
 export const getAllPermissions = (): Permission[] => {
   const permissions: Permission[] = [];
-  permissionModules.forEach(module => {
-    module.permissions.forEach(perm => {
+  permissionModules.forEach((module) => {
+    module.permissions.forEach((perm) => {
       permissions.push({
         ...perm,
         module: module.name,
@@ -156,19 +154,19 @@ export function usePermission() {
       // 从localStorage获取用户信息
       const userStr = localStorage.getItem('user');
       if (!userStr) return;
-      
+
       const user = JSON.parse(userStr);
       if (!user.role_id) return;
 
       // 获取角色权限
       const response = await fetch(`/api/role-permissions?roleId=${user.role_id}`);
       const result = await response.json();
-      
+
       if (result.success) {
         // 获取角色的按钮权限
         const roleResponse = await fetch(`/api/organization/role`);
         const roleResult = await roleResponse.json();
-        
+
         let buttonPermissions: string[] = [];
         if (roleResult.success) {
           const role = roleResult.data.find((r: any) => r.id === user.role_id);
@@ -189,49 +187,61 @@ export function usePermission() {
   }, []);
 
   // 检查是否有权限
-  const hasPermission = useCallback((permissionId: string): boolean => {
-    // 超级管理员拥有所有权限
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
-    }
-    
-    return userPermissions.buttons.includes(permissionId);
-  }, [userPermissions.buttons]);
+  const hasPermission = useCallback(
+    (permissionId: string): boolean => {
+      // 超级管理员拥有所有权限
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
+      }
+
+      return userPermissions.buttons.includes(permissionId);
+    },
+    [userPermissions.buttons]
+  );
 
   // 检查是否有菜单权限
-  const hasMenuPermission = useCallback((menuId: number): boolean => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
-    }
-    
-    return userPermissions.menus.includes(menuId);
-  }, [userPermissions.menus]);
+  const hasMenuPermission = useCallback(
+    (menuId: number): boolean => {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
+      }
+
+      return userPermissions.menus.includes(menuId);
+    },
+    [userPermissions.menus]
+  );
 
   // 检查是否有任意一个权限
-  const hasAnyPermission = useCallback((permissionIds: string[]): boolean => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
-    }
-    
-    return permissionIds.some(id => userPermissions.buttons.includes(id));
-  }, [userPermissions.buttons]);
+  const hasAnyPermission = useCallback(
+    (permissionIds: string[]): boolean => {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
+      }
+
+      return permissionIds.some((id) => userPermissions.buttons.includes(id));
+    },
+    [userPermissions.buttons]
+  );
 
   // 检查是否拥有所有权限
-  const hasAllPermissions = useCallback((permissionIds: string[]): boolean => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
-    }
-    
-    return permissionIds.every(id => userPermissions.buttons.includes(id));
-  }, [userPermissions.buttons]);
+  const hasAllPermissions = useCallback(
+    (permissionIds: string[]): boolean => {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
+      }
+
+      return permissionIds.every((id) => userPermissions.buttons.includes(id));
+    },
+    [userPermissions.buttons]
+  );
 
   useEffect(() => {
     loadPermissions();

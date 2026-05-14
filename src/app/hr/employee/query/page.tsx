@@ -5,8 +5,29 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { UserCircle, Building2, Briefcase, Phone, Mail, Calendar, ArrowLeft, Loader2 } from 'lucide-react';
+import {
+  UserCircle,
+  Building2,
+  Briefcase,
+  Phone,
+  Mail,
+  Calendar,
+  ArrowLeft,
+  Loader2,
+} from 'lucide-react';
 import Link from 'next/link';
+
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
 
 // 员工接口
 interface Employee {
@@ -29,7 +50,7 @@ interface Employee {
 function EmployeeQueryContent() {
   const searchParams = useSearchParams();
   const employeeId = searchParams.get('id');
-  
+
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -45,7 +66,7 @@ function EmployeeQueryContent() {
 
   const fetchEmployee = async (id: number) => {
     try {
-      const response = await fetch(`/api/organization/employee?id=${id}`);
+      const response = await authFetch(`/api/organization/employee?id=${id}`);
       const result = await response.json();
       if (result.success && result.data) {
         setEmployee(result.data);
@@ -65,19 +86,15 @@ function EmployeeQueryContent() {
       1: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
       0: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
       2: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-      3: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+      3: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
     };
     const labels: Record<number, string> = {
       1: '在职',
       0: '停用',
       2: '试用期',
-      3: '离职'
+      3: '离职',
     };
-    return (
-      <Badge className={styles[status] || 'bg-gray-100'}>
-        {labels[status] || '未知'}
-      </Badge>
-    );
+    return <Badge className={styles[status] || 'bg-gray-100'}>{labels[status] || '未知'}</Badge>;
   };
 
   if (loading) {
@@ -146,9 +163,7 @@ function EmployeeQueryContent() {
               返回员工列表
             </Button>
           </Link>
-          <div className="text-sm text-gray-500">
-            员工编号: {employee.employee_no}
-          </div>
+          <div className="text-sm text-gray-500">员工编号: {employee.employee_no}</div>
         </div>
 
         {/* 员工信息卡片 */}

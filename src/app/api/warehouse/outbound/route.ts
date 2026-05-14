@@ -153,12 +153,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   // 使用事务确保数据一致性
   const result = await transaction(async (connection) => {
-
     // 计算总金额
-    const totalQty = items.reduce(
-      (sum: number, item: any) => sum + (parseFloat(item.qty) || 0),
-      0
-    );
+    const totalQty = items.reduce((sum: number, item: any) => sum + (parseFloat(item.qty) || 0), 0);
     const totalAmount = items.reduce(
       (sum: number, item: any) =>
         sum + (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0),
@@ -222,7 +218,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     oper_type: 'warehouse',
     oper_method: 'POST',
     oper_url: '/api/warehouse/outbound',
-    oper_param: JSON.stringify({ orderNo: result.orderNo, warehouseCode, warehouseName, operatorName }),
+    oper_param: JSON.stringify({
+      orderNo: result.orderNo,
+      warehouseCode,
+      warehouseName,
+      operatorName,
+    }),
     oper_result: `出库单 ${result.orderNo} 创建成功`,
     status: 1,
   });
@@ -284,7 +285,11 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     oper_type: 'warehouse',
     oper_method: 'PUT',
     oper_url: '/api/warehouse/outbound',
-    oper_param: JSON.stringify({ id, orderDate: updateData.orderDate, warehouseCode: updateData.warehouseCode }),
+    oper_param: JSON.stringify({
+      id,
+      orderDate: updateData.orderDate,
+      warehouseCode: updateData.warehouseCode,
+    }),
     oper_result: `出库单 ${id} 更新成功`,
     status: 1,
   });
@@ -326,10 +331,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
       'UPDATE inv_outbound_order SET deleted = 1, update_time = NOW() WHERE id = ?',
       [id]
     );
-    await connection.execute(
-      'UPDATE inv_outbound_item SET deleted = 1 WHERE order_id = ?',
-      [id]
-    );
+    await connection.execute('UPDATE inv_outbound_item SET deleted = 1 WHERE order_id = ?', [id]);
   });
 
   await logOperation({

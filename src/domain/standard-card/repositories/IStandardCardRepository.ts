@@ -20,7 +20,11 @@ export interface IStandardCardRepository {
   findByCode(code: string): Promise<StandardCard | null>;
   findByMaterialId(materialId: number, includeObsolete?: boolean): Promise<StandardCard[]>;
   findCurrentByMaterialId(materialId: number): Promise<StandardCard | null>;
-  findByFilters(filters: StandardCardFilters, page?: number, pageSize?: number): Promise<{ list: StandardCard[]; total: number }>;
+  findByFilters(
+    filters: StandardCardFilters,
+    page?: number,
+    pageSize?: number
+  ): Promise<{ list: StandardCard[]; total: number }>;
   save(card: StandardCard): Promise<number>;
   update(card: StandardCard): Promise<void>;
   delete(id: number): Promise<void>;

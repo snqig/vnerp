@@ -67,27 +67,78 @@ interface OutboundRecord {
   materialCode: string;
   width?: number;
   batchNo?: string;
+  batch_no?: string;
 }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { MainLayout } from '@/components/layout';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
 // 状态类型
 const statusOptions = [
-  { value: 'all', label: '全部', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  { value: 'draft', label: '草稿', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  { value: 'pending', label: '待审核', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200' },
-  { value: 'approved', label: '已审核', color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200' },
-  { value: 'rejected', label: '已拒绝', color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' },
-  { value: 'completed', label: '已完成', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200' },
+  {
+    value: 'all',
+    label: '全部',
+    color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  },
+  {
+    value: 'draft',
+    label: '草稿',
+    color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  },
+  {
+    value: 'pending',
+    label: '待审核',
+    color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200',
+  },
+  {
+    value: 'approved',
+    label: '已审核',
+    color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
+  },
+  {
+    value: 'rejected',
+    label: '已拒绝',
+    color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200',
+  },
+  {
+    value: 'completed',
+    label: '已完成',
+    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
+  },
 ];
 
 // 出库类型选项
@@ -114,14 +165,86 @@ const unitOptions = [
 
 // 基础信息数据（物料主数据）
 const materials = [
-  { id: 1, category: '原材料', name: '厚0.3热缩套管', code: 'RSG-0.3-32', spec: 'Ф32', unit: 'M', supplier: '恒翌达', location: 'A01-01' },
-  { id: 2, category: '原材料', name: 'PE管', code: 'PE-25', spec: '25mm', unit: 'M', supplier: '恒翌达', location: 'A01-02' },
-  { id: 3, category: '原材料', name: '厚0.2热缩套管', code: 'RSG-0.2-22', spec: 'Ф22', unit: 'M', supplier: '恒翌达', location: 'A01-03' },
-  { id: 4, category: '原材料', name: 'PVC绝缘胶带', code: 'PVC-TAPE-20', spec: '20mm*20m', unit: '卷', supplier: '华通材料', location: 'A02-01' },
-  { id: 5, category: '原材料', name: '铜芯线', code: 'CU-WIRE-1.5', spec: '1.5mm²', unit: 'M', supplier: '江南电缆', location: 'A02-02' },
-  { id: 6, category: '原材料', name: '铝箔屏蔽带', code: 'AL-FOIL-50', spec: '50mm*50m', unit: '卷', supplier: '华通材料', location: 'A02-03' },
-  { id: 7, category: '原材料', name: '尼龙扎带', code: 'NYLON-TIE-4', spec: '4*200mm', unit: '包', supplier: '恒翌达', location: 'A03-01' },
-  { id: 8, category: '原材料', name: '热熔胶棒', code: 'HOT-GLUE-11', spec: 'Ф11mm', unit: 'KG', supplier: '华通材料', location: 'A03-02' },
+  {
+    id: 1,
+    category: '原材料',
+    name: '厚0.3热缩套管',
+    code: 'RSG-0.3-32',
+    spec: 'Ф32',
+    unit: 'M',
+    supplier: '恒翌达',
+    location: 'A01-01',
+  },
+  {
+    id: 2,
+    category: '原材料',
+    name: 'PE管',
+    code: 'PE-25',
+    spec: '25mm',
+    unit: 'M',
+    supplier: '恒翌达',
+    location: 'A01-02',
+  },
+  {
+    id: 3,
+    category: '原材料',
+    name: '厚0.2热缩套管',
+    code: 'RSG-0.2-22',
+    spec: 'Ф22',
+    unit: 'M',
+    supplier: '恒翌达',
+    location: 'A01-03',
+  },
+  {
+    id: 4,
+    category: '原材料',
+    name: 'PVC绝缘胶带',
+    code: 'PVC-TAPE-20',
+    spec: '20mm*20m',
+    unit: '卷',
+    supplier: '华通材料',
+    location: 'A02-01',
+  },
+  {
+    id: 5,
+    category: '原材料',
+    name: '铜芯线',
+    code: 'CU-WIRE-1.5',
+    spec: '1.5mm²',
+    unit: 'M',
+    supplier: '江南电缆',
+    location: 'A02-02',
+  },
+  {
+    id: 6,
+    category: '原材料',
+    name: '铝箔屏蔽带',
+    code: 'AL-FOIL-50',
+    spec: '50mm*50m',
+    unit: '卷',
+    supplier: '华通材料',
+    location: 'A02-03',
+  },
+  {
+    id: 7,
+    category: '原材料',
+    name: '尼龙扎带',
+    code: 'NYLON-TIE-4',
+    spec: '4*200mm',
+    unit: '包',
+    supplier: '恒翌达',
+    location: 'A03-01',
+  },
+  {
+    id: 8,
+    category: '原材料',
+    name: '热熔胶棒',
+    code: 'HOT-GLUE-11',
+    spec: 'Ф11mm',
+    unit: 'KG',
+    supplier: '华通材料',
+    location: 'A03-02',
+  },
 ];
 
 // 出库记录数据
@@ -204,29 +327,79 @@ const initialOutboundRecords: OutboundRecord[] = [
   },
 ];
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ComponentType<any> }> = {
-  completed: { label: '已完成', color: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800', icon: CheckCircle2 },
-  pending: { label: '待出库', color: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-800', icon: Clock },
-  in_transit: { label: '运输中', color: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800', icon: Truck },
-  cancelled: { label: '已取消', color: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600', icon: AlertCircle },
-  draft: { label: '草稿', color: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600', icon: FileText },
-  approved: { label: '已审核', color: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800', icon: CheckCircle2 },
-  rejected: { label: '已拒绝', color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-800', icon: X },
+const statusConfig: Record<
+  string,
+  { label: string; color: string; icon: React.ComponentType<any> }
+> = {
+  completed: {
+    label: '已完成',
+    color:
+      'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800',
+    icon: CheckCircle2,
+  },
+  pending: {
+    label: '待出库',
+    color:
+      'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-800',
+    icon: Clock,
+  },
+  in_transit: {
+    label: '运输中',
+    color:
+      'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800',
+    icon: Truck,
+  },
+  cancelled: {
+    label: '已取消',
+    color:
+      'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
+    icon: AlertCircle,
+  },
+  draft: {
+    label: '草稿',
+    color:
+      'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
+    icon: FileText,
+  },
+  approved: {
+    label: '已审核',
+    color:
+      'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800',
+    icon: CheckCircle2,
+  },
+  rejected: {
+    label: '已拒绝',
+    color:
+      'bg-red-100 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-800',
+    icon: X,
+  },
 };
 
 export default function OutboundManagementPage() {
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const [activeTab, setActiveTab] = useState('records');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // 数据状态
   const [outboundRecords, setOutboundRecords] = useState(initialOutboundRecords);
   const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [warehouseCategories, setWarehouseCategories] = useState<any[]>([]);
-  
+
   // 对话框状态
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -234,12 +407,12 @@ export default function OutboundManagementPage() {
   const [isAuditDialogOpen, setIsAuditDialogOpen] = useState(false);
   const [isFifoDialogOpen, setIsFifoDialogOpen] = useState(false);
   const [currentRecord, setCurrentRecord] = useState<any>(null);
-  
+
   // FIFO分配状态
   const [fifoAllocation, setFifoAllocation] = useState<any>(null);
   const [fifoLoading, setFifoLoading] = useState(false);
   const [fifoConfirming, setFifoConfirming] = useState(false);
-  
+
   // 表单状态
   const [formData, setFormData] = useState({
     materialCode: '',
@@ -271,8 +444,8 @@ export default function OutboundManagementPage() {
       if (statusFilter !== 'all') params.append('status', statusFilter);
       params.append('page', '1');
       params.append('pageSize', '1000');
-      
-      const response = await fetch(`/api/warehouse/outbound?${params.toString()}`);
+
+      const response = await authFetch(`/api/warehouse/outbound?${params.toString()}`);
       const result = await response.json();
       if (result.success) {
         setOutboundRecords(result.data?.list || result.data || []);
@@ -285,7 +458,7 @@ export default function OutboundManagementPage() {
   // 获取仓库列表
   const fetchWarehouses = useCallback(async () => {
     try {
-      const response = await fetch('/api/warehouse');
+      const response = await authFetch('/api/warehouse');
       const result = await response.json();
       if (result.success) {
         setWarehouses(result.data);
@@ -298,7 +471,7 @@ export default function OutboundManagementPage() {
   // 获取仓库分类列表
   const fetchWarehouseCategories = useCallback(async () => {
     try {
-      const response = await fetch('/api/warehouse/categories');
+      const response = await authFetch('/api/warehouse/categories');
       const result = await response.json();
       if (result.success) {
         setWarehouseCategories(result.data);
@@ -325,14 +498,15 @@ export default function OutboundManagementPage() {
 
   // 筛选出库记录
   const filteredRecords = useMemo(() => {
-    return outboundRecords.filter(record => {
-      const matchesSearch = !searchQuery || 
+    return outboundRecords.filter((record) => {
+      const matchesSearch =
+        !searchQuery ||
         record.materialName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         record.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         record.remark?.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
       const matchesStatus = statusFilter === 'all' || record.auditStatus === statusFilter;
-      
+
       return matchesSearch && matchesStatus;
     });
   }, [outboundRecords, searchQuery, statusFilter]);
@@ -366,7 +540,14 @@ export default function OutboundManagementPage() {
       unit: record.unit || '',
       warehouse: record.warehouse || '',
       remark: record.remark || '',
-      outboundType: record.type === '生产出库' ? 'production' : record.type === '销售出库' ? 'sales' : record.type === '退货出库' ? 'return' : 'other',
+      outboundType:
+        record.type === '生产出库'
+          ? 'production'
+          : record.type === '销售出库'
+            ? 'sales'
+            : record.type === '退货出库'
+              ? 'return'
+              : 'other',
       isRawMaterial: record.isRawMaterial || false,
       batchNo: record.batchNo || '',
       width: record.width?.toString() || '',
@@ -377,8 +558,10 @@ export default function OutboundManagementPage() {
   // 保存出库单
   const handleSave = async () => {
     try {
-      const warehouseData = warehouses.find(w => w.code === formData.warehouse || w.name === formData.warehouse);
-      
+      const warehouseData = warehouses.find(
+        (w) => w.code === formData.warehouse || w.name === formData.warehouse
+      );
+
       const apiData = {
         orderDate: new Date().toISOString().slice(0, 10),
         outboundType: formData.outboundType,
@@ -386,31 +569,32 @@ export default function OutboundManagementPage() {
         warehouseCode: warehouseData?.code || formData.warehouse,
         warehouseName: warehouseData?.name || formData.warehouse,
         remark: formData.remark,
-        items: [{
-          materialId: 0,
-          materialCode: formData.materialCode,
-          materialName: formData.materialName,
-          specification: formData.specification,
-          width: parseFloat(formData.width) || 0,
-          batchNo: formData.batchNo,
-          qty: parseFloat(formData.quantity) || 0,
-          unit: formData.unit,
-          isRawMaterial: formData.isRawMaterial,
-          unitPrice: 0,
-          locationCode: '',
-          remark: '',
-        }],
+        items: [
+          {
+            materialId: 0,
+            materialCode: formData.materialCode,
+            materialName: formData.materialName,
+            specification: formData.specification,
+            width: parseFloat(formData.width) || 0,
+            batchNo: formData.batchNo,
+            qty: parseFloat(formData.quantity) || 0,
+            unit: formData.unit,
+            isRawMaterial: formData.isRawMaterial,
+            unitPrice: 0,
+            locationCode: '',
+            remark: '',
+          },
+        ],
         operatorId: 0,
         operatorName: '当前用户',
       };
 
-      const response = await fetch('/api/warehouse/outbound', {
+      const response = await authFetch('/api/warehouse/outbound', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiData),
       });
       const result = await response.json();
-      
+
       if (result.success) {
         toast.success('出库单保存成功');
         await fetchOutboundRecords();
@@ -427,10 +611,12 @@ export default function OutboundManagementPage() {
   // 更新出库单
   const handleUpdate = async () => {
     if (!currentRecord) return;
-    
+
     try {
-      const warehouseData = warehouses.find(w => w.code === formData.warehouse || w.name === formData.warehouse);
-      
+      const warehouseData = warehouses.find(
+        (w) => w.code === formData.warehouse || w.name === formData.warehouse
+      );
+
       const apiData = {
         id: currentRecord.id,
         orderDate: currentRecord.orderDate || new Date().toISOString().slice(0, 10),
@@ -439,31 +625,32 @@ export default function OutboundManagementPage() {
         warehouseCode: warehouseData?.code || formData.warehouse,
         warehouseName: warehouseData?.name || formData.warehouse,
         remark: formData.remark,
-        items: [{
-          materialId: 0,
-          materialCode: formData.materialCode,
-          materialName: formData.materialName,
-          specification: formData.specification,
-          width: parseFloat(formData.width) || 0,
-          batchNo: formData.batchNo,
-          qty: parseFloat(formData.quantity) || 0,
-          unit: formData.unit,
-          isRawMaterial: formData.isRawMaterial,
-          unitPrice: 0,
-          locationCode: '',
-          remark: '',
-        }],
+        items: [
+          {
+            materialId: 0,
+            materialCode: formData.materialCode,
+            materialName: formData.materialName,
+            specification: formData.specification,
+            width: parseFloat(formData.width) || 0,
+            batchNo: formData.batchNo,
+            qty: parseFloat(formData.quantity) || 0,
+            unit: formData.unit,
+            isRawMaterial: formData.isRawMaterial,
+            unitPrice: 0,
+            locationCode: '',
+            remark: '',
+          },
+        ],
         operatorId: 0,
         operatorName: '当前用户',
       };
 
-      const response = await fetch('/api/warehouse/outbound', {
+      const response = await authFetch('/api/warehouse/outbound', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiData),
       });
       const result = await response.json();
-      
+
       if (result.success) {
         toast.success('出库单更新成功');
         await fetchOutboundRecords();
@@ -485,13 +672,13 @@ export default function OutboundManagementPage() {
 
   const confirmDelete = async () => {
     if (!currentRecord) return;
-    
+
     try {
-      const response = await fetch(`/api/warehouse/outbound?id=${currentRecord.id}`, {
+      const response = await authFetch(`/api/warehouse/outbound?id=${currentRecord.id}`, {
         method: 'DELETE',
       });
       const result = await response.json();
-      
+
       if (result.success) {
         toast.success('出库单删除成功');
         await fetchOutboundRecords();
@@ -513,12 +700,11 @@ export default function OutboundManagementPage() {
 
   const confirmAudit = async () => {
     if (!currentRecord) return;
-    
+
     try {
       const newStatus = currentRecord.auditAction === 'approve' ? 'approved' : 'pending';
-      const response = await fetch('/api/warehouse/outbound', {
+      const response = await authFetch('/api/warehouse/outbound', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: currentRecord.id,
           status: newStatus,
@@ -528,7 +714,7 @@ export default function OutboundManagementPage() {
         }),
       });
       const result = await response.json();
-      
+
       if (result.success) {
         toast.success(currentRecord.auditAction === 'approve' ? '审核成功' : '撤审成功');
         await fetchOutboundRecords();
@@ -548,22 +734,22 @@ export default function OutboundManagementPage() {
     setFifoLoading(true);
     setIsFifoDialogOpen(true);
     setFifoAllocation(null);
-    
+
     try {
-      const warehouseData = warehouses.find(w => w.name === record.warehouse);
+      const warehouseData = warehouses.find((w) => w.name === record.warehouse);
       const warehouseId = warehouseData?.id || record.warehouseId;
-      
+
       if (!warehouseId) {
         toast.error('无法确定仓库信息');
         setFifoLoading(false);
         return;
       }
 
-      const response = await fetch(
+      const response = await authFetch(
         `/api/warehouse/outbound/fifo?materialId=${record.materialId || record.material_id || 0}&warehouseId=${warehouseId}&requiredQty=${record.quantity || record.qty || 0}`
       );
       const result = await response.json();
-      
+
       if (result.success) {
         setFifoAllocation(result.data);
       } else {
@@ -580,11 +766,10 @@ export default function OutboundManagementPage() {
   const handleFifoConfirm = async () => {
     if (!currentRecord) return;
     setFifoConfirming(true);
-    
+
     try {
-      const response = await fetch('/api/warehouse/outbound/confirm', {
+      const response = await authFetch('/api/warehouse/outbound/confirm', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: currentRecord.id || currentRecord.orderId,
           operatorId: 1,
@@ -593,7 +778,7 @@ export default function OutboundManagementPage() {
         }),
       });
       const result = await response.json();
-      
+
       if (result.success) {
         toast.success('FIFO出库确认成功，库存已按先进先出扣减');
         await fetchOutboundRecords();
@@ -620,10 +805,8 @@ export default function OutboundManagementPage() {
 
   // 选择记录
   const toggleSelectRecord = (recordId: string) => {
-    setSelectedRecords(prev => 
-      prev.includes(recordId) 
-        ? prev.filter(id => id !== recordId)
-        : [...prev, recordId]
+    setSelectedRecords((prev) =>
+      prev.includes(recordId) ? prev.filter((id) => id !== recordId) : [...prev, recordId]
     );
   };
 
@@ -632,342 +815,362 @@ export default function OutboundManagementPage() {
     if (selectedRecords.length === filteredRecords.length) {
       setSelectedRecords([]);
     } else {
-      setSelectedRecords(filteredRecords.map(r => r.id));
+      setSelectedRecords(filteredRecords.map((r) => r.id));
     }
   };
 
   // 计算统计数据
   const totalOutboundToday = outboundRecords
-    .filter(r => r.date === new Date().toISOString().slice(0, 10))
+    .filter((r) => r.date === new Date().toISOString().slice(0, 10))
     .reduce((sum, r) => sum + r.quantity, 0);
-  
-  const totalOutboundMonth = outboundRecords
-    .reduce((sum, r) => sum + r.quantity, 0);
+
+  const totalOutboundMonth = outboundRecords.reduce((sum, r) => sum + r.quantity, 0);
 
   return (
     <MainLayout>
       <div className="max-w-[1600px] mx-auto space-y-6">
-            {/* 页面标题 */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-between"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200">
-                  <ArrowUpRight className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900">出库管理</h1>
-                  <p className="text-slate-500">原材料出库登记、查询与统计</p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* 功能按钮栏 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border dark:border-slate-700"
-            >
-              <Button onClick={handleAdd} className="gap-2 bg-blue-600 hover:bg-blue-700">
-                <Plus className="w-4 h-4" />
-                新增
-              </Button>
-              <Button onClick={handlePrint} variant="outline" className="gap-2">
-                <Printer className="w-4 h-4" />
-                打印
-              </Button>
-              <div className="w-px h-8 bg-slate-200 dark:bg-slate-600 mx-2" />
-              <Button onClick={handleRefresh} variant="outline" className="gap-2" disabled={isLoading}>
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                刷新
-              </Button>
-              <Button onClick={handleReset} variant="outline" className="gap-2">
-                <RotateCcw className="w-4 h-4" />
-                重置
-              </Button>
-            </motion.div>
-
-            {/* 查询筛选栏 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex flex-wrap items-center gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border dark:border-slate-700"
-            >
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-slate-500" />
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">状态：</span>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="选择状态" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Search className="w-4 h-4 text-slate-500" />
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">关键字：</span>
-                <Input
-                  placeholder="搜索品名、单号、备注..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-slate-500" />
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">时间：</span>
-                <Select value={dateRange} onValueChange={setDateRange}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="时间范围" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部</SelectItem>
-                    <SelectItem value="today">今日</SelectItem>
-                    <SelectItem value="week">本周</SelectItem>
-                    <SelectItem value="month">本月</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {selectedRecords.length > 0 && (
-                <Badge variant="secondary" className="ml-auto">
-                  已选择 {selectedRecords.length} 条记录
-                </Badge>
-              )}
-            </motion.div>
-
-            {/* 统计卡片 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-slate-600 dark:text-slate-300">今日出库</p>
-                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">{totalOutboundToday.toLocaleString()}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">单位：件/M</p>
-                      </div>
-                      <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/60 flex items-center justify-center">
-                        <TrendingDown className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Card className="border-0 shadow-md bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-900/40 dark:to-violet-900/40">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-slate-600 dark:text-slate-300">本月累计出库</p>
-                        <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-1">{totalOutboundMonth.toLocaleString()}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">单位：件/M</p>
-                      </div>
-                      <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/60 flex items-center justify-center">
-                        <Boxes className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Card className="border-0 shadow-md bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/40 dark:to-orange-900/40">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-slate-600 dark:text-slate-300">待审核</p>
-                        <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">
-                          {outboundRecords.filter(r => r.auditStatus === 'draft' || r.auditStatus === 'pending').length}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">笔待处理</p>
-                      </div>
-                      <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/60 flex items-center justify-center">
-                        <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-              >
-                <Card className="border-0 shadow-md bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/40 dark:to-pink-900/40">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-slate-600 dark:text-slate-300">出库单总数</p>
-                        <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-1">{outboundRecords.length}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">本月累计</p>
-                      </div>
-                      <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/60 flex items-center justify-center">
-                        <FileText className="w-6 h-6 text-red-600 dark:text-red-400" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+        {/* 页面标题 */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200">
+              <ArrowUpRight className="w-6 h-6 text-white" />
             </div>
-
-            {/* 出库记录表格 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="border shadow-sm dark:border-slate-700">
-                <CardHeader className="flex flex-row items-center justify-between border-b dark:border-slate-700">
-                  <CardTitle>出库记录</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-500 dark:text-slate-400">共 {filteredRecords.length} 条记录</span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-12">
-                            <Checkbox
-                              checked={selectedRecords.length === filteredRecords.length && filteredRecords.length > 0}
-                              onCheckedChange={toggleSelectAll}
-                            />
-                          </TableHead>
-                          <TableHead>出库单号</TableHead>
-                          <TableHead>日期</TableHead>
-                          <TableHead>物料名称</TableHead>
-                          <TableHead>规格</TableHead>
-                          <TableHead>数量</TableHead>
-                          <TableHead>单位</TableHead>
-                          <TableHead>仓库</TableHead>
-                          <TableHead>批次号</TableHead>
-                          <TableHead>类型</TableHead>
-                          <TableHead>状态</TableHead>
-                          <TableHead>操作员</TableHead>
-                          <TableHead className="text-right">操作</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredRecords.map((record) => {
-                          const StatusIcon = statusConfig[record.status]?.icon || FileText;
-                          return (
-                            <TableRow key={record.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                              <TableCell>
-                                <Checkbox
-                                  checked={selectedRecords.includes(record.id)}
-                                  onCheckedChange={() => toggleSelectRecord(record.id)}
-                                />
-                              </TableCell>
-                              <TableCell className="font-medium">{record.id}</TableCell>
-                              <TableCell>{record.date}</TableCell>
-                              <TableCell>{record.materialName}</TableCell>
-                              <TableCell>{record.spec}</TableCell>
-                              <TableCell>{record.quantity}</TableCell>
-                              <TableCell>{record.unit}</TableCell>
-                              <TableCell>{record.warehouse}</TableCell>
-                              <TableCell className="font-mono text-xs">{record.batchNo || record.batch_no || '-'}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800">
-                                  {record.type}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-1">
-                                  <StatusIcon className="w-4 h-4" />
-                                  <span>{statusConfig[record.status]?.label || record.status}</span>
-                                </div>
-                              </TableCell>
-                              <TableCell>{record.operator}</TableCell>
-                              <TableCell className="text-right">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEdit(record)}>
-                                      <Edit className="mr-2 h-4 w-4" />
-                                      编辑
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDelete(record)}>
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      删除
-                                    </DropdownMenuItem>
-                                    {record.auditStatus !== 'approved' && (
-                                      <DropdownMenuItem onClick={() => handleAudit(record, 'approve')}>
-                                        <Check className="mr-2 h-4 w-4" />
-                                        审核
-                                      </DropdownMenuItem>
-                                    )}
-                                    {record.auditStatus === 'approved' && (
-                                      <DropdownMenuItem onClick={() => handleAudit(record, 'reject')}>
-                                        <RotateCcw className="mr-2 h-4 w-4" />
-                                        撤审
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem onClick={() => handleFifoPreview(record)}>
-                                      <Layers className="mr-2 h-4 w-4" />
-                                      FIFO分配
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {filteredRecords.length === 0 && (
-                    <div className="text-center py-12">
-                      <div className="mx-auto w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                        <List className="w-8 h-8 text-slate-400" />
-                      </div>
-                      <p className="text-slate-500">暂无出库记录</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">出库管理</h1>
+              <p className="text-slate-500">原材料出库登记、查询与统计</p>
+            </div>
           </div>
+        </motion.div>
+
+        {/* 功能按钮栏 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border dark:border-slate-700"
+        >
+          <Button onClick={handleAdd} className="gap-2 bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4" />
+            新增
+          </Button>
+          <Button onClick={handlePrint} variant="outline" className="gap-2">
+            <Printer className="w-4 h-4" />
+            打印
+          </Button>
+          <div className="w-px h-8 bg-slate-200 dark:bg-slate-600 mx-2" />
+          <Button onClick={handleRefresh} variant="outline" className="gap-2" disabled={isLoading}>
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            刷新
+          </Button>
+          <Button onClick={handleReset} variant="outline" className="gap-2">
+            <RotateCcw className="w-4 h-4" />
+            重置
+          </Button>
+        </motion.div>
+
+        {/* 查询筛选栏 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="flex flex-wrap items-center gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border dark:border-slate-700"
+        >
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-slate-500" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">状态：</span>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="选择状态" />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-slate-500" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">关键字：</span>
+            <Input
+              placeholder="搜索品名、单号、备注..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-64"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-slate-500" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">时间：</span>
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="时间范围" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部</SelectItem>
+                <SelectItem value="today">今日</SelectItem>
+                <SelectItem value="week">本周</SelectItem>
+                <SelectItem value="month">本月</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedRecords.length > 0 && (
+            <Badge variant="secondary" className="ml-auto">
+              已选择 {selectedRecords.length} 条记录
+            </Badge>
+          )}
+        </motion.div>
+
+        {/* 统计卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">今日出库</p>
+                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                      {totalOutboundToday.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">单位：件/M</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/60 flex items-center justify-center">
+                    <TrendingDown className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="border-0 shadow-md bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-900/40 dark:to-violet-900/40">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">本月累计出库</p>
+                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-1">
+                      {totalOutboundMonth.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">单位：件/M</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/60 flex items-center justify-center">
+                    <Boxes className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="border-0 shadow-md bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/40 dark:to-orange-900/40">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">待审核</p>
+                    <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">
+                      {
+                        outboundRecords.filter(
+                          (r) => r.auditStatus === 'draft' || r.auditStatus === 'pending'
+                        ).length
+                      }
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">笔待处理</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/60 flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Card className="border-0 shadow-md bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/40 dark:to-pink-900/40">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">出库单总数</p>
+                    <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-1">
+                      {outboundRecords.length}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">本月累计</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/60 flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-red-600 dark:text-red-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* 出库记录表格 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="border shadow-sm dark:border-slate-700">
+            <CardHeader className="flex flex-row items-center justify-between border-b dark:border-slate-700">
+              <CardTitle>出库记录</CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-500 dark:text-slate-400">
+                  共 {filteredRecords.length} 条记录
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={
+                            selectedRecords.length === filteredRecords.length &&
+                            filteredRecords.length > 0
+                          }
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </TableHead>
+                      <TableHead>出库单号</TableHead>
+                      <TableHead>日期</TableHead>
+                      <TableHead>物料名称</TableHead>
+                      <TableHead>规格</TableHead>
+                      <TableHead>数量</TableHead>
+                      <TableHead>单位</TableHead>
+                      <TableHead>仓库</TableHead>
+                      <TableHead>批次号</TableHead>
+                      <TableHead>类型</TableHead>
+                      <TableHead>状态</TableHead>
+                      <TableHead>操作员</TableHead>
+                      <TableHead className="text-right">操作</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredRecords.map((record) => {
+                      const StatusIcon = statusConfig[record.status]?.icon || FileText;
+                      return (
+                        <TableRow
+                          key={record.id}
+                          className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                        >
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedRecords.includes(record.id)}
+                              onCheckedChange={() => toggleSelectRecord(record.id)}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium">{record.id}</TableCell>
+                          <TableCell>{record.date}</TableCell>
+                          <TableCell>{record.materialName}</TableCell>
+                          <TableCell>{record.spec}</TableCell>
+                          <TableCell>{record.quantity}</TableCell>
+                          <TableCell>{record.unit}</TableCell>
+                          <TableCell>{record.warehouse}</TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {record.batchNo || record.batch_no || '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800"
+                            >
+                              {record.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <StatusIcon className="w-4 h-4" />
+                              <span>{statusConfig[record.status]?.label || record.status}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{record.operator}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEdit(record)}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  编辑
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDelete(record)}>
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  删除
+                                </DropdownMenuItem>
+                                {record.auditStatus !== 'approved' && (
+                                  <DropdownMenuItem onClick={() => handleAudit(record, 'approve')}>
+                                    <Check className="mr-2 h-4 w-4" />
+                                    审核
+                                  </DropdownMenuItem>
+                                )}
+                                {record.auditStatus === 'approved' && (
+                                  <DropdownMenuItem onClick={() => handleAudit(record, 'reject')}>
+                                    <RotateCcw className="mr-2 h-4 w-4" />
+                                    撤审
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem onClick={() => handleFifoPreview(record)}>
+                                  <Layers className="mr-2 h-4 w-4" />
+                                  FIFO分配
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              {filteredRecords.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                    <List className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <p className="text-slate-500">暂无出库记录</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
 
       {/* 新增出库单对话框 */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-md" resizable>
           <DialogHeader>
             <DialogTitle>新增出库单</DialogTitle>
-            <DialogDescription>
-              填写出库单信息，带 * 为必填项
-            </DialogDescription>
+            <DialogDescription>填写出库单信息，带 * 为必填项</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -1028,12 +1231,15 @@ export default function OutboundManagementPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="unit">单位 *</Label>
-              <Select value={formData.unit} onValueChange={(value) => setFormData({ ...formData, unit: value })}>
+              <Select
+                value={formData.unit}
+                onValueChange={(value) => setFormData({ ...formData, unit: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="选择单位" />
                 </SelectTrigger>
                 <SelectContent>
-                  {unitOptions.map(option => (
+                  {unitOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -1043,12 +1249,15 @@ export default function OutboundManagementPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="warehouse">仓库 *</Label>
-              <Select value={formData.warehouse} onValueChange={(value) => setFormData({ ...formData, warehouse: value })}>
+              <Select
+                value={formData.warehouse}
+                onValueChange={(value) => setFormData({ ...formData, warehouse: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="选择仓库" />
                 </SelectTrigger>
                 <SelectContent>
-                  {warehouses.map(warehouse => (
+                  {warehouses.map((warehouse) => (
                     <SelectItem key={warehouse.id} value={warehouse.name}>
                       {warehouse.name}
                     </SelectItem>
@@ -1058,12 +1267,15 @@ export default function OutboundManagementPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="outboundType">出库类型 *</Label>
-              <Select value={formData.outboundType} onValueChange={(value) => setFormData({ ...formData, outboundType: value })}>
+              <Select
+                value={formData.outboundType}
+                onValueChange={(value) => setFormData({ ...formData, outboundType: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="选择出库类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  {outboundTypeOptions.map(option => (
+                  {outboundTypeOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -1084,7 +1296,9 @@ export default function OutboundManagementPage() {
               <Checkbox
                 id="isRawMaterial"
                 checked={formData.isRawMaterial}
-                onCheckedChange={(checked) => setFormData({ ...formData, isRawMaterial: checked as boolean })}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isRawMaterial: checked as boolean })
+                }
               />
               <Label htmlFor="isRawMaterial">是否原材料</Label>
             </div>
@@ -1105,9 +1319,7 @@ export default function OutboundManagementPage() {
         <DialogContent className="sm:max-w-md" resizable>
           <DialogHeader>
             <DialogTitle>编辑出库单</DialogTitle>
-            <DialogDescription>
-              修改出库单信息，带 * 为必填项
-            </DialogDescription>
+            <DialogDescription>修改出库单信息，带 * 为必填项</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -1168,12 +1380,15 @@ export default function OutboundManagementPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="unit">单位 *</Label>
-              <Select value={formData.unit} onValueChange={(value) => setFormData({ ...formData, unit: value })}>
+              <Select
+                value={formData.unit}
+                onValueChange={(value) => setFormData({ ...formData, unit: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="选择单位" />
                 </SelectTrigger>
                 <SelectContent>
-                  {unitOptions.map(option => (
+                  {unitOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -1183,12 +1398,15 @@ export default function OutboundManagementPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="warehouse">仓库 *</Label>
-              <Select value={formData.warehouse} onValueChange={(value) => setFormData({ ...formData, warehouse: value })}>
+              <Select
+                value={formData.warehouse}
+                onValueChange={(value) => setFormData({ ...formData, warehouse: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="选择仓库" />
                 </SelectTrigger>
                 <SelectContent>
-                  {warehouses.map(warehouse => (
+                  {warehouses.map((warehouse) => (
                     <SelectItem key={warehouse.id} value={warehouse.name}>
                       {warehouse.name}
                     </SelectItem>
@@ -1198,12 +1416,15 @@ export default function OutboundManagementPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="outboundType">出库类型 *</Label>
-              <Select value={formData.outboundType} onValueChange={(value) => setFormData({ ...formData, outboundType: value })}>
+              <Select
+                value={formData.outboundType}
+                onValueChange={(value) => setFormData({ ...formData, outboundType: value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="选择出库类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  {outboundTypeOptions.map(option => (
+                  {outboundTypeOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -1224,7 +1445,9 @@ export default function OutboundManagementPage() {
               <Checkbox
                 id="isRawMaterial"
                 checked={formData.isRawMaterial}
-                onCheckedChange={(checked) => setFormData({ ...formData, isRawMaterial: checked as boolean })}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isRawMaterial: checked as boolean })
+                }
               />
               <Label htmlFor="isRawMaterial">是否原材料</Label>
             </div>
@@ -1268,17 +1491,23 @@ export default function OutboundManagementPage() {
               {currentRecord?.auditAction === 'approve' ? '审核出库单' : '撤审出库单'}
             </DialogTitle>
             <DialogDescription>
-              {currentRecord?.auditAction === 'approve' 
+              {currentRecord?.auditAction === 'approve'
                 ? `确定要审核通过出库单 ${currentRecord?.id} 吗？`
-                : `确定要撤销审核出库单 ${currentRecord?.id} 吗？`
-              }
+                : `确定要撤销审核出库单 ${currentRecord?.id} 吗？`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAuditDialogOpen(false)}>
               取消
             </Button>
-            <Button onClick={confirmAudit} className={currentRecord?.auditAction === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-600 hover:bg-yellow-700'}>
+            <Button
+              onClick={confirmAudit}
+              className={
+                currentRecord?.auditAction === 'approve'
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-yellow-600 hover:bg-yellow-700'
+              }
+            >
               {currentRecord?.auditAction === 'approve' ? '审核通过' : '撤销审核'}
             </Button>
           </DialogFooter>
@@ -1294,10 +1523,11 @@ export default function OutboundManagementPage() {
               FIFO先进先出分配方案
             </DialogTitle>
             <DialogDescription>
-              出库单 {currentRecord?.id} - {currentRecord?.materialName} | 需出库数量: {currentRecord?.quantity || currentRecord?.qty}
+              出库单 {currentRecord?.id} - {currentRecord?.materialName} | 需出库数量:{' '}
+              {currentRecord?.quantity || currentRecord?.qty}
             </DialogDescription>
           </DialogHeader>
-          
+
           {fifoLoading ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
@@ -1309,17 +1539,27 @@ export default function OutboundManagementPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-blue-50 rounded-lg p-3 text-center">
                   <p className="text-xs text-blue-600">需要出库</p>
-                  <p className="text-xl font-bold text-blue-700">{fifoAllocation.required_qty || currentRecord?.quantity || currentRecord?.qty}</p>
+                  <p className="text-xl font-bold text-blue-700">
+                    {fifoAllocation.required_qty || currentRecord?.quantity || currentRecord?.qty}
+                  </p>
                 </div>
                 <div className="bg-green-50 rounded-lg p-3 text-center">
                   <p className="text-xs text-green-600">可用库存</p>
-                  <p className="text-xl font-bold text-green-700">{fifoAllocation.total_available?.toFixed(3) || '0'}</p>
+                  <p className="text-xl font-bold text-green-700">
+                    {fifoAllocation.total_available?.toFixed(3) || '0'}
+                  </p>
                 </div>
-                <div className={`rounded-lg p-3 text-center ${fifoAllocation.shortage > 0 ? 'bg-red-50' : 'bg-emerald-50'}`}>
-                  <p className={`text-xs ${fifoAllocation.shortage > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                <div
+                  className={`rounded-lg p-3 text-center ${fifoAllocation.shortage > 0 ? 'bg-red-50' : 'bg-emerald-50'}`}
+                >
+                  <p
+                    className={`text-xs ${fifoAllocation.shortage > 0 ? 'text-red-600' : 'text-emerald-600'}`}
+                  >
                     {fifoAllocation.shortage > 0 ? '缺少' : '状态'}
                   </p>
-                  <p className={`text-xl font-bold ${fifoAllocation.shortage > 0 ? 'text-red-700' : 'text-emerald-700'}`}>
+                  <p
+                    className={`text-xl font-bold ${fifoAllocation.shortage > 0 ? 'text-red-700' : 'text-emerald-700'}`}
+                  >
                     {fifoAllocation.shortage > 0 ? fifoAllocation.shortage.toFixed(3) : '充足'}
                   </p>
                 </div>
@@ -1329,7 +1569,8 @@ export default function OutboundManagementPage() {
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 text-red-600" />
                   <span className="text-sm text-red-700">
-                    库存不足！缺少 {fifoAllocation.shortage.toFixed(3)} 件，无法完成出库。请先补货或减少出库数量。
+                    库存不足！缺少 {fifoAllocation.shortage.toFixed(3)}{' '}
+                    件，无法完成出库。请先补货或减少出库数量。
                   </span>
                 </div>
               )}
@@ -1337,7 +1578,9 @@ export default function OutboundManagementPage() {
               {/* 分配明细表 */}
               {fifoAllocation.allocation_plan && fifoAllocation.allocation_plan.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">分配明细（按入库日期从早到晚）</h4>
+                  <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    分配明细（按入库日期从早到晚）
+                  </h4>
                   <div className="border rounded-lg overflow-hidden">
                     <Table>
                       <TableHeader>
@@ -1356,45 +1599,12 @@ export default function OutboundManagementPage() {
                             <TableCell className="font-mono text-sm">{alloc.batch_no}</TableCell>
                             <TableCell>{alloc.inbound_date || '-'}</TableCell>
                             <TableCell>{alloc.available_qty_before?.toFixed(3)}</TableCell>
-                            <TableCell className="font-semibold text-blue-700">{alloc.allocate_qty?.toFixed(3)}</TableCell>
+                            <TableCell className="font-semibold text-blue-700">
+                              {alloc.allocate_qty?.toFixed(3)}
+                            </TableCell>
                             <TableCell>{alloc.unit_cost?.toFixed(2)}</TableCell>
-                            <TableCell>{(alloc.allocate_qty * alloc.unit_cost)?.toFixed(2)}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              )}
-
-              {/* 可用批次列表 */}
-              {fifoAllocation.batches && fifoAllocation.batches.length > 0 && !fifoAllocation.allocation_plan?.length && (
-                <div>
-                  <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">可用批次（按入库日期排序）</h4>
-                  <div className="border rounded-lg overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">批次号</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">入库日期</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">总数量</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">可用数量</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">单价</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">状态</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {fifoAllocation.batches.map((batch: any, idx: number) => (
-                          <TableRow key={idx}>
-                            <TableCell className="font-mono text-sm">{batch.batch_no}</TableCell>
-                            <TableCell>{batch.inbound_date || '-'}</TableCell>
-                            <TableCell>{parseFloat(batch.quantity)?.toFixed(3)}</TableCell>
-                            <TableCell className="font-semibold text-green-700">{parseFloat(batch.available_qty)?.toFixed(3)}</TableCell>
-                            <TableCell>{parseFloat(batch.unit_price)?.toFixed(2)}</TableCell>
                             <TableCell>
-                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                正常
-                              </Badge>
+                              {(alloc.allocate_qty * alloc.unit_cost)?.toFixed(2)}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -1404,14 +1614,65 @@ export default function OutboundManagementPage() {
                 </div>
               )}
 
-              {(!fifoAllocation.batches || fifoAllocation.batches.length === 0) && 
-               (!fifoAllocation.allocation_plan || fifoAllocation.allocation_plan.length === 0) && (
-                <div className="text-center py-8">
-                  <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
-                  <p className="text-slate-600">该物料暂无可用批次库存</p>
-                  <p className="text-sm text-slate-400 mt-1">请先进行入库操作</p>
-                </div>
-              )}
+              {/* 可用批次列表 */}
+              {fifoAllocation.batches &&
+                fifoAllocation.batches.length > 0 &&
+                !fifoAllocation.allocation_plan?.length && (
+                  <div>
+                    <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      可用批次（按入库日期排序）
+                    </h4>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">批次号</TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">
+                              入库日期
+                            </TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">总数量</TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">
+                              可用数量
+                            </TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">单价</TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">状态</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {fifoAllocation.batches.map((batch: any, idx: number) => (
+                            <TableRow key={idx}>
+                              <TableCell className="font-mono text-sm">{batch.batch_no}</TableCell>
+                              <TableCell>{batch.inbound_date || '-'}</TableCell>
+                              <TableCell>{parseFloat(batch.quantity)?.toFixed(3)}</TableCell>
+                              <TableCell className="font-semibold text-green-700">
+                                {parseFloat(batch.available_qty)?.toFixed(3)}
+                              </TableCell>
+                              <TableCell>{parseFloat(batch.unit_price)?.toFixed(2)}</TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant="outline"
+                                  className="bg-green-50 text-green-700 border-green-200"
+                                >
+                                  正常
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+
+              {(!fifoAllocation.batches || fifoAllocation.batches.length === 0) &&
+                (!fifoAllocation.allocation_plan ||
+                  fifoAllocation.allocation_plan.length === 0) && (
+                  <div className="text-center py-8">
+                    <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
+                    <p className="text-slate-600">该物料暂无可用批次库存</p>
+                    <p className="text-sm text-slate-400 mt-1">请先进行入库操作</p>
+                  </div>
+                )}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -1423,25 +1684,27 @@ export default function OutboundManagementPage() {
             <Button variant="outline" onClick={() => setIsFifoDialogOpen(false)}>
               关闭
             </Button>
-            {fifoAllocation && fifoAllocation.can_fulfill && currentRecord?.status !== 'completed' && (
-              <Button 
-                onClick={handleFifoConfirm} 
-                disabled={fifoConfirming}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {fifoConfirming ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    确认中...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    确认FIFO出库
-                  </>
-                )}
-              </Button>
-            )}
+            {fifoAllocation &&
+              fifoAllocation.can_fulfill &&
+              currentRecord?.status !== 'completed' && (
+                <Button
+                  onClick={handleFifoConfirm}
+                  disabled={fifoConfirming}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {fifoConfirming ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      确认中...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      确认FIFO出库
+                    </>
+                  )}
+                </Button>
+              )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,7 +1,12 @@
 import { NextRequest } from 'next/server';
 import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
 import { query, transaction } from '@/lib/db';
-import { calculateXbarRChart, calculatePareto, calculatePChart, getSPCDataFromDB } from '@/lib/spc-analysis';
+import {
+  calculateXbarRChart,
+  calculatePareto,
+  calculatePChart,
+  getSPCDataFromDB,
+} from '@/lib/spc-analysis';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -10,14 +15,23 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   if (action === 'xbar-r') {
     const materialId = parseInt(searchParams.get('material_id') || '0');
     const inspectionType = searchParams.get('inspection_type') || 'PQC';
-    const startDate = searchParams.get('start_date') || new Date(Date.now() - 30*86400000).toISOString().slice(0, 10);
+    const startDate =
+      searchParams.get('start_date') ||
+      new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
     const endDate = searchParams.get('end_date') || new Date().toISOString().slice(0, 10);
     const subgroupSize = parseInt(searchParams.get('subgroup_size') || '5');
 
     if (!materialId) return errorResponse('请提供物料ID', 400, 400);
 
     const spcData = await transaction(async (conn) => {
-      return await getSPCDataFromDB(conn, materialId, inspectionType, startDate, endDate, subgroupSize);
+      return await getSPCDataFromDB(
+        conn,
+        materialId,
+        inspectionType,
+        startDate,
+        endDate,
+        subgroupSize
+      );
     });
 
     if (spcData.length === 0) return successResponse({ message: '无足够数据生成控制图' });
@@ -27,14 +41,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   if (action === 'pareto') {
-    const startDate = searchParams.get('start_date') || new Date(Date.now() - 30*86400000).toISOString().slice(0, 10);
+    const startDate =
+      searchParams.get('start_date') ||
+      new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
     const endDate = searchParams.get('end_date') || new Date().toISOString().slice(0, 10);
     const materialId = searchParams.get('material_id');
 
-    let whereClause = "WHERE DATE(create_time) BETWEEN ? AND ?";
+    let whereClause = 'WHERE DATE(create_time) BETWEEN ? AND ?';
     const params: any[] = [startDate, endDate];
     if (materialId) {
-      whereClause += " AND material_id = ?";
+      whereClause += ' AND material_id = ?';
       params.push(parseInt(materialId));
     }
 
@@ -43,23 +59,27 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       params
     );
 
-    const pareto = calculatePareto(defects.map((d: any) => ({
-      defect_type: d.defect_type || '未分类',
-      count: Number(d.count)
-    })));
+    const pareto = calculatePareto(
+      defects.map((d: any) => ({
+        defect_type: d.defect_type || '未分类',
+        count: Number(d.count),
+      }))
+    );
 
     return successResponse(pareto);
   }
 
   if (action === 'p-chart') {
-    const startDate = searchParams.get('start_date') || new Date(Date.now() - 30*86400000).toISOString().slice(0, 10);
+    const startDate =
+      searchParams.get('start_date') ||
+      new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
     const endDate = searchParams.get('end_date') || new Date().toISOString().slice(0, 10);
     const materialId = searchParams.get('material_id');
 
-    let whereClause = "WHERE inspection_date BETWEEN ? AND ?";
+    let whereClause = 'WHERE inspection_date BETWEEN ? AND ?';
     const params: any[] = [startDate, endDate];
     if (materialId) {
-      whereClause += " AND material_id = ?";
+      whereClause += ' AND material_id = ?';
       params.push(parseInt(materialId));
     }
 
@@ -68,11 +88,13 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       params
     );
 
-    const pChart = calculatePChart(data.map((d: any) => ({
-      period: d.period,
-      inspected: Number(d.inspected),
-      defective: Number(d.defective)
-    })));
+    const pChart = calculatePChart(
+      data.map((d: any) => ({
+        period: d.period,
+        inspected: Number(d.inspected),
+        defective: Number(d.defective),
+      }))
+    );
 
     return successResponse(pChart);
   }

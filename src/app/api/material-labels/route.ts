@@ -20,24 +20,30 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const isCut = searchParams.get('isCut');
 
   if (id) {
-    const rows = await query(`
+    const rows = await query(
+      `
       SELECT ml.*, w.warehouse_name, l.location_name
       FROM inv_material_label ml
       LEFT JOIN inv_warehouse w ON ml.warehouse_id = w.id
       LEFT JOIN inv_location l ON ml.location_id = l.id
       WHERE ml.id = ? AND ml.deleted = 0
-    `, [id]);
+    `,
+      [id]
+    );
     return successResponse((rows as any[])[0], '标签详情');
   }
 
   if (labelNo) {
-    const rows = await query(`
+    const rows = await query(
+      `
       SELECT ml.*, w.warehouse_name, l.location_name
       FROM inv_material_label ml
       LEFT JOIN inv_warehouse w ON ml.warehouse_id = w.id
       LEFT JOIN inv_location l ON ml.location_id = l.id
       WHERE ml.label_no = ? AND ml.deleted = 0
-    `, [labelNo]);
+    `,
+      [labelNo]
+    );
     return successResponse((rows as any[])[0], '标签详情');
   }
 
@@ -68,7 +74,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   const [rows, countResult] = await Promise.all([
-    query(`
+    query(
+      `
       SELECT ml.*, w.warehouse_name, l.location_name
       FROM inv_material_label ml
       LEFT JOIN inv_warehouse w ON ml.warehouse_id = w.id
@@ -76,16 +83,21 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       WHERE ${whereClause}
       ORDER BY ml.create_time DESC
       LIMIT ? OFFSET ?
-    `, [...params, pageSize, offset]),
-    query(`SELECT COUNT(*) as total FROM inv_material_label ml WHERE ${whereClause}`, params)
+    `,
+      [...params, pageSize, offset]
+    ),
+    query(`SELECT COUNT(*) as total FROM inv_material_label ml WHERE ${whereClause}`, params),
   ]);
 
-  return successResponse({
-    list: rows,
-    total: (countResult as any[])[0].total,
-    page,
-    pageSize
-  }, '标签列表');
+  return successResponse(
+    {
+      list: rows,
+      total: (countResult as any[])[0].total,
+      page,
+      pageSize,
+    },
+    '标签列表'
+  );
 });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
@@ -114,7 +126,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     remark,
     purchaseOrderNo,
     supplierName,
-    receiveDate
+    receiveDate,
   } = body;
 
   if (!materialCode || !materialName || !quantity) {
@@ -123,7 +135,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   const labelNo = generateLabelNo();
 
-  const result = await execute(`
+  const result = await execute(
+    `
     INSERT INTO inv_material_label (
       label_no, material_code, material_name, specification, unit,
       batch_no, quantity, package_qty, width, length_per_roll,
@@ -132,13 +145,31 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       label_type, remaining_width, remaining_length, status,
       remark, purchase_order_no, supplier_name, receive_date
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, NULL, 1, ?, ?, 1, ?, ?, ?, ?)
-  `, [
-    labelNo, materialCode, materialName, specification ?? null, unit ?? null,
-    batchNo ?? null, quantity, packageQty ?? null, width ?? null, lengthPerRoll ?? null,
-    colorCode ?? null, mixRemark ?? null, warehouseId ?? null, locationId ?? null,
-    isMainMaterial ? 1 : 0, width ?? null, lengthPerRoll ?? null, remark ?? null,
-    purchaseOrderNo ?? null, supplierName ?? null, receiveDate ?? null
-  ]);
+  `,
+    [
+      labelNo,
+      materialCode,
+      materialName,
+      specification ?? null,
+      unit ?? null,
+      batchNo ?? null,
+      quantity,
+      packageQty ?? null,
+      width ?? null,
+      lengthPerRoll ?? null,
+      colorCode ?? null,
+      mixRemark ?? null,
+      warehouseId ?? null,
+      locationId ?? null,
+      isMainMaterial ? 1 : 0,
+      width ?? null,
+      lengthPerRoll ?? null,
+      remark ?? null,
+      purchaseOrderNo ?? null,
+      supplierName ?? null,
+      receiveDate ?? null,
+    ]
+  );
 
   return successResponse({ id: (result as any).insertId, labelNo }, '标签创建成功');
 });
@@ -150,9 +181,12 @@ async function handleCut(body: any) {
     return errorResponse('缺少必要参数', 400);
   }
 
-  const parentLabel = await query(`
+  const parentLabel = await query(
+    `
     SELECT * FROM inv_material_label WHERE id = ? AND deleted = 0
-  `, [parentLabelId]);
+  `,
+    [parentLabelId]
+  );
 
   const parent = (parentLabel as any[])[0];
 
@@ -177,7 +211,8 @@ async function handleCut(body: any) {
     const ratio = cutWidth / parent.width;
     const newQuantity = Math.floor(parent.quantity * ratio);
 
-    const result = await execute(`
+    const result = await execute(
+      `
       INSERT INTO inv_material_label (
         label_no, material_code, material_name, specification, unit,
         batch_no, quantity, package_qty, width, length_per_roll,
@@ -186,33 +221,58 @@ async function handleCut(body: any) {
         label_type, remaining_width, remaining_length, status,
         remark, purchase_order_no, supplier_name, receive_date
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, 2, ?, ?, 1, ?, ?, ?, ?)
-    `, [
-      newLabelNo, parent.material_code, parent.material_name, parent.specification, parent.unit,
-      parent.batch_no, newQuantity, parent.package_qty ? parent.package_qty * ratio : null, cutWidth, parent.length_per_roll ?? null,
-      parent.color_code ?? null, parent.mix_remark ?? null, parent.warehouse_id ?? null, parent.location_id ?? null,
-      parent.is_main_material, parentLabelId, cutWidth, parent.length_per_roll ?? null,
-      `分切自 ${parent.label_no}`, parent.purchase_order_no ?? null, parent.supplier_name ?? null, parent.receive_date ?? null
-    ]);
+    `,
+      [
+        newLabelNo,
+        parent.material_code,
+        parent.material_name,
+        parent.specification,
+        parent.unit,
+        parent.batch_no,
+        newQuantity,
+        parent.package_qty ? parent.package_qty * ratio : null,
+        cutWidth,
+        parent.length_per_roll ?? null,
+        parent.color_code ?? null,
+        parent.mix_remark ?? null,
+        parent.warehouse_id ?? null,
+        parent.location_id ?? null,
+        parent.is_main_material,
+        parentLabelId,
+        cutWidth,
+        parent.length_per_roll ?? null,
+        `分切自 ${parent.label_no}`,
+        parent.purchase_order_no ?? null,
+        parent.supplier_name ?? null,
+        parent.receive_date ?? null,
+      ]
+    );
 
     newLabels.push({
       id: (result as any).insertId,
       labelNo: newLabelNo,
       width: cutWidth,
-      quantity: newQuantity
+      quantity: newQuantity,
     });
   }
 
-  await execute(`
+  await execute(
+    `
     UPDATE inv_material_label
     SET is_cut = 1, remaining_width = width - ?, remaining_length = 0, update_time = NOW()
     WHERE id = ?
-  `, [totalCutWidth, parentLabelId]);
+  `,
+    [totalCutWidth, parentLabelId]
+  );
 
-  return successResponse({
-    parentLabelId,
-    newLabels,
-    remainingWidth: parent.width - totalCutWidth
-  }, '分切成功');
+  return successResponse(
+    {
+      parentLabelId,
+      newLabels,
+      remainingWidth: parent.width - totalCutWidth,
+    },
+    '分切成功'
+  );
 }
 
 export const PUT = withErrorHandler(async (request: NextRequest) => {
@@ -231,7 +291,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     locationId: 'location_id',
     isUsed: 'is_used',
     remark: 'remark',
-    status: 'status'
+    status: 'status',
   };
 
   for (const [key, col] of Object.entries(fieldMap)) {
@@ -261,7 +321,9 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('缺少标签ID', 400);
   }
 
-  await execute('UPDATE inv_material_label SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
+  await execute('UPDATE inv_material_label SET deleted = 1, update_time = NOW() WHERE id = ?', [
+    id,
+  ]);
 
   return successResponse(null, '标签删除成功');
 });

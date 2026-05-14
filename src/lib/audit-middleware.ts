@@ -42,13 +42,7 @@ const METHOD_TYPE_MAPPING: Record<string, string> = {
 // 需要记录详细请求/响应的模块（白名单）
 // ============================================================
 
-const DETAIL_LOG_MODULES = [
-  '采购管理',
-  '销售管理',
-  '库存管理',
-  '生产管理',
-  '财务管理',
-];
+const DETAIL_LOG_MODULES = ['采购管理', '销售管理', '库存管理', '生产管理', '财务管理'];
 
 // ============================================================
 // 辅助函数
@@ -71,17 +65,17 @@ function getOperationType(method: string, url: string): string {
   if (url.includes('action=export')) return '导出';
   if (url.includes('action=print')) return '打印';
   if (url.includes('action=submit')) return '提交';
-  
+
   return METHOD_TYPE_MAPPING[method] || method;
 }
 
 function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) return forwarded.split(',')[0].trim();
-  
+
   const realIp = request.headers.get('x-real-ip');
   if (realIp) return realIp;
-  
+
   return 'unknown';
 }
 
@@ -94,13 +88,15 @@ async function parseRequestBody(request: NextRequest): Promise<any> {
   try {
     const clonedRequest = request.clone();
     const contentType = request.headers.get('content-type') || '';
-    
+
     if (contentType.includes('application/json')) {
       return await clonedRequest.json();
     }
-    
-    if (contentType.includes('application/x-www-form-urlencoded') || 
-        contentType.includes('multipart/form-data')) {
+
+    if (
+      contentType.includes('application/x-www-form-urlencoded') ||
+      contentType.includes('multipart/form-data')
+    ) {
       const formData = await clonedRequest.formData();
       const obj: Record<string, any> = {};
       formData.forEach((value, key) => {
@@ -108,7 +104,7 @@ async function parseRequestBody(request: NextRequest): Promise<any> {
       });
       return obj;
     }
-    
+
     return null;
   } catch {
     return null;
@@ -143,33 +139,28 @@ export function withAudit(
     const method = request.method;
     const module = options?.module || getModuleFromUrl(url);
     const type = options?.type || getOperationType(method, url);
-    
+
     // 设置用户上下文（从请求头或token中获取）
     const userId = request.headers.get('x-user-id');
     const username = request.headers.get('x-username');
     const ip = getClientIp(request);
     const userAgent = request.headers.get('user-agent') || 'unknown';
-    
-    setAuditUserContext(
-      userId ? Number(userId) : undefined,
-      username || undefined,
-      ip,
-      userAgent
-    );
+
+    setAuditUserContext(userId ? Number(userId) : undefined, username || undefined, ip, userAgent);
 
     // 解析请求参数
     let requestParam: any = null;
     if (!options?.skipRequestBody && ['POST', 'PUT', 'PATCH'].includes(method)) {
       requestParam = await parseRequestBody(request);
     }
-    
+
     // 从URL查询参数中提取
     const { searchParams } = new URL(url);
     const queryParams: Record<string, string> = {};
     searchParams.forEach((value, key) => {
       queryParams[key] = value;
     });
-    
+
     if (Object.keys(queryParams).length > 0 && !requestParam) {
       requestParam = queryParams;
     }
@@ -182,7 +173,7 @@ export function withAudit(
     try {
       // 执行原始处理器
       response = await handler(request);
-      
+
       // 尝试解析响应数据
       if (!options?.skipResponseBody) {
         try {
@@ -192,47 +183,54 @@ export function withAudit(
           // 响应不是JSON格式，忽略
         }
       }
-      
+
       // 判断操作是否成功
       if (responseData && typeof responseData === 'object') {
-        if (responseData.code !== undefined && responseData.code !== 200 && responseData.code !== 0) {
+        if (
+          responseData.code !== undefined &&
+          responseData.code !== 200 &&
+          responseData.code !== 0
+        ) {
           status = 0;
           errorMsg = responseData.message || responseData.msg || '操作失败';
         }
       }
-      
+
       if (response.status >= 400) {
         status = 0;
       }
     } catch (error: any) {
       status = 0;
       errorMsg = error.message || '服务器内部错误';
-      
+
       // 重新抛出错误，让上层错误处理器处理
       throw error;
     } finally {
       const duration = Date.now() - startTime;
-      
+
       // 只对关键操作记录详细日志
-      const shouldLogDetail = DETAIL_LOG_MODULES.includes(module) || 
-                              ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
-      
+      const shouldLogDetail =
+        DETAIL_LOG_MODULES.includes(module) || ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
+
       if (shouldLogDetail) {
-        await logOperation({
-          module,
-          type,
-          title: options?.title || `${method} ${url.split('?')[0]}`,
-          content: options?.customContent || `${module} - ${type}操作`,
-          requestUrl: url.split('?')[0],
-          requestMethod: method,
-          requestParam: requestParam ? maskSensitiveData(requestParam) : null,
-          responseResult: responseData ? maskSensitiveData(responseData) : null,
-          status,
-          errorMsg,
-          durationMs: duration,
-        }, request);
+        await logOperation(
+          {
+            module,
+            type,
+            title: options?.title || `${method} ${url.split('?')[0]}`,
+            content: options?.customContent || `${module} - ${type}操作`,
+            requestUrl: url.split('?')[0],
+            requestMethod: method,
+            requestParam: requestParam ? maskSensitiveData(requestParam) : null,
+            responseResult: responseData ? maskSensitiveData(responseData) : null,
+            status,
+            errorMsg,
+            durationMs: duration,
+          },
+          request
+        );
       }
-      
+
       // 清除用户上下文
       clearAuditUserContext();
     }
@@ -294,14 +292,17 @@ export async function recordBusinessOperation(
   }
 ): Promise<void> {
   const { logOperation } = await import('@/lib/audit-logger');
-  
-  await logOperation({
-    module,
-    type,
-    content,
-    beforeData: data?.beforeData,
-    afterData: data?.afterData,
-    status: data?.status ?? 1,
-    errorMsg: data?.errorMsg,
-  }, request);
+
+  await logOperation(
+    {
+      module,
+      type,
+      content,
+      beforeData: data?.beforeData,
+      afterData: data?.afterData,
+      status: data?.status ?? 1,
+      errorMsg: data?.errorMsg,
+    },
+    request
+  );
 }

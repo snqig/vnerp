@@ -2,28 +2,56 @@
 
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle,
-} from '@/components/ui/card';
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  FileText, Package, Factory, AlertTriangle, CheckCircle, Activity,
-  TrendingUp, TrendingDown, Users, DollarSign, ArrowRight, RefreshCw,
+  FileText,
+  Package,
+  Factory,
+  AlertTriangle,
+  CheckCircle,
+  Activity,
+  TrendingUp,
+  TrendingDown,
+  Users,
+  DollarSign,
+  ArrowRight,
+  RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
 
 interface DashboardData {
   stats: {
-    todayOrders: number; orderChange: number; pendingOrders: number;
-    producingOrders: number; completedToday: number; inventoryAlert: number;
-    totalCustomers: number; totalEmployees: number; todayProduction: number; productionChange: number;
+    todayOrders: number;
+    orderChange: number;
+    pendingOrders: number;
+    producingOrders: number;
+    completedToday: number;
+    inventoryAlert: number;
+    totalCustomers: number;
+    totalEmployees: number;
+    todayProduction: number;
+    productionChange: number;
   };
-  recentOrders: { id: number; orderNo: string; customer: string; product: string; quantity: number; status: number; date: string }[];
+  recentOrders: {
+    id: number;
+    orderNo: string;
+    customer: string;
+    product: string;
+    quantity: number;
+    status: number;
+    date: string;
+  }[];
   alerts: { type: string; message: string; severity: string; time: string }[];
   orderStats: { date: string; count: number }[];
 }
@@ -31,27 +59,62 @@ interface DashboardData {
 export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [data, setData] = useState<DashboardData>({
-    stats: { todayOrders: 0, orderChange: 0, pendingOrders: 0, producingOrders: 0, completedToday: 0, inventoryAlert: 0, totalCustomers: 0, totalEmployees: 0, todayProduction: 0, productionChange: 0 },
-    recentOrders: [], alerts: [], orderStats: [],
+    stats: {
+      todayOrders: 0,
+      orderChange: 0,
+      pendingOrders: 0,
+      producingOrders: 0,
+      completedToday: 0,
+      inventoryAlert: 0,
+      totalCustomers: 0,
+      totalEmployees: 0,
+      todayProduction: 0,
+      productionChange: 0,
+    },
+    recentOrders: [],
+    alerts: [],
+    orderStats: [],
   });
   const [loading, setLoading] = useState(true);
 
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const fetchDashboard = async () => {
     try {
-      const res = await fetch('/api/dashboard');
+      const res = await authFetch('/api/dashboard');
       const result = await res.json();
       if (result.success && result.data) setData(result.data);
-    } catch (e) { console.error('获取仪表盘数据失败:', e); } finally { setLoading(false); }
+    } catch (e) {
+      console.error('获取仪表盘数据失败:', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchDashboard();
     const updateTime = () => {
       const now = new Date();
-      setCurrentTime(now.toLocaleString('zh-CN', {
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
-      }));
+      setCurrentTime(
+        now.toLocaleString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        })
+      );
     };
     updateTime();
     const timer = setInterval(updateTime, 1000);
@@ -59,7 +122,10 @@ export default function DashboardPage() {
   }, []);
 
   const getStatusBadge = (status: number) => {
-    const map: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+    const map: Record<
+      number,
+      { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+    > = {
       0: { label: '草稿', variant: 'secondary' },
       1: { label: '已确认', variant: 'default' },
       2: { label: '生产中', variant: 'default' },
@@ -81,7 +147,15 @@ export default function DashboardPage() {
               欢迎回来，这里是您的企业运营概览。当前时间：{currentTime}
             </p>
           </div>
-          <Button variant="outline" size="sm" data-testid="dashboard-refresh" onClick={() => { setLoading(true); fetchDashboard(); }}>
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid="dashboard-refresh"
+            onClick={() => {
+              setLoading(true);
+              fetchDashboard();
+            }}
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             刷新数据
           </Button>
@@ -96,8 +170,15 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">{s.todayOrders}</div>
               <div className="flex items-center text-xs">
-                {s.orderChange >= 0 ? <TrendingUp className="h-3 w-3 text-green-600 mr-1" /> : <TrendingDown className="h-3 w-3 text-red-600 mr-1" />}
-                <span className={s.orderChange >= 0 ? 'text-green-600' : 'text-red-600'}>{s.orderChange >= 0 ? '+' : ''}{s.orderChange}%</span>
+                {s.orderChange >= 0 ? (
+                  <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
+                ) : (
+                  <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
+                )}
+                <span className={s.orderChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  {s.orderChange >= 0 ? '+' : ''}
+                  {s.orderChange}%
+                </span>
                 <span className="text-muted-foreground ml-1">较昨日</span>
               </div>
             </CardContent>
@@ -163,8 +244,14 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">{s.todayProduction.toLocaleString()}</div>
               <div className="flex items-center text-xs">
-                {s.productionChange >= 0 ? <TrendingUp className="h-3 w-3 text-green-600 mr-1" /> : <TrendingDown className="h-3 w-3 text-red-600 mr-1" />}
-                <span className={s.productionChange >= 0 ? 'text-green-600' : 'text-red-600'}>+{s.productionChange}%</span>
+                {s.productionChange >= 0 ? (
+                  <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
+                ) : (
+                  <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
+                )}
+                <span className={s.productionChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  +{s.productionChange}%
+                </span>
                 <span className="text-muted-foreground ml-1">较昨日</span>
               </div>
             </CardContent>
@@ -195,12 +282,17 @@ export default function DashboardPage() {
                   <CardDescription>最近创建的生产工单</CardDescription>
                 </div>
                 <Link href="/production/orders">
-                  <Button variant="outline" size="sm">查看全部<ArrowRight className="h-4 w-4 ml-2" /></Button>
+                  <Button variant="outline" size="sm">
+                    查看全部
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
                 </Link>
               </CardHeader>
               <CardContent>
                 {data.recentOrders.length === 0 ? (
-                  <p className="text-gray-400 text-center py-8">{loading ? '加载中...' : '暂无工单'}</p>
+                  <p className="text-gray-400 text-center py-8">
+                    {loading ? '加载中...' : '暂无工单'}
+                  </p>
                 ) : (
                   <Table>
                     <TableHeader>
@@ -243,18 +335,36 @@ export default function DashboardPage() {
                 ) : (
                   <div className="space-y-3">
                     {data.alerts.map((a, i) => {
-                      const iconMap: Record<string, typeof AlertTriangle> = { order: FileText, production: Factory, inventory: Package, quality: CheckCircle, material: Package, equipment: Factory };
+                      const iconMap: Record<string, typeof AlertTriangle> = {
+                        order: FileText,
+                        production: Factory,
+                        inventory: Package,
+                        quality: CheckCircle,
+                        material: Package,
+                        equipment: Factory,
+                      };
                       const Icon = iconMap[a.type] || Activity;
-                      const colorMap: Record<string, string> = { high: 'text-red-600 bg-red-50', medium: 'text-orange-600 bg-orange-50', low: 'text-blue-600 bg-blue-50' };
+                      const colorMap: Record<string, string> = {
+                        high: 'text-red-600 bg-red-50',
+                        medium: 'text-orange-600 bg-orange-50',
+                        low: 'text-blue-600 bg-blue-50',
+                      };
                       return (
-                        <div key={i} className="flex items-start space-x-4 p-3 rounded-lg border hover:bg-muted transition-colors">
-                          <div className={`p-2 rounded-lg ${colorMap[a.severity] || 'text-gray-600 bg-gray-50'}`}>
+                        <div
+                          key={i}
+                          className="flex items-start space-x-4 p-3 rounded-lg border hover:bg-muted transition-colors"
+                        >
+                          <div
+                            className={`p-2 rounded-lg ${colorMap[a.severity] || 'text-gray-600 bg-gray-50'}`}
+                          >
                             <Icon className="h-4 w-4" />
                           </div>
                           <div className="flex-1 space-y-1">
                             <div className="flex items-center justify-between">
                               <p className="font-medium">{a.message}</p>
-                              <Badge variant={a.severity === 'high' ? 'destructive' : 'secondary'}>{a.severity === 'high' ? '高' : '中'}</Badge>
+                              <Badge variant={a.severity === 'high' ? 'destructive' : 'secondary'}>
+                                {a.severity === 'high' ? '高' : '中'}
+                              </Badge>
                             </div>
                             <p className="text-xs text-muted-foreground">{a.time}</p>
                           </div>
@@ -273,8 +383,13 @@ export default function DashboardPage() {
             <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-100 rounded-lg"><Factory className="h-5 w-5 text-blue-600" /></div>
-                  <div><p className="font-medium">生产看板</p><p className="text-xs text-muted-foreground">实时生产监控</p></div>
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Factory className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium">生产看板</p>
+                    <p className="text-xs text-muted-foreground">实时生产监控</p>
+                  </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
               </CardContent>
@@ -284,8 +399,13 @@ export default function DashboardPage() {
             <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-green-100 rounded-lg"><Package className="h-5 w-5 text-green-600" /></div>
-                  <div><p className="font-medium">仓库看板</p><p className="text-xs text-muted-foreground">库存出入监控</p></div>
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Package className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium">仓库看板</p>
+                    <p className="text-xs text-muted-foreground">库存出入监控</p>
+                  </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
               </CardContent>
@@ -295,8 +415,13 @@ export default function DashboardPage() {
             <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-orange-100 rounded-lg"><DollarSign className="h-5 w-5 text-orange-600" /></div>
-                  <div><p className="font-medium">销售看板</p><p className="text-xs text-muted-foreground">订单营收分析</p></div>
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium">销售看板</p>
+                    <p className="text-xs text-muted-foreground">订单营收分析</p>
+                  </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
               </CardContent>
@@ -306,8 +431,13 @@ export default function DashboardPage() {
             <Card className="hover:bg-muted transition-colors cursor-pointer">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-purple-100 rounded-lg"><CheckCircle className="h-5 w-5 text-purple-600" /></div>
-                  <div><p className="font-medium">质量看板</p><p className="text-xs text-muted-foreground">品质检验监控</p></div>
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium">质量看板</p>
+                    <p className="text-xs text-muted-foreground">品质检验监控</p>
+                  </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
               </CardContent>

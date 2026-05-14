@@ -3,7 +3,15 @@ import { DomainEvent } from '../../shared/DomainTypes';
 export class SalesOrderCreatedEvent implements DomainEvent {
   readonly eventType = 'sales.created';
   readonly occurredAt = new Date();
-  constructor(public readonly payload: { orderId: number; orderNo: string; customerId: number; customerName: string; totalAmount: number }) {}
+  constructor(
+    public readonly payload: {
+      orderId: number;
+      orderNo: string;
+      customerId: number;
+      customerName: string;
+      totalAmount: number;
+    }
+  ) {}
 }
 
 export class SalesOrderSubmittedEvent implements DomainEvent {
@@ -17,9 +25,18 @@ export class SalesOrderApprovedEvent implements DomainEvent {
   readonly occurredAt = new Date();
   constructor(
     public readonly payload: {
-      orderId: number; orderNo: string;
-      customerId: number; customerName: string;
-      lines: Array<{ materialId: number; materialCode: string; materialName: string; orderQty: number; unitPrice: number; remainingQty: number }>;
+      orderId: number;
+      orderNo: string;
+      customerId: number;
+      customerName: string;
+      lines: Array<{
+        materialId: number;
+        materialCode: string;
+        materialName: string;
+        orderQty: number;
+        unitPrice: number;
+        remainingQty: number;
+      }>;
       totalAmount: number;
     }
   ) {}
@@ -30,9 +47,19 @@ export class SalesOrderShippedEvent implements DomainEvent {
   readonly occurredAt = new Date();
   constructor(
     public readonly payload: {
-      orderId: number; orderNo: string;
-      customerId: number; customerName: string;
-      shippedItems: Array<{ materialId: number; materialCode: string; materialName: string; quantity: number; unitPrice: number; batchNo: string; warehouseId: number }>;
+      orderId: number;
+      orderNo: string;
+      customerId: number;
+      customerName: string;
+      shippedItems: Array<{
+        materialId: number;
+        materialCode: string;
+        materialName: string;
+        quantity: number;
+        unitPrice: number;
+        batchNo: string;
+        warehouseId: number;
+      }>;
       totalShippedAmount: number;
     }
   ) {}

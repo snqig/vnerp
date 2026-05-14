@@ -17,8 +17,7 @@ const buttonVariants = cva(
           'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
         secondary:
           'bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm hover:shadow',
-        ghost:
-          'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
+        ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',
         // 新增变体
         success: 'bg-green-500 text-white hover:bg-green-600 shadow-sm hover:shadow',
@@ -48,7 +47,7 @@ const buttonVariants = cva(
       size: 'default',
       shape: 'default',
     },
-  },
+  }
 );
 
 interface ButtonProps extends React.ComponentProps<'button'>, VariantProps<typeof buttonVariants> {
@@ -91,9 +90,7 @@ function Button({
       disabled={isDisabled}
       {...props}
     >
-      {loading && (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      )}
+      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
       {children}
     </Comp>
   );

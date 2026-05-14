@@ -1,10 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 import { WarehouseStateMachine, InboundStatus } from '@/lib/warehouse-state-machine';
 
 // 审核入库单 - 确认入库并更新库存
@@ -228,10 +224,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     material_id: number;
     batch_no: string;
     qty: number;
-  }>(
-    `SELECT material_id, batch_no, qty FROM inv_inbound_item WHERE order_id = ? AND deleted = 0`,
-    [id]
-  );
+  }>(`SELECT material_id, batch_no, qty FROM inv_inbound_item WHERE order_id = ? AND deleted = 0`, [
+    id,
+  ]);
 
   // 使用事务确保数据一致性
   await transaction(async (connection) => {

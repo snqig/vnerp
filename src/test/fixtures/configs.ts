@@ -3,13 +3,13 @@
  */
 
 export interface ConfigFixture {
-  id: number
-  config_name: string
-  config_key: string
-  config_value: string
-  config_type: number
-  description: string | null
-  deleted: number
+  id: number;
+  config_name: string;
+  config_key: string;
+  config_value: string;
+  config_type: number;
+  description: string | null;
+  deleted: number;
 }
 
 export function createConfig(overrides: Partial<ConfigFixture> = {}): ConfigFixture {
@@ -22,7 +22,7 @@ export function createConfig(overrides: Partial<ConfigFixture> = {}): ConfigFixt
     description: null,
     deleted: 0,
     ...overrides,
-  }
+  };
 }
 
 export function createCompanyNameConfig(): ConfigFixture {
@@ -32,7 +32,7 @@ export function createCompanyNameConfig(): ConfigFixture {
     config_key: 'company_name',
     config_value: '越南达昌科技有限公司',
     description: '系统显示的公司全称',
-  })
+  });
 }
 
 export function createCompanyShortNameConfig(): ConfigFixture {
@@ -42,7 +42,7 @@ export function createCompanyShortNameConfig(): ConfigFixture {
     config_key: 'company_short_name',
     config_value: '达昌科技',
     description: '系统显示的公司简称',
-  })
+  });
 }
 
 export function createSystemVersionConfig(): ConfigFixture {
@@ -52,13 +52,9 @@ export function createSystemVersionConfig(): ConfigFixture {
     config_key: 'system_version',
     config_value: '1.0.0',
     config_type: 2,
-  })
+  });
 }
 
 export function createConfigList(): ConfigFixture[] {
-  return [
-    createCompanyNameConfig(),
-    createCompanyShortNameConfig(),
-    createSystemVersionConfig(),
-  ]
+  return [createCompanyNameConfig(), createCompanyShortNameConfig(), createSystemVersionConfig()];
 }

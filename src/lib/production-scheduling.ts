@@ -87,7 +87,7 @@ function skipWeekends(date: Date): Date {
 }
 
 function addWorkingDays(startDate: Date, days: number): Date {
-  let current = new Date(startDate);
+  const current = new Date(startDate);
   let added = 0;
   while (added < days) {
     current.setDate(current.getDate() + 1);
@@ -98,7 +98,10 @@ function addWorkingDays(startDate: Date, days: number): Date {
   return current;
 }
 
-export function calculatePriorityScore(workOrder: SchedulableWorkOrder, materialReady: boolean): number {
+export function calculatePriorityScore(
+  workOrder: SchedulableWorkOrder,
+  materialReady: boolean
+): number {
   const urgencyScore = URGENCY_SCORES[workOrder.priority] ?? 50;
 
   const customerScore = workOrder.customer_name ? 10 : 0;
@@ -147,7 +150,8 @@ export function suggestScheduleDates(params: {
   const estimatedDays = Math.max(1, Math.ceil(workOrder.quantity * estimatedDaysPerUnit));
 
   const sortedSchedule = [...existingSchedule].sort(
-    (a, b) => new Date(a.suggested_start_date).getTime() - new Date(b.suggested_start_date).getTime()
+    (a, b) =>
+      new Date(a.suggested_start_date).getTime() - new Date(b.suggested_start_date).getTime()
   );
 
   let end = estimatedDays > 1 ? addWorkingDays(start, estimatedDays - 1) : new Date(start);
@@ -269,7 +273,12 @@ export async function autoSchedule(params: {
   startDate?: string;
   workingHoursPerDay?: number;
 }): Promise<SchedulingResult[]> {
-  const { workOrderIds, warehouseId, startDate, workingHoursPerDay = DEFAULT_WORKING_HOURS_PER_DAY } = params;
+  const {
+    workOrderIds,
+    warehouseId,
+    startDate,
+    workingHoursPerDay = DEFAULT_WORKING_HOURS_PER_DAY,
+  } = params;
 
   let sql = `
     SELECT id, work_order_no, order_no, customer_name, product_name,
@@ -382,7 +391,11 @@ export async function getCapacityLoad(params: {
     const woStart = new Date(wo.plan_start_date);
     const woEnd = new Date(wo.plan_end_date);
 
-    for (let d = new Date(Math.max(woStart.getTime(), start.getTime())); d <= woEnd && d <= end; d = addDays(d, 1)) {
+    for (
+      let d = new Date(Math.max(woStart.getTime(), start.getTime()));
+      d <= woEnd && d <= end;
+      d = addDays(d, 1)
+    ) {
       if (isWeekend(d)) continue;
 
       const dateStr = formatDateStr(d);

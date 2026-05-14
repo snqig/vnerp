@@ -140,7 +140,7 @@ const roles = [
     description: '系统最高权限，可访问所有功能',
     userCount: 2,
     isSystem: true,
-    permissions: permissionModules.flatMap(m => m.permissions.map(p => p.id)),
+    permissions: permissionModules.flatMap((m) => m.permissions.map((p) => p.id)),
   },
   {
     id: 'sales_mgr',
@@ -151,9 +151,15 @@ const roles = [
     isSystem: false,
     permissions: [
       'dashboard_view',
-      'business_order_view', 'business_order_create', 'business_order_edit',
-      'business_customer_view', 'business_customer_manage',
-      'sample_view', 'sample_create', 'sample_edit', 'sample_approve',
+      'business_order_view',
+      'business_order_create',
+      'business_order_edit',
+      'business_customer_view',
+      'business_customer_manage',
+      'sample_view',
+      'sample_create',
+      'sample_edit',
+      'sample_approve',
     ],
   },
   {
@@ -165,9 +171,13 @@ const roles = [
     isSystem: false,
     permissions: [
       'dashboard_view',
-      'production_order_view', 'production_order_create', 'production_order_schedule',
-      'production_report_view', 'production_report_create',
-      'quality_inspection_view', 'quality_inspection_create',
+      'production_order_view',
+      'production_order_create',
+      'production_order_schedule',
+      'production_report_view',
+      'production_report_create',
+      'quality_inspection_view',
+      'quality_inspection_create',
     ],
   },
   {
@@ -179,8 +189,10 @@ const roles = [
     isSystem: false,
     permissions: [
       'dashboard_view',
-      'quality_inspection_view', 'quality_inspection_create',
-      'quality_ncr_view', 'quality_ncr_manage',
+      'quality_inspection_view',
+      'quality_inspection_create',
+      'quality_ncr_view',
+      'quality_ncr_manage',
       'quality_report_view',
     ],
   },
@@ -193,9 +205,13 @@ const roles = [
     isSystem: false,
     permissions: [
       'dashboard_view',
-      'purchase_order_view', 'purchase_order_create', 'purchase_order_approve',
-      'purchase_supplier_view', 'purchase_supplier_manage',
-      'purchase_request_view', 'purchase_request_create',
+      'purchase_order_view',
+      'purchase_order_create',
+      'purchase_order_approve',
+      'purchase_supplier_view',
+      'purchase_supplier_manage',
+      'purchase_request_view',
+      'purchase_request_create',
     ],
   },
   {
@@ -207,8 +223,11 @@ const roles = [
     isSystem: false,
     permissions: [
       'dashboard_view',
-      'warehouse_inventory_view', 'warehouse_inbound', 'warehouse_outbound',
-      'warehouse_transfer', 'warehouse_inventory_check',
+      'warehouse_inventory_view',
+      'warehouse_inbound',
+      'warehouse_outbound',
+      'warehouse_transfer',
+      'warehouse_inventory_check',
     ],
   },
   {
@@ -234,7 +253,7 @@ export default function PermissionsSettingsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // 初始化角色权限状态
-  const initRolePermissions = (role: typeof roles[0]) => {
+  const initRolePermissions = (role: (typeof roles)[0]) => {
     const perms: Record<string, boolean> = {};
     permissionModules.forEach((module) => {
       module.permissions.forEach((perm) => {
@@ -245,7 +264,7 @@ export default function PermissionsSettingsPage() {
   };
 
   // 切换角色
-  const handleRoleSelect = (role: typeof roles[0]) => {
+  const handleRoleSelect = (role: (typeof roles)[0]) => {
     setSelectedRole(role);
     initRolePermissions(role);
   };

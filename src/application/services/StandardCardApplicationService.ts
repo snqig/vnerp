@@ -1,14 +1,14 @@
 import { StandardCard } from '@/domain/standard-card/aggregates/StandardCard';
 import { StandardCardType } from '@/domain/standard-card/value-objects/StandardCardType';
 import { StandardCardStatus } from '@/domain/standard-card/value-objects/StandardCardStatus';
-import { 
+import {
   StandardCardCreatedEvent,
   StandardCardSubmittedEvent,
   StandardCardApprovedEvent,
   StandardCardConfirmedEvent,
-  StandardCardObsoletedEvent
+  StandardCardObsoletedEvent,
 } from '@/domain/standard-card/events/StandardCardEvents';
-import { EventBus } from '@/infrastructure/events/EventBus';
+import { getEventBus, EventBus } from '@/infrastructure/event-bus/EventBus';
 
 export interface CreateStandardCardDTO {
   name: string;
@@ -54,16 +54,17 @@ export class StandardCardApplicationService {
   private eventBus: EventBus;
 
   constructor() {
-    this.eventBus = EventBus.getInstance();
+    this.eventBus = getEventBus();
   }
 
   async create(dto: CreateStandardCardDTO): Promise<StandardCard> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
 
     const seq = await repo.getNextSequence(dto.type);
     const code = `${dto.type.substring(0, 3).toUpperCase()}${seq}`;
-    
+
     const card = new StandardCard({
       code,
       version: '1.0',
@@ -81,23 +82,27 @@ export class StandardCardApplicationService {
       isLocked: false,
       qualityRequirement: dto.qualityRequirement,
       createUser: dto.userId,
-      remark: dto.remark
+      remark: dto.remark,
     });
 
     if (dto.colorItems) {
-      const { ColorStandardItem } = await import('@/domain/standard-card/entities/ColorStandardItem');
+      const { ColorStandardItem } =
+        await import('@/domain/standard-card/entities/ColorStandardItem');
       card.setColorItems(dto.colorItems.map((item: any) => new ColorStandardItem(item)));
     }
     if (dto.processItems) {
-      const { ProcessStandardItem } = await import('@/domain/standard-card/entities/ProcessStandardItem');
+      const { ProcessStandardItem } =
+        await import('@/domain/standard-card/entities/ProcessStandardItem');
       card.setProcessItems(dto.processItems.map((item: any) => new ProcessStandardItem(item)));
     }
     if (dto.qualityItems) {
-      const { QualityStandardItem } = await import('@/domain/standard-card/entities/QualityStandardItem');
+      const { QualityStandardItem } =
+        await import('@/domain/standard-card/entities/QualityStandardItem');
       card.setQualityItems(dto.qualityItems.map((item: any) => new QualityStandardItem(item)));
     }
     if (dto.materials) {
-      const { StandardCardMaterial } = await import('@/domain/standard-card/entities/StandardCardMaterial');
+      const { StandardCardMaterial } =
+        await import('@/domain/standard-card/entities/StandardCardMaterial');
       card.setMaterials(dto.materials.map((item: any) => new StandardCardMaterial(item)));
     }
     if (dto.inks) {
@@ -105,7 +110,8 @@ export class StandardCardApplicationService {
       card.setInks(dto.inks.map((item: any) => new StandardCardInk(item)));
     }
     if (dto.toolings) {
-      const { StandardCardTooling } = await import('@/domain/standard-card/entities/StandardCardTooling');
+      const { StandardCardTooling } =
+        await import('@/domain/standard-card/entities/StandardCardTooling');
       card.setToolings(dto.toolings.map((item: any) => new StandardCardTooling(item)));
     }
 
@@ -126,7 +132,7 @@ export class StandardCardApplicationService {
       type: card.type,
       materialId: dto.materialId,
       customerId: dto.customerId,
-      userId: dto.userId
+      userId: dto.userId,
     });
     this.eventBus.publish(event);
 
@@ -134,7 +140,8 @@ export class StandardCardApplicationService {
   }
 
   async update(dto: UpdateStandardCardDTO): Promise<StandardCard> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
 
     const card = await repo.findById(dto.id);
@@ -156,23 +163,31 @@ export class StandardCardApplicationService {
       spec: dto.spec,
       effectiveDate: dto.effectiveDate ? new Date(dto.effectiveDate) : undefined,
       qualityRequirement: dto.qualityRequirement,
-      changeDescription: dto.changeDescription
+      changeDescription: dto.changeDescription,
     });
 
     if (dto.colorItems) {
-      const { ColorStandardItem } = await import('@/domain/standard-card/entities/ColorStandardItem');
+      const { ColorStandardItem } =
+        await import('@/domain/standard-card/entities/ColorStandardItem');
       updatedCard.setColorItems(dto.colorItems.map((item: any) => new ColorStandardItem(item)));
     }
     if (dto.processItems) {
-      const { ProcessStandardItem } = await import('@/domain/standard-card/entities/ProcessStandardItem');
-      updatedCard.setProcessItems(dto.processItems.map((item: any) => new ProcessStandardItem(item)));
+      const { ProcessStandardItem } =
+        await import('@/domain/standard-card/entities/ProcessStandardItem');
+      updatedCard.setProcessItems(
+        dto.processItems.map((item: any) => new ProcessStandardItem(item))
+      );
     }
     if (dto.qualityItems) {
-      const { QualityStandardItem } = await import('@/domain/standard-card/entities/QualityStandardItem');
-      updatedCard.setQualityItems(dto.qualityItems.map((item: any) => new QualityStandardItem(item)));
+      const { QualityStandardItem } =
+        await import('@/domain/standard-card/entities/QualityStandardItem');
+      updatedCard.setQualityItems(
+        dto.qualityItems.map((item: any) => new QualityStandardItem(item))
+      );
     }
     if (dto.materials) {
-      const { StandardCardMaterial } = await import('@/domain/standard-card/entities/StandardCardMaterial');
+      const { StandardCardMaterial } =
+        await import('@/domain/standard-card/entities/StandardCardMaterial');
       updatedCard.setMaterials(dto.materials.map((item: any) => new StandardCardMaterial(item)));
     }
     if (dto.inks) {
@@ -180,7 +195,8 @@ export class StandardCardApplicationService {
       updatedCard.setInks(dto.inks.map((item: any) => new StandardCardInk(item)));
     }
     if (dto.toolings) {
-      const { StandardCardTooling } = await import('@/domain/standard-card/entities/StandardCardTooling');
+      const { StandardCardTooling } =
+        await import('@/domain/standard-card/entities/StandardCardTooling');
       updatedCard.setToolings(dto.toolings.map((item: any) => new StandardCardTooling(item)));
     }
 
@@ -191,7 +207,8 @@ export class StandardCardApplicationService {
   }
 
   async submit(id: number, userId: number): Promise<StandardCard> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
 
     const card = await repo.findById(id);
@@ -207,7 +224,7 @@ export class StandardCardApplicationService {
       standardCardId: id,
       code: card.code,
       version: card.version,
-      userId
+      userId,
     });
     this.eventBus.publish(event);
 
@@ -215,7 +232,8 @@ export class StandardCardApplicationService {
   }
 
   async approve(id: number, userId: number): Promise<StandardCard> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
 
     const card = await repo.findById(id);
@@ -232,7 +250,7 @@ export class StandardCardApplicationService {
       code: card.code,
       version: card.version,
       userId,
-      approvalLevel: 'tech_manager'
+      approvalLevel: 'tech_manager',
     });
     this.eventBus.publish(event);
 
@@ -240,7 +258,8 @@ export class StandardCardApplicationService {
   }
 
   async confirm(id: number, userId: number): Promise<StandardCard> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
 
     const card = await repo.findById(id);
@@ -248,14 +267,15 @@ export class StandardCardApplicationService {
       throw new Error('标准卡不存在');
     }
 
-    const { VersionChangeLogRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { VersionChangeLogRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const logRepo = new VersionChangeLogRepository();
     await logRepo.save({
       standardCardId: id,
       version: card.version,
       changeType: 'update',
       changeContent: '总经理审批通过',
-      changedBy: userId
+      changedBy: userId,
     });
 
     card.confirm(userId);
@@ -266,7 +286,7 @@ export class StandardCardApplicationService {
       code: card.code,
       version: card.version,
       materialId: card.materialId,
-      userId
+      userId,
     });
     this.eventBus.publish(event);
 
@@ -274,7 +294,8 @@ export class StandardCardApplicationService {
   }
 
   async obsolete(id: number, reason: string, userId: number): Promise<StandardCard> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
 
     const card = await repo.findById(id);
@@ -291,7 +312,7 @@ export class StandardCardApplicationService {
       code: card.code,
       version: card.version,
       reason,
-      userId
+      userId,
     });
     this.eventBus.publish(event);
 
@@ -299,7 +320,8 @@ export class StandardCardApplicationService {
   }
 
   async createNewVersion(id: number, userId: number): Promise<StandardCard> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
 
     const card = await repo.findById(id);
@@ -311,71 +333,91 @@ export class StandardCardApplicationService {
     const newId = await repo.save(newCard);
     (newCard as any).id = newId;
 
-    const { ColorStandardItemRepository, ProcessStandardItemRepository, QualityStandardItemRepository,
-            StandardCardMaterialRepository, StandardCardInkRepository, StandardCardToolingRepository } = 
-      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
-    
+    const {
+      ColorStandardItemRepository,
+      ProcessStandardItemRepository,
+      QualityStandardItemRepository,
+      StandardCardMaterialRepository,
+      StandardCardInkRepository,
+      StandardCardToolingRepository,
+    } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+
     const colorRepo = new ColorStandardItemRepository();
     const colorItems = await colorRepo.findByStandardCardId(id);
     if (colorItems.length > 0) {
-      await colorRepo.saveBatch(newId, colorItems.map((item: any) => ({
-        colorName: item.color_name,
-        pantoneCode: item.pantone_code,
-        cmykValue: item.cmyk_value,
-        rgbValue: item.rgb_value,
-        colorSampleImage: item.color_sample_image,
-        tolerance: item.tolerance,
-        remark: item.remark
-      })));
+      await colorRepo.saveBatch(
+        newId,
+        colorItems.map((item: any) => ({
+          colorName: item.color_name,
+          pantoneCode: item.pantone_code,
+          cmykValue: item.cmyk_value,
+          rgbValue: item.rgb_value,
+          colorSampleImage: item.color_sample_image,
+          tolerance: item.tolerance,
+          remark: item.remark,
+        }))
+      );
     }
 
     return newCard;
   }
 
   async getById(id: number): Promise<StandardCard | null> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
     return await repo.findById(id);
   }
 
   async getByCode(code: string): Promise<StandardCard | null> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
     return await repo.findByCode(code);
   }
 
   async getByMaterialId(materialId: number, includeObsolete = false): Promise<StandardCard[]> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
     return await repo.findByMaterialId(materialId, includeObsolete);
   }
 
   async getCurrentByMaterialId(materialId: number): Promise<StandardCard | null> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
     return await repo.findCurrentByMaterialId(materialId);
   }
 
   async query(filters: StandardCardQueryDTO): Promise<{ list: StandardCard[]; total: number }> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
 
-    return await repo.findByFilters({
-      code: filters.code,
-      name: filters.name,
-      type: filters.type as StandardCardType | undefined,
-      status: filters.status,
-      materialId: filters.materialId,
-      customerId: filters.customerId,
-      isCurrent: filters.isCurrent,
-      isObsolete: filters.isObsolete,
-      effectiveDateFrom: filters.effectiveDateFrom ? new Date(filters.effectiveDateFrom) : undefined,
-      effectiveDateTo: filters.effectiveDateTo ? new Date(filters.effectiveDateTo) : undefined
-    }, filters.page || 1, filters.pageSize || 20);
+    return await repo.findByFilters(
+      {
+        code: filters.code,
+        name: filters.name,
+        type: filters.type as StandardCardType | undefined,
+        status: filters.status,
+        materialId: filters.materialId,
+        customerId: filters.customerId,
+        isCurrent: filters.isCurrent,
+        isObsolete: filters.isObsolete,
+        effectiveDateFrom: filters.effectiveDateFrom
+          ? new Date(filters.effectiveDateFrom)
+          : undefined,
+        effectiveDateTo: filters.effectiveDateTo ? new Date(filters.effectiveDateTo) : undefined,
+      },
+      filters.page || 1,
+      filters.pageSize || 20
+    );
   }
 
   async delete(id: number): Promise<void> {
-    const { MysqlStandardCardRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { MysqlStandardCardRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new MysqlStandardCardRepository();
 
     const card = await repo.findById(id);
@@ -386,10 +428,15 @@ export class StandardCardApplicationService {
       throw new Error('只有草稿状态的标准卡才能删除');
     }
 
-    const { ColorStandardItemRepository, ProcessStandardItemRepository, QualityStandardItemRepository,
-            StandardCardMaterialRepository, StandardCardInkRepository, StandardCardToolingRepository,
-            StandardCardAttachmentRepository } = 
-      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const {
+      ColorStandardItemRepository,
+      ProcessStandardItemRepository,
+      QualityStandardItemRepository,
+      StandardCardMaterialRepository,
+      StandardCardInkRepository,
+      StandardCardToolingRepository,
+      StandardCardAttachmentRepository,
+    } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
 
     await Promise.all([
       new ColorStandardItemRepository().deleteByStandardCardId(id),
@@ -398,19 +445,34 @@ export class StandardCardApplicationService {
       new StandardCardMaterialRepository().deleteByStandardCardId(id),
       new StandardCardInkRepository().deleteByStandardCardId(id),
       new StandardCardToolingRepository().deleteByStandardCardId(id),
-      new StandardCardAttachmentRepository().deleteByStandardCardId(id)
+      new StandardCardAttachmentRepository().deleteByStandardCardId(id),
     ]);
 
     await repo.delete(id);
   }
 
   async getDetailItems(standardCardId: number): Promise<any> {
-    const { ColorStandardItemRepository, ProcessStandardItemRepository, QualityStandardItemRepository,
-            StandardCardMaterialRepository, StandardCardInkRepository, StandardCardToolingRepository,
-            StandardCardAttachmentRepository, VersionChangeLogRepository } = 
-      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const {
+      ColorStandardItemRepository,
+      ProcessStandardItemRepository,
+      QualityStandardItemRepository,
+      StandardCardMaterialRepository,
+      StandardCardInkRepository,
+      StandardCardToolingRepository,
+      StandardCardAttachmentRepository,
+      VersionChangeLogRepository,
+    } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
 
-    const [colorItems, processItems, qualityItems, materials, inks, toolings, attachments, versionLogs] = await Promise.all([
+    const [
+      colorItems,
+      processItems,
+      qualityItems,
+      materials,
+      inks,
+      toolings,
+      attachments,
+      versionLogs,
+    ] = await Promise.all([
       new ColorStandardItemRepository().findByStandardCardId(standardCardId),
       new ProcessStandardItemRepository().findByStandardCardId(standardCardId),
       new QualityStandardItemRepository().findByStandardCardId(standardCardId),
@@ -418,7 +480,7 @@ export class StandardCardApplicationService {
       new StandardCardInkRepository().findByStandardCardId(standardCardId),
       new StandardCardToolingRepository().findByStandardCardId(standardCardId),
       new StandardCardAttachmentRepository().findByStandardCardId(standardCardId),
-      new VersionChangeLogRepository().findByStandardCardId(standardCardId)
+      new VersionChangeLogRepository().findByStandardCardId(standardCardId),
     ]);
 
     return {
@@ -430,7 +492,7 @@ export class StandardCardApplicationService {
         rgbValue: item.rgb_value,
         colorSampleImage: item.color_sample_image,
         tolerance: item.tolerance,
-        remark: item.remark
+        remark: item.remark,
       })),
       processItems: processItems.map((item: any) => ({
         id: item.id,
@@ -444,7 +506,7 @@ export class StandardCardApplicationService {
         standardTime: item.standard_time,
         machineType: item.machine_type,
         description: item.description,
-        remark: item.remark
+        remark: item.remark,
       })),
       qualityItems: qualityItems.map((item: any) => ({
         id: item.id,
@@ -454,7 +516,7 @@ export class StandardCardApplicationService {
         inspectionMethod: item.inspection_method,
         isKey: item.is_key === 1,
         defectLevel: item.defect_level,
-        remark: item.remark
+        remark: item.remark,
       })),
       materials: materials.map((item: any) => ({
         id: item.id,
@@ -464,7 +526,7 @@ export class StandardCardApplicationService {
         spec: item.spec,
         unitConsumption: item.unit_consumption,
         lossRate: item.loss_rate,
-        remark: item.remark
+        remark: item.remark,
       })),
       inks: inks.map((item: any) => ({
         id: item.id,
@@ -474,13 +536,13 @@ export class StandardCardApplicationService {
         colorName: item.color_name,
         ratio: item.ratio,
         unitConsumption: item.unit_consumption,
-        remark: item.remark
+        remark: item.remark,
       })),
       toolings: toolings.map((item: any) => ({
         id: item.id,
         dieMoldId: item.die_mold_id,
         screenPlateId: item.screen_plate_id,
-        remark: item.remark
+        remark: item.remark,
       })),
       attachments: attachments.map((item: any) => ({
         id: item.id,
@@ -490,7 +552,7 @@ export class StandardCardApplicationService {
         version: item.version,
         remark: item.remark,
         uploadedBy: item.uploaded_by,
-        uploadedAt: item.uploaded_at
+        uploadedAt: item.uploaded_at,
       })),
       versionLogs: versionLogs.map((item: any) => ({
         id: item.id,
@@ -499,15 +561,20 @@ export class StandardCardApplicationService {
         changeContent: item.change_content,
         changedBy: item.changed_by,
         changedByName: item.changed_by_name,
-        changedAt: item.changed_at
-      }))
+        changedAt: item.changed_at,
+      })),
     };
   }
 
   private async saveDetailItems(standardCardId: number, dto: any): Promise<void> {
-    const { ColorStandardItemRepository, ProcessStandardItemRepository, QualityStandardItemRepository,
-            StandardCardMaterialRepository, StandardCardInkRepository, StandardCardToolingRepository } = 
-      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const {
+      ColorStandardItemRepository,
+      ProcessStandardItemRepository,
+      QualityStandardItemRepository,
+      StandardCardMaterialRepository,
+      StandardCardInkRepository,
+      StandardCardToolingRepository,
+    } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
 
     const repos = {
       color: new ColorStandardItemRepository(),
@@ -515,7 +582,7 @@ export class StandardCardApplicationService {
       quality: new QualityStandardItemRepository(),
       material: new StandardCardMaterialRepository(),
       ink: new StandardCardInkRepository(),
-      tooling: new StandardCardToolingRepository()
+      tooling: new StandardCardToolingRepository(),
     };
 
     if (dto.colorItems) await repos.color.saveBatch(standardCardId, dto.colorItems);
@@ -527,7 +594,8 @@ export class StandardCardApplicationService {
   }
 
   private async saveVersionLogs(card: StandardCard): Promise<void> {
-    const { VersionChangeLogRepository } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { VersionChangeLogRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
     const repo = new VersionChangeLogRepository();
 
     for (const log of card.versionLogsNew) {
@@ -536,7 +604,7 @@ export class StandardCardApplicationService {
         version: log.version,
         changeType: log.changeType,
         changeContent: log.changeContent,
-        changedBy: log.changedBy
+        changedBy: log.changedBy,
       });
     }
   }

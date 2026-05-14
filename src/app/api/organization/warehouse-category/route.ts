@@ -58,11 +58,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['code', 'name']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查编码是否已存在
@@ -80,13 +76,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       INSERT INTO sys_warehouse_category (code, name, description, sort_order, status)
       VALUES (?, ?, ?, ?, ?)
     `,
-    [
-      body.code,
-      body.name,
-      body.description || '',
-      body.sort_order ?? 0,
-      body.status ?? 1,
-    ]
+    [body.code, body.name, body.description || '', body.sort_order ?? 0, body.status ?? 1]
   );
 
   return successResponse({ id: result.insertId }, '仓库分类创建成功');
@@ -105,11 +95,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['code', 'name']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查分类是否存在
@@ -138,14 +124,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       SET code = ?, name = ?, description = ?, sort_order = ?, status = ?
       WHERE id = ?
     `,
-    [
-      body.code,
-      body.name,
-      body.description || '',
-      body.sort_order ?? 0,
-      body.status ?? 1,
-      id,
-    ]
+    [body.code, body.name, body.description || '', body.sort_order ?? 0, body.status ?? 1, id]
   );
 
   if (result.affectedRows === 0) {
@@ -187,10 +166,9 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 软删除
-  const result = await execute(
-    'UPDATE sys_warehouse_category SET deleted = 1 WHERE id = ?',
-    [categoryId]
-  );
+  const result = await execute('UPDATE sys_warehouse_category SET deleted = 1 WHERE id = ?', [
+    categoryId,
+  ]);
 
   if (result.affectedRows === 0) {
     return commonErrors.notFound('仓库分类不存在');

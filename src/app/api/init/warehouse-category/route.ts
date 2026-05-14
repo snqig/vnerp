@@ -1,10 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 
 // 仓库分类关联接口
 interface WarehouseCategoryLink {
@@ -33,24 +29,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     // 更新现有仓库数据，根据 warehouse_type 分配分类
     // 原材料仓 (ID=1): warehouse_type = 1
-    await connection.execute(
-      `UPDATE inv_warehouse SET category_id = 1 WHERE warehouse_type = 1`
-    );
+    await connection.execute(`UPDATE inv_warehouse SET category_id = 1 WHERE warehouse_type = 1`);
 
     // 半成品仓 (ID=2): warehouse_type = 2
-    await connection.execute(
-      `UPDATE inv_warehouse SET category_id = 2 WHERE warehouse_type = 2`
-    );
+    await connection.execute(`UPDATE inv_warehouse SET category_id = 2 WHERE warehouse_type = 2`);
 
     // 成品仓 (ID=3): warehouse_type = 3
-    await connection.execute(
-      `UPDATE inv_warehouse SET category_id = 3 WHERE warehouse_type = 3`
-    );
+    await connection.execute(`UPDATE inv_warehouse SET category_id = 3 WHERE warehouse_type = 3`);
 
     // 辅料仓 (ID=4): warehouse_type = 4
-    await connection.execute(
-      `UPDATE inv_warehouse SET category_id = 4 WHERE warehouse_type = 4`
-    );
+    await connection.execute(`UPDATE inv_warehouse SET category_id = 4 WHERE warehouse_type = 4`);
   });
 
   // 查询更新后的数据

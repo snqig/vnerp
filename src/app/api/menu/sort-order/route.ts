@@ -1,11 +1,6 @@
 import { NextRequest } from 'next/server';
 import { execute, queryOne, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  commonErrors,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
 import { jwtVerify } from 'jose';
 import { secureLog } from '@/lib/logger';
 
@@ -28,10 +23,7 @@ interface MenuSortItem {
 // 验证JWT Token
 async function verifyToken(token: string) {
   try {
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(SECRET_KEY)
-    );
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
     return payload;
   } catch (error) {
     console.error('Token verification error:', error);
@@ -66,11 +58,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   // 验证每个排序项
   for (const item of orders) {
     if (!item.id || typeof item.sort_order !== 'number') {
-      return errorResponse(
-        '排序项格式不正确，需要id和sort_order字段',
-        400,
-        400
-      );
+      return errorResponse('排序项格式不正确，需要id和sort_order字段', 400, 400);
     }
   }
 
@@ -78,16 +66,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   await transaction(async (connection) => {
     for (const item of orders) {
       // 检查菜单是否存在
-      const [menuResult]: any = await connection.execute(
-        'SELECT id FROM sys_menu WHERE id = ?',
-        [item.id]
-      );
+      const [menuResult]: any = await connection.execute('SELECT id FROM sys_menu WHERE id = ?', [
+        item.id,
+      ]);
 
       if (menuResult.length > 0) {
-        await connection.execute(
-          'UPDATE sys_menu SET sort_order = ? WHERE id = ?',
-          [item.sort_order, item.id]
-        );
+        await connection.execute('UPDATE sys_menu SET sort_order = ? WHERE id = ?', [
+          item.sort_order,
+          item.id,
+        ]);
       }
     }
   });

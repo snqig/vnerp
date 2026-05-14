@@ -107,7 +107,7 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
 
   for (const ink of surplusInks) {
     let matchScore = 0;
-    let matchReasons: string[] = [];
+    const matchReasons: string[] = [];
 
     if (pantoneCode && ink.pantone_code) {
       if (ink.pantone_code === pantoneCode) {
@@ -120,7 +120,10 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
     }
 
     if (colorName && ink.dispatch_color_name) {
-      if (ink.dispatch_color_name.includes(colorName) || colorName.includes(ink.dispatch_color_name)) {
+      if (
+        ink.dispatch_color_name.includes(colorName) ||
+        colorName.includes(ink.dispatch_color_name)
+      ) {
         matchScore += 30;
         matchReasons.push('颜色名称匹配');
       }
@@ -151,7 +154,10 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
 
   recommendations.sort((a, b) => b.match_score - a.match_score);
 
-  const totalAvailable = surplusInks.reduce((sum: number, ink: any) => sum + Number(ink.available_qty || 0), 0);
+  const totalAvailable = surplusInks.reduce(
+    (sum: number, ink: any) => sum + Number(ink.available_qty || 0),
+    0
+  );
   const potentialSaving = totalAvailable * (surplusInks[0]?.unit_price || 50);
 
   return successResponse({
@@ -164,12 +170,15 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
 }
 
 async function getSurplusDetail(batchNo: string) {
-  const batchRows: any = await query(`
+  const batchRows: any = await query(
+    `
     SELECT ib.*, w.warehouse_name
     FROM inv_inventory_batch ib
     LEFT JOIN inv_warehouse w ON ib.warehouse_id = w.id
     WHERE ib.batch_no = ? AND ib.deleted = 0
-  `, [batchNo]);
+  `,
+    [batchNo]
+  );
 
   if (batchRows.length === 0) {
     return errorResponse('批次不存在', 404, 404);
@@ -187,10 +196,9 @@ async function getSurplusDetail(batchNo: string) {
 
   if (dispatchRows.length > 0) {
     const dispatch = dispatchRows[0];
-    const formulaRows: any = await query(
-      'SELECT * FROM ink_formula WHERE id = ? AND deleted = 0',
-      [dispatch.formula_id]
-    );
+    const formulaRows: any = await query('SELECT * FROM ink_formula WHERE id = ? AND deleted = 0', [
+      dispatch.formula_id,
+    ]);
     if (formulaRows.length > 0) {
       formulaInfo = formulaRows[0];
       const items: any = await query(
@@ -223,7 +231,17 @@ async function getSurplusDetail(batchNo: string) {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { batch_no, return_weight, unit, workorder_no, operator_id, operator_name, location_id, location_name, remark } = body;
+  const {
+    batch_no,
+    return_weight,
+    unit,
+    workorder_no,
+    operator_id,
+    operator_name,
+    location_id,
+    location_name,
+    remark,
+  } = body;
 
   if (!batch_no || !return_weight || Number(return_weight) <= 0) {
     return errorResponse('缺少必填字段: batch_no, return_weight', 400, 400);
@@ -251,14 +269,29 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     );
 
     const now = new Date();
-    const usageNo = 'IU' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    const usageNo =
+      'IU' +
+      now.getFullYear() +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      String(now.getDate()).padStart(2, '0') +
+      String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
     const [insertResult]: any = await conn.execute(
       `INSERT INTO ink_usage (usage_no, usage_type, batch_no, workorder_no, color_name, weight, unit, operator_id, operator_name, location_id, location_name, status, remark)
        VALUES (?, 'return', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-      [usageNo, batch_no, workorder_no || null, batch.material_name || '',
-       return_weight, unit || 'kg', operator_id || null, operator_name || null,
-       location_id || null, location_name || null, remark || '余墨退回']
+      [
+        usageNo,
+        batch_no,
+        workorder_no || null,
+        batch.material_name || '',
+        return_weight,
+        unit || 'kg',
+        operator_id || null,
+        operator_name || null,
+        location_id || null,
+        location_name || null,
+        remark || '余墨退回',
+      ]
     );
 
     return { id: insertResult.insertId, usage_no: usageNo, batch_no, return_weight };

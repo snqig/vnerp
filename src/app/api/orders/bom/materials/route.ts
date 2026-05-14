@@ -62,10 +62,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
 
-  const validation = validateRequestBody(body, [
-    'materialCode',
-    'materialName',
-  ]);
+  const validation = validateRequestBody(body, ['materialCode', 'materialName']);
 
   if (!validation.valid) {
     return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
@@ -119,10 +116,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     ]
   );
 
-  return successResponse(
-    { id: (result as any).insertId, materialCode },
-    '物料创建成功'
-  );
+  return successResponse({ id: (result as any).insertId, materialCode }, '物料创建成功');
 }, '创建物料失败');
 
 /**
@@ -137,10 +131,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('物料ID不能为空', 400, 400);
   }
 
-  const material = await query(
-    'SELECT id FROM bom_material WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  const material = await query('SELECT id FROM bom_material WHERE id = ? AND deleted = 0', [id]);
 
   if ((material as any[]).length === 0) {
     return errorResponse('物料不存在', 404, 404);
@@ -204,19 +195,13 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 检查是否被BOM引用
-  const usedInBom = await query(
-    'SELECT 1 FROM bom_line WHERE material_id = ? LIMIT 1',
-    [id]
-  );
+  const usedInBom = await query('SELECT 1 FROM bom_line WHERE material_id = ? LIMIT 1', [id]);
 
   if ((usedInBom as any[]).length > 0) {
     return errorResponse('该物料已被BOM引用，不能删除', 400, 400);
   }
 
-  await query(
-    'UPDATE bom_material SET deleted = 1, update_time = NOW() WHERE id = ?',
-    [id]
-  );
+  await query('UPDATE bom_material SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
   return successResponse(null, '物料删除成功');
 }, '删除物料失败');

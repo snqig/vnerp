@@ -80,10 +80,10 @@ export async function convertRequestToPurchaseOrder(requestId: number): Promise<
       );
     }
 
-    await conn.execute(
-      `UPDATE pur_request SET status = ? WHERE id = ?`,
-      [PurBizStatus.CONVERT_PO, requestId]
-    );
+    await conn.execute(`UPDATE pur_request SET status = ? WHERE id = ?`, [
+      PurBizStatus.CONVERT_PO,
+      requestId,
+    ]);
 
     return {
       poId,
@@ -94,7 +94,9 @@ export async function convertRequestToPurchaseOrder(requestId: number): Promise<
   });
 }
 
-export async function batchConvertRequestToPurchaseOrder(requestIds: number[]): Promise<ConvertResult[]> {
+export async function batchConvertRequestToPurchaseOrder(
+  requestIds: number[]
+): Promise<ConvertResult[]> {
   const results: ConvertResult[] = [];
   for (const id of requestIds) {
     try {

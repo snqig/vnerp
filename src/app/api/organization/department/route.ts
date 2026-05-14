@@ -24,10 +24,10 @@ interface Department {
 }
 
 // 构建查询条件
-function buildQueryConditions(params: {
-  keyword: string;
-  status: string | null;
-}): { sql: string; values: any[] } {
+function buildQueryConditions(params: { keyword: string; status: string | null }): {
+  sql: string;
+  values: any[];
+} {
   let sql = `
     SELECT
       id, dept_code, dept_name, parent_id, leader_id, leader_name,
@@ -53,20 +53,45 @@ function buildQueryConditions(params: {
   return { sql, values };
 }
 
-// GET - 获取部门列表
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status');
+  const page = parseInt(searchParams.get('page') || '1');
+  const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   const { sql, values } = buildQueryConditions({
     keyword,
     status,
   });
 
-  const departments = await query<Department>(sql, values);
+  let countSql = `SELECT COUNT(*) as total FROM sys_department WHERE deleted = 0`;
+  const countValues: any[] = [];
 
-  return successResponse(departments);
+  if (keyword) {
+    countSql += ' AND (dept_name LIKE ? OR dept_code LIKE ?)';
+    countValues.push(`%${keyword}%`, `%${keyword}%`);
+  }
+
+  if (status !== undefined && status !== null && status !== '') {
+    countSql += ' AND status = ?';
+    countValues.push(parseInt(status));
+  }
+
+  const countResult = await query(countSql, countValues);
+  const total = (countResult as any[])[0]?.total || 0;
+
+  const paginatedSql = `${sql} LIMIT ? OFFSET ?`;
+  const paginatedValues = [...values, pageSize, (page - 1) * pageSize];
+
+  const departments = await query<Department>(paginatedSql, paginatedValues);
+
+  return successResponse({
+    list: departments,
+    total,
+    page,
+    pageSize,
+  });
 }, '获取部门列表失败');
 
 // POST - 创建部门
@@ -77,11 +102,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['dept_code', 'dept_name']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查编码是否已存在
@@ -124,11 +145,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['dept_code', 'dept_name']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查部门是否存在

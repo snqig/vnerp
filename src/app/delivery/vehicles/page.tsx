@@ -20,16 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Plus,
-  Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Car,
-  Wrench,
-  FileText,
-} from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Car, Wrench, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Vehicle {
@@ -50,7 +41,10 @@ interface Vehicle {
   create_time: string;
 }
 
-const statusMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const statusMap: Record<
+  number,
+  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+> = {
   0: { label: '停用', variant: 'secondary' },
   1: { label: '可用', variant: 'default' },
   2: { label: '维修中', variant: 'outline' },
@@ -131,9 +125,7 @@ export default function VehiclesPage() {
               <Car className="h-6 w-6" />
               车辆管理
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              管理公司车辆信息、维修记录和费用
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">管理公司车辆信息、维修记录和费用</p>
           </div>
           <Button onClick={() => router.push('/delivery/vehicles/new')}>
             <Plus className="h-4 w-4 mr-2" />
@@ -155,7 +147,10 @@ export default function VehiclesPage() {
           </div>
           <select
             value={status}
-            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
             className="border rounded-md px-3 py-2"
           >
             <option value="all">全部状态</option>
@@ -200,12 +195,12 @@ export default function VehiclesPage() {
               ) : (
                 vehicles.map((vehicle) => (
                   <TableRow key={vehicle.id}>
-                    <TableCell className="font-medium">
-                      {vehicle.vehicle_no}
-                    </TableCell>
+                    <TableCell className="font-medium">{vehicle.vehicle_no}</TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        <div>{vehicle.brand} {vehicle.model}</div>
+                        <div>
+                          {vehicle.brand} {vehicle.model}
+                        </div>
                         <div className="text-muted-foreground">
                           {vehicle.vehicle_type} · {vehicle.color} · {vehicle.fuel_type}
                         </div>
@@ -237,19 +232,25 @@ export default function VehiclesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/delivery/vehicles/${vehicle.id}`)}>
+                          <DropdownMenuItem
+                            onClick={() => router.push(`/delivery/vehicles/${vehicle.id}`)}
+                          >
                             <Edit className="h-4 w-4 mr-2" />
                             编辑
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push(`/delivery/vehicles/${vehicle.id}/repair`)}>
+                          <DropdownMenuItem
+                            onClick={() => router.push(`/delivery/vehicles/${vehicle.id}/repair`)}
+                          >
                             <Wrench className="h-4 w-4 mr-2" />
                             维修记录
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push(`/delivery/vehicles/${vehicle.id}/cost`)}>
+                          <DropdownMenuItem
+                            onClick={() => router.push(`/delivery/vehicles/${vehicle.id}/cost`)}
+                          >
                             <FileText className="h-4 w-4 mr-2" />
                             费用记录
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => handleDelete(vehicle.id)}
                             className="text-red-600"
                           >
@@ -276,7 +277,7 @@ export default function VehiclesPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
               >
                 上一页
@@ -284,7 +285,7 @@ export default function VehiclesPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(p => p + 1)}
+                onClick={() => setPage((p) => p + 1)}
                 disabled={page >= Math.ceil(total / pageSize)}
               >
                 下一页

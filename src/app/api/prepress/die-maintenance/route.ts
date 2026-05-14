@@ -1,6 +1,12 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler, validateRequestBody } from '@/lib/api-response';
+import {
+  successResponse,
+  errorResponse,
+  commonErrors,
+  withErrorHandler,
+  validateRequestBody,
+} from '@/lib/api-response';
 
 const MAINTENANCE_TYPE_MAP: Record<string, string> = {
   routine: '常规保养',
@@ -42,9 +48,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const list = await query(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM prd_die_maintenance WHERE deleted = 0`;
-  const countResult = await queryOne(countSql) as any;
+  const countResult = (await queryOne(countSql)) as any;
 
-  const costStats = await query(
+  const costStats = (await query(
     `SELECT
       maintenance_type,
       COUNT(*) as count,
@@ -52,11 +58,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       AVG(cost) as avg_cost
     FROM prd_die_maintenance WHERE deleted = 0 AND status = 3
     GROUP BY maintenance_type`
-  ) as any[];
+  )) as any[];
 
-  const pendingCount = await queryOne(
+  const pendingCount = (await queryOne(
     `SELECT COUNT(*) as count FROM prd_die_maintenance WHERE deleted = 0 AND status IN (1, 2)`
-  ) as any;
+  )) as any;
 
   return successResponse({
     list,
@@ -113,8 +119,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       `INSERT INTO prd_die_maintenance (maintenance_no, die_id, die_code, maintenance_type, impressions_before, impressions_after, maintenance_date, next_maintenance_date, cost, technician_id, technician_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?)`,
       [
-        maintenanceNo, dieId, die.template_code, maintenanceType,
-        impressionsBefore, impressionsAfter,
+        maintenanceNo,
+        dieId,
+        die.template_code,
+        maintenanceType,
+        impressionsBefore,
+        impressionsAfter,
         nextMaintenanceDate,
         body.cost || 0,
         body.technician_id || null,
@@ -137,19 +147,29 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
              die_status = ?,
              status = 1
          WHERE id = ?`,
-        [impressionsAfter, impressionsAfter, impressionsAfter,
-         newMaintenanceCount, impressionsBefore, newDieStatus, dieId]
+        [
+          impressionsAfter,
+          impressionsAfter,
+          impressionsAfter,
+          newMaintenanceCount,
+          impressionsBefore,
+          newDieStatus,
+          dieId,
+        ]
       );
     }
 
-    return successResponse({
-      maintenance_no: maintenanceNo,
-      die_id: dieId,
-      maintenance_type: maintenanceType,
-      impressions_before: impressionsBefore,
-      impressions_after: impressionsAfter,
-      new_die_status: newDieStatus,
-    }, '保养记录创建成功');
+    return successResponse(
+      {
+        maintenance_no: maintenanceNo,
+        die_id: dieId,
+        maintenance_type: maintenanceType,
+        impressions_before: impressionsBefore,
+        impressions_after: impressionsAfter,
+        new_die_status: newDieStatus,
+      },
+      '保养记录创建成功'
+    );
   });
 }, '创建保养记录失败');
 
@@ -157,7 +177,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   if (!body.id) return commonErrors.badRequest('保养ID不能为空');
 
-  const existing = await queryOne('SELECT id, die_id, maintenance_type, status FROM prd_die_maintenance WHERE id = ? AND deleted = 0', [body.id]);
+  const existing = await queryOne(
+    'SELECT id, die_id, maintenance_type, status FROM prd_die_maintenance WHERE id = ? AND deleted = 0',
+    [body.id]
+  );
   if (!existing) return commonErrors.notFound('保养记录不存在');
 
   return await transaction(async (conn) => {
@@ -169,9 +192,18 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       const die = dieRows?.[0];
       if (!die) return errorResponse('刀模/网版不存在', 404, 404);
 
-      const impressionsAfter = body.impressions_after !== undefined ? body.impressions_after : (existing.maintenance_type === 're_rule' || existing.maintenance_type === 'replace' ? 0 : die.cumulative_impressions);
+      const impressionsAfter =
+        body.impressions_after !== undefined
+          ? body.impressions_after
+          : existing.maintenance_type === 're_rule' || existing.maintenance_type === 'replace'
+            ? 0
+            : die.cumulative_impressions;
       const newMaintenanceCount = die.maintenance_count + 1;
-      const newDieStatus = computeDieStatus(impressionsAfter, die.max_impressions, die.warning_threshold);
+      const newDieStatus = computeDieStatus(
+        impressionsAfter,
+        die.max_impressions,
+        die.warning_threshold
+      );
 
       await conn.execute(
         `UPDATE prd_die_template
@@ -188,20 +220,41 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
                ELSE 1
              END
          WHERE id = ?`,
-        [impressionsAfter, impressionsAfter, impressionsAfter,
-         newMaintenanceCount, die.cumulative_impressions,
-         newDieStatus, impressionsAfter, impressionsAfter,
-         existing.die_id]
+        [
+          impressionsAfter,
+          impressionsAfter,
+          impressionsAfter,
+          newMaintenanceCount,
+          die.cumulative_impressions,
+          newDieStatus,
+          impressionsAfter,
+          impressionsAfter,
+          existing.die_id,
+        ]
       );
 
       await conn.execute(
         `UPDATE prd_die_maintenance SET status = 3, impressions_after = ?, cost = ?, technician_name = ?, remark = ?, update_time = NOW() WHERE id = ?`,
-        [impressionsAfter, body.cost || 0, body.technician_name || null, body.remark || null, body.id]
+        [
+          impressionsAfter,
+          body.cost || 0,
+          body.technician_name || null,
+          body.remark || null,
+          body.id,
+        ]
       );
     } else {
       const fields: string[] = [];
       const values: any[] = [];
-      const allowedFields = ['maintenance_type', 'impressions_after', 'next_maintenance_date', 'cost', 'technician_name', 'status', 'remark'];
+      const allowedFields = [
+        'maintenance_type',
+        'impressions_after',
+        'next_maintenance_date',
+        'cost',
+        'technician_name',
+        'status',
+        'remark',
+      ];
 
       for (const field of allowedFields) {
         if (body[field] !== undefined) {
@@ -212,7 +265,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
       if (fields.length > 0) {
         values.push(body.id);
-        await conn.execute(`UPDATE prd_die_maintenance SET ${fields.join(', ')}, update_time = NOW() WHERE id = ?`, values);
+        await conn.execute(
+          `UPDATE prd_die_maintenance SET ${fields.join(', ')}, update_time = NOW() WHERE id = ?`,
+          values
+        );
       }
     }
 
@@ -229,7 +285,11 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   return successResponse(null, '删除成功');
 }, '删除保养记录失败');
 
-function computeDieStatus(cumulative: number, maxImpressions: number, warningThreshold: number): string {
+function computeDieStatus(
+  cumulative: number,
+  maxImpressions: number,
+  warningThreshold: number
+): string {
   if (maxImpressions <= 0) return 'available';
   const pct = (cumulative / maxImpressions) * 100;
   if (pct >= 95) return 're_rule_needed';

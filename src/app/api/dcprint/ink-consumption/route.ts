@@ -28,7 +28,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let workorderAnalysis: any[] = [];
   try {
-    workorderAnalysis = await query(`
+    workorderAnalysis = await query(
+      `
       SELECT
         u.workorder_no,
         d.color_name,
@@ -48,12 +49,17 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       WHERE d.deleted = 0 AND d.workorder_no IS NOT NULL
       GROUP BY d.batch_no, d.workorder_no, d.color_name, d.pantone_code, d.total_weight, d.net_weight
       ORDER BY waste_rate DESC
-    `, params);
-  } catch (e) { console.error('Workorder analysis failed:', e); }
+    `,
+      params
+    );
+  } catch (e) {
+    console.error('Workorder analysis failed:', e);
+  }
 
   let inkTypeSummary: any[] = [];
   try {
-    inkTypeSummary = await query(`
+    inkTypeSummary = await query(
+      `
       SELECT
         f.ink_type,
         COUNT(DISTINCT d.id) as dispatch_count,
@@ -67,12 +73,17 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       LEFT JOIN ink_usage u ON u.batch_no = d.batch_no AND u.deleted = 0 ${dateFilter.replace('u.', 'u.')}
       WHERE d.deleted = 0
       GROUP BY f.ink_type
-    `, params);
-  } catch (e) { console.error('Ink type summary failed:', e); }
+    `,
+      params
+    );
+  } catch (e) {
+    console.error('Ink type summary failed:', e);
+  }
 
   let topWasteItems: any[] = [];
   try {
-    topWasteItems = await query(`
+    topWasteItems = await query(
+      `
       SELECT
         di.ink_name,
         di.brand,
@@ -89,12 +100,17 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       HAVING overage > 0
       ORDER BY overage DESC
       LIMIT 10
-    `, params);
-  } catch (e) { console.error('Top waste items failed:', e); }
+    `,
+      params
+    );
+  } catch (e) {
+    console.error('Top waste items failed:', e);
+  }
 
   let dailyTrend: any[] = [];
   try {
-    dailyTrend = await query(`
+    dailyTrend = await query(
+      `
       SELECT
         DATE(u.usage_time) as date,
         SUM(CASE WHEN u.usage_type = 'consumption' THEN u.weight ELSE 0 END) as consumed,
@@ -105,10 +121,14 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       WHERE u.deleted = 0 ${dateFilter}
       GROUP BY DATE(u.usage_time)
       ORDER BY date
-    `, params);
-  } catch (e) { console.error('Daily trend failed:', e); }
+    `,
+      params
+    );
+  } catch (e) {
+    console.error('Daily trend failed:', e);
+  }
 
-  let summary: any = {
+  const summary: any = {
     total_dispatch: 0,
     total_consumed: 0,
     total_returned: 0,
@@ -117,7 +137,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     avg_per_workorder: 0,
   };
   try {
-    const summaryRows: any = await query(`
+    const summaryRows: any = await query(
+      `
       SELECT
         COALESCE(SUM(d.total_weight), 0) as total_dispatch,
         COALESCE(SUM(CASE WHEN u.usage_type = 'consumption' THEN u.weight ELSE 0 END), 0) as total_consumed,
@@ -127,7 +148,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       FROM ink_dispatch d
       LEFT JOIN ink_usage u ON u.batch_no = d.batch_no AND u.deleted = 0 ${dateFilter.replace('u.', 'u.')}
       WHERE d.deleted = 0
-    `, params);
+    `,
+      params
+    );
 
     if (summaryRows.length > 0) {
       const s = summaryRows[0];
@@ -135,14 +158,20 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       summary.total_consumed = Number(s.total_consumed || 0);
       summary.total_returned = Number(s.total_returned || 0);
       summary.total_scraped = Number(s.total_scraped || 0);
-      summary.overall_waste_rate = summary.total_dispatch > 0
-        ? Math.round((summary.total_dispatch - summary.total_consumed) / summary.total_dispatch * 10000) / 100
-        : 0;
-      summary.avg_per_workorder = Number(s.dispatch_count || 0) > 0
-        ? Math.round(summary.total_consumed / Number(s.dispatch_count) * 100) / 100
-        : 0;
+      summary.overall_waste_rate =
+        summary.total_dispatch > 0
+          ? Math.round(
+              ((summary.total_dispatch - summary.total_consumed) / summary.total_dispatch) * 10000
+            ) / 100
+          : 0;
+      summary.avg_per_workorder =
+        Number(s.dispatch_count || 0) > 0
+          ? Math.round((summary.total_consumed / Number(s.dispatch_count)) * 100) / 100
+          : 0;
     }
-  } catch (e) { console.error('Summary calc failed:', e); }
+  } catch (e) {
+    console.error('Summary calc failed:', e);
+  }
 
   return successResponse({
     summary,

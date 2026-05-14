@@ -2,13 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -83,7 +77,9 @@ interface MaterialLabel {
 
 export default function ProcessCardsPage() {
   const [qrCode, setQrCode] = useState('');
-  const [scanState, setScanState] = useState<'workOrder' | 'mainMaterial' | 'auxiliary'>('workOrder');
+  const [scanState, setScanState] = useState<'workOrder' | 'mainMaterial' | 'auxiliary'>(
+    'workOrder'
+  );
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [mainMaterial, setMainMaterial] = useState<MaterialLabel | null>(null);
   const [auxiliaryMaterials, setAuxiliaryMaterials] = useState<MaterialLabel[]>([]);
@@ -163,7 +159,7 @@ export default function ProcessCardsPage() {
         } else if (scanState === 'auxiliary') {
           if (type === '0' || type === '1' || type === '2') {
             // 添加辅料
-            if (!auxiliaryMaterials.find(m => m.id === data.id)) {
+            if (!auxiliaryMaterials.find((m) => m.id === data.id)) {
               setAuxiliaryMaterials([...auxiliaryMaterials, data]);
               setSuccess(`辅料 ${data.materialName} 添加成功`);
             } else {
@@ -249,15 +245,24 @@ export default function ProcessCardsPage() {
   };
 
   const removeAuxiliaryMaterial = (id: number) => {
-    setAuxiliaryMaterials(auxiliaryMaterials.filter(m => m.id !== id));
+    setAuxiliaryMaterials(auxiliaryMaterials.filter((m) => m.id !== id));
   };
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string }> = {
-      pending: { label: '未配料', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
-      completed: { label: '已配料', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+      pending: {
+        label: '未配料',
+        className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+      },
+      completed: {
+        label: '已配料',
+        className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+      },
     };
-    const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+    const config = statusMap[status] || {
+      label: status,
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    };
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
@@ -265,7 +270,9 @@ export default function ProcessCardsPage() {
     return status === 'locked' ? (
       <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">已锁</Badge>
     ) : (
-      <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">未锁</Badge>
+      <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+        未锁
+      </Badge>
     );
   };
 
@@ -279,32 +286,39 @@ export default function ProcessCardsPage() {
               <QrCode className="h-5 w-5" />
               扫码生成流程卡
             </CardTitle>
-            <CardDescription>
-              按顺序扫描工单、主材、辅料生成流程卡
-            </CardDescription>
+            <CardDescription>按顺序扫描工单、主材、辅料生成流程卡</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {/* 扫码步骤指示 */}
               <div className="flex items-center gap-4 mb-4">
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                  scanState === 'workOrder' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
-                }`}>
+                <div
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                    scanState === 'workOrder' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
+                  }`}
+                >
                   <FileText className="h-4 w-4" />
                   <span className="font-medium">1. 扫描工单</span>
                 </div>
                 <div className="text-muted-foreground">→</div>
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                  scanState === 'mainMaterial' ? 'bg-blue-100 text-blue-700' : 
-                  scanState === 'auxiliary' ? 'bg-green-100 text-green-700' : 'bg-gray-100'
-                }`}>
+                <div
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                    scanState === 'mainMaterial'
+                      ? 'bg-blue-100 text-blue-700'
+                      : scanState === 'auxiliary'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100'
+                  }`}
+                >
                   <QrCode className="h-4 w-4" />
                   <span className="font-medium">2. 扫描主材</span>
                 </div>
                 <div className="text-muted-foreground">→</div>
-                <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                  scanState === 'auxiliary' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
-                }`}>
+                <div
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                    scanState === 'auxiliary' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100'
+                  }`}
+                >
                   <Plus className="h-4 w-4" />
                   <span className="font-medium">3. 添加辅料（可选）</span>
                 </div>
@@ -377,9 +391,7 @@ export default function ProcessCardsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-muted-foreground text-center py-4">
-                        请扫描工单二维码
-                      </div>
+                      <div className="text-muted-foreground text-center py-4">请扫描工单二维码</div>
                     )}
                   </CardContent>
                 </Card>
@@ -410,9 +422,7 @@ export default function ProcessCardsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-muted-foreground text-center py-4">
-                        请扫描主材标签
-                      </div>
+                      <div className="text-muted-foreground text-center py-4">请扫描主材标签</div>
                     )}
                   </CardContent>
                 </Card>
@@ -422,16 +432,25 @@ export default function ProcessCardsPage() {
               {auxiliaryMaterials.length > 0 && (
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">已添加辅料 ({auxiliaryMaterials.length})</CardTitle>
+                    <CardTitle className="text-sm">
+                      已添加辅料 ({auxiliaryMaterials.length})
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
                       {auxiliaryMaterials.map((material) => (
-                        <div key={material.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                        <div
+                          key={material.id}
+                          className="flex items-center justify-between p-2 bg-muted rounded"
+                        >
                           <div className="flex items-center gap-4">
                             <span className="font-medium">{material.materialName}</span>
-                            <span className="text-sm text-muted-foreground">{material.materialCode}</span>
-                            <span className="text-sm text-muted-foreground">批号: {material.batchNo}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {material.materialCode}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              批号: {material.batchNo}
+                            </span>
                           </div>
                           <Button
                             variant="ghost"

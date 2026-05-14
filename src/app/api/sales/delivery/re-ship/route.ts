@@ -1,11 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  commonErrors,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
 import { getShPrefix, generateDocNo } from '@/lib/global-config';
 
 // POST /api/sales/delivery/re-ship - 提交补发申请（符合设计文档 5.4 节）
@@ -54,10 +49,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   // 复制原发货单的明细到补发单
-  const parentItems = await query<any>(
-    `SELECT * FROM shipment_items WHERE shipment_id = ?`,
-    [parent_shipment_id]
-  );
+  const parentItems = await query<any>(`SELECT * FROM shipment_items WHERE shipment_id = ?`, [
+    parent_shipment_id,
+  ]);
 
   if (parentItems.length > 0) {
     for (const item of parentItems.slice(0, 1)) {
@@ -79,10 +73,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
   }
 
-  return successResponse({
-    id: result.insertId,
-    shipment_no: shipmentNo,
-    type: 're_ship',
-    status: 2, // 待审批
-  }, '补发申请提交成功');
+  return successResponse(
+    {
+      id: result.insertId,
+      shipment_no: shipmentNo,
+      type: 're_ship',
+      status: 2, // 待审批
+    },
+    '补发申请提交成功'
+  );
 }, '提交补发申请失败');

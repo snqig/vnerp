@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const pageSize = parseInt(searchParams.get('pageSize') || '100');
   const page = parseInt(searchParams.get('page') || '1');
@@ -38,12 +39,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const total = (countResult as any[])[0]?.total || 0;
 
   return successResponse({
-    data: list,
-    pagination: {
-      page,
-      pageSize,
-      total,
-      totalPages: Math.ceil(total / pageSize),
-    },
+    list,
+    total,
+    page,
+    pageSize,
   });
 });

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import {
   Table,
   TableHeader,
@@ -9,7 +9,7 @@ import {
   TableRow,
   TableCell,
   TableCaption,
-} from './table'
+} from './table';
 
 describe('Table 组件测试', () => {
   it('应该正确渲染完整表格', () => {
@@ -29,12 +29,12 @@ describe('Table 组件测试', () => {
           </TableRow>
         </TableBody>
       </Table>
-    )
+    );
 
-    expect(screen.getByText('用户列表')).toBeInTheDocument()
-    expect(screen.getByText('姓名')).toBeInTheDocument()
-    expect(screen.getByText('张三')).toBeInTheDocument()
-  })
+    expect(screen.getByText('用户列表')).toBeInTheDocument();
+    expect(screen.getByText('姓名')).toBeInTheDocument();
+    expect(screen.getByText('张三')).toBeInTheDocument();
+  });
 
   it('应该渲染表格容器', () => {
     const { container } = render(
@@ -45,11 +45,11 @@ describe('Table 组件测试', () => {
           </TableRow>
         </TableBody>
       </Table>
-    )
+    );
 
-    expect(container.querySelector('[data-slot="table-container"]')).toBeInTheDocument()
-    expect(container.querySelector('[data-slot="table"]')).toBeInTheDocument()
-  })
+    expect(container.querySelector('[data-slot="table-container"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-slot="table"]')).toBeInTheDocument();
+  });
 
   it('应该渲染表头', () => {
     render(
@@ -61,13 +61,13 @@ describe('Table 组件测试', () => {
           </TableRow>
         </TableHeader>
       </Table>
-    )
+    );
 
-    const headers = screen.getAllByRole('columnheader')
-    expect(headers).toHaveLength(2)
-    expect(headers[0]).toHaveTextContent('列1')
-    expect(headers[1]).toHaveTextContent('列2')
-  })
+    const headers = screen.getAllByRole('columnheader');
+    expect(headers).toHaveLength(2);
+    expect(headers[0]).toHaveTextContent('列1');
+    expect(headers[1]).toHaveTextContent('列2');
+  });
 
   it('应该渲染表格主体', () => {
     render(
@@ -81,11 +81,11 @@ describe('Table 组件测试', () => {
           </TableRow>
         </TableBody>
       </Table>
-    )
+    );
 
-    const rows = screen.getAllByRole('row')
-    expect(rows).toHaveLength(2)
-  })
+    const rows = screen.getAllByRole('row');
+    expect(rows).toHaveLength(2);
+  });
 
   it('应该渲染表格底部', () => {
     render(
@@ -97,11 +97,11 @@ describe('Table 组件测试', () => {
           </TableRow>
         </TableFooter>
       </Table>
-    )
+    );
 
-    expect(screen.getByText('总计')).toBeInTheDocument()
-    expect(screen.getByText('100')).toBeInTheDocument()
-  })
+    expect(screen.getByText('总计')).toBeInTheDocument();
+    expect(screen.getByText('100')).toBeInTheDocument();
+  });
 
   it('应该支持自定义className', () => {
     const { container } = render(
@@ -112,10 +112,10 @@ describe('Table 组件测试', () => {
           </TableRow>
         </TableBody>
       </Table>
-    )
+    );
 
-    expect(container.querySelector('[data-slot="table"]')).toHaveClass('custom-table')
-  })
+    expect(container.querySelector('[data-slot="table"]')).toHaveClass('custom-table');
+  });
 
   it('应该支持行自定义className', () => {
     render(
@@ -126,10 +126,10 @@ describe('Table 组件测试', () => {
           </TableRow>
         </TableBody>
       </Table>
-    )
+    );
 
-    expect(screen.getByRole('row')).toHaveClass('highlight-row')
-  })
+    expect(screen.getByRole('row')).toHaveClass('highlight-row');
+  });
 
   it('应该支持单元格自定义className', () => {
     render(
@@ -140,20 +140,20 @@ describe('Table 组件测试', () => {
           </TableRow>
         </TableBody>
       </Table>
-    )
+    );
 
-    expect(screen.getByRole('cell')).toHaveClass('text-right')
-  })
+    expect(screen.getByRole('cell')).toHaveClass('text-right');
+  });
 
   it('应该渲染空表格', () => {
     const { container } = render(
       <Table>
         <TableBody></TableBody>
       </Table>
-    )
+    );
 
-    expect(container.querySelector('[data-slot="table-body"]')).toBeInTheDocument()
-  })
+    expect(container.querySelector('[data-slot="table-body"]')).toBeInTheDocument();
+  });
 
   it('应该支持表头自定义className', () => {
     render(
@@ -164,8 +164,8 @@ describe('Table 组件测试', () => {
           </TableRow>
         </TableHeader>
       </Table>
-    )
+    );
 
-    expect(screen.getAllByRole('rowgroup')[0]).toHaveClass('sticky-header')
-  })
-})
+    expect(screen.getAllByRole('rowgroup')[0]).toHaveClass('sticky-header');
+  });
+});

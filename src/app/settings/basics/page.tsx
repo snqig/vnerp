@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -30,22 +29,25 @@ import {
   Factory,
   ShieldCheck,
   Palette,
-  BookOpen,
 } from 'lucide-react';
 import { ThemeSettings } from '@/components/theme-settings';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import ApiClient from '@/lib/api-client';
 
 interface ConfigItem {
   id?: number;
   config_name: string;
   config_key: string;
   config_value: string;
-  config_type_enum: 'string' | 'number' | 'boolean' | 'select';
+  config_type: 'string' | 'number' | 'boolean' | 'json';
   category: string;
+  display_name: string;
   description?: string;
-  is_required?: boolean;
-  approval_required?: boolean;
+  sort_order: number;
+  is_required: boolean;
+  approval_required: boolean;
+  status: number;
   options?: string[];
   min?: number;
   max?: number;
@@ -57,37 +59,68 @@ interface ConfigGroup {
   items: ConfigItem[];
 }
 
-export default function BasicsSettingsPage() {
-  const { hasRole } = useAuth();
-  const isAdmin = hasRole('super_admin');
+interface SystemConfigResponse {
+  success: boolean;
+  data: {
+    list: ConfigItem[];
+    categories: string[];
+    grouped: Record<string, ConfigItem[]>;
+  };
+  message?: string;
+}
 
-  const [activeTab, setActiveTab] = useState(isAdmin ? 'numbering' : 'theme');
+export default function BasicsSettingsPage() {
+  const { hasRole, isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState<string>('theme');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [configGroups, setConfigGroups] = useState<ConfigGroup[]>([]);
   const [configValues, setConfigValues] = useState<Record<string, string>>({});
+  const [categories, setCategories] = useState<string[]>([]);
+
+  // 等待用户认证状态确定后才计算isAdmin
+  const isAdmin = isAuthenticated && hasRole('super_admin');
 
   const loadConfigs = useCallback(async () => {
     try {
-      const res = await fetch('/api/settings/system');
-      const data = await res.json();
-      if (data.success && data.data?.groups) {
-        setConfigGroups(data.data.groups);
+      setLoading(true);
+      const result = await ApiClient.get<SystemConfigResponse>('/api/settings/system');
+
+      if (result.success && result.data) {
+        const groups: ConfigGroup[] = [];
         const values: Record<string, string> = {};
-        data.data.groups.forEach((group: ConfigGroup) => {
-          group.items.forEach((item: ConfigItem) => {
+
+        result.data.categories.forEach((category) => {
+          const items = result.data.grouped[category] || [];
+          if (items.length > 0) {
+            groups.push({
+              category,
+              display_name: category,
+              items: items.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+            });
+          }
+
+          items.forEach((item) => {
             values[item.config_key] = item.config_value;
           });
         });
+
+        setConfigGroups(groups);
+        setCategories(result.data.categories);
         setConfigValues(values);
+
+        // 使用返回的分类数据，而不是state中的旧值
+        if (groups.length > 0 && !result.data.categories.includes(activeTab)) {
+          setActiveTab(groups[0].category);
+        }
       }
     } catch (e) {
-      console.error('加载配置失败', e);
+      console.error('加载配置失败:', e);
       toast.error('加载配置失败');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeTab]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -95,60 +128,58 @@ export default function BasicsSettingsPage() {
     } else {
       setLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, loadConfigs]);
 
   const handleValueChange = (key: string, value: string) => {
-    setConfigValues(prev => ({ ...prev, [key]: value }));
+    setConfigValues((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async (category: string) => {
+    const group = configGroups.find((g) => g.category === category);
+    if (!group) return;
+
     setSaving(true);
     try {
-      const group = configGroups.find(g => g.category === category);
-      if (!group) return;
-
-      const updates = group.items.map(item => ({
+      const updates = group.items.map((item) => ({
         config_key: item.config_key,
-        config_value: configValues[item.config_key] || item.config_value,
+        config_value: configValues[item.config_key] ?? item.config_value,
       }));
 
-      const res = await fetch('/api/settings/system', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ updates }),
-      });
+      const result = await ApiClient.post('/api/settings/system', { updates });
 
-      const data = await res.json();
-      if (data.success) {
-        toast.success(data.message || '保存成功');
+      if (result.success) {
+        toast.success(result.message || '保存成功');
         await loadConfigs();
       } else {
-        toast.error(data.message || '保存失败');
+        toast.error(result.message || '保存失败');
       }
-    } catch (e) {
-      console.error('保存配置失败', e);
-      toast.error('保存失败');
+    } catch (e: any) {
+      console.error('保存配置失败:', e);
+      toast.error(e.message || '保存失败');
     } finally {
       setSaving(false);
     }
   };
 
   const renderConfigItem = (item: ConfigItem) => {
-    const value = configValues[item.config_key] || item.config_value;
+    const value = configValues[item.config_key] ?? item.config_value;
 
-    switch (item.config_type_enum) {
+    switch (item.config_type) {
       case 'boolean':
         return (
-          <div key={item.config_key} className="flex items-center justify-between p-3 border rounded-lg">
+          <div
+            key={item.config_key}
+            className="flex items-center justify-between p-3 border rounded-lg"
+          >
             <div>
-              <Label className="font-medium">{item.config_name}</Label>
+              <Label className="font-medium">{item.display_name || item.config_name}</Label>
               {item.description && (
                 <p className="text-sm text-muted-foreground">{item.description}</p>
               )}
             </div>
             <Switch
               checked={value === 'true'}
-              onCheckedChange={v => handleValueChange(item.config_key, String(v))}
+              onCheckedChange={(v) => handleValueChange(item.config_key, String(v))}
             />
           </div>
         );
@@ -156,7 +187,7 @@ export default function BasicsSettingsPage() {
       case 'number':
         return (
           <div key={item.config_key} className="space-y-2">
-            <Label>{item.config_name}</Label>
+            <Label>{item.display_name || item.config_name}</Label>
             {item.description && (
               <p className="text-sm text-muted-foreground">{item.description}</p>
             )}
@@ -165,67 +196,60 @@ export default function BasicsSettingsPage() {
               min={item.min}
               max={item.max}
               value={value}
-              onChange={e => handleValueChange(item.config_key, e.target.value)}
+              onChange={(e) => handleValueChange(item.config_key, e.target.value)}
             />
           </div>
         );
 
-      case 'select':
+      case 'string':
         return (
           <div key={item.config_key} className="space-y-2">
-            <Label>{item.config_name}</Label>
-            {item.description && (
-              <p className="text-sm text-muted-foreground">{item.description}</p>
-            )}
-            <Select value={value} onValueChange={v => handleValueChange(item.config_key, v)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(item.options || []).map(opt => (
-                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-
-      default:
-        return (
-          <div key={item.config_key} className="space-y-2">
-            <Label>{item.config_name}</Label>
+            <Label>{item.display_name || item.config_name}</Label>
             {item.description && (
               <p className="text-sm text-muted-foreground">{item.description}</p>
             )}
             <Input
               value={value}
-              onChange={e => handleValueChange(item.config_key, e.target.value)}
+              onChange={(e) => handleValueChange(item.config_key, e.target.value)}
             />
           </div>
         );
+
+      default:
+        return null;
     }
   };
 
-  const renderConfigGroup = (category: string, icon: React.ReactNode, title: string, description: string) => {
-    const group = configGroups.find(g => g.category === category);
-    if (!group) return null;
+  const renderConfigGroup = (group: ConfigGroup) => {
+    const iconMap: Record<string, React.ReactNode> = {
+      单据编码规则: <FileText className="h-5 w-5" />,
+      刀模配置: <Scissors className="h-5 w-5" />,
+      网版配置: <LayoutGrid className="h-5 w-5" />,
+      原材料保质期: <Package className="h-5 w-5" />,
+      小料拆分标准: <Scaling className="h-5 w-5" />,
+      仓库管理规则: <Warehouse className="h-5 w-5" />,
+      盘点周期管理: <RefreshCw className="h-5 w-5" />,
+      生产与品质规则: <Factory className="h-5 w-5" />,
+      审批规则: <ShieldCheck className="h-5 w-5" />,
+      系统基础配置: <Settings className="h-5 w-5" />,
+    };
 
     return (
-      <Card>
+      <Card key={group.category}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            {icon}
-            {title}
+            {iconMap[group.category] || <Settings className="h-5 w-5" />}
+            {group.display_name || group.category}
           </CardTitle>
-          <CardDescription>{description}</CardDescription>
+          <CardDescription>配置{group.display_name || group.category}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {group.items.map(item => renderConfigItem(item))}
+            {group.items.map((item) => renderConfigItem(item))}
           </div>
         </CardContent>
         <div className="px-6 pb-6 flex justify-end">
-          <Button onClick={() => handleSave(category)} disabled={saving}>
+          <Button onClick={() => handleSave(group.category)} disabled={saving}>
             <Save className="h-4 w-4 mr-2" />
             {saving ? '保存中...' : '保存设置'}
           </Button>
@@ -249,150 +273,24 @@ export default function BasicsSettingsPage() {
       <div className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex flex-wrap w-full gap-1">
-            {isAdmin && (
-              <>
-                <TabsTrigger value="numbering" className="flex items-center gap-1">
-                  <FileText className="h-4 w-4" />
-                  编码规则
+            {isAdmin &&
+              categories.map((category) => (
+                <TabsTrigger key={category} value={category} className="flex items-center gap-1">
+                  {category}
                 </TabsTrigger>
-                <TabsTrigger value="die" className="flex items-center gap-1">
-                  <Scissors className="h-4 w-4" />
-                  刀模配置
-                </TabsTrigger>
-                <TabsTrigger value="screen" className="flex items-center gap-1">
-                  <LayoutGrid className="h-4 w-4" />
-                  网版配置
-                </TabsTrigger>
-                <TabsTrigger value="material" className="flex items-center gap-1">
-                  <Package className="h-4 w-4" />
-                  原材料保质期
-                </TabsTrigger>
-                <TabsTrigger value="split" className="flex items-center gap-1">
-                  <Scaling className="h-4 w-4" />
-                  小料拆分
-                </TabsTrigger>
-                <TabsTrigger value="warehouse" className="flex items-center gap-1">
-                  <Warehouse className="h-4 w-4" />
-                  仓库规则
-                </TabsTrigger>
-                <TabsTrigger value="cycle" className="flex items-center gap-1">
-                  <RefreshCw className="h-4 w-4" />
-                  循环盘点
-                </TabsTrigger>
-                <TabsTrigger value="production" className="flex items-center gap-1">
-                  <Factory className="h-4 w-4" />
-                  生产品质
-                </TabsTrigger>
-                <TabsTrigger value="approval" className="flex items-center gap-1">
-                  <ShieldCheck className="h-4 w-4" />
-                  审批规则
-                </TabsTrigger>
-              </>
-            )}
+              ))}
             <TabsTrigger value="theme" className="flex items-center gap-1">
               <Palette className="h-4 w-4" />
               主题设置
             </TabsTrigger>
           </TabsList>
 
-          {isAdmin && (
-            <TabsContent value="numbering" className="space-y-6">
-              {renderConfigGroup(
-                'numbering',
-                <FileText className="h-5 w-5" />,
-                '编码规则配置',
-                '配置各类单据的编码前缀和流水号规则'
-              )}
-            </TabsContent>
-          )}
-
-          {isAdmin && (
-            <TabsContent value="die" className="space-y-6">
-              {renderConfigGroup(
-                'die',
-                <Scissors className="h-5 w-5" />,
-                '刀模寿命配置',
-                '配置刀模的使用寿命和预警规则'
-              )}
-            </TabsContent>
-          )}
-
-          {isAdmin && (
-            <TabsContent value="screen" className="space-y-6">
-              {renderConfigGroup(
-                'screen',
-                <LayoutGrid className="h-5 w-5" />,
-                '网版寿命配置',
-                '配置网版的使用寿命和预警规则'
-              )}
-            </TabsContent>
-          )}
-
-          {isAdmin && (
-            <TabsContent value="material" className="space-y-6">
-              {renderConfigGroup(
-                'material',
-                <Package className="h-5 w-5" />,
-                '原材料/油墨保质期配置',
-                '配置各类原材料和油墨的保质期'
-              )}
-            </TabsContent>
-          )}
-
-          {isAdmin && (
-            <TabsContent value="split" className="space-y-6">
-              {renderConfigGroup(
-                'split',
-                <Scaling className="h-5 w-5" />,
-                '小料拆分标准配置',
-                '配置小料拆分的标准规格'
-              )}
-            </TabsContent>
-          )}
-
-          {isAdmin && (
-            <TabsContent value="warehouse" className="space-y-6">
-              {renderConfigGroup(
-                'warehouse',
-                <Warehouse className="h-5 w-5" />,
-                '仓库管理规则配置',
-                '配置仓库管理的各项规则'
-              )}
-            </TabsContent>
-          )}
-
-          {isAdmin && (
-            <TabsContent value="cycle" className="space-y-6">
-              {renderConfigGroup(
-                'cycle',
-                <RefreshCw className="h-5 w-5" />,
-                '循环盘点周期配置',
-                '配置不同等级物料的盘点周期'
-              )}
-            </TabsContent>
-          )}
-
-          {isAdmin && (
-            <TabsContent value="production" className="space-y-6">
-              {renderConfigGroup(
-                'production',
-                <Factory className="h-5 w-5" />,
-                '生产与品质规则配置',
-                '配置生产流程和品质控制规则'
-              )}
-            </TabsContent>
-          )}
-
-          {isAdmin && (
-            <TabsContent value="approval" className="space-y-6">
-              {renderConfigGroup(
-                'approval',
-                <ShieldCheck className="h-5 w-5" />,
-                '审批规则配置',
-                '配置参数变更的审批流程'
-              )}
-            </TabsContent>
-          )}
+          {isAdmin &&
+            configGroups.map((group) => (
+              <TabsContent key={group.category} value={group.category} className="space-y-6">
+                {renderConfigGroup(group)}
+              </TabsContent>
+            ))}
 
           <TabsContent value="theme" className="space-y-6">
             <Card>

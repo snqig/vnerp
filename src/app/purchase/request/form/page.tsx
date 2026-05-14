@@ -11,16 +11,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { ArrowLeft, Printer, Save, Plus, List, ChevronDown, Search, Send, CheckCircle } from 'lucide-react';
+  ArrowLeft,
+  Printer,
+  Save,
+  Plus,
+  List,
+  ChevronDown,
+  Search,
+  Send,
+  CheckCircle,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { MaterialPicker } from '@/components/ui/material-picker';
+
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
 
 interface Department {
   id: number;
@@ -116,7 +133,9 @@ const generateOrderNo = () => {
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, '0');
   const dd = String(today.getDate()).padStart(2, '0');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, '0');
   return `PO-${yyyy}${mm}${dd}-${random}`;
 };
 
@@ -124,7 +143,34 @@ const formatDateCN = (date: Date) => {
   return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
 };
 
-const commonUnits = ['个', '件', '箱', '卷', '米', '千克', '公斤', '吨', '张', '套', '批', '桶', '瓶', '包', '条', '块', '片', '支', '根', '台', '把', '双', '对', '只', '令', '令/张'];
+const commonUnits = [
+  '个',
+  '件',
+  '箱',
+  '卷',
+  '米',
+  '千克',
+  '公斤',
+  '吨',
+  '张',
+  '套',
+  '批',
+  '桶',
+  '瓶',
+  '包',
+  '条',
+  '块',
+  '片',
+  '支',
+  '根',
+  '台',
+  '把',
+  '双',
+  '对',
+  '只',
+  '令',
+  '令/张',
+];
 
 export default function PurchaseRequestFormPage() {
   const router = useRouter();
@@ -166,9 +212,9 @@ export default function PurchaseRequestFormPage() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/organization/department')
-      .then(res => res.json())
-      .then(result => {
+    authFetch('/api/organization/department')
+      .then((res) => res.json())
+      .then((result) => {
         if (result.success && Array.isArray(result.data)) {
           setDepartments(result.data);
         }
@@ -177,11 +223,11 @@ export default function PurchaseRequestFormPage() {
   }, []);
 
   useEffect(() => {
-    fetch('/api/organization/employee?pageSize=200')
-      .then(res => res.json())
-      .then(result => {
+    authFetch('/api/organization/employee?pageSize=200')
+      .then((res) => res.json())
+      .then((result) => {
         if (result.success && result.data) {
-          const list = Array.isArray(result.data) ? result.data : (result.data.data || []);
+          const list = Array.isArray(result.data) ? result.data : result.data.data || [];
           setEmployees(list);
         }
       })
@@ -191,7 +237,7 @@ export default function PurchaseRequestFormPage() {
   const loadSavedRecords = async () => {
     setLoadingRecords(true);
     try {
-      const res = await fetch('/api/purchase/request?pageSize=50');
+      const res = await authFetch('/api/purchase/request?pageSize=50');
       const result = await res.json();
       if (result.success) {
         const records = result.data?.data || result.data || [];
@@ -215,8 +261,8 @@ export default function PurchaseRequestFormPage() {
     setPurchaseOrderNo(record.request_no);
     setRequestDate(record.request_date);
 
-    const dept = departments.find(d => d.dept_name === record.request_dept);
-    const applicant = employees.find(e => e.name === record.requester_name);
+    const dept = departments.find((d) => d.dept_name === record.request_dept);
+    const applicant = employees.find((e) => e.name === record.requester_name);
 
     setForm({
       department_id: dept?.id || 0,
@@ -259,7 +305,7 @@ export default function PurchaseRequestFormPage() {
 
   const onMaterialPicked = (mat: any) => {
     if (materialPickerTargetIdx < 0) return;
-    setPurchaseItems(prev => {
+    setPurchaseItems((prev) => {
       const next = [...prev];
       const qty = next[materialPickerTargetIdx].quantity || '1';
       const price = String(mat.purchase_price || '');
@@ -279,7 +325,7 @@ export default function PurchaseRequestFormPage() {
   };
 
   const addNewRow = () => {
-    setPurchaseItems(prev => [...prev, createEmptyItem()]);
+    setPurchaseItems((prev) => [...prev, createEmptyItem()]);
   };
 
   const removeRow = (index: number) => {
@@ -287,11 +333,11 @@ export default function PurchaseRequestFormPage() {
       toast({ title: '至少保留一行物料明细', variant: 'destructive' });
       return;
     }
-    setPurchaseItems(prev => prev.filter((_, i) => i !== index));
+    setPurchaseItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const updateItem = (index: number, field: keyof PurchaseItem, value: string) => {
-    setPurchaseItems(prev => {
+    setPurchaseItems((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
 
@@ -308,7 +354,9 @@ export default function PurchaseRequestFormPage() {
   };
 
   const handleSave = async (submitStatus: number = 0) => {
-    const filledItems = purchaseItems.filter(item => item.productName || item.spec || item.quantity);
+    const filledItems = purchaseItems.filter(
+      (item) => item.productName || item.spec || item.quantity
+    );
     if (filledItems.length === 0) {
       toast({ title: '请至少填写一行物料明细', variant: 'destructive' });
       return;
@@ -322,9 +370,12 @@ export default function PurchaseRequestFormPage() {
       return;
     }
 
-    const itemsWithoutMaterialId = filledItems.filter(item => !item.material_id);
+    const itemsWithoutMaterialId = filledItems.filter((item) => !item.material_id);
     if (itemsWithoutMaterialId.length > 0 && submitStatus >= 1) {
-      toast({ title: `有 ${itemsWithoutMaterialId.length} 行物料未从主档选择，提交前请补全`, variant: 'destructive' });
+      toast({
+        title: `有 ${itemsWithoutMaterialId.length} 行物料未从主档选择，提交前请补全`,
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -360,15 +411,13 @@ export default function PurchaseRequestFormPage() {
 
       let res;
       if (editingId) {
-        res = await fetch(`/api/purchase/request?id=${editingId}`, {
+        res = await authFetch(`/api/purchase/request?id=${editingId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
       } else {
-        res = await fetch('/api/purchase/request', {
+        res = await authFetch('/api/purchase/request', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
       }
@@ -390,9 +439,14 @@ export default function PurchaseRequestFormPage() {
   };
 
   const handlePrint = () => {
-    const filledItems = purchaseItems.filter(item => item.productName || item.spec || item.quantity);
-    const itemRows = filledItems.length > 0
-      ? filledItems.map((item, idx) => `
+    const filledItems = purchaseItems.filter(
+      (item) => item.productName || item.spec || item.quantity
+    );
+    const itemRows =
+      filledItems.length > 0
+        ? filledItems
+            .map(
+              (item, idx) => `
         <tr>
           <td class="serial">${idx + 1}</td>
           <td>${item.productName || ''}</td>
@@ -400,12 +454,17 @@ export default function PurchaseRequestFormPage() {
           <td>${item.unit || ''}</td>
           <td class="num">${item.quantity || ''}</td>
           <td>${item.remark || ''}</td>
-        </tr>`).join('')
-      : Array.from({ length: 10 }, (_, idx) => `
+        </tr>`
+            )
+            .join('')
+        : Array.from(
+            { length: 10 },
+            (_, idx) => `
         <tr>
           <td class="serial">${idx + 1}</td>
           <td></td><td></td><td></td><td></td><td></td>
-        </tr>`).join('');
+        </tr>`
+          ).join('');
 
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>请购单</title>
       <style>
@@ -471,10 +530,14 @@ export default function PurchaseRequestFormPage() {
     for (let i = 0; i < 10; i++) items.push(createEmptyItem());
     setPurchaseItems(items);
     setForm({
-      department_id: 0, department: '',
-      applicant_id: 0, applicant: '',
-      reviewer_id: 0, reviewer: '',
-      approver_id: 0, approver: '',
+      department_id: 0,
+      department: '',
+      applicant_id: 0,
+      applicant: '',
+      reviewer_id: 0,
+      reviewer: '',
+      approver_id: 0,
+      approver: '',
     });
     setEditingId(null);
     setEditingStatus(0);
@@ -501,68 +564,129 @@ export default function PurchaseRequestFormPage() {
             </Button>
             <h1 className="text-xl font-bold">请购单录入</h1>
             {editingId && (
-              <span style={{
-                fontSize: '12px', fontWeight: 600,
-                color: STATUS_MAP[editingStatus]?.color || '#6b7280',
-                background: `${STATUS_MAP[editingStatus]?.color}15`,
-                padding: '2px 12px', borderRadius: '12px'
-              }}>
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: STATUS_MAP[editingStatus]?.color || '#6b7280',
+                  background: `${STATUS_MAP[editingStatus]?.color}15`,
+                  padding: '2px 12px',
+                  borderRadius: '12px',
+                }}
+              >
                 {STATUS_MAP[editingStatus]?.label || '未知'}
               </span>
             )}
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleOpenList}>
-              <List className="h-4 w-4 mr-1" />历史记录
+              <List className="h-4 w-4 mr-1" />
+              历史记录
             </Button>
             <Button variant="outline" size="sm" onClick={resetForm}>
               新建
             </Button>
             <Button variant="outline" size="sm" onClick={handlePrint}>
-              <Printer className="h-4 w-4 mr-1" />打印(A5横向)
+              <Printer className="h-4 w-4 mr-1" />
+              打印(A5横向)
             </Button>
             {canEdit && (
               <Button variant="outline" size="sm" onClick={() => handleSave(0)}>
-                <Save className="h-4 w-4 mr-1" />保存草稿
+                <Save className="h-4 w-4 mr-1" />
+                保存草稿
               </Button>
             )}
             {canSubmit && (
               <Button size="sm" onClick={() => handleSave(1)}>
-                <Send className="h-4 w-4 mr-1" />提交审校
+                <Send className="h-4 w-4 mr-1" />
+                提交审校
               </Button>
             )}
           </div>
         </div>
 
-        <div ref={printRef} className="bg-white rounded-2xl shadow-lg p-6 max-w-[1400px] mx-auto" style={{ background: '#ffffff', borderRadius: '28px', boxShadow: '0 25px 45px -12px rgba(0,0,0,0.15)', padding: '28px 32px 42px' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap', marginBottom: '8px' }}>
+        <div
+          ref={printRef}
+          className="bg-white rounded-2xl shadow-lg p-6 max-w-[1400px] mx-auto"
+          style={{
+            background: '#ffffff',
+            borderRadius: '28px',
+            boxShadow: '0 25px 45px -12px rgba(0,0,0,0.15)',
+            padding: '28px 32px 42px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              justifyContent: 'space-between',
+              gap: '16px',
+              flexWrap: 'wrap',
+              marginBottom: '8px',
+            }}
+          >
             <div style={{ flex: 1 }}></div>
             <div style={{ textAlign: 'center', flex: 2 }}>
-              <span style={{ fontSize: '28px', fontWeight: 800, color: '#0b3b5f', letterSpacing: '1px', display: 'inline-block', paddingBottom: '8px' }}>
+              <span
+                style={{
+                  fontSize: '28px',
+                  fontWeight: 800,
+                  color: '#0b3b5f',
+                  letterSpacing: '1px',
+                  display: 'inline-block',
+                  paddingBottom: '8px',
+                }}
+              >
                 {companyName}
               </span>
             </div>
             <div style={{ flex: 1, textAlign: 'right' }}>
-              <span style={{ fontSize: '16px', fontWeight: 600, color: '#e11d1d', padding: '4px 14px', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+              <span
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  color: '#e11d1d',
+                  padding: '4px 14px',
+                  whiteSpace: 'nowrap',
+                  letterSpacing: '0.5px',
+                }}
+              >
                 {purchaseOrderNo}
               </span>
             </div>
           </div>
 
           <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <span style={{ fontSize: '22px', fontWeight: 700, color: '#1e466e', display: 'inline-block', padding: '6px 28px' }}>
+            <span
+              style={{
+                fontSize: '22px',
+                fontWeight: 700,
+                color: '#1e466e',
+                display: 'inline-block',
+                padding: '6px 28px',
+              }}
+            >
               请购单
             </span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '18px', padding: '14px 22px' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '18px',
+              padding: '14px 22px',
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontWeight: 500 }}>
               <label style={{ fontWeight: 700, color: '#0f3b5c' }}>部门：</label>
               <Select
                 value={form.department_id ? String(form.department_id) : ''}
-                onValueChange={v => {
-                  const dept = departments.find(d => d.id === Number(v));
-                  setForm(prev => ({
+                onValueChange={(v) => {
+                  const dept = departments.find((d) => d.id === Number(v));
+                  setForm((prev) => ({
                     ...prev,
                     department_id: Number(v),
                     department: dept?.dept_name || '',
@@ -570,33 +694,105 @@ export default function PurchaseRequestFormPage() {
                 }}
                 disabled={!canEdit}
               >
-                <SelectTrigger style={{ border: '1px solid #cbdde6', borderRadius: '0', padding: '8px 16px', fontSize: '14px', width: '200px' }}>
+                <SelectTrigger
+                  style={{
+                    border: '1px solid #cbdde6',
+                    borderRadius: '0',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    width: '200px',
+                  }}
+                >
                   <SelectValue placeholder="选择部门" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.map(dept => (
-                    <SelectItem key={dept.id} value={String(dept.id)}>{dept.dept_name}</SelectItem>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.id} value={String(dept.id)}>
+                      {dept.dept_name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', color: '#2c6e9e', fontWeight: 600 }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '15px',
+                color: '#2c6e9e',
+                fontWeight: 600,
+              }}
+            >
               <input
                 type="date"
                 value={requestDate}
-                onChange={e => setRequestDate(e.target.value)}
+                onChange={(e) => setRequestDate(e.target.value)}
                 disabled={!canEdit}
-                style={{ border: '1px solid #cbdde6', borderRadius: '0', padding: '4px 12px', fontSize: '14px', color: '#2c6e9e', background: 'white', cursor: 'pointer', fontWeight: 600 }}
+                style={{
+                  border: '1px solid #cbdde6',
+                  borderRadius: '0',
+                  padding: '4px 12px',
+                  fontSize: '14px',
+                  color: '#2c6e9e',
+                  background: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
               />
             </div>
           </div>
 
           <div style={{ overflowX: 'auto', border: '1px solid #e0edf3' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', minWidth: '900px' }}>
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: '14px',
+                minWidth: '900px',
+              }}
+            >
               <thead>
                 <tr>
-                  {['序号', '物料编码', '品名', '规格', '单位', '数量', '单价', '金额', '备注', '操作'].map((h, i) => (
-                    <th key={h} style={{ border: '1px solid #d4e2ec', padding: '12px 10px', background: '#eef3fc', fontWeight: 800, color: '#1a4b74', fontSize: '15px', width: i === 0 ? '50px' : i === 1 ? '110px' : i === 4 ? '80px' : i === 5 ? '90px' : i === 6 ? '90px' : i === 7 ? '100px' : i === 9 ? '70px' : undefined }}>
+                  {[
+                    '序号',
+                    '物料编码',
+                    '品名',
+                    '规格',
+                    '单位',
+                    '数量',
+                    '单价',
+                    '金额',
+                    '备注',
+                    '操作',
+                  ].map((h, i) => (
+                    <th
+                      key={h}
+                      style={{
+                        border: '1px solid #d4e2ec',
+                        padding: '12px 10px',
+                        background: '#eef3fc',
+                        fontWeight: 800,
+                        color: '#1a4b74',
+                        fontSize: '15px',
+                        width:
+                          i === 0
+                            ? '50px'
+                            : i === 1
+                              ? '110px'
+                              : i === 4
+                                ? '80px'
+                                : i === 5
+                                  ? '90px'
+                                  : i === 6
+                                    ? '90px'
+                                    : i === 7
+                                      ? '100px'
+                                      : i === 9
+                                        ? '70px'
+                                        : undefined,
+                      }}
+                    >
                       {h}
                     </th>
                   ))}
@@ -605,12 +801,29 @@ export default function PurchaseRequestFormPage() {
               <tbody>
                 {purchaseItems.map((item, idx) => (
                   <tr key={item.id}>
-                    <td style={{ border: '1px solid #d4e2ec', padding: 0, textAlign: 'center', fontWeight: 600, background: '#f9fbfd', color: '#1f5e8e' }}>
+                    <td
+                      style={{
+                        border: '1px solid #d4e2ec',
+                        padding: 0,
+                        textAlign: 'center',
+                        fontWeight: 600,
+                        background: '#f9fbfd',
+                        color: '#1f5e8e',
+                      }}
+                    >
                       {idx + 1}
                     </td>
                     <td style={{ border: '1px solid #d4e2ec', padding: 0, textAlign: 'center' }}>
                       {item.material_code ? (
-                        <span style={{ fontSize: '12px', fontFamily: 'monospace', color: '#2563eb', fontWeight: 600, padding: '0 8px' }}>
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            fontFamily: 'monospace',
+                            color: '#2563eb',
+                            fontWeight: 600,
+                            padding: '0 8px',
+                          }}
+                        >
                           {item.material_code}
                         </span>
                       ) : (
@@ -618,10 +831,18 @@ export default function PurchaseRequestFormPage() {
                           onClick={() => handleMaterialSelect(idx)}
                           disabled={!canEdit}
                           style={{
-                            width: '100%', border: 'none', background: '#f0f6ff',
-                            padding: '10px', cursor: canEdit ? 'pointer' : 'default',
-                            color: '#2563eb', fontSize: '12px', fontWeight: 600,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px'
+                            width: '100%',
+                            border: 'none',
+                            background: '#f0f6ff',
+                            padding: '10px',
+                            cursor: canEdit ? 'pointer' : 'default',
+                            color: '#2563eb',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
                           }}
                         >
                           <Search style={{ width: '14px', height: '14px' }} />
@@ -632,35 +853,108 @@ export default function PurchaseRequestFormPage() {
                         <button
                           onClick={() => handleMaterialSelect(idx)}
                           style={{
-                            border: 'none', background: 'none', cursor: 'pointer',
-                            color: '#2563eb', fontSize: '11px', padding: '2px 4px'
+                            border: 'none',
+                            background: 'none',
+                            cursor: 'pointer',
+                            color: '#2563eb',
+                            fontSize: '11px',
+                            padding: '2px 4px',
                           }}
                         >
                           更换
                         </button>
                       )}
                     </td>
-                    {(['productName', 'spec', 'unit', 'quantity', 'price', 'amount', 'remark'] as const).map(field => {
+                    {(
+                      [
+                        'productName',
+                        'spec',
+                        'unit',
+                        'quantity',
+                        'price',
+                        'amount',
+                        'remark',
+                      ] as const
+                    ).map((field) => {
                       if (field === 'unit') {
                         return (
-                          <td key={field} style={{ border: '1px solid #d4e2ec', padding: 0, position: 'relative' }}>
+                          <td
+                            key={field}
+                            style={{
+                              border: '1px solid #d4e2ec',
+                              padding: 0,
+                              position: 'relative',
+                            }}
+                          >
                             <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                               <input
                                 type="text"
                                 value={item.unit}
-                                onChange={e => updateItem(idx, 'unit', e.target.value)}
+                                onChange={(e) => updateItem(idx, 'unit', e.target.value)}
                                 onFocus={() => setUnitPickerIdx(idx)}
                                 disabled={!canEdit}
-                                style={{ width: '100%', height: '100%', border: 'none', background: 'transparent', outline: 'none', padding: '12px 10px', fontFamily: 'inherit', fontSize: 'inherit', textAlign: 'center', cursor: 'text', paddingRight: '20px' }}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  border: 'none',
+                                  background: 'transparent',
+                                  outline: 'none',
+                                  padding: '12px 10px',
+                                  fontFamily: 'inherit',
+                                  fontSize: 'inherit',
+                                  textAlign: 'center',
+                                  cursor: 'text',
+                                  paddingRight: '20px',
+                                }}
                               />
-                              <ChevronDown style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px', color: '#999', pointerEvents: 'none' }} />
+                              <ChevronDown
+                                style={{
+                                  position: 'absolute',
+                                  right: '4px',
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  width: '14px',
+                                  height: '14px',
+                                  color: '#999',
+                                  pointerEvents: 'none',
+                                }}
+                              />
                               {unitPickerIdx === idx && canEdit && (
-                                <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', top: '100%', left: '0', zIndex: 50, background: 'white', border: '1px solid #d4e2ec', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', padding: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px', minWidth: '200px' }}>
-                                  {commonUnits.map(u => (
+                                <div
+                                  onClick={(e) => e.stopPropagation()}
+                                  style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: '0',
+                                    zIndex: 50,
+                                    background: 'white',
+                                    border: '1px solid #d4e2ec',
+                                    borderRadius: '8px',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                    padding: '6px',
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: '4px',
+                                    minWidth: '200px',
+                                  }}
+                                >
+                                  {commonUnits.map((u) => (
                                     <button
                                       key={u}
-                                      onClick={() => { updateItem(idx, 'unit', u); setUnitPickerIdx(null); }}
-                                      style={{ border: '1px solid #e2edf2', background: item.unit === u ? '#eef3fc' : '#f8fafc', padding: '3px 10px', borderRadius: '16px', fontSize: '12px', cursor: 'pointer', color: '#1a4b74', fontWeight: item.unit === u ? 700 : 400 }}
+                                      onClick={() => {
+                                        updateItem(idx, 'unit', u);
+                                        setUnitPickerIdx(null);
+                                      }}
+                                      style={{
+                                        border: '1px solid #e2edf2',
+                                        background: item.unit === u ? '#eef3fc' : '#f8fafc',
+                                        padding: '3px 10px',
+                                        borderRadius: '16px',
+                                        fontSize: '12px',
+                                        cursor: 'pointer',
+                                        color: '#1a4b74',
+                                        fontWeight: item.unit === u ? 700 : 400,
+                                      }}
                                     >
                                       {u}
                                     </button>
@@ -674,7 +968,17 @@ export default function PurchaseRequestFormPage() {
 
                       if (field === 'amount') {
                         return (
-                          <td key={field} style={{ border: '1px solid #d4e2ec', padding: 0, textAlign: 'center', color: '#059669', fontWeight: 600, fontSize: '13px' }}>
+                          <td
+                            key={field}
+                            style={{
+                              border: '1px solid #d4e2ec',
+                              padding: 0,
+                              textAlign: 'center',
+                              color: '#059669',
+                              fontWeight: 600,
+                              fontSize: '13px',
+                            }}
+                          >
                             {item.amount || ''}
                           </td>
                         );
@@ -685,13 +989,28 @@ export default function PurchaseRequestFormPage() {
                           <input
                             type={field === 'quantity' || field === 'price' ? 'number' : 'text'}
                             value={item[field]}
-                            onChange={e => updateItem(idx, field, e.target.value)}
-                            disabled={!canEdit || (field === 'productName' && item.material_id > 0) || (field === 'spec' && item.material_id > 0)}
+                            onChange={(e) => updateItem(idx, field, e.target.value)}
+                            disabled={
+                              !canEdit ||
+                              (field === 'productName' && item.material_id > 0) ||
+                              (field === 'spec' && item.material_id > 0)
+                            }
                             style={{
-                              width: '100%', height: '100%', border: 'none', background: 'transparent',
-                              outline: 'none', padding: '12px 10px', fontFamily: 'inherit',
-                              fontSize: 'inherit', textAlign: 'center', cursor: 'text',
-                              color: item.material_id > 0 && (field === 'productName' || field === 'spec') ? '#6b7280' : 'inherit'
+                              width: '100%',
+                              height: '100%',
+                              border: 'none',
+                              background: 'transparent',
+                              outline: 'none',
+                              padding: '12px 10px',
+                              fontFamily: 'inherit',
+                              fontSize: 'inherit',
+                              textAlign: 'center',
+                              cursor: 'text',
+                              color:
+                                item.material_id > 0 &&
+                                (field === 'productName' || field === 'spec')
+                                  ? '#6b7280'
+                                  : 'inherit',
                             }}
                           />
                         </td>
@@ -702,9 +1021,14 @@ export default function PurchaseRequestFormPage() {
                         onClick={() => removeRow(idx)}
                         disabled={!canEdit}
                         style={{
-                          background: 'none', border: 'none', fontSize: '16px', cursor: canEdit ? 'pointer' : 'not-allowed',
-                          color: '#a0342e', padding: '4px 8px', borderRadius: '30px',
-                          opacity: canEdit ? 1 : 0.4
+                          background: 'none',
+                          border: 'none',
+                          fontSize: '16px',
+                          cursor: canEdit ? 'pointer' : 'not-allowed',
+                          color: '#a0342e',
+                          padding: '4px 8px',
+                          borderRadius: '30px',
+                          opacity: canEdit ? 1 : 0.4,
                         }}
                         title="删除此行"
                       >
@@ -717,29 +1041,69 @@ export default function PurchaseRequestFormPage() {
             </table>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', margin: '12px 0 10px' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              margin: '12px 0 10px',
+            }}
+          >
             <button
               onClick={addNewRow}
               disabled={!canEdit}
               style={{
-                background: canEdit ? '#1e6f3f' : '#9ca3af', color: 'white', border: 'none',
-                padding: '10px 24px', borderRadius: '40px', fontWeight: 600, fontSize: '14px',
-                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                background: canEdit ? '#1e6f3f' : '#9ca3af',
+                color: 'white',
+                border: 'none',
+                padding: '10px 24px',
+                borderRadius: '40px',
+                fontWeight: 600,
+                fontSize: '14px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
                 cursor: canEdit ? 'pointer' : 'not-allowed',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
               }}
             >
               + 添加物料行
             </button>
             <div style={{ fontSize: '13px', color: '#6b7280' }}>
-              合计金额：<span style={{ color: '#059669', fontWeight: 700, fontSize: '16px' }}>
-                ¥{purchaseItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0).toFixed(2)}
+              合计金额：
+              <span style={{ color: '#059669', fontWeight: 700, fontSize: '16px' }}>
+                ¥
+                {purchaseItems
+                  .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
+                  .toFixed(2)}
               </span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '20px', marginTop: '30px', paddingTop: '18px', borderTop: '1px solid #cde1ec' }}>
-            <div style={{ fontFamily: 'monospace', fontSize: '13px', background: '#f1f5f9', padding: '6px 18px', borderRadius: '32px', color: '#2c5282', fontWeight: 600 }}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '20px',
+              marginTop: '30px',
+              paddingTop: '18px',
+              borderTop: '1px solid #cde1ec',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: 'monospace',
+                fontSize: '13px',
+                background: '#f1f5f9',
+                padding: '6px 18px',
+                borderRadius: '32px',
+                color: '#2c5282',
+                fontWeight: 600,
+              }}
+            >
               表单编号：DC-A-03A
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '22px', alignItems: 'center' }}>
@@ -747,14 +1111,17 @@ export default function PurchaseRequestFormPage() {
                 { label: '申请人', key: 'applicant' as const, idKey: 'applicant_id' as const },
                 { label: '审校', key: 'reviewer' as const, idKey: 'reviewer_id' as const },
                 { label: '批准', key: 'approver' as const, idKey: 'approver_id' as const },
-              ].map(item => (
-                <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
+              ].map((item) => (
+                <div
+                  key={item.key}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px' }}
+                >
                   <span style={{ fontWeight: 700, color: '#b43b0b' }}>{item.label}：</span>
                   <Select
                     value={form[item.idKey] ? String(form[item.idKey]) : ''}
-                    onValueChange={v => {
-                      const emp = employees.find(e => e.id === Number(v));
-                      setForm(prev => ({
+                    onValueChange={(v) => {
+                      const emp = employees.find((e) => e.id === Number(v));
+                      setForm((prev) => ({
                         ...prev,
                         [item.idKey]: Number(v),
                         [item.key]: emp?.name || '',
@@ -762,13 +1129,22 @@ export default function PurchaseRequestFormPage() {
                     }}
                     disabled={!canEdit}
                   >
-                    <SelectTrigger style={{ border: '1px solid #cbdde6', borderRadius: '0', padding: '4px 12px', fontSize: '13px', width: '120px' }}>
+                    <SelectTrigger
+                      style={{
+                        border: '1px solid #cbdde6',
+                        borderRadius: '0',
+                        padding: '4px 12px',
+                        fontSize: '13px',
+                        width: '120px',
+                      }}
+                    >
                       <SelectValue placeholder={`选择${item.label}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      {employees.map(emp => (
+                      {employees.map((emp) => (
                         <SelectItem key={emp.id} value={String(emp.id)}>
-                          {emp.name}{emp.dept_name ? ` (${emp.dept_name})` : ''}
+                          {emp.name}
+                          {emp.dept_name ? ` (${emp.dept_name})` : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -786,15 +1162,29 @@ export default function PurchaseRequestFormPage() {
             </DialogHeader>
             <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
               {loadingRecords ? (
-                <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>加载中...</div>
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
+                  加载中...
+                </div>
               ) : savedRecords.length === 0 ? (
-                <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>暂无记录</div>
+                <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
+                  暂无记录
+                </div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
                     <tr>
-                      {['单号', '部门', '申请人', '日期', '状态', '金额', '操作'].map(h => (
-                        <th key={h} style={{ border: '1px solid #e5e7eb', padding: '8px 12px', background: '#f9fafb', fontWeight: 700, color: '#374151', textAlign: 'left' }}>
+                      {['单号', '部门', '申请人', '日期', '状态', '金额', '操作'].map((h) => (
+                        <th
+                          key={h}
+                          style={{
+                            border: '1px solid #e5e7eb',
+                            padding: '8px 12px',
+                            background: '#f9fafb',
+                            fontWeight: 700,
+                            color: '#374151',
+                            textAlign: 'left',
+                          }}
+                        >
                           {h}
                         </th>
                       ))}
@@ -803,19 +1193,32 @@ export default function PurchaseRequestFormPage() {
                   <tbody>
                     {savedRecords.map((record) => (
                       <tr key={record.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                        <td style={{ padding: '8px 12px', fontFamily: 'monospace', color: '#2563eb', fontWeight: 600 }}>
+                        <td
+                          style={{
+                            padding: '8px 12px',
+                            fontFamily: 'monospace',
+                            color: '#2563eb',
+                            fontWeight: 600,
+                          }}
+                        >
                           {record.request_no}
                         </td>
                         <td style={{ padding: '8px 12px' }}>{record.request_dept}</td>
                         <td style={{ padding: '8px 12px' }}>{record.requester_name}</td>
-                        <td style={{ padding: '8px 12px', color: '#6b7280' }}>{record.request_date}</td>
+                        <td style={{ padding: '8px 12px', color: '#6b7280' }}>
+                          {record.request_date}
+                        </td>
                         <td style={{ padding: '8px 12px' }}>
-                          <span style={{
-                            fontSize: '11px', fontWeight: 600,
-                            color: STATUS_MAP[record.status]?.color || '#6b7280',
-                            background: `${STATUS_MAP[record.status]?.color}15`,
-                            padding: '2px 8px', borderRadius: '10px'
-                          }}>
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              color: STATUS_MAP[record.status]?.color || '#6b7280',
+                              background: `${STATUS_MAP[record.status]?.color}15`,
+                              padding: '2px 8px',
+                              borderRadius: '10px',
+                            }}
+                          >
                             {STATUS_MAP[record.status]?.label || '未知'}
                           </span>
                         </td>
@@ -826,9 +1229,14 @@ export default function PurchaseRequestFormPage() {
                           <button
                             onClick={() => handleEditRecord(record)}
                             style={{
-                              background: '#2563eb', color: 'white', border: 'none',
-                              padding: '4px 12px', borderRadius: '6px', fontSize: '12px',
-                              cursor: 'pointer', fontWeight: 600
+                              background: '#2563eb',
+                              color: 'white',
+                              border: 'none',
+                              padding: '4px 12px',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                              fontWeight: 600,
                             }}
                           >
                             编辑

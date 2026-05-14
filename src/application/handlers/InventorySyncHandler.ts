@@ -5,7 +5,7 @@ import { secureLog } from '@/lib/logger';
 
 export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEvent> {
   async handle(event: InboundOrderApprovedEvent): Promise<void> {
-    const { warehouseId, items, orderNo } = event.payload;
+    const { warehouseId, items, inboundNo } = event.payload;
 
     const sortedItems = [...items].sort((a, b) => a.materialId - b.materialId);
 
@@ -25,7 +25,14 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
           await conn.execute(
             `INSERT INTO inv_inventory (material_id, material_code, material_name, warehouse_id, quantity, unit, create_time)
              VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-            [item.materialId, item.materialCode || null, item.materialName, warehouseId, item.quantity, item.unit || '件']
+            [
+              item.materialId,
+              item.materialCode || null,
+              item.materialName,
+              warehouseId,
+              item.quantity,
+              '件',
+            ]
           );
         }
 
@@ -44,16 +51,22 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
             `INSERT INTO inv_inventory_batch (batch_no, material_id, material_code, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, status, produce_date, create_time)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'normal', ?, NOW())`,
             [
-              item.batchNo, item.materialId, item.materialCode || null,
-              item.materialName, warehouseId, item.quantity, item.quantity,
-              item.unitPrice || 0, event.payload.inboundDate || new Date().toISOString().slice(0, 10),
-              item.produceDate || null,
+              item.batchNo,
+              item.materialId,
+              item.materialCode || null,
+              item.materialName,
+              warehouseId,
+              item.quantity,
+              item.quantity,
+              item.unitPrice || 0,
+              new Date().toISOString().slice(0, 10),
+              null,
             ]
           );
         }
       }
     });
 
-    secureLog('info', 'Inventory synced for inbound order', { orderNo, itemCount: items.length });
+    secureLog('info', 'Inventory synced for inbound order', { orderNo: inboundNo, itemCount: items.length });
   }
 }

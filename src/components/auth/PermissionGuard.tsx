@@ -17,7 +17,7 @@ export function PermissionGuard({
   permission,
   permissions,
   role,
-  fallback = null
+  fallback = null,
 }: PermissionGuardProps) {
   const { hasPermission, hasAnyPermission, hasRole, isLoading } = useAuth();
 
@@ -49,20 +49,12 @@ interface PermissionButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEle
   children: ReactNode;
 }
 
-export function PermissionButton({
-  permission,
-  children,
-  ...props
-}: PermissionButtonProps) {
+export function PermissionButton({ permission, children, ...props }: PermissionButtonProps) {
   const { hasPermission } = useAuth();
 
   if (permission && !hasPermission(permission)) {
     return null;
   }
 
-  return (
-    <button {...props}>
-      {children}
-    </button>
-  );
+  return <button {...props}>{children}</button>;
 }

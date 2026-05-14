@@ -1,10 +1,10 @@
-import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 
 if (typeof window !== 'undefined') {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
-    value: vi.fn().mockImplementation(query => ({
+    value: vi.fn().mockImplementation((query) => ({
       matches: false,
       media: query,
       onchange: null,
@@ -14,18 +14,20 @@ if (typeof window !== 'undefined') {
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
     })),
-  })
+  });
 }
 
 if (typeof globalThis.IntersectionObserver === 'undefined') {
   globalThis.IntersectionObserver = class IntersectionObserver {
-    readonly root: Element | null = null
-    readonly rootMargin: string = ''
-    readonly thresholds: ReadonlyArray<number> = []
+    readonly root: Element | null = null;
+    readonly rootMargin: string = '';
+    readonly thresholds: ReadonlyArray<number> = [];
     constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
     disconnect() {}
     observe(_target: Element) {}
     unobserve(_target: Element) {}
-    takeRecords(): IntersectionObserverEntry[] { return [] }
-  } as any
+    takeRecords(): IntersectionObserverEntry[] {
+      return [];
+    }
+  } as any;
 }

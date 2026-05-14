@@ -166,7 +166,11 @@ export async function scanGhostData(): Promise<FixResult[]> {
       detail: `出库分配引用已删除批次: ${outboundGhost?.[0]?.cnt || 0}条`,
     });
   } catch (e: any) {
-    results.push({ fixName: 'scanGhost_outbound_deleted_batch', affectedRows: 0, detail: `扫描失败: ${e.message}` });
+    results.push({
+      fixName: 'scanGhost_outbound_deleted_batch',
+      affectedRows: 0,
+      detail: `扫描失败: ${e.message}`,
+    });
   }
 
   try {
@@ -181,7 +185,11 @@ export async function scanGhostData(): Promise<FixResult[]> {
       detail: `工艺卡引用已删除工单: ${processCardGhost?.[0]?.cnt || 0}条`,
     });
   } catch (e: any) {
-    results.push({ fixName: 'scanGhost_processcard_deleted_workorder', affectedRows: 0, detail: `扫描失败: ${e.message}` });
+    results.push({
+      fixName: 'scanGhost_processcard_deleted_workorder',
+      affectedRows: 0,
+      detail: `扫描失败: ${e.message}`,
+    });
   }
 
   try {
@@ -196,7 +204,11 @@ export async function scanGhostData(): Promise<FixResult[]> {
       detail: `应付账款引用已删除入库单: ${payableGhost?.[0]?.cnt || 0}条`,
     });
   } catch (e: any) {
-    results.push({ fixName: 'scanGhost_payable_deleted_inbound', affectedRows: 0, detail: `扫描失败: ${e.message}` });
+    results.push({
+      fixName: 'scanGhost_payable_deleted_inbound',
+      affectedRows: 0,
+      detail: `扫描失败: ${e.message}`,
+    });
   }
 
   try {
@@ -210,7 +222,11 @@ export async function scanGhostData(): Promise<FixResult[]> {
       detail: `已过期但状态仍为normal的批次: ${expiredNormal?.[0]?.cnt || 0}条`,
     });
   } catch (e: any) {
-    results.push({ fixName: 'scanGhost_expired_normal_batch', affectedRows: 0, detail: `扫描失败: ${e.message}` });
+    results.push({
+      fixName: 'scanGhost_expired_normal_batch',
+      affectedRows: 0,
+      detail: `扫描失败: ${e.message}`,
+    });
   }
 
   return results;
@@ -241,13 +257,16 @@ export async function runAllFixes(): Promise<FixResult[]> {
   results.push(await fixBomLineMaterialRef());
   results.push(await fixExpiredBatches());
 
-  await execute(`
+  await execute(
+    `
     INSERT INTO sys_daily_check_log (check_date, check_type, error_count, error_detail, status)
     VALUES (CURDATE(), 'data_fix', ?, ?, 1)
-  `, [
-    results.filter(r => r.affectedRows > 0).length,
-    results.map(r => `${r.fixName}: ${r.detail}`).join('\n'),
-  ]);
+  `,
+    [
+      results.filter((r) => r.affectedRows > 0).length,
+      results.map((r) => `${r.fixName}: ${r.detail}`).join('\n'),
+    ]
+  );
 
   return results;
 }

@@ -38,7 +38,20 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { label_no, material_id, material_name, batch_no, original_expire_date, opening_date, shelf_life_after_opening, remaining_qty, unit, operator_id, operator_name, remark } = body;
+  const {
+    label_no,
+    material_id,
+    material_name,
+    batch_no,
+    original_expire_date,
+    opening_date,
+    shelf_life_after_opening,
+    remaining_qty,
+    unit,
+    operator_id,
+    operator_name,
+    remark,
+  } = body;
 
   if (!label_no || !material_name || !opening_date) {
     return errorResponse('缺少必填字段: label_no, material_name, opening_date', 400, 400);
@@ -46,7 +59,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   const result = await transaction(async (conn) => {
     const now = new Date();
-    const openingNo = 'IO' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    const openingNo =
+      'IO' +
+      now.getFullYear() +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      String(now.getDate()).padStart(2, '0') +
+      String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
     const shelfLife = shelf_life_after_opening || 7;
     const openingDate = new Date(opening_date);
@@ -56,9 +74,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     let newExpireDate: string | null = null;
     if (original_expire_date) {
       const origExpire = new Date(original_expire_date);
-      newExpireDate = newExpireFromOpening < origExpire
-        ? newExpireFromOpening.toISOString().slice(0, 10)
-        : origExpire.toISOString().slice(0, 10);
+      newExpireDate =
+        newExpireFromOpening < origExpire
+          ? newExpireFromOpening.toISOString().slice(0, 10)
+          : origExpire.toISOString().slice(0, 10);
     } else {
       newExpireDate = newExpireFromOpening.toISOString().slice(0, 10);
     }
@@ -66,7 +85,22 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const [insertResult]: any = await conn.execute(
       `INSERT INTO ink_opening_record (opening_no, label_no, material_id, material_name, batch_no, original_expire_date, opening_date, shelf_life_after_opening, new_expire_date, remaining_qty, unit, operator_id, operator_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-      [openingNo, label_no, material_id || null, material_name, batch_no || null, original_expire_date || null, opening_date, shelfLife, newExpireDate, remaining_qty || null, unit || 'kg', operator_id || null, operator_name || null, remark || null]
+      [
+        openingNo,
+        label_no,
+        material_id || null,
+        material_name,
+        batch_no || null,
+        original_expire_date || null,
+        opening_date,
+        shelfLife,
+        newExpireDate,
+        remaining_qty || null,
+        unit || 'kg',
+        operator_id || null,
+        operator_name || null,
+        remark || null,
+      ]
     );
 
     if (batch_no) {
@@ -110,14 +144,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         );
       }
 
-      await conn.execute(
-        'UPDATE ink_opening_record SET status = 3 WHERE id = ?',
-        [id]
-      );
+      await conn.execute('UPDATE ink_opening_record SET status = 3 WHERE id = ?', [id]);
     });
   } else {
-    if (status !== undefined) await execute('UPDATE ink_opening_record SET status = ? WHERE id = ?', [status, id]);
-    if (remark !== undefined) await execute('UPDATE ink_opening_record SET remark = ? WHERE id = ?', [remark, id]);
+    if (status !== undefined)
+      await execute('UPDATE ink_opening_record SET status = ? WHERE id = ?', [status, id]);
+    if (remark !== undefined)
+      await execute('UPDATE ink_opening_record SET remark = ? WHERE id = ?', [remark, id]);
   }
 
   return successResponse(null, '更新成功');

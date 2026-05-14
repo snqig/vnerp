@@ -34,14 +34,17 @@ export interface CancelResult {
 // 可作废的单据类型配置
 // ============================================================
 
-export const CANCELLABLE_DOCUMENTS: Record<string, {
-  tableName: string;
-  module: string;
-  statusField: string;
-  cancelStatus: string;
-  noField: string;
-  checkConditions?: string[];
-}> = {
+export const CANCELLABLE_DOCUMENTS: Record<
+  string,
+  {
+    tableName: string;
+    module: string;
+    statusField: string;
+    cancelStatus: string;
+    noField: string;
+    checkConditions?: string[];
+  }
+> = {
   purchase_order: {
     tableName: 'pur_purchase_order',
     module: '采购管理',
@@ -130,9 +133,7 @@ export const CANCELLABLE_DOCUMENTS: Record<string, {
 /**
  * 作废单据（企业标准：不可物理删除）
  */
-export async function cancelDocument(
-  options: SoftDeleteOptions
-): Promise<CancelResult> {
+export async function cancelDocument(options: SoftDeleteOptions): Promise<CancelResult> {
   const {
     tableName,
     recordId,
@@ -147,10 +148,7 @@ export async function cancelDocument(
 
   try {
     // 1. 查询原始数据（用于快照）
-    const rows: any = await query(
-      `SELECT * FROM \`${tableName}\` WHERE id = ?`,
-      [recordId]
-    );
+    const rows: any = await query(`SELECT * FROM \`${tableName}\` WHERE id = ?`, [recordId]);
 
     if (rows.length === 0) {
       return { success: false, message: '单据不存在' };
@@ -164,17 +162,11 @@ export async function cancelDocument(
     }
 
     // 3. 检查业务约束（如已审核、已出库等）
-    const config = Object.values(CANCELLABLE_DOCUMENTS).find(
-      (c) => c.tableName === tableName
-    );
+    const config = Object.values(CANCELLABLE_DOCUMENTS).find((c) => c.tableName === tableName);
 
     if (config?.checkConditions) {
       for (const condition of config.checkConditions) {
-        const checkResult = await checkBusinessCondition(
-          tableName,
-          recordId,
-          condition
-        );
+        const checkResult = await checkBusinessCondition(tableName, recordId, condition);
         if (!checkResult.passed) {
           return { success: false, message: checkResult.message };
         }
@@ -314,10 +306,7 @@ export async function physicalDelete(
 ): Promise<CancelResult> {
   try {
     // 1. 查询当前状态
-    const rows: any = await query(
-      `SELECT * FROM \`${tableName}\` WHERE id = ?`,
-      [recordId]
-    );
+    const rows: any = await query(`SELECT * FROM \`${tableName}\` WHERE id = ?`, [recordId]);
 
     if (rows.length === 0) {
       return { success: false, message: '记录不存在' };
@@ -398,10 +387,7 @@ async function checkBusinessCondition(
 
     case 'not_started': {
       // 检查工单是否已开工
-      const rows: any = await query(
-        `SELECT status FROM prod_work_order WHERE id = ?`,
-        [recordId]
-      );
+      const rows: any = await query(`SELECT status FROM prod_work_order WHERE id = ?`, [recordId]);
       if (rows[0]?.status === 'producing' || rows[0]?.status === 'completed') {
         return { passed: false, message: '工单已开始生产，不可作废' };
       }
@@ -415,10 +401,9 @@ async function checkBusinessCondition(
 
     case 'not_completed': {
       // 检查调拨单是否已完成
-      const rows: any = await query(
-        `SELECT status FROM warehouse_transfer WHERE id = ?`,
-        [recordId]
-      );
+      const rows: any = await query(`SELECT status FROM warehouse_transfer WHERE id = ?`, [
+        recordId,
+      ]);
       if (rows[0]?.status === 'completed') {
         return { passed: false, message: '调拨单已完成，不可作废' };
       }
@@ -427,10 +412,9 @@ async function checkBusinessCondition(
 
     case 'not_paid': {
       // 检查是否已付款/收款
-      const rows: any = await query(
-        `SELECT paid_amount FROM ${tableName} WHERE id = ?`,
-        [recordId]
-      );
+      const rows: any = await query(`SELECT paid_amount FROM ${tableName} WHERE id = ?`, [
+        recordId,
+      ]);
       if (rows[0]?.paid_amount > 0) {
         return { passed: false, message: '已存在收付款记录，不可作废' };
       }
@@ -439,10 +423,7 @@ async function checkBusinessCondition(
 
     case 'not_posted': {
       // 检查凭证是否已过账
-      const rows: any = await query(
-        `SELECT status FROM fin_voucher WHERE id = ?`,
-        [recordId]
-      );
+      const rows: any = await query(`SELECT status FROM fin_voucher WHERE id = ?`, [recordId]);
       if (rows[0]?.status === 'posted') {
         return { passed: false, message: '凭证已过账，不可作废' };
       }
@@ -505,7 +486,11 @@ export async function batchCancel(
   cancelReason: string,
   cancelledBy?: string,
   cancelledById?: number
-): Promise<{ success: number; failed: number; details: Array<{ id: number; result: CancelResult }> }> {
+): Promise<{
+  success: number;
+  failed: number;
+  details: Array<{ id: number; result: CancelResult }>;
+}> {
   const results: Array<{ id: number; result: CancelResult }> = [];
   let success = 0;
   let failed = 0;

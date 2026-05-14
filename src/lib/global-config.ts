@@ -86,7 +86,7 @@ const DEFAULT_CONFIGS: Record<string, any> = {
 };
 
 function getConfigFromCache(): Record<string, any> | null {
-  if (configCache && (Date.now() - configCache.timestamp) < CACHE_TTL) {
+  if (configCache && Date.now() - configCache.timestamp < CACHE_TTL) {
     return configCache.data;
   }
   return null;
@@ -95,7 +95,7 @@ function getConfigFromCache(): Record<string, any> | null {
 function setConfigToCache(data: Record<string, any>): void {
   configCache = {
     data,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 }
 
@@ -105,7 +105,7 @@ export function getDefaultConfig(): Record<string, any> {
 
 export function getConfig(key?: string): any {
   const cachedConfig = getConfigFromCache();
-  
+
   if (!cachedConfig) {
     return key ? DEFAULT_CONFIGS[key] : { ...DEFAULT_CONFIGS };
   }
@@ -311,7 +311,8 @@ export function getSerialNumberLength(): number {
 
 export function generateDocNo(prefix: string): string {
   const now = new Date();
-  const dateStr = now.getFullYear() +
+  const dateStr =
+    now.getFullYear() +
     String(now.getMonth() + 1).padStart(2, '0') +
     String(now.getDate()).padStart(2, '0');
   const serialLen = getSerialNumberLength();

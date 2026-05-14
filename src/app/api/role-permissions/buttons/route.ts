@@ -51,11 +51,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['role_id']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   const roleIdNum = parseInt(role_id);
@@ -76,10 +72,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 更新角色权限
-  const result = await execute(
-    'UPDATE sys_role SET permissions = ? WHERE id = ?',
-    [JSON.stringify(permissions || []), roleIdNum]
-  );
+  const result = await execute('UPDATE sys_role SET permissions = ? WHERE id = ?', [
+    JSON.stringify(permissions || []),
+    roleIdNum,
+  ]);
 
   if (result.affectedRows === 0) {
     return commonErrors.notFound('角色不存在');

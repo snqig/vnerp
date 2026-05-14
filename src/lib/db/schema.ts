@@ -117,7 +117,9 @@ export const warehouses = pgTable('warehouses', {
 export const locations = pgTable('locations', {
   id: serial('id').primaryKey(),
   code: varchar('code', { length: 50 }).notNull().unique(),
-  warehouseId: integer('warehouse_id').notNull().references(() => warehouses.id),
+  warehouseId: integer('warehouse_id')
+    .notNull()
+    .references(() => warehouses.id),
   name: varchar('name', { length: 100 }).notNull(),
   zone: varchar('zone', { length: 50 }), // 区域
   shelf: varchar('shelf', { length: 50 }), // 货架
@@ -133,7 +135,9 @@ export const inventoryBatches = pgTable('inventory_batches', {
   qrCode: varchar('qr_code', { length: 100 }).unique(), // 二维码
   materialId: integer('material_id').references(() => materials.id), // 物料ID
   productId: integer('product_id').references(() => products.id), // 产品ID
-  warehouseId: integer('warehouse_id').notNull().references(() => warehouses.id),
+  warehouseId: integer('warehouse_id')
+    .notNull()
+    .references(() => warehouses.id),
   locationId: integer('location_id').references(() => locations.id),
   quantity: numeric('quantity', { precision: 15, scale: 4 }).notNull(), // 数量
   availableQty: numeric('available_qty', { precision: 15, scale: 4 }).notNull(), // 可用数量
@@ -160,7 +164,9 @@ export const inventoryTransactions = pgTable('inventory_transactions', {
   id: serial('id').primaryKey(),
   transNo: varchar('trans_no', { length: 50 }).notNull().unique(), // 事务编号
   transType: varchar('trans_type', { length: 50 }).notNull(), // 入库/出库/调拨/盘点
-  batchId: integer('batch_id').notNull().references(() => inventoryBatches.id),
+  batchId: integer('batch_id')
+    .notNull()
+    .references(() => inventoryBatches.id),
   warehouseId: integer('warehouse_id').notNull(),
   locationId: integer('location_id'),
   quantity: numeric('quantity', { precision: 15, scale: 4 }).notNull(),
@@ -180,7 +186,9 @@ export const inventoryTransactions = pgTable('inventory_transactions', {
 export const salesOrders = pgTable('sales_orders', {
   id: serial('id').primaryKey(),
   orderNo: varchar('order_no', { length: 50 }).notNull().unique(),
-  customerId: integer('customer_id').notNull().references(() => customers.id),
+  customerId: integer('customer_id')
+    .notNull()
+    .references(() => customers.id),
   orderDate: timestamp('order_date').notNull(),
   deliveryDate: timestamp('delivery_date'), // 交货日期
   status: varchar('status', { length: 20 }).default('draft'), // 草稿/确认/生产中/完成/取消
@@ -194,8 +202,12 @@ export const salesOrders = pgTable('sales_orders', {
 // 销售订单明细
 export const salesOrderItems = pgTable('sales_order_items', {
   id: serial('id').primaryKey(),
-  orderId: integer('order_id').notNull().references(() => salesOrders.id),
-  productId: integer('product_id').notNull().references(() => products.id),
+  orderId: integer('order_id')
+    .notNull()
+    .references(() => salesOrders.id),
+  productId: integer('product_id')
+    .notNull()
+    .references(() => products.id),
   quantity: numeric('quantity', { precision: 15, scale: 4 }).notNull(),
   unit: varchar('unit', { length: 20 }),
   unitPrice: numeric('unit_price', { precision: 15, scale: 4 }),
@@ -209,7 +221,9 @@ export const salesOrderItems = pgTable('sales_order_items', {
 // BOM配方
 export const boms = pgTable('boms', {
   id: serial('id').primaryKey(),
-  productId: integer('product_id').notNull().references(() => products.id),
+  productId: integer('product_id')
+    .notNull()
+    .references(() => products.id),
   version: varchar('version', { length: 20 }).default('V1.0'),
   status: varchar('status', { length: 20 }).default('active'),
   effectiveDate: timestamp('effective_date'),
@@ -221,8 +235,12 @@ export const boms = pgTable('boms', {
 // BOM明细
 export const bomItems = pgTable('bom_items', {
   id: serial('id').primaryKey(),
-  bomId: integer('bom_id').notNull().references(() => boms.id),
-  materialId: integer('material_id').notNull().references(() => materials.id),
+  bomId: integer('bom_id')
+    .notNull()
+    .references(() => boms.id),
+  materialId: integer('material_id')
+    .notNull()
+    .references(() => materials.id),
   quantity: numeric('quantity', { precision: 15, scale: 6 }).notNull(), // 单位用量
   unit: varchar('unit', { length: 20 }),
   lossRate: numeric('loss_rate', { precision: 5, scale: 2 }).default('0'), // 损耗率
@@ -240,7 +258,9 @@ export const workOrders = pgTable('work_orders', {
   qrCode: varchar('qr_code', { length: 100 }).unique(), // 工单二维码
   salesOrderId: integer('sales_order_id').references(() => salesOrders.id),
   salesOrderItemId: integer('sales_order_item_id').references(() => salesOrderItems.id),
-  productId: integer('product_id').notNull().references(() => products.id),
+  productId: integer('product_id')
+    .notNull()
+    .references(() => products.id),
   bomId: integer('bom_id').references(() => boms.id),
   quantity: numeric('quantity', { precision: 15, scale: 4 }).notNull(), // 计划数量
   completedQty: numeric('completed_qty', { precision: 15, scale: 4 }).default('0'), // 完成数量
@@ -274,8 +294,12 @@ export const processes = pgTable('processes', {
 // 工单工序
 export const workOrderProcesses = pgTable('work_order_processes', {
   id: serial('id').primaryKey(),
-  workOrderId: integer('work_order_id').notNull().references(() => workOrders.id),
-  processId: integer('process_id').notNull().references(() => processes.id),
+  workOrderId: integer('work_order_id')
+    .notNull()
+    .references(() => workOrders.id),
+  processId: integer('process_id')
+    .notNull()
+    .references(() => processes.id),
   equipmentId: integer('equipment_id').references(() => equipments.id),
   planQty: numeric('plan_qty', { precision: 15, scale: 4 }).notNull(),
   completedQty: numeric('completed_qty', { precision: 15, scale: 4 }).default('0'),
@@ -290,11 +314,17 @@ export const workOrderProcesses = pgTable('work_order_processes', {
 export const productionReports = pgTable('production_reports', {
   id: serial('id').primaryKey(),
   reportNo: varchar('report_no', { length: 50 }).notNull().unique(),
-  workOrderId: integer('work_order_id').notNull().references(() => workOrders.id),
+  workOrderId: integer('work_order_id')
+    .notNull()
+    .references(() => workOrders.id),
   workOrderProcessId: integer('work_order_process_id').references(() => workOrderProcesses.id),
-  processId: integer('process_id').notNull().references(() => processes.id),
+  processId: integer('process_id')
+    .notNull()
+    .references(() => processes.id),
   equipmentId: integer('equipment_id').references(() => equipments.id),
-  employeeId: integer('employee_id').notNull().references(() => employees.id),
+  employeeId: integer('employee_id')
+    .notNull()
+    .references(() => employees.id),
   goodQty: numeric('good_qty', { precision: 15, scale: 4 }).notNull(), // 良品数
   scrapQty: numeric('scrap_qty', { precision: 15, scale: 4 }).default('0'), // 报废数
   batchNo: varchar('batch_no', { length: 50 }), // 生产批次号
@@ -377,8 +407,12 @@ export const purchaseRequests = pgTable('purchase_requests', {
 // 采购申请明细
 export const purchaseRequestItems = pgTable('purchase_request_items', {
   id: serial('id').primaryKey(),
-  requestId: integer('request_id').notNull().references(() => purchaseRequests.id),
-  materialId: integer('material_id').notNull().references(() => materials.id),
+  requestId: integer('request_id')
+    .notNull()
+    .references(() => purchaseRequests.id),
+  materialId: integer('material_id')
+    .notNull()
+    .references(() => materials.id),
   quantity: numeric('quantity', { precision: 15, scale: 4 }).notNull(),
   unit: varchar('unit', { length: 20 }),
   requiredDate: timestamp('required_date'),
@@ -391,7 +425,9 @@ export const purchaseRequestItems = pgTable('purchase_request_items', {
 export const purchaseOrders = pgTable('purchase_orders', {
   id: serial('id').primaryKey(),
   orderNo: varchar('order_no', { length: 50 }).notNull().unique(),
-  supplierId: integer('supplier_id').notNull().references(() => suppliers.id),
+  supplierId: integer('supplier_id')
+    .notNull()
+    .references(() => suppliers.id),
   orderDate: timestamp('order_date').notNull(),
   expectedDate: timestamp('expected_date'),
   status: varchar('status', { length: 20 }).default('draft'), // 草稿/已发送/部分到货/完成
@@ -405,8 +441,12 @@ export const purchaseOrders = pgTable('purchase_orders', {
 // 采购订单明细
 export const purchaseOrderItems = pgTable('purchase_order_items', {
   id: serial('id').primaryKey(),
-  orderId: integer('order_id').notNull().references(() => purchaseOrders.id),
-  materialId: integer('material_id').notNull().references(() => materials.id),
+  orderId: integer('order_id')
+    .notNull()
+    .references(() => purchaseOrders.id),
+  materialId: integer('material_id')
+    .notNull()
+    .references(() => materials.id),
   quantity: numeric('quantity', { precision: 15, scale: 4 }).notNull(),
   receivedQty: numeric('received_qty', { precision: 15, scale: 4 }).default('0'),
   unit: varchar('unit', { length: 20 }),
@@ -424,7 +464,9 @@ export const outsourceOrders = pgTable('outsource_orders', {
   id: serial('id').primaryKey(),
   orderNo: varchar('order_no', { length: 50 }).notNull().unique(),
   qrCode: varchar('qr_code', { length: 100 }).unique(), // 委外二维码
-  supplierId: integer('supplier_id').notNull().references(() => suppliers.id),
+  supplierId: integer('supplier_id')
+    .notNull()
+    .references(() => suppliers.id),
   workOrderId: integer('work_order_id').references(() => workOrders.id),
   processId: integer('process_id').references(() => processes.id),
   sendQty: numeric('send_qty', { precision: 15, scale: 4 }).notNull(), // 发出数量
@@ -479,8 +521,12 @@ export const deliveryOrders = pgTable('delivery_orders', {
 // 派车明细
 export const deliveryItems = pgTable('delivery_items', {
   id: serial('id').primaryKey(),
-  deliveryId: integer('delivery_id').notNull().references(() => deliveryOrders.id),
-  batchId: integer('batch_id').notNull().references(() => inventoryBatches.id),
+  deliveryId: integer('delivery_id')
+    .notNull()
+    .references(() => deliveryOrders.id),
+  batchId: integer('batch_id')
+    .notNull()
+    .references(() => inventoryBatches.id),
   quantity: numeric('quantity', { precision: 15, scale: 4 }).notNull(),
   palletNo: varchar('pallet_no', { length: 50 }), // 栈板号
   loadedAt: timestamp('loaded_at'),
@@ -493,7 +539,9 @@ export const deliveryItems = pgTable('delivery_items', {
 // 电子回单
 export const deliveryReceipts = pgTable('delivery_receipts', {
   id: serial('id').primaryKey(),
-  deliveryId: integer('delivery_id').notNull().references(() => deliveryOrders.id),
+  deliveryId: integer('delivery_id')
+    .notNull()
+    .references(() => deliveryOrders.id),
   receiverName: varchar('receiver_name', { length: 50 }),
   receiverPhone: varchar('receiver_phone', { length: 20 }),
   receivedAt: timestamp('received_at'),
@@ -509,7 +557,9 @@ export const deliveryReceipts = pgTable('delivery_receipts', {
 export const sampleRequests = pgTable('sample_requests', {
   id: serial('id').primaryKey(),
   requestNo: varchar('request_no', { length: 50 }).notNull().unique(),
-  customerId: integer('customer_id').notNull().references(() => customers.id),
+  customerId: integer('customer_id')
+    .notNull()
+    .references(() => customers.id),
   productId: integer('product_id').references(() => products.id),
   productName: varchar('product_name', { length: 200 }),
   specification: varchar('specification', { length: 200 }),
@@ -531,7 +581,9 @@ export const sampleRequests = pgTable('sample_requests', {
 // 保养计划
 export const maintenancePlans = pgTable('maintenance_plans', {
   id: serial('id').primaryKey(),
-  equipmentId: integer('equipment_id').notNull().references(() => equipments.id),
+  equipmentId: integer('equipment_id')
+    .notNull()
+    .references(() => equipments.id),
   planDate: timestamp('plan_date').notNull(),
   maintenanceType: varchar('maintenance_type', { length: 20 }), // 日常/周保/月保/年保
   status: varchar('status', { length: 20 }).default('planned'), // 计划/执行中/完成
@@ -607,7 +659,9 @@ export const materialLabels = pgTable('material_labels', {
 export const cuttingRecords = pgTable('cutting_records', {
   id: serial('id').primaryKey(),
   recordNo: varchar('record_no', { length: 50 }).notNull().unique(), // 分切单号
-  sourceLabelId: integer('source_label_id').notNull().references(() => materialLabels.id), // 源标签ID
+  sourceLabelId: integer('source_label_id')
+    .notNull()
+    .references(() => materialLabels.id), // 源标签ID
   sourceLabelNo: varchar('source_label_no', { length: 50 }).notNull(), // 源标签编号
   cutWidthStr: varchar('cut_width_str', { length: 200 }), // 分切宽幅（如：10+20+30）
   originalWidth: numeric('original_width', { precision: 18, scale: 2 }), // 原宽幅
@@ -624,8 +678,12 @@ export const cuttingRecords = pgTable('cutting_records', {
 // 分切明细表
 export const cuttingDetails = pgTable('cutting_details', {
   id: serial('id').primaryKey(),
-  recordId: integer('record_id').notNull().references(() => cuttingRecords.id), // 分切记录ID
-  newLabelId: integer('new_label_id').notNull().references(() => materialLabels.id), // 新标签ID
+  recordId: integer('record_id')
+    .notNull()
+    .references(() => cuttingRecords.id), // 分切记录ID
+  newLabelId: integer('new_label_id')
+    .notNull()
+    .references(() => materialLabels.id), // 新标签ID
   newLabelNo: varchar('new_label_no', { length: 50 }).notNull(), // 新标签编号
   cutWidth: numeric('cut_width', { precision: 18, scale: 2 }), // 分切宽幅
   sequence: integer('sequence').default(0), // 分切序号
@@ -657,9 +715,13 @@ export const processCards = pgTable('process_cards', {
 // 流程卡物料关联表
 export const processCardMaterials = pgTable('process_card_materials', {
   id: serial('id').primaryKey(),
-  cardId: integer('card_id').notNull().references(() => processCards.id), // 流程卡ID
+  cardId: integer('card_id')
+    .notNull()
+    .references(() => processCards.id), // 流程卡ID
   cardNo: varchar('card_no', { length: 50 }), // 流程卡卡号
-  labelId: integer('label_id').notNull().references(() => materialLabels.id), // 物料标签ID
+  labelId: integer('label_id')
+    .notNull()
+    .references(() => materialLabels.id), // 物料标签ID
   labelNo: varchar('label_no', { length: 50 }).notNull(), // 物料标签编号
   materialType: varchar('material_type', { length: 20 }).default('auxiliary'), // 物料类型：main/auxiliary
   materialCode: varchar('material_code', { length: 50 }), // 物料代号

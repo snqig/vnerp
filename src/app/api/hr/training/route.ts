@@ -12,32 +12,75 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let where = 'WHERE deleted = 0';
   const params: any[] = [];
-  if (trainingName) { where += ' AND training_name LIKE ?'; params.push('%' + trainingName + '%'); }
-  if (trainingType) { where += ' AND training_type = ?'; params.push(Number(trainingType)); }
-  if (status) { where += ' AND status = ?'; params.push(Number(status)); }
+  if (trainingName) {
+    where += ' AND training_name LIKE ?';
+    params.push('%' + trainingName + '%');
+  }
+  if (trainingType) {
+    where += ' AND training_type = ?';
+    params.push(Number(trainingType));
+  }
+  if (status) {
+    where += ' AND status = ?';
+    params.push(Number(status));
+  }
 
   const totalRows: any = await query('SELECT COUNT(*) as total FROM hr_training ' + where, params);
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query('SELECT * FROM hr_training ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?', [...params, pageSize, (page - 1) * pageSize]);
+  const rows: any = await query(
+    'SELECT * FROM hr_training ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
+    [...params, pageSize, (page - 1) * pageSize]
+  );
   return successResponse({ list: rows, total, page, pageSize });
 });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { training_name, training_type, training_date, training_hours, trainer, training_content, training_place, remark, participants } = body;
+  const {
+    training_name,
+    training_type,
+    training_date,
+    training_hours,
+    trainer,
+    training_content,
+    training_place,
+    remark,
+    participants,
+  } = body;
   const now = new Date();
-  const trainingNo = 'PX' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  const trainingNo =
+    'PX' +
+    now.getFullYear() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0') +
+    String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
   const result: any = await execute(
     'INSERT INTO hr_training (training_no, training_name, training_type, training_date, training_hours, trainer, training_content, training_place, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [trainingNo, training_name, training_type || null, training_date, training_hours || null, trainer || null, training_content || null, training_place || null, remark || null]
+    [
+      trainingNo,
+      training_name,
+      training_type || null,
+      training_date,
+      training_hours || null,
+      trainer || null,
+      training_content || null,
+      training_place || null,
+      remark || null,
+    ]
   );
 
   if (participants && Array.isArray(participants)) {
     for (const p of participants) {
       await execute(
         'INSERT INTO hr_training_participant (training_id, employee_id, employee_name, score, is_qualified) VALUES (?, ?, ?, ?, ?)',
-        [result.insertId, p.employee_id, p.employee_name || null, p.score || null, p.is_qualified || null]
+        [
+          result.insertId,
+          p.employee_id,
+          p.employee_name || null,
+          p.score || null,
+          p.is_qualified || null,
+        ]
       );
     }
   }
@@ -47,8 +90,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 export const PUT = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   const { id, status, remark } = body;
-  if (status !== undefined) await execute('UPDATE hr_training SET status = ? WHERE id = ? AND deleted = 0', [status, id]);
-  if (remark !== undefined) await execute('UPDATE hr_training SET remark = ? WHERE id = ? AND deleted = 0', [remark, id]);
+  if (status !== undefined)
+    await execute('UPDATE hr_training SET status = ? WHERE id = ? AND deleted = 0', [status, id]);
+  if (remark !== undefined)
+    await execute('UPDATE hr_training SET remark = ? WHERE id = ? AND deleted = 0', [remark, id]);
   return successResponse(null, '更新成功');
 });
 

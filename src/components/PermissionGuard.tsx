@@ -31,7 +31,11 @@ interface AnyPermissionGuardProps {
 }
 
 // 任意权限验证组件
-export function AnyPermissionGuard({ permissions, children, fallback = null }: AnyPermissionGuardProps) {
+export function AnyPermissionGuard({
+  permissions,
+  children,
+  fallback = null,
+}: AnyPermissionGuardProps) {
   const { hasAnyPermission, loaded } = usePermission();
 
   if (!loaded) {
@@ -52,7 +56,11 @@ interface AllPermissionsGuardProps {
 }
 
 // 所有权限验证组件
-export function AllPermissionsGuard({ permissions, children, fallback = null }: AllPermissionsGuardProps) {
+export function AllPermissionsGuard({
+  permissions,
+  children,
+  fallback = null,
+}: AllPermissionsGuardProps) {
   const { hasAllPermissions, loaded } = usePermission();
 
   if (!loaded) {

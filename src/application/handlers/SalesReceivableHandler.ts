@@ -14,7 +14,15 @@ export class SalesReceivableHandler implements EventHandler<SalesOrderShippedEve
       await conn.execute(
         `INSERT INTO fin_receivable (receivable_no, customer_id, customer_name, source_type, source_id, source_no, amount, received_amount, status, due_date, remark, create_time)
          VALUES (?, ?, ?, 'sales', ?, ?, ?, 0, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
-        [receivableNo, customerId, customerName, orderId, orderNo, totalShippedAmount, `销售订单 ${orderNo} 出库自动生成`]
+        [
+          receivableNo,
+          customerId,
+          customerName,
+          orderId,
+          orderNo,
+          totalShippedAmount,
+          `销售订单 ${orderNo} 出库自动生成`,
+        ]
       );
     });
 

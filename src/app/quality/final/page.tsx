@@ -3,13 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import QRCode from 'qrcode';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -45,7 +39,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { TableExportToolbar, exportTableToXLS, exportTableToPDF, exportTableToWORD, printTable } from '@/components/ui/table-export-toolbar';
+import {
+  TableExportToolbar,
+  exportTableToXLS,
+  exportTableToPDF,
+  exportTableToWORD,
+  printTable,
+} from '@/components/ui/table-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import {
   Search,
@@ -69,6 +69,18 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
 
 // 终检数据类型
 interface FinalInspect {
@@ -124,12 +136,27 @@ const finalInspectItems = [
 // 获取状态标签
 const getStatusBadge = (status: number) => {
   const statusMap: Record<number, { label: string; className: string }> = {
-    0: { label: '待排产', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-    1: { label: '已排产', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-    2: { label: '待终检', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-    3: { label: '已终检', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+    0: {
+      label: '待排产',
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    },
+    1: {
+      label: '已排产',
+      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    },
+    2: {
+      label: '待终检',
+      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+    },
+    3: {
+      label: '已终检',
+      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    },
   };
-  const config = statusMap[status] || { label: '未知', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+  const config = statusMap[status] || {
+    label: '未知',
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -157,10 +184,40 @@ export default function QualityFinalPage() {
   const fetchFinals = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/quality/final');
+      const res = await authFetch('/api/quality/final');
       const data = await res.json();
       if (data.success) {
-        const list = Array.isArray(data.data) ? data.data : [];
+        // 统一处理API返回的数据结构，可能是直接数组或包含list的对象
+        const rawData = data.data;
+        const rawList = Array.isArray(rawData) ? rawData : (rawData?.list || []);
+        const list = rawList.map((item: any) => ({
+          id: item.id,
+          card_no: item.cardNo || item.card_no,
+          qr_code: item.qrCode || item.qr_code,
+          work_order_no: item.workOrderNo || item.work_order_no,
+          product_code: item.productCode || item.product_code,
+          product_name: item.productName || item.product_name,
+          material_spec: item.materialSpec || item.material_spec,
+          work_order_date: item.workOrderDate || item.work_order_date,
+          plan_qty: item.planQty || item.plan_qty,
+          main_label_no: item.mainLabelNo || item.main_label_no,
+          burdening_status: item.burdeningStatus || item.burdening_status || 0,
+          lock_status: item.lockStatus || item.lock_status || 0,
+          create_user_name: item.createUserName || item.create_user_name,
+          create_time: item.createTime || item.create_time,
+          update_time: item.updateTime || item.update_time,
+          customer_name: item.customerName || item.customer_name,
+          customer_code: item.customerCode || item.customer_code,
+          process_flow1: item.processFlow1 || item.process_flow1,
+          process_flow2: item.processFlow2 || item.process_flow2,
+          print_type: item.printType || item.print_type,
+          finished_size: item.finishedSize || item.finished_size,
+          tolerance: item.tolerance,
+          quality_manager: item.qualityManager || item.quality_manager,
+          packing_type: item.packingType || item.packing_type,
+          slice_per_box: item.slicePerBox || item.slice_per_box,
+          slice_per_bundle: item.slicePerBundle || item.slice_per_bundle,
+        }));
         setFinals(list);
         const pendingCount = list.filter((f: FinalInspect) => f.burdening_status === 1).length;
         const inspectingCount = list.filter((f: FinalInspect) => f.burdening_status === 2).length;
@@ -219,7 +276,12 @@ export default function QualityFinalPage() {
     return true;
   });
 
-  const { sortField, sortDirection, handleSort, sortedData: sortedFinalInspects } = useTableSort(filteredFinals, 'id');
+  const {
+    sortField,
+    sortDirection,
+    handleSort,
+    sortedData: sortedFinalInspects,
+  } = useTableSort(filteredFinals, 'id');
 
   // 查看详情
   const handleViewDetail = (final: FinalInspect) => {
@@ -248,14 +310,14 @@ export default function QualityFinalPage() {
     if (!selectedFinal) return;
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setFinals(finals.map((f: FinalInspect) => 
-        f.id === selectedFinal.id 
-          ? { ...f, burdening_status: 3 }
-          : f
-      ));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setFinals(
+        finals.map((f: FinalInspect) =>
+          f.id === selectedFinal.id ? { ...f, burdening_status: 3 } : f
+        )
+      );
+
       setIsFinalOpen(false);
       alert('终检提交成功');
     } catch (error) {
@@ -268,10 +330,10 @@ export default function QualityFinalPage() {
 
   // 切换检验项目
   const toggleInspectItem = (itemId: string) => {
-    setFinalForm(prev => ({
+    setFinalForm((prev) => ({
       ...prev,
       checkedItems: prev.checkedItems.includes(itemId)
-        ? prev.checkedItems.filter(id => id !== itemId)
+        ? prev.checkedItems.filter((id) => id !== itemId)
         : [...prev.checkedItems, itemId],
     }));
   };
@@ -429,30 +491,46 @@ export default function QualityFinalPage() {
                   onSelectAll={() => setSelectedIds(filteredFinals.map((f: FinalInspect) => f.id))}
                   onDeselectAll={() => setSelectedIds([])}
                   onPrint={handlePrint}
-                  onExportPDF={() => exportTableToPDF(filteredFinals, '成品检验报告', [
-                    { key: 'card_no', header: '流程卡号' },
-                    { key: 'product_name', header: '产品名称' },
-                    { key: 'product_code', header: '产品编码' },
-                    { key: 'material_spec', header: '规格' },
-                    { key: 'quantity', header: '数量' },
-                    { key: 'status', header: '状态' },
-                  ], '成品检验报告')}
-                  onExportXLS={() => exportTableToXLS(filteredFinals, '成品检验报告', [
-                    { key: 'card_no', header: '流程卡号' },
-                    { key: 'product_name', header: '产品名称' },
-                    { key: 'product_code', header: '产品编码' },
-                    { key: 'material_spec', header: '规格' },
-                    { key: 'quantity', header: '数量' },
-                    { key: 'status', header: '状态' },
-                  ])}
-                  onExportWORD={() => exportTableToWORD(filteredFinals, '成品检验报告', [
-                    { key: 'card_no', header: '流程卡号' },
-                    { key: 'product_name', header: '产品名称' },
-                    { key: 'product_code', header: '产品编码' },
-                    { key: 'material_spec', header: '规格' },
-                    { key: 'quantity', header: '数量' },
-                    { key: 'status', header: '状态' },
-                  ], '成品检验报告')}
+                  onExportPDF={() =>
+                    exportTableToPDF(
+                      filteredFinals,
+                      '成品检验报告',
+                      [
+                        { key: 'card_no', header: '流程卡号' },
+                        { key: 'product_name', header: '产品名称' },
+                        { key: 'product_code', header: '产品编码' },
+                        { key: 'material_spec', header: '规格' },
+                        { key: 'quantity', header: '数量' },
+                        { key: 'status', header: '状态' },
+                      ],
+                      '成品检验报告'
+                    )
+                  }
+                  onExportXLS={() =>
+                    exportTableToXLS(filteredFinals, '成品检验报告', [
+                      { key: 'card_no', header: '流程卡号' },
+                      { key: 'product_name', header: '产品名称' },
+                      { key: 'product_code', header: '产品编码' },
+                      { key: 'material_spec', header: '规格' },
+                      { key: 'quantity', header: '数量' },
+                      { key: 'status', header: '状态' },
+                    ])
+                  }
+                  onExportWORD={() =>
+                    exportTableToWORD(
+                      filteredFinals,
+                      '成品检验报告',
+                      [
+                        { key: 'card_no', header: '流程卡号' },
+                        { key: 'product_name', header: '产品名称' },
+                        { key: 'product_code', header: '产品编码' },
+                        { key: 'material_spec', header: '规格' },
+                        { key: 'quantity', header: '数量' },
+                        { key: 'status', header: '状态' },
+                      ],
+                      '成品检验报告'
+                    )
+                  }
                 />
               </div>
             </div>
@@ -475,7 +553,10 @@ export default function QualityFinalPage() {
                     <TableRow>
                       <TableHead className="w-12">
                         <Checkbox
-                          checked={selectedIds.length === filteredFinals.length && filteredFinals.length > 0}
+                          checked={
+                            selectedIds.length === filteredFinals.length &&
+                            filteredFinals.length > 0
+                          }
                           onCheckedChange={() => {
                             if (selectedIds.length === filteredFinals.length) {
                               setSelectedIds([]);
@@ -486,13 +567,34 @@ export default function QualityFinalPage() {
                         />
                       </TableHead>
                       <TableHead className="w-12 text-center">序号</TableHead>
-                      <SortableTableHeader field="card_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>流程卡号</SortableTableHeader>
-                      <SortableTableHeader field="product_name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>产品信息</SortableTableHeader>
+                      <SortableTableHeader
+                        field="card_no"
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      >
+                        流程卡号
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        field="product_name"
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      >
+                        产品信息
+                      </SortableTableHeader>
                       <TableHead>客户</TableHead>
                       <TableHead>规格要求</TableHead>
                       <TableHead>数量</TableHead>
                       <TableHead>包装方式</TableHead>
-                      <SortableTableHeader field="status" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>状态</SortableTableHeader>
+                      <SortableTableHeader
+                        field="status"
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      >
+                        状态
+                      </SortableTableHeader>
                       <TableHead>操作</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -502,27 +604,43 @@ export default function QualityFinalPage() {
                         <TableCell>
                           <Checkbox
                             checked={selectedIds.includes(final.id)}
-                            onCheckedChange={() => setSelectedIds((prev: number[]) => prev.includes(final.id) ? prev.filter((i: number) => i !== final.id) : [...prev, final.id])}
+                            onCheckedChange={() =>
+                              setSelectedIds((prev: number[]) =>
+                                prev.includes(final.id)
+                                  ? prev.filter((i: number) => i !== final.id)
+                                  : [...prev, final.id]
+                              )
+                            }
                           />
                         </TableCell>
-                        <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
+                        <TableCell className="text-center text-muted-foreground">
+                          {index + 1}
+                        </TableCell>
                         <TableCell className="font-medium">
                           <div className="flex flex-col">
                             <span>{final.card_no}</span>
-                            <span className="text-xs text-muted-foreground">{final.work_order_no}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {final.work_order_no}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium">{final.product_name}</span>
-                            <span className="text-xs text-muted-foreground">{final.material_spec}</span>
-                            <span className="text-xs text-muted-foreground">{final.print_type}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {final.material_spec}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {final.print_type}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span>{final.customer_name}</span>
-                            <span className="text-xs text-muted-foreground">{final.customer_code}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {final.customer_code}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -551,10 +669,7 @@ export default function QualityFinalPage() {
                               <Eye className="h-4 w-4" />
                             </Button>
                             {final.burdening_status === 2 && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleStartFinal(final)}
-                              >
+                              <Button size="sm" onClick={() => handleStartFinal(final)}>
                                 <ClipboardCheck className="h-4 w-4 mr-1" />
                                 终检
                               </Button>
@@ -653,7 +768,9 @@ export default function QualityFinalPage() {
                       </div>
                       <div className="space-y-2">
                         <span className="text-muted-foreground">装箱规格:</span>
-                        <span>{selectedFinal.slice_per_box}片/箱 × {selectedFinal.slice_per_bundle}片/捆</span>
+                        <span>
+                          {selectedFinal.slice_per_box}片/箱 × {selectedFinal.slice_per_bundle}片/捆
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -661,18 +778,24 @@ export default function QualityFinalPage() {
                   <div className="space-y-3">
                     <h4 className="font-semibold text-sm text-muted-foreground">工艺流程</h4>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {selectedFinal.process_flow1?.split('-').map((step: string, index: number, arr: string[]) => (
-                        <div key={index} className="flex items-center">
-                          <Badge variant="outline">{step}</Badge>
-                          {index < arr.length - 1 && <span className="mx-1 text-muted-foreground">→</span>}
-                        </div>
-                      ))}
-                      {selectedFinal.process_flow2?.split('-').map((step: string, index: number, arr: string[]) => (
-                        <div key={`2-${index}`} className="flex items-center">
-                          <span className="mx-1 text-muted-foreground">→</span>
-                          <Badge variant="outline">{step}</Badge>
-                        </div>
-                      ))}
+                      {selectedFinal.process_flow1
+                        ?.split('-')
+                        .map((step: string, index: number, arr: string[]) => (
+                          <div key={index} className="flex items-center">
+                            <Badge variant="outline">{step}</Badge>
+                            {index < arr.length - 1 && (
+                              <span className="mx-1 text-muted-foreground">→</span>
+                            )}
+                          </div>
+                        ))}
+                      {selectedFinal.process_flow2
+                        ?.split('-')
+                        .map((step: string, index: number, arr: string[]) => (
+                          <div key={`2-${index}`} className="flex items-center">
+                            <span className="mx-1 text-muted-foreground">→</span>
+                            <Badge variant="outline">{step}</Badge>
+                          </div>
+                        ))}
                     </div>
                   </div>
 
@@ -681,10 +804,12 @@ export default function QualityFinalPage() {
                       关闭
                     </Button>
                     {selectedFinal.burdening_status === 2 && (
-                      <Button onClick={() => {
-                        setIsDetailOpen(false);
-                        handleStartFinal(selectedFinal);
-                      }}>
+                      <Button
+                        onClick={() => {
+                          setIsDetailOpen(false);
+                          handleStartFinal(selectedFinal);
+                        }}
+                      >
                         <ClipboardCheck className="h-4 w-4 mr-2" />
                         开始终检
                       </Button>
@@ -722,17 +847,23 @@ export default function QualityFinalPage() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">规格:</span>
-                        <span className="ml-2">{selectedFinal.finished_size} ({selectedFinal.tolerance})</span>
+                        <span className="ml-2">
+                          {selectedFinal.finished_size} ({selectedFinal.tolerance})
+                        </span>
                       </div>
                       <div>
                         <span className="text-muted-foreground">计划数量:</span>
-                        <span className="ml-2">{(selectedFinal.plan_qty ?? 0).toLocaleString()}</span>
+                        <span className="ml-2">
+                          {(selectedFinal.plan_qty ?? 0).toLocaleString()}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <Label>终检项目 <span className="text-red-500">*</span></Label>
+                    <Label>
+                      终检项目 <span className="text-red-500">*</span>
+                    </Label>
                     <div className="grid grid-cols-2 gap-3">
                       {finalInspectItems.map((item) => (
                         <div key={item.id} className="flex items-center space-x-2">
@@ -790,7 +921,12 @@ export default function QualityFinalPage() {
                       <Input
                         type="number"
                         value={finalForm.qualifiedQty}
-                        onChange={(e) => setFinalForm({ ...finalForm, qualifiedQty: parseInt(e.target.value) || 0 })}
+                        onChange={(e) =>
+                          setFinalForm({
+                            ...finalForm,
+                            qualifiedQty: parseInt(e.target.value) || 0,
+                          })
+                        }
                       />
                     </div>
                     <div className="space-y-3">
@@ -798,7 +934,9 @@ export default function QualityFinalPage() {
                       <Input
                         type="number"
                         value={finalForm.defectQty}
-                        onChange={(e) => setFinalForm({ ...finalForm, defectQty: parseInt(e.target.value) || 0 })}
+                        onChange={(e) =>
+                          setFinalForm({ ...finalForm, defectQty: parseInt(e.target.value) || 0 })
+                        }
                       />
                     </div>
                   </div>
@@ -808,7 +946,9 @@ export default function QualityFinalPage() {
                       <Label>不良原因</Label>
                       <Select
                         value={finalForm.defectReason}
-                        onValueChange={(value) => setFinalForm({ ...finalForm, defectReason: value })}
+                        onValueChange={(value) =>
+                          setFinalForm({ ...finalForm, defectReason: value })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="选择不良原因" />
@@ -882,7 +1022,9 @@ export default function QualityFinalPage() {
             <div ref={printRef} className="space-y-6 py-4">
               <div className="text-center border-b pb-4">
                 <h1 className="text-2xl font-bold">终检报告</h1>
-                <p className="text-muted-foreground mt-2">生成时间: {format(new Date(), 'yyyy-MM-dd HH:mm:ss')}</p>
+                <p className="text-muted-foreground mt-2">
+                  生成时间: {format(new Date(), 'yyyy-MM-dd HH:mm:ss')}
+                </p>
               </div>
 
               <div className="grid grid-cols-6 gap-4">

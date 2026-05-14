@@ -2,12 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -89,14 +84,29 @@ interface ProcessCard {
 }
 
 const STATUS_MAP: Record<number, { label: string; className: string }> = {
-  0: { label: '待排产', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  1: { label: '已排产', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  2: { label: '生产中', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-  3: { label: '已完成', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+  0: {
+    label: '待排产',
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  },
+  1: {
+    label: '已排产',
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  },
+  2: {
+    label: '生产中',
+    className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  },
+  3: {
+    label: '已完成',
+    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  },
 };
 
 const getStatusBadge = (status: number) => {
-  const config = STATUS_MAP[status] || { label: '未知', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+  const config = STATUS_MAP[status] || {
+    label: '未知',
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -112,6 +122,18 @@ export default function ProductionProcessPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [processRemark, setProcessRemark] = useState('');
 
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const fetchProcesses = useCallback(async () => {
     try {
       setLoading(true);
@@ -126,13 +148,18 @@ export default function ProductionProcessPage() {
       }
       if (searchQuery) params.append('cardNo', searchQuery);
 
-      const res = await fetch(`/api/production/process?${params}`);
+      const res = await authFetch(`/api/production/process?${params}`);
       const data = await res.json();
 
       if (data.success) {
-        setProcesses(Array.isArray(data.data) ? data.data : []);
+        const processList = Array.isArray(data.data) ? data.data : (data.data?.list || []);
+        setProcesses(processList);
       } else {
-        toast({ title: '错误', description: data.message || '获取流程列表失败', variant: 'destructive' });
+        toast({
+          title: '错误',
+          description: data.message || '获取流程列表失败',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       toast({ title: '错误', description: '获取流程列表失败', variant: 'destructive' });
@@ -180,9 +207,8 @@ export default function ProductionProcessPage() {
 
   const handleStatusUpdate = async (process: ProcessCard, newStatus: number) => {
     try {
-      const res = await fetch('/api/production/process', {
+      const res = await authFetch('/api/production/process', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: process.id,
           processStatus: newStatus,
@@ -194,7 +220,10 @@ export default function ProductionProcessPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '成功', description: `状态已更新为${STATUS_MAP[newStatus]?.label || newStatus}` });
+        toast({
+          title: '成功',
+          description: `状态已更新为${STATUS_MAP[newStatus]?.label || newStatus}`,
+        });
         fetchProcesses();
       } else {
         toast({ title: '错误', description: data.message || '更新失败', variant: 'destructive' });
@@ -316,15 +345,21 @@ export default function ProductionProcessPage() {
                           <TableCell className="font-medium">
                             <div className="flex flex-col">
                               <span>{process.card_no}</span>
-                              <span className="text-xs text-muted-foreground">{process.work_order_no}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {process.work_order_no}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-medium">{process.product_name}</span>
-                              <span className="text-xs text-muted-foreground">{process.material_spec}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {process.material_spec}
+                              </span>
                               {process.print_type && (
-                                <span className="text-xs text-muted-foreground">{process.print_type}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {process.print_type}
+                                </span>
                               )}
                             </div>
                           </TableCell>
@@ -333,12 +368,16 @@ export default function ProductionProcessPage() {
                               <span>{process.customer_name || '-'}</span>
                             </div>
                           </TableCell>
-                          <TableCell>{parseFloat(String(process.plan_qty)).toLocaleString()}</TableCell>
+                          <TableCell>
+                            {parseFloat(String(process.plan_qty)).toLocaleString()}
+                          </TableCell>
                           <TableCell>
                             <div className="flex flex-col gap-1">
                               <div className="text-xs">{process.process_flow1 || '-'}</div>
                               {process.process_flow2 && (
-                                <div className="text-xs text-muted-foreground">{process.process_flow2}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {process.process_flow2}
+                                </div>
                               )}
                             </div>
                           </TableCell>
@@ -361,10 +400,7 @@ export default function ProductionProcessPage() {
                                 <Eye className="h-4 w-4" />
                               </Button>
                               {process.burdening_status === 1 && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleStartProcess(process)}
-                                >
+                                <Button size="sm" onClick={() => handleStartProcess(process)}>
                                   <Play className="h-4 w-4 mr-1" />
                                   开工
                                 </Button>
@@ -391,13 +427,17 @@ export default function ProductionProcessPage() {
                                     查看详情
                                   </DropdownMenuItem>
                                   {process.burdening_status === 2 && (
-                                    <DropdownMenuItem onClick={() => handleStatusUpdate(process, 3)}>
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusUpdate(process, 3)}
+                                    >
                                       <CheckCircle className="h-4 w-4 mr-2" />
                                       完成生产
                                     </DropdownMenuItem>
                                   )}
                                   {process.burdening_status === 3 && (
-                                    <DropdownMenuItem onClick={() => handleStatusUpdate(process, 2)}>
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusUpdate(process, 2)}
+                                    >
                                       <RotateCcw className="h-4 w-4 mr-2" />
                                       重新生产
                                     </DropdownMenuItem>
@@ -484,13 +524,15 @@ export default function ProductionProcessPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       {getProcessFlow(selectedProcess).map((step, index, arr) => (
                         <div key={index} className="flex items-center">
-                          <div className={`px-3 py-1 rounded-full text-sm ${
-                            index < currentStep
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                              : index === currentStep
-                                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
-                                : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
-                          }`}>
+                          <div
+                            className={`px-3 py-1 rounded-full text-sm ${
+                              index < currentStep
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                                : index === currentStep
+                                  ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                                  : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+                            }`}
+                          >
                             {step}
                           </div>
                           {index < arr.length - 1 && (
@@ -507,19 +549,23 @@ export default function ProductionProcessPage() {
                       关闭
                     </Button>
                     {selectedProcess.burdening_status === 1 && (
-                      <Button onClick={() => {
-                        setIsDetailOpen(false);
-                        handleStartProcess(selectedProcess);
-                      }}>
+                      <Button
+                        onClick={() => {
+                          setIsDetailOpen(false);
+                          handleStartProcess(selectedProcess);
+                        }}
+                      >
                         <Play className="h-4 w-4 mr-2" />
                         开始生产
                       </Button>
                     )}
                     {selectedProcess.burdening_status === 2 && (
-                      <Button onClick={() => {
-                        setIsDetailOpen(false);
-                        handleStartProcess(selectedProcess);
-                      }}>
+                      <Button
+                        onClick={() => {
+                          setIsDetailOpen(false);
+                          handleStartProcess(selectedProcess);
+                        }}
+                      >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         完成生产
                       </Button>
@@ -556,18 +602,25 @@ export default function ProductionProcessPage() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">计划数量:</span>
-                        <span className="ml-2">{parseFloat(String(selectedProcess.plan_qty)).toLocaleString()}</span>
+                        <span className="ml-2">
+                          {parseFloat(String(selectedProcess.plan_qty)).toLocaleString()}
+                        </span>
                       </div>
                       <div>
                         <span className="text-muted-foreground">当前状态:</span>
-                        <span className="ml-2">{getStatusBadge(selectedProcess.burdening_status)}</span>
+                        <span className="ml-2">
+                          {getStatusBadge(selectedProcess.burdening_status)}
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <Label>当前工序</Label>
-                    <Select value={String(currentStep)} onValueChange={(v) => setCurrentStep(parseInt(v))}>
+                    <Select
+                      value={String(currentStep)}
+                      onValueChange={(v) => setCurrentStep(parseInt(v))}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="选择当前工序" />
                       </SelectTrigger>

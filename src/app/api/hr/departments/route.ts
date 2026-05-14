@@ -1,22 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
+import { successResponse, withErrorHandler } from '@/lib/api-response';
 
-// 获取部门列表
-export async function GET(request: NextRequest) {
-  try {
-    const departments = await query(
-      `SELECT id, dept_name, dept_code, parent_id FROM sys_department WHERE status = 1 AND deleted = 0 ORDER BY sort_order`
-    );
+export const GET = withErrorHandler(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get('page') || '1');
+  const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
-    return NextResponse.json({
-      success: true,
-      data: departments,
-    });
-  } catch (error) {
-    console.error('获取部门列表失败:', error);
-    return NextResponse.json(
-      { success: false, message: '获取部门列表失败' },
-      { status: 500 }
-    );
-  }
-}
+  const countResult = await query(
+    `SELECT COUNT(*) as total FROM sys_department WHERE status = 1 AND deleted = 0`
+  );
+  const total = (countResult as any[])[0]?.total || 0;
+
+  const departments = await query(
+    `SELECT id, dept_name, dept_code, parent_id FROM sys_department WHERE status = 1 AND deleted = 0 ORDER BY sort_order LIMIT ? OFFSET ?`,
+    [pageSize, (page - 1) * pageSize]
+  );
+
+  return successResponse({
+    list: departments,
+    total,
+    page,
+    pageSize,
+  });
+}, '获取部门列表失败');

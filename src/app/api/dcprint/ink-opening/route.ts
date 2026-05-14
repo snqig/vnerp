@@ -1,6 +1,13 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler, validateRequestBody, logOperation } from '@/lib/api-response';
+import {
+  successResponse,
+  errorResponse,
+  commonErrors,
+  withErrorHandler,
+  validateRequestBody,
+  logOperation,
+} from '@/lib/api-response';
 import { randomUUID } from 'crypto';
 import { getConfig, isInkUnopenedShelfLife, getInkOpenedShelfLife } from '@/lib/global-config';
 
@@ -14,7 +21,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   if (id) {
-    const record = await queryOne('SELECT * FROM ink_opening_record WHERE id = ? AND deleted = 0', [parseInt(id)]);
+    const record = await queryOne('SELECT * FROM ink_opening_record WHERE id = ? AND deleted = 0', [
+      parseInt(id),
+    ]);
     if (!record) return commonErrors.notFound('油墨开罐记录不存在');
     return successResponse(record);
   }
@@ -42,7 +51,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const list = await query(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM ink_opening_record WHERE deleted = 0`;
-  const countResult = await queryOne(countSql) as any;
+  const countResult = (await queryOne(countSql)) as any;
 
   const summarySql = `SELECT
     COUNT(*) as total_count,
@@ -51,7 +60,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     COALESCE(SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END), 0) as scrapped_count,
     COALESCE(SUM(CASE WHEN status = 1 AND expire_time < NOW() THEN 1 ELSE 0 END), 0) as overdue_using_count
   FROM ink_opening_record WHERE deleted = 0`;
-  const summary = await queryOne(summarySql) as any;
+  const summary = (await queryOne(summarySql)) as any;
 
   const overdueSql = `SELECT * FROM ink_opening_record
     WHERE deleted = 0 AND status = 1 AND expire_time < NOW()
@@ -81,7 +90,23 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
-  const { material_id, material_code, material_name, batch_no, label_id, ink_type, open_time, expire_hours, remaining_qty, unit, operator_id, operator_name, remark, workorder_id, workorder_no } = body;
+  const {
+    material_id,
+    material_code,
+    material_name,
+    batch_no,
+    label_id,
+    ink_type,
+    open_time,
+    expire_hours,
+    remaining_qty,
+    unit,
+    operator_id,
+    operator_name,
+    remark,
+    workorder_id,
+    workorder_no,
+  } = body;
 
   if (batch_no) {
     const expiredOpening: any = await queryOne(
@@ -93,7 +118,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     if (expiredOpening) {
       return errorResponse(
         `该批次油墨已有过期开盖记录(${expiredOpening.record_no}，过期时间: ${expiredOpening.expire_time})，请先报废后再重新开盖`,
-        400, 400
+        400,
+        400
       );
     }
 
@@ -106,7 +132,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     if (activeOpening) {
       return errorResponse(
         `该批次油墨已有生效中的开盖记录(${activeOpening.record_no}，过期时间: ${activeOpening.expire_time})，请勿重复开盖`,
-        409, 409
+        409,
+        409
       );
     }
   }
@@ -127,7 +154,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       actualExpireHours = isInkUnopenedShelfLife();
     }
 
-    const expireTime = new Date(new Date(open_time).getTime() + actualExpireHours * 3600000).toISOString().slice(0, 19).replace('T', ' ');
+    const expireTime = new Date(new Date(open_time).getTime() + actualExpireHours * 3600000)
+      .toISOString()
+      .slice(0, 19)
+      .replace('T', ' ');
 
     let finalExpireTime = expireTime;
     if (batch_no) {
@@ -147,7 +177,23 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const [insertResult]: any = await conn.execute(
       `INSERT INTO ink_opening_record (record_no, material_id, material_code, material_name, batch_no, label_id, ink_type, open_time, expire_hours, expire_time, remaining_qty, unit, status, operator_id, operator_name, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
-      [recordNo, material_id, material_code || null, material_name || null, batch_no || null, label_id || null, ink_type || null, open_time, actualExpireHours, finalExpireTime, remaining_qty || null, unit || null, operator_id || null, operator_name || null, remark || null]
+      [
+        recordNo,
+        material_id,
+        material_code || null,
+        material_name || null,
+        batch_no || null,
+        label_id || null,
+        ink_type || null,
+        open_time,
+        actualExpireHours,
+        finalExpireTime,
+        remaining_qty || null,
+        unit || null,
+        operator_id || null,
+        operator_name || null,
+        remark || null,
+      ]
     );
     const insertId = insertResult.insertId;
 
@@ -184,11 +230,22 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, material_id, material_code, material_name, batch_no, quantity, unit, expiry_date, status, extra_data)
        VALUES (?, 'ink_open', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
       [
-        qrCode, insertId, recordNo,
-        material_id, material_code || null, material_name || null,
-        batch_no || null, remaining_qty || 0, unit || null,
+        qrCode,
+        insertId,
+        recordNo,
+        material_id,
+        material_code || null,
+        material_name || null,
+        batch_no || null,
+        remaining_qty || 0,
+        unit || null,
         finalExpireTime,
-        JSON.stringify({ ink_type, open_time, expire_hours: actualExpireHours, workorder_no: workorder_no || null }),
+        JSON.stringify({
+          ink_type,
+          open_time,
+          expire_hours: actualExpireHours,
+          workorder_no: workorder_no || null,
+        }),
       ]
     );
 
@@ -211,7 +268,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   if (!body.id) return commonErrors.badRequest('记录ID不能为空');
 
-  const existing = await queryOne('SELECT id, status FROM ink_opening_record WHERE id = ? AND deleted = 0', [body.id]);
+  const existing = await queryOne(
+    'SELECT id, status FROM ink_opening_record WHERE id = ? AND deleted = 0',
+    [body.id]
+  );
   if (!existing) return commonErrors.notFound('油墨开罐记录不存在');
 
   if (body.status !== undefined) {
@@ -245,7 +305,10 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   const id = searchParams.get('id');
   if (!id) return commonErrors.badRequest('记录ID不能为空');
 
-  const existing = await queryOne('SELECT id, status FROM ink_opening_record WHERE id = ? AND deleted = 0', [parseInt(id)]);
+  const existing = await queryOne(
+    'SELECT id, status FROM ink_opening_record WHERE id = ? AND deleted = 0',
+    [parseInt(id)]
+  );
   if (!existing) return commonErrors.notFound('油墨开罐记录不存在');
 
   await execute('UPDATE ink_opening_record SET deleted = 1 WHERE id = ?', [parseInt(id)]);

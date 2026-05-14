@@ -9,21 +9,45 @@ export async function GET(request: NextRequest) {
     const aging60Days = Number(getConfig('aging_60_days') || 60);
     const aging90Days = Number(getConfig('aging_90_days') || 90);
 
-    let overview: any = { totalReceivable: 0, totalPayable: 0, monthRevenue: 0, monthExpense: 0, revenueChange: 0, expenseChange: 0, netProfit: 0 };
+    const overview: any = {
+      totalReceivable: 0,
+      totalPayable: 0,
+      monthRevenue: 0,
+      monthExpense: 0,
+      revenueChange: 0,
+      expenseChange: 0,
+      netProfit: 0,
+    };
     try {
-      const recRows: any = await query(`SELECT COALESCE(SUM(amount), 0) as total FROM fin_receivable WHERE deleted = 0 AND status = 1`);
-      const payRows: any = await query(`SELECT COALESCE(SUM(amount), 0) as total FROM fin_payable WHERE deleted = 0 AND status = 1`);
-      if (Array.isArray(recRows) && recRows.length > 0) overview.totalReceivable = Number(recRows[0].total || 0);
-      if (Array.isArray(payRows) && payRows.length > 0) overview.totalPayable = Number(payRows[0].total || 0);
+      const recRows: any = await query(
+        `SELECT COALESCE(SUM(amount), 0) as total FROM fin_receivable WHERE deleted = 0 AND status = 1`
+      );
+      const payRows: any = await query(
+        `SELECT COALESCE(SUM(amount), 0) as total FROM fin_payable WHERE deleted = 0 AND status = 1`
+      );
+      if (Array.isArray(recRows) && recRows.length > 0)
+        overview.totalReceivable = Number(recRows[0].total || 0);
+      if (Array.isArray(payRows) && payRows.length > 0)
+        overview.totalPayable = Number(payRows[0].total || 0);
       overview.netProfit = overview.totalReceivable - overview.totalPayable;
-    } catch (e) { console.error('finance overview failed:', e); }
+    } catch (e) {
+      console.error('finance overview failed:', e);
+    }
 
     try {
-      const revRows: any = await query(`SELECT COALESCE(SUM(amount), 0) as total FROM fin_receipt_record WHERE deleted = 0 AND DATE(receipt_date) >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)`);
-      const expRows: any = await query(`SELECT COALESCE(SUM(amount), 0) as total FROM fin_payment_record WHERE deleted = 0 AND DATE(payment_date) >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)`);
-      if (Array.isArray(revRows) && revRows.length > 0) overview.monthRevenue = Number(revRows[0].total || 0);
-      if (Array.isArray(expRows) && expRows.length > 0) overview.monthExpense = Number(expRows[0].total || 0);
-    } catch (e) { console.error('finance monthly failed:', e); }
+      const revRows: any = await query(
+        `SELECT COALESCE(SUM(amount), 0) as total FROM fin_receipt_record WHERE deleted = 0 AND DATE(receipt_date) >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)`
+      );
+      const expRows: any = await query(
+        `SELECT COALESCE(SUM(amount), 0) as total FROM fin_payment_record WHERE deleted = 0 AND DATE(payment_date) >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)`
+      );
+      if (Array.isArray(revRows) && revRows.length > 0)
+        overview.monthRevenue = Number(revRows[0].total || 0);
+      if (Array.isArray(expRows) && expRows.length > 0)
+        overview.monthExpense = Number(expRows[0].total || 0);
+    } catch (e) {
+      console.error('finance monthly failed:', e);
+    }
 
     let revenueTrend: any[] = [];
     try {
@@ -33,7 +57,9 @@ export async function GET(request: NextRequest) {
         GROUP BY DATE(receipt_date) ORDER BY date
       `);
       revenueTrend = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('finance revenueTrend failed:', e); }
+    } catch (e) {
+      console.error('finance revenueTrend failed:', e);
+    }
 
     let expenseTrend: any[] = [];
     try {
@@ -43,7 +69,9 @@ export async function GET(request: NextRequest) {
         GROUP BY DATE(payment_date) ORDER BY date
       `);
       expenseTrend = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('finance expenseTrend failed:', e); }
+    } catch (e) {
+      console.error('finance expenseTrend failed:', e);
+    }
 
     let receivableAging: any[] = [];
     try {
@@ -60,7 +88,9 @@ export async function GET(request: NextRequest) {
         FROM fin_receivable WHERE deleted = 0 AND status = 1 GROUP BY aging
       `);
       receivableAging = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('finance aging failed:', e); }
+    } catch (e) {
+      console.error('finance aging failed:', e);
+    }
 
     let recentTransactions: any[] = [];
     try {
@@ -72,8 +102,12 @@ export async function GET(request: NextRequest) {
       `);
       const receipts = Array.isArray(recRows) ? recRows : [];
       const payments = Array.isArray(payRows) ? payRows : [];
-      recentTransactions = [...receipts, ...payments].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10);
-    } catch (e) { console.error('finance recent failed:', e); }
+      recentTransactions = [...receipts, ...payments]
+        .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 10);
+    } catch (e) {
+      console.error('finance recent failed:', e);
+    }
 
     let topPayables: any[] = [];
     try {
@@ -84,11 +118,20 @@ export async function GET(request: NextRequest) {
         WHERE p.deleted = 0 AND p.status = 1 GROUP BY s.supplier_name ORDER BY total DESC LIMIT 5
       `);
       topPayables = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('finance topPayables failed:', e); }
+    } catch (e) {
+      console.error('finance topPayables failed:', e);
+    }
 
     return NextResponse.json({
       success: true,
-      data: { overview, revenueTrend, expenseTrend, receivableAging, recentTransactions, topPayables },
+      data: {
+        overview,
+        revenueTrend,
+        expenseTrend,
+        receivableAging,
+        recentTransactions,
+        topPayables,
+      },
     });
   } catch (error) {
     console.error('获取财务看板数据失败:', error);

@@ -13,7 +13,9 @@ export async function GET(request: NextRequest) {
         FROM prd_process_card WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) orderStats = rows[0];
-    } catch (e) { console.error('orderStats query failed:', e); }
+    } catch (e) {
+      console.error('orderStats query failed:', e);
+    }
 
     let equipStats: any = { total: 0, running: 0, idle: 0, maintenance: 0, error_count: 0 };
     try {
@@ -27,7 +29,9 @@ export async function GET(request: NextRequest) {
         FROM eqp_equipment WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) equipStats = rows[0];
-    } catch (e) { console.error('equipStats query failed:', e); }
+    } catch (e) {
+      console.error('equipStats query failed:', e);
+    }
 
     let equipmentList: any[] = [];
     try {
@@ -38,7 +42,9 @@ export async function GET(request: NextRequest) {
         FROM eqp_equipment WHERE deleted = 0 AND status = 1 ORDER BY equipment_code
       `);
       equipmentList = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('equipmentList query failed:', e); }
+    } catch (e) {
+      console.error('equipmentList query failed:', e);
+    }
 
     let qualityRate = 96.8;
     try {
@@ -53,7 +59,9 @@ export async function GET(request: NextRequest) {
         const passedInspect = Number(rows[0].passed || 0);
         if (totalInspect > 0) qualityRate = Math.round((passedInspect / totalInspect) * 1000) / 10;
       }
-    } catch (e) { console.error('qualityStats query failed, using default'); }
+    } catch (e) {
+      console.error('qualityStats query failed, using default');
+    }
 
     let recentOrders: any[] = [];
     try {
@@ -68,7 +76,9 @@ export async function GET(request: NextRequest) {
         ORDER BY pc.update_time DESC LIMIT 10
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('recentOrders query failed:', e); }
+    } catch (e) {
+      console.error('recentOrders query failed:', e);
+    }
 
     let inkStats: any = { total_opened: 0, in_use: 0, expired: 0, expiring_soon: 0 };
     try {
@@ -81,9 +91,11 @@ export async function GET(request: NextRequest) {
         FROM ink_opening_record WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) inkStats = rows[0];
-    } catch (e) { console.error('inkStats query failed:', e); }
+    } catch (e) {
+      console.error('inkStats query failed:', e);
+    }
 
-    let dieStats: any = { total: 0, normal: 0, warning: 0, locked: 0, scrapped: 0 };
+    const dieStats: any = { total: 0, normal: 0, warning: 0, locked: 0, scrapped: 0 };
     try {
       const rows: any = await query(`
         SELECT
@@ -100,7 +112,9 @@ export async function GET(request: NextRequest) {
         dieStats.scrapped = rows[0].scrapped || 0;
         dieStats.normal = dieStats.total - dieStats.warning - dieStats.locked - dieStats.scrapped;
       }
-    } catch (e) { console.error('dieStats query failed:', e); }
+    } catch (e) {
+      console.error('dieStats query failed:', e);
+    }
 
     const totalEquip = Number(equipStats?.total || 0);
     const runningEquip = Number(equipStats?.running || 0);
@@ -122,7 +136,14 @@ export async function GET(request: NextRequest) {
           id: e.equipment_code,
           name: e.equipment_name,
           type: e.equipment_type,
-          status: e.current_status === 1 ? 'running' : e.current_status === 2 ? 'idle' : e.current_status === 3 ? 'maintenance' : 'error',
+          status:
+            e.current_status === 1
+              ? 'running'
+              : e.current_status === 2
+                ? 'idle'
+                : e.current_status === 3
+                  ? 'maintenance'
+                  : 'error',
           efficiency: Number(e.oee || 0),
           currentOrder: '-',
           operator: '-',
@@ -159,9 +180,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('获取生产看板数据失败:', error);
-    return NextResponse.json(
-      { success: false, message: '获取生产看板数据失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: '获取生产看板数据失败' }, { status: 500 });
   }
 }

@@ -1,4 +1,8 @@
-import { IInboundOrderRepository, Pagination, PaginatedResult } from '@/domain/warehouse/repositories/IInboundOrderRepository';
+import {
+  IInboundOrderRepository,
+  Pagination,
+  PaginatedResult,
+} from '@/domain/warehouse/repositories/IInboundOrderRepository';
 import { InboundOrder, InboundOrderProps } from '@/domain/warehouse/aggregates/InboundOrder';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
@@ -131,33 +135,35 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     }
 
     return {
-      data: result.data.map((o: any) => InboundOrder.reconstitute({
-        id: o.id,
-        orderNo: o.order_no,
-        status: (DB_TO_DOMAIN_STATUS[o.status] || o.status) as any,
-        warehouseId: o.warehouse_id,
-        supplierName: o.supplier_name || '',
-        orderType: o.order_type,
-        inboundDate: o.inbound_date,
-        remark: o.remark,
-        items: (o.items || []).map((item: any) => ({
-          id: item.id,
-          orderId: item.order_id,
-          materialId: item.material_id,
-          materialName: item.material_name,
-          materialSpec: item.material_spec,
-          batchNo: item.batch_no || '',
-          quantity: item.quantity,
-          unit: item.unit,
-          unitPrice: item.unit_price,
-          warehouseLocation: item.warehouse_location,
-          produceDate: item.produce_date,
-        })),
-        totalAmount: o.total_amount,
-        totalQuantity: o.total_quantity,
-        createTime: o.create_time,
-        updateTime: o.update_time,
-      })),
+      data: result.data.map((o: any) =>
+        InboundOrder.reconstitute({
+          id: o.id,
+          orderNo: o.order_no,
+          status: (DB_TO_DOMAIN_STATUS[o.status] || o.status) as any,
+          warehouseId: o.warehouse_id,
+          supplierName: o.supplier_name || '',
+          orderType: o.order_type,
+          inboundDate: o.inbound_date,
+          remark: o.remark,
+          items: (o.items || []).map((item: any) => ({
+            id: item.id,
+            orderId: item.order_id,
+            materialId: item.material_id,
+            materialName: item.material_name,
+            materialSpec: item.material_spec,
+            batchNo: item.batch_no || '',
+            quantity: item.quantity,
+            unit: item.unit,
+            unitPrice: item.unit_price,
+            warehouseLocation: item.warehouse_location,
+            produceDate: item.produce_date,
+          })),
+          totalAmount: o.total_amount,
+          totalQuantity: o.total_quantity,
+          createTime: o.create_time,
+          updateTime: o.update_time,
+        })
+      ),
       pagination: result.pagination,
     };
   }
@@ -172,10 +178,15 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
          (order_no, order_type, warehouse_id, supplier_name, total_amount, total_quantity, status, inbound_date, remark, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
-          orderNo, order.orderType || 'purchase', order.warehouseId, order.supplierName || null,
-          order.totalAmount.amount, order.totalQuantity,
+          orderNo,
+          order.orderType || 'purchase',
+          order.warehouseId,
+          order.supplierName || null,
+          order.totalAmount.amount,
+          order.totalQuantity,
           DOMAIN_TO_DB_STATUS[order.status.value] || order.status.value,
-          order.inboundDate || null, order.remark || null,
+          order.inboundDate || null,
+          order.remark || null,
         ]
       );
 
@@ -187,9 +198,17 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
            (order_id, material_id, material_name, material_spec, batch_no, quantity, unit, unit_price, total_price, warehouse_location, produce_date, create_time)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
           [
-            orderId, item.materialId, item.materialName || null, item.materialSpec || null,
-            item.batchNo || null, item.quantity, item.unit || null, item.unitPrice || 0,
-            item.totalPrice || 0, item.warehouseLocation || null, item.produceDate || null,
+            orderId,
+            item.materialId,
+            item.materialName || null,
+            item.materialSpec || null,
+            item.batchNo || null,
+            item.quantity,
+            item.unit || null,
+            item.unitPrice || 0,
+            item.totalPrice || 0,
+            item.warehouseLocation || null,
+            item.produceDate || null,
           ]
         );
       }
@@ -208,20 +227,22 @@ export class MysqlInboundOrderRepository implements IInboundOrderRepository {
     return result.affectedRows > 0;
   }
 
-  async updateInspectionAndFinance(id: number, inspectionStatus: number, financePosted: boolean): Promise<void> {
+  async updateInspectionAndFinance(
+    id: number,
+    inspectionStatus: number,
+    financePosted: boolean
+  ): Promise<void> {
     try {
-      await execute(
-        'UPDATE inv_inbound_order SET qc_status = ? WHERE id = ?',
-        [inspectionStatus === 3 ? 'pass' : 'pending', id]
-      );
-    } catch {
-    }
+      await execute('UPDATE inv_inbound_order SET qc_status = ? WHERE id = ?', [
+        inspectionStatus === 3 ? 'pass' : 'pending',
+        id,
+      ]);
+    } catch {}
   }
 
   async softDelete(id: number): Promise<void> {
-    await execute(
-      'UPDATE inv_inbound_order SET deleted = 1, update_time = NOW() WHERE id = ?',
-      [id]
-    );
+    await execute('UPDATE inv_inbound_order SET deleted = 1, update_time = NOW() WHERE id = ?', [
+      id,
+    ]);
   }
 }

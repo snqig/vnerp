@@ -31,13 +31,16 @@ export function SearchInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const prevDebouncedRef = useRef(debouncedValue);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    if (!isControlled) {
-      setInternalValue(val);
-    }
-    onChange?.(val);
-  }, [isControlled, onChange]);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      if (!isControlled) {
+        setInternalValue(val);
+      }
+      onChange?.(val);
+    },
+    [isControlled, onChange]
+  );
 
   const handleClear = useCallback(() => {
     if (!isControlled) {
@@ -47,11 +50,14 @@ export function SearchInput({
     inputRef.current?.focus();
   }, [isControlled, onChange]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      onSearch?.(currentValue);
-    }
-  }, [currentValue, onSearch]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        onSearch?.(currentValue);
+      }
+    },
+    [currentValue, onSearch]
+  );
 
   useEffect(() => {
     if (prevDebouncedRef.current !== debouncedValue) {

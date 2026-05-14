@@ -3,11 +3,7 @@ import { writeFile } from 'fs/promises';
 import { mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 
 const UPLOAD_CONFIG = {
   maxSize: 50 * 1024 * 1024,
@@ -31,7 +27,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('未找到上传的文件', 400, 400);
   }
 
-  if (!UPLOAD_CONFIG.allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.pdf')) {
+  if (
+    !UPLOAD_CONFIG.allowedTypes.includes(file.type) &&
+    !file.name.toLowerCase().endsWith('.pdf')
+  ) {
     return errorResponse('只能上传PDF文件', 400, 400);
   }
 

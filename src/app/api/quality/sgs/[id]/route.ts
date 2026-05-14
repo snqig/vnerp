@@ -10,10 +10,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('ID不能为空', 400, 400);
   }
 
-  const certRows: any = await query(
-    'SELECT * FROM qms_sgs_cert WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  const certRows: any = await query('SELECT * FROM qms_sgs_cert WHERE id = ? AND deleted = 0', [
+    id,
+  ]);
 
   if (certRows.length === 0) {
     return errorResponse('SGS认证记录不存在', 404, 404);

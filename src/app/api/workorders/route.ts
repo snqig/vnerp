@@ -91,7 +91,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   const countResult = await query(
-    `SELECT COUNT(*) as total FROM prod_work_order wo WHERE wo.deleted = 0` + (status && status !== 'all' ? ' AND wo.status = ?' : ''),
+    `SELECT COUNT(*) as total FROM prod_work_order wo WHERE wo.deleted = 0` +
+      (status && status !== 'all' ? ' AND wo.status = ?' : ''),
     status && status !== 'all' ? [status] : []
   );
 
@@ -105,7 +106,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     list: workOrders,
     total: (countResult as any[])[0]?.total || (workOrders as any[]).length,
     page,
-    page_size: pageSize,
+    pageSize,
   });
 }, '获取工单失败');
 
@@ -194,12 +195,20 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       );
 
       for (const bomLine of bomLines as any[]) {
-        const requiredQty = bomLine.quantity * totalQuantity * (1 + (bomLine.scrap_rate || 0) / 100);
+        const requiredQty =
+          bomLine.quantity * totalQuantity * (1 + (bomLine.scrap_rate || 0) / 100);
         await connection.execute(
           `INSERT INTO prod_work_order_material_req 
            (work_order_id, bom_line_id, material_id, material_name, required_qty, unit, create_time)
            VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-          [workOrderId, bomLine.id, bomLine.material_id, bomLine.material_name, requiredQty, bomLine.unit]
+          [
+            workOrderId,
+            bomLine.id,
+            bomLine.material_id,
+            bomLine.material_name,
+            requiredQty,
+            bomLine.unit,
+          ]
         );
       }
     }
@@ -214,8 +223,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, work_order_id, work_order_no, customer_name, quantity, status, extra_data)
        VALUES (?, 'workorder', ?, ?, ?, ?, ?, ?, 1, ?)`,
       [
-        qrCode, workOrderId, workOrderNo,
-        workOrderId, workOrderNo,
+        qrCode,
+        workOrderId,
+        workOrderNo,
+        workOrderId,
+        workOrderNo,
         customer_name || '',
         totalQuantity,
         JSON.stringify({ order_no, product_name }),

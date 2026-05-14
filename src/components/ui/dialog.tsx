@@ -1,33 +1,25 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { XIcon } from "lucide-react"
+import * as React from 'react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { XIcon } from 'lucide-react';
 
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils';
 
-function Dialog({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
-function DialogTrigger({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
+function DialogTrigger({ ...props }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
 }
 
-function DialogPortal({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+function DialogPortal({ ...props }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 
-function DialogClose({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+function DialogClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
 function DialogOverlay({
@@ -38,12 +30,12 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50',
         className
       )}
       {...props}
     />
-  )
+  );
 }
 
 function DialogContent({
@@ -53,42 +45,42 @@ function DialogContent({
   resizable = false,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
-  showCloseButton?: boolean
-  resizable?: boolean
+  showCloseButton?: boolean;
+  resizable?: boolean;
 }) {
-  const contentRef = React.useRef<HTMLDivElement>(null)
-  const [size, setSize] = React.useState<{ width: number; height: number } | null>(null)
-  const isDragging = React.useRef(false)
-  const startPos = React.useRef({ x: 0, y: 0 })
-  const startSize = React.useRef({ width: 0, height: 0 })
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  const [size, setSize] = React.useState<{ width: number; height: number } | null>(null);
+  const isDragging = React.useRef(false);
+  const startPos = React.useRef({ x: 0, y: 0 });
+  const startSize = React.useRef({ width: 0, height: 0 });
 
   const handleMouseDown = React.useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    isDragging.current = true
-    startPos.current = { x: e.clientX, y: e.clientY }
+    e.preventDefault();
+    e.stopPropagation();
+    isDragging.current = true;
+    startPos.current = { x: e.clientX, y: e.clientY };
     if (contentRef.current) {
       startSize.current = {
         width: contentRef.current.offsetWidth,
         height: contentRef.current.offsetHeight,
-      }
+      };
     }
     const handleMouseMove = (ev: MouseEvent) => {
-      if (!isDragging.current) return
-      const dx = ev.clientX - startPos.current.x
-      const dy = ev.clientY - startPos.current.y
-      const newWidth = Math.max(320, startSize.current.width + dx)
-      const newHeight = Math.max(200, startSize.current.height + dy)
-      setSize({ width: newWidth, height: newHeight })
-    }
+      if (!isDragging.current) return;
+      const dx = ev.clientX - startPos.current.x;
+      const dy = ev.clientY - startPos.current.y;
+      const newWidth = Math.max(320, startSize.current.width + dx);
+      const newHeight = Math.max(200, startSize.current.height + dy);
+      setSize({ width: newWidth, height: newHeight });
+    };
     const handleMouseUp = () => {
-      isDragging.current = false
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-  }, [])
+      isDragging.current = false;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, []);
 
   return (
     <DialogPortal data-slot="dialog-portal">
@@ -97,11 +89,15 @@ function DialogContent({
         ref={contentRef}
         data-slot="dialog-content"
         className={cn(
-          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg",
-          resizable && "resize-none overflow-auto",
+          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg',
+          resizable && 'resize-none overflow-auto',
           className
         )}
-        style={size ? { width: size.width, height: size.height, maxWidth: '95vw', maxHeight: '95vh' } : undefined}
+        style={
+          size
+            ? { width: size.width, height: size.height, maxWidth: '95vw', maxHeight: '95vh' }
+            : undefined
+        }
         {...props}
       >
         {children}
@@ -119,50 +115,55 @@ function DialogContent({
             className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize flex items-end justify-end p-0.5"
             onMouseDown={handleMouseDown}
           >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-muted-foreground/50">
-              <path d="M9 1L1 9M9 5L5 9M9 9L9 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 10 10"
+              fill="none"
+              className="text-muted-foreground/50"
+            >
+              <path
+                d="M9 1L1 9M9 5L5 9M9 9L9 9"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
           </div>
         )}
       </DialogPrimitive.Content>
     </DialogPortal>
-  )
+  );
 }
 
-function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cn('flex flex-col gap-2 text-center sm:text-left', className)}
       {...props}
     />
-  )
+  );
 }
 
-function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        className
-      )}
+      className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
       {...props}
     />
-  )
+  );
 }
 
-function DialogTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Title>) {
+function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg leading-none font-semibold", className)}
+      className={cn('text-lg leading-none font-semibold', className)}
       {...props}
     />
-  )
+  );
 }
 
 function DialogDescription({
@@ -172,10 +173,10 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn("text-muted-foreground text-sm", className)}
+      className={cn('text-muted-foreground text-sm', className)}
       {...props}
     />
-  )
+  );
 }
 
 export {
@@ -189,4 +190,4 @@ export {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
-}
+};

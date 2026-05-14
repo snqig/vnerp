@@ -19,7 +19,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       }
     };
 
-    await createTable('inv_material_category', `CREATE TABLE IF NOT EXISTS inv_material_category (
+    await createTable(
+      'inv_material_category',
+      `CREATE TABLE IF NOT EXISTS inv_material_category (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       category_code VARCHAR(50) NOT NULL COMMENT '分类编码',
       category_name VARCHAR(100) NOT NULL COMMENT '分类名称',
@@ -33,9 +35,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_category_code (category_code)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='物料分类表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='物料分类表'`
+    );
 
-    await createTable('inv_transfer_order', `CREATE TABLE IF NOT EXISTS inv_transfer_order (
+    await createTable(
+      'inv_transfer_order',
+      `CREATE TABLE IF NOT EXISTS inv_transfer_order (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       transfer_no VARCHAR(50) NOT NULL COMMENT '调拨单号',
       from_warehouse_id BIGINT UNSIGNED NOT NULL COMMENT '源仓库ID',
@@ -52,9 +57,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_transfer_no (transfer_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存调拨单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存调拨单'`
+    );
 
-    await createTable('inv_transfer_item', `CREATE TABLE IF NOT EXISTS inv_transfer_item (
+    await createTable(
+      'inv_transfer_item',
+      `CREATE TABLE IF NOT EXISTS inv_transfer_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       transfer_id BIGINT UNSIGNED NOT NULL COMMENT '调拨单ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -67,9 +75,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_transfer (transfer_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调拨单明细'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调拨单明细'`
+    );
 
-    await createTable('inv_stocktaking', `CREATE TABLE IF NOT EXISTS inv_stocktaking (
+    await createTable(
+      'inv_stocktaking',
+      `CREATE TABLE IF NOT EXISTS inv_stocktaking (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       taking_no VARCHAR(50) NOT NULL COMMENT '盘点单号',
       warehouse_id BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
@@ -85,9 +96,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_taking_no (taking_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存盘点单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存盘点单'`
+    );
 
-    await createTable('inv_stocktaking_item', `CREATE TABLE IF NOT EXISTS inv_stocktaking_item (
+    await createTable(
+      'inv_stocktaking_item',
+      `CREATE TABLE IF NOT EXISTS inv_stocktaking_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       taking_id BIGINT UNSIGNED NOT NULL COMMENT '盘点单ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -103,9 +117,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_taking (taking_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='盘点单明细'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='盘点单明细'`
+    );
 
-    await createTable('inv_stock_adjust', `CREATE TABLE IF NOT EXISTS inv_stock_adjust (
+    await createTable(
+      'inv_stock_adjust',
+      `CREATE TABLE IF NOT EXISTS inv_stock_adjust (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       adjust_no VARCHAR(50) NOT NULL COMMENT '调整单号',
       warehouse_id BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
@@ -121,9 +138,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_adjust_no (adjust_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存调整单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存调整单'`
+    );
 
-    await createTable('inv_stock_adjust_item', `CREATE TABLE IF NOT EXISTS inv_stock_adjust_item (
+    await createTable(
+      'inv_stock_adjust_item',
+      `CREATE TABLE IF NOT EXISTS inv_stock_adjust_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       adjust_id BIGINT UNSIGNED NOT NULL COMMENT '调整单ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -138,9 +158,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_adjust (adjust_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调整单明细'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调整单明细'`
+    );
 
-    await createTable('prd_material_issue', `CREATE TABLE IF NOT EXISTS prd_material_issue (
+    await createTable(
+      'prd_material_issue',
+      `CREATE TABLE IF NOT EXISTS prd_material_issue (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       issue_no VARCHAR(50) NOT NULL COMMENT '发料单号',
       work_order_id BIGINT UNSIGNED COMMENT '工单ID',
@@ -158,9 +181,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_issue_no (issue_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产发料单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产发料单'`
+    );
 
-    await createTable('prd_material_issue_item', `CREATE TABLE IF NOT EXISTS prd_material_issue_item (
+    await createTable(
+      'prd_material_issue_item',
+      `CREATE TABLE IF NOT EXISTS prd_material_issue_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       issue_id BIGINT UNSIGNED NOT NULL COMMENT '发料单ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -174,9 +200,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_issue (issue_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='发料单明细'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='发料单明细'`
+    );
 
-    await createTable('prd_material_return', `CREATE TABLE IF NOT EXISTS prd_material_return (
+    await createTable(
+      'prd_material_return',
+      `CREATE TABLE IF NOT EXISTS prd_material_return (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       return_no VARCHAR(50) NOT NULL COMMENT '退料单号',
       work_order_id BIGINT UNSIGNED COMMENT '工单ID',
@@ -193,9 +222,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_return_no (return_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产退料单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产退料单'`
+    );
 
-    await createTable('prd_material_return_item', `CREATE TABLE IF NOT EXISTS prd_material_return_item (
+    await createTable(
+      'prd_material_return_item',
+      `CREATE TABLE IF NOT EXISTS prd_material_return_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       return_id BIGINT UNSIGNED NOT NULL COMMENT '退料单ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -208,9 +240,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_return (return_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='退料单明细'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='退料单明细'`
+    );
 
-    await createTable('prd_product_label', `CREATE TABLE IF NOT EXISTS prd_product_label (
+    await createTable(
+      'prd_product_label',
+      `CREATE TABLE IF NOT EXISTS prd_product_label (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       label_no VARCHAR(50) NOT NULL COMMENT '标签编号',
       work_order_id BIGINT UNSIGNED COMMENT '工单ID',
@@ -232,9 +267,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_label_no (label_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='成品标签表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='成品标签表'`
+    );
 
-    await createTable('qc_unqualified_handle', `CREATE TABLE IF NOT EXISTS qc_unqualified_handle (
+    await createTable(
+      'qc_unqualified_handle',
+      `CREATE TABLE IF NOT EXISTS qc_unqualified_handle (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       handle_no VARCHAR(50) NOT NULL COMMENT '处理单号',
       inspection_id BIGINT UNSIGNED COMMENT '检验单ID',
@@ -255,9 +293,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_handle_no (handle_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='不合格品处理单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='不合格品处理单'`
+    );
 
-    await createTable('qc_incoming_inspection', `CREATE TABLE IF NOT EXISTS qc_incoming_inspection (
+    await createTable(
+      'qc_incoming_inspection',
+      `CREATE TABLE IF NOT EXISTS qc_incoming_inspection (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       inspection_no VARCHAR(50) NOT NULL COMMENT '检验单号',
       inspection_date DATE COMMENT '检验日期',
@@ -283,9 +324,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_inspection_no (inspection_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='来料检验单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='来料检验单'`
+    );
 
-    await createTable('qc_incoming_inspection_item', `CREATE TABLE IF NOT EXISTS qc_incoming_inspection_item (
+    await createTable(
+      'qc_incoming_inspection_item',
+      `CREATE TABLE IF NOT EXISTS qc_incoming_inspection_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       inspection_id BIGINT UNSIGNED NOT NULL COMMENT '检验单ID',
       item_name VARCHAR(100) COMMENT '检验项目',
@@ -297,9 +341,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       KEY idx_inspection (inspection_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='来料检验明细'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='来料检验明细'`
+    );
 
-    await createTable('qc_process_inspection', `CREATE TABLE IF NOT EXISTS qc_process_inspection (
+    await createTable(
+      'qc_process_inspection',
+      `CREATE TABLE IF NOT EXISTS qc_process_inspection (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       inspection_no VARCHAR(50) NOT NULL COMMENT '检验单号',
       inspection_date DATE COMMENT '检验日期',
@@ -321,9 +368,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_inspection_no (inspection_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='过程检验单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='过程检验单'`
+    );
 
-    await createTable('qc_final_inspection', `CREATE TABLE IF NOT EXISTS qc_final_inspection (
+    await createTable(
+      'qc_final_inspection',
+      `CREATE TABLE IF NOT EXISTS qc_final_inspection (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       inspection_no VARCHAR(50) NOT NULL COMMENT '检验单号',
       inspection_date DATE COMMENT '检验日期',
@@ -345,9 +395,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_inspection_no (inspection_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='终检单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='终检单'`
+    );
 
-    await createTable('eqp_repair', `CREATE TABLE IF NOT EXISTS eqp_repair (
+    await createTable(
+      'eqp_repair',
+      `CREATE TABLE IF NOT EXISTS eqp_repair (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       repair_no VARCHAR(50) NOT NULL COMMENT '维修单号',
       equipment_id BIGINT UNSIGNED NOT NULL COMMENT '设备ID',
@@ -369,9 +422,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_repair_no (repair_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备维修单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备维修单'`
+    );
 
-    await createTable('eqp_calibration', `CREATE TABLE IF NOT EXISTS eqp_calibration (
+    await createTable(
+      'eqp_calibration',
+      `CREATE TABLE IF NOT EXISTS eqp_calibration (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       calibration_no VARCHAR(50) NOT NULL COMMENT '检定单号',
       equipment_id BIGINT UNSIGNED NOT NULL COMMENT '设备ID',
@@ -391,9 +447,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_calibration_no (calibration_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备检定/校准单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备检定/校准单'`
+    );
 
-    await createTable('eqp_scrap', `CREATE TABLE IF NOT EXISTS eqp_scrap (
+    await createTable(
+      'eqp_scrap',
+      `CREATE TABLE IF NOT EXISTS eqp_scrap (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       scrap_no VARCHAR(50) NOT NULL COMMENT '报废单号',
       equipment_id BIGINT UNSIGNED NOT NULL COMMENT '设备ID',
@@ -412,9 +471,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_scrap_no (scrap_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备报废单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备报废单'`
+    );
 
-    await createTable('prd_ink', `CREATE TABLE IF NOT EXISTS prd_ink (
+    await createTable(
+      'prd_ink',
+      `CREATE TABLE IF NOT EXISTS prd_ink (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       ink_code VARCHAR(50) NOT NULL COMMENT '油墨编码',
       ink_name VARCHAR(100) NOT NULL COMMENT '油墨名称',
@@ -435,9 +497,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_ink_code (ink_code)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨管理表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨管理表'`
+    );
 
-    await createTable('prd_screen_plate', `CREATE TABLE IF NOT EXISTS prd_screen_plate (
+    await createTable(
+      'prd_screen_plate',
+      `CREATE TABLE IF NOT EXISTS prd_screen_plate (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       plate_code VARCHAR(50) NOT NULL COMMENT '网版编码',
       plate_name VARCHAR(100) NOT NULL COMMENT '网版名称',
@@ -461,9 +526,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_plate_code (plate_code)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='网版管理表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='网版管理表'`
+    );
 
-    await createTable('prd_die', `CREATE TABLE IF NOT EXISTS prd_die (
+    await createTable(
+      'prd_die',
+      `CREATE TABLE IF NOT EXISTS prd_die (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       die_code VARCHAR(50) NOT NULL COMMENT '刀具编码',
       die_name VARCHAR(100) NOT NULL COMMENT '刀具名称',
@@ -486,9 +554,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_die_code (die_code)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='刀具管理表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='刀具管理表'`
+    );
 
-    await createTable('hr_training', `CREATE TABLE IF NOT EXISTS hr_training (
+    await createTable(
+      'hr_training',
+      `CREATE TABLE IF NOT EXISTS hr_training (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       training_no VARCHAR(50) NOT NULL COMMENT '培训编号',
       training_name VARCHAR(100) NOT NULL COMMENT '培训名称',
@@ -506,9 +577,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_training_no (training_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='培训管理表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='培训管理表'`
+    );
 
-    await createTable('hr_training_participant', `CREATE TABLE IF NOT EXISTS hr_training_participant (
+    await createTable(
+      'hr_training_participant',
+      `CREATE TABLE IF NOT EXISTS hr_training_participant (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       training_id BIGINT UNSIGNED NOT NULL COMMENT '培训ID',
       employee_id BIGINT UNSIGNED NOT NULL COMMENT '员工ID',
@@ -520,9 +594,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       PRIMARY KEY (id),
       KEY idx_training (training_id),
       KEY idx_employee (employee_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='培训参与人员表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='培训参与人员表'`
+    );
 
-    await createTable('inv_production_inbound', `CREATE TABLE IF NOT EXISTS inv_production_inbound (
+    await createTable(
+      'inv_production_inbound',
+      `CREATE TABLE IF NOT EXISTS inv_production_inbound (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       inbound_no VARCHAR(50) NOT NULL COMMENT '入库单号',
       work_order_id BIGINT UNSIGNED COMMENT '工单ID',
@@ -540,9 +617,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_inbound_no (inbound_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产入库单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产入库单'`
+    );
 
-    await createTable('inv_production_inbound_item', `CREATE TABLE IF NOT EXISTS inv_production_inbound_item (
+    await createTable(
+      'inv_production_inbound_item',
+      `CREATE TABLE IF NOT EXISTS inv_production_inbound_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       inbound_id BIGINT UNSIGNED NOT NULL COMMENT '入库单ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -555,9 +635,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_inbound (inbound_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产入库单明细'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产入库单明细'`
+    );
 
-    await createTable('inv_sales_outbound', `CREATE TABLE IF NOT EXISTS inv_sales_outbound (
+    await createTable(
+      'inv_sales_outbound',
+      `CREATE TABLE IF NOT EXISTS inv_sales_outbound (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       outbound_no VARCHAR(50) NOT NULL COMMENT '出库单号',
       order_id BIGINT UNSIGNED COMMENT '销售订单ID',
@@ -575,9 +658,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_outbound_no (outbound_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售出库单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售出库单'`
+    );
 
-    await createTable('inv_sales_outbound_item', `CREATE TABLE IF NOT EXISTS inv_sales_outbound_item (
+    await createTable(
+      'inv_sales_outbound_item',
+      `CREATE TABLE IF NOT EXISTS inv_sales_outbound_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       outbound_id BIGINT UNSIGNED NOT NULL COMMENT '出库单ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -590,9 +676,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_outbound (outbound_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售出库单明细'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售出库单明细'`
+    );
 
-    await createTable('outsource_order', `CREATE TABLE IF NOT EXISTS outsource_order (
+    await createTable(
+      'outsource_order',
+      `CREATE TABLE IF NOT EXISTS outsource_order (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       order_no VARCHAR(50) NOT NULL COMMENT '委外订单号',
       work_order_id BIGINT UNSIGNED COMMENT '关联工单ID',
@@ -621,9 +710,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_order_no (order_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='委外订单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='委外订单'`
+    );
 
-    await createTable('outsource_issue', `CREATE TABLE IF NOT EXISTS outsource_issue (
+    await createTable(
+      'outsource_issue',
+      `CREATE TABLE IF NOT EXISTS outsource_issue (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       issue_no VARCHAR(50) NOT NULL COMMENT '委外发料单号',
       outsource_order_id BIGINT UNSIGNED NOT NULL COMMENT '委外订单ID',
@@ -640,9 +732,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_issue_no (issue_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='委外发料单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='委外发料单'`
+    );
 
-    await createTable('outsource_issue_item', `CREATE TABLE IF NOT EXISTS outsource_issue_item (
+    await createTable(
+      'outsource_issue_item',
+      `CREATE TABLE IF NOT EXISTS outsource_issue_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       issue_id BIGINT UNSIGNED NOT NULL COMMENT '发料单ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -655,9 +750,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_issue (issue_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='委外发料单明细'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='委外发料单明细'`
+    );
 
-    await createTable('outsource_receive', `CREATE TABLE IF NOT EXISTS outsource_receive (
+    await createTable(
+      'outsource_receive',
+      `CREATE TABLE IF NOT EXISTS outsource_receive (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       receive_no VARCHAR(50) NOT NULL COMMENT '委外收货单号',
       outsource_order_id BIGINT UNSIGNED NOT NULL COMMENT '委外订单ID',
@@ -678,9 +776,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_receive_no (receive_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='委外收货单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='委外收货单'`
+    );
 
-    await createTable('outsource_settlement', `CREATE TABLE IF NOT EXISTS outsource_settlement (
+    await createTable(
+      'outsource_settlement',
+      `CREATE TABLE IF NOT EXISTS outsource_settlement (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       settlement_no VARCHAR(50) NOT NULL COMMENT '结算单号',
       outsource_order_id BIGINT UNSIGNED NOT NULL COMMENT '委外订单ID',
@@ -703,9 +804,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_settlement_no (settlement_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='委外结算单'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='委外结算单'`
+    );
 
-    await createTable('fin_cost_record', `CREATE TABLE IF NOT EXISTS fin_cost_record (
+    await createTable(
+      'fin_cost_record',
+      `CREATE TABLE IF NOT EXISTS fin_cost_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       cost_no VARCHAR(50) NOT NULL COMMENT '成本单号',
       cost_type VARCHAR(20) NOT NULL COMMENT '成本类型: material-材料, labor-人工, overhead-制造费用, outsource-委外, other-其他',
@@ -724,9 +828,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_cost_no (cost_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='成本记录表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='成本记录表'`
+    );
 
-    await createTable('qrcode_record', `CREATE TABLE IF NOT EXISTS qrcode_record (
+    await createTable(
+      'qrcode_record',
+      `CREATE TABLE IF NOT EXISTS qrcode_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       qr_code VARCHAR(100) NOT NULL COMMENT '二维码编码(UUID)',
       qr_type VARCHAR(30) NOT NULL COMMENT '二维码类型: material-原料, product-成品, workorder-工单, ink-油墨, screen_plate-网版, die-刀具, shipment-出货, ink_open-开罐, ink_mixed-调色',
@@ -767,9 +874,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       KEY idx_ref (qr_type, ref_id),
       KEY idx_batch (batch_no),
       KEY idx_material (material_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='二维码记录表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='二维码记录表'`
+    );
 
-    await createTable('qrcode_scan_log', `CREATE TABLE IF NOT EXISTS qrcode_scan_log (
+    await createTable(
+      'qrcode_scan_log',
+      `CREATE TABLE IF NOT EXISTS qrcode_scan_log (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       qr_code VARCHAR(100) NOT NULL COMMENT '二维码编码',
       qr_type VARCHAR(30) COMMENT '二维码类型',
@@ -787,9 +897,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       KEY idx_qr_code (qr_code),
       KEY idx_scan_type (scan_type),
       KEY idx_create_time (create_time)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='二维码扫描日志表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='二维码扫描日志表'`
+    );
 
-    await createTable('sys_operation_log', `CREATE TABLE IF NOT EXISTS sys_operation_log (
+    await createTable(
+      'sys_operation_log',
+      `CREATE TABLE IF NOT EXISTS sys_operation_log (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       title VARCHAR(100) COMMENT '操作标题',
       oper_name VARCHAR(50) COMMENT '操作人',
@@ -806,7 +919,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       PRIMARY KEY (id),
       KEY idx_oper_time (oper_time),
       KEY idx_oper_name (oper_name)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表'`
+    );
 
     const addColumn = async (table: string, column: string, definition: string) => {
       try {
@@ -827,17 +941,37 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     await addColumn('sys_login_log', 'browser', "VARCHAR(50) COMMENT '浏览器类型'");
     await addColumn('sys_login_log', 'os', "VARCHAR(50) COMMENT '操作系统'");
     await addColumn('sys_login_log', 'msg', "VARCHAR(255) COMMENT '提示消息'");
-    await addColumn('sys_login_log', 'login_time', "DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '登录时间'");
+    await addColumn(
+      'sys_login_log',
+      'login_time',
+      "DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '登录时间'"
+    );
     await addColumn('sys_login_log', 'deleted', "TINYINT DEFAULT 0 COMMENT '软删除'");
 
-    await addColumn('inv_material_category', 'category_type', "TINYINT COMMENT '分类类型: 1-原材料, 2-半成品, 3-成品, 4-辅料, 5-包材, 6-油墨, 7-溶剂/洗网水, 8-网版/丝网, 9-刀具/刀模, 10-设备配件'");
+    await addColumn(
+      'inv_material_category',
+      'category_type',
+      "TINYINT COMMENT '分类类型: 1-原材料, 2-半成品, 3-成品, 4-辅料, 5-包材, 6-油墨, 7-溶剂/洗网水, 8-网版/丝网, 9-刀具/刀模, 10-设备配件'"
+    );
     await addColumn('inv_material_category', 'category_code', "VARCHAR(50) COMMENT '分类编码'");
-    await addColumn('inv_material_category', 'parent_id', "BIGINT UNSIGNED DEFAULT 0 COMMENT '父分类ID'");
+    await addColumn(
+      'inv_material_category',
+      'parent_id',
+      "BIGINT UNSIGNED DEFAULT 0 COMMENT '父分类ID'"
+    );
     await addColumn('inv_material_category', 'sort_order', "INT DEFAULT 0 COMMENT '排序'");
-    await addColumn('inv_material_category', 'status', "TINYINT DEFAULT 1 COMMENT '状态: 0-禁用, 1-启用'");
+    await addColumn(
+      'inv_material_category',
+      'status',
+      "TINYINT DEFAULT 1 COMMENT '状态: 0-禁用, 1-启用'"
+    );
     await addColumn('inv_material_category', 'remark', "VARCHAR(255) COMMENT '备注'");
     await addColumn('inv_material_category', 'deleted', "TINYINT DEFAULT 0 COMMENT '软删除'");
-    await addColumn('sys_operation_log', 'oper_time', "DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间'");
+    await addColumn(
+      'sys_operation_log',
+      'oper_time',
+      "DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间'"
+    );
     await addColumn('sys_operation_log', 'oper_name', "VARCHAR(50) COMMENT '操作人'");
     await addColumn('sys_operation_log', 'oper_type', "VARCHAR(30) COMMENT '操作类型'");
     await addColumn('sys_operation_log', 'oper_method', "VARCHAR(10) COMMENT '请求方式'");
@@ -847,9 +981,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     await addColumn('sys_operation_log', 'oper_result', "TEXT COMMENT '返回结果'");
     await addColumn('sys_operation_log', 'deleted', "TINYINT DEFAULT 0 COMMENT '软删除'");
     await addColumn('sys_notice', 'deleted', "TINYINT DEFAULT 0 COMMENT '软删除'");
-    await addColumn('sys_menu', 'is_visible', "TINYINT DEFAULT 1 COMMENT '是否可见: 0-隐藏, 1-可见'");
+    await addColumn(
+      'sys_menu',
+      'is_visible',
+      "TINYINT DEFAULT 1 COMMENT '是否可见: 0-隐藏, 1-可见'"
+    );
 
-    await createTable('qms_sgs_cert', `CREATE TABLE IF NOT EXISTS qms_sgs_cert (
+    await createTable(
+      'qms_sgs_cert',
+      `CREATE TABLE IF NOT EXISTS qms_sgs_cert (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       cert_no VARCHAR(50) NOT NULL COMMENT 'SGS证书编号',
       material_id BIGINT UNSIGNED COMMENT '物料ID',
@@ -877,9 +1017,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       KEY idx_supplier (supplier_id),
       KEY idx_expire (expire_date),
       KEY idx_status (status)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='SGS认证管理表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='SGS认证管理表'`
+    );
 
-    await createTable('qms_sgs_cert_item', `CREATE TABLE IF NOT EXISTS qms_sgs_cert_item (
+    await createTable(
+      'qms_sgs_cert_item',
+      `CREATE TABLE IF NOT EXISTS qms_sgs_cert_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       cert_id BIGINT UNSIGNED NOT NULL COMMENT 'SGS证书ID',
       test_item_name VARCHAR(200) COMMENT '检测项目名称',
@@ -892,10 +1035,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_cert (cert_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='SGS检测项目明细表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='SGS检测项目明细表'`
+    );
 
     const seedCategories = async () => {
-      const [existing]: any = await conn.execute('SELECT COUNT(*) as cnt FROM inv_material_category WHERE deleted = 0');
+      const [existing]: any = await conn.execute(
+        'SELECT COUNT(*) as cnt FROM inv_material_category WHERE deleted = 0'
+      );
       if (existing.cnt > 0) {
         results.push('物料分类: 已有数据，跳过初始化');
         return;
@@ -903,13 +1049,31 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       const categories = [
         { code: 'RM-01', name: '承印物', type: 1, sort: 1, remark: 'PET/PP/PE/纸张等印刷基材' },
         { code: 'RM-02', name: '油墨', type: 6, sort: 2, remark: '丝印油墨、UV油墨、溶剂油墨等' },
-        { code: 'RM-03', name: '溶剂/洗网水', type: 7, sort: 3, remark: '洗网水、开油水、稀释剂等' },
+        {
+          code: 'RM-03',
+          name: '溶剂/洗网水',
+          type: 7,
+          sort: 3,
+          remark: '洗网水、开油水、稀释剂等',
+        },
         { code: 'RM-04', name: '网版/丝网', type: 8, sort: 4, remark: '丝网版、铝框、网纱等' },
         { code: 'RM-05', name: '刀具/刀模', type: 9, sort: 5, remark: '模切刀、冲模、切割刀具等' },
         { code: 'RM-06', name: '胶水/粘合剂', type: 4, sort: 6, remark: '丝印胶水、热熔胶等' },
-        { code: 'RM-07', name: '保护膜/离型膜', type: 4, sort: 7, remark: '保护膜、离型膜、离型纸等' },
+        {
+          code: 'RM-07',
+          name: '保护膜/离型膜',
+          type: 4,
+          sort: 7,
+          remark: '保护膜、离型膜、离型纸等',
+        },
         { code: 'RM-08', name: '刮刀/胶刮', type: 4, sort: 8, remark: '聚氨酯刮刀、硅胶刮刀等' },
-        { code: 'RM-09', name: '设备配件', type: 10, sort: 9, remark: '印刷机配件、干燥设备配件等' },
+        {
+          code: 'RM-09',
+          name: '设备配件',
+          type: 10,
+          sort: 9,
+          remark: '印刷机配件、干燥设备配件等',
+        },
         { code: 'RM-10', name: '包装材料', type: 5, sort: 10, remark: '纸箱、气泡膜、标签等' },
         { code: 'SP-01', name: '半成品', type: 2, sort: 11, remark: '印刷半成品、分切半成品等' },
         { code: 'FP-01', name: '成品', type: 3, sort: 12, remark: '最终成品' },
@@ -938,7 +1102,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     };
     await seedCategories();
 
-    await createTable('plm_product_lifecycle', `CREATE TABLE IF NOT EXISTS plm_product_lifecycle (
+    await createTable(
+      'plm_product_lifecycle',
+      `CREATE TABLE IF NOT EXISTS plm_product_lifecycle (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       product_id BIGINT UNSIGNED NOT NULL COMMENT '产品ID',
       product_code VARCHAR(50) COMMENT '产品编码',
@@ -960,9 +1126,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       PRIMARY KEY (id),
       KEY idx_product (product_id),
       KEY idx_stage (lifecycle_stage)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='产品生命周期管理表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='产品生命周期管理表'`
+    );
 
-    await createTable('plm_eco', `CREATE TABLE IF NOT EXISTS plm_eco (
+    await createTable(
+      'plm_eco',
+      `CREATE TABLE IF NOT EXISTS plm_eco (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       eco_no VARCHAR(50) NOT NULL COMMENT '工程变更单号',
       eco_type VARCHAR(20) NOT NULL COMMENT '变更类型: bom-BOM变更, process-工艺变更, material-物料变更, design-设计变更',
@@ -988,9 +1157,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       UNIQUE KEY uk_eco_no (eco_no),
       KEY idx_product (product_id),
       KEY idx_status (status)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工程变更单表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工程变更单表'`
+    );
 
-    await createTable('crm_follow_record', `CREATE TABLE IF NOT EXISTS crm_follow_record (
+    await createTable(
+      'crm_follow_record',
+      `CREATE TABLE IF NOT EXISTS crm_follow_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       customer_id BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
       customer_name VARCHAR(100) COMMENT '客户名称',
@@ -1009,9 +1181,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       PRIMARY KEY (id),
       KEY idx_customer (customer_id),
       KEY idx_follow_date (create_time)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户跟进记录表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户跟进记录表'`
+    );
 
-    await createTable('crm_customer_analysis', `CREATE TABLE IF NOT EXISTS crm_customer_analysis (
+    await createTable(
+      'crm_customer_analysis',
+      `CREATE TABLE IF NOT EXISTS crm_customer_analysis (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       customer_id BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
       customer_name VARCHAR(100) COMMENT '客户名称',
@@ -1033,9 +1208,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       PRIMARY KEY (id),
       KEY idx_customer (customer_id),
       KEY idx_period (analysis_period, period_start)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户分析统计表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户分析统计表'`
+    );
 
-    await createTable('srm_supplier_eval', `CREATE TABLE IF NOT EXISTS srm_supplier_eval (
+    await createTable(
+      'srm_supplier_eval',
+      `CREATE TABLE IF NOT EXISTS srm_supplier_eval (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       eval_no VARCHAR(50) NOT NULL COMMENT '评估编号',
       supplier_id BIGINT UNSIGNED NOT NULL COMMENT '供应商ID',
@@ -1067,9 +1245,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       UNIQUE KEY uk_eval_no (eval_no),
       KEY idx_supplier (supplier_id),
       KEY idx_period (eval_period, period_start)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='供应商评估表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='供应商评估表'`
+    );
 
-    await createTable('srm_supplier_eval_item', `CREATE TABLE IF NOT EXISTS srm_supplier_eval_item (
+    await createTable(
+      'srm_supplier_eval_item',
+      `CREATE TABLE IF NOT EXISTS srm_supplier_eval_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       eval_id BIGINT UNSIGNED NOT NULL COMMENT '评估ID',
       category VARCHAR(30) COMMENT '评估类别: quality-质量, delivery-交付, price-价格, service-服务',
@@ -1083,9 +1264,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_eval (eval_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='供应商评估明细表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='供应商评估明细表'`
+    );
 
-    await createTable('eng_sample_to_mass', `CREATE TABLE IF NOT EXISTS eng_sample_to_mass (
+    await createTable(
+      'eng_sample_to_mass',
+      `CREATE TABLE IF NOT EXISTS eng_sample_to_mass (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       transfer_no VARCHAR(50) NOT NULL COMMENT '转移单号',
       sample_order_id BIGINT UNSIGNED COMMENT '样品订单ID',
@@ -1120,9 +1304,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       UNIQUE KEY uk_transfer_no (transfer_no),
       KEY idx_product (product_id),
       KEY idx_status (status)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='样品转量产交接表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='样品转量产交接表'`
+    );
 
-    await createTable('eng_sop', `CREATE TABLE IF NOT EXISTS eng_sop (
+    await createTable(
+      'eng_sop',
+      `CREATE TABLE IF NOT EXISTS eng_sop (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       sop_no VARCHAR(50) NOT NULL COMMENT 'SOP编号',
       sop_name VARCHAR(100) NOT NULL COMMENT 'SOP名称',
@@ -1151,9 +1338,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       UNIQUE KEY uk_sop_no (sop_no),
       KEY idx_product (product_id),
       KEY idx_process (process_code)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标准作业指导书表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='标准作业指导书表'`
+    );
 
-    await createTable('prd_schedule', `CREATE TABLE IF NOT EXISTS prd_schedule (
+    await createTable(
+      'prd_schedule',
+      `CREATE TABLE IF NOT EXISTS prd_schedule (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       schedule_no VARCHAR(50) NOT NULL COMMENT '排产单号',
       order_id BIGINT UNSIGNED COMMENT '销售订单ID',
@@ -1182,9 +1372,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       KEY idx_workshop (workshop),
       KEY idx_status (status),
       KEY idx_planned_start (planned_start)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产排产计划表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产排产计划表'`
+    );
 
-    await createTable('qms_complaint', `CREATE TABLE IF NOT EXISTS qms_complaint (
+    await createTable(
+      'qms_complaint',
+      `CREATE TABLE IF NOT EXISTS qms_complaint (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       complaint_no VARCHAR(50) NOT NULL COMMENT '客诉编号',
       customer_id BIGINT UNSIGNED COMMENT '客户ID',
@@ -1220,9 +1413,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       KEY idx_customer (customer_id),
       KEY idx_status (status),
       KEY idx_level (complaint_level)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客诉8D处理表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客诉8D处理表'`
+    );
 
-    await createTable('qms_lab_test', `CREATE TABLE IF NOT EXISTS qms_lab_test (
+    await createTable(
+      'qms_lab_test',
+      `CREATE TABLE IF NOT EXISTS qms_lab_test (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       test_no VARCHAR(50) NOT NULL COMMENT '测试编号',
       test_type VARCHAR(20) COMMENT '测试类型: color_diff-色差, adhesion-附着力, wear-耐磨, thickness-厚度, tension-张力, viscosity-粘度, other-其他',
@@ -1249,9 +1445,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       UNIQUE KEY uk_test_no (test_no),
       KEY idx_product (product_id),
       KEY idx_type (test_type)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='实验室测试记录表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='实验室测试记录表'`
+    );
 
-    await createTable('qms_supplier_audit', `CREATE TABLE IF NOT EXISTS qms_supplier_audit (
+    await createTable(
+      'qms_supplier_audit',
+      `CREATE TABLE IF NOT EXISTS qms_supplier_audit (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       audit_no VARCHAR(50) NOT NULL COMMENT '审核编号',
       supplier_id BIGINT UNSIGNED NOT NULL COMMENT '供应商ID',
@@ -1277,9 +1476,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       UNIQUE KEY uk_audit_no (audit_no),
       KEY idx_supplier (supplier_id),
       KEY idx_status (status)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='供应商质量审核表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='供应商质量审核表'`
+    );
 
-    await createTable('biz_contract_review', `CREATE TABLE IF NOT EXISTS biz_contract_review (
+    await createTable(
+      'biz_contract_review',
+      `CREATE TABLE IF NOT EXISTS biz_contract_review (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       review_no VARCHAR(50) NOT NULL COMMENT '评审编号',
       order_id BIGINT UNSIGNED COMMENT '订单ID',
@@ -1311,7 +1513,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       UNIQUE KEY uk_review_no (review_no),
       KEY idx_order (order_id),
       KEY idx_status (status)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合同评审表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合同评审表'`
+    );
 
     return results;
   });

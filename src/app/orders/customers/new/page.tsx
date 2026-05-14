@@ -4,16 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-const MainLayout = dynamic(() => import('@/components/layout').then(m => ({ default: m.MainLayout })), { ssr: false });
+const MainLayout = dynamic(
+  () => import('@/components/layout').then((m) => ({ default: m.MainLayout })),
+  { ssr: false }
+);
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -52,13 +50,25 @@ export default function NewCustomerPage() {
     remark: '',
   });
 
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.customer_code || !formData.customer_name) {
       alert('请填写客户编码和客户名称');
       return;
@@ -66,11 +76,8 @@ export default function NewCustomerPage() {
 
     try {
       setLoading(true);
-      const response = await fetch('/api/customers', {
+      const response = await authFetch('/api/customers', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           ...formData,
           customer_type: parseInt(formData.customer_type),

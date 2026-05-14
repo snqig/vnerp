@@ -14,9 +14,9 @@ import {
   Users,
   Settings,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // 图标映射
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -28,7 +28,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Banknote,
   ShieldCheck,
   Users,
-  Settings
+  Settings,
 };
 
 interface MenuItem {
@@ -41,10 +41,78 @@ interface MenuItem {
   children?: MenuItem[];
 }
 
+// 通过路径匹配找到所有祖先菜单 - 改进版
+function findAncestorsByPathPrefix(menus: MenuItem[], currentPath: string): string[] {
+  const ancestors: string[] = [];
+  
+  function search(currentMenus: MenuItem[], parentCodes: string[]): boolean {
+    for (const menu of currentMenus) {
+      // 检查当前菜单是否匹配当前路径
+      if (menu.path && (currentPath === menu.path || currentPath.startsWith(menu.path + '/'))) {
+        ancestors.push(...parentCodes);
+        return true;
+      }
+      
+      // 如果当前菜单有子菜单，继续搜索
+      if (menu.children && menu.children.length > 0) {
+        if (search(menu.children, [...parentCodes, menu.code])) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
+  // 先尝试精确匹配
+  let found = search(menus, []);
+  
+  // 如果没找到，尝试更宽松的匹配（寻找最长匹配的路径前缀）
+  if (!found) {
+    function searchBestMatch(currentMenus: MenuItem[], parentCodes: string[]): boolean {
+      for (const menu of currentMenus) {
+        if (menu.path) {
+          // 检查是否是当前路径的前缀
+          if (currentPath.startsWith(menu.path)) {
+            ancestors.push(...parentCodes);
+            // 继续搜索子菜单，看是否有更精确的匹配
+            if (menu.children && menu.children.length > 0) {
+              searchBestMatch(menu.children, [...parentCodes, menu.code]);
+            }
+            return true;
+          }
+        }
+        if (menu.children && menu.children.length > 0) {
+          if (searchBestMatch(menu.children, [...parentCodes, menu.code])) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    searchBestMatch(menus, []);
+  }
+  
+  return [...new Set(ancestors)];
+}
+
 export function DynamicMenu() {
   const { menus, isLoading } = useAuth();
   const pathname = usePathname();
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+
+  // 根据当前路径自动展开所有祖先菜单
+  useEffect(() => {
+    if (!pathname || !menus || menus.length === 0) return;
+    
+    // 使用新的前缀匹配函数
+    const ancestorCodes = findAncestorsByPathPrefix(menus, pathname);
+    if (ancestorCodes.length > 0) {
+      setExpandedMenus(prev => {
+        const newSet = new Set([...prev, ...ancestorCodes]);
+        return Array.from(newSet);
+      });
+    }
+  }, [pathname, menus]);
 
   if (isLoading) {
     return <div className="p-4 text-muted-foreground">加载中...</div>;
@@ -53,9 +121,7 @@ export function DynamicMenu() {
   // 切换菜单展开状态
   const toggleMenu = (code: string) => {
     setExpandedMenus(prev =>
-      prev.includes(code)
-        ? prev.filter(c => c !== code)
-        : [...prev, code]
+      prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
     );
   };
 
@@ -85,9 +151,7 @@ export function DynamicMenu() {
           <button
             onClick={() => toggleMenu(menu.code)}
             className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-              active
-                ? 'bg-blue-50 text-blue-700'
-                : 'text-gray-700 hover:bg-gray-100'
+              active ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
             }`}
             style={{ paddingLeft: `${16 + level * 16}px` }}
           >
@@ -116,9 +180,7 @@ export function DynamicMenu() {
         key={menu.id}
         href={menu.path || '#'}
         className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-          active
-            ? 'bg-blue-50 text-blue-700'
-            : 'text-gray-700 hover:bg-gray-100'
+          active ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
         }`}
         style={{ paddingLeft: `${16 + level * 16}px` }}
       >

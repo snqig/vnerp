@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -6,12 +6,41 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Plus, Search, RefreshCw, Edit, Trash2, ChevronRight, ChevronDown, Loader2 } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  RefreshCw,
+  Edit,
+  Trash2,
+  ChevronRight,
+  ChevronDown,
+  Loader2,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface MenuItem {
   id: number;
@@ -42,12 +71,14 @@ export default function MenusPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/organization/menu');
+      const res = await authFetch('/api/organization/menu');
       const result = await res.json();
       if (result.success && result.data) {
-        const menuData = Array.isArray(result.data) ? result.data : [];
+        const menuData = Array.isArray(result.data) ? result.data : (result.data?.list || []);
         setList(menuData);
-        const parentIds = new Set<number>(menuData.filter((m: MenuItem) => m.menu_type === 1).map((m: MenuItem) => m.id));
+        const parentIds = new Set<number>(
+          menuData.filter((m: MenuItem) => m.menu_type === 1).map((m: MenuItem) => m.id)
+        );
         setExpandedIds(parentIds);
       }
     } catch (e) {
@@ -58,29 +89,35 @@ export default function MenusPage() {
     }
   }, [toast]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const toggleExpand = (id: number) => {
-    setExpandedIds(prev => {
+    setExpandedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
 
   const buildTree = (items: MenuItem[]): MenuItem[] => {
-    const roots = items.filter(i => !i.parent_id || i.parent_id === 0);
-    const children = items.filter(i => i.parent_id && i.parent_id !== 0);
+    const roots = items.filter((i) => !i.parent_id || i.parent_id === 0);
+    const children = items.filter((i) => i.parent_id && i.parent_id !== 0);
     const attach = (parents: MenuItem[]): MenuItem[] =>
-      parents.map(p => ({ ...p, children: attach(children.filter(c => c.parent_id === p.id)) }));
+      parents.map((p) => ({
+        ...p,
+        children: attach(children.filter((c) => c.parent_id === p.id)),
+      }));
     return attach(roots);
   };
 
-  const tree = buildTree(list.filter(i => !searchName || i.menu_name.includes(searchName)));
+  const tree = buildTree(list.filter((i) => !searchName || i.menu_name.includes(searchName)));
 
   const renderTree = (items: MenuItem[], level: number = 0): React.ReactNode[] => {
     const rows: React.ReactNode[] = [];
-    items.forEach(item => {
+    items.forEach((item) => {
       const hasChildren = item.children && item.children.length > 0;
       const isExpanded = expandedIds.has(item.id);
       rows.push(
@@ -88,23 +125,49 @@ export default function MenusPage() {
           <TableCell>
             <div className="flex items-center" style={{ paddingLeft: `${level * 24}px` }}>
               {hasChildren ? (
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 mr-1" onClick={() => toggleExpand(item.id)}>
-                  {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 mr-1"
+                  onClick={() => toggleExpand(item.id)}
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
                 </Button>
-              ) : <span className="w-7" />}
+              ) : (
+                <span className="w-7" />
+              )}
               {item.menu_name}
             </div>
           </TableCell>
           <TableCell className="font-mono text-sm">{item.menu_code}</TableCell>
-          <TableCell><Badge variant={item.menu_type === 1 ? 'default' : 'secondary'}>{item.menu_type === 1 ? '目录' : item.menu_type === 2 ? '菜单' : '按钮'}</Badge></TableCell>
+          <TableCell>
+            <Badge variant={item.menu_type === 1 ? 'default' : 'secondary'}>
+              {item.menu_type === 1 ? '目录' : item.menu_type === 2 ? '菜单' : '按钮'}
+            </Badge>
+          </TableCell>
           <TableCell>{item.icon || '-'}</TableCell>
           <TableCell className="font-mono text-sm">{item.path || '-'}</TableCell>
           <TableCell className="font-mono text-sm">{item.permission || '-'}</TableCell>
           <TableCell>{item.sort_order}</TableCell>
           <TableCell>
             <div className="flex gap-1">
-              <Button variant="ghost" size="sm" onClick={() => { setEditItem({ ...item, is_new: false }); setShowDialog(true); }}><Edit className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setEditItem({ ...item, is_new: false });
+                  setShowDialog(true);
+                }}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => handleDelete(item)}>
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </Button>
             </div>
           </TableCell>
         </TableRow>
@@ -171,9 +234,8 @@ export default function MenusPage() {
             status: editItem.status ?? 1,
           };
 
-      const res = await fetch(url, {
+      const res = await authFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       const result = await res.json();
@@ -194,7 +256,7 @@ export default function MenusPage() {
   const handleDelete = async (item: MenuItem) => {
     if (!confirm(`确定删除菜单"${item.menu_name}"？`)) return;
     try {
-      const res = await fetch(`/api/organization/menu?id=${item.id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/organization/menu?id=${item.id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });
@@ -215,17 +277,30 @@ export default function MenusPage() {
           <div className="flex items-center gap-2">
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="搜索菜单名称" value={searchName} onChange={e => setSearchName(e.target.value)} className="pl-10 h-9" />
+              <Input
+                placeholder="搜索菜单名称"
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="pl-10 h-9"
+              />
             </div>
-            <Button variant="outline" size="sm" onClick={fetchData}><RefreshCw className="h-4 w-4" /></Button>
-            <Button size="sm" onClick={() => handleAdd(0)}><Plus className="h-4 w-4 mr-1" />新增目录</Button>
+            <Button variant="outline" size="sm" onClick={fetchData}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button size="sm" onClick={() => handleAdd(0)}>
+              <Plus className="h-4 w-4 mr-1" />
+              新增目录
+            </Button>
           </div>
         </div>
 
         <Card>
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-gray-400" /><span className="ml-2 text-gray-400">加载中...</span></div>
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                <span className="ml-2 text-gray-400">加载中...</span>
+              </div>
             ) : (
               <Table>
                 <TableHeader>
@@ -242,8 +317,14 @@ export default function MenusPage() {
                 </TableHeader>
                 <TableBody>
                   {tree.length === 0 ? (
-                    <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">暂无数据</TableCell></TableRow>
-                  ) : renderTree(tree)}
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        暂无数据
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    renderTree(tree)
+                  )}
                 </TableBody>
               </Table>
             )}
@@ -252,26 +333,93 @@ export default function MenusPage() {
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
-            <DialogHeader><DialogTitle>{editItem.is_new ? '新增菜单' : '编辑菜单'}</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>{editItem.is_new ? '新增菜单' : '编辑菜单'}</DialogTitle>
+            </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
-              <div><Label>菜单名称</Label><Input value={editItem.menu_name || ''} onChange={e => setEditItem({ ...editItem, menu_name: e.target.value })} /></div>
-              <div><Label>菜单编码</Label><Input value={editItem.menu_code || ''} onChange={e => setEditItem({ ...editItem, menu_code: e.target.value })} disabled={!editItem.is_new} /></div>
-              <div><Label>菜单类型</Label><Select value={String(editItem.menu_type || 1)} onValueChange={v => setEditItem({ ...editItem, menu_type: Number(v) })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="1">目录</SelectItem><SelectItem value="2">菜单</SelectItem><SelectItem value="3">按钮</SelectItem></SelectContent>
-              </Select></div>
-              <div><Label>图标</Label><Input value={editItem.icon || ''} onChange={e => setEditItem({ ...editItem, icon: e.target.value })} /></div>
-              <div><Label>路径</Label><Input value={editItem.path || ''} onChange={e => setEditItem({ ...editItem, path: e.target.value })} /></div>
-              <div><Label>权限标识</Label><Input value={editItem.permission || ''} onChange={e => setEditItem({ ...editItem, permission: e.target.value })} /></div>
-              <div><Label>排序</Label><Input type="number" value={editItem.sort_order || 0} onChange={e => setEditItem({ ...editItem, sort_order: Number(e.target.value) })} /></div>
-              <div><Label>是否可见</Label><Select value={String(editItem.is_visible ?? 1)} onValueChange={v => setEditItem({ ...editItem, is_visible: Number(v) })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="1">可见</SelectItem><SelectItem value="0">隐藏</SelectItem></SelectContent>
-              </Select></div>
+              <div>
+                <Label>菜单名称</Label>
+                <Input
+                  value={editItem.menu_name || ''}
+                  onChange={(e) => setEditItem({ ...editItem, menu_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>菜单编码</Label>
+                <Input
+                  value={editItem.menu_code || ''}
+                  onChange={(e) => setEditItem({ ...editItem, menu_code: e.target.value })}
+                  disabled={!editItem.is_new}
+                />
+              </div>
+              <div>
+                <Label>菜单类型</Label>
+                <Select
+                  value={String(editItem.menu_type || 1)}
+                  onValueChange={(v) => setEditItem({ ...editItem, menu_type: Number(v) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">目录</SelectItem>
+                    <SelectItem value="2">菜单</SelectItem>
+                    <SelectItem value="3">按钮</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>图标</Label>
+                <Input
+                  value={editItem.icon || ''}
+                  onChange={(e) => setEditItem({ ...editItem, icon: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>路径</Label>
+                <Input
+                  value={editItem.path || ''}
+                  onChange={(e) => setEditItem({ ...editItem, path: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>权限标识</Label>
+                <Input
+                  value={editItem.permission || ''}
+                  onChange={(e) => setEditItem({ ...editItem, permission: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>排序</Label>
+                <Input
+                  type="number"
+                  value={editItem.sort_order || 0}
+                  onChange={(e) => setEditItem({ ...editItem, sort_order: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label>是否可见</Label>
+                <Select
+                  value={String(editItem.is_visible ?? 1)}
+                  onValueChange={(v) => setEditItem({ ...editItem, is_visible: Number(v) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">可见</SelectItem>
+                    <SelectItem value="0">隐藏</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDialog(false)}>取消</Button>
-              <Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}保存</Button>
+              <Button variant="outline" onClick={() => setShowDialog(false)}>
+                取消
+              </Button>
+              <Button onClick={handleSave} disabled={saving}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}保存
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

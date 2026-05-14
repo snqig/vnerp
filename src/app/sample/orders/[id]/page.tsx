@@ -17,6 +17,18 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 interface SampleOrder {
   id: number;
   sample_no: string;
@@ -55,21 +67,24 @@ interface SampleOrder {
 const statusMap: Record<number, { label: string; color: string }> = {
   0: { label: '待处理', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
   1: { label: '进行中', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  2: { label: '已完成', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+  2: {
+    label: '已完成',
+    color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  },
   3: { label: '已取消', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
 };
 
 const sampleTypeColors: Record<string, string> = {
-  '设变': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-  '测试': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  '新款': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  设变: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  测试: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  新款: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
 };
 
 export default function SampleOrderDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  
+
   const [order, setOrder] = useState<SampleOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -83,7 +98,7 @@ export default function SampleOrderDetailPage() {
   const fetchOrder = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/sample/orders?id=${id}`);
+      const response = await authFetch(`/api/sample/orders?id=${id}`);
       const result = await response.json();
 
       if (result.success) {
@@ -103,7 +118,7 @@ export default function SampleOrderDetailPage() {
       const response = await fetch(`/api/sample/orders?id=${id}`, {
         method: 'DELETE',
       });
-      
+
       const contentType = response.headers.get('content-type');
       let result;
       if (contentType && contentType.includes('application/json')) {
@@ -157,9 +172,7 @@ export default function SampleOrderDetailPage() {
                 <FlaskConical className="h-6 w-6 text-blue-500" />
                 打样单详情
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                {order.sample_no}
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">{order.sample_no}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -210,10 +223,14 @@ export default function SampleOrderDetailPage() {
                   <div className="text-sm text-muted-foreground">种类</div>
                   <div>
                     {order.sample_type ? (
-                      <span className={`px-2 py-1 rounded text-xs ${sampleTypeColors[order.sample_type] || 'bg-gray-100'}`}>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${sampleTypeColors[order.sample_type] || 'bg-gray-100'}`}
+                      >
                         {order.sample_type}
                       </span>
-                    ) : '-'}
+                    ) : (
+                      '-'
+                    )}
                   </div>
                 </div>
                 <div>
@@ -320,7 +337,9 @@ export default function SampleOrderDetailPage() {
               <div className="grid grid-cols-4 gap-4 mb-4">
                 <div>
                   <div className="text-sm text-muted-foreground">状态</div>
-                  <span className={`px-2 py-1 rounded text-xs ${statusMap[order.status]?.color || ''}`}>
+                  <span
+                    className={`px-2 py-1 rounded text-xs ${statusMap[order.status]?.color || ''}`}
+                  >
                     {statusMap[order.status]?.label || '未知'}
                   </span>
                 </div>

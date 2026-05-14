@@ -1,6 +1,12 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler, validateRequestBody } from '@/lib/api-response';
+import {
+  successResponse,
+  errorResponse,
+  commonErrors,
+  withErrorHandler,
+  validateRequestBody,
+} from '@/lib/api-response';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -23,10 +29,13 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const list = await query(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM prd_process_route WHERE deleted = 0`;
-  const countResult = await queryOne(countSql) as any;
+  const countResult = (await queryOne(countSql)) as any;
 
   for (const route of list as any[]) {
-    const steps = await query('SELECT * FROM prd_process_route_step WHERE route_id = ? ORDER BY step_seq ASC', [route.id]);
+    const steps = await query(
+      'SELECT * FROM prd_process_route_step WHERE route_id = ? ORDER BY step_seq ASC',
+      [route.id]
+    );
     route.steps = steps;
   }
 
@@ -44,7 +53,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     await conn.execute(
       `INSERT INTO prd_process_route (route_code, route_name, product_id, version, is_default, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [body.route_code, body.route_name, body.product_id || null, body.version || '1.0', body.is_default || 1, body.status || 1, body.remark || null]
+      [
+        body.route_code,
+        body.route_name,
+        body.product_id || null,
+        body.version || '1.0',
+        body.is_default || 1,
+        body.status || 1,
+        body.remark || null,
+      ]
     );
 
     const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
@@ -55,9 +72,19 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         await conn.execute(
           `INSERT INTO prd_process_route_step (route_id, step_seq, step_name, step_type, equipment_type, standard_time, setup_time, is_key_process, is_first_piece_required, quality_check, remark)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [routeId, step.step_seq, step.step_name, step.step_type || null, step.equipment_type || null,
-           step.standard_time || null, step.setup_time || null, step.is_key_process || 0,
-           step.is_first_piece_required || 0, step.quality_check || 0, step.remark || null]
+          [
+            routeId,
+            step.step_seq,
+            step.step_name,
+            step.step_type || null,
+            step.equipment_type || null,
+            step.standard_time || null,
+            step.setup_time || null,
+            step.is_key_process || 0,
+            step.is_first_piece_required || 0,
+            step.quality_check || 0,
+            step.remark || null,
+          ]
         );
       }
     }
@@ -72,7 +99,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   if (!body.id) return commonErrors.badRequest('工艺路线ID不能为空');
 
-  const existing = await queryOne('SELECT id FROM prd_process_route WHERE id = ? AND deleted = 0', [body.id]);
+  const existing = await queryOne('SELECT id FROM prd_process_route WHERE id = ? AND deleted = 0', [
+    body.id,
+  ]);
   if (!existing) return commonErrors.notFound('工艺路线不存在');
 
   await execute(
@@ -86,9 +115,19 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       await execute(
         `INSERT INTO prd_process_route_step (route_id, step_seq, step_name, step_type, equipment_type, standard_time, setup_time, is_key_process, is_first_piece_required, quality_check, remark)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [body.id, step.step_seq, step.step_name, step.step_type || null, step.equipment_type || null,
-         step.standard_time || null, step.setup_time || null, step.is_key_process || 0,
-         step.is_first_piece_required || 0, step.quality_check || 0, step.remark || null]
+        [
+          body.id,
+          step.step_seq,
+          step.step_name,
+          step.step_type || null,
+          step.equipment_type || null,
+          step.standard_time || null,
+          step.setup_time || null,
+          step.is_key_process || 0,
+          step.is_first_piece_required || 0,
+          step.quality_check || 0,
+          step.remark || null,
+        ]
       );
     }
   }

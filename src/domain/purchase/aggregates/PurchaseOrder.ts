@@ -83,7 +83,7 @@ export class PurchaseOrder {
     const totalAmount = lines.reduce((sum, l) => sum + l.amount, 0);
     const totalQuantity = lines.reduce((sum, l) => sum + l.orderQty, 0);
     const taxRate = props.taxRate || 13;
-    const taxAmount = totalAmount * taxRate / 100;
+    const taxAmount = (totalAmount * taxRate) / 100;
     const grandTotal = totalAmount + taxAmount;
 
     const order = new PurchaseOrder(
@@ -131,16 +131,19 @@ export class PurchaseOrder {
   }
 
   static reconstitute(props: PurchaseOrderProps): PurchaseOrder {
-    const lines = props.lines.map(line => PurchaseOrderLine.reconstitute(line));
+    const lines = props.lines.map((line) => PurchaseOrderLine.reconstitute(line));
 
-    const totalAmount = props.totalAmount !== undefined
-      ? props.totalAmount
-      : lines.reduce((sum, l) => sum + l.amount, 0);
-    const totalQuantity = props.totalQuantity !== undefined
-      ? props.totalQuantity
-      : lines.reduce((sum, l) => sum + l.orderQty, 0);
+    const totalAmount =
+      props.totalAmount !== undefined
+        ? props.totalAmount
+        : lines.reduce((sum, l) => sum + l.amount, 0);
+    const totalQuantity =
+      props.totalQuantity !== undefined
+        ? props.totalQuantity
+        : lines.reduce((sum, l) => sum + l.orderQty, 0);
     const taxRate = props.taxRate || 13;
-    const taxAmount = props.taxAmount !== undefined ? props.taxAmount : totalAmount * taxRate / 100;
+    const taxAmount =
+      props.taxAmount !== undefined ? props.taxAmount : (totalAmount * taxRate) / 100;
     const grandTotal = props.grandTotal !== undefined ? props.grandTotal : totalAmount + taxAmount;
 
     return new PurchaseOrder(
@@ -205,7 +208,7 @@ export class PurchaseOrder {
   }
 
   get isFullyReceived(): boolean {
-    return this._lines.every(l => l.isFullyReceived);
+    return this._lines.every((l) => l.isFullyReceived);
   }
 
   submit(): void {
@@ -232,7 +235,7 @@ export class PurchaseOrder {
         orderNo: this.orderNo,
         supplierId: this.supplierId,
         supplierName: this.supplierName,
-        lines: this._lines.map(l => ({
+        lines: this._lines.map((l) => ({
           materialId: l.materialId,
           materialCode: l.materialCode,
           materialName: l.materialName,
@@ -264,7 +267,7 @@ export class PurchaseOrder {
     }> = [];
 
     for (const recv of lineReceives) {
-      const line = this._lines.find(l => l.lineNo === recv.lineNo);
+      const line = this._lines.find((l) => l.lineNo === recv.lineNo);
       if (!line) {
         throw new DomainError(`行号${recv.lineNo}不存在`);
       }
@@ -290,7 +293,8 @@ export class PurchaseOrder {
     }
 
     const totalReceivedAmount = receivedItems.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice, 0
+      (sum, item) => sum + item.quantity * item.unitPrice,
+      0
     );
 
     this._domainEvents.push(

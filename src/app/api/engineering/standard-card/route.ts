@@ -1,7 +1,19 @@
 import { NextRequest } from 'next/server';
-import { withErrorHandler, successResponse, errorResponse, paginatedResponse } from '@/lib/api-response';
+import {
+  withErrorHandler,
+  successResponse,
+  errorResponse,
+  paginatedResponse,
+} from '@/lib/api-response';
 import { query, transaction } from '@/lib/db';
-import { createCardWithVersion, updateCardWithVersion, getVersionHistory, approveCardVersion, getTemplates, compareVersions } from '@/lib/standard-card-service';
+import {
+  createCardWithVersion,
+  updateCardWithVersion,
+  getVersionHistory,
+  approveCardVersion,
+  getTemplates,
+  compareVersions,
+} from '@/lib/standard-card-service';
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
@@ -85,5 +97,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     [...params, pageSize, (page - 1) * pageSize]
   );
 
-  return paginatedResponse(rows, { page, pageSize, total: Number(total[0]?.count || 0), totalPages: Math.ceil(Number(total[0]?.count || 0) / pageSize) });
+  return paginatedResponse(rows, {
+    page,
+    pageSize,
+    total: Number(total[0]?.count || 0),
+    totalPages: Math.ceil(Number(total[0]?.count || 0) / pageSize),
+  });
 });

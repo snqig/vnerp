@@ -5,14 +5,39 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
-import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import {
+  TableExportToolbar,
+  printTable,
+  exportTableToPDF,
+  exportTableToXLS,
+  exportTableToWORD,
+} from '@/components/ui/table-export-toolbar';
 
 interface Item {
   id: number;
@@ -28,8 +53,17 @@ interface Item {
   status: number;
 }
 
-const typeMap: Record<number, string> = { 1: '水性油墨', 2: '溶剂油墨', 3: 'UV油墨', 4: '丝印油墨', 5: '特种油墨' };
-const statusMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const typeMap: Record<number, string> = {
+  1: '水性油墨',
+  2: '溶剂油墨',
+  3: 'UV油墨',
+  4: '丝印油墨',
+  5: '特种油墨',
+};
+const statusMap: Record<
+  number,
+  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+> = {
   1: { label: '启用', variant: 'default' },
   0: { label: '禁用', variant: 'destructive' },
 };
@@ -86,11 +120,13 @@ export default function InkManagementPage() {
     }
   }, [page, searchCode, searchName, searchType, searchStatus]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortDir('asc');
@@ -114,24 +150,27 @@ export default function InkManagementPage() {
 
   const toggleSelect = (id: number) => {
     const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id); else next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     setSelectedIds(next);
   };
 
   const toggleSelectAll = () => {
     if (selectedIds.size === sortedList.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(sortedList.map(s => s.id)));
+    else setSelectedIds(new Set(sortedList.map((s) => s.id)));
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
-    return sortDir === 'asc'
-      ? <ArrowUp className="h-3 w-3 ml-1 text-blue-600" />
-      : <ArrowDown className="h-3 w-3 ml-1 text-blue-600" />;
+    return sortDir === 'asc' ? (
+      <ArrowUp className="h-3 w-3 ml-1 text-blue-600" />
+    ) : (
+      <ArrowDown className="h-3 w-3 ml-1 text-blue-600" />
+    );
   };
 
   const getExportData = () =>
-    sortedList.map(item => ({
+    sortedList.map((item) => ({
       ...item,
       ink_type_label: typeMap[item.ink_type] || '-',
       status_label: statusMap[item.status]?.label || '-',
@@ -194,8 +233,15 @@ export default function InkManagementPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">油墨管理</h1>
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => { setEditItem({}); setShowDialog(true); }}>
-              <Plus className="h-3 w-3 mr-1" />新增油墨
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditItem({});
+                setShowDialog(true);
+              }}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              新增油墨
             </Button>
           </div>
         </div>
@@ -206,29 +252,41 @@ export default function InkManagementPage() {
               <Input
                 placeholder="油墨编码"
                 value={searchCode}
-                onChange={e => setSearchCode(e.target.value)}
+                onChange={(e) => setSearchCode(e.target.value)}
                 className="w-32 h-8 text-sm"
-                onKeyDown={e => e.key === 'Enter' && fetchData()}
+                onKeyDown={(e) => e.key === 'Enter' && fetchData()}
               />
               <Input
                 placeholder="油墨名称"
                 value={searchName}
-                onChange={e => setSearchName(e.target.value)}
+                onChange={(e) => setSearchName(e.target.value)}
                 className="w-32 h-8 text-sm"
-                onKeyDown={e => e.key === 'Enter' && fetchData()}
+                onKeyDown={(e) => e.key === 'Enter' && fetchData()}
               />
-              <Select value={searchType} onValueChange={v => { setSearchType(v === '_all' ? '' : v); }}>
+              <Select
+                value={searchType}
+                onValueChange={(v) => {
+                  setSearchType(v === '_all' ? '' : v);
+                }}
+              >
                 <SelectTrigger className="w-28 h-8 text-sm">
                   <SelectValue placeholder="全部类型" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_all">全部类型</SelectItem>
                   {Object.entries(typeMap).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                    <SelectItem key={k} value={k}>
+                      {v}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={searchStatus} onValueChange={v => { setSearchStatus(v === '_all' ? '' : v); }}>
+              <Select
+                value={searchStatus}
+                onValueChange={(v) => {
+                  setSearchStatus(v === '_all' ? '' : v);
+                }}
+              >
                 <SelectTrigger className="w-24 h-8 text-sm">
                   <SelectValue placeholder="全部状态" />
                 </SelectTrigger>
@@ -239,7 +297,8 @@ export default function InkManagementPage() {
                 </SelectContent>
               </Select>
               <Button size="sm" variant="outline" className="h-8" onClick={fetchData}>
-                <Search className="h-3 w-3 mr-1" />搜索
+                <Search className="h-3 w-3 mr-1" />
+                搜索
               </Button>
               <div className="ml-auto">
                 <TableExportToolbar
@@ -265,27 +324,63 @@ export default function InkManagementPage() {
                     />
                   </TableHead>
                   <TableHead className="w-[60px]">序号</TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => handleSort('ink_code')}>
-                    <span className="flex items-center">油墨编码<SortIcon field="ink_code" /></span>
+                  <TableHead
+                    className="text-xs cursor-pointer select-none"
+                    onClick={() => handleSort('ink_code')}
+                  >
+                    <span className="flex items-center">
+                      油墨编码
+                      <SortIcon field="ink_code" />
+                    </span>
                   </TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => handleSort('ink_name')}>
-                    <span className="flex items-center">油墨名称<SortIcon field="ink_name" /></span>
+                  <TableHead
+                    className="text-xs cursor-pointer select-none"
+                    onClick={() => handleSort('ink_name')}
+                  >
+                    <span className="flex items-center">
+                      油墨名称
+                      <SortIcon field="ink_name" />
+                    </span>
                   </TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => handleSort('ink_type')}>
-                    <span className="flex items-center">类型<SortIcon field="ink_type" /></span>
+                  <TableHead
+                    className="text-xs cursor-pointer select-none"
+                    onClick={() => handleSort('ink_type')}
+                  >
+                    <span className="flex items-center">
+                      类型
+                      <SortIcon field="ink_type" />
+                    </span>
                   </TableHead>
                   <TableHead className="text-xs">颜色</TableHead>
                   <TableHead className="text-xs">色号</TableHead>
                   <TableHead className="text-xs">品牌</TableHead>
                   <TableHead className="text-xs">单位</TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => handleSort('stock_qty')}>
-                    <span className="flex items-center">库存<SortIcon field="stock_qty" /></span>
+                  <TableHead
+                    className="text-xs cursor-pointer select-none"
+                    onClick={() => handleSort('stock_qty')}
+                  >
+                    <span className="flex items-center">
+                      库存
+                      <SortIcon field="stock_qty" />
+                    </span>
                   </TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => handleSort('safety_stock')}>
-                    <span className="flex items-center">安全库存<SortIcon field="safety_stock" /></span>
+                  <TableHead
+                    className="text-xs cursor-pointer select-none"
+                    onClick={() => handleSort('safety_stock')}
+                  >
+                    <span className="flex items-center">
+                      安全库存
+                      <SortIcon field="safety_stock" />
+                    </span>
                   </TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => handleSort('status')}>
-                    <span className="flex items-center">状态<SortIcon field="status" /></span>
+                  <TableHead
+                    className="text-xs cursor-pointer select-none"
+                    onClick={() => handleSort('status')}
+                  >
+                    <span className="flex items-center">
+                      状态
+                      <SortIcon field="status" />
+                    </span>
                   </TableHead>
                   <TableHead className="text-xs">操作</TableHead>
                 </TableRow>
@@ -311,18 +406,35 @@ export default function InkManagementPage() {
                       <TableCell className="text-xs">{item.unit}</TableCell>
                       <TableCell className="text-xs">
                         {item.stock_qty ?? 0}
-                        {item.stock_qty < item.safety_stock && <span className="text-red-500 ml-1">⚠</span>}
+                        {item.stock_qty < item.safety_stock && (
+                          <span className="text-red-500 ml-1">⚠</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-xs">{item.safety_stock}</TableCell>
                       <TableCell>
-                        <Badge variant={st.variant} className="text-xs">{st.label}</Badge>
+                        <Badge variant={st.variant} className="text-xs">
+                          {st.label}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => { setEditItem(item); setShowDialog(true); }}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0"
+                            onClick={() => {
+                              setEditItem(item);
+                              setShowDialog(true);
+                            }}
+                          >
                             <Edit className="h-3 w-3" />
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600" onClick={() => handleDelete(item.id)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-red-600"
+                            onClick={() => handleDelete(item.id)}
+                          >
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
@@ -332,7 +444,9 @@ export default function InkManagementPage() {
                 })}
                 {sortedList.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={13} className="text-center text-gray-400 py-8">暂无记录</TableCell>
+                    <TableCell colSpan={13} className="text-center text-gray-400 py-8">
+                      暂无记录
+                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -341,8 +455,22 @@ export default function InkManagementPage() {
             <div className="flex items-center justify-between mt-4">
               <span className="text-sm text-gray-500">共 {total} 条</span>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</Button>
-                <Button size="sm" variant="outline" disabled={page * 20 >= total} onClick={() => setPage(p => p + 1)}>下一页</Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  上一页
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={page * 20 >= total}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  下一页
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -356,16 +484,27 @@ export default function InkManagementPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>油墨编码</Label>
-                <Input value={editItem.ink_code || ''} onChange={e => setEditItem({ ...editItem, ink_code: e.target.value })} />
+                <Input
+                  value={editItem.ink_code || ''}
+                  onChange={(e) => setEditItem({ ...editItem, ink_code: e.target.value })}
+                />
               </div>
               <div>
                 <Label>油墨名称</Label>
-                <Input value={editItem.ink_name || ''} onChange={e => setEditItem({ ...editItem, ink_name: e.target.value })} />
+                <Input
+                  value={editItem.ink_name || ''}
+                  onChange={(e) => setEditItem({ ...editItem, ink_name: e.target.value })}
+                />
               </div>
               <div>
                 <Label>类型</Label>
-                <Select value={String(editItem.ink_type || 4)} onValueChange={v => setEditItem({ ...editItem, ink_type: Number(v) })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={String(editItem.ink_type || 4)}
+                  onValueChange={(v) => setEditItem({ ...editItem, ink_type: Number(v) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">水性油墨</SelectItem>
                     <SelectItem value="2">溶剂油墨</SelectItem>
@@ -377,27 +516,47 @@ export default function InkManagementPage() {
               </div>
               <div>
                 <Label>颜色名称</Label>
-                <Input value={editItem.color_name || ''} onChange={e => setEditItem({ ...editItem, color_name: e.target.value })} />
+                <Input
+                  value={editItem.color_name || ''}
+                  onChange={(e) => setEditItem({ ...editItem, color_name: e.target.value })}
+                />
               </div>
               <div>
                 <Label>色号</Label>
-                <Input value={editItem.color_code || ''} onChange={e => setEditItem({ ...editItem, color_code: e.target.value })} />
+                <Input
+                  value={editItem.color_code || ''}
+                  onChange={(e) => setEditItem({ ...editItem, color_code: e.target.value })}
+                />
               </div>
               <div>
                 <Label>品牌</Label>
-                <Input value={editItem.brand || ''} onChange={e => setEditItem({ ...editItem, brand: e.target.value })} />
+                <Input
+                  value={editItem.brand || ''}
+                  onChange={(e) => setEditItem({ ...editItem, brand: e.target.value })}
+                />
               </div>
               <div>
                 <Label>单位</Label>
-                <Input value={editItem.unit || 'kg'} onChange={e => setEditItem({ ...editItem, unit: e.target.value })} />
+                <Input
+                  value={editItem.unit || 'kg'}
+                  onChange={(e) => setEditItem({ ...editItem, unit: e.target.value })}
+                />
               </div>
               <div>
                 <Label>安全库存</Label>
-                <Input type="number" value={editItem.safety_stock ?? ''} onChange={e => setEditItem({ ...editItem, safety_stock: Number(e.target.value) })} />
+                <Input
+                  type="number"
+                  value={editItem.safety_stock ?? ''}
+                  onChange={(e) =>
+                    setEditItem({ ...editItem, safety_stock: Number(e.target.value) })
+                  }
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDialog(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setShowDialog(false)}>
+                取消
+              </Button>
               <Button onClick={handleSave}>保存</Button>
             </DialogFooter>
           </DialogContent>

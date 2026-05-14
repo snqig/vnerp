@@ -9,10 +9,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const configName = searchParams.get('configName') || '';
   const configKey = searchParams.get('configKey') || '';
 
-  let where = 'WHERE deleted = 0';
+  let where = 'WHERE 1=1';
   const params: any[] = [];
-  if (configName) { where += ' AND config_name LIKE ?'; params.push(`%${configName}%`); }
-  if (configKey) { where += ' AND config_key LIKE ?'; params.push(`%${configKey}%`); }
+  if (configName) {
+    where += ' AND config_name LIKE ?';
+    params.push(`%${configName}%`);
+  }
+  if (configKey) {
+    where += ' AND config_key LIKE ?';
+    params.push(`%${configKey}%`);
+  }
 
   const totalRows: any = await query(`SELECT COUNT(*) as total FROM sys_config ${where}`, params);
   const total = totalRows[0]?.total || 0;
@@ -42,7 +48,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const { id, config_name, config_key, config_value, config_type, description } = body;
 
   await execute(
-    `UPDATE sys_config SET config_name = ?, config_key = ?, config_value = ?, config_type = ?, description = ? WHERE id = ? AND deleted = 0`,
+    `UPDATE sys_config SET config_name = ?, config_key = ?, config_value = ?, config_type = ?, description = ? WHERE id = ?`,
     [config_name, config_key, config_value, config_type ?? 1, description || null, id]
   );
 
@@ -54,6 +60,6 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
 
-  await execute(`UPDATE sys_config SET deleted = 1 WHERE id = ?`, [Number(id)]);
+  await execute(`DELETE FROM sys_config WHERE id = ?`, [Number(id)]);
   return successResponse(null, '删除成功');
 });

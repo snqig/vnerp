@@ -1,14 +1,9 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { formatDate } from '@/lib/date-utils';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -102,30 +97,81 @@ interface WorkOrder {
   update_time: string;
   item_count?: number;
   items?: WorkOrderItem[];
+  [key: string]: unknown;
+}
+
+interface SalesOrder {
+  id: number;
+  order_no: string;
+  customer_name: string;
+  product_name: string;
+  quantity: number;
+  status: number;
+}
+
+interface BOMItem {
+  id: number;
+  bom_code: string;
+  bom_no?: string;
+  product_name: string;
+  product_id?: number;
+  version: string;
 }
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  pending: { label: '待确认', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  confirmed: { label: '已确认', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  producing: { label: '生产中', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-  completed: { label: '已完成', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-  cancelled: { label: '已取消', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+  pending: {
+    label: '待确认',
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  },
+  confirmed: {
+    label: '已确认',
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  },
+  producing: {
+    label: '生产中',
+    className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  },
+  completed: {
+    label: '已完成',
+    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  },
+  cancelled: {
+    label: '已取消',
+    className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  },
 };
 
 const PRIORITY_MAP: Record<string, { label: string; className: string }> = {
-  urgent: { label: '紧急', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
-  high: { label: '高', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-  normal: { label: '中', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  urgent: {
+    label: '紧急',
+    className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  },
+  high: {
+    label: '高',
+    className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  },
+  normal: {
+    label: '中',
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  },
   low: { label: '低', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
 };
 
-const getStatusBadge = (status: string) => {
-  const config = STATUS_MAP[status] || { label: status, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+const getStatusBadge = (status: number | string) => {
+  const statusStr = String(status);
+  const config = STATUS_MAP[statusStr] || {
+    label: statusStr,
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
-const getPriorityBadge = (priority: string) => {
-  const config = PRIORITY_MAP[priority] || { label: priority, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+const getPriorityBadge = (priority: number | string) => {
+  const priorityStr = String(priority);
+  const config = PRIORITY_MAP[priorityStr] || {
+    label: priorityStr,
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -141,15 +187,37 @@ export default function WorkOrderPage() {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
 
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const handleSort = (field: string) => {
     if (sortField === field) {
       if (sortOrder === 'asc') setSortOrder('desc');
-      else if (sortOrder === 'desc') { setSortField(null); setSortOrder(null); }
-    } else { setSortField(field); setSortOrder('asc'); }
+      else if (sortOrder === 'desc') {
+        setSortField(null);
+        setSortOrder(null);
+      }
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
   };
   const getSortIcon = (field: string) => {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
-    return sortOrder === 'asc' ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
+    return sortOrder === 'asc' ? (
+      <ArrowUp className="ml-1 h-3 w-3" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3" />
+    );
   };
   const sortedWorkOrders = useMemo(() => {
     if (!sortField || !sortOrder) return workOrders;
@@ -183,14 +251,18 @@ export default function WorkOrderPage() {
       params.append('page', '1');
       params.append('page_size', '100');
 
-      const res = await fetch(`/api/workorders?${params}`);
+      const res = await authFetch(`/api/workorders?${params}`);
       const data = await res.json();
 
       if (data.success) {
         const list = data.data?.list || (Array.isArray(data.data) ? data.data : []);
         setWorkOrders(list);
       } else {
-        toast({ title: '错误', description: data.message || '获取工单列表失败', variant: 'destructive' });
+        toast({
+          title: '错误',
+          description: data.message || '获取工单列表失败',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       toast({ title: '错误', description: '获取工单列表失败', variant: 'destructive' });
@@ -201,7 +273,7 @@ export default function WorkOrderPage() {
 
   const fetchSalesOrders = useCallback(async () => {
     try {
-      const res = await fetch('/api/orders');
+      const res = await authFetch('/api/orders');
       const data = await res.json();
       if (data.success) {
         setSalesOrders(data.data?.list || (Array.isArray(data.data) ? data.data : []));
@@ -213,7 +285,7 @@ export default function WorkOrderPage() {
 
   const fetchBomList = useCallback(async () => {
     try {
-      const res = await fetch('/api/orders/bom');
+      const res = await authFetch('/api/orders/bom');
       const data = await res.json();
       if (data.success) {
         setBomList(data.data?.list || (Array.isArray(data.data) ? data.data : []));
@@ -234,7 +306,7 @@ export default function WorkOrderPage() {
 
   const handleViewDetail = async (order: WorkOrder) => {
     try {
-      const res = await fetch(`/api/workorders?id=${order.work_order_no}`);
+      const res = await authFetch(`/api/workorders?id=${order.work_order_no}`);
       const data = await res.json();
       if (data.success) {
         setSelectedOrder(data.data);
@@ -249,9 +321,8 @@ export default function WorkOrderPage() {
 
   const handleCreateOrder = async () => {
     try {
-      const res = await fetch('/api/workorders', {
+      const res = await authFetch('/api/workorders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           order_no: newOrder.order_no,
           bom_id: parseInt(newOrder.bom_id) || null,
@@ -279,7 +350,11 @@ export default function WorkOrderPage() {
         });
         fetchWorkOrders();
       } else {
-        toast({ title: '错误', description: data.message || '创建工单失败', variant: 'destructive' });
+        toast({
+          title: '错误',
+          description: data.message || '创建工单失败',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       toast({ title: '错误', description: '创建工单失败', variant: 'destructive' });
@@ -288,17 +363,23 @@ export default function WorkOrderPage() {
 
   const handleStatusChange = async (order: WorkOrder, newStatus: string) => {
     try {
-      const res = await fetch('/api/workorders', {
+      const res = await authFetch('/api/workorders', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: order.id, status: newStatus }),
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '成功', description: `工单状态已更新为${STATUS_MAP[newStatus]?.label || newStatus}` });
+        toast({
+          title: '成功',
+          description: `工单状态已更新为${STATUS_MAP[newStatus]?.label || newStatus}`,
+        });
         fetchWorkOrders();
       } else {
-        toast({ title: '错误', description: data.message || '状态更新失败', variant: 'destructive' });
+        toast({
+          title: '错误',
+          description: data.message || '状态更新失败',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       toast({ title: '错误', description: '状态更新失败', variant: 'destructive' });
@@ -308,7 +389,7 @@ export default function WorkOrderPage() {
   const handleDelete = async (order: WorkOrder) => {
     if (!confirm(`确定要删除工单 ${order.work_order_no} 吗？`)) return;
     try {
-      const res = await fetch(`/api/workorders?id=${order.id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/workorders?id=${order.id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         toast({ title: '成功', description: '工单已删除' });
@@ -323,11 +404,11 @@ export default function WorkOrderPage() {
 
   const stats = {
     total: workOrders.length,
-    producing: workOrders.filter((o) => o.status === 'producing').length,
-    completed: workOrders.filter((o) => o.status === 'completed').length,
-    confirmed: workOrders.filter((o) => o.status === 'confirmed').length,
-    pending: workOrders.filter((o) => o.status === 'pending').length,
-    totalQty: workOrders.reduce((sum, o) => sum + (parseFloat(String(o.quantity)) || 0), 0),
+    producing: workOrders.filter((o) => o.status === 2).length,
+    completed: workOrders.filter((o) => o.status === 3).length,
+    confirmed: workOrders.filter((o) => o.status === 1).length,
+    pending: workOrders.filter((o) => o.status === 0).length,
+    totalQty: workOrders.reduce((sum, o) => sum + (parseFloat(String(o.plan_quantity)) || 0), 0),
   };
 
   return (
@@ -367,9 +448,7 @@ export default function WorkOrderPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.producing}</div>
-              <p className="text-xs text-muted-foreground">
-                正在生产
-              </p>
+              <p className="text-xs text-muted-foreground">正在生产</p>
             </CardContent>
           </Card>
 
@@ -420,7 +499,10 @@ export default function WorkOrderPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>关联销售订单</Label>
-                          <Select value={newOrder.order_no} onValueChange={(v) => setNewOrder({ ...newOrder, order_no: v })}>
+                          <Select
+                            value={newOrder.order_no}
+                            onValueChange={(v) => setNewOrder({ ...newOrder, order_no: v })}
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder="选择销售订单" />
                             </SelectTrigger>
@@ -435,7 +517,10 @@ export default function WorkOrderPage() {
                         </div>
                         <div className="space-y-2">
                           <Label>关联BOM</Label>
-                          <Select value={newOrder.bom_id} onValueChange={(v) => setNewOrder({ ...newOrder, bom_id: v })}>
+                          <Select
+                            value={newOrder.bom_id}
+                            onValueChange={(v) => setNewOrder({ ...newOrder, bom_id: v })}
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder="选择BOM" />
                             </SelectTrigger>
@@ -461,7 +546,10 @@ export default function WorkOrderPage() {
                         </div>
                         <div className="space-y-2">
                           <Label>单位</Label>
-                          <Select value={newOrder.unit} onValueChange={(v) => setNewOrder({ ...newOrder, unit: v })}>
+                          <Select
+                            value={newOrder.unit}
+                            onValueChange={(v) => setNewOrder({ ...newOrder, unit: v })}
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder="选择单位" />
                             </SelectTrigger>
@@ -477,7 +565,10 @@ export default function WorkOrderPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>优先级</Label>
-                          <Select value={newOrder.priority} onValueChange={(v) => setNewOrder({ ...newOrder, priority: v })}>
+                          <Select
+                            value={newOrder.priority}
+                            onValueChange={(v) => setNewOrder({ ...newOrder, priority: v })}
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder="选择优先级" />
                             </SelectTrigger>
@@ -504,7 +595,9 @@ export default function WorkOrderPage() {
                           <Input
                             type="date"
                             value={newOrder.plan_start_date}
-                            onChange={(e) => setNewOrder({ ...newOrder, plan_start_date: e.target.value })}
+                            onChange={(e) =>
+                              setNewOrder({ ...newOrder, plan_start_date: e.target.value })
+                            }
                           />
                         </div>
                         <div className="space-y-2">
@@ -512,7 +605,9 @@ export default function WorkOrderPage() {
                           <Input
                             type="date"
                             value={newOrder.plan_end_date}
-                            onChange={(e) => setNewOrder({ ...newOrder, plan_end_date: e.target.value })}
+                            onChange={(e) =>
+                              setNewOrder({ ...newOrder, plan_end_date: e.target.value })
+                            }
                           />
                         </div>
                       </div>
@@ -554,26 +649,61 @@ export default function WorkOrderPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('work_order_no')}>
-                          <span className="inline-flex items-center">工单号{getSortIcon('work_order_no')}</span>
+                        <TableHead
+                          className="cursor-pointer select-none hover:bg-muted"
+                          onClick={() => handleSort('work_order_no')}
+                        >
+                          <span className="inline-flex items-center">
+                            工单号{getSortIcon('work_order_no')}
+                          </span>
                         </TableHead>
-                        <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('product_name')}>
-                          <span className="inline-flex items-center">产品信息{getSortIcon('product_name')}</span>
+                        <TableHead
+                          className="cursor-pointer select-none hover:bg-muted"
+                          onClick={() => handleSort('product_name')}
+                        >
+                          <span className="inline-flex items-center">
+                            产品信息{getSortIcon('product_name')}
+                          </span>
                         </TableHead>
-                        <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('customer_name')}>
-                          <span className="inline-flex items-center">客户{getSortIcon('customer_name')}</span>
+                        <TableHead
+                          className="cursor-pointer select-none hover:bg-muted"
+                          onClick={() => handleSort('customer_name')}
+                        >
+                          <span className="inline-flex items-center">
+                            客户{getSortIcon('customer_name')}
+                          </span>
                         </TableHead>
-                        <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('quantity')}>
-                          <span className="inline-flex items-center">数量{getSortIcon('quantity')}</span>
+                        <TableHead
+                          className="cursor-pointer select-none hover:bg-muted"
+                          onClick={() => handleSort('quantity')}
+                        >
+                          <span className="inline-flex items-center">
+                            数量{getSortIcon('quantity')}
+                          </span>
                         </TableHead>
-                        <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('status')}>
-                          <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
+                        <TableHead
+                          className="cursor-pointer select-none hover:bg-muted"
+                          onClick={() => handleSort('status')}
+                        >
+                          <span className="inline-flex items-center">
+                            状态{getSortIcon('status')}
+                          </span>
                         </TableHead>
-                        <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('priority')}>
-                          <span className="inline-flex items-center">优先级{getSortIcon('priority')}</span>
+                        <TableHead
+                          className="cursor-pointer select-none hover:bg-muted"
+                          onClick={() => handleSort('priority')}
+                        >
+                          <span className="inline-flex items-center">
+                            优先级{getSortIcon('priority')}
+                          </span>
                         </TableHead>
-                        <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('planned_start_date')}>
-                          <span className="inline-flex items-center">计划日期{getSortIcon('planned_start_date')}</span>
+                        <TableHead
+                          className="cursor-pointer select-none hover:bg-muted"
+                          onClick={() => handleSort('planned_start_date')}
+                        >
+                          <span className="inline-flex items-center">
+                            计划日期{getSortIcon('planned_start_date')}
+                          </span>
                         </TableHead>
                         <TableHead>操作</TableHead>
                       </TableRow>
@@ -585,7 +715,9 @@ export default function WorkOrderPage() {
                             <div className="flex flex-col">
                               <span>{order.work_order_no}</span>
                               {order.order_no && (
-                                <span className="text-xs text-muted-foreground">关联: {order.order_no}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  关联: {order.order_no}
+                                </span>
                               )}
                             </div>
                           </TableCell>
@@ -598,7 +730,9 @@ export default function WorkOrderPage() {
                             <span>{order.customer_name || '-'}</span>
                           </TableCell>
                           <TableCell>
-                            <span>{parseFloat(String(order.quantity)).toLocaleString()} {order.unit}</span>
+                            <span>
+                              {parseFloat(String(order.quantity)).toLocaleString()} {order.unit}
+                            </span>
                           </TableCell>
                           <TableCell>{getStatusBadge(order.status)}</TableCell>
                           <TableCell>{getPriorityBadge(order.priority)}</TableCell>
@@ -629,20 +763,26 @@ export default function WorkOrderPage() {
                                     <Eye className="h-4 w-4 mr-2" />
                                     查看详情
                                   </DropdownMenuItem>
-                                  {order.status === 'pending' && (
-                                    <DropdownMenuItem onClick={() => handleStatusChange(order, 'confirmed')}>
+                                  {order.status === 0 && (
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusChange(order, 'confirmed')}
+                                    >
                                       <CheckCircle className="h-4 w-4 mr-2" />
                                       确认工单
                                     </DropdownMenuItem>
                                   )}
-                                  {order.status === 'confirmed' && (
-                                    <DropdownMenuItem onClick={() => handleStatusChange(order, 'producing')}>
+                                  {order.status === 1 && (
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusChange(order, 'producing')}
+                                    >
                                       <Play className="h-4 w-4 mr-2" />
                                       开始生产
                                     </DropdownMenuItem>
                                   )}
-                                  {order.status === 'producing' && (
-                                    <DropdownMenuItem onClick={() => handleStatusChange(order, 'completed')}>
+                                  {order.status === 2 && (
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusChange(order, 'completed')}
+                                    >
                                       <CheckCircle className="h-4 w-4 mr-2" />
                                       完成工单
                                     </DropdownMenuItem>
@@ -651,7 +791,10 @@ export default function WorkOrderPage() {
                                     <Printer className="h-4 w-4 mr-2" />
                                     打印工单
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(order)}>
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={() => handleDelete(order)}
+                                  >
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     删除
                                   </DropdownMenuItem>
@@ -678,9 +821,7 @@ export default function WorkOrderPage() {
                     工单详情: {selectedOrder.work_order_no}
                     {getStatusBadge(selectedOrder.status)}
                   </DialogTitle>
-                  <DialogDescription>
-                    查看工单详细信息和生产进度
-                  </DialogDescription>
+                  <DialogDescription>查看工单详细信息和生产进度</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
@@ -691,7 +832,10 @@ export default function WorkOrderPage() {
                         <span className="text-muted-foreground">产品名称:</span>
                         <span>{selectedOrder.product_name || '-'}</span>
                         <span className="text-muted-foreground">计划数量:</span>
-                        <span>{parseFloat(String(selectedOrder.quantity)).toLocaleString()} {selectedOrder.unit}</span>
+                        <span>
+                          {parseFloat(String(selectedOrder.quantity)).toLocaleString()}{' '}
+                          {selectedOrder.unit}
+                        </span>
                         <span className="text-muted-foreground">优先级:</span>
                         <span>{getPriorityBadge(selectedOrder.priority)}</span>
                       </div>
@@ -730,7 +874,9 @@ export default function WorkOrderPage() {
                               <TableCell>{item.line_no}</TableCell>
                               <TableCell>{item.material_code || '-'}</TableCell>
                               <TableCell>{item.material_name || '-'}</TableCell>
-                              <TableCell>{parseFloat(String(item.required_qty)).toLocaleString()}</TableCell>
+                              <TableCell>
+                                {parseFloat(String(item.required_qty)).toLocaleString()}
+                              </TableCell>
                               <TableCell>{item.unit || '-'}</TableCell>
                               <TableCell>{getStatusBadge(item.status)}</TableCell>
                             </TableRow>
@@ -779,14 +925,24 @@ export default function WorkOrderPage() {
                     <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
                       关闭
                     </Button>
-                    {selectedOrder.status === 'confirmed' && (
-                      <Button onClick={() => { handleStatusChange(selectedOrder, 'producing'); setIsDetailOpen(false); }}>
+                    {selectedOrder.status === 1 && (
+                      <Button
+                        onClick={() => {
+                          handleStatusChange(selectedOrder, 'producing');
+                          setIsDetailOpen(false);
+                        }}
+                      >
                         <Play className="h-4 w-4 mr-2" />
                         开始生产
                       </Button>
                     )}
-                    {selectedOrder.status === 'producing' && (
-                      <Button onClick={() => { handleStatusChange(selectedOrder, 'completed'); setIsDetailOpen(false); }}>
+                    {selectedOrder.status === 2 && (
+                      <Button
+                        onClick={() => {
+                          handleStatusChange(selectedOrder, 'completed');
+                          setIsDetailOpen(false);
+                        }}
+                      >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         完成工单
                       </Button>

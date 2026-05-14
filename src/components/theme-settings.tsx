@@ -6,13 +6,32 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { LayoutDashboard, Menu, PanelTop, Blend, Moon, Eye, Palette, RotateCcw } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Menu,
+  PanelTop,
+  Blend,
+  Moon,
+  Eye,
+  Palette,
+  RotateCcw,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navModes: { value: NavigationMode; label: string; icon: React.ReactNode; desc: string }[] = [
-  { value: 'sidebar', label: '侧边栏', icon: <Menu className="w-4 h-4" />, desc: '经典左侧菜单导航' },
+  {
+    value: 'sidebar',
+    label: '侧边栏',
+    icon: <Menu className="w-4 h-4" />,
+    desc: '经典左侧菜单导航',
+  },
   { value: 'top', label: '顶部', icon: <PanelTop className="w-4 h-4" />, desc: '顶部水平菜单导航' },
-  { value: 'mixed', label: '混合', icon: <Blend className="w-4 h-4" />, desc: '顶部+侧边栏混合导航' },
+  {
+    value: 'mixed',
+    label: '混合',
+    icon: <Blend className="w-4 h-4" />,
+    desc: '顶部+侧边栏混合导航',
+  },
 ];
 
 export function ThemeSettings() {
@@ -55,16 +74,22 @@ export function ThemeSettings() {
                     : 'border-border hover:border-primary/50'
                 )}
               >
-                <div className={cn(
-                  'w-12 h-8 rounded border flex items-center justify-center',
-                  navigationMode === mode.value ? 'bg-primary/10 border-primary' : 'bg-muted border-border'
-                )}>
+                <div
+                  className={cn(
+                    'w-12 h-8 rounded border flex items-center justify-center',
+                    navigationMode === mode.value
+                      ? 'bg-primary/10 border-primary'
+                      : 'bg-muted border-border'
+                  )}
+                >
                   {mode.icon}
                 </div>
-                <span className={cn(
-                  'text-xs font-medium',
-                  navigationMode === mode.value ? 'text-primary' : 'text-muted-foreground'
-                )}>
+                <span
+                  className={cn(
+                    'text-xs font-medium',
+                    navigationMode === mode.value ? 'text-primary' : 'text-muted-foreground'
+                  )}
+                >
                   {mode.label}
                 </span>
               </button>

@@ -433,13 +433,13 @@ CREATE TABLE `inv_inventory` (
   KEY `idx_batch` (`batch_no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='库存表';
 
--- 库存流水表
+-- 库存流水表（不可修改、不可删除 - 审计要求）
 CREATE TABLE `inv_inventory_log` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '流水ID',
   `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
   `warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
   `batch_no` VARCHAR(50) COMMENT '批次号',
-  `operation_type` TINYINT NOT NULL COMMENT '操作类型: 1-入库, 2-出库, 3-盘点, 4-调拨, 5-报废',
+  `operation_type` TINYINT NOT NULL COMMENT '操作类型: 1-入库, 2-出库, 3-盘点, 4-调拨, 5-报废, 6-锁定, 7-解锁',
   `operation_qty` DECIMAL(18,4) NOT NULL COMMENT '操作数量',
   `before_qty` DECIMAL(18,4) COMMENT '操作前数量',
   `after_qty` DECIMAL(18,4) COMMENT '操作后数量',
@@ -452,8 +452,9 @@ CREATE TABLE `inv_inventory_log` (
   KEY `idx_material` (`material_id`),
   KEY `idx_warehouse` (`warehouse_id`),
   KEY `idx_operation_type` (`operation_type`),
+  KEY `idx_business_no` (`business_no`),
   KEY `idx_create_time` (`create_time`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='库存流水表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_ai_ci COMMENT='库存流水表（不可修改、不可删除）';
 
 -- ========================================================
 -- 5. 采购管理模块
@@ -1148,3 +1149,197 @@ INSERT INTO `eqp_equipment` (`equipment_code`, `equipment_name`, `equipment_type
 ('TM003', '商标模切机C', 'trademark', 'trademark', 600, 1, 20, 'available'),
 ('PK001', '自动包装线A', 'packaging', 'packaging', 1000, 1, 10, 'available'),
 ('PK002', '自动包装线B', 'packaging', 'packaging', 1000, 1, 10, 'available');
+
+-- ========================================================
+-- 10. 物料领用管理模块
+-- ========================================================
+
+-- 领料单主表
+CREATE TABLE `material_requisitions` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '领料单ID',
+  `requisition_no` VARCHAR(50) NOT NULL COMMENT '领料单编号，格式：MR+YYYYMMDD+4位序号',
+  `work_order_id` BIGINT UNSIGNED COMMENT '关联工单ID',
+  `work_order_no` VARCHAR(50) COMMENT '工单编号',
+  `type` VARCHAR(20) NOT NULL COMMENT '类型：normal-正常领料, over-超领, supplementary-补料',
+  `status` TINYINT DEFAULT 0 COMMENT '状态：0=待审批，1=待出库，2=已出库，3=已取消',
+  `applicant_id` BIGINT UNSIGNED COMMENT '申请人ID',
+  `applicant_name` VARCHAR(50) COMMENT '申请人姓名',
+  `approver_id` BIGINT UNSIGNED COMMENT '审批人ID',
+  `approver_name` VARCHAR(50) COMMENT '审批人姓名',
+  `approve_time` DATETIME COMMENT '审批时间',
+  `total_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '领料总数量',
+  `issued_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '已出库数量',
+  `warehouse_id` BIGINT UNSIGNED COMMENT '仓库ID',
+  `original_requisition_id` BIGINT UNSIGNED COMMENT '原领料单ID（补料时关联）',
+  `reason` VARCHAR(255) COMMENT '超领/补料原因',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `remark` TEXT COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_requisition_no` (`requisition_no`),
+  KEY `idx_work_order` (`work_order_id`),
+  KEY `idx_type` (`type`),
+  KEY `idx_status` (`status`),
+  KEY `idx_applicant` (`applicant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='领料单主表';
+
+-- 领料单明细表
+CREATE TABLE `material_requisition_items` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `requisition_id` BIGINT UNSIGNED NOT NULL COMMENT '领料单ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码',
+  `material_name` VARCHAR(100) COMMENT '物料名称',
+  `planned_quantity` DECIMAL(18,4) NOT NULL COMMENT '计划数量（BOM计算）',
+  `actual_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '实际领用数量',
+  `issued_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '已出库数量',
+  `unit` VARCHAR(20) COMMENT '单位',
+  `qr_code` VARCHAR(50) COMMENT '小料二维码',
+  `batch_no` VARCHAR(50) COMMENT '批次号',
+  `warehouse_location` VARCHAR(50) COMMENT '库位',
+  `fifo_recommended` TINYINT DEFAULT 0 COMMENT '是否为FIFO推荐批次：0-否，1-是',
+  `split_flag` TINYINT DEFAULT 1 COMMENT '拆分标记：0-整料，1-小料，2-余料',
+  `unit_cost` DECIMAL(18,4) COMMENT '单位成本',
+  `total_cost` DECIMAL(18,4) COMMENT '总成本',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_requisition` (`requisition_id`),
+  KEY `idx_material` (`material_id`),
+  KEY `idx_qr_code` (`qr_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='领料单明细表';
+
+-- 退料单主表
+CREATE TABLE `material_returns` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '退料单ID',
+  `return_no` VARCHAR(50) NOT NULL COMMENT '退料单编号，格式：RT+YYYYMMDD+4位序号',
+  `work_order_id` BIGINT UNSIGNED COMMENT '关联工单ID',
+  `requisition_id` BIGINT UNSIGNED COMMENT '关联领料单ID',
+  `status` TINYINT DEFAULT 0 COMMENT '状态：0=待确认，1=已入库，2=已取消',
+  `applicant_id` BIGINT UNSIGNED COMMENT '申请人ID',
+  `applicant_name` VARCHAR(50) COMMENT '申请人姓名',
+  `confirm_id` BIGINT UNSIGNED COMMENT '确认人ID',
+  `confirm_name` VARCHAR(50) COMMENT '确认人姓名',
+  `confirm_time` DATETIME COMMENT '确认时间',
+  `total_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '退料总数量',
+  `warehouse_id` BIGINT UNSIGNED COMMENT '仓库ID',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `remark` TEXT COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_return_no` (`return_no`),
+  KEY `idx_work_order` (`work_order_id`),
+  KEY `idx_requisition` (`requisition_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='退料单主表';
+
+-- 退料单明细表
+CREATE TABLE `material_return_items` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `return_id` BIGINT UNSIGNED NOT NULL COMMENT '退料单ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码',
+  `material_name` VARCHAR(100) COMMENT '物料名称',
+  `quantity` DECIMAL(18,4) NOT NULL COMMENT '退料数量',
+  `unit` VARCHAR(20) COMMENT '单位',
+  `qr_code` VARCHAR(50) COMMENT '小料二维码',
+  `batch_no` VARCHAR(50) COMMENT '批次号',
+  `reason` VARCHAR(255) COMMENT '退料原因',
+  `unit_cost` DECIMAL(18,4) COMMENT '单位成本',
+  `total_cost` DECIMAL(18,4) COMMENT '总成本',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_return` (`return_id`),
+  KEY `idx_material` (`material_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='退料单明细表';
+
+-- FIFO异常覆盖记录表
+CREATE TABLE `inv_fifo_override_log` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `recommended_batch_no` VARCHAR(50) COMMENT '推荐批次号',
+  `actual_batch_no` VARCHAR(50) COMMENT '实际出库批次号',
+  `requisition_id` BIGINT UNSIGNED COMMENT '领料单ID',
+  `reason` VARCHAR(255) NOT NULL COMMENT '异常原因',
+  `operator_id` BIGINT UNSIGNED COMMENT '操作人ID',
+  `operator_name` VARCHAR(50) COMMENT '操作人姓名',
+  `approve_id` BIGINT UNSIGNED COMMENT '审批人ID',
+  `approve_name` VARCHAR(50) COMMENT '审批人姓名',
+  `status` TINYINT DEFAULT 0 COMMENT '状态：0=待审批，1=已批准，2=已拒绝',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_material` (`material_id`),
+  KEY `idx_requisition` (`requisition_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='FIFO异常覆盖记录表';
+
+-- ========================================================
+-- 11. 成本核算模块
+-- ========================================================
+
+-- 工单成本表
+CREATE TABLE `work_order_costs` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '成本ID',
+  `work_order_id` BIGINT UNSIGNED NOT NULL COMMENT '工单ID',
+  `work_order_no` VARCHAR(50) COMMENT '工单编号',
+  `material_cost` DECIMAL(18,4) DEFAULT 0 COMMENT '原材料成本',
+  `labor_cost` DECIMAL(18,4) DEFAULT 0 COMMENT '人工成本',
+  `manufacturing_cost` DECIMAL(18,4) DEFAULT 0 COMMENT '制造费用',
+  `total_cost` DECIMAL(18,4) DEFAULT 0 COMMENT '总成本',
+  `unit_cost` DECIMAL(18,4) DEFAULT 0 COMMENT '单位成本',
+  `quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '完工数量',
+  `calculate_time` DATETIME COMMENT '成本计算时间',
+  `status` TINYINT DEFAULT 0 COMMENT '状态：0=未计算，1=已计算，2=已结转',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_work_order` (`work_order_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='工单成本表';
+
+-- 小料批次成本表
+CREATE TABLE `material_batch_costs` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '成本ID',
+  `qr_code` VARCHAR(50) NOT NULL COMMENT '小料二维码编码',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码',
+  `material_name` VARCHAR(100) COMMENT '物料名称',
+  `batch_no` VARCHAR(50) COMMENT '批次号',
+  `quantity` DECIMAL(18,4) NOT NULL COMMENT '数量',
+  `unit_cost` DECIMAL(18,4) NOT NULL COMMENT '单位成本',
+  `total_cost` DECIMAL(18,4) NOT NULL COMMENT '总成本',
+  `used_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '已使用数量',
+  `remaining_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '剩余数量',
+  `split_flag` TINYINT DEFAULT 1 COMMENT '拆分标记：0-整料，1-小料，2-余料',
+  `warehouse_id` BIGINT UNSIGNED COMMENT '仓库ID',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_qr_code` (`qr_code`),
+  KEY `idx_material` (`material_id`),
+  KEY `idx_batch` (`batch_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='小料批次成本表';
+
+-- 库存批次表（支持FIFO和小料管理）
+CREATE TABLE `inv_inventory_batch` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '批次ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `batch_no` VARCHAR(50) NOT NULL COMMENT '批次号',
+  `qr_code` VARCHAR(50) COMMENT '二维码',
+  `quantity` DECIMAL(18,4) NOT NULL COMMENT '数量',
+  `remaining_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '剩余数量',
+  `unit_cost` DECIMAL(18,4) COMMENT '单位成本',
+  `warehouse_id` BIGINT UNSIGNED COMMENT '仓库ID',
+  `location` VARCHAR(50) COMMENT '库位',
+  `split_flag` TINYINT DEFAULT 0 COMMENT '拆分标记：0-整料，1-小料，2-余料',
+  `parent_qr_code` VARCHAR(50) COMMENT '父级二维码（小料关联整料）',
+  `inbound_date` DATE COMMENT '入库日期',
+  `expire_date` DATE COMMENT '过期日期',
+  `status` TINYINT DEFAULT 1 COMMENT '状态：1-可用，2-冻结，3-过期',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_material` (`material_id`),
+  KEY `idx_batch` (`batch_no`),
+  KEY `idx_qr` (`qr_code`),
+  KEY `idx_inbound_date` (`inbound_date`),
+  KEY `idx_expire_date` (`expire_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='库存批次表（FIFO+小料管理）';

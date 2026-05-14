@@ -1,18 +1,74 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 
 // 仓库初始化数据
 const warehouseData = [
-  { warehouse_code: 'WH001', warehouse_name: '原料主仓库', warehouse_type: 1, province: '广东', city: '深圳', address: 'A栋1层', manager_id: null, contact_phone: '13800138001', status: 1, remark: '存放主要原材料', category_id: 1 },
-  { warehouse_code: 'WH002', warehouse_name: '成品仓库', warehouse_type: 3, province: '广东', city: '深圳', address: 'B栋2层', manager_id: null, contact_phone: '13800138002', status: 1, remark: '存放成品标签', category_id: 3 },
-  { warehouse_code: 'WH003', warehouse_name: '半成品仓库', warehouse_type: 2, province: '广东', city: '深圳', address: 'A栋2层', manager_id: null, contact_phone: '13800138003', status: 1, remark: '存放印刷后半成品', category_id: 2 },
-  { warehouse_code: 'WH004', warehouse_name: '废品暂存区', warehouse_type: 4, province: '广东', city: '深圳', address: 'C栋1层', manager_id: null, contact_phone: '13800138004', status: 1, remark: '不良品暂存', category_id: 7 },
-  { warehouse_code: 'WH005', warehouse_name: '外租仓库', warehouse_type: 3, province: '广东', city: '深圳', address: '工业区3号', manager_id: null, contact_phone: '13800138005', status: 1, remark: '租赁仓库，存放季节性产品', category_id: 3 },
+  {
+    warehouse_code: 'WH001',
+    warehouse_name: '原料主仓库',
+    warehouse_type: 1,
+    province: '广东',
+    city: '深圳',
+    address: 'A栋1层',
+    manager_id: null,
+    contact_phone: '13800138001',
+    status: 1,
+    remark: '存放主要原材料',
+    category_id: 1,
+  },
+  {
+    warehouse_code: 'WH002',
+    warehouse_name: '成品仓库',
+    warehouse_type: 3,
+    province: '广东',
+    city: '深圳',
+    address: 'B栋2层',
+    manager_id: null,
+    contact_phone: '13800138002',
+    status: 1,
+    remark: '存放成品标签',
+    category_id: 3,
+  },
+  {
+    warehouse_code: 'WH003',
+    warehouse_name: '半成品仓库',
+    warehouse_type: 2,
+    province: '广东',
+    city: '深圳',
+    address: 'A栋2层',
+    manager_id: null,
+    contact_phone: '13800138003',
+    status: 1,
+    remark: '存放印刷后半成品',
+    category_id: 2,
+  },
+  {
+    warehouse_code: 'WH004',
+    warehouse_name: '废品暂存区',
+    warehouse_type: 4,
+    province: '广东',
+    city: '深圳',
+    address: 'C栋1层',
+    manager_id: null,
+    contact_phone: '13800138004',
+    status: 1,
+    remark: '不良品暂存',
+    category_id: 7,
+  },
+  {
+    warehouse_code: 'WH005',
+    warehouse_name: '外租仓库',
+    warehouse_type: 3,
+    province: '广东',
+    city: '深圳',
+    address: '工业区3号',
+    manager_id: null,
+    contact_phone: '13800138005',
+    status: 1,
+    remark: '租赁仓库，存放季节性产品',
+    category_id: 3,
+  },
 ];
 
 // 仓库接口
@@ -44,9 +100,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     await execute(
       'ALTER TABLE inv_warehouse ADD COLUMN category_id BIGINT UNSIGNED DEFAULT NULL COMMENT "仓库分类ID" AFTER warehouse_name'
     );
-    await execute(
-      'ALTER TABLE inv_warehouse ADD KEY idx_category_id (category_id)'
-    );
+    await execute('ALTER TABLE inv_warehouse ADD KEY idx_category_id (category_id)');
   }
 
   // 使用事务初始化数据

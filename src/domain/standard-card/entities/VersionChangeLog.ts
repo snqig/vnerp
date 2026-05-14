@@ -51,10 +51,10 @@ export class VersionChangeLog {
 
   get changeTypeLabel(): string {
     const labels: Record<string, string> = {
-      'create': '创建',
-      'update': '更新',
-      'obsolete': '作废',
-      'restore': '恢复'
+      create: '创建',
+      update: '更新',
+      obsolete: '作废',
+      restore: '恢复',
     };
     return labels[this.changeType] || this.changeType;
   }
@@ -68,7 +68,7 @@ export class VersionChangeLog {
       changeContent: this.changeContent,
       changedBy: this.changedBy,
       changedByName: this.changedByName,
-      changedAt: this.changedAt
+      changedAt: this.changedAt,
     };
   }
 }

@@ -45,12 +45,7 @@ interface FreeRect {
   height: number;
 }
 
-function splitFreeRect(
-  rect: FreeRect,
-  pw: number,
-  ph: number,
-  kerf: number
-): FreeRect[] {
+function splitFreeRect(rect: FreeRect, pw: number, ph: number, kerf: number): FreeRect[] {
   const result: FreeRect[] = [];
   const rightW = rect.width - pw;
   const bottomH = rect.height - ph;
@@ -104,9 +99,7 @@ export function guillotineCut(
   kerfWidth: number = 2,
   allowRotation: boolean = true
 ): CuttingOptimizationResult {
-  const sorted = [...inputs].sort(
-    (a, b) => b.width * b.height - a.width * a.height
-  );
+  const sorted = [...inputs].sort((a, b) => b.width * b.height - a.width * a.height);
 
   const sheets: SheetLayout[] = [];
   const freeRectsList: FreeRect[][] = [];
@@ -203,12 +196,7 @@ export function guillotineCut(
             rotated: false,
             sheet_index: sheetIndex,
           });
-          const newFreeRects = splitFreeRect(
-            initialFreeRect,
-            input.width,
-            input.height,
-            kerfWidth
-          );
+          const newFreeRects = splitFreeRect(initialFreeRect, input.width, input.height, kerfWidth);
           sheets.push(newSheet);
           freeRectsList.push(newFreeRects);
           placed = true;
@@ -228,12 +216,7 @@ export function guillotineCut(
             rotated: true,
             sheet_index: sheetIndex,
           });
-          const newFreeRects = splitFreeRect(
-            initialFreeRect,
-            input.height,
-            input.width,
-            kerfWidth
-          );
+          const newFreeRects = splitFreeRect(initialFreeRect, input.height, input.width, kerfWidth);
           sheets.push(newSheet);
           freeRectsList.push(newFreeRects);
           placed = true;
@@ -258,13 +241,9 @@ export function guillotineCut(
   let totalUtilized = 0;
   let totalArea = 0;
   for (const sheet of sheets) {
-    sheet.utilized_area = sheet.cuts.reduce(
-      (sum, c) => sum + c.width * c.height,
-      0
-    );
+    sheet.utilized_area = sheet.cuts.reduce((sum, c) => sum + c.width * c.height, 0);
     sheet.waste_area = sheet.total_area - sheet.utilized_area;
-    sheet.utilization_rate =
-      sheet.total_area > 0 ? sheet.utilized_area / sheet.total_area : 0;
+    sheet.utilization_rate = sheet.total_area > 0 ? sheet.utilized_area / sheet.total_area : 0;
     totalUtilized += sheet.utilized_area;
     totalArea += sheet.total_area;
   }
@@ -278,22 +257,17 @@ export function guillotineCut(
   };
 }
 
-export function calculateScrapRate(
-  result: CuttingOptimizationResult
-): { perSheet: number[]; overall: number } {
+export function calculateScrapRate(result: CuttingOptimizationResult): {
+  perSheet: number[];
+  overall: number;
+} {
   const perSheet = result.sheets.map((sheet) => {
     if (sheet.total_area <= 0) return 0;
     return sheet.waste_area / sheet.total_area;
   });
 
-  const totalWaste = result.sheets.reduce(
-    (sum, sheet) => sum + sheet.waste_area,
-    0
-  );
-  const totalArea = result.sheets.reduce(
-    (sum, sheet) => sum + sheet.total_area,
-    0
-  );
+  const totalWaste = result.sheets.reduce((sum, sheet) => sum + sheet.waste_area, 0);
+  const totalArea = result.sheets.reduce((sum, sheet) => sum + sheet.total_area, 0);
   const overall = totalArea > 0 ? totalWaste / totalArea : 0;
 
   return { perSheet, overall };
@@ -339,14 +313,13 @@ export async function generateCuttingPlan(
   );
 
   if (!labels || labels.length === 0) {
-    throw new Error(
-      `源标签不存在: label_id=${record.source_label_id}`
-    );
+    throw new Error(`源标签不存在: label_id=${record.source_label_id}`);
   }
 
   const sourceLabel = labels[0];
   const sheetWidth = parseFloat(sourceLabel.width) || parseFloat(record.original_width) || 0;
-  const sheetHeight = parseFloat(sourceLabel.length_per_roll) || parseSpecLength(sourceLabel.specification) || 1000;
+  const sheetHeight =
+    parseFloat(sourceLabel.length_per_roll) || parseSpecLength(sourceLabel.specification) || 1000;
 
   if (sheetWidth <= 0 || sheetHeight <= 0) {
     throw new Error('无法确定原材料尺寸，请检查标签宽幅和长度信息');
@@ -432,19 +405,17 @@ export async function generateCuttingPlan(
     ? `${existingRemark} [LAYOUT:${layoutJson}]`
     : `[LAYOUT:${layoutJson}]`;
 
-  await conn.execute(
-    `UPDATE inv_cutting_record SET remark = ? WHERE id = ?`,
-    [newRemark, cuttingRecordId]
-  );
+  await conn.execute(`UPDATE inv_cutting_record SET remark = ? WHERE id = ?`, [
+    newRemark,
+    cuttingRecordId,
+  ]);
 
   return result;
 }
 
 function parseSpecLength(spec: string): number {
   if (!spec) return 0;
-  const match = spec.match(
-    /(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*(mm|m)?/i
-  );
+  const match = spec.match(/(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*(mm|m)?/i);
   if (match) {
     const length = parseFloat(match[2]);
     const unit = match[3]?.toLowerCase();

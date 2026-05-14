@@ -6,14 +6,13 @@ import { generateDocumentNo } from '@/lib/document-numbering';
 
 export class MysqlSalesOrderRepository implements ISalesOrderRepository {
   async findById(id: number): Promise<SalesOrder | null> {
-    const orders = await query<any>(
-      'SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]
-    );
+    const orders = await query<any>('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
     const details = await query<any>(
-      'SELECT * FROM sal_order_detail WHERE order_id = ? AND deleted = 0 ORDER BY id ASC', [id]
+      'SELECT * FROM sal_order_detail WHERE order_id = ? AND deleted = 0 ORDER BY id ASC',
+      [id]
     );
 
     return SalesOrder.reconstitute(this.mapToProps(order, details));
@@ -98,9 +97,17 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
           total_amount, total_qty, shipped_qty, status, warehouse_id, remark, create_by, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, NOW())`,
         [
-          orderNo, order.customerId, order.customerName, order.orderDate,
-          order.deliveryDate || null, order.totalAmount, order.totalQuantity,
-          order.status.toDbCode(), order.warehouseId, order.remark, order.createBy || null,
+          orderNo,
+          order.customerId,
+          order.customerName,
+          order.orderDate,
+          order.deliveryDate || null,
+          order.totalAmount,
+          order.totalQuantity,
+          order.status.toDbCode(),
+          order.warehouseId,
+          order.remark,
+          order.createBy || null,
         ]
       );
 
@@ -112,9 +119,16 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
             specification, unit, quantity, shipped_qty, unit_price, amount, remark, create_time)
            VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, NOW())`,
           [
-            orderId, line.materialId, line.materialCode, line.materialName,
-            line.specification, line.unit, line.orderQty,
-            line.unitPrice, line.amount, line.remark || null,
+            orderId,
+            line.materialId,
+            line.materialCode,
+            line.materialName,
+            line.specification,
+            line.unit,
+            line.orderQty,
+            line.unitPrice,
+            line.amount,
+            line.remark || null,
           ]
         );
       }
@@ -134,10 +148,10 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
   }
 
   async updateShippedQty(lineId: number, shippedQty: number): Promise<void> {
-    await execute(
-      'UPDATE sal_order_detail SET shipped_qty = ?, update_time = NOW() WHERE id = ?',
-      [shippedQty, lineId]
-    );
+    await execute('UPDATE sal_order_detail SET shipped_qty = ?, update_time = NOW() WHERE id = ?', [
+      shippedQty,
+      lineId,
+    ]);
   }
 
   async updateAuditInfo(id: number, auditBy: number, auditTime: string): Promise<void> {

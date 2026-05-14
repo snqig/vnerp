@@ -1,11 +1,7 @@
 import { NextRequest } from 'next/server';
 import mysql from 'mysql2/promise';
 import { query, execute, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 
 // 部门接口
 interface Department {
@@ -59,9 +55,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
 
     // 获取刚插入的部门ID映射
-    const [allDepts] = await connection.execute(
-      'SELECT id, dept_code FROM sys_department'
-    ) as [any[], any];
+    const [allDepts] = (await connection.execute('SELECT id, dept_code FROM sys_department')) as [
+      any[],
+      any,
+    ];
     const codeToIdMap = new Map(allDepts.map((d: any) => [d.dept_code, d.id]));
 
     // 插入子部门

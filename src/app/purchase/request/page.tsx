@@ -45,6 +45,18 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { SearchInput } from '@/components/ui/search-input';
 import { useCompanyName } from '@/hooks/useCompanyName';
 
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 interface PurchaseRequest {
   id: number;
   request_no: string;
@@ -78,7 +90,10 @@ interface RequestItem {
   remark: string;
 }
 
-const statusMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const statusMap: Record<
+  number,
+  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+> = {
   0: { label: '草稿', variant: 'secondary' },
   1: { label: '待审批', variant: 'outline' },
   2: { label: '已审批', variant: 'default' },
@@ -89,7 +104,10 @@ const statusMap: Record<number, { label: string; variant: 'default' | 'secondary
 const priorityMap: Record<number, { label: string; color: string }> = {
   0: { label: '低', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
   1: { label: '中', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200' },
-  2: { label: '高', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200' },
+  2: {
+    label: '高',
+    color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200',
+  },
   3: { label: '紧急', color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' },
 };
 
@@ -112,12 +130,22 @@ export default function PurchaseRequestPage() {
   const handleSort = (field: string) => {
     if (sortField === field) {
       if (sortOrder === 'asc') setSortOrder('desc');
-      else if (sortOrder === 'desc') { setSortField(null); setSortOrder(null); }
-    } else { setSortField(field); setSortOrder('asc'); }
+      else if (sortOrder === 'desc') {
+        setSortField(null);
+        setSortOrder(null);
+      }
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
   };
   const getSortIcon = (field: string) => {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
-    return sortOrder === 'asc' ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
+    return sortOrder === 'asc' ? (
+      <ArrowUp className="ml-1 h-3 w-3" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3" />
+    );
   };
   const sortedRequests = useMemo(() => {
     if (!sortField || !sortOrder) return requests;
@@ -147,12 +175,13 @@ export default function PurchaseRequestPage() {
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
 
-      const response = await fetch(`/api/purchase/request?${params}`);
+      const response = await authFetch(`/api/purchase/request?${params}`);
       const result = await response.json();
 
       if (result.success) {
-        setRequests(result.data);
-        setTotal(result.pagination.total);
+        const data = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        setRequests(data);
+        setTotal(result.pagination?.total || result.data?.total || data.length);
       } else {
         toast.error(result.message || '获取采购申请列表失败');
       }
@@ -167,7 +196,7 @@ export default function PurchaseRequestPage() {
     if (!confirm('确定要删除这个采购申请吗？')) return;
 
     try {
-      const response = await fetch(`/api/purchase/request?id=${id}`, {
+      const response = await authFetch(`/api/purchase/request?id=${id}`, {
         method: 'DELETE',
       });
       const result = await response.json();
@@ -189,19 +218,19 @@ export default function PurchaseRequestPage() {
   };
 
   const toggleSelect = (id: number) => {
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
 
   const toggleSelectAll = () => {
     if (selectedIds.length === requests.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(requests.map(r => r.id));
+      setSelectedIds(requests.map((r) => r.id));
     }
   };
 
   const toggleRowExpand = (id: number) => {
-    setExpandedRows(prev => {
+    setExpandedRows((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -210,7 +239,8 @@ export default function PurchaseRequestPage() {
   };
 
   const handlePrint = () => {
-    const recordsToPrint = selectedIds.length > 0 ? requests.filter(r => selectedIds.includes(r.id)) : requests;
+    const recordsToPrint =
+      selectedIds.length > 0 ? requests.filter((r) => selectedIds.includes(r.id)) : requests;
     if (recordsToPrint.length === 0) {
       toast.error('没有可打印的数据');
       return;
@@ -221,10 +251,14 @@ export default function PurchaseRequestPage() {
       return;
     }
 
-    const orderSections = recordsToPrint.map((r) => {
-      const items = r.items || [];
-      const itemRows = items.length > 0
-        ? items.map((item, idx) => `
+    const orderSections = recordsToPrint
+      .map((r) => {
+        const items = r.items || [];
+        const itemRows =
+          items.length > 0
+            ? items
+                .map(
+                  (item, idx) => `
           <tr>
             <td>${idx + 1}</td>
             <td>${item.material_code || '-'}</td>
@@ -234,10 +268,12 @@ export default function PurchaseRequestPage() {
             <td class="num">${item.quantity ?? 0}</td>
             <td class="num">${Number(item.price || 0).toFixed(2)}</td>
             <td class="num">${Number(item.amount || 0).toFixed(2)}</td>
-          </tr>`).join('')
-        : '<tr><td colspan="8" style="color:#999;text-align:center;padding:6px;">暂无明细数据</td></tr>';
+          </tr>`
+                )
+                .join('')
+            : '<tr><td colspan="8" style="color:#999;text-align:center;padding:6px;">暂无明细数据</td></tr>';
 
-      return `
+        return `
         <div class="order-block">
           <div class="order-header">
             <span class="order-no">${r.request_no}</span>
@@ -257,7 +293,8 @@ export default function PurchaseRequestPage() {
           </table>
           ${r.remark ? `<div class="remark">备注：${r.remark}</div>` : ''}
         </div>`;
-    }).join('');
+      })
+      .join('');
 
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>采购申请打印</title>
       <style>
@@ -290,13 +327,23 @@ export default function PurchaseRequestPage() {
   };
 
   const handleExportXLS = () => {
-    const recordsToExport = selectedIds.length > 0 ? requests.filter(r => selectedIds.includes(r.id)) : requests;
+    const recordsToExport =
+      selectedIds.length > 0 ? requests.filter((r) => selectedIds.includes(r.id)) : requests;
     if (recordsToExport.length === 0) {
       toast.error('没有可导出的数据');
       return;
     }
-    const headers = ['申请单号', '申请日期', '申请部门', '申请人', '类型', '优先级', '金额', '状态'];
-    const rows = recordsToExport.map(r => [
+    const headers = [
+      '申请单号',
+      '申请日期',
+      '申请部门',
+      '申请人',
+      '类型',
+      '优先级',
+      '金额',
+      '状态',
+    ];
+    const rows = recordsToExport.map((r) => [
       r.request_no,
       formatDate(r.request_date),
       r.request_dept || '',
@@ -307,7 +354,8 @@ export default function PurchaseRequestPage() {
       statusMap[r.status]?.label || '未知',
     ]);
     const BOM = '\uFEFF';
-    const csvContent = BOM + [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+    const csvContent =
+      BOM + [headers.join(','), ...rows.map((r) => r.map((c) => `"${c}"`).join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -318,7 +366,8 @@ export default function PurchaseRequestPage() {
   };
 
   const handleExportPDF = () => {
-    const recordsToExport = selectedIds.length > 0 ? requests.filter(r => selectedIds.includes(r.id)) : requests;
+    const recordsToExport =
+      selectedIds.length > 0 ? requests.filter((r) => selectedIds.includes(r.id)) : requests;
     if (recordsToExport.length === 0) {
       toast.error('没有可导出的数据');
       return;
@@ -328,7 +377,9 @@ export default function PurchaseRequestPage() {
       toast.error('无法打开导出窗口');
       return;
     }
-    const rows = recordsToExport.map(r => `<tr>
+    const rows = recordsToExport
+      .map(
+        (r) => `<tr>
       <td>${r.request_no}</td>
       <td>${formatDate(r.request_date)}</td>
       <td>${r.request_dept || '-'}</td>
@@ -337,7 +388,9 @@ export default function PurchaseRequestPage() {
       <td>${priorityMap[r.priority]?.label || '中'}</td>
       <td>${formatAmount(r.total_amount, r.currency)}</td>
       <td>${statusMap[r.status]?.label || '未知'}</td>
-    </tr>`).join('');
+    </tr>`
+      )
+      .join('');
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>采购申请列表</title>
       <style>
         @page { size: A4; margin: 15mm; }
@@ -389,28 +442,42 @@ export default function PurchaseRequestPage() {
               <FileText className="h-6 w-6" />
               采购申请
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              管理采购申请单，跟踪审批进度
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">管理采购申请单，跟踪审批进度</p>
           </div>
           <div className="flex gap-2 items-center">
             <Button onClick={() => router.push('/purchase/request/new')} className="rounded-full">
               <Plus className="h-4 w-4 mr-2" />
               新增申请
             </Button>
-            <Button variant="outline" onClick={() => router.push('/purchase/request/form')} className="rounded-full">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/purchase/request/form')}
+              className="rounded-full"
+            >
               <FileText className="h-4 w-4 mr-2" />
               传统录入
             </Button>
             <div className="flex gap-1">
-              <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1"><Printer className="h-4 w-4" />打印</Button>
+              <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1">
+                <Printer className="h-4 w-4" />
+                打印
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1"><Download className="h-4 w-4" />导出</Button>
+                  <Button variant="outline" size="sm" className="gap-1">
+                    <Download className="h-4 w-4" />
+                    导出
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onClick={handleExportXLS}><FileSpreadsheet className="h-4 w-4 mr-2" />导出 XLS</DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportPDF}><FileText className="h-4 w-4 mr-2" />导出 PDF</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportXLS}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    导出 XLS
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    导出 PDF
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -423,17 +490,35 @@ export default function PurchaseRequestPage() {
             placeholder="搜索申请单号、申请人、部门..."
             value={keyword}
             onChange={setKeyword}
-            onSearch={() => { setPage(1); fetchRequests(); }}
+            onSearch={() => {
+              setPage(1);
+              fetchRequests();
+            }}
             className="flex-1 min-w-[200px]"
           />
           <div className="flex items-center gap-2">
-            <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-36" placeholder="开始日期" />
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-36"
+              placeholder="开始日期"
+            />
             <span className="text-muted-foreground">~</span>
-            <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-36" placeholder="结束日期" />
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-36"
+              placeholder="结束日期"
+            />
           </div>
           <select
             value={status}
-            onChange={(e) => { setStatus(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
             className="border rounded-md px-3 py-2"
           >
             <option value="all">全部状态</option>
@@ -454,30 +539,64 @@ export default function PurchaseRequestPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">
-                  <Checkbox checked={requests.length > 0 && selectedIds.length === requests.length} onCheckedChange={toggleSelectAll} />
+                  <Checkbox
+                    checked={requests.length > 0 && selectedIds.length === requests.length}
+                    onCheckedChange={toggleSelectAll}
+                  />
                 </TableHead>
                 <TableHead>申请单号</TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('request_date')}>
-                      <span className="inline-flex items-center">申请日期{getSortIcon('request_date')}</span>
-                    </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('request_dept')}>
-                      <span className="inline-flex items-center">申请部门{getSortIcon('request_dept')}</span>
-                    </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('requester_name')}>
-                      <span className="inline-flex items-center">申请人{getSortIcon('requester_name')}</span>
-                    </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('request_type')}>
-                      <span className="inline-flex items-center">类型{getSortIcon('request_type')}</span>
-                    </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('priority')}>
-                      <span className="inline-flex items-center">优先级{getSortIcon('priority')}</span>
-                    </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('total_amount')}>
-                      <span className="inline-flex items-center">金额{getSortIcon('total_amount')}</span>
-                    </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('status')}>
-                      <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
-                    </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:bg-muted"
+                  onClick={() => handleSort('request_date')}
+                >
+                  <span className="inline-flex items-center">
+                    申请日期{getSortIcon('request_date')}
+                  </span>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:bg-muted"
+                  onClick={() => handleSort('request_dept')}
+                >
+                  <span className="inline-flex items-center">
+                    申请部门{getSortIcon('request_dept')}
+                  </span>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:bg-muted"
+                  onClick={() => handleSort('requester_name')}
+                >
+                  <span className="inline-flex items-center">
+                    申请人{getSortIcon('requester_name')}
+                  </span>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:bg-muted"
+                  onClick={() => handleSort('request_type')}
+                >
+                  <span className="inline-flex items-center">
+                    类型{getSortIcon('request_type')}
+                  </span>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:bg-muted"
+                  onClick={() => handleSort('priority')}
+                >
+                  <span className="inline-flex items-center">优先级{getSortIcon('priority')}</span>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:bg-muted"
+                  onClick={() => handleSort('total_amount')}
+                >
+                  <span className="inline-flex items-center">
+                    金额{getSortIcon('total_amount')}
+                  </span>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:bg-muted"
+                  onClick={() => handleSort('status')}
+                >
+                  <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
+                </TableHead>
                 <TableHead className="w-[100px]">操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -502,7 +621,10 @@ export default function PurchaseRequestPage() {
                     <Fragment key={request.id}>
                       <TableRow className="hover:bg-muted/50">
                         <TableCell>
-                          <Checkbox checked={selectedIds.includes(request.id)} onCheckedChange={() => toggleSelect(request.id)} />
+                          <Checkbox
+                            checked={selectedIds.includes(request.id)}
+                            onCheckedChange={() => toggleSelect(request.id)}
+                          />
                         </TableCell>
                         <TableCell>
                           <Button
@@ -524,7 +646,9 @@ export default function PurchaseRequestPage() {
                         <TableCell>{request.requester_name || '-'}</TableCell>
                         <TableCell>{request.request_type || '-'}</TableCell>
                         <TableCell>
-                          <span className={`px-2 py-1 rounded text-xs ${priorityMap[request.priority]?.color || ''}`}>
+                          <span
+                            className={`px-2 py-1 rounded text-xs ${priorityMap[request.priority]?.color || ''}`}
+                          >
                             {priorityMap[request.priority]?.label || '中'}
                           </span>
                         </TableCell>
@@ -544,12 +668,18 @@ export default function PurchaseRequestPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => router.push(`/purchase/request/${request.id}`)}>
+                              <DropdownMenuItem
+                                onClick={() => router.push(`/purchase/request/${request.id}`)}
+                              >
                                 <Eye className="h-4 w-4 mr-2" />
                                 查看
                               </DropdownMenuItem>
                               {request.status <= 1 && (
-                                <DropdownMenuItem onClick={() => router.push(`/purchase/request/${request.id}/edit`)}>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    router.push(`/purchase/request/${request.id}/edit`)
+                                  }
+                                >
                                   <Edit className="h-4 w-4 mr-2" />
                                   编辑
                                 </DropdownMenuItem>
@@ -567,7 +697,7 @@ export default function PurchaseRequestPage() {
                                 </>
                               )}
                               {request.status <= 1 && (
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   onClick={() => handleDelete(request.id)}
                                   className="text-red-600"
                                 >
@@ -586,29 +716,65 @@ export default function PurchaseRequestPage() {
                               <Table>
                                 <TableHeader>
                                   <TableRow className="bg-slate-100/50 dark:bg-slate-700/50 hover:bg-slate-100/50 dark:hover:bg-slate-700/50">
-                                    <TableHead className="pl-8 text-xs font-normal text-muted-foreground">物料编码</TableHead>
-                                    <TableHead className="text-xs font-normal text-muted-foreground">物料名称</TableHead>
-                                    <TableHead className="text-xs font-normal text-muted-foreground">规格型号</TableHead>
-                                    <TableHead className="text-xs font-normal text-muted-foreground">单位</TableHead>
-                                    <TableHead className="text-xs font-normal text-muted-foreground text-right">数量</TableHead>
-                                    <TableHead className="text-xs font-normal text-muted-foreground text-right">单价</TableHead>
-                                    <TableHead className="text-xs font-normal text-muted-foreground text-right">金额</TableHead>
+                                    <TableHead className="pl-8 text-xs font-normal text-muted-foreground">
+                                      物料编码
+                                    </TableHead>
+                                    <TableHead className="text-xs font-normal text-muted-foreground">
+                                      物料名称
+                                    </TableHead>
+                                    <TableHead className="text-xs font-normal text-muted-foreground">
+                                      规格型号
+                                    </TableHead>
+                                    <TableHead className="text-xs font-normal text-muted-foreground">
+                                      单位
+                                    </TableHead>
+                                    <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                      数量
+                                    </TableHead>
+                                    <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                      单价
+                                    </TableHead>
+                                    <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                      金额
+                                    </TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                  {items.length > 0 ? items.map((item, idx) => (
-                                    <TableRow key={idx} className="bg-transparent hover:bg-white/60 dark:hover:bg-slate-700/60">
-                                      <TableCell className="pl-8 font-mono text-sm">{item.material_code || '-'}</TableCell>
-                                      <TableCell className="text-sm">{item.material_name || '-'}</TableCell>
-                                      <TableCell className="text-sm">{item.material_spec || '-'}</TableCell>
-                                      <TableCell className="text-sm">{item.material_unit || '-'}</TableCell>
-                                      <TableCell className="text-sm text-right">{item.quantity ?? 0}</TableCell>
-                                      <TableCell className="text-sm text-right">{Number(item.price || 0).toFixed(2)}</TableCell>
-                                      <TableCell className="text-sm text-right font-medium">{Number(item.amount || 0).toFixed(2)}</TableCell>
-                                    </TableRow>
-                                  )) : (
+                                  {items.length > 0 ? (
+                                    items.map((item, idx) => (
+                                      <TableRow
+                                        key={idx}
+                                        className="bg-transparent hover:bg-white/60 dark:hover:bg-slate-700/60"
+                                      >
+                                        <TableCell className="pl-8 font-mono text-sm">
+                                          {item.material_code || '-'}
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                          {item.material_name || '-'}
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                          {item.material_spec || '-'}
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                          {item.material_unit || '-'}
+                                        </TableCell>
+                                        <TableCell className="text-sm text-right">
+                                          {item.quantity ?? 0}
+                                        </TableCell>
+                                        <TableCell className="text-sm text-right">
+                                          {Number(item.price || 0).toFixed(2)}
+                                        </TableCell>
+                                        <TableCell className="text-sm text-right font-medium">
+                                          {Number(item.amount || 0).toFixed(2)}
+                                        </TableCell>
+                                      </TableRow>
+                                    ))
+                                  ) : (
                                     <TableRow>
-                                      <TableCell colSpan={7} className="text-center py-3 text-muted-foreground text-sm">
+                                      <TableCell
+                                        colSpan={7}
+                                        className="text-center py-3 text-muted-foreground text-sm"
+                                      >
                                         暂无明细数据
                                       </TableCell>
                                     </TableRow>
@@ -637,7 +803,7 @@ export default function PurchaseRequestPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(p => Math.max(1, p - 1))}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
               >
                 上一页
@@ -645,7 +811,7 @@ export default function PurchaseRequestPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(p => p + 1)}
+                onClick={() => setPage((p) => p + 1)}
                 disabled={page >= Math.ceil(total / pageSize)}
               >
                 下一页

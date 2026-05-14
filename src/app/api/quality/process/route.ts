@@ -1,6 +1,11 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { successResponse, paginatedResponse, withErrorHandler, errorResponse } from '@/lib/api-response';
+import {
+  successResponse,
+  paginatedResponse,
+  withErrorHandler,
+  errorResponse,
+} from '@/lib/api-response';
 import { StateMachineValidator, InspectStatus, StateTransitionLogger } from '@/lib/state-machine';
 import { generateDocNo, getQiPrefix } from '@/lib/global-config';
 
@@ -12,14 +17,14 @@ async function queryPaginatedLocal(
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;
-  
-  const [countResult] = await query<{ total: number }>(countSql, values);
-  const total = countResult?.total || 0;
-  
+
+  const countResult = await query<{ total: number }>(countSql, values);
+  const total = countResult?.[0]?.total || 0;
+
   const paginatedSql = `${sql} LIMIT ? OFFSET ?`;
   const paginatedValues = [...values, pageSize, (page - 1) * pageSize];
   const data = await query(paginatedSql, paginatedValues);
-  
+
   return {
     data,
     pagination: {
@@ -37,18 +42,18 @@ async function getCurrentInspectStatus(cardId: number): Promise<InspectStatus> {
     `SELECT inspect_result FROM qc_process_inspection WHERE card_id = ? ORDER BY created_at DESC LIMIT 1`,
     [cardId]
   );
-  
+
   if (!result) return 'pending';
-  
+
   const statusMap: Record<string, InspectStatus> = {
-    'pending': 'pending',
-    'inspecting': 'inspecting',
-    'pass': 'pass',
-    'fail': 'fail',
-    'rework': 'rework',
-    'scrap': 'scrap',
+    pending: 'pending',
+    inspecting: 'inspecting',
+    pass: 'pass',
+    fail: 'fail',
+    rework: 'rework',
+    scrap: 'scrap',
   };
-  
+
   return statusMap[result.inspect_result] || 'pending';
 }
 
@@ -139,7 +144,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   // 状态机验证
   const currentStatus = await getCurrentInspectStatus(cardId);
   const targetStatus = inspectResult as InspectStatus;
-  
+
   if (!StateMachineValidator.canTransitionInspect(currentStatus, targetStatus)) {
     return errorResponse(
       `状态流转不合法: ${StateMachineValidator.getInspectStatusLabel(currentStatus)} -> ${StateMachineValidator.getInspectStatusLabel(targetStatus)}`,
@@ -156,7 +161,18 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       inspect_no, card_id, card_no, inspect_type, inspect_result,
       defect_type, defect_qty, qualified_qty, inspector, remark, created_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-    [inspectNo, cardId, cardNo, inspectType, inspectResult, defectType, defectQty, qualifiedQty, inspector, remark]
+    [
+      inspectNo,
+      cardId,
+      cardNo,
+      inspectType,
+      inspectResult,
+      defectType,
+      defectQty,
+      qualifiedQty,
+      inspector,
+      remark,
+    ]
   );
 
   // 记录状态流转日志
@@ -216,7 +232,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   // 状态机验证
   const currentStatus = (currentRecord.inspect_result || 'pending') as InspectStatus;
   const targetStatus = inspectResult as InspectStatus;
-  
+
   if (!StateMachineValidator.canTransitionInspect(currentStatus, targetStatus)) {
     return errorResponse(
       `状态流转不合法: ${StateMachineValidator.getInspectStatusLabel(currentStatus)} -> ${StateMachineValidator.getInspectStatusLabel(targetStatus)}`,

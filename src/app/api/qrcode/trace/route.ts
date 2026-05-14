@@ -16,16 +16,27 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   let record: any = null;
 
   if (qrCode) {
-    record = await queryOne('SELECT * FROM qrcode_record WHERE qr_code = ? AND deleted = 0', [qrCode]);
+    record = await queryOne('SELECT * FROM qrcode_record WHERE qr_code = ? AND deleted = 0', [
+      qrCode,
+    ]);
   }
   if (!record && refNo) {
-    record = await queryOne('SELECT * FROM qrcode_record WHERE ref_no = ? AND deleted = 0 ORDER BY create_time DESC LIMIT 1', [refNo]);
+    record = await queryOne(
+      'SELECT * FROM qrcode_record WHERE ref_no = ? AND deleted = 0 ORDER BY create_time DESC LIMIT 1',
+      [refNo]
+    );
   }
   if (!record && batchNo) {
-    record = await queryOne('SELECT * FROM qrcode_record WHERE batch_no = ? AND deleted = 0 ORDER BY create_time DESC LIMIT 1', [batchNo]);
+    record = await queryOne(
+      'SELECT * FROM qrcode_record WHERE batch_no = ? AND deleted = 0 ORDER BY create_time DESC LIMIT 1',
+      [batchNo]
+    );
   }
   if (!record && materialCode) {
-    record = await queryOne('SELECT * FROM qrcode_record WHERE material_code = ? AND deleted = 0 ORDER BY create_time DESC LIMIT 1', [materialCode]);
+    record = await queryOne(
+      'SELECT * FROM qrcode_record WHERE material_code = ? AND deleted = 0 ORDER BY create_time DESC LIMIT 1',
+      [materialCode]
+    );
   }
 
   if (!record) return errorResponse('未找到对应的二维码记录', 404, 404);
@@ -105,19 +116,26 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let orderInfo: any = null;
   if (record.ref_no && record.ref_no.startsWith('SO')) {
-    orderInfo = await queryOne('SELECT * FROM sales_order WHERE order_no = ? AND deleted = 0', [record.ref_no]);
+    orderInfo = await queryOne('SELECT * FROM sales_order WHERE order_no = ? AND deleted = 0', [
+      record.ref_no,
+    ]);
   }
   if (record.ref_no && record.ref_no.startsWith('PO')) {
-    orderInfo = await queryOne('SELECT * FROM pur_order WHERE order_no = ? AND deleted = 0', [record.ref_no]);
+    orderInfo = await queryOne('SELECT * FROM pur_order WHERE order_no = ? AND deleted = 0', [
+      record.ref_no,
+    ]);
   }
   if (record.work_order_no) {
-    orderInfo = await queryOne('SELECT * FROM prd_work_order WHERE work_order_no = ? AND deleted = 0', [record.work_order_no]);
+    orderInfo = await queryOne(
+      'SELECT * FROM prd_work_order WHERE work_order_no = ? AND deleted = 0',
+      [record.work_order_no]
+    );
   }
 
   let qualityInfo: any = null;
   if (record.ref_no) {
     qualityInfo = await query(
-      "SELECT * FROM qc_incoming_inspection WHERE (batch_no = ? OR material_code = ?) AND deleted = 0 ORDER BY create_time DESC LIMIT 5",
+      'SELECT * FROM qc_incoming_inspection WHERE (batch_no = ? OR material_code = ?) AND deleted = 0 ORDER BY create_time DESC LIMIT 5',
       [record.batch_no || '', record.material_code || '']
     );
   }
@@ -183,17 +201,34 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 function getTypeLabel(type: string): string {
   const map: Record<string, string> = {
-    material: '原料', product: '成品', workorder: '工单', ink: '油墨',
-    screen_plate: '网版', die: '刀具', shipment: '出货', ink_open: '开罐', ink_mixed: '调色',
+    material: '原料',
+    product: '成品',
+    workorder: '工单',
+    ink: '油墨',
+    screen_plate: '网版',
+    die: '刀具',
+    shipment: '出货',
+    ink_open: '开罐',
+    ink_mixed: '调色',
   };
   return map[type] || type;
 }
 
 function getScanTypeLabel(type: string): string {
   const map: Record<string, string> = {
-    inbound: '入库扫描', outbound: '出库扫描', issue: '领料扫描', report: '报工扫描',
-    check: '检验扫描', inventory: '盘点扫描', ink_open: '开罐扫描', ink_use: '油墨使用',
-    plate_use: '网版领用', plate_clean: '网版清洗', die_use: '刀具使用', die_sharpen: '刀具刃磨', trace: '追溯查询',
+    inbound: '入库扫描',
+    outbound: '出库扫描',
+    issue: '领料扫描',
+    report: '报工扫描',
+    check: '检验扫描',
+    inventory: '盘点扫描',
+    ink_open: '开罐扫描',
+    ink_use: '油墨使用',
+    plate_use: '网版领用',
+    plate_clean: '网版清洗',
+    die_use: '刀具使用',
+    die_sharpen: '刀具刃磨',
+    trace: '追溯查询',
   };
   return map[type] || type;
 }

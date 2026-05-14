@@ -12,24 +12,54 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let where = 'WHERE deleted = 0';
   const params: any[] = [];
-  if (scrapNo) { where += ' AND scrap_no LIKE ?'; params.push('%' + scrapNo + '%'); }
-  if (status) { where += ' AND status = ?'; params.push(Number(status)); }
+  if (scrapNo) {
+    where += ' AND scrap_no LIKE ?';
+    params.push('%' + scrapNo + '%');
+  }
+  if (status) {
+    where += ' AND status = ?';
+    params.push(Number(status));
+  }
 
   const totalRows: any = await query('SELECT COUNT(*) as total FROM eqp_scrap ' + where, params);
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query('SELECT * FROM eqp_scrap ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?', [...params, pageSize, (page - 1) * pageSize]);
+  const rows: any = await query(
+    'SELECT * FROM eqp_scrap ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
+    [...params, pageSize, (page - 1) * pageSize]
+  );
   return successResponse({ list: rows, total, page, pageSize });
 });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { equipment_id, equipment_code, equipment_name, scrap_date, scrap_reason, original_value, net_value, approval_person, remark } = body;
+  const {
+    equipment_id,
+    equipment_code,
+    equipment_name,
+    scrap_date,
+    scrap_reason,
+    original_value,
+    net_value,
+    approval_person,
+    remark,
+  } = body;
   const now = new Date();
   const scrapNo = generateDocNo(getBfPrefix());
 
   const result: any = await execute(
     'INSERT INTO eqp_scrap (scrap_no, equipment_id, equipment_code, equipment_name, scrap_date, scrap_reason, original_value, net_value, approval_person, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [scrapNo, equipment_id, equipment_code || null, equipment_name || null, scrap_date, scrap_reason || null, original_value || 0, net_value || 0, approval_person || null, remark || null]
+    [
+      scrapNo,
+      equipment_id,
+      equipment_code || null,
+      equipment_name || null,
+      scrap_date,
+      scrap_reason || null,
+      original_value || 0,
+      net_value || 0,
+      approval_person || null,
+      remark || null,
+    ]
   );
   return successResponse({ id: result.insertId, scrap_no: scrapNo }, '报废单创建成功');
 });
@@ -37,8 +67,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 export const PUT = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   const { id, status, remark } = body;
-  if (status !== undefined) await execute('UPDATE eqp_scrap SET status = ? WHERE id = ? AND deleted = 0', [status, id]);
-  if (remark !== undefined) await execute('UPDATE eqp_scrap SET remark = ? WHERE id = ? AND deleted = 0', [remark, id]);
+  if (status !== undefined)
+    await execute('UPDATE eqp_scrap SET status = ? WHERE id = ? AND deleted = 0', [status, id]);
+  if (remark !== undefined)
+    await execute('UPDATE eqp_scrap SET remark = ? WHERE id = ? AND deleted = 0', [remark, id]);
   return successResponse(null, '更新成功');
 });
 

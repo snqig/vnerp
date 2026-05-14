@@ -1,6 +1,5 @@
 import { db } from '@/lib/db';
-import { sql } from 'drizzle-orm';
-import { CacheManager } from '@/lib/cache';
+import { getCacheManager } from '@/lib/cache';
 
 export interface MaterialLifecycleStats {
   totalMaterials: number;
@@ -91,15 +90,15 @@ export interface MaterialAdjustmentRecord {
 }
 
 export class MaterialLifecycleService {
-  private cache = CacheManager.getInstance();
+  private cache = getCacheManager();
 
   async getStats(): Promise<MaterialLifecycleStats> {
     const cacheKey = 'material_lifecycle_stats';
-    const cached = this.cache.get<MaterialLifecycleStats>(cacheKey);
+    const cached = await this.cache.get<MaterialLifecycleStats>(cacheKey);
     if (cached) return cached;
 
-    const stats = await db.execute(sql`
-      SELECT 
+    const stats = await db.query(
+      `SELECT 
         COUNT(*) as total_materials,
         COALESCE(SUM(stock_qty), 0) as total_stock,
         COALESCE(SUM(stock_qty * unit_price), 0) as total_value,
@@ -107,8 +106,8 @@ export class MaterialLifecycleService {
         SUM(CASE WHEN expire_date IS NOT NULL AND expire_date <= CURDATE() THEN 1 ELSE 0 END) as expired_materials,
         SUM(CASE WHEN stock_qty <= min_stock THEN 1 ELSE 0 END) as low_stock_materials
       FROM inv_material 
-      WHERE deleted = 0
-    `);
+      WHERE deleted = 0`
+    );
 
     const result: MaterialLifecycleStats = {
       totalMaterials: Number(stats[0]?.total_materials || 0),
@@ -116,16 +115,16 @@ export class MaterialLifecycleService {
       totalValue: Number(stats[0]?.total_value || 0),
       expiringMaterials: Number(stats[0]?.expiring_materials || 0),
       expiredMaterials: Number(stats[0]?.expired_materials || 0),
-      lowStockMaterials: Number(stats[0]?.low_stock_materials || 0)
+      lowStockMaterials: Number(stats[0]?.low_stock_materials || 0),
     };
 
-    this.cache.set(cacheKey, result, 300);
+    await this.cache.set(cacheKey, result, 300);
     return result;
   }
 
   async getExpiryWarnings(daysAhead = 30): Promise<MaterialExpiryWarning[]> {
-    const rows = await db.execute(sql`
-      SELECT 
+    const rows = await db.query(
+      `SELECT 
         m.id,
         m.material_no,
         m.material_name,
@@ -145,8 +144,8 @@ export class MaterialLifecycleService {
       WHERE m.deleted = 0 
         AND m.expire_date IS NOT NULL
         AND m.expire_date <= DATE_ADD(CURDATE(), INTERVAL ${daysAhead} DAY)
-      ORDER BY days_until_expiry ASC
-    `);
+      ORDER BY days_until_expiry ASC`
+    );
 
     return rows.map((row: any) => ({
       id: row.id,
@@ -159,13 +158,13 @@ export class MaterialLifecycleService {
       productionDate: row.production_date,
       expireDate: row.expire_date,
       daysUntilExpiry: Number(row.days_until_expiry),
-      expiryStatus: row.expiry_status
+      expiryStatus: row.expiry_status,
     }));
   }
 
   async getStockAnalysis(): Promise<MaterialStockAnalysis[]> {
-    const rows = await db.execute(sql`
-      SELECT 
+    const rows = await db.query(
+      `SELECT 
         id,
         material_no,
         material_name,
@@ -190,8 +189,8 @@ export class MaterialLifecycleService {
         END as warning_level
       FROM inv_material
       WHERE deleted = 0
-      ORDER BY warning_level DESC, stock_value DESC
-    `);
+      ORDER BY warning_level DESC, stock_value DESC`
+    );
 
     return rows.map((row: any) => ({
       materialId: row.id,
@@ -205,13 +204,13 @@ export class MaterialLifecycleService {
       unitPrice: Number(row.unit_price),
       stockValue: Number(row.stock_value),
       stockStatus: row.stock_status,
-      warningLevel: Number(row.warning_level)
+      warningLevel: Number(row.warning_level),
     }));
   }
 
   async getBatchList(materialId: number): Promise<MaterialBatchInfo[]> {
-    const rows = await db.execute(sql`
-      SELECT 
+    const rows = await db.query(
+      `SELECT 
         b.id as batch_id,
         b.batch_no,
         b.quantity,
@@ -236,8 +235,8 @@ export class MaterialLifecycleService {
         CASE WHEN b.opened_at IS NOT NULL THEN b.opened_at ELSE b.inbound_date END ASC,
         b.expire_date ASC,
         b.inbound_date ASC,
-        b.id ASC
-    `);
+        b.id ASC`
+    );
 
     return rows.map((row: any) => ({
       batchId: row.batch_id,
@@ -252,7 +251,7 @@ export class MaterialLifecycleService {
       supplierName: row.supplier_name,
       sourceInboundNo: row.source_inbound_no,
       batchStatus: row.batch_status,
-      daysUntilExpiry: row.days_until_expiry !== null ? Number(row.days_until_expiry) : null
+      daysUntilExpiry: row.days_until_expiry !== null ? Number(row.days_until_expiry) : null,
     }));
   }
 
@@ -280,27 +279,27 @@ export class MaterialLifecycleService {
       source_id: params.sourceId,
       source_no: params.sourceNo,
       operator_id: params.operatorId,
-      remark: params.remark
+      remark: params.remark,
     } as any);
 
-    await db.execute(sql`
-      UPDATE inv_material 
+    await db.execute(
+      `UPDATE inv_material 
       SET stock_qty = stock_qty - ${params.consumeQty},
           update_time = NOW()
-      WHERE id = ${params.materialId}
-    `);
+      WHERE id = ${params.materialId}`
+    );
 
     if (params.batchId) {
-      await db.execute(sql`
-        UPDATE inv_inventory_batch 
+      await db.execute(
+        `UPDATE inv_inventory_batch 
         SET quantity = quantity - ${params.consumeQty},
             available_qty = available_qty - ${params.consumeQty},
             update_time = NOW()
-        WHERE id = ${params.batchId}
-      `);
+        WHERE id = ${params.batchId}`
+      );
     }
 
-    this.cache.delete('material_lifecycle_stats');
+    await this.cache.delete('material_lifecycle_stats');
 
     return result.insertId;
   }
@@ -313,8 +312,8 @@ export class MaterialLifecycleService {
     reason: string;
     operatorId: number;
   }): Promise<number> {
-    const material = await db.execute(
-      sql`SELECT stock_qty FROM inv_material WHERE id = ${params.materialId}`
+    const material = await db.query(
+      `SELECT stock_qty FROM inv_material WHERE id = ${params.materialId}`
     );
     const beforeQty = Number(material[0]?.stock_qty || 0);
     const adjustmentQty = params.afterQty - beforeQty;
@@ -328,7 +327,7 @@ export class MaterialLifecycleService {
       adjustment_qty: adjustmentQty,
       reason: params.reason,
       operator_id: params.operatorId,
-      approve_status: params.adjustmentType === 'inventory' ? 'pending' : 'approved'
+      approve_status: params.adjustmentType === 'inventory' ? 'pending' : 'approved',
     } as any);
 
     if (params.adjustmentType !== 'inventory') {
@@ -339,30 +338,35 @@ export class MaterialLifecycleService {
   }
 
   async approveAdjustment(adjustmentId: number, approveUserId: number): Promise<void> {
-    await db.execute(sql`
-      UPDATE inv_material_adjustment 
+    await db.execute(
+      `UPDATE inv_material_adjustment 
       SET approve_user = ${approveUserId},
           approve_status = 'approved'
-      WHERE id = ${adjustmentId}
-    `);
+      WHERE id = ${adjustmentId}`
+    );
 
-    const adjustment = await db.execute(
-      sql`SELECT material_id, after_qty FROM inv_material_adjustment WHERE id = ${adjustmentId}`
+    const adjustment = await db.query(
+      `SELECT material_id, after_qty FROM inv_material_adjustment WHERE id = ${adjustmentId}`
     );
 
     if (adjustment.length > 0) {
-      await db.execute(sql`
-        UPDATE inv_material 
+      await db.execute(
+        `UPDATE inv_material 
         SET stock_qty = ${adjustment[0].after_qty},
             update_time = NOW()
-        WHERE id = ${adjustment[0].material_id}
-      `);
+        WHERE id = ${adjustment[0].material_id}`
+      );
     }
 
-    this.cache.delete('material_lifecycle_stats');
+    await this.cache.delete('material_lifecycle_stats');
   }
 
-  async getConsumeLog(materialId?: number, workOrderId?: number, page = 1, pageSize = 20): Promise<{ list: MaterialConsumeRecord[]; total: number }> {
+  async getConsumeLog(
+    materialId?: number,
+    workOrderId?: number,
+    page = 1,
+    pageSize = 20
+  ): Promise<{ list: MaterialConsumeRecord[]; total: number }> {
     let whereClause = 'WHERE m.deleted = 0';
     const params: any[] = [];
 
@@ -375,21 +379,21 @@ export class MaterialLifecycleService {
       params.push(workOrderId);
     }
 
-    const countResult = await db.execute(
-      sql`SELECT COUNT(*) as total FROM inv_material_consume_log l ${sql.raw(whereClause)}`,
+    const countResult = await db.query(
+      `SELECT COUNT(*) as total FROM inv_material_consume_log l ${whereClause}`,
       params as any
     );
     const total = Number(countResult[0]?.total || 0);
 
     const offset = (page - 1) * pageSize;
-    const rows = await db.execute(
-      sql`
+    const rows = await db.query(
+      `
         SELECT l.*, m.material_name, COALESCE(b.batch_no, '') as batch_no, u.user_name as operator_name
         FROM inv_material_consume_log l
         LEFT JOIN inv_material m ON l.material_id = m.id
         LEFT JOIN inv_inventory_batch b ON l.batch_id = b.id
         LEFT JOIN sys_user u ON l.operator_id = u.id
-        ${sql.raw(whereClause)}
+        ${whereClause}
         ORDER BY l.create_time DESC
         LIMIT ${pageSize} OFFSET ${offset}
       `,
@@ -411,13 +415,17 @@ export class MaterialLifecycleService {
         sourceId: row.source_id,
         sourceNo: row.source_no,
         operatorName: row.operator_name,
-        createTime: row.create_time
+        createTime: row.create_time,
       })),
-      total
+      total,
     };
   }
 
-  async getAdjustmentLog(materialId?: number, page = 1, pageSize = 20): Promise<{ list: MaterialAdjustmentRecord[]; total: number }> {
+  async getAdjustmentLog(
+    materialId?: number,
+    page = 1,
+    pageSize = 20
+  ): Promise<{ list: MaterialAdjustmentRecord[]; total: number }> {
     let whereClause = 'WHERE a.deleted = 0';
     const params: any[] = [];
 
@@ -426,15 +434,15 @@ export class MaterialLifecycleService {
       params.push(materialId);
     }
 
-    const countResult = await db.execute(
-      sql`SELECT COUNT(*) as total FROM inv_material_adjustment a ${sql.raw(whereClause)}`,
+    const countResult = await db.query(
+      `SELECT COUNT(*) as total FROM inv_material_adjustment a ${whereClause}`,
       params as any
     );
     const total = Number(countResult[0]?.total || 0);
 
     const offset = (page - 1) * pageSize;
-    const rows = await db.execute(
-      sql`
+    const rows = await db.query(
+      `
         SELECT a.*, m.material_name, COALESCE(b.batch_no, '') as batch_no, 
                u1.user_name as operator_name, u2.user_name as approve_user_name
         FROM inv_material_adjustment a
@@ -442,7 +450,7 @@ export class MaterialLifecycleService {
         LEFT JOIN inv_inventory_batch b ON a.batch_id = b.id
         LEFT JOIN sys_user u1 ON a.operator_id = u1.id
         LEFT JOIN sys_user u2 ON a.approve_user = u2.id
-        ${sql.raw(whereClause)}
+        ${whereClause}
         ORDER BY a.create_time DESC
         LIMIT ${pageSize} OFFSET ${offset}
       `,
@@ -464,21 +472,21 @@ export class MaterialLifecycleService {
         operatorName: row.operator_name,
         approveUserName: row.approve_user_name,
         approveStatus: row.approve_status,
-        createTime: row.create_time
+        createTime: row.create_time,
       })),
-      total
+      total,
     };
   }
 
   async runExpiryCheck(): Promise<{ processed: number; notified: number; expired: number }> {
-    const rows = await db.execute(sql`
-      SELECT id, material_name, expire_date, warning_days
+    const rows = await db.query(
+      `SELECT id, material_name, expire_date, warning_days
       FROM inv_material
       WHERE deleted = 0 
         AND expire_date IS NOT NULL
         AND expire_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)
-        AND status = 'normal'
-    `);
+        AND status = 'normal'`
+    );
 
     let processed = 0;
     let notified = 0;
@@ -486,19 +494,25 @@ export class MaterialLifecycleService {
 
     for (const row of rows) {
       processed++;
-      const daysUntilExpiry = Math.ceil((new Date(row.expire_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      const daysUntilExpiry = Math.ceil(
+        (new Date(row.expire_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      );
 
       if (daysUntilExpiry <= 0) {
-        await db.execute(sql`UPDATE inv_material SET status = 'expired' WHERE id = ${row.id}`);
+        await db.execute(
+          `UPDATE inv_material SET status = 'expired' WHERE id = ${row.id}`
+        );
         expired++;
       } else if (daysUntilExpiry <= row.warning_days) {
-        const existing = await db.execute(
-          sql`SELECT 1 FROM sys_notification WHERE source_type = 'material' AND source_id = ${row.id} AND type = 'material_expiry_warning' AND DATE(create_time) = CURDATE() LIMIT 1`
+        const existing = await db.query(
+          `SELECT 1 FROM sys_notification WHERE source_type = 'material' AND source_id = ${row.id} AND type = 'material_expiry_warning' AND DATE(create_time) = CURDATE() LIMIT 1`
         );
-        
+
         if (existing.length === 0) {
-          const users = await db.execute(sql`SELECT id FROM sys_user WHERE deleted = 0 AND status = 'active'`);
-          
+          const users = await db.query(
+            `SELECT id FROM sys_user WHERE deleted = 0 AND status = 'active'`
+          );
+
           for (const user of users) {
             await db.insert('sys_notification', {
               title: '物料即将过期',
@@ -507,7 +521,7 @@ export class MaterialLifecycleService {
               source_type: 'material',
               source_id: row.id,
               receive_user: user.id,
-              is_read: 0
+              is_read: 0,
             } as any);
           }
           notified++;
@@ -515,7 +529,7 @@ export class MaterialLifecycleService {
       }
     }
 
-    this.cache.delete('material_lifecycle_stats');
+    await this.cache.delete('material_lifecycle_stats');
 
     return { processed, notified, expired };
   }

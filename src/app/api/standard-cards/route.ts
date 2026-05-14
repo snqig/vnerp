@@ -17,19 +17,19 @@ export type StandardCardType = 'color' | 'process' | 'quality' | 'comprehensive'
 export type StandardCardStatus = 'draft' | 'pending' | 'effective' | 'expired';
 
 // 标准卡数据接口（符合设计文档 5.1 节 standard_cards 表结构）
-interface StandardCard {
+export interface StandardCard {
   id?: number;
-  card_no: string;                    // 格式：SC+类型代码+YYYYMMDD+3位序号
-  name: string;                       // 标准卡名称
-  type: StandardCardType;             // 类型：color/process/quality/comprehensive
-  version: string;                    // 版本号，格式：V1.0
-  material_id?: number;               // 适用产品 ID
-  status: number;                     // 状态：1=草稿 2=待审核 3=已生效 4=已失效
-  effective_date?: string;            // 生效日期
-  expiry_date?: string;               // 失效日期
-  create_user?: number;               // 创建人
-  audit_user?: number;                // 审核人
-  remark?: string;                    // 备注
+  card_no: string; // 格式：SC+类型代码+YYYYMMDD+3位序号
+  name: string; // 标准卡名称
+  type: StandardCardType; // 类型：color/process/quality/comprehensive
+  version: string; // 版本号，格式：V1.0
+  material_id?: number; // 适用产品 ID
+  status: number; // 状态：1=草稿 2=待审核 3=已生效 4=已失效
+  effective_date?: string; // 生效日期
+  expiry_date?: string; // 失效日期
+  create_user?: number; // 创建人
+  audit_user?: number; // 审核人
+  remark?: string; // 备注
 
   // 扩展字段（兼容现有丝网印刷行业特性）
   customer_name?: string;
@@ -53,47 +53,47 @@ interface StandardCard {
 }
 
 // 颜色标准卡明细接口（符合设计文档 5.2 节 color_standard_items）
-interface ColorStandardItem {
+export interface ColorStandardItem {
   id?: number;
   standard_card_id: number;
-  color_name: string;                 // 颜色名称
-  pantone_code?: string;              // 潘通色号
-  cmyk_value?: string;                // CMYK 值，格式：C,M,Y,K
-  rgb_value?: string;                 // RGB 值，格式：R,G,B
-  color_sample_image?: string;        // 色样图片 URL
-  tolerance?: string;                 // 颜色公差范围
+  color_name: string; // 颜色名称
+  pantone_code?: string; // 潘通色号
+  cmyk_value?: string; // CMYK 值，格式：C,M,Y,K
+  rgb_value?: string; // RGB 值，格式：R,G,B
+  color_sample_image?: string; // 色样图片 URL
+  tolerance?: string; // 颜色公差范围
 }
 
 // 工艺标准卡明细接口（符合设计文档 5.3 节 process_standard_items）
-interface ProcessStandardItem {
+export interface ProcessStandardItem {
   id?: number;
   standard_card_id: number;
-  process_id?: number;                // 关联工序 ID
-  parameter_name: string;             // 参数名称
-  standard_value: string;             // 标准值
-  tolerance?: string;                 // 公差范围
-  unit?: string;                      // 单位
-  description?: string;               // 参数说明
+  process_id?: number; // 关联工序 ID
+  parameter_name: string; // 参数名称
+  standard_value: string; // 标准值
+  tolerance?: string; // 公差范围
+  unit?: string; // 单位
+  description?: string; // 参数说明
 }
 
 // 质量标准卡明细接口（符合设计文档 5.4 节 quality_standard_items）
-interface QualityStandardItem {
+export interface QualityStandardItem {
   id?: number;
   standard_card_id: number;
-  inspection_item: string;            // 检验项目
-  standard_value: string;             // 标准值
-  tolerance?: string;                 // 公差范围
-  inspection_method?: string;         // 检验方法
-  is_key?: boolean;                   // 是否关键项目
-  defect_level?: string;              // 缺陷等级：致命、严重、一般、轻微
+  inspection_item: string; // 检验项目
+  standard_value: string; // 标准值
+  tolerance?: string; // 公差范围
+  inspection_method?: string; // 检验方法
+  is_key?: boolean; // 是否关键项目
+  defect_level?: string; // 缺陷等级：致命、严重、一般、轻微
 }
 
 // 标准卡类型代码映射（符合设计文档 5.1 节）
 const TYPE_CODE_MAP: Record<StandardCardType, string> = {
-  color: 'C',           // 颜色标准卡
-  process: 'P',         // 工艺标准卡
-  quality: 'Q',         // 质量标准卡
-  comprehensive: 'X',   // 综合标准卡
+  color: 'C', // 颜色标准卡
+  process: 'P', // 工艺标准卡
+  quality: 'Q', // 质量标准卡
+  comprehensive: 'X', // 综合标准卡
 };
 
 // 生成标准卡编号（符合设计文档格式：SC+类型代码+YYYYMMDD+3位序号）
@@ -103,10 +103,10 @@ function generateCardNo(type: StandardCardType): string {
 
 // 列表查询字段（精简，包含新增的核心字段）
 const LIST_FIELDS = `
-  id, card_no, name, type, version, material_id, status,
-  effective_date, expiry_date, create_user, audit_user,
-  customer_name, product_name, print_type, process_method,
-  remark, create_time, update_time
+  id, card_no, customer_name, customer_code, product_name, version, status,
+  print_type, process_method, material_type, glue_type, packing_type,
+  finished_size, tolerance, material_name, layout_type,
+  date, document_code, creator, create_time, update_time
 `;
 
 // GET - 获取标准卡列表或单个标准卡
@@ -130,9 +130,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
 
     // 解析sequences字段
-    if (card.sequences && typeof card.sequences === 'string') {
+    const cardAny = card as any;
+    if (cardAny.sequences && typeof cardAny.sequences === 'string') {
       try {
-        card.sequences = JSON.parse(card.sequences);
+        cardAny.sequences = JSON.parse(cardAny.sequences);
       } catch {
         // 保持原样
       }
@@ -170,33 +171,24 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return paginatedResponse(result.data, result.pagination);
 }, '获取标准卡列表失败');
 
-// POST - 创建标准卡（符合设计文档 4.1 节创建流程）
+// POST - 创建标准卡（兼容前端录入格式）
 export const POST = withErrorHandler(async (request: NextRequest) => {
-  const body: StandardCard = await request.json();
+  const body = await request.json();
 
-  // 验证必填字段（符合设计文档要求）
-  const validation = validateRequestBody(body, ['name', 'type']);
+  // 兼容前端录入格式：如果没有 name，使用 product_name 或 customer_name
+  const name = body.name || body.product_name || `${body.customer_name || ''}标准卡`;
 
-  if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
-  }
+  // 兼容前端录入格式：如果没有 type，默认为 process（工艺标准卡）
+  const type: StandardCardType = body.type || 'process';
 
   // 验证 type 字段值
   const validTypes: StandardCardType[] = ['color', 'process', 'quality', 'comprehensive'];
-  if (!validTypes.includes(body.type)) {
-    return errorResponse(
-      `无效的标准卡类型，必须是: ${validTypes.join(', ')}`,
-      400,
-      400
-    );
+  if (!validTypes.includes(type)) {
+    return errorResponse(`无效的标准卡类型，必须是: ${validTypes.join(', ')}`, 400, 400);
   }
 
   // 生成标准卡编号（根据类型自动生成）
-  const cardNo = body.card_no || generateCardNo(body.type);
+  const cardNo = body.card_no || generateCardNo(type);
 
   // 检查标准卡编号是否已存在
   const existing = await queryOne<{ id: number }>(
@@ -208,31 +200,40 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('标准卡编号已存在', 409, 409);
   }
 
-  // 插入标准卡主表（符合设计文档 5.1 节字段结构）
+  // 插入标准卡主表（兼容前端所有字段）
   const result = await execute(
     `INSERT INTO prd_standard_card (
-      card_no, name, type, version, material_id, status,
+      card_no, name, type, version, status,
       effective_date, expiry_date, create_user, audit_user,
       customer_name, customer_code, product_name,
       finished_size, tolerance, material_name, material_type,
       layout_type, print_type, process_method, glue_type, packing_type,
+      sequences, film_manufacturer, film_code, film_size,
+      process_method, stamping_method, mold_code, layout_method, layout_way,
+      jump_distance, mylar_material, mylar_specs, mylar_layout, mylar_jump,
+      adhesive_type, adhesive_manufacturer, adhesive_code, adhesive_size,
+      dashed_knife, slice_per_row, slice_per_roll, slice_per_bundle,
+      slice_per_bag, slice_per_box, back_knife_mold, back_mylar_mold,
+      release_paper_code, release_paper_type, release_paper_specs,
+      padding_material, packing_material, special_color, color_formula,
+      file_path, sample_info, notes, creator, reviewer,
+      factory_manager, quality_manager, sales, approver, document_code,
       remark, deleted
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
     [
       cardNo,
-      body.name,
-      body.type,
+      name,
+      type,
       body.version || 'V1.0',
-      body.material_id || null,
-      body.status || 1,                    // 默认草稿状态
-      body.effective_date || null,
+      body.status || 1,
+      body.effective_date || body.date || null,
       body.expiry_date || null,
       body.create_user || null,
       body.audit_user || null,
-      body.customer_name || '',
+      body.customer_name || body.customer || '',
       body.customer_code || '',
       body.product_name || '',
-      body.finished_size || '',
+      body.finished_size || body.finished_size || '',
       body.tolerance || '',
       body.material_name || '',
       body.material_type || '',
@@ -241,6 +242,49 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       body.process_method || '',
       body.glue_type || '',
       body.packing_type || '',
+      body.sequences || null,
+      body.film_manufacturer || '',
+      body.film_code || '',
+      body.film_size || '',
+      body.process_method || '',
+      body.stamping_method || '',
+      body.mold_code || '',
+      body.layout_method || '',
+      body.layout_way || '',
+      body.jump_distance || '',
+      body.mylar_material || '',
+      body.mylar_specs || '',
+      body.mylar_layout || '',
+      body.mylar_jump || '',
+      body.adhesive_type || '',
+      body.adhesive_manufacturer || '',
+      body.adhesive_code || '',
+      body.adhesive_size || '',
+      body.dashed_knife || 0,
+      body.slice_per_row || '',
+      body.slice_per_roll || '',
+      body.slice_per_bundle || '',
+      body.slice_per_bag || '',
+      body.slice_per_box || '',
+      body.back_knife_mold || '',
+      body.back_mylar_mold || '',
+      body.release_paper_code || '',
+      body.release_paper_type || '',
+      body.release_paper_specs || '',
+      body.padding_material || '',
+      body.packing_material || '',
+      body.special_color || '',
+      body.color_formula || '',
+      body.file_path || '',
+      body.sample_info || '',
+      body.notes || '',
+      body.creator || '',
+      body.reviewer || '',
+      body.factory_manager || '',
+      body.quality_manager || '',
+      body.sales || '',
+      body.approver || '',
+      body.document_code || '',
       body.remark || '',
     ]
   );
@@ -249,13 +293,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   // 如果有明细数据，插入对应的明细表
   if (body.items && Array.isArray(body.items) && body.items.length > 0) {
-    await insertStandardCardItems(standardCardId, body.type, body.items);
+    await insertStandardCardItems(standardCardId, type, body.items);
   }
 
-  return successResponse(
-    { id: standardCardId, card_no: cardNo },
-    '标准卡创建成功'
-  );
+  return successResponse({ id: standardCardId, card_no: cardNo }, '标准卡创建成功');
 }, '创建标准卡失败');
 
 // 插入标准卡明细数据（根据类型插入不同表）
@@ -387,7 +428,7 @@ async function insertStandardCardItems(
 
 // PUT - 更新标准卡（符合设计文档 4.2 节版本更新流程）
 export const PUT = withErrorHandler(async (request: NextRequest) => {
-  const body: StandardCard = await request.json();
+  const body = await request.json();
   const { id } = body;
 
   if (!id) {
@@ -398,11 +439,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['name', 'type']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查标准卡是否存在
@@ -418,7 +455,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   // 更新标准卡主表（符合设计文档 5.1 节字段结构）
   const result = await execute(
     `UPDATE prd_standard_card SET
-      name = ?, type = ?, version = ?, material_id = ?,
+      name = ?, type = ?, version = ?,
       status = ?, effective_date = ?, expiry_date = ?,
       create_user = ?, audit_user = ?,
       customer_name = ?, customer_code = ?, product_name = ?,
@@ -430,7 +467,6 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       body.name,
       body.type,
       body.version || existingCard.version,
-      body.material_id || null,
       body.status || existingCard.status,
       body.effective_date || null,
       body.expiry_date || null,
@@ -492,10 +528,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return commonErrors.notFound('标准卡不存在');
   }
 
-  const result = await execute(
-    'UPDATE prd_standard_card SET deleted = 1 WHERE id = ?',
-    [cardId]
-  );
+  const result = await execute('UPDATE prd_standard_card SET deleted = 1 WHERE id = ?', [cardId]);
 
   if (result.affectedRows === 0) {
     return commonErrors.notFound('标准卡不存在或已被删除');
@@ -509,8 +542,11 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
 // ============================================================
 
 // GET /api/standard-cards/by-material/{material_id} - 获取产品标准卡（6.1节）
-export async function GET_byMaterial(request: NextRequest, { params }: { params: { material_id: string } }) {
-  return withErrorHandler(async () => {
+export async function GET_byMaterial(
+  request: NextRequest,
+  { params }: { params: { material_id: string } }
+) {
+  try {
     const materialId = parseInt(params.material_id);
 
     if (isNaN(materialId)) {
@@ -573,12 +609,18 @@ export async function GET_byMaterial(request: NextRequest, { params }: { params:
       ...card,
       items,
     });
-  }, '获取产品标准卡失败')(request);
+  } catch (error: any) {
+    console.error('[API Error]:', error);
+    return errorResponse(error.message || '获取产品标准卡失败', 500, 500);
+  }
 }
 
 // GET /api/standard-cards/by-work-order/{work_order_id} - 获取工单标准卡（6.2节）
-export async function GET_byWorkOrder(request: NextRequest, { params }: { params: { work_order_id: string } }) {
-  return withErrorHandler(async () => {
+export async function GET_byWorkOrder(
+  request: NextRequest,
+  { params }: { params: { work_order_id: string } }
+) {
+  try {
     const workOrderId = parseInt(params.work_order_id);
 
     if (isNaN(workOrderId)) {
@@ -599,12 +641,15 @@ export async function GET_byWorkOrder(request: NextRequest, { params }: { params
     }
 
     return successResponse(cards);
-  }, '获取工单标准卡失败')(request);
+  } catch (error: any) {
+    console.error('[API Error]:', error);
+    return errorResponse(error.message || '获取工单标准卡失败', 500, 500);
+  }
 }
 
 // POST /api/standard-cards/scan - 扫码查看标准卡（6.3节）
 export async function POST_scan(request: NextRequest) {
-  return withErrorHandler(async () => {
+  try {
     const body = await request.json();
     const { qr_code } = body;
 
@@ -685,12 +730,15 @@ export async function POST_scan(request: NextRequest) {
       work_order_no: workOrderNo,
       standard_cards: cardsWithItems,
     });
-  }, '扫码查看标准卡失败')(request);
+  } catch (error: any) {
+    console.error('[API Error]:', error);
+    return errorResponse(error.message || '扫码查看标准卡失败', 500, 500);
+  }
 }
 
 // POST /api/standard-cards/check-deviation - 参数偏差检测（6.5节）
 export async function POST_checkDeviation(request: NextRequest) {
-  return withErrorHandler(async () => {
+  try {
     const body = await request.json();
     const { standard_card_id, actual_params } = body;
 
@@ -785,5 +833,8 @@ export async function POST_checkDeviation(request: NextRequest) {
         version: card.version,
       },
     });
-  }, '参数偏差检测失败')(request);
+  } catch (error: any) {
+    console.error('[API Error]:', error);
+    return errorResponse(error.message || '参数偏差检测失败', 500, 500);
+  }
 }

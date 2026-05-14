@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { WorkOrderStateMachine, ProcessStepStateMachine, WorkOrderStatus, ProcessStepStatus } from './work-order-state-machine';
+import {
+  WorkOrderStateMachine,
+  ProcessStepStateMachine,
+  WorkOrderStatus,
+  ProcessStepStatus,
+} from './work-order-state-machine';
 
 describe('WorkOrderStateMachine', () => {
   describe('canTransition', () => {
@@ -17,9 +22,17 @@ describe('WorkOrderStateMachine', () => {
 
     it('disallows cancelled → anything', () => {
       const statuses: WorkOrderStatus[] = [
-        'pending', 'confirmed', 'material_preparing', 'material_ready',
-        'producing', 'qc_pending', 'qc_pass', 'qc_fail', 'rework',
-        'completed', 'cancelled',
+        'pending',
+        'confirmed',
+        'material_preparing',
+        'material_ready',
+        'producing',
+        'qc_pending',
+        'qc_pass',
+        'qc_fail',
+        'rework',
+        'completed',
+        'cancelled',
       ];
       for (const to of statuses) {
         if (to === 'cancelled') continue;
@@ -51,7 +64,10 @@ describe('WorkOrderStateMachine', () => {
 
   describe('getAllowedTransitions', () => {
     it('returns [confirmed, cancelled] for pending', () => {
-      expect(WorkOrderStateMachine.getAllowedTransitions('pending')).toEqual(['confirmed', 'cancelled']);
+      expect(WorkOrderStateMachine.getAllowedTransitions('pending')).toEqual([
+        'confirmed',
+        'cancelled',
+      ]);
     });
 
     it('returns [] for completed', () => {
@@ -63,7 +79,10 @@ describe('WorkOrderStateMachine', () => {
     });
 
     it('returns [qc_pass, qc_fail] for qc_pending', () => {
-      expect(WorkOrderStateMachine.getAllowedTransitions('qc_pending')).toEqual(['qc_pass', 'qc_fail']);
+      expect(WorkOrderStateMachine.getAllowedTransitions('qc_pending')).toEqual([
+        'qc_pass',
+        'qc_fail',
+      ]);
     });
   });
 

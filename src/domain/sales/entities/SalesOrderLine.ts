@@ -42,37 +42,67 @@ export class SalesOrderLine {
     }
     const amount = (props.orderQty || 0) * (props.unitPrice || 0);
     return new SalesOrderLine(
-      props.id, props.orderId, props.lineNo,
-      props.materialId, props.materialCode || '', props.materialName || '',
-      props.specification || '', props.unit || '件',
-      props.orderQty, props.shippedQty || 0, props.unitPrice || 0, amount,
+      props.id,
+      props.orderId,
+      props.lineNo,
+      props.materialId,
+      props.materialCode || '',
+      props.materialName || '',
+      props.specification || '',
+      props.unit || '件',
+      props.orderQty,
+      props.shippedQty || 0,
+      props.unitPrice || 0,
+      amount,
       props.remark
     );
   }
 
   static reconstitute(props: SalesOrderLineProps): SalesOrderLine {
     return new SalesOrderLine(
-      props.id, props.orderId, props.lineNo,
-      props.materialId, props.materialCode || '', props.materialName || '',
-      props.specification || '', props.unit || '件',
-      props.orderQty, props.shippedQty || 0, props.unitPrice || 0,
-      props.amount || 0, props.remark
+      props.id,
+      props.orderId,
+      props.lineNo,
+      props.materialId,
+      props.materialCode || '',
+      props.materialName || '',
+      props.specification || '',
+      props.unit || '件',
+      props.orderQty,
+      props.shippedQty || 0,
+      props.unitPrice || 0,
+      props.amount || 0,
+      props.remark
     );
   }
 
-  get orderQty(): number { return this._orderQty; }
-  get shippedQty(): number { return this._shippedQty; }
-  get unitPrice(): number { return this._unitPrice; }
-  get amount(): number { return this._amount; }
+  get orderQty(): number {
+    return this._orderQty;
+  }
+  get shippedQty(): number {
+    return this._shippedQty;
+  }
+  get unitPrice(): number {
+    return this._unitPrice;
+  }
+  get amount(): number {
+    return this._amount;
+  }
 
-  get remainingQty(): number { return this._orderQty - this._shippedQty; }
-  get isFullyShipped(): boolean { return this._shippedQty >= this._orderQty; }
+  get remainingQty(): number {
+    return this._orderQty - this._shippedQty;
+  }
+  get isFullyShipped(): boolean {
+    return this._shippedQty >= this._orderQty;
+  }
 
   ship(quantity: number): void {
     if (quantity <= 0) throw new DomainError('出库数量必须大于0');
     const newShippedQty = this._shippedQty + quantity;
     if (newShippedQty > this._orderQty) {
-      throw new DomainError(`出库数量超限: 行${this.lineNo} 订购${this._orderQty}, 已发${this._shippedQty}, 本次${quantity}`);
+      throw new DomainError(
+        `出库数量超限: 行${this.lineNo} 订购${this._orderQty}, 已发${this._shippedQty}, 本次${quantity}`
+      );
     }
     this._shippedQty = newShippedQty;
   }

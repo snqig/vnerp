@@ -3,13 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import QRCode from 'qrcode';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -46,7 +40,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { TableExportToolbar, exportTableToXLS, exportTableToPDF, exportTableToWORD, printTable } from '@/components/ui/table-export-toolbar';
+import {
+  TableExportToolbar,
+  exportTableToXLS,
+  exportTableToPDF,
+  exportTableToWORD,
+  printTable,
+} from '@/components/ui/table-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import {
   Search,
@@ -128,12 +128,27 @@ const inspectItems = [
 // 获取状态标签
 const getStatusBadge = (status: number) => {
   const statusMap: Record<number, { label: string; className: string }> = {
-    0: { label: '待排产', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-    1: { label: '待检验', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-    2: { label: '检验中', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-    3: { label: '已检验', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+    0: {
+      label: '待排产',
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    },
+    1: {
+      label: '待检验',
+      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    },
+    2: {
+      label: '检验中',
+      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+    },
+    3: {
+      label: '已检验',
+      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    },
   };
-  const config = statusMap[status] || { label: '未知', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+  const config = statusMap[status] || {
+    label: '未知',
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -398,36 +413,50 @@ export default function QualityProcessPage() {
   const [loading, setLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const fetchProcesses = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/quality/process');
+      const res = await authFetch('/api/quality/process');
       const data = await res.json();
       if (data.success) {
-        const rawList = Array.isArray(data.data) ? data.data : [];
+        // 统一处理API返回的数据结构，可能是直接数组或包含list的对象
+        const rawData = data.data;
+        const rawList = Array.isArray(rawData) ? rawData : (rawData?.list || []);
         const list = rawList.map((item: any) => ({
           id: item.id,
-          card_no: item.cardNo,
-          qr_code: item.qrCode,
-          work_order_no: item.workOrderNo,
-          product_code: item.productCode,
-          product_name: item.productName,
-          material_spec: item.materialSpec,
-          work_order_date: item.workOrderDate,
-          plan_qty: item.planQty,
-          main_label_no: item.mainLabelNo,
-          burdening_status: item.burdeningStatus,
-          create_user_name: item.createUserName,
-          create_time: item.createTime,
-          update_time: item.updateTime,
-          customer_name: item.customerName,
-          customer_code: item.customerCode,
-          process_flow1: item.processFlow1,
-          process_flow2: item.processFlow2,
-          print_type: item.printType,
-          finished_size: item.finishedSize,
+          card_no: item.cardNo || item.card_no,
+          qr_code: item.qrCode || item.qr_code,
+          work_order_no: item.workOrderNo || item.work_order_no,
+          product_code: item.productCode || item.product_code,
+          product_name: item.productName || item.product_name,
+          material_spec: item.materialSpec || item.material_spec,
+          work_order_date: item.workOrderDate || item.work_order_date,
+          plan_qty: item.planQty || item.plan_qty,
+          main_label_no: item.mainLabelNo || item.main_label_no,
+          burdening_status: item.burdeningStatus || item.burdening_status || 0,
+          create_user_name: item.createUserName || item.create_user_name,
+          create_time: item.createTime || item.create_time,
+          update_time: item.updateTime || item.update_time,
+          customer_name: item.customerName || item.customer_name,
+          customer_code: item.customerCode || item.customer_code,
+          process_flow1: item.processFlow1 || item.process_flow1,
+          process_flow2: item.processFlow2 || item.process_flow2,
+          print_type: item.printType || item.print_type,
+          finished_size: item.finishedSize || item.finished_size,
           tolerance: item.tolerance,
-          quality_manager: item.qualityManager,
+          quality_manager: item.qualityManager || item.quality_manager,
         }));
         setProcesses(list);
         setStats({
@@ -469,10 +498,34 @@ export default function QualityProcessPage() {
   const printRef = useRef<HTMLDivElement>(null);
 
   // 模拟检验记录数据
-  const mockInspectRecords = [
-    { id: 1, inspectNo: 'QI20240318001', inspectType: '尺寸检验', result: '合格', inspector: '张三', inspectTime: '2024-03-18 10:30:00', remark: '尺寸符合要求' },
-    { id: 2, inspectNo: 'QI20240318002', inspectType: '颜色检验', result: '合格', inspector: '李四', inspectTime: '2024-03-18 11:00:00', remark: '颜色正常' },
-    { id: 3, inspectNo: 'QI20240319001', inspectType: '外观检验', result: '合格', inspector: '王五', inspectTime: '2024-03-19 09:30:00', remark: '外观无缺陷' },
+  const mockInspectRecords: InspectRecord[] = [
+    {
+      id: 1,
+      inspectNo: 'QI20240318001',
+      inspectType: '尺寸检验',
+      result: '合格',
+      inspector: '张三',
+      inspectTime: '2024-03-18 10:30:00',
+      remark: '尺寸符合要求',
+    },
+    {
+      id: 2,
+      inspectNo: 'QI20240318002',
+      inspectType: '颜色检验',
+      result: '合格',
+      inspector: '李四',
+      inspectTime: '2024-03-18 11:00:00',
+      remark: '颜色正常',
+    },
+    {
+      id: 3,
+      inspectNo: 'QI20240319001',
+      inspectType: '外观检验',
+      result: '合格',
+      inspector: '王五',
+      inspectTime: '2024-03-19 09:30:00',
+      remark: '外观无缺陷',
+    },
   ];
 
   // 筛选流程
@@ -497,7 +550,12 @@ export default function QualityProcessPage() {
     return true;
   });
 
-  const { sortField, sortDirection, handleSort, sortedData: sortedProcesses } = useTableSort(filteredProcesses, 'id');
+  const {
+    sortField,
+    sortDirection,
+    handleSort,
+    sortedData: sortedProcesses,
+  } = useTableSort(filteredProcesses, 'id');
 
   // 查看详情
   const handleViewDetail = (process: QualityProcess) => {
@@ -526,15 +584,13 @@ export default function QualityProcessPage() {
     setLoading(true);
     try {
       // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       // 更新本地数据
-      setProcesses(processes.map(p => 
-        p.id === selectedProcess.id 
-          ? { ...p, burdening_status: 3 }
-          : p
-      ));
-      
+      setProcesses(
+        processes.map((p) => (p.id === selectedProcess.id ? { ...p, burdening_status: 3 } : p))
+      );
+
       setIsInspectOpen(false);
       alert('检验提交成功');
     } catch (error) {
@@ -547,10 +603,10 @@ export default function QualityProcessPage() {
 
   // 切换检验项目
   const toggleInspectItem = (itemId: string) => {
-    setInspectForm(prev => ({
+    setInspectForm((prev) => ({
       ...prev,
       checkedItems: prev.checkedItems.includes(itemId)
-        ? prev.checkedItems.filter(id => id !== itemId)
+        ? prev.checkedItems.filter((id) => id !== itemId)
         : [...prev.checkedItems, itemId],
     }));
   };
@@ -708,33 +764,49 @@ export default function QualityProcessPage() {
                 <TableExportToolbar
                   selectedCount={selectedIds.length}
                   totalCount={filteredProcesses.length}
-                  onSelectAll={() => setSelectedIds(filteredProcesses.map(p => p.id))}
+                  onSelectAll={() => setSelectedIds(filteredProcesses.map((p) => p.id))}
                   onDeselectAll={() => setSelectedIds([])}
                   onPrint={handlePrint}
-                  onExportPDF={() => exportTableToPDF(filteredProcesses, '过程检验报告', [
-                    { key: 'card_no', header: '流程卡号' },
-                    { key: 'product_name', header: '产品名称' },
-                    { key: 'product_code', header: '产品编码' },
-                    { key: 'material_spec', header: '规格' },
-                    { key: 'quantity', header: '数量' },
-                    { key: 'status', header: '状态' },
-                  ], '过程检验报告')}
-                  onExportXLS={() => exportTableToXLS(filteredProcesses, '过程检验报告', [
-                    { key: 'card_no', header: '流程卡号' },
-                    { key: 'product_name', header: '产品名称' },
-                    { key: 'product_code', header: '产品编码' },
-                    { key: 'material_spec', header: '规格' },
-                    { key: 'quantity', header: '数量' },
-                    { key: 'status', header: '状态' },
-                  ])}
-                  onExportWORD={() => exportTableToWORD(filteredProcesses, '过程检验报告', [
-                    { key: 'card_no', header: '流程卡号' },
-                    { key: 'product_name', header: '产品名称' },
-                    { key: 'product_code', header: '产品编码' },
-                    { key: 'material_spec', header: '规格' },
-                    { key: 'quantity', header: '数量' },
-                    { key: 'status', header: '状态' },
-                  ], '过程检验报告')}
+                  onExportPDF={() =>
+                    exportTableToPDF(
+                      filteredProcesses,
+                      '过程检验报告',
+                      [
+                        { key: 'card_no', header: '流程卡号' },
+                        { key: 'product_name', header: '产品名称' },
+                        { key: 'product_code', header: '产品编码' },
+                        { key: 'material_spec', header: '规格' },
+                        { key: 'quantity', header: '数量' },
+                        { key: 'status', header: '状态' },
+                      ],
+                      '过程检验报告'
+                    )
+                  }
+                  onExportXLS={() =>
+                    exportTableToXLS(filteredProcesses, '过程检验报告', [
+                      { key: 'card_no', header: '流程卡号' },
+                      { key: 'product_name', header: '产品名称' },
+                      { key: 'product_code', header: '产品编码' },
+                      { key: 'material_spec', header: '规格' },
+                      { key: 'quantity', header: '数量' },
+                      { key: 'status', header: '状态' },
+                    ])
+                  }
+                  onExportWORD={() =>
+                    exportTableToWORD(
+                      filteredProcesses,
+                      '过程检验报告',
+                      [
+                        { key: 'card_no', header: '流程卡号' },
+                        { key: 'product_name', header: '产品名称' },
+                        { key: 'product_code', header: '产品编码' },
+                        { key: 'material_spec', header: '规格' },
+                        { key: 'quantity', header: '数量' },
+                        { key: 'status', header: '状态' },
+                      ],
+                      '过程检验报告'
+                    )
+                  }
                 />
               </div>
             </div>
@@ -758,24 +830,48 @@ export default function QualityProcessPage() {
                     <TableRow>
                       <TableHead className="w-12">
                         <Checkbox
-                          checked={selectedIds.length === filteredProcesses.length && filteredProcesses.length > 0}
+                          checked={
+                            selectedIds.length === filteredProcesses.length &&
+                            filteredProcesses.length > 0
+                          }
                           onCheckedChange={() => {
                             if (selectedIds.length === filteredProcesses.length) {
                               setSelectedIds([]);
                             } else {
-                              setSelectedIds(filteredProcesses.map(p => p.id));
+                              setSelectedIds(filteredProcesses.map((p) => p.id));
                             }
                           }}
                         />
                       </TableHead>
                       <TableHead className="w-12 text-center">序号</TableHead>
-                      <SortableTableHeader field="card_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>流程卡号</SortableTableHeader>
-                      <SortableTableHeader field="product_name" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>产品信息</SortableTableHeader>
+                      <SortableTableHeader
+                        field="card_no"
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      >
+                        流程卡号
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        field="product_name"
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      >
+                        产品信息
+                      </SortableTableHeader>
                       <TableHead>客户</TableHead>
                       <TableHead>规格要求</TableHead>
                       <TableHead>数量</TableHead>
                       <TableHead>质量主管</TableHead>
-                      <SortableTableHeader field="status" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>状态</SortableTableHeader>
+                      <SortableTableHeader
+                        field="status"
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                      >
+                        状态
+                      </SortableTableHeader>
                       <TableHead>操作</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -785,27 +881,43 @@ export default function QualityProcessPage() {
                         <TableCell>
                           <Checkbox
                             checked={selectedIds.includes(process.id)}
-                            onCheckedChange={() => setSelectedIds(prev => prev.includes(process.id) ? prev.filter(i => i !== process.id) : [...prev, process.id])}
+                            onCheckedChange={() =>
+                              setSelectedIds((prev) =>
+                                prev.includes(process.id)
+                                  ? prev.filter((i) => i !== process.id)
+                                  : [...prev, process.id]
+                              )
+                            }
                           />
                         </TableCell>
-                        <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
+                        <TableCell className="text-center text-muted-foreground">
+                          {index + 1}
+                        </TableCell>
                         <TableCell className="font-medium">
                           <div className="flex flex-col">
                             <span>{process.card_no}</span>
-                            <span className="text-xs text-muted-foreground">{process.work_order_no}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {process.work_order_no}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span className="font-medium">{process.product_name}</span>
-                            <span className="text-xs text-muted-foreground">{process.material_spec}</span>
-                            <span className="text-xs text-muted-foreground">{process.print_type}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {process.material_spec}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {process.print_type}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
                             <span>{process.customer_name}</span>
-                            <span className="text-xs text-muted-foreground">{process.customer_code}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {process.customer_code}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -814,7 +926,9 @@ export default function QualityProcessPage() {
                             <span>公差: {process.tolerance}</span>
                           </div>
                         </TableCell>
-                        <TableCell>{process.plan_qty ? process.plan_qty.toLocaleString() : '-'}</TableCell>
+                        <TableCell>
+                          {process.plan_qty ? process.plan_qty.toLocaleString() : '-'}
+                        </TableCell>
                         <TableCell>{process.quality_manager}</TableCell>
                         <TableCell>{getStatusBadge(process.burdening_status)}</TableCell>
                         <TableCell>
@@ -827,10 +941,7 @@ export default function QualityProcessPage() {
                               <Eye className="h-4 w-4" />
                             </Button>
                             {(process.burdening_status === 1 || process.burdening_status === 2) && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleStartInspect(process)}
-                              >
+                              <Button size="sm" onClick={() => handleStartInspect(process)}>
                                 <ClipboardCheck className="h-4 w-4 mr-1" />
                                 检验
                               </Button>
@@ -939,7 +1050,9 @@ export default function QualityProcessPage() {
                       {selectedProcess.process_flow1?.split('-').map((step, index, arr) => (
                         <div key={index} className="flex items-center">
                           <Badge variant="outline">{step}</Badge>
-                          {index < arr.length - 1 && <span className="mx-1 text-muted-foreground">→</span>}
+                          {index < arr.length - 1 && (
+                            <span className="mx-1 text-muted-foreground">→</span>
+                          )}
                         </div>
                       ))}
                       {selectedProcess.process_flow2?.split('-').map((step, index, arr) => (
@@ -956,11 +1069,14 @@ export default function QualityProcessPage() {
                     <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
                       关闭
                     </Button>
-                    {(selectedProcess.burdening_status === 1 || selectedProcess.burdening_status === 2) && (
-                      <Button onClick={() => {
-                        setIsDetailOpen(false);
-                        handleStartInspect(selectedProcess);
-                      }}>
+                    {(selectedProcess.burdening_status === 1 ||
+                      selectedProcess.burdening_status === 2) && (
+                      <Button
+                        onClick={() => {
+                          setIsDetailOpen(false);
+                          handleStartInspect(selectedProcess);
+                        }}
+                      >
                         <ClipboardCheck className="h-4 w-4 mr-2" />
                         开始检验
                       </Button>
@@ -999,11 +1115,15 @@ export default function QualityProcessPage() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">规格:</span>
-                        <span className="ml-2">{selectedProcess.finished_size} ({selectedProcess.tolerance})</span>
+                        <span className="ml-2">
+                          {selectedProcess.finished_size} ({selectedProcess.tolerance})
+                        </span>
                       </div>
                       <div>
                         <span className="text-muted-foreground">计划数量:</span>
-                        <span className="ml-2">{(selectedProcess.plan_qty ?? 0).toLocaleString()}</span>
+                        <span className="ml-2">
+                          {(selectedProcess.plan_qty ?? 0).toLocaleString()}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1071,7 +1191,12 @@ export default function QualityProcessPage() {
                       <Input
                         type="number"
                         value={inspectForm.qualifiedQty}
-                        onChange={(e) => setInspectForm({ ...inspectForm, qualifiedQty: parseInt(e.target.value) || 0 })}
+                        onChange={(e) =>
+                          setInspectForm({
+                            ...inspectForm,
+                            qualifiedQty: parseInt(e.target.value) || 0,
+                          })
+                        }
                       />
                     </div>
                     <div className="space-y-3">
@@ -1079,7 +1204,12 @@ export default function QualityProcessPage() {
                       <Input
                         type="number"
                         value={inspectForm.defectQty}
-                        onChange={(e) => setInspectForm({ ...inspectForm, defectQty: parseInt(e.target.value) || 0 })}
+                        onChange={(e) =>
+                          setInspectForm({
+                            ...inspectForm,
+                            defectQty: parseInt(e.target.value) || 0,
+                          })
+                        }
                       />
                     </div>
                   </div>
@@ -1090,7 +1220,9 @@ export default function QualityProcessPage() {
                       <Label>不良类型</Label>
                       <Select
                         value={inspectForm.defectType}
-                        onValueChange={(value) => setInspectForm({ ...inspectForm, defectType: value })}
+                        onValueChange={(value) =>
+                          setInspectForm({ ...inspectForm, defectType: value })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="选择不良类型" />
@@ -1113,7 +1245,9 @@ export default function QualityProcessPage() {
                     <Input
                       placeholder="输入检验员姓名"
                       value={inspectForm.inspector}
-                      onChange={(e) => setInspectForm({ ...inspectForm, inspector: e.target.value })}
+                      onChange={(e) =>
+                        setInspectForm({ ...inspectForm, inspector: e.target.value })
+                      }
                     />
                   </div>
 
@@ -1158,7 +1292,9 @@ export default function QualityProcessPage() {
               {/* 报告标题 */}
               <div className="text-center border-b pb-4">
                 <h1 className="text-2xl font-bold">品质检验报告</h1>
-                <p className="text-muted-foreground mt-2">生成时间: {format(new Date(), 'yyyy-MM-dd HH:mm:ss')}</p>
+                <p className="text-muted-foreground mt-2">
+                  生成时间: {format(new Date(), 'yyyy-MM-dd HH:mm:ss')}
+                </p>
               </div>
 
               {/* 统计概览 */}
@@ -1354,8 +1490,8 @@ export default function QualityProcessPage() {
                               record.result === '合格'
                                 ? 'bg-green-100 text-green-700'
                                 : record.result === '不合格'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-orange-100 text-orange-700'
+                                  ? 'bg-red-100 text-red-700'
+                                  : 'bg-orange-100 text-orange-700'
                             }
                           >
                             {record.result}
@@ -1382,13 +1518,13 @@ export default function QualityProcessPage() {
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <div className="text-2xl font-bold text-green-600">
-                        {inspectRecords.filter(r => r.result === '合格').length}
+                        {inspectRecords.filter((r) => r.result === '合格').length}
                       </div>
                       <div className="text-sm text-muted-foreground">合格项</div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-red-600">
-                        {inspectRecords.filter(r => r.result === '不合格').length}
+                        {inspectRecords.filter((r) => r.result === '不合格').length}
                       </div>
                       <div className="text-sm text-muted-foreground">不合格项</div>
                     </div>

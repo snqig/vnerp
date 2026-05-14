@@ -3,30 +3,33 @@
 
 import { secureLog } from '@/lib/logger';
 
-export type InspectStatus = 
-  | 'pending'      // 待检验
-  | 'inspecting'   // 检验中
-  | 'pass'         // 合格
-  | 'fail'         // 不合格
-  | 'rework'       // 返工
-  | 'scrap';       // 报废
+export type InspectStatus =
+  | 'pending' // 待检验
+  | 'inspecting' // 检验中
+  | 'pass' // 合格
+  | 'fail' // 不合格
+  | 'rework' // 返工
+  | 'scrap'; // 报废
 
-export type ProcessStatus = 
-  | 'created'      // 已创建
+export type ProcessStatus =
+  | 'created' // 已创建
   | 'material_ready' // 材料准备
-  | 'in_progress'  // 生产中
-  | 'qc_pending'   // 待检验
-  | 'qc_pass'      // 检验通过
-  | 'qc_fail'      // 检验失败
-  | 'rework'       // 返工中
-  | 'completed';   // 已完成
+  | 'in_progress' // 生产中
+  | 'qc_pending' // 待检验
+  | 'qc_pass' // 检验通过
+  | 'qc_fail' // 检验失败
+  | 'rework' // 返工中
+  | 'completed'; // 已完成
 
 // 检验状态机配置
-export const inspectStateMachine: Record<InspectStatus, {
-  label: string;
-  color: string;
-  allowedTransitions: InspectStatus[];
-}> = {
+export const inspectStateMachine: Record<
+  InspectStatus,
+  {
+    label: string;
+    color: string;
+    allowedTransitions: InspectStatus[];
+  }
+> = {
   pending: {
     label: '待检验',
     color: 'bg-gray-100 text-gray-700',
@@ -60,11 +63,14 @@ export const inspectStateMachine: Record<InspectStatus, {
 };
 
 // 生产流程状态机配置
-export const processStateMachine: Record<ProcessStatus, {
-  label: string;
-  color: string;
-  allowedTransitions: ProcessStatus[];
-}> = {
+export const processStateMachine: Record<
+  ProcessStatus,
+  {
+    label: string;
+    color: string;
+    allowedTransitions: ProcessStatus[];
+  }
+> = {
   created: {
     label: '已创建',
     color: 'bg-gray-100 text-gray-700',
@@ -191,7 +197,7 @@ export class StateTransitionLogger {
 
     // 这里可以保存到数据库
     secureLog('debug', 'State transition', { entityType, entityId, fromStatus, toStatus });
-    
+
     return transition;
   }
 }

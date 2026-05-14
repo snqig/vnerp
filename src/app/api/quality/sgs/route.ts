@@ -50,10 +50,23 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   const {
-    cert_no, material_id, material_code, material_name,
-    supplier_id, supplier_name, cert_type, test_items,
-    test_result, test_report_no, test_org,
-    issue_date, expire_date, status, file_url, remark, items
+    cert_no,
+    material_id,
+    material_code,
+    material_name,
+    supplier_id,
+    supplier_name,
+    cert_type,
+    test_items,
+    test_result,
+    test_report_no,
+    test_org,
+    issue_date,
+    expire_date,
+    status,
+    file_url,
+    remark,
+    items,
   } = body;
 
   if (!cert_no) {
@@ -72,11 +85,22 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     `INSERT INTO qms_sgs_cert (cert_no, material_id, material_code, material_name, supplier_id, supplier_name, cert_type, test_items, test_result, test_report_no, test_org, issue_date, expire_date, status, file_url, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      cert_no, material_id || null, material_code || null, material_name || '',
-      supplier_id || null, supplier_name || '', cert_type || 'RoHS',
-      test_items || null, test_result || 'PENDING', test_report_no || null,
-      test_org || 'SGS', issue_date || null, expire_date || null,
-      status ?? 2, file_url || null, remark || null
+      cert_no,
+      material_id || null,
+      material_code || null,
+      material_name || '',
+      supplier_id || null,
+      supplier_name || '',
+      cert_type || 'RoHS',
+      test_items || null,
+      test_result || 'PENDING',
+      test_report_no || null,
+      test_org || 'SGS',
+      issue_date || null,
+      expire_date || null,
+      status ?? 2,
+      file_url || null,
+      remark || null,
     ]
   );
 
@@ -89,9 +113,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         `INSERT INTO qms_sgs_cert_item (cert_id, test_item_name, test_standard, limit_value, test_value, unit, result, sort_order)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          certId, item.test_item_name || '', item.test_standard || '',
-          item.limit_value || '', item.test_value || '', item.unit || '',
-          item.result || 'N/A', i + 1
+          certId,
+          item.test_item_name || '',
+          item.test_standard || '',
+          item.limit_value || '',
+          item.test_value || '',
+          item.unit || '',
+          item.result || 'N/A',
+          i + 1,
         ]
       );
     }
@@ -112,10 +141,21 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const updateValues: any[] = [];
 
   const allowedFields = [
-    'material_id', 'material_code', 'material_name', 'supplier_id',
-    'supplier_name', 'cert_type', 'test_items', 'test_result',
-    'test_report_no', 'test_org', 'issue_date', 'expire_date',
-    'status', 'file_url', 'remark'
+    'material_id',
+    'material_code',
+    'material_name',
+    'supplier_id',
+    'supplier_name',
+    'cert_type',
+    'test_items',
+    'test_result',
+    'test_report_no',
+    'test_org',
+    'issue_date',
+    'expire_date',
+    'status',
+    'file_url',
+    'remark',
   ];
 
   for (const field of allowedFields) {
@@ -140,9 +180,14 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         `INSERT INTO qms_sgs_cert_item (cert_id, test_item_name, test_standard, limit_value, test_value, unit, result, sort_order)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          id, item.test_item_name || '', item.test_standard || '',
-          item.limit_value || '', item.test_value || '', item.unit || '',
-          item.result || 'N/A', i + 1
+          id,
+          item.test_item_name || '',
+          item.test_standard || '',
+          item.limit_value || '',
+          item.test_value || '',
+          item.unit || '',
+          item.result || 'N/A',
+          i + 1,
         ]
       );
     }

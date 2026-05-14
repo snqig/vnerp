@@ -29,7 +29,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     params.push(Number(status));
   }
   if (workorderNo) {
-    where += ' AND EXISTS (SELECT 1 FROM ink_formula_workorder fw WHERE fw.formula_id = f.id AND fw.workorder_no = ? AND fw.deleted = 0)';
+    where +=
+      ' AND EXISTS (SELECT 1 FROM ink_formula_workorder fw WHERE fw.formula_id = f.id AND fw.workorder_no = ? AND fw.deleted = 0)';
     params.push(workorderNo);
   }
 
@@ -66,7 +67,21 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { formula_name, pantone_code, color_name, color_code, ink_type, base_ink_type, total_weight, unit, shelf_life_hours, remark, items, workorder_id, workorder_no } = body;
+  const {
+    formula_name,
+    pantone_code,
+    color_name,
+    color_code,
+    ink_type,
+    base_ink_type,
+    total_weight,
+    unit,
+    shelf_life_hours,
+    remark,
+    items,
+    workorder_id,
+    workorder_no,
+  } = body;
 
   if (!formula_name || !items || !Array.isArray(items) || items.length === 0) {
     return errorResponse('缺少必填字段: formula_name, items', 400, 400);
@@ -74,14 +89,29 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   const result = await transaction(async (conn) => {
     const now = new Date();
-    const formulaNo = 'FM' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    const formulaNo =
+      'FM' +
+      now.getFullYear() +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      String(now.getDate()).padStart(2, '0') +
+      String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
     const [insertResult]: any = await conn.execute(
       `INSERT INTO ink_formula (formula_no, formula_name, pantone_code, color_name, color_code, ink_type, base_ink_type, total_weight, unit, shelf_life_hours, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-      [formulaNo, formula_name, pantone_code || null, color_name || null, color_code || null,
-       ink_type || 'solvent', base_ink_type || null, total_weight || null, unit || 'kg',
-       shelf_life_hours || isInkUnopenedShelfLife(), remark || null]
+      [
+        formulaNo,
+        formula_name,
+        pantone_code || null,
+        color_name || null,
+        color_code || null,
+        ink_type || 'solvent',
+        base_ink_type || null,
+        total_weight || null,
+        unit || 'kg',
+        shelf_life_hours || isInkUnopenedShelfLife(),
+        remark || null,
+      ]
     );
     const formulaId = insertResult.insertId;
 
@@ -90,9 +120,19 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       await conn.execute(
         `INSERT INTO ink_formula_item (formula_id, sort_order, ink_id, ink_code, ink_name, ink_type, brand, ratio_percent, weight, unit, is_base)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [formulaId, i + 1, item.ink_id || null, item.ink_code || null, item.ink_name || '',
-         item.ink_type || null, item.brand || null, item.ratio_percent || 0,
-         item.weight || 0, item.unit || 'kg', item.is_base ? 1 : 0]
+        [
+          formulaId,
+          i + 1,
+          item.ink_id || null,
+          item.ink_code || null,
+          item.ink_name || '',
+          item.ink_type || null,
+          item.brand || null,
+          item.ratio_percent || 0,
+          item.weight || 0,
+          item.unit || 'kg',
+          item.is_base ? 1 : 0,
+        ]
       );
     }
 
@@ -162,9 +202,19 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         await conn.execute(
           `INSERT INTO ink_formula_item (formula_id, sort_order, ink_id, ink_code, ink_name, ink_type, brand, ratio_percent, weight, unit, is_base)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [id, i + 1, item.ink_id || null, item.ink_code || null, item.ink_name || '',
-           item.ink_type || null, item.brand || null, item.ratio_percent || 0,
-           item.weight || 0, item.unit || 'kg', item.is_base ? 1 : 0]
+          [
+            id,
+            i + 1,
+            item.ink_id || null,
+            item.ink_code || null,
+            item.ink_name || '',
+            item.ink_type || null,
+            item.brand || null,
+            item.ratio_percent || 0,
+            item.weight || 0,
+            item.unit || 'kg',
+            item.is_base ? 1 : 0,
+          ]
         );
       }
     });
@@ -180,8 +230,12 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
 
   await transaction(async (conn) => {
     await conn.execute('UPDATE ink_formula SET deleted = 1 WHERE id = ?', [Number(id)]);
-    await conn.execute('UPDATE ink_formula_item SET deleted = 1 WHERE formula_id = ?', [Number(id)]);
-    await conn.execute('UPDATE ink_formula_workorder SET deleted = 1 WHERE formula_id = ?', [Number(id)]);
+    await conn.execute('UPDATE ink_formula_item SET deleted = 1 WHERE formula_id = ?', [
+      Number(id),
+    ]);
+    await conn.execute('UPDATE ink_formula_workorder SET deleted = 1 WHERE formula_id = ?', [
+      Number(id),
+    ]);
   });
 
   return successResponse(null, '删除成功');

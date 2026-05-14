@@ -10,11 +10,20 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let dateFormat: string;
   switch (periodType) {
-    case 'day': dateFormat = '%Y-%m-%d'; break;
-    case 'week': dateFormat = '%Y-W%u'; break;
-    case 'quarter': dateFormat = '%Y-Q%q'; break;
-    case 'year': dateFormat = '%Y'; break;
-    default: dateFormat = '%Y-%m';
+    case 'day':
+      dateFormat = '%Y-%m-%d';
+      break;
+    case 'week':
+      dateFormat = '%Y-W%u';
+      break;
+    case 'quarter':
+      dateFormat = '%Y-Q%q';
+      break;
+    case 'year':
+      dateFormat = '%Y';
+      break;
+    default:
+      dateFormat = '%Y-%m';
   }
 
   const revenueRows: any = await query(`
@@ -53,7 +62,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const totalRevenue = parseFloat(summary[0]?.total_revenue || 0);
   const totalCost = parseFloat(summary[0]?.total_cost || 0);
   const totalProfit = totalRevenue - totalCost;
-  const profitRate = totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
+  const profitRate = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
   return successResponse({
     list,

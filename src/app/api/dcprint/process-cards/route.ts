@@ -11,7 +11,9 @@ import {
 function generateCardNo(): string {
   const date = new Date();
   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, '0');
   return `PC${dateStr}${random}`;
 }
 
@@ -93,7 +95,12 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     { page, pageSize }
   );
 
-  return successResponse(result);
+  return successResponse({
+    list: result.list,
+    total: result.pagination.total,
+    page: result.pagination.page,
+    pageSize: result.pagination.pageSize,
+  });
 }, '获取流程卡列表失败');
 
 // POST - 创建流程卡
@@ -111,11 +118,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   ]);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   const {
@@ -169,19 +172,26 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         burdening_status, lock_status, create_user_id, create_user_name, deleted
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'unlocked', ?, ?, 0)`,
       [
-        cardNo, qrCode, workOrderId, workOrderNo, productCode, productName,
-        materialSpec, workOrderDate, planQty, mainLabelId, mainLabelNo,
-        createUserId, createUserName,
+        cardNo,
+        qrCode,
+        workOrderId,
+        workOrderNo,
+        productCode,
+        productName,
+        materialSpec,
+        workOrderDate,
+        planQty,
+        mainLabelId,
+        mainLabelNo,
+        createUserId,
+        createUserName,
       ]
     );
 
     const cardId = (cardResult as any).insertId;
 
     // 2. 更新主材标签为已使用
-    await conn.execute(
-      `UPDATE inv_material_label SET is_used = 1 WHERE id = ?`,
-      [mainLabelId]
-    );
+    await conn.execute(`UPDATE inv_material_label SET is_used = 1 WHERE id = ?`, [mainLabelId]);
 
     // 3. 添加主材到流程卡物料关联表
     await conn.execute(
@@ -263,17 +273,21 @@ async function addMaterialToCard(cardIdentifier: string | number, data: any) {
       material_code, material_name, specification, batch_no, quantity, unit
     ) VALUES (?, ?, ?, ?, 'auxiliary', ?, ?, ?, ?, ?, ?)`,
     [
-      card.id, card.card_no, labelId, labelNo,
-      label.material_code, label.material_name, label.specification,
-      label.batch_no, label.quantity, label.unit,
+      card.id,
+      card.card_no,
+      labelId,
+      labelNo,
+      label.material_code,
+      label.material_name,
+      label.specification,
+      label.batch_no,
+      label.quantity,
+      label.unit,
     ]
   );
 
   // 更新标签为已使用
-  await execute(
-    `UPDATE inv_material_label SET is_used = 1 WHERE id = ?`,
-    [labelId]
-  );
+  await execute(`UPDATE inv_material_label SET is_used = 1 WHERE id = ?`, [labelId]);
 
   return successResponse(null, '辅料添加成功');
 }
@@ -304,8 +318,12 @@ async function updateCardInfo(cardIdentifier: string | number, data: any) {
   const params: any[] = [];
 
   const fields = [
-    'productCode', 'productName', 'materialSpec', 'workOrderDate',
-    'planQty', 'remark',
+    'productCode',
+    'productName',
+    'materialSpec',
+    'workOrderDate',
+    'planQty',
+    'remark',
   ];
 
   fields.forEach((field) => {
@@ -338,10 +356,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('缺少流程卡ID', 400, 400);
   }
 
-  await execute(
-    'UPDATE prd_process_card SET deleted = 1 WHERE id = ?',
-    [id]
-  );
+  await execute('UPDATE prd_process_card SET deleted = 1 WHERE id = ?', [id]);
 
   return successResponse(null, '流程卡删除成功');
 }, '删除流程卡失败');

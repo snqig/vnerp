@@ -6,12 +6,14 @@ describe('入库单 Zod 校验回归测试', () => {
     it('应通过合法的入库单数据', () => {
       const result = createInboundOrderSchema.parse({
         warehouse_id: 1,
-        items: [{
-          material_id: 100,
-          material_name: '测试物料',
-          quantity: 50,
-          unit_price: 10.5,
-        }],
+        items: [
+          {
+            material_id: 100,
+            material_name: '测试物料',
+            quantity: 50,
+            unit_price: 10.5,
+          },
+        ],
       });
       expect(result.warehouse_id).toBe(1);
       expect(result.items.length).toBe(1);
@@ -29,11 +31,13 @@ describe('入库单 Zod 校验回归测试', () => {
     it('应拒绝缺少 warehouse_id', () => {
       expect(() =>
         createInboundOrderSchema.parse({
-          items: [{
-            material_id: 1,
-            material_name: '测试',
-            quantity: 1,
-          }],
+          items: [
+            {
+              material_id: 1,
+              material_name: '测试',
+              quantity: 1,
+            },
+          ],
         })
       ).toThrow();
     });
@@ -42,11 +46,13 @@ describe('入库单 Zod 校验回归测试', () => {
       expect(() =>
         createInboundOrderSchema.parse({
           warehouse_id: 1,
-          items: [{
-            material_id: 1,
-            material_name: '测试',
-            quantity: -5,
-          }],
+          items: [
+            {
+              material_id: 1,
+              material_name: '测试',
+              quantity: -5,
+            },
+          ],
         })
       ).toThrow();
     });
@@ -55,12 +61,14 @@ describe('入库单 Zod 校验回归测试', () => {
       expect(() =>
         createInboundOrderSchema.parse({
           warehouse_id: 1,
-          items: [{
-            material_id: 1,
-            material_name: '测试',
-            quantity: 1,
-            unit_price: -10,
-          }],
+          items: [
+            {
+              material_id: 1,
+              material_name: '测试',
+              quantity: 1,
+              unit_price: -10,
+            },
+          ],
         })
       ).toThrow();
     });
@@ -82,11 +90,13 @@ describe('入库单 Zod 校验回归测试', () => {
     it('应设置默认值', () => {
       const result = createInboundOrderSchema.parse({
         warehouse_id: 1,
-        items: [{
-          material_id: 1,
-          material_name: '测试',
-          quantity: 10,
-        }],
+        items: [
+          {
+            material_id: 1,
+            material_name: '测试',
+            quantity: 10,
+          },
+        ],
       });
       expect(result.supplier_name).toBe('');
       expect(result.items[0].unit).toBe('件');
@@ -97,11 +107,13 @@ describe('入库单 Zod 校验回归测试', () => {
       expect(() =>
         createInboundOrderSchema.parse({
           warehouse_id: 1,
-          items: [{
-            material_id: 1,
-            material_name: 'A'.repeat(101),
-            quantity: 1,
-          }],
+          items: [
+            {
+              material_id: 1,
+              material_name: 'A'.repeat(101),
+              quantity: 1,
+            },
+          ],
         })
       ).toThrow();
     });
@@ -110,11 +122,13 @@ describe('入库单 Zod 校验回归测试', () => {
       expect(() =>
         createInboundOrderSchema.parse({
           warehouse_id: 1,
-          items: [{
-            material_id: 1.5,
-            material_name: '测试',
-            quantity: 1,
-          }],
+          items: [
+            {
+              material_id: 1.5,
+              material_name: '测试',
+              quantity: 1,
+            },
+          ],
         })
       ).toThrow();
     });

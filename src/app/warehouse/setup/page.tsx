@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -85,6 +85,18 @@ const warehouseNatures = [
 ];
 
 export default function WarehouseSetupPage() {
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -115,7 +127,7 @@ export default function WarehouseSetupPage() {
       const params = new URLSearchParams();
       if (searchKeyword) params.append('keyword', searchKeyword);
 
-      const response = await fetch(`/api/warehouse?${params}`);
+      const response = await authFetch(`/api/warehouse?${params}`);
       const result = await response.json();
 
       if (result.success) {
@@ -191,7 +203,7 @@ export default function WarehouseSetupPage() {
   const handleConfirmDelete = async () => {
     if (warehouseToDelete) {
       try {
-        const response = await fetch(`/api/warehouse?id=${warehouseToDelete.id}`, {
+        const response = await authFetch(`/api/warehouse?id=${warehouseToDelete.id}`, {
           method: 'DELETE',
         });
         const result = await response.json();
@@ -220,13 +232,10 @@ export default function WarehouseSetupPage() {
     try {
       const url = '/api/warehouse';
       const method = editingWarehouse ? 'PUT' : 'POST';
-      const body = editingWarehouse
-        ? { ...formData, id: editingWarehouse.id }
-        : formData;
+      const body = editingWarehouse ? { ...formData, id: editingWarehouse.id } : formData;
 
-      const response = await fetch(url, {
+      const response = await authFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
 
@@ -254,9 +263,7 @@ export default function WarehouseSetupPage() {
               <Warehouse className="h-6 w-6 text-primary" />
               仓库设置
             </h1>
-            <p className="text-muted-foreground mt-1">
-              管理仓库基础信息、容量和属性设置
-            </p>
+            <p className="text-muted-foreground mt-1">管理仓库基础信息、容量和属性设置</p>
           </div>
           <Button onClick={handleAdd} className="btn-dashboard-primary">
             <Plus className="h-4 w-4 mr-2" />
@@ -379,14 +386,10 @@ export default function WarehouseSetupPage() {
                       <TableCell className="font-medium">{warehouse.code}</TableCell>
                       <TableCell>{warehouse.name}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {getNatureLabel(warehouse.nature)}
-                        </Badge>
+                        <Badge variant="outline">{getNatureLabel(warehouse.nature)}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary">
-                          {getTypeLabel(warehouse.type)}
-                        </Badge>
+                        <Badge variant="secondary">{getTypeLabel(warehouse.type)}</Badge>
                       </TableCell>
                       <TableCell>
                         {warehouse.includeInCalculation ? (
@@ -402,7 +405,9 @@ export default function WarehouseSetupPage() {
                       <TableCell>
                         <div className="w-24">
                           <div className="flex items-center justify-between text-xs mb-1">
-                            <span>{Math.round((warehouse.usedCapacity / warehouse.capacity) * 100)}%</span>
+                            <span>
+                              {Math.round((warehouse.usedCapacity / warehouse.capacity) * 100)}%
+                            </span>
                             <span className="text-muted-foreground">
                               {warehouse.usedCapacity}/{warehouse.capacity}
                             </span>
@@ -413,8 +418,8 @@ export default function WarehouseSetupPage() {
                                 warehouse.usedCapacity / warehouse.capacity > 0.9
                                   ? 'bg-red-500'
                                   : warehouse.usedCapacity / warehouse.capacity > 0.7
-                                  ? 'bg-amber-500'
-                                  : 'bg-emerald-500'
+                                    ? 'bg-amber-500'
+                                    : 'bg-emerald-500'
                               }`}
                               style={{
                                 width: `${(warehouse.usedCapacity / warehouse.capacity) * 100}%`,
@@ -469,9 +474,7 @@ export default function WarehouseSetupPage() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
-              <DialogTitle>
-                {editingWarehouse ? '编辑仓库' : '新增仓库'}
-              </DialogTitle>
+              <DialogTitle>{editingWarehouse ? '编辑仓库' : '新增仓库'}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
@@ -482,9 +485,7 @@ export default function WarehouseSetupPage() {
                   id="code"
                   placeholder="如：WH001"
                   value={formData.code}
-                  onChange={(e) =>
-                    setFormData({ ...formData, code: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -495,9 +496,7 @@ export default function WarehouseSetupPage() {
                   id="name"
                   placeholder="请输入仓库名称"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -546,9 +545,7 @@ export default function WarehouseSetupPage() {
                   id="manager"
                   placeholder="请输入负责人姓名"
                   value={formData.manager}
-                  onChange={(e) =>
-                    setFormData({ ...formData, manager: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, manager: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -557,9 +554,7 @@ export default function WarehouseSetupPage() {
                   id="contact"
                   placeholder="请输入联系电话"
                   value={formData.contact}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contact: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -580,9 +575,7 @@ export default function WarehouseSetupPage() {
                   id="address"
                   placeholder="如：A栋1层"
                   value={formData.address}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 />
               </div>
               <div className="col-span-2 space-y-2">
@@ -606,9 +599,7 @@ export default function WarehouseSetupPage() {
                   id="remark"
                   placeholder="请输入备注信息"
                   value={formData.remark}
-                  onChange={(e) =>
-                    setFormData({ ...formData, remark: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
                 />
               </div>
             </div>
@@ -633,9 +624,7 @@ export default function WarehouseSetupPage() {
               <p className="text-muted-foreground">
                 确定要删除仓库 <strong>{warehouseToDelete?.name}</strong> 吗？
               </p>
-              <p className="text-sm text-red-500 mt-2">
-                此操作不可恢复，请谨慎操作。
-              </p>
+              <p className="text-sm text-red-500 mt-2">此操作不可恢复，请谨慎操作。</p>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>

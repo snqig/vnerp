@@ -1,11 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  commonErrors,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
 
 const SAMPLE_DELIVERY_STATUS = {
   PENDING: 'pending',
@@ -42,8 +37,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       throw new Error('打样订单不存在');
     }
 
-    if (sampleOrder.delivery_status === SAMPLE_DELIVERY_STATUS.DELIVERED ||
-        sampleOrder.delivery_status === SAMPLE_DELIVERY_STATUS.SIGNED) {
+    if (
+      sampleOrder.delivery_status === SAMPLE_DELIVERY_STATUS.DELIVERED ||
+      sampleOrder.delivery_status === SAMPLE_DELIVERY_STATUS.SIGNED
+    ) {
       throw new Error('打样订单已交付，不能创建工单');
     }
 
@@ -60,7 +57,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     const workOrderNo = `WO${new Date().toISOString().slice(0, 10).replace(/-/g, '')}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
 
-    const productDesc = `${sampleOrder.product_name} ${sampleOrder.size_spec || ''} ${sampleOrder.version || ''}`.trim();
+    const productDesc =
+      `${sampleOrder.product_name} ${sampleOrder.size_spec || ''} ${sampleOrder.version || ''}`.trim();
 
     const [orderResult] = await connection.execute(
       `INSERT INTO prod_work_order 
@@ -101,10 +99,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const bomInfo = (bomRows as any[])[0] || null;
 
     if (bomInfo) {
-      await connection.execute(
-        `UPDATE prod_work_order SET bom_id = ? WHERE id = ?`,
-        [bomInfo.id, workOrderId]
-      );
+      await connection.execute(`UPDATE prod_work_order SET bom_id = ? WHERE id = ?`, [
+        bomInfo.id,
+        workOrderId,
+      ]);
 
       const [bomLines] = await connection.execute(
         `SELECT bl.id, bl.material_id, bl.material_name, bl.quantity, bl.unit, bl.scrap_rate
@@ -113,22 +111,35 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       );
 
       for (const bomLine of bomLines as any[]) {
-        const requiredQty = bomLine.quantity * (sampleOrder.quantity || 1) * (1 + (bomLine.scrap_rate || 0) / 100);
+        const requiredQty =
+          bomLine.quantity * (sampleOrder.quantity || 1) * (1 + (bomLine.scrap_rate || 0) / 100);
         await connection.execute(
           `INSERT INTO prod_work_order_material_req 
            (work_order_id, bom_line_id, material_id, material_name, required_qty, unit, create_time)
            VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-          [workOrderId, bomLine.id, bomLine.material_id, bomLine.material_name, requiredQty, bomLine.unit]
+          [
+            workOrderId,
+            bomLine.id,
+            bomLine.material_id,
+            bomLine.material_name,
+            requiredQty,
+            bomLine.unit,
+          ]
         );
       }
     }
 
-    return successResponse({
-      work_order_id: workOrderId,
-      work_order_no: workOrderNo,
-      sample_order_no: sampleOrder.order_no,
-      bom_info: bomInfo ? { bom_id: bomInfo.id, bom_no: bomInfo.bom_no, version: bomInfo.version } : null,
-    }, `打样工单 ${workOrderNo} 创建成功`);
+    return successResponse(
+      {
+        work_order_id: workOrderId,
+        work_order_no: workOrderNo,
+        sample_order_no: sampleOrder.order_no,
+        bom_info: bomInfo
+          ? { bom_id: bomInfo.id, bom_no: bomInfo.bom_no, version: bomInfo.version }
+          : null,
+      },
+      `打样工单 ${workOrderNo} 创建成功`
+    );
   });
 }, '打样订单转工单失败');
 
@@ -172,13 +183,20 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         `UPDATE sal_sample_order 
          SET delivery_status = ?, actual_delivery_date = ?, update_time = NOW() 
          WHERE id = ?`,
-        [SAMPLE_DELIVERY_STATUS.DELIVERED, actual_delivery_date || new Date().toISOString().slice(0, 10), sample_order_id]
+        [
+          SAMPLE_DELIVERY_STATUS.DELIVERED,
+          actual_delivery_date || new Date().toISOString().slice(0, 10),
+          sample_order_id,
+        ]
       );
 
-      return successResponse({
-        sample_order_id,
-        delivery_status: SAMPLE_DELIVERY_STATUS.DELIVERED,
-      }, '打样订单已标记为已交付');
+      return successResponse(
+        {
+          sample_order_id,
+          delivery_status: SAMPLE_DELIVERY_STATUS.DELIVERED,
+        },
+        '打样订单已标记为已交付'
+      );
     }
 
     if (action === 'sign') {
@@ -193,10 +211,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         [SAMPLE_DELIVERY_STATUS.SIGNED, sample_order_id]
       );
 
-      return successResponse({
-        sample_order_id,
-        delivery_status: SAMPLE_DELIVERY_STATUS.SIGNED,
-      }, '打样订单已签收');
+      return successResponse(
+        {
+          sample_order_id,
+          delivery_status: SAMPLE_DELIVERY_STATUS.SIGNED,
+        },
+        '打样订单已签收'
+      );
     }
 
     return errorResponse('无效的操作类型', 400, 400);
@@ -211,10 +232,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('打样订单ID不能为空', 400, 400);
   }
 
-  const sampleOrder = await query(
-    `SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0`,
-    [sample_order_id]
-  );
+  const sampleOrder = await query(`SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0`, [
+    sample_order_id,
+  ]);
 
   if ((sampleOrder as any[]).length === 0) {
     return commonErrors.notFound('打样订单不存在');

@@ -52,7 +52,10 @@ interface RecentWorkOrder {
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   1: { label: '待确认', className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30' },
   2: { label: '已确认', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
-  3: { label: '部分发货', className: 'bg-orange-500/20 text-orange-300 border border-orange-500/30' },
+  3: {
+    label: '部分发货',
+    className: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
+  },
   4: { label: '已完成', className: 'bg-green-500/20 text-green-300 border border-green-500/30' },
   5: { label: '已取消', className: 'bg-red-500/20 text-red-300 border border-red-500/30' },
 };
@@ -81,37 +84,42 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        
+
         const salesRes = await fetch('/api/orders/sales?pageSize=20');
         const salesData = await salesRes.json();
-        
+
         if (salesData.success) {
           const orders = salesData.data?.list || salesData.data || [];
-          
+
           const today = new Date().toISOString().split('T')[0];
           const todayOrders = orders.filter((o: any) => o.order_date?.startsWith(today)).length;
-          const pendingOrderCount = orders.filter((o: any) => o.status === 1 || o.status === 2).length;
+          const pendingOrderCount = orders.filter(
+            (o: any) => o.status === 1 || o.status === 2
+          ).length;
           const producingCount = orders.filter((o: any) => o.status === 3).length;
           const completedCount = orders.filter((o: any) => o.status === 4).length;
           const totalValue = orders.reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0);
 
-          setRecentOrders(orders.slice(0, 20).map((o: any) => ({
-            id: o.order_no,
-            customer: o.customer_name,
-            product: o.items?.[0]?.material_name || '-',
-            quantity: o.items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0,
-            status: STATUS_MAP[o.status]?.label || '未知',
-            statusClass: STATUS_MAP[o.status]?.className || '',
-            delivery: o.delivery_date || '-',
-          })));
+          setRecentOrders(
+            orders.slice(0, 20).map((o: any) => ({
+              id: o.order_no,
+              customer: o.customer_name,
+              product: o.items?.[0]?.material_name || '-',
+              quantity:
+                o.items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0,
+              status: STATUS_MAP[o.status]?.label || '未知',
+              statusClass: STATUS_MAP[o.status]?.className || '',
+              delivery: o.delivery_date || '-',
+            }))
+          );
 
           const inventoryRes = await fetch('/api/warehouse/inventory?pageSize=100');
           const inventoryData = await inventoryRes.json();
           let inventoryWarnings = 0;
           if (inventoryData.success) {
             const inventoryList = inventoryData.data?.list || inventoryData.data || [];
-            inventoryWarnings = inventoryList.filter((item: any) => 
-              (item.quantity || 0) < (item.min_quantity || 0)
+            inventoryWarnings = inventoryList.filter(
+              (item: any) => (item.quantity || 0) < (item.min_quantity || 0)
             ).length;
           }
 
@@ -120,18 +128,20 @@ export default function DashboardPage() {
           let pendingWorkOrders = 0;
           if (workOrdersData.success) {
             const workOrders = workOrdersData.data?.list || workOrdersData.data || [];
-            pendingWorkOrders = workOrders.filter((wo: any) => 
-              wo.status === 1 || wo.status === 2
+            pendingWorkOrders = workOrders.filter(
+              (wo: any) => wo.status === 1 || wo.status === 2
             ).length;
 
-            setRecentWorkOrders(workOrders.slice(0, 20).map((wo: any) => ({
-              id: wo.work_order_no,
-              product: wo.product_name || '-',
-              quantity: wo.quantity || 0,
-              status: WORK_ORDER_STATUS_MAP[wo.status]?.label || '未知',
-              statusClass: WORK_ORDER_STATUS_MAP[wo.status]?.className || '',
-              date: wo.create_time?.substring(0, 10) || '-',
-            })));
+            setRecentWorkOrders(
+              workOrders.slice(0, 20).map((wo: any) => ({
+                id: wo.work_order_no,
+                product: wo.product_name || '-',
+                quantity: wo.quantity || 0,
+                status: WORK_ORDER_STATUS_MAP[wo.status]?.label || '未知',
+                statusClass: WORK_ORDER_STATUS_MAP[wo.status]?.className || '',
+                date: wo.create_time?.substring(0, 10) || '-',
+              }))
+            );
           }
 
           setStats({
@@ -217,7 +227,8 @@ export default function DashboardPage() {
     });
   };
 
-  const formatMoney = (v: number) => '¥' + (v / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formatMoney = (v: number) =>
+    '¥' + (v / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   if (loading) {
     return (
@@ -233,12 +244,48 @@ export default function DashboardPage() {
   }
 
   const displayStats = [
-    { title: '今日订单', value: stats?.todayOrders || 0, icon: FileText, color: 'from-cyan-500 to-blue-500', change: '+12%' },
-    { title: '待产工单', value: stats?.pendingWorkOrders || 0, icon: Factory, color: 'from-orange-500 to-amber-500', change: '-5%' },
-    { title: '库存预警', value: stats?.inventoryWarnings || 0, icon: AlertTriangle, color: 'from-red-500 to-pink-500', change: '+3' },
-    { title: '今日完成', value: stats?.todayCompleted || 0, icon: CheckCircle, color: 'from-green-500 to-emerald-500', change: '+8%' },
-    { title: '订单总额', value: formatMoney(stats?.totalValue || 0), icon: TrendingUp, color: 'from-purple-500 to-indigo-500', change: '+15%' },
-    { title: '生产中', value: stats?.producingCount || 0, icon: Activity, color: 'from-teal-500 to-cyan-500', change: '+2' },
+    {
+      title: '今日订单',
+      value: stats?.todayOrders || 0,
+      icon: FileText,
+      color: 'from-cyan-500 to-blue-500',
+      change: '+12%',
+    },
+    {
+      title: '待产工单',
+      value: stats?.pendingWorkOrders || 0,
+      icon: Factory,
+      color: 'from-orange-500 to-amber-500',
+      change: '-5%',
+    },
+    {
+      title: '库存预警',
+      value: stats?.inventoryWarnings || 0,
+      icon: AlertTriangle,
+      color: 'from-red-500 to-pink-500',
+      change: '+3',
+    },
+    {
+      title: '今日完成',
+      value: stats?.todayCompleted || 0,
+      icon: CheckCircle,
+      color: 'from-green-500 to-emerald-500',
+      change: '+8%',
+    },
+    {
+      title: '订单总额',
+      value: formatMoney(stats?.totalValue || 0),
+      icon: TrendingUp,
+      color: 'from-purple-500 to-indigo-500',
+      change: '+15%',
+    },
+    {
+      title: '生产中',
+      value: stats?.producingCount || 0,
+      icon: Activity,
+      color: 'from-teal-500 to-cyan-500',
+      change: '+2',
+    },
   ];
 
   return (
@@ -300,10 +347,7 @@ export default function DashboardPage() {
         {/* 关键指标卡片 */}
         <div className="relative z-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           {displayStats.map((s, i) => (
-            <div
-              key={i}
-              className={`tech-card tech-glow tech-card-delay-${i + 1} p-4`}
-            >
+            <div key={i} className={`tech-card tech-glow tech-card-delay-${i + 1} p-4`}>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-white/60">{s.title}</p>
@@ -316,7 +360,9 @@ export default function DashboardPage() {
                     ) : (
                       <ArrowDownRight className="h-3 w-3 text-red-400" />
                     )}
-                    <span className={`text-xs ${s.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                    <span
+                      className={`text-xs ${s.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}
+                    >
                       {s.change}
                     </span>
                   </div>
@@ -345,13 +391,12 @@ export default function DashboardPage() {
             {recentOrders.length === 0 ? (
               <p className="text-white/40 text-center py-8">暂无订单数据</p>
             ) : (
-              <div
-                ref={orderScrollRef}
-                className="overflow-hidden"
-                style={{ maxHeight: '400px' }}
-              >
+              <div ref={orderScrollRef} className="overflow-hidden" style={{ maxHeight: '400px' }}>
                 <table className="w-full text-sm">
-                  <thead className="sticky top-0 z-10" style={{ background: 'rgba(15, 23, 42, 0.9)' }}>
+                  <thead
+                    className="sticky top-0 z-10"
+                    style={{ background: 'rgba(15, 23, 42, 0.9)' }}
+                  >
                     <tr className="border-b border-white/10">
                       <th className="text-left py-2 px-3 text-white/60 font-medium">订单号</th>
                       <th className="text-left py-2 px-3 text-white/60 font-medium">客户</th>
@@ -363,11 +408,16 @@ export default function DashboardPage() {
                   </thead>
                   <tbody>
                     {[...recentOrders, ...recentOrders].map((order, i) => (
-                      <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <tr
+                        key={i}
+                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                      >
                         <td className="py-2 px-3 font-mono text-cyan-300 text-xs">{order.id}</td>
                         <td className="py-2 px-3 text-white/80 text-xs">{order.customer}</td>
                         <td className="py-2 px-3 text-white/60 text-xs">{order.product}</td>
-                        <td className="py-2 px-3 text-white/60 text-xs">{order.quantity.toLocaleString()}</td>
+                        <td className="py-2 px-3 text-white/60 text-xs">
+                          {order.quantity.toLocaleString()}
+                        </td>
                         <td className="py-2 px-3">
                           <span className={`px-2 py-0.5 rounded text-xs ${order.statusClass}`}>
                             {order.status}
@@ -402,7 +452,10 @@ export default function DashboardPage() {
                 style={{ maxHeight: '400px' }}
               >
                 <table className="w-full text-sm">
-                  <thead className="sticky top-0 z-10" style={{ background: 'rgba(15, 23, 42, 0.9)' }}>
+                  <thead
+                    className="sticky top-0 z-10"
+                    style={{ background: 'rgba(15, 23, 42, 0.9)' }}
+                  >
                     <tr className="border-b border-white/10">
                       <th className="text-left py-2 px-3 text-white/60 font-medium">工单号</th>
                       <th className="text-left py-2 px-3 text-white/60 font-medium">产品</th>
@@ -413,10 +466,15 @@ export default function DashboardPage() {
                   </thead>
                   <tbody>
                     {[...recentWorkOrders, ...recentWorkOrders].map((wo, i) => (
-                      <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <tr
+                        key={i}
+                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                      >
                         <td className="py-2 px-3 font-mono text-cyan-300 text-xs">{wo.id}</td>
                         <td className="py-2 px-3 text-white/80 text-xs">{wo.product}</td>
-                        <td className="py-2 px-3 text-white/60 text-xs">{wo.quantity.toLocaleString()}</td>
+                        <td className="py-2 px-3 text-white/60 text-xs">
+                          {wo.quantity.toLocaleString()}
+                        </td>
                         <td className="py-2 px-3">
                           <span className={`px-2 py-0.5 rounded text-xs ${wo.statusClass}`}>
                             {wo.status}
@@ -447,7 +505,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between space-x-4">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-white/60">待处理订单</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">{stats?.pendingOrderCount || 0}</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
+                  {stats?.pendingOrderCount || 0}
+                </p>
               </div>
               <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center">
                 <FileText className="h-8 w-8 text-cyan-400" />
@@ -457,7 +517,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between space-x-4">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-white/60">生产中</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-orange-300 to-amber-300 bg-clip-text text-transparent">{stats?.producingCount || 0}</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-orange-300 to-amber-300 bg-clip-text text-transparent">
+                  {stats?.producingCount || 0}
+                </p>
               </div>
               <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-500/30 flex items-center justify-center">
                 <Factory className="h-8 w-8 text-orange-400" />
@@ -467,7 +529,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between space-x-4">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-white/60">已完成</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">{stats?.completedCount || 0}</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-green-300 to-emerald-300 bg-clip-text text-transparent">
+                  {stats?.completedCount || 0}
+                </p>
               </div>
               <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 flex items-center justify-center">
                 <CheckCircle className="h-8 w-8 text-green-400" />

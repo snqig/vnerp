@@ -3,7 +3,15 @@ import { query } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    let overview: any = { totalItems: 0, totalValue: 0, lowStock: 0, todayInbound: 0, todayOutbound: 0, pendingInbound: 0, pendingOutbound: 0 };
+    const overview: any = {
+      totalItems: 0,
+      totalValue: 0,
+      lowStock: 0,
+      todayInbound: 0,
+      todayOutbound: 0,
+      pendingInbound: 0,
+      pendingOutbound: 0,
+    };
     try {
       const rows: any = await query(`
         SELECT COUNT(*) as total,
@@ -16,14 +24,24 @@ export async function GET(request: NextRequest) {
         overview.lowStock = Number(rows[0].low_stock || 0);
         overview.totalValue = Number(rows[0].total_value || 0);
       }
-    } catch (e) { console.error('warehouse overview failed:', e); }
+    } catch (e) {
+      console.error('warehouse overview failed:', e);
+    }
 
     try {
-      const inRows: any = await query(`SELECT COUNT(*) as total FROM inv_inbound_order WHERE deleted = 0 AND DATE(create_time) = CURDATE()`);
-      const outRows: any = await query(`SELECT COUNT(*) as total FROM inv_outbound_order WHERE deleted = 0 AND DATE(create_time) = CURDATE()`);
-      if (Array.isArray(inRows) && inRows.length > 0) overview.todayInbound = Number(inRows[0].total || 0);
-      if (Array.isArray(outRows) && outRows.length > 0) overview.todayOutbound = Number(outRows[0].total || 0);
-    } catch (e) { console.error('warehouse today failed:', e); }
+      const inRows: any = await query(
+        `SELECT COUNT(*) as total FROM inv_inbound_order WHERE deleted = 0 AND DATE(create_time) = CURDATE()`
+      );
+      const outRows: any = await query(
+        `SELECT COUNT(*) as total FROM inv_outbound_order WHERE deleted = 0 AND DATE(create_time) = CURDATE()`
+      );
+      if (Array.isArray(inRows) && inRows.length > 0)
+        overview.todayInbound = Number(inRows[0].total || 0);
+      if (Array.isArray(outRows) && outRows.length > 0)
+        overview.todayOutbound = Number(outRows[0].total || 0);
+    } catch (e) {
+      console.error('warehouse today failed:', e);
+    }
 
     let categoryDistribution: any[] = [];
     try {
@@ -35,7 +53,9 @@ export async function GET(request: NextRequest) {
         WHERE m.deleted = 0 AND m.status = 1 GROUP BY m.material_type ORDER BY count DESC
       `);
       categoryDistribution = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('warehouse category failed:', e); }
+    } catch (e) {
+      console.error('warehouse category failed:', e);
+    }
 
     let lowStockItems: any[] = [];
     try {
@@ -48,7 +68,9 @@ export async function GET(request: NextRequest) {
         ORDER BY (COALESCE(i.quantity, 0) / NULLIF(m.safety_stock, 0)) ASC LIMIT 10
       `);
       lowStockItems = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('warehouse lowStock failed:', e); }
+    } catch (e) {
+      console.error('warehouse lowStock failed:', e);
+    }
 
     let recentTransactions: any[] = [];
     try {
@@ -60,7 +82,9 @@ export async function GET(request: NextRequest) {
         ORDER BY t.create_time DESC LIMIT 10
       `);
       recentTransactions = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('warehouse transactions failed:', e); }
+    } catch (e) {
+      console.error('warehouse transactions failed:', e);
+    }
 
     let warehouseOccupancy: any[] = [];
     try {
@@ -72,11 +96,19 @@ export async function GET(request: NextRequest) {
         WHERE w.deleted = 0 GROUP BY w.id, w.warehouse_name
       `);
       warehouseOccupancy = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('warehouse occupancy failed:', e); }
+    } catch (e) {
+      console.error('warehouse occupancy failed:', e);
+    }
 
     return NextResponse.json({
       success: true,
-      data: { overview, categoryDistribution, lowStockItems, recentTransactions, warehouseOccupancy },
+      data: {
+        overview,
+        categoryDistribution,
+        lowStockItems,
+        recentTransactions,
+        warehouseOccupancy,
+      },
     });
   } catch (error) {
     console.error('获取仓库看板数据失败:', error);

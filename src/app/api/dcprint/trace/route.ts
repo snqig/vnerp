@@ -1,11 +1,7 @@
 // @ts-nocheck
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 
 // 物料项接口
 interface MaterialItem {
@@ -42,7 +38,9 @@ interface TraceDetail {
 function generateTraceNo(): string {
   const date = new Date();
   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, '0');
   return `TR${dateStr}${random}`;
 }
 
@@ -79,7 +77,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     params.push(traceType);
   }
 
-  const result = await queryPaginated(
+  const dbResult = await queryPaginated(
     `SELECT
       t.id,
       t.trace_no,
@@ -107,6 +105,21 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     params,
     { page, pageSize }
   );
+
+  // 转换为驼峰命名
+  const result = {
+    ...dbResult,
+    list: dbResult.list.map((item: any) => ({
+      id: item.id,
+      traceNo: item.trace_no,
+      cardNo: item.card_no,
+      workOrderNo: item.work_order_no,
+      productCode: item.product_code,
+      traceType: item.trace_type,
+      operatorName: item.operator_name,
+      traceTime: item.trace_time,
+    }))
+  };
 
   return successResponse(result);
 }, '获取追溯记录列表失败');
@@ -173,9 +186,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       trace_type, operator_id, operator_name, remark, deleted
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
     [
-      traceNo, card.id, card.card_no, card.work_order_no,
-      card.product_code, card.main_label_id,
-      traceType, operatorId, operatorName,
+      traceNo,
+      card.id,
+      card.card_no,
+      card.work_order_no,
+      card.product_code,
+      card.main_label_id,
+      traceType,
+      operatorId,
+      operatorName,
       `追溯查询: ${traceType === 'forward' ? '正向追溯' : '反向追溯'}`,
     ]
   );
@@ -193,7 +212,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         ?, ?, ?, ?, ?, ?, ?, ?, ?
       )`,
       [
-        traceNo, material.labelNo, material.labelNo,
+        traceNo,
+        material.labelNo,
+        material.labelNo,
         material.materialCode || '',
         material.materialName || '',
         material.specification || '',
@@ -206,27 +227,30 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     );
   }
 
-  return successResponse({
-    traceNo,
-    card: {
-      cardNo: card.card_no,
-      workOrderNo: card.work_order_no,
-      productCode: card.product_code,
-      productName: card.product_name,
+  return successResponse(
+    {
+      traceNo,
+      card: {
+        cardNo: card.card_no,
+        workOrderNo: card.work_order_no,
+        productCode: card.product_code,
+        productName: card.product_name,
+      },
+      mainMaterial: {
+        labelNo: card.main_label_no,
+        materialCode: card.main_material_code,
+        materialName: card.main_material_name,
+        specification: card.main_specification,
+        batchNo: card.main_batch_no,
+        supplierName: card.main_supplier_name,
+        receiveDate: card.main_receive_date,
+      },
+      materials: materials || [],
+      mainMaterials: materials?.filter((m) => m.materialType === 'main') || [],
+      auxiliaryMaterials: materials?.filter((m) => m.materialType === 'auxiliary') || [],
     },
-    mainMaterial: {
-      labelNo: card.main_label_no,
-      materialCode: card.main_material_code,
-      materialName: card.main_material_name,
-      specification: card.main_specification,
-      batchNo: card.main_batch_no,
-      supplierName: card.main_supplier_name,
-      receiveDate: card.main_receive_date,
-    },
-    materials: materials || [],
-    mainMaterials: materials?.filter((m) => m.materialType === 'main') || [],
-    auxiliaryMaterials: materials?.filter((m) => m.materialType === 'auxiliary') || [],
-  }, '追溯查询成功');
+    '追溯查询成功'
+  );
 }, '追溯查询失败');
 
 // GET /detail - 获取追溯详情

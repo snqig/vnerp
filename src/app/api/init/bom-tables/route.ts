@@ -234,7 +234,9 @@ export async function GET(request: NextRequest) {
       results.push('✅ 插入测试数据: 物料分类');
     }
 
-    const materialCount = await query(`SELECT COUNT(*) as count FROM bom_material WHERE deleted = 0`);
+    const materialCount = await query(
+      `SELECT COUNT(*) as count FROM bom_material WHERE deleted = 0`
+    );
     if ((materialCount as any[])[0].count === 0) {
       await query(`
         INSERT INTO bom_material (material_code, material_name, material_spec, material_type, category_id, unit, unit_cost) VALUES
@@ -292,7 +294,7 @@ export async function GET(request: NextRequest) {
 
     return successResponse({
       message: 'BOM管理表初始化完成',
-      details: results
+      details: results,
     });
   } catch (error: any) {
     console.error('初始化失败:', error);

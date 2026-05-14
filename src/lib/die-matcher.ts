@@ -73,9 +73,7 @@ function areMaterialsCompatible(mat1: string, mat2: string): boolean {
 
 function parseSpecification(spec: string): { width: number; height: number } {
   if (!spec) return { width: 0, height: 0 };
-  const match = spec.match(
-    /(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*(mm|m)?/i
-  );
+  const match = spec.match(/(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*(mm|m)?/i);
   if (match) {
     let w = parseFloat(match[1]);
     let h = parseFloat(match[2]);
@@ -96,10 +94,7 @@ function deriveShapeType(width: number, height: number, assetType: string): stri
   return 'rectangle';
 }
 
-export function calculateDieMatchScore(
-  die: DieTemplate,
-  product: ProductSpec
-): DieMatchResult {
+export function calculateDieMatchScore(die: DieTemplate, product: ProductSpec): DieMatchResult {
   const warnings: string[] = [];
   let sizeMatch = 0;
   let shapeMatch = 0;
@@ -124,10 +119,7 @@ export function calculateDieMatchScore(
     die.height <= product.height + tolerance * 2
   ) {
     sizeMatch = 30;
-  } else if (
-    die.width >= product.width &&
-    die.height >= product.height
-  ) {
+  } else if (die.width >= product.width && die.height >= product.height) {
     if (dieArea > 0) {
       sizeMatch = Math.round(20 * (productArea / dieArea));
     } else {
@@ -147,10 +139,7 @@ export function calculateDieMatchScore(
     die.height <= product.width + tolerance * 2
   ) {
     sizeMatch = 30;
-  } else if (
-    die.width >= product.height &&
-    die.height >= product.width
-  ) {
+  } else if (die.width >= product.height && die.height >= product.width) {
     if (dieArea > 0) {
       sizeMatch = Math.round(20 * (productArea / dieArea));
     } else {
@@ -271,8 +260,7 @@ export async function findBestDieMatch(
     const spec = parseSpecification(row.specification || '');
     const maxUses = row.max_impressions || row.max_usage || 0;
     const currentUses = row.cumulative_impressions || row.current_usage || 0;
-    const remainingLife =
-      maxUses > 0 ? ((maxUses - currentUses) / maxUses) * 100 : 100;
+    const remainingLife = maxUses > 0 ? ((maxUses - currentUses) / maxUses) * 100 : 100;
 
     const die: DieTemplate = {
       id: row.id,
@@ -280,19 +268,13 @@ export async function findBestDieMatch(
       name: row.template_name || '',
       width: spec.width,
       height: spec.height,
-      shape_type: deriveShapeType(
-        spec.width,
-        spec.height,
-        row.asset_type
-      ),
+      shape_type: deriveShapeType(spec.width, spec.height, row.asset_type),
       material_type: row.material || '',
       max_uses: maxUses,
       current_uses: currentUses,
       remaining_life: Math.max(0, Math.round(remainingLife * 100) / 100),
       status: row.die_status || String(row.status),
-      compatible_products: usageMap.has(row.id)
-        ? [`${usageMap.get(row.id)}个关联工单`]
-        : [],
+      compatible_products: usageMap.has(row.id) ? [`${usageMap.get(row.id)}个关联工单`] : [],
     };
 
     const matchResult = calculateDieMatchScore(die, productSpec);
@@ -341,9 +323,7 @@ export async function predictDieLife(
   const currentUses = die.cumulative_impressions || die.current_usage || 0;
   const remainingUses = Math.max(0, maxUses - currentUses);
   const remainingLifePercent =
-    maxUses > 0
-      ? Math.round(((maxUses - currentUses) / maxUses) * 10000) / 100
-      : 100;
+    maxUses > 0 ? Math.round(((maxUses - currentUses) / maxUses) * 10000) / 100 : 100;
 
   const [usageLogs]: any = await conn.query(
     `SELECT
@@ -368,14 +348,11 @@ export async function predictDieLife(
 
     const firstDate = new Date(usageLogs[0].usage_date || usageLogs[0].create_time);
     const lastDate = new Date(
-      usageLogs[usageLogs.length - 1].usage_date ||
-        usageLogs[usageLogs.length - 1].create_time
+      usageLogs[usageLogs.length - 1].usage_date || usageLogs[usageLogs.length - 1].create_time
     );
     const totalDays = Math.max(
       1,
-      Math.ceil(
-        (lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)
-      )
+      Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24))
     );
 
     avgDailyUsage = totalImpressions / totalDays;
@@ -384,16 +361,10 @@ export async function predictDieLife(
       const midpoint = Math.floor(usageLogs.length / 2);
       const firstHalfImpressions = usageLogs
         .slice(0, midpoint)
-        .reduce(
-          (sum: number, log: any) => sum + (parseInt(log.impressions) || 0),
-          0
-        );
+        .reduce((sum: number, log: any) => sum + (parseInt(log.impressions) || 0), 0);
       const secondHalfImpressions = usageLogs
         .slice(midpoint)
-        .reduce(
-          (sum: number, log: any) => sum + (parseInt(log.impressions) || 0),
-          0
-        );
+        .reduce((sum: number, log: any) => sum + (parseInt(log.impressions) || 0), 0);
 
       const firstHalfAvg = firstHalfImpressions / midpoint;
       const secondHalfAvg = secondHalfImpressions / (usageLogs.length - midpoint);
@@ -422,10 +393,8 @@ export async function predictDieLife(
         const firstHalf = monthlyUsage.slice(0, Math.floor(monthlyUsage.length / 2));
         const secondHalf = monthlyUsage.slice(Math.floor(monthlyUsage.length / 2));
 
-        const firstAvg =
-          firstHalf.reduce((s, m) => s + m.total, 0) / firstHalf.length;
-        const secondAvg =
-          secondHalf.reduce((s, m) => s + m.total, 0) / secondHalf.length;
+        const firstAvg = firstHalf.reduce((s, m) => s + m.total, 0) / firstHalf.length;
+        const secondAvg = secondHalf.reduce((s, m) => s + m.total, 0) / secondHalf.length;
 
         if (secondAvg > firstAvg * 1.2) {
           usageTrend = 'increasing';
@@ -440,9 +409,7 @@ export async function predictDieLife(
     const now = new Date();
     const daysSinceUse = Math.max(
       1,
-      Math.ceil(
-        (now.getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24)
-      )
+      Math.ceil((now.getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24))
     );
     avgDailyUsage = (parseInt(log.impressions) || 0) / daysSinceUse;
   }

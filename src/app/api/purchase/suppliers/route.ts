@@ -71,10 +71,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
 
-  const validation = validateRequestBody(body, [
-    'supplier_code',
-    'supplier_name',
-  ]);
+  const validation = validateRequestBody(body, ['supplier_code', 'supplier_name']);
 
   if (!validation.valid) {
     return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
@@ -136,10 +133,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('供应商ID不能为空', 400, 400);
   }
 
-  const existing = await query(
-    'SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  const existing = await query('SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0', [id]);
 
   if ((existing as any[]).length === 0) {
     return commonErrors.notFound('供应商不存在');
@@ -193,19 +187,13 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('供应商ID不能为空', 400, 400);
   }
 
-  const existing = await query(
-    'SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  const existing = await query('SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0', [id]);
 
   if ((existing as any[]).length === 0) {
     return commonErrors.notFound('供应商不存在');
   }
 
-  await query(
-    'UPDATE pur_supplier SET deleted = 1, update_time = NOW() WHERE id = ?',
-    [id]
-  );
+  await query('UPDATE pur_supplier SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
   return successResponse(null, '供应商删除成功');
 });

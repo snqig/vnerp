@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -12,11 +13,23 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let where = 'WHERE deleted = 0';
   const params: any[] = [];
-  if (dictName) { where += ' AND dict_name LIKE ?'; params.push(`%${dictName}%`); }
-  if (dictType) { where += ' AND dict_code LIKE ?'; params.push(`%${dictType}%`); }
-  if (status !== '') { where += ' AND status = ?'; params.push(Number(status)); }
+  if (dictName) {
+    where += ' AND dict_name LIKE ?';
+    params.push(`%${dictName}%`);
+  }
+  if (dictType) {
+    where += ' AND dict_code LIKE ?';
+    params.push(`%${dictType}%`);
+  }
+  if (status !== '') {
+    where += ' AND status = ?';
+    params.push(Number(status));
+  }
 
-  const totalRows: any = await query(`SELECT COUNT(*) as total FROM sys_dict_type ${where}`, params);
+  const totalRows: any = await query(
+    `SELECT COUNT(*) as total FROM sys_dict_type ${where}`,
+    params
+  );
   const total = totalRows[0]?.total || 0;
 
   const rows: any = await query(
@@ -27,7 +40,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const body = await request.json();
   const { dict_name, dict_code, status, description } = body;
 
@@ -39,7 +52,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   return successResponse({ id: result.insertId }, '创建成功');
 });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const body = await request.json();
   const { id, dict_name, dict_code, status, description } = body;
 
@@ -51,7 +64,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   return successResponse(null, '更新成功');
 });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });

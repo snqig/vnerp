@@ -60,7 +60,7 @@ export class InboundOrder {
       throw new DomainError('入库项不能为空');
     }
 
-    const items = props.items.map(item => InboundItem.create(item));
+    const items = props.items.map((item) => InboundItem.create(item));
     const totalAmount = items.reduce(
       (sum, item) => sum.add(Money.create(item.totalPrice)),
       Money.zero()
@@ -89,10 +89,10 @@ export class InboundOrder {
     if (order.id) {
       order._domainEvents.push(
         new InboundOrderCreatedEvent({
-          orderId: order.id,
-          orderNo: order.orderNo,
+          inboundId: order.id,
+          inboundNo: order.orderNo,
           warehouseId: order.warehouseId,
-          supplierName: order.supplierName,
+          supplierId: 0, // We don't have supplierId here, use 0 as placeholder
         })
       );
     }
@@ -101,13 +101,15 @@ export class InboundOrder {
   }
 
   static reconstitute(props: InboundOrderProps): InboundOrder {
-    const items = props.items.map(item => InboundItem.reconstitute(item));
-    const totalAmount = props.totalAmount !== undefined
-      ? Money.create(props.totalAmount)
-      : items.reduce((sum, item) => sum.add(Money.create(item.totalPrice)), Money.zero());
-    const totalQuantity = props.totalQuantity !== undefined
-      ? props.totalQuantity
-      : items.reduce((sum, item) => sum + item.quantity, 0);
+    const items = props.items.map((item) => InboundItem.reconstitute(item));
+    const totalAmount =
+      props.totalAmount !== undefined
+        ? Money.create(props.totalAmount)
+        : items.reduce((sum, item) => sum.add(Money.create(item.totalPrice)), Money.zero());
+    const totalQuantity =
+      props.totalQuantity !== undefined
+        ? props.totalQuantity
+        : items.reduce((sum, item) => sum + item.quantity, 0);
 
     return new InboundOrder(
       props.id,
@@ -157,8 +159,11 @@ export class InboundOrder {
     this._status = this._status.transitionTo('pending');
     this._domainEvents.push(
       new InboundOrderSubmittedEvent({
-        orderId: this.id!,
-        orderNo: this.orderNo,
+        inboundId: this.id!,
+        inboundNo: this.orderNo,
+        warehouseId: this.warehouseId,
+        supplierId: 0,
+        totalAmount: this._totalAmount.amount,
       })
     );
   }
@@ -174,25 +179,21 @@ export class InboundOrder {
 
     this._domainEvents.push(
       new InboundOrderApprovedEvent({
-        orderId: this.id!,
-        orderNo: this.orderNo,
+        inboundId: this.id!,
+        inboundNo: this.orderNo,
         warehouseId: this.warehouseId,
         warehouseName,
+        supplierId: 0,
         supplierName: this.supplierName,
-        items: this._items.map(item => ({
-          id: item.id,
+        items: this._items.map((item) => ({
           materialId: item.materialId,
           materialCode: item.materialCode,
           materialName: item.materialName,
-          materialSpec: item.materialSpec,
-          batchNo: item.batchNo,
           quantity: item.quantity,
-          unit: item.unit,
           unitPrice: item.unitPrice,
-          produceDate: item.produceDate,
+          batchNo: item.batchNo,
         })),
         totalAmount: this._totalAmount.amount,
-        inboundDate: this.inboundDate,
       })
     );
   }
@@ -201,8 +202,9 @@ export class InboundOrder {
     this._status = this._status.transitionTo('cancelled');
     this._domainEvents.push(
       new InboundOrderCancelledEvent({
-        orderId: this.id!,
-        orderNo: this.orderNo,
+        inboundId: this.id!,
+        inboundNo: this.orderNo,
+        reason: '',
       })
     );
   }
@@ -213,14 +215,9 @@ export class InboundOrder {
     this._financePosted = false;
     this._domainEvents.push(
       new InboundOrderUnapprovedEvent({
-        orderId: this.id!,
-        orderNo: this.orderNo,
-        warehouseId: this.warehouseId,
-        items: this._items.map(item => ({
-          materialId: item.materialId,
-          batchNo: item.batchNo,
-          quantity: item.quantity,
-        })),
+        inboundId: this.id!,
+        inboundNo: this.orderNo,
+        reason: '',
       })
     );
   }

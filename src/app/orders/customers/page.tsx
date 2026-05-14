@@ -1,13 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -61,7 +56,13 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
-import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import {
+  TableExportToolbar,
+  printTable,
+  exportTableToPDF,
+  exportTableToXLS,
+  exportTableToWORD,
+} from '@/components/ui/table-export-toolbar';
 
 // 客户列表项接口（基于 crm_customer 表）
 interface CustomerListItem {
@@ -102,10 +103,26 @@ const customerTypeMap: Record<number, { label: string; color: string }> = {
 
 // 跟进状态映射
 const followUpStatusMap: Record<number, { label: string; color: string }> = {
-  1: { label: '潜在客户', color: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' },
-  2: { label: '意向客户', color: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700' },
-  3: { label: '成交客户', color: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700' },
-  4: { label: '流失客户', color: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700' },
+  1: {
+    label: '潜在客户',
+    color:
+      'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
+  },
+  2: {
+    label: '意向客户',
+    color:
+      'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
+  },
+  3: {
+    label: '成交客户',
+    color:
+      'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
+  },
+  4: {
+    label: '流失客户',
+    color:
+      'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
+  },
 };
 
 // 状态映射
@@ -133,6 +150,18 @@ export default function CustomersPage() {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
 
   // 从数据库加载客户数据
   useEffect(() => {
@@ -172,12 +201,13 @@ export default function CustomersPage() {
         params.append('keyword', searchTerm);
       }
 
-      const response = await fetch(`/api/customers?${params.toString()}`);
+      const response = await authFetch(`/api/customers?${params.toString()}`);
       const result = await response.json();
 
       if (result.success) {
         // 转换数据库字段为前端格式
-        const formattedCustomers: CustomerListItem[] = result.data.map((item: any) => ({
+        const customerList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const formattedCustomers: CustomerListItem[] = customerList.map((item: any) => ({
           id: item.id,
           customerCode: item.customer_code,
           customerName: item.customer_name,
@@ -207,7 +237,7 @@ export default function CustomersPage() {
           updateTime: item.update_time,
         }));
         setCustomers(formattedCustomers);
-        setTotalCount(result.pagination?.total || 0);
+        setTotalCount(result.pagination?.total || result.data?.total || 0);
       } else {
         console.error('加载数据失败:', result.message);
       }
@@ -272,7 +302,7 @@ export default function CustomersPage() {
     }
 
     try {
-      const response = await fetch(`/api/customers?id=${customer.id}`, {
+      const response = await authFetch(`/api/customers?id=${customer.id}`, {
         method: 'DELETE',
       });
       const result = await response.json();
@@ -316,9 +346,8 @@ export default function CustomersPage() {
         status: parseInt(editForm.status) ?? 1,
         remark: editForm.remark,
       };
-      const response = await fetch(`/api/customers?id=${selectedCustomer.id}`, {
+      const response = await authFetch(`/api/customers?id=${selectedCustomer.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       const result = await response.json();
@@ -338,7 +367,9 @@ export default function CustomersPage() {
   const getCustomerTypeBadge = (type: number) => {
     const { label, color } = customerTypeMap[type] || customerTypeMap[1];
     return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${color}`}>
+      <span
+        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${color}`}
+      >
         {label}
       </span>
     );
@@ -348,7 +379,9 @@ export default function CustomersPage() {
   const getFollowUpStatusBadge = (status: number) => {
     const { label, color } = followUpStatusMap[status] || followUpStatusMap[1];
     return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${color}`}>
+      <span
+        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${color}`}
+      >
         {label}
       </span>
     );
@@ -358,7 +391,9 @@ export default function CustomersPage() {
   const getStatusBadge = (status: number) => {
     const { label, color } = statusMap[status] || statusMap[1];
     return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${color}`}>
+      <span
+        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${color}`}
+      >
         {label}
       </span>
     );
@@ -370,19 +405,29 @@ export default function CustomersPage() {
   const handleSort = (field: string) => {
     if (sortField === field) {
       if (sortOrder === 'asc') setSortOrder('desc');
-      else if (sortOrder === 'desc') { setSortField(null); setSortOrder(null); }
-    } else { setSortField(field); setSortOrder('asc'); }
+      else if (sortOrder === 'desc') {
+        setSortField(null);
+        setSortOrder(null);
+      }
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
   };
   const getSortIcon = (field: string) => {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
-    return sortOrder === 'asc' ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
+    return sortOrder === 'asc' ? (
+      <ArrowUp className="ml-1 h-3 w-3" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3" />
+    );
   };
 
   const filteredCustomers = useMemo(() => {
     if (!sortField || !sortOrder) return customers;
     return [...customers].sort((a, b) => {
-      const aVal = (a as Record<string, unknown>)[sortField];
-      const bVal = (b as Record<string, unknown>)[sortField];
+      const aVal = (a as Record<string, any>)[sortField];
+      const bVal = (b as Record<string, any>)[sortField];
       const aStr = String(aVal ?? '').toLowerCase();
       const bStr = String(bVal ?? '').toLowerCase();
       if (aStr < bStr) return sortOrder === 'asc' ? -1 : 1;
@@ -398,9 +443,7 @@ export default function CustomersPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                客户总数
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">客户总数</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalCount}</div>
@@ -408,37 +451,31 @@ export default function CustomersPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                成交客户
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">成交客户</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {customers.filter(c => c.followUpStatus === 3).length}
+                {customers.filter((c) => c.followUpStatus === 3).length}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                意向客户
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">意向客户</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                {customers.filter(c => c.followUpStatus === 2).length}
+                {customers.filter((c) => c.followUpStatus === 2).length}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                企业客户
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">企业客户</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {customers.filter(c => c.customerType === 1).length}
+                {customers.filter((c) => c.customerType === 1).length}
               </div>
             </CardContent>
           </Card>
@@ -454,7 +491,10 @@ export default function CustomersPage() {
                   placeholder="客户编码/名称/联系人/电话"
                   value={searchTerm}
                   onChange={setSearchTerm}
-                  onSearch={() => { setCurrentPage(1); fetchCustomers(); }}
+                  onSearch={() => {
+                    setCurrentPage(1);
+                    fetchCustomers();
+                  }}
                 />
               </div>
               <div className="w-[140px]">
@@ -521,48 +561,110 @@ export default function CustomersPage() {
             <TableExportToolbar
               selectedCount={selectedIds.size}
               totalCount={filteredCustomers.length}
-              onSelectAll={() => setSelectedIds(new Set(filteredCustomers.map(c => c.id)))}
+              onSelectAll={() => setSelectedIds(new Set(filteredCustomers.map((c) => c.id)))}
               onDeselectAll={() => setSelectedIds(new Set())}
-              onPrint={() => printTable(filteredCustomers.map(c => ({
-                客户编码: c.customerCode, 客户名称: c.customerName, 类型: customerTypeMap[c.customerType]?.label || '',
-                联系人: c.contactName, 联系电话: c.contactPhone, 地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                跟进状态: followUpStatusMap[c.followUpStatus]?.label || '', 状态: statusMap[c.status]?.label || '',
-              })), [
-                { key: '客户编码', header: '客户编码' }, { key: '客户名称', header: '客户名称' },
-                { key: '类型', header: '类型' }, { key: '联系人', header: '联系人' },
-                { key: '联系电话', header: '联系电话' }, { key: '地址', header: '地址' },
-                { key: '跟进状态', header: '跟进状态' }, { key: '状态', header: '状态' },
-              ], '客户列表')}
-              onExportPDF={() => exportTableToPDF(filteredCustomers.map(c => ({
-                客户编码: c.customerCode, 客户名称: c.customerName, 类型: customerTypeMap[c.customerType]?.label || '',
-                联系人: c.contactName, 联系电话: c.contactPhone, 地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                跟进状态: followUpStatusMap[c.followUpStatus]?.label || '', 状态: statusMap[c.status]?.label || '',
-              })), '客户列表', [
-                { key: '客户编码', header: '客户编码' }, { key: '客户名称', header: '客户名称' },
-                { key: '类型', header: '类型' }, { key: '联系人', header: '联系人' },
-                { key: '联系电话', header: '联系电话' }, { key: '地址', header: '地址' },
-                { key: '跟进状态', header: '跟进状态' }, { key: '状态', header: '状态' },
-              ], '客户列表')}
-              onExportXLS={() => exportTableToXLS(filteredCustomers.map(c => ({
-                客户编码: c.customerCode, 客户名称: c.customerName, 类型: customerTypeMap[c.customerType]?.label || '',
-                联系人: c.contactName, 联系电话: c.contactPhone, 地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                跟进状态: followUpStatusMap[c.followUpStatus]?.label || '', 状态: statusMap[c.status]?.label || '',
-              })), '客户列表', [
-                { key: '客户编码', header: '客户编码' }, { key: '客户名称', header: '客户名称' },
-                { key: '类型', header: '类型' }, { key: '联系人', header: '联系人' },
-                { key: '联系电话', header: '联系电话' }, { key: '地址', header: '地址' },
-                { key: '跟进状态', header: '跟进状态' }, { key: '状态', header: '状态' },
-              ])}
-              onExportWORD={() => exportTableToWORD(filteredCustomers.map(c => ({
-                客户编码: c.customerCode, 客户名称: c.customerName, 类型: customerTypeMap[c.customerType]?.label || '',
-                联系人: c.contactName, 联系电话: c.contactPhone, 地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                跟进状态: followUpStatusMap[c.followUpStatus]?.label || '', 状态: statusMap[c.status]?.label || '',
-              })), '客户列表', [
-                { key: '客户编码', header: '客户编码' }, { key: '客户名称', header: '客户名称' },
-                { key: '类型', header: '类型' }, { key: '联系人', header: '联系人' },
-                { key: '联系电话', header: '联系电话' }, { key: '地址', header: '地址' },
-                { key: '跟进状态', header: '跟进状态' }, { key: '状态', header: '状态' },
-              ], '客户列表')}
+              onPrint={() =>
+                printTable(
+                  filteredCustomers.map((c) => ({
+                    客户编码: c.customerCode,
+                    客户名称: c.customerName,
+                    类型: customerTypeMap[c.customerType]?.label || '',
+                    联系人: c.contactName,
+                    联系电话: c.contactPhone,
+                    地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                    跟进状态: followUpStatusMap[c.followUpStatus]?.label || '',
+                    状态: statusMap[c.status]?.label || '',
+                  })),
+                  [
+                    { key: '客户编码', header: '客户编码' },
+                    { key: '客户名称', header: '客户名称' },
+                    { key: '类型', header: '类型' },
+                    { key: '联系人', header: '联系人' },
+                    { key: '联系电话', header: '联系电话' },
+                    { key: '地址', header: '地址' },
+                    { key: '跟进状态', header: '跟进状态' },
+                    { key: '状态', header: '状态' },
+                  ],
+                  '客户列表'
+                )
+              }
+              onExportPDF={() =>
+                exportTableToPDF(
+                  filteredCustomers.map((c) => ({
+                    客户编码: c.customerCode,
+                    客户名称: c.customerName,
+                    类型: customerTypeMap[c.customerType]?.label || '',
+                    联系人: c.contactName,
+                    联系电话: c.contactPhone,
+                    地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                    跟进状态: followUpStatusMap[c.followUpStatus]?.label || '',
+                    状态: statusMap[c.status]?.label || '',
+                  })),
+                  '客户列表',
+                  [
+                    { key: '客户编码', header: '客户编码' },
+                    { key: '客户名称', header: '客户名称' },
+                    { key: '类型', header: '类型' },
+                    { key: '联系人', header: '联系人' },
+                    { key: '联系电话', header: '联系电话' },
+                    { key: '地址', header: '地址' },
+                    { key: '跟进状态', header: '跟进状态' },
+                    { key: '状态', header: '状态' },
+                  ],
+                  '客户列表'
+                )
+              }
+              onExportXLS={() =>
+                exportTableToXLS(
+                  filteredCustomers.map((c) => ({
+                    客户编码: c.customerCode,
+                    客户名称: c.customerName,
+                    类型: customerTypeMap[c.customerType]?.label || '',
+                    联系人: c.contactName,
+                    联系电话: c.contactPhone,
+                    地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                    跟进状态: followUpStatusMap[c.followUpStatus]?.label || '',
+                    状态: statusMap[c.status]?.label || '',
+                  })),
+                  '客户列表',
+                  [
+                    { key: '客户编码', header: '客户编码' },
+                    { key: '客户名称', header: '客户名称' },
+                    { key: '类型', header: '类型' },
+                    { key: '联系人', header: '联系人' },
+                    { key: '联系电话', header: '联系电话' },
+                    { key: '地址', header: '地址' },
+                    { key: '跟进状态', header: '跟进状态' },
+                    { key: '状态', header: '状态' },
+                  ]
+                )
+              }
+              onExportWORD={() =>
+                exportTableToWORD(
+                  filteredCustomers.map((c) => ({
+                    客户编码: c.customerCode,
+                    客户名称: c.customerName,
+                    类型: customerTypeMap[c.customerType]?.label || '',
+                    联系人: c.contactName,
+                    联系电话: c.contactPhone,
+                    地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                    跟进状态: followUpStatusMap[c.followUpStatus]?.label || '',
+                    状态: statusMap[c.status]?.label || '',
+                  })),
+                  '客户列表',
+                  [
+                    { key: '客户编码', header: '客户编码' },
+                    { key: '客户名称', header: '客户名称' },
+                    { key: '类型', header: '类型' },
+                    { key: '联系人', header: '联系人' },
+                    { key: '联系电话', header: '联系电话' },
+                    { key: '地址', header: '地址' },
+                    { key: '跟进状态', header: '跟进状态' },
+                    { key: '状态', header: '状态' },
+                  ],
+                  '客户列表'
+                )
+              }
             />
           </CardHeader>
           <CardContent>
@@ -572,35 +674,73 @@ export default function CustomersPage() {
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
                     <TableHead className="w-[40px]">
                       <Checkbox
-                        checked={selectedIds.size > 0 && selectedIds.size === filteredCustomers.length}
+                        checked={
+                          selectedIds.size > 0 && selectedIds.size === filteredCustomers.length
+                        }
                         onCheckedChange={(checked) => {
-                          if (checked) setSelectedIds(new Set(filteredCustomers.map(c => c.id)));
+                          if (checked) setSelectedIds(new Set(filteredCustomers.map((c) => c.id)));
                           else setSelectedIds(new Set());
                         }}
                       />
                     </TableHead>
-                    <TableHead className="w-[100px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('customerCode')}>
-                      <span className="inline-flex items-center">客户编码{getSortIcon('customerCode')}</span>
+                    <TableHead
+                      className="w-[100px] cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('customerCode')}
+                    >
+                      <span className="inline-flex items-center">
+                        客户编码{getSortIcon('customerCode')}
+                      </span>
                     </TableHead>
-                    <TableHead className="w-[180px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('customerName')}>
-                      <span className="inline-flex items-center">客户名称{getSortIcon('customerName')}</span>
+                    <TableHead
+                      className="w-[180px] cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('customerName')}
+                    >
+                      <span className="inline-flex items-center">
+                        客户名称{getSortIcon('customerName')}
+                      </span>
                     </TableHead>
-                    <TableHead className="w-[100px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('customerType')}>
-                      <span className="inline-flex items-center">类型{getSortIcon('customerType')}</span>
+                    <TableHead
+                      className="w-[100px] cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('customerType')}
+                    >
+                      <span className="inline-flex items-center">
+                        类型{getSortIcon('customerType')}
+                      </span>
                     </TableHead>
-                    <TableHead className="w-[120px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('contactName')}>
-                      <span className="inline-flex items-center">联系人{getSortIcon('contactName')}</span>
+                    <TableHead
+                      className="w-[120px] cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('contactName')}
+                    >
+                      <span className="inline-flex items-center">
+                        联系人{getSortIcon('contactName')}
+                      </span>
                     </TableHead>
-                    <TableHead className="w-[130px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('contactPhone')}>
-                      <span className="inline-flex items-center">联系电话{getSortIcon('contactPhone')}</span>
+                    <TableHead
+                      className="w-[130px] cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('contactPhone')}
+                    >
+                      <span className="inline-flex items-center">
+                        联系电话{getSortIcon('contactPhone')}
+                      </span>
                     </TableHead>
-                    <TableHead className="w-[200px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('address')}>
+                    <TableHead
+                      className="w-[200px] cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('address')}
+                    >
                       <span className="inline-flex items-center">地址{getSortIcon('address')}</span>
                     </TableHead>
-                    <TableHead className="w-[100px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('followUpStatus')}>
-                      <span className="inline-flex items-center">跟进状态{getSortIcon('followUpStatus')}</span>
+                    <TableHead
+                      className="w-[100px] cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('followUpStatus')}
+                    >
+                      <span className="inline-flex items-center">
+                        跟进状态{getSortIcon('followUpStatus')}
+                      </span>
                     </TableHead>
-                    <TableHead className="w-[70px] cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('status')}>
+                    <TableHead
+                      className="w-[70px] cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('status')}
+                    >
                       <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
                     </TableHead>
                     <TableHead className="w-[80px] text-center">操作</TableHead>
@@ -630,27 +770,29 @@ export default function CustomersPage() {
                             checked={selectedIds.has(customer.id)}
                             onCheckedChange={(checked) => {
                               const next = new Set(selectedIds);
-                              if (checked) next.add(customer.id); else next.delete(customer.id);
+                              if (checked) next.add(customer.id);
+                              else next.delete(customer.id);
                               setSelectedIds(next);
                             }}
                           />
                         </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {customer.customerCode}
-                        </TableCell>
+                        <TableCell className="font-mono text-sm">{customer.customerCode}</TableCell>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span className="font-medium truncate max-w-[160px]" title={customer.customerName}>
+                            <span
+                              className="font-medium truncate max-w-[160px]"
+                              title={customer.customerName}
+                            >
                               {customer.customerName}
                             </span>
                             {customer.shortName && (
-                              <span className="text-xs text-muted-foreground">{customer.shortName}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {customer.shortName}
+                              </span>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          {getCustomerTypeBadge(customer.customerType)}
-                        </TableCell>
+                        <TableCell>{getCustomerTypeBadge(customer.customerType)}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <User className="h-3 w-3 text-muted-foreground" />
@@ -668,17 +810,19 @@ export default function CustomersPage() {
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <MapPin className="h-3 w-3" />
-                            <span className="truncate max-w-[180px]" title={`${customer.province || ''}${customer.city || ''}${customer.district || ''}${customer.address || ''}`}>
-                              {customer.province || ''}{customer.city || ''}{customer.district || ''}{customer.address || '-'}
+                            <span
+                              className="truncate max-w-[180px]"
+                              title={`${customer.province || ''}${customer.city || ''}${customer.district || ''}${customer.address || ''}`}
+                            >
+                              {customer.province || ''}
+                              {customer.city || ''}
+                              {customer.district || ''}
+                              {customer.address || '-'}
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          {getFollowUpStatusBadge(customer.followUpStatus)}
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(customer.status)}
-                        </TableCell>
+                        <TableCell>{getFollowUpStatusBadge(customer.followUpStatus)}</TableCell>
+                        <TableCell>{getStatusBadge(customer.status)}</TableCell>
                         <TableCell className="text-center">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -695,7 +839,7 @@ export default function CustomersPage() {
                                 <Edit className="h-4 w-4 mr-2" />
                                 编辑
                               </DropdownMenuItem>
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={() => handleDelete(customer)}
                                 className="text-red-600 focus:text-red-600"
                               >
@@ -722,7 +866,7 @@ export default function CustomersPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                   >
                     上一页
@@ -730,7 +874,7 @@ export default function CustomersPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                   >
                     下一页
@@ -809,7 +953,16 @@ export default function CustomersPage() {
                     </div>
                     <div className="space-y-1 col-span-2">
                       <span className="text-sm text-muted-foreground">地址</span>
-                      <p className="font-medium">{[selectedCustomer.province, selectedCustomer.city, selectedCustomer.district, selectedCustomer.address].filter(Boolean).join('') || '-'}</p>
+                      <p className="font-medium">
+                        {[
+                          selectedCustomer.province,
+                          selectedCustomer.city,
+                          selectedCustomer.district,
+                          selectedCustomer.address,
+                        ]
+                          .filter(Boolean)
+                          .join('') || '-'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -856,20 +1009,40 @@ export default function CustomersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>客户编码 *</Label>
-                  <Input value={editForm.customerCode || ''} onChange={e => setEditForm(prev => ({ ...prev, customerCode: e.target.value }))} />
+                  <Input
+                    value={editForm.customerCode || ''}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, customerCode: e.target.value }))
+                    }
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>客户名称 *</Label>
-                  <Input value={editForm.customerName || ''} onChange={e => setEditForm(prev => ({ ...prev, customerName: e.target.value }))} />
+                  <Input
+                    value={editForm.customerName || ''}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, customerName: e.target.value }))
+                    }
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>简称</Label>
-                  <Input value={editForm.shortName || ''} onChange={e => setEditForm(prev => ({ ...prev, shortName: e.target.value }))} />
+                  <Input
+                    value={editForm.shortName || ''}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, shortName: e.target.value }))
+                    }
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>客户类型</Label>
-                  <Select value={editForm.customerType || '1'} onValueChange={v => setEditForm(prev => ({ ...prev, customerType: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={editForm.customerType || '1'}
+                    onValueChange={(v) => setEditForm((prev) => ({ ...prev, customerType: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1">企业</SelectItem>
                       <SelectItem value="2">个人</SelectItem>
@@ -878,20 +1051,36 @@ export default function CustomersPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>行业</Label>
-                  <Input value={editForm.industry || ''} onChange={e => setEditForm(prev => ({ ...prev, industry: e.target.value }))} />
+                  <Input
+                    value={editForm.industry || ''}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, industry: e.target.value }))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>规模</Label>
-                  <Input value={editForm.scale || ''} onChange={e => setEditForm(prev => ({ ...prev, scale: e.target.value }))} />
+                  <Input
+                    value={editForm.scale || ''}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, scale: e.target.value }))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>信用等级</Label>
-                  <Input value={editForm.creditLevel || ''} onChange={e => setEditForm(prev => ({ ...prev, creditLevel: e.target.value }))} />
+                  <Input
+                    value={editForm.creditLevel || ''}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, creditLevel: e.target.value }))
+                    }
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>跟进状态</Label>
-                  <Select value={editForm.followUpStatus || '1'} onValueChange={v => setEditForm(prev => ({ ...prev, followUpStatus: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={editForm.followUpStatus || '1'}
+                    onValueChange={(v) => setEditForm((prev) => ({ ...prev, followUpStatus: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1">潜在客户</SelectItem>
                       <SelectItem value="2">意向客户</SelectItem>
@@ -906,39 +1095,80 @@ export default function CustomersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>联系人</Label>
-                    <Input value={editForm.contactName || ''} onChange={e => setEditForm(prev => ({ ...prev, contactName: e.target.value }))} />
+                    <Input
+                      value={editForm.contactName || ''}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, contactName: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>联系电话</Label>
-                    <Input value={editForm.contactPhone || ''} onChange={e => setEditForm(prev => ({ ...prev, contactPhone: e.target.value }))} />
+                    <Input
+                      value={editForm.contactPhone || ''}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, contactPhone: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>邮箱</Label>
-                    <Input value={editForm.contactEmail || ''} onChange={e => setEditForm(prev => ({ ...prev, contactEmail: e.target.value }))} />
+                    <Input
+                      value={editForm.contactEmail || ''}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, contactEmail: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>传真</Label>
-                    <Input value={editForm.fax || ''} onChange={e => setEditForm(prev => ({ ...prev, fax: e.target.value }))} />
+                    <Input
+                      value={editForm.fax || ''}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, fax: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>网址</Label>
-                    <Input value={editForm.website || ''} onChange={e => setEditForm(prev => ({ ...prev, website: e.target.value }))} />
+                    <Input
+                      value={editForm.website || ''}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, website: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>省份</Label>
-                    <Input value={editForm.province || ''} onChange={e => setEditForm(prev => ({ ...prev, province: e.target.value }))} />
+                    <Input
+                      value={editForm.province || ''}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, province: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>城市</Label>
-                    <Input value={editForm.city || ''} onChange={e => setEditForm(prev => ({ ...prev, city: e.target.value }))} />
+                    <Input
+                      value={editForm.city || ''}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, city: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>区县</Label>
-                    <Input value={editForm.district || ''} onChange={e => setEditForm(prev => ({ ...prev, district: e.target.value }))} />
+                    <Input
+                      value={editForm.district || ''}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, district: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-2 col-span-2">
                     <Label>详细地址</Label>
-                    <Input value={editForm.address || ''} onChange={e => setEditForm(prev => ({ ...prev, address: e.target.value }))} />
+                    <Input
+                      value={editForm.address || ''}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, address: e.target.value }))
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -947,20 +1177,40 @@ export default function CustomersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>税号</Label>
-                    <Input value={editForm.taxNumber || ''} onChange={e => setEditForm(prev => ({ ...prev, taxNumber: e.target.value }))} />
+                    <Input
+                      value={editForm.taxNumber || ''}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, taxNumber: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>开户银行</Label>
-                    <Input value={editForm.bankName || ''} onChange={e => setEditForm(prev => ({ ...prev, bankName: e.target.value }))} />
+                    <Input
+                      value={editForm.bankName || ''}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, bankName: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>银行账号</Label>
-                    <Input value={editForm.bankAccount || ''} onChange={e => setEditForm(prev => ({ ...prev, bankAccount: e.target.value }))} />
+                    <Input
+                      value={editForm.bankAccount || ''}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, bankAccount: e.target.value }))
+                      }
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>状态</Label>
-                    <Select value={editForm.status || '1'} onValueChange={v => setEditForm(prev => ({ ...prev, status: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Select
+                      value={editForm.status || '1'}
+                      onValueChange={(v) => setEditForm((prev) => ({ ...prev, status: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="1">启用</SelectItem>
                         <SelectItem value="0">禁用</SelectItem>
@@ -971,11 +1221,16 @@ export default function CustomersPage() {
               </div>
               <div className="space-y-2">
                 <Label>备注</Label>
-                <Input value={editForm.remark || ''} onChange={e => setEditForm(prev => ({ ...prev, remark: e.target.value }))} />
+                <Input
+                  value={editForm.remark || ''}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, remark: e.target.value }))}
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditOpen(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                取消
+              </Button>
               <Button onClick={handleSaveEdit}>保存</Button>
             </DialogFooter>
           </DialogContent>

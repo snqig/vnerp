@@ -1,14 +1,14 @@
 import { secureLog } from '@/lib/logger';
 
 export type SalesOrderStatus =
-  | 'draft'           // 草稿
-  | 'pending_review'  // 待审核
-  | 'approved'        // 已审核
-  | 'producing'       // 生产中（已转工单）
-  | 'partial_ship'    // 部分发货
-  | 'shipped'         // 已发货
-  | 'completed'       // 已完成
-  | 'cancelled';      // 已取消
+  | 'draft' // 草稿
+  | 'pending_review' // 待审核
+  | 'approved' // 已审核
+  | 'producing' // 生产中（已转工单）
+  | 'partial_ship' // 部分发货
+  | 'shipped' // 已发货
+  | 'completed' // 已完成
+  | 'cancelled'; // 已取消
 
 export interface SalesOrderStatusConfig {
   label: string;
@@ -92,7 +92,7 @@ export class SalesOrderStateMachine {
   static canTransition(from: SalesOrderStatus, to: SalesOrderStatus): boolean {
     const config = salesOrderStateMachineConfig[from];
     if (!config) {
-      secureLog.error('无效的源状态', { from });
+      secureLog('error', '无效的源状态', { from });
       return false;
     }
     return config.allowedTransitions.includes(to);

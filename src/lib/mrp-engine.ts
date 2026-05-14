@@ -268,7 +268,10 @@ export async function calculateTimeBuckets(
 
   const requirementMap = new Map<string, number>();
   for (const row of requirementRows) {
-    const dateStr = typeof row.req_date === 'string' ? row.req_date.substring(0, 10) : String(row.req_date).substring(0, 10);
+    const dateStr =
+      typeof row.req_date === 'string'
+        ? row.req_date.substring(0, 10)
+        : String(row.req_date).substring(0, 10);
     requirementMap.set(dateStr, Number(row.total_req));
   }
 
@@ -291,7 +294,10 @@ export async function calculateTimeBuckets(
 
   const receiptMap = new Map<string, number>();
   for (const row of receiptRows) {
-    const dateStr = typeof row.receipt_date === 'string' ? row.receipt_date.substring(0, 10) : String(row.receipt_date).substring(0, 10);
+    const dateStr =
+      typeof row.receipt_date === 'string'
+        ? row.receipt_date.substring(0, 10)
+        : String(row.receipt_date).substring(0, 10);
     receiptMap.set(dateStr, Number(row.total_receipt));
   }
 
@@ -347,9 +353,12 @@ export async function calculateTimeBuckets(
 
 function getBucketDays(bucketSize: 'day' | 'week' | 'month'): number {
   switch (bucketSize) {
-    case 'day': return 1;
-    case 'week': return 7;
-    case 'month': return 30;
+    case 'day':
+      return 1;
+    case 'week':
+      return 7;
+    case 'month':
+      return 30;
   }
 }
 
@@ -358,7 +367,11 @@ interface BucketDates {
   dates: Date[];
 }
 
-function generateBucketDates(startDate: string, endDate: string, bucketSize: 'day' | 'week' | 'month'): BucketDates[] {
+function generateBucketDates(
+  startDate: string,
+  endDate: string,
+  bucketSize: 'day' | 'week' | 'month'
+): BucketDates[] {
   const start = new Date(startDate + 'T00:00:00');
   const end = new Date(endDate + 'T00:00:00');
   const buckets: BucketDates[] = [];
@@ -463,14 +476,17 @@ export async function calculateNetRequirements(
     return [];
   }
 
-  const materialRequirements = new Map<number, {
-    total_qty: number;
-    unit: string;
-    material_code: string;
-    material_name: string;
-    earliest_start_date: string;
-    work_order_ids: number[];
-  }>();
+  const materialRequirements = new Map<
+    number,
+    {
+      total_qty: number;
+      unit: string;
+      material_code: string;
+      material_name: string;
+      earliest_start_date: string;
+      work_order_ids: number[];
+    }
+  >();
 
   for (const wo of workOrders) {
     if (!wo.product_id) continue;
@@ -496,7 +512,9 @@ export async function calculateNetRequirements(
           unit: leaf.unit,
           material_code: leaf.material_code,
           material_name: leaf.material_name,
-          earliest_start_date: wo.plan_start_date ? wo.plan_start_date.substring(0, 10) : formatDateStr(new Date()),
+          earliest_start_date: wo.plan_start_date
+            ? wo.plan_start_date.substring(0, 10)
+            : formatDateStr(new Date()),
           work_order_ids: [wo.id],
         });
       }
@@ -595,8 +613,22 @@ export async function calculateNetRequirements(
   return results;
 }
 
-function collectLeafMaterials(node: BOMNode): Array<{ material_id: number; material_code: string; material_name: string; quantity: number; unit: string }> {
-  const leaves: Array<{ material_id: number; material_code: string; material_name: string; quantity: number; unit: string }> = [];
+function collectLeafMaterials(
+  node: BOMNode
+): Array<{
+  material_id: number;
+  material_code: string;
+  material_name: string;
+  quantity: number;
+  unit: string;
+}> {
+  const leaves: Array<{
+    material_id: number;
+    material_code: string;
+    material_name: string;
+    quantity: number;
+    unit: string;
+  }> = [];
 
   if (node.is_leaf) {
     leaves.push({
@@ -638,7 +670,7 @@ export async function generatePlannedOrders(
 ): Promise<PlannedOrder[]> {
   const netRequirements = await calculateNetRequirements(conn, workOrderIds, warehouseId);
 
-  const positiveReqs = netRequirements.filter(r => r.net_requirement > 0);
+  const positiveReqs = netRequirements.filter((r) => r.net_requirement > 0);
 
   const orderMap = new Map<number, PlannedOrder>();
 
@@ -669,8 +701,8 @@ export async function generatePlannedOrders(
       }
 
       const woIds = netRequirements
-        .filter(r => r.material_id === req.material_id)
-        .flatMap(r => {
+        .filter((r) => r.material_id === req.material_id)
+        .flatMap((r) => {
           return workOrderIds;
         });
       const uniqueWoIds = Array.from(new Set(woIds));
@@ -703,7 +735,7 @@ export async function generatePurchaseRequestsFromMRP(
     return [];
   }
 
-  const materialIds = plannedOrders.map(o => o.material_id);
+  const materialIds = plannedOrders.map((o) => o.material_id);
   const matPlaceholders = materialIds.map(() => '?').join(',');
 
   const supplierMap = new Map<number | null, PlannedOrder[]>();
@@ -876,7 +908,7 @@ export async function runFullMRP(
     workOrderIds
   );
 
-  let combinedBomTree: BOMNode = {
+  const combinedBomTree: BOMNode = {
     material_id: 0,
     material_code: 'MRP_ROOT',
     material_name: 'MRP计算根节点',
@@ -904,10 +936,15 @@ export async function runFullMRP(
 
   let purchaseRequests: { request_no: string; item_count: number }[] | undefined;
   if (autoGeneratePR && plannedOrders.length > 0) {
-    purchaseRequests = await generatePurchaseRequestsFromMRP(conn, plannedOrders, operatorId, operatorName);
+    purchaseRequests = await generatePurchaseRequestsFromMRP(
+      conn,
+      plannedOrders,
+      operatorId,
+      operatorName
+    );
   }
 
-  const totalShortages = netRequirements.filter(r => r.shortage_warning).length;
+  const totalShortages = netRequirements.filter((r) => r.shortage_warning).length;
 
   let totalPlannedAmount = 0;
   for (const order of plannedOrders) {
@@ -927,7 +964,8 @@ export async function runFullMRP(
     summary: {
       total_materials: netRequirements.length,
       total_shortages: totalShortages,
-      total_planned_qty: Math.round(plannedOrders.reduce((sum, o) => sum + o.quantity, 0) * 10000) / 10000,
+      total_planned_qty:
+        Math.round(plannedOrders.reduce((sum, o) => sum + o.quantity, 0) * 10000) / 10000,
       total_planned_amount: Math.round(totalPlannedAmount * 100) / 100,
     },
   };

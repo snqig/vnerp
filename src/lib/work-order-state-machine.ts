@@ -11,12 +11,7 @@ export type WorkOrderStatus =
   | 'completed'
   | 'cancelled';
 
-export type ProcessStepStatus =
-  | 'pending'
-  | 'in_progress'
-  | 'completed'
-  | 'skipped'
-  | 'failed';
+export type ProcessStepStatus = 'pending' | 'in_progress' | 'completed' | 'skipped' | 'failed';
 
 export interface ProcessStep {
   id: number;
@@ -187,7 +182,9 @@ export class WorkOrderStateMachine {
     if (config.allowedTransitions.includes(to)) return '';
     const fromLabel = config.label;
     const toLabel = workOrderStateMachineConfig[to]?.label || to;
-    const allowedLabels = config.allowedTransitions.map(s => workOrderStateMachineConfig[s].label).join('、');
+    const allowedLabels = config.allowedTransitions
+      .map((s) => workOrderStateMachineConfig[s].label)
+      .join('、');
     return `工单状态不允许从"${fromLabel}"流转到"${toLabel}"，允许的流转目标：${allowedLabels || '无'}`;
   }
 

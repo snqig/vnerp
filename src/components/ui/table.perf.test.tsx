@@ -2,8 +2,8 @@
  * Table组件渲染性能测试
  */
 
-import { describe, it, expect } from 'vitest'
-import { render } from '@testing-library/react'
+import { describe, it, expect } from 'vitest';
+import { render } from '@testing-library/react';
 import {
   Table,
   TableHeader,
@@ -13,7 +13,7 @@ import {
   TableRow,
   TableCell,
   TableCaption,
-} from './table'
+} from './table';
 
 describe('Table组件渲染性能测试', () => {
   const generateData = (count: number) =>
@@ -23,11 +23,11 @@ describe('Table组件渲染性能测试', () => {
       price: (Math.random() * 1000).toFixed(2),
       stock: Math.floor(Math.random() * 1000),
       status: Math.random() > 0.5 ? '启用' : '禁用',
-    }))
+    }));
 
   it('应该在合理时间内渲染基础表格', () => {
-    const data = generateData(10)
-    const start = performance.now()
+    const data = generateData(10);
+    const start = performance.now();
     const { container } = render(
       <Table>
         <TableHeader>
@@ -49,17 +49,17 @@ describe('Table组件渲染性能测试', () => {
           ))}
         </TableBody>
       </Table>
-    )
-    const end = performance.now()
+    );
+    const end = performance.now();
 
-    expect(container.querySelector('table')).toBeInTheDocument()
-    expect(container.querySelectorAll('tbody tr')).toHaveLength(10)
-    expect(end - start).toBeLessThan(200)
-  })
+    expect(container.querySelector('table')).toBeInTheDocument();
+    expect(container.querySelectorAll('tbody tr')).toHaveLength(10);
+    expect(end - start).toBeLessThan(200);
+  });
 
   it('应该高效渲染大数据量表格', () => {
-    const data = generateData(100)
-    const start = performance.now()
+    const data = generateData(100);
+    const start = performance.now();
     const { container } = render(
       <Table>
         <TableHeader>
@@ -81,15 +81,15 @@ describe('Table组件渲染性能测试', () => {
           ))}
         </TableBody>
       </Table>
-    )
-    const end = performance.now()
+    );
+    const end = performance.now();
 
-    expect(container.querySelectorAll('tbody tr')).toHaveLength(100)
-    expect(end - start).toBeLessThan(1000) // 1秒内渲染100行
-  })
+    expect(container.querySelectorAll('tbody tr')).toHaveLength(100);
+    expect(end - start).toBeLessThan(1000); // 1秒内渲染100行
+  });
 
   it('应该高效渲染复杂表格结构', () => {
-    const start = performance.now()
+    const start = performance.now();
     const { container } = render(
       <Table>
         <TableCaption>产品列表</TableCaption>
@@ -115,11 +115,11 @@ describe('Table组件渲染性能测试', () => {
           </TableRow>
         </TableFooter>
       </Table>
-    )
-    const end = performance.now()
+    );
+    const end = performance.now();
 
-    expect(container.querySelector('caption')).toBeInTheDocument()
-    expect(container.querySelector('tfoot')).toBeInTheDocument()
-    expect(end - start).toBeLessThan(300)
-  })
-})
+    expect(container.querySelector('caption')).toBeInTheDocument();
+    expect(container.querySelector('tfoot')).toBeInTheDocument();
+    expect(end - start).toBeLessThan(300);
+  });
+});

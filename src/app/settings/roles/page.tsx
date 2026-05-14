@@ -7,12 +7,44 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit, Trash2, Shield, RefreshCw, Search, Users, CheckSquare, Square, LayoutGrid, MousePointer } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Shield,
+  RefreshCw,
+  Search,
+  Users,
+  CheckSquare,
+  Square,
+  LayoutGrid,
+  MousePointer,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getPermissionModules, Permission } from '@/hooks/usePermission';
 
@@ -44,7 +76,7 @@ const dataScopeOptions = [
   { value: 2, label: '本部门数据' },
   { value: 3, label: '本部门及以下数据' },
   { value: 4, label: '仅本人数据' },
-  { value: 5, label: '自定义' }
+  { value: 5, label: '自定义' },
 ];
 
 // 权限模块
@@ -56,7 +88,7 @@ export default function RolesPage() {
   const [menus, setMenus] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
-  
+
   // 对话框状态
   const [dialogOpen, setDialogOpen] = useState(false);
   const [permissionDialogOpen, setPermissionDialogOpen] = useState(false);
@@ -67,17 +99,30 @@ export default function RolesPage() {
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [activePermissionTab, setActivePermissionTab] = useState('menus');
 
+  const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  }, []);
+
   // 获取角色列表
   const fetchRoles = useCallback(async () => {
     setLoading(true);
     try {
-      const url = search 
+      const url = search
         ? `/api/organization/role?keyword=${encodeURIComponent(search)}`
         : '/api/organization/role';
-      const response = await fetch(url);
+      const response = await authFetch(url);
+      if (!response.ok) return;
       const result = await response.json();
       if (result.success) {
-        setRoles(result.data);
+        setRoles(Array.isArray(result.data) ? result.data : (result.data?.list || []));
       }
     } catch (error) {
       console.error('获取角色列表失败:', error);
@@ -90,11 +135,13 @@ export default function RolesPage() {
   // 获取菜单列表
   const fetchMenus = useCallback(async () => {
     try {
-      const response = await fetch('/api/menu');
+      const response = await authFetch('/api/menu');
+      if (!response.ok) return [];
       const result = await response.json();
       if (result.success) {
-        setMenus(result.data);
-        return result.data;
+        const data = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        setMenus(data);
+        return data;
       }
     } catch (error) {
       console.error('获取菜单列表失败:', error);
@@ -106,14 +153,14 @@ export default function RolesPage() {
   const fetchRolePermissions = async (roleId: number) => {
     try {
       // 获取菜单权限
-      const menuResponse = await fetch(`/api/role-permissions?roleId=${roleId}`);
+      const menuResponse = await authFetch(`/api/role-permissions?roleId=${roleId}`);
       const menuResult = await menuResponse.json();
       if (menuResult.success) {
         setSelectedMenus(menuResult.data.map((p: any) => p.menu_id));
       }
 
       // 获取按钮权限
-      const roleResponse = await fetch('/api/organization/role');
+      const roleResponse = await authFetch('/api/organization/role');
       const roleResult = await roleResponse.json();
       if (roleResult.success) {
         const role = roleResult.data.find((r: Role) => r.id === roleId);
@@ -140,13 +187,12 @@ export default function RolesPage() {
     try {
       const url = editing ? '/api/organization/role' : '/api/organization/role';
       const method = editing ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
+
+      const response = await authFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+        body: JSON.stringify(form),
       });
-      
+
       const result = await response.json();
       if (result.success) {
         toast({ title: editing ? '角色更新成功' : '角色创建成功' });
@@ -164,12 +210,12 @@ export default function RolesPage() {
   // 删除角色
   const deleteRole = async (id: number) => {
     if (!confirm('确定要删除该角色吗？')) return;
-    
+
     try {
-      const response = await fetch(`/api/organization/role?id=${id}`, {
-        method: 'DELETE'
+      const response = await authFetch(`/api/organization/role?id=${id}`, {
+        method: 'DELETE',
       });
-      
+
       const result = await response.json();
       if (result.success) {
         toast({ title: '角色删除成功' });
@@ -189,28 +235,26 @@ export default function RolesPage() {
 
     try {
       // 保存菜单权限
-      const menuResponse = await fetch('/api/role-permissions', {
+      const menuResponse = await authFetch('/api/role-permissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           role_id: selectedRole.id,
-          menu_ids: selectedMenus
-        })
+          menu_ids: selectedMenus,
+        }),
       });
-      
+
       const menuResult = await menuResponse.json();
       if (!menuResult.success) {
         toast({ title: menuResult.message || '菜单权限设置失败', variant: 'destructive' });
         return;
       }
 
-      const btnResponse = await fetch('/api/role-permissions/buttons', {
+      const btnResponse = await authFetch('/api/role-permissions/buttons', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           role_id: selectedRole.id,
-          permissions: selectedPermissions
-        })
+          permissions: selectedPermissions,
+        }),
       });
 
       const btnResult = await btnResponse.json();
@@ -224,7 +268,7 @@ export default function RolesPage() {
       fetchRoles();
 
       try {
-        await fetch('/api/auth/cache/clear', { method: 'POST' });
+        await authFetch('/api/auth/cache/clear', { method: 'POST' });
       } catch (e) {
         console.error('清除缓存失败:', e);
       }
@@ -254,29 +298,27 @@ export default function RolesPage() {
     setSelectedMenus([]);
     setSelectedPermissions([]);
     setActivePermissionTab('menus');
-    
+
     let currentMenus = menus;
     if (currentMenus.length === 0) {
       currentMenus = await fetchMenus();
     }
-    
+
     await fetchRolePermissions(role.id);
     setPermissionDialogOpen(true);
   };
 
   // 切换菜单选择
   const toggleMenuSelection = (menuId: number) => {
-    setSelectedMenus(prev => 
-      prev.includes(menuId) 
-        ? prev.filter(id => id !== menuId)
-        : [...prev, menuId]
+    setSelectedMenus((prev) =>
+      prev.includes(menuId) ? prev.filter((id) => id !== menuId) : [...prev, menuId]
     );
   };
 
   // 递归获取所有菜单ID
   const getAllMenuIds = (menuList: Menu[]): number[] => {
     let ids: number[] = [];
-    menuList.forEach(menu => {
+    menuList.forEach((menu) => {
       ids.push(menu.id);
       if (menu.children && menu.children.length > 0) {
         ids = [...ids, ...getAllMenuIds(menu.children)];
@@ -287,10 +329,10 @@ export default function RolesPage() {
 
   // 递归渲染菜单树
   const renderMenuTree = (menuList: Menu[], level = 0) => {
-    return menuList.map(menu => (
+    return menuList.map((menu) => (
       <div key={menu.id} className={`${level > 0 ? 'ml-6' : ''}`}>
         <div className="flex items-center gap-2 py-1 hover:bg-muted rounded px-2">
-          <Checkbox 
+          <Checkbox
             checked={selectedMenus.includes(menu.id)}
             onCheckedChange={() => toggleMenuSelection(menu.id)}
           />
@@ -334,9 +376,7 @@ export default function RolesPage() {
                   <Shield className="w-6 h-6" />
                   角色管理
                 </CardTitle>
-                <CardDescription>
-                  管理系统角色和权限分配
-                </CardDescription>
+                <CardDescription>管理系统角色和权限分配</CardDescription>
               </div>
               <Button onClick={openAddDialog} className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="w-4 h-4 mr-2" />
@@ -349,7 +389,7 @@ export default function RolesPage() {
             <div className="flex items-center gap-4 mb-6">
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
+                <Input
                   placeholder="搜索角色名称、编码..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -383,32 +423,30 @@ export default function RolesPage() {
                 <TableBody>
                   {roles.map((role, index) => (
                     <TableRow key={role.id}>
-                      <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
+                      <TableCell className="text-center text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
                       <TableCell className="font-medium">{role.role_code}</TableCell>
                       <TableCell>{role.role_name}</TableCell>
                       <TableCell className="text-gray-500">{role.description || '-'}</TableCell>
                       <TableCell>{getStatusBadge(role.status)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="sm"
                             onClick={() => openPermissionDialog(role)}
                           >
                             <Shield className="w-4 h-4 mr-1" />
                             权限
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => openEditDialog(role)}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => openEditDialog(role)}>
                             <Edit className="w-4 h-4 mr-1" />
                             编辑
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="text-red-600 hover:text-red-700"
                             onClick={() => deleteRole(role.id)}
                           >
@@ -431,41 +469,43 @@ export default function RolesPage() {
         <DialogContent className="max-w-lg" resizable>
           <DialogHeader>
             <DialogTitle>{editing ? '编辑角色' : '新增角色'}</DialogTitle>
-            <DialogDescription>
-              {editing ? '修改角色信息' : '填写新角色信息'}
-            </DialogDescription>
+            <DialogDescription>{editing ? '修改角色信息' : '填写新角色信息'}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>角色编码 <span className="text-red-500">*</span></Label>
-              <Input 
-                value={form.role_code || ''} 
-                onChange={(e) => setForm({...form, role_code: e.target.value})}
+              <Label>
+                角色编码 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={form.role_code || ''}
+                onChange={(e) => setForm({ ...form, role_code: e.target.value })}
                 placeholder="请输入角色编码"
                 readOnly={editing}
               />
             </div>
             <div className="space-y-2">
-              <Label>角色名称 <span className="text-red-500">*</span></Label>
-              <Input 
-                value={form.role_name || ''} 
-                onChange={(e) => setForm({...form, role_name: e.target.value})}
+              <Label>
+                角色名称 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={form.role_name || ''}
+                onChange={(e) => setForm({ ...form, role_name: e.target.value })}
                 placeholder="请输入角色名称"
               />
             </div>
             <div className="space-y-2">
               <Label>描述</Label>
-              <Input 
-                value={form.description || ''} 
-                onChange={(e) => setForm({...form, description: e.target.value})}
+              <Input
+                value={form.description || ''}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
                 placeholder="请输入角色描述"
               />
             </div>
             <div className="space-y-2">
               <Label>状态</Label>
-              <Select 
-                value={form.status?.toString() || '1'} 
-                onValueChange={(v) => setForm({...form, status: parseInt(v)})}
+              <Select
+                value={form.status?.toString() || '1'}
+                onValueChange={(v) => setForm({ ...form, status: parseInt(v) })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择状态" />
@@ -493,11 +533,9 @@ export default function RolesPage() {
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" resizable>
           <DialogHeader>
             <DialogTitle>设置权限 - {selectedRole?.role_name}</DialogTitle>
-            <DialogDescription>
-              配置该角色的菜单访问权限和按钮操作权限
-            </DialogDescription>
+            <DialogDescription>配置该角色的菜单访问权限和按钮操作权限</DialogDescription>
           </DialogHeader>
-          
+
           <Tabs value={activePermissionTab} onValueChange={setActivePermissionTab} className="mt-4">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="menus" className="flex items-center gap-2">
@@ -509,12 +547,15 @@ export default function RolesPage() {
                 按钮权限
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="menus" className="mt-4">
               <div className="border rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-4 pb-2 border-b">
-                  <Checkbox 
-                    checked={menus.length > 0 && getAllMenuIds(menus).every(id => selectedMenus.includes(id))}
+                  <Checkbox
+                    checked={
+                      menus.length > 0 &&
+                      getAllMenuIds(menus).every((id) => selectedMenus.includes(id))
+                    }
                     onCheckedChange={(checked) => {
                       if (checked) {
                         setSelectedMenus(getAllMenuIds(menus));
@@ -533,16 +574,21 @@ export default function RolesPage() {
                 </div>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="buttons" className="mt-4">
               <div className="border rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-4 pb-2 border-b">
-                  <Checkbox 
-                    checked={selectedPermissions.length > 0 && permissionModules.flatMap(m => m.permissions.map(p => p.id)).every(id => selectedPermissions.includes(id))}
+                  <Checkbox
+                    checked={
+                      selectedPermissions.length > 0 &&
+                      permissionModules
+                        .flatMap((m) => m.permissions.map((p) => p.id))
+                        .every((id) => selectedPermissions.includes(id))
+                    }
                     onCheckedChange={(checked) => {
                       if (checked) {
-                        const allPermissionIds = permissionModules.flatMap(m => 
-                          m.permissions.map(p => p.id)
+                        const allPermissionIds = permissionModules.flatMap((m) =>
+                          m.permissions.map((p) => p.id)
                         );
                         setSelectedPermissions(allPermissionIds);
                       } else {
@@ -556,39 +602,45 @@ export default function RolesPage() {
                   </span>
                 </div>
                 <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                  {permissionModules.map(module => (
+                  {permissionModules.map((module) => (
                     <div key={module.id} className="border rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
-                        <Checkbox 
-                          checked={module.permissions.every(p => selectedPermissions.includes(p.id))}
+                        <Checkbox
+                          checked={module.permissions.every((p) =>
+                            selectedPermissions.includes(p.id)
+                          )}
                           onCheckedChange={(checked) => {
-                            const modulePermissionIds = module.permissions.map(p => p.id);
+                            const modulePermissionIds = module.permissions.map((p) => p.id);
                             if (checked) {
-                              setSelectedPermissions(prev => [
+                              setSelectedPermissions((prev) => [
                                 ...prev,
-                                ...modulePermissionIds.filter(id => !prev.includes(id))
+                                ...modulePermissionIds.filter((id) => !prev.includes(id)),
                               ]);
                             } else {
-                              setSelectedPermissions(prev => 
-                                prev.filter(id => !modulePermissionIds.includes(id))
+                              setSelectedPermissions((prev) =>
+                                prev.filter((id) => !modulePermissionIds.includes(id))
                               );
                             }
                           }}
                         />
                         <span className="font-medium text-sm">{module.name}</span>
                         <span className="text-xs text-gray-400 ml-auto">
-                          {module.permissions.filter(p => selectedPermissions.includes(p.id)).length}/{module.permissions.length}
+                          {
+                            module.permissions.filter((p) => selectedPermissions.includes(p.id))
+                              .length
+                          }
+                          /{module.permissions.length}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {module.permissions.map(permission => (
+                        {module.permissions.map((permission) => (
                           <div key={permission.id} className="flex items-center gap-2">
-                            <Checkbox 
+                            <Checkbox
                               checked={selectedPermissions.includes(permission.id)}
                               onCheckedChange={() => {
-                                setSelectedPermissions(prev => 
+                                setSelectedPermissions((prev) =>
                                   prev.includes(permission.id)
-                                    ? prev.filter(id => id !== permission.id)
+                                    ? prev.filter((id) => id !== permission.id)
                                     : [...prev, permission.id]
                                 );
                               }}
@@ -603,7 +655,7 @@ export default function RolesPage() {
               </div>
             </TabsContent>
           </Tabs>
-          
+
           <DialogFooter className="mt-6">
             <Button variant="outline" onClick={() => setPermissionDialogOpen(false)}>
               取消

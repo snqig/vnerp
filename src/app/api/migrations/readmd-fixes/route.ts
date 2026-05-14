@@ -502,7 +502,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     results.push('===== 【4】HR考勤ID修复 =====');
 
     if (await tableExists('hr_attendance')) {
-      const r1 = await addColumnSafe('hr_attendance', 'emp_id', 'INT UNSIGNED NULL COMMENT \'关联员工ID\'');
+      const r1 = await addColumnSafe(
+        'hr_attendance',
+        'emp_id',
+        "INT UNSIGNED NULL COMMENT '关联员工ID'"
+      );
       results.push(r1);
 
       try {
@@ -632,18 +636,38 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     results.push('===== 【7】请购单FK字段补充 =====');
 
     if (await tableExists('pur_request')) {
-      const r1 = await addColumnSafe('pur_request', 'request_dept_id', 'BIGINT UNSIGNED DEFAULT NULL COMMENT \'申请部门ID\'');
+      const r1 = await addColumnSafe(
+        'pur_request',
+        'request_dept_id',
+        "BIGINT UNSIGNED DEFAULT NULL COMMENT '申请部门ID'"
+      );
       results.push(r1);
-      const r2 = await addColumnSafe('pur_request', 'requester_id', 'BIGINT UNSIGNED DEFAULT NULL COMMENT \'申请人ID\'');
+      const r2 = await addColumnSafe(
+        'pur_request',
+        'requester_id',
+        "BIGINT UNSIGNED DEFAULT NULL COMMENT '申请人ID'"
+      );
       results.push(r2);
-      const r3 = await addColumnSafe('pur_request', 'reviewer_id', 'BIGINT UNSIGNED DEFAULT NULL COMMENT \'审校人ID\'');
+      const r3 = await addColumnSafe(
+        'pur_request',
+        'reviewer_id',
+        "BIGINT UNSIGNED DEFAULT NULL COMMENT '审校人ID'"
+      );
       results.push(r3);
-      const r4 = await addColumnSafe('pur_request', 'approver_id', 'BIGINT UNSIGNED DEFAULT NULL COMMENT \'批准人ID\'');
+      const r4 = await addColumnSafe(
+        'pur_request',
+        'approver_id',
+        "BIGINT UNSIGNED DEFAULT NULL COMMENT '批准人ID'"
+      );
       results.push(r4);
     }
 
     if (await tableExists('pur_request_item')) {
-      const r5 = await addColumnSafe('pur_request_item', 'material_id', 'BIGINT UNSIGNED DEFAULT NULL COMMENT \'物料ID\'');
+      const r5 = await addColumnSafe(
+        'pur_request_item',
+        'material_id',
+        "BIGINT UNSIGNED DEFAULT NULL COMMENT '物料ID'"
+      );
       results.push(r5);
 
       try {
@@ -667,20 +691,76 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     results.push('===== 【8】菜单数据更新 =====');
 
     const newMenuItems = [
-      { parent_code: 'purchase', menu_name: '请购单管理', menu_code: 'purchase_request_new', menu_type: 2, icon: null, path: '/purchase/request', component: '/purchase/request', permission: 'purchase:request:*', sort_order: 3 },
-      { parent_code: 'finance', menu_name: '应付款管理', menu_code: 'finance_payable', menu_type: 2, icon: null, path: '/finance/payable', component: '/finance/payable', permission: 'finance:payable:*', sort_order: 2 },
-      { parent_code: 'finance', menu_name: '付款管理', menu_code: 'finance_payment', menu_type: 2, icon: null, path: '/finance/payment', component: '/finance/payment', permission: 'finance:payment:*', sort_order: 3 },
-      { parent_code: 'settings', menu_name: '数据巡检', menu_code: 'settings_daily_check', menu_type: 2, icon: null, path: '/settings/daily-check', component: '/settings/daily-check', permission: 'settings:daily-check:*', sort_order: 10 },
+      {
+        parent_code: 'purchase',
+        menu_name: '请购单管理',
+        menu_code: 'purchase_request_new',
+        menu_type: 2,
+        icon: null,
+        path: '/purchase/request',
+        component: '/purchase/request',
+        permission: 'purchase:request:*',
+        sort_order: 3,
+      },
+      {
+        parent_code: 'finance',
+        menu_name: '应付款管理',
+        menu_code: 'finance_payable',
+        menu_type: 2,
+        icon: null,
+        path: '/finance/payable',
+        component: '/finance/payable',
+        permission: 'finance:payable:*',
+        sort_order: 2,
+      },
+      {
+        parent_code: 'finance',
+        menu_name: '付款管理',
+        menu_code: 'finance_payment',
+        menu_type: 2,
+        icon: null,
+        path: '/finance/payment',
+        component: '/finance/payment',
+        permission: 'finance:payment:*',
+        sort_order: 3,
+      },
+      {
+        parent_code: 'settings',
+        menu_name: '数据巡检',
+        menu_code: 'settings_daily_check',
+        menu_type: 2,
+        icon: null,
+        path: '/settings/daily-check',
+        component: '/settings/daily-check',
+        permission: 'settings:daily-check:*',
+        sort_order: 10,
+      },
     ];
 
     for (const menu of newMenuItems) {
-      const [parent]: any = await query('SELECT id FROM sys_menu WHERE menu_code = ? AND parent_id = 0', [menu.parent_code]);
+      const [parent]: any = await query(
+        'SELECT id FROM sys_menu WHERE menu_code = ? AND parent_id = 0',
+        [menu.parent_code]
+      );
       if (parent && parent.length > 0) {
-        const [existing]: any = await query('SELECT id FROM sys_menu WHERE menu_code = ?', [menu.menu_code]);
+        const [existing]: any = await query('SELECT id FROM sys_menu WHERE menu_code = ?', [
+          menu.menu_code,
+        ]);
         if (!existing || existing.length === 0) {
           await execute(
             'INSERT INTO sys_menu (parent_id, menu_name, menu_code, menu_type, icon, path, component, permission, sort_order, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [parent[0].id, menu.menu_name, menu.menu_code, menu.menu_type, menu.icon, menu.path, menu.component, menu.permission, menu.sort_order, 1]
+            [
+              parent[0].id,
+              menu.menu_name,
+              menu.menu_code,
+              menu.menu_type,
+              menu.icon,
+              menu.path,
+              menu.component,
+              menu.permission,
+              menu.sort_order,
+              1,
+            ]
           );
           results.push(`Created menu: ${menu.menu_code}`);
         } else {

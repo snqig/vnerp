@@ -204,17 +204,32 @@ export async function GET(request: NextRequest) {
 
     // 5. 修改采购订单行表
     const poLineColumns = [
-      { name: 'source_order_id', def: "source_order_id INT UNSIGNED DEFAULT NULL COMMENT '来源业务订单ID'" },
-      { name: 'source_order_line_id', def: "source_order_line_id INT UNSIGNED DEFAULT NULL COMMENT '来源业务订单行ID'" },
-      { name: 'source_order_no', def: "source_order_no VARCHAR(50) DEFAULT NULL COMMENT '来源业务订单号'" },
+      {
+        name: 'source_order_id',
+        def: "source_order_id INT UNSIGNED DEFAULT NULL COMMENT '来源业务订单ID'",
+      },
+      {
+        name: 'source_order_line_id',
+        def: "source_order_line_id INT UNSIGNED DEFAULT NULL COMMENT '来源业务订单行ID'",
+      },
+      {
+        name: 'source_order_no',
+        def: "source_order_no VARCHAR(50) DEFAULT NULL COMMENT '来源业务订单号'",
+      },
       { name: 'pr_id', def: "pr_id INT UNSIGNED DEFAULT NULL COMMENT '来源采购申请ID'" },
-      { name: 'pr_line_id', def: "pr_line_id INT UNSIGNED DEFAULT NULL COMMENT '来源采购申请行ID'" },
-      { name: 'is_strict_by_order', def: "is_strict_by_order TINYINT(1) DEFAULT 1 COMMENT '是否严格按单'" },
+      {
+        name: 'pr_line_id',
+        def: "pr_line_id INT UNSIGNED DEFAULT NULL COMMENT '来源采购申请行ID'",
+      },
+      {
+        name: 'is_strict_by_order',
+        def: "is_strict_by_order TINYINT(1) DEFAULT 1 COMMENT '是否严格按单'",
+      },
     ];
 
     let poLineUpdated = false;
     for (const col of poLineColumns) {
-      if (!await columnExists('pur_purchase_order_line', col.name)) {
+      if (!(await columnExists('pur_purchase_order_line', col.name))) {
         await addColumnSafe('pur_purchase_order_line', col.def);
         poLineUpdated = true;
       }
@@ -222,11 +237,17 @@ export async function GET(request: NextRequest) {
 
     // 添加索引
     try {
-      await query(`CREATE INDEX idx_source_order ON pur_purchase_order_line(source_order_id, source_order_line_id)`);
-    } catch (e) { /* 索引可能已存在 */ }
+      await query(
+        `CREATE INDEX idx_source_order ON pur_purchase_order_line(source_order_id, source_order_line_id)`
+      );
+    } catch (e) {
+      /* 索引可能已存在 */
+    }
     try {
       await query(`CREATE INDEX idx_pr ON pur_purchase_order_line(pr_id, pr_line_id)`);
-    } catch (e) { /* 索引可能已存在 */ }
+    } catch (e) {
+      /* 索引可能已存在 */
+    }
 
     if (poLineUpdated) {
       results.push('✅ 更新表: pur_purchase_order_line (添加来源标识)');
@@ -236,14 +257,20 @@ export async function GET(request: NextRequest) {
 
     // 6. 修改入库明细表
     const inboundItemColumns = [
-      { name: 'source_order_id', def: "source_order_id INT UNSIGNED DEFAULT NULL COMMENT '来源业务订单ID'" },
-      { name: 'source_order_line_id', def: "source_order_line_id INT UNSIGNED DEFAULT NULL COMMENT '来源业务订单行ID'" },
+      {
+        name: 'source_order_id',
+        def: "source_order_id INT UNSIGNED DEFAULT NULL COMMENT '来源业务订单ID'",
+      },
+      {
+        name: 'source_order_line_id',
+        def: "source_order_line_id INT UNSIGNED DEFAULT NULL COMMENT '来源业务订单行ID'",
+      },
       { name: 'is_consumed', def: "is_consumed TINYINT(1) DEFAULT 0 COMMENT '是否已关联消耗'" },
     ];
 
     let inboundItemUpdated = false;
     for (const col of inboundItemColumns) {
-      if (!await columnExists('inv_inbound_item', col.name)) {
+      if (!(await columnExists('inv_inbound_item', col.name))) {
         await addColumnSafe('inv_inbound_item', col.def);
         inboundItemUpdated = true;
       }
@@ -251,8 +278,12 @@ export async function GET(request: NextRequest) {
 
     // 添加索引
     try {
-      await query(`CREATE INDEX idx_source_order_item ON inv_inbound_item(source_order_id, source_order_line_id)`);
-    } catch (e) { /* 索引可能已存在 */ }
+      await query(
+        `CREATE INDEX idx_source_order_item ON inv_inbound_item(source_order_id, source_order_line_id)`
+      );
+    } catch (e) {
+      /* 索引可能已存在 */
+    }
 
     if (inboundItemUpdated) {
       results.push('✅ 更新表: inv_inbound_item (添加来源标识)');
@@ -384,7 +415,9 @@ export async function GET(request: NextRequest) {
     }
 
     // 插入测试数据
-    const orderCount = await query(`SELECT COUNT(*) as count FROM biz_order_header WHERE deleted = 0`);
+    const orderCount = await query(
+      `SELECT COUNT(*) as count FROM biz_order_header WHERE deleted = 0`
+    );
     if ((orderCount as any[])[0].count === 0) {
       await query(`
         INSERT INTO biz_order_header (order_no, order_type, customer_name, product_name, status, req_qty, delivery_date, remark)
@@ -401,7 +434,9 @@ export async function GET(request: NextRequest) {
     }
 
     // 插入容差配置
-    const toleranceCount = await query(`SELECT COUNT(*) as count FROM order_tolerance_config WHERE is_default = 1`);
+    const toleranceCount = await query(
+      `SELECT COUNT(*) as count FROM order_tolerance_config WHERE is_default = 1`
+    );
     if ((toleranceCount as any[])[0].count === 0) {
       await query(`
         INSERT INTO order_tolerance_config (order_type, over_delivery_tolerance, under_delivery_tolerance, price_tolerance, action_on_exceed, is_default)
@@ -412,7 +447,7 @@ export async function GET(request: NextRequest) {
 
     return successResponse({
       message: '三层勾稽模型表初始化完成',
-      details: results
+      details: results,
     });
   } catch (error: any) {
     console.error('初始化失败:', error);

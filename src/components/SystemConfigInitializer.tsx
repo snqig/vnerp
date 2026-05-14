@@ -7,10 +7,22 @@ export default function SystemConfigInitializer() {
   useEffect(() => {
     const initSystemConfig = async () => {
       try {
-        const res = await fetch('/api/settings/system');
+        const res = await fetch('/api/system/config?pageSize=200');
+
+        if (!res.ok) {
+          console.warn('系统全局配置加载失败，HTTP状态:', res.status);
+          return;
+        }
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          console.warn('系统全局配置返回非JSON响应');
+          return;
+        }
+
         const result = await res.json();
 
-        if (result.success && result.data?.list) {
+        if (result.success && Array.isArray(result.data?.list)) {
           const configMap: Record<string, any> = {};
 
           result.data.list.forEach((item: any) => {

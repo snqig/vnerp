@@ -5,11 +5,38 @@ import { secureLog } from '@/lib/logger';
 
 export class InventoryRollbackHandler implements EventHandler<InboundOrderUnapprovedEvent> {
   async handle(event: InboundOrderUnapprovedEvent): Promise<void> {
-    const { warehouseId, items, orderNo } = event.payload;
-
-    const sortedItems = [...items].sort((a, b) => a.materialId - b.materialId);
+    const { inboundId, inboundNo } = event.payload;
 
     await transaction(async (conn) => {
+      // Fetch inbound order details from database
+      const [inboundRows]: any = await conn.execute(
+        'SELECT warehouse_id FROM inv_inbound WHERE id = ? AND deleted = 0 LIMIT 1',
+        [inboundId]
+      );
+      
+      if (inboundRows.length === 0) {
+        secureLog('warn', 'Inbound order not found for rollback', { inboundId });
+        return;
+      }
+      
+      const warehouseId = inboundRows[0].warehouse_id;
+      
+      // Fetch inbound items
+      const [itemRows]: any = await conn.execute(
+        'SELECT material_id, material_code, material_name, quantity, batch_no FROM inv_inbound_item WHERE inbound_id = ? AND deleted = 0',
+        [inboundId]
+      );
+      
+      const items = itemRows.map((row: any) => ({
+        materialId: row.material_id,
+        materialCode: row.material_code,
+        materialName: row.material_name,
+        quantity: row.quantity,
+        batchNo: row.batch_no,
+      }));
+
+      const sortedItems = [...items].sort((a, b) => a.materialId - b.materialId);
+
       for (const item of sortedItems) {
         const [existingInv]: any = await conn.execute(
           'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
@@ -54,6 +81,8 @@ export class InventoryRollbackHandler implements EventHandler<InboundOrderUnappr
       }
     });
 
-    secureLog('info', 'Inventory rolled back for unapproved inbound order', { orderNo, itemCount: items.length });
+    secureLog('info', 'Inventory rolled back for unapproved inbound order', {
+      orderNo: inboundNo,
+    });
   }
 }

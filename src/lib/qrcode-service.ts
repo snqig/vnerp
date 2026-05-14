@@ -151,8 +151,12 @@ export class QRCodeService {
         `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, material_id, material_code, material_name, warehouse_id, production_date, expire_date, trace_url, create_time)
          VALUES (?, 'material', 'material', ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
-          qrCode, materialId, materialId, materialCode,
-          materialCode, materialName,
+          qrCode,
+          materialId,
+          materialId,
+          materialCode,
+          materialCode,
+          materialName,
           options?.warehouseId || null,
           options?.productionDate || null,
           options?.expireDate || null,
@@ -169,10 +173,10 @@ export class QRCodeService {
       });
       const qrImageUrl = await this.generateQRCodeImage(qrContent);
 
-      await conn.execute(
-        `UPDATE inv_qr_code SET qr_image_url = ? WHERE id = ?`,
-        [qrImageUrl, qrId]
-      );
+      await conn.execute(`UPDATE inv_qr_code SET qr_image_url = ? WHERE id = ?`, [
+        qrImageUrl,
+        qrId,
+      ]);
 
       secureLog('info', 'Material QR code generated', { qrId, materialCode });
 
@@ -197,8 +201,13 @@ export class QRCodeService {
         `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, material_id, material_code, material_name, batch_no, warehouse_id, production_date, expire_date, trace_url, create_time)
          VALUES (?, 'batch', 'batch', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
-          batchNo, materialId, materialId, materialCode,
-          materialCode, materialName, batchNo,
+          batchNo,
+          materialId,
+          materialId,
+          materialCode,
+          materialCode,
+          materialName,
+          batchNo,
           options?.warehouseId || null,
           options?.productionDate || null,
           options?.expireDate || null,
@@ -218,10 +227,10 @@ export class QRCodeService {
       });
       const qrImageUrl = await this.generateQRCodeImage(qrContent);
 
-      await conn.execute(
-        `UPDATE inv_qr_code SET qr_image_url = ? WHERE id = ?`,
-        [qrImageUrl, qrId]
-      );
+      await conn.execute(`UPDATE inv_qr_code SET qr_image_url = ? WHERE id = ?`, [
+        qrImageUrl,
+        qrId,
+      ]);
 
       secureLog('info', 'Batch QR code generated', { qrId, batchNo });
 
@@ -243,7 +252,10 @@ export class QRCodeService {
         `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, work_order_no, trace_url, create_time)
          VALUES (?, 'workorder', 'workorder', ?, ?, ?, ?, NOW())`,
         [
-          workOrderNo, workOrderId, workOrderId, workOrderNo,
+          workOrderNo,
+          workOrderId,
+          workOrderId,
+          workOrderNo,
           this.generateTraceUrl('workorder', workOrderId, workOrderNo),
         ]
       );
@@ -257,10 +269,10 @@ export class QRCodeService {
       });
       const qrImageUrl = await this.generateQRCodeImage(qrContent);
 
-      await conn.execute(
-        `UPDATE inv_qr_code SET qr_image_url = ? WHERE id = ?`,
-        [qrImageUrl, qrId]
-      );
+      await conn.execute(`UPDATE inv_qr_code SET qr_image_url = ? WHERE id = ?`, [
+        qrImageUrl,
+        qrId,
+      ]);
 
       secureLog('info', 'Work order QR code generated', { qrId, workOrderNo });
 
@@ -352,13 +364,13 @@ export class QRCodeService {
 
   private static getEventLabel(transType: string): string {
     const labels: Record<string, string> = {
-      'in': '入库',
-      'out': '出库',
-      'inbound': '入库',
-      'outbound': '出库',
-      'transfer': '调拨',
-      'adjust': '调整',
-      'return': '退货',
+      in: '入库',
+      out: '出库',
+      inbound: '入库',
+      outbound: '出库',
+      transfer: '调拨',
+      adjust: '调整',
+      return: '退货',
     };
     return labels[transType] || transType;
   }

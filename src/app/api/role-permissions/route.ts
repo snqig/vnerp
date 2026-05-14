@@ -52,11 +52,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['role_id']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   const roleIdNum = parseInt(role_id);
@@ -74,20 +70,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   // 使用事务保存权限
   await transaction(async (connection) => {
     // 删除该角色原有的权限
-    await connection.execute(
-      'DELETE FROM sys_role_menu WHERE role_id = ?',
-      [roleIdNum]
-    );
+    await connection.execute('DELETE FROM sys_role_menu WHERE role_id = ?', [roleIdNum]);
 
     // 插入新的权限
     if (menu_ids && Array.isArray(menu_ids) && menu_ids.length > 0) {
       // 验证所有菜单ID是否有效
       const validMenuIds: number[] = [];
       for (const menuId of menu_ids) {
-        const menu = await queryOne<{ id: number }>(
-          'SELECT id FROM sys_menu WHERE id = ?',
-          [parseInt(menuId)]
-        );
+        const menu = await queryOne<{ id: number }>('SELECT id FROM sys_menu WHERE id = ?', [
+          parseInt(menuId),
+        ]);
         if (menu) {
           validMenuIds.push(parseInt(menuId));
         }
@@ -95,10 +87,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
       if (validMenuIds.length > 0) {
         const values = validMenuIds.map((menuId) => [roleIdNum, menuId]);
-        await connection.query(
-          'INSERT INTO sys_role_menu (role_id, menu_id) VALUES ?',
-          [values]
-        );
+        await connection.query('INSERT INTO sys_role_menu (role_id, menu_id) VALUES ?', [values]);
       }
     }
   });

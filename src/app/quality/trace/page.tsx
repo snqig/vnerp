@@ -1,14 +1,8 @@
-﻿﻿﻿﻿﻿﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -52,8 +46,25 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
-import { TableExportToolbar, exportTableToXLS, exportTableToPDF, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import {
+  TableExportToolbar,
+  exportTableToXLS,
+  exportTableToPDF,
+  exportTableToWORD,
+} from '@/components/ui/table-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
 
 interface TraceRecord {
   id: number;
@@ -126,10 +137,29 @@ export default function TracePage() {
       if (keyword) params.set('keyword', keyword);
       if (traceTypeFilter !== 'all') params.set('traceType', traceTypeFilter);
       params.set('pageSize', '20');
-      const res = await fetch(`/api/dcprint/trace?${params}`);
+      const res = await authFetch(`/api/dcprint/trace?${params}`);
       const data = await res.json();
       if (data.success) {
-        setRecords(data.data?.list || data.data || []);
+        // 统一处理API返回的数据结构
+        const rawData = data.data;
+        const rawList = Array.isArray(rawData) ? rawData : (rawData?.list || []);
+        const list = rawList.map((item: any) => ({
+          id: item.id,
+          trace_no: item.traceNo || item.trace_no,
+          card_no: item.cardNo || item.card_no,
+          work_order_no: item.workOrderNo || item.work_order_no,
+          product_code: item.productCode || item.product_code,
+          product_name: item.productName || item.product_name,
+          main_label_id: item.mainLabelId || item.main_label_id,
+          main_material_code: item.mainMaterialCode || item.main_material_code,
+          main_material_name: item.mainMaterialName || item.main_material_name,
+          main_batch_no: item.mainBatchNo || item.main_batch_no,
+          trace_type: item.traceType || item.trace_type || 1,
+          operator_name: item.operatorName || item.operator_name,
+          trace_time: item.traceTime || item.trace_time,
+          remark: item.remark,
+        }));
+        setRecords(list);
       }
     } catch (e) {
       console.error('Failed to fetch records:', e);
@@ -151,9 +181,8 @@ export default function TracePage() {
     setTraceResult(null);
 
     try {
-      const response = await fetch('/api/dcprint/trace', {
+      const response = await authFetch('/api/dcprint/trace', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cardNo: scannedCode.trim(),
           traceType: 'forward',
@@ -191,9 +220,8 @@ export default function TracePage() {
     setError('');
 
     try {
-      const response = await fetch('/api/dcprint/trace', {
+      const response = await authFetch('/api/dcprint/trace', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cardNo: record.card_no,
           traceType: record.trace_type === 2 ? 'backward' : 'forward',
@@ -275,11 +303,26 @@ export default function TracePage() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div><span className="text-muted-foreground">追溯单号：</span>{traceResult.traceNo}</div>
-                      <div><span className="text-muted-foreground">流程卡号：</span>{traceResult.card?.cardNo}</div>
-                      <div><span className="text-muted-foreground">工单号：</span>{traceResult.card?.workOrderNo}</div>
-                      <div><span className="text-muted-foreground">成品料号：</span>{traceResult.card?.productCode || '-'}</div>
-                      <div><span className="text-muted-foreground">成品品名：</span>{traceResult.card?.productName || '-'}</div>
+                      <div>
+                        <span className="text-muted-foreground">追溯单号：</span>
+                        {traceResult.traceNo}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">流程卡号：</span>
+                        {traceResult.card?.cardNo}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">工单号：</span>
+                        {traceResult.card?.workOrderNo}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">成品料号：</span>
+                        {traceResult.card?.productCode || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">成品品名：</span>
+                        {traceResult.card?.productName || '-'}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -293,13 +336,34 @@ export default function TracePage() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div><span className="text-muted-foreground">标签号：</span>{traceResult.mainMaterial?.labelNo}</div>
-                      <div><span className="text-muted-foreground">物料代号：</span>{traceResult.mainMaterial?.materialCode || '-'}</div>
-                      <div><span className="text-muted-foreground">品名：</span>{traceResult.mainMaterial?.materialName || '-'}</div>
-                      <div><span className="text-muted-foreground">规格：</span>{traceResult.mainMaterial?.specification || '-'}</div>
-                      <div><span className="text-muted-foreground">批号：</span>{traceResult.mainMaterial?.batchNo || '-'}</div>
-                      <div><span className="text-muted-foreground">供应商：</span>{traceResult.mainMaterial?.supplierName || '-'}</div>
-                      <div><span className="text-muted-foreground">进料日期：</span>{traceResult.mainMaterial?.receiveDate || '-'}</div>
+                      <div>
+                        <span className="text-muted-foreground">标签号：</span>
+                        {traceResult.mainMaterial?.labelNo}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">物料代号：</span>
+                        {traceResult.mainMaterial?.materialCode || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">品名：</span>
+                        {traceResult.mainMaterial?.materialName || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">规格：</span>
+                        {traceResult.mainMaterial?.specification || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">批号：</span>
+                        {traceResult.mainMaterial?.batchNo || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">供应商：</span>
+                        {traceResult.mainMaterial?.supplierName || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">进料日期：</span>
+                        {traceResult.mainMaterial?.receiveDate || '-'}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -318,33 +382,49 @@ export default function TracePage() {
                           <Package className="h-4 w-4 text-white" />
                         </div>
                         <span className="font-medium text-sm">主材</span>
-                        <span className="text-xs text-muted-foreground">{traceResult.mainMaterial?.materialName}</span>
-                        <span className="text-xs text-muted-foreground">{traceResult.mainMaterial?.batchNo}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {traceResult.mainMaterial?.materialName}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {traceResult.mainMaterial?.batchNo}
+                        </span>
                       </div>
                       <ArrowRight className="h-5 w-5 text-muted-foreground mx-2" />
-                      {traceResult.materials.filter(m => m.materialType === '2' || m.materialType === '辅料').map((mat, idx) => (
-                        <div key={idx} className="flex items-center">
-                          <div className="flex flex-col items-center p-4 rounded-lg min-w-[100px] bg-green-50 border border-green-200">
-                            <div className="p-2 rounded-full mb-2 bg-green-500">
-                              <CheckCircle className="h-4 w-4 text-white" />
+                      {traceResult.materials
+                        .filter((m) => m.materialType === '2' || m.materialType === '辅料')
+                        .map((mat, idx) => (
+                          <div key={idx} className="flex items-center">
+                            <div className="flex flex-col items-center p-4 rounded-lg min-w-[100px] bg-green-50 border border-green-200">
+                              <div className="p-2 rounded-full mb-2 bg-green-500">
+                                <CheckCircle className="h-4 w-4 text-white" />
+                              </div>
+                              <span className="font-medium text-sm">
+                                {mat.materialName || '辅料'}
+                              </span>
+                              <span className="text-xs text-muted-foreground">{mat.batchNo}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {mat.supplierName}
+                              </span>
                             </div>
-                            <span className="font-medium text-sm">{mat.materialName || '辅料'}</span>
-                            <span className="text-xs text-muted-foreground">{mat.batchNo}</span>
-                            <span className="text-xs text-muted-foreground">{mat.supplierName}</span>
+                            {idx <
+                              traceResult.materials.filter(
+                                (m) => m.materialType === '2' || m.materialType === '辅料'
+                              ).length -
+                                1 && <ArrowRight className="h-5 w-5 text-muted-foreground mx-2" />}
                           </div>
-                          {idx < traceResult.materials.filter(m => m.materialType === '2' || m.materialType === '辅料').length - 1 && (
-                            <ArrowRight className="h-5 w-5 text-muted-foreground mx-2" />
-                          )}
-                        </div>
-                      ))}
+                        ))}
                       <ArrowRight className="h-5 w-5 text-muted-foreground mx-2" />
                       <div className="flex flex-col items-center p-4 rounded-lg min-w-[100px] bg-purple-50 border border-purple-200">
                         <div className="p-2 rounded-full mb-2 bg-purple-500">
                           <Factory className="h-4 w-4 text-white" />
                         </div>
                         <span className="font-medium text-sm">成品</span>
-                        <span className="text-xs text-muted-foreground">{traceResult.card?.productName}</span>
-                        <span className="text-xs text-muted-foreground">{traceResult.card?.productCode}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {traceResult.card?.productName}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {traceResult.card?.productCode}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -373,7 +453,7 @@ export default function TracePage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {(!traceResult.materials || traceResult.materials.length === 0) ? (
+                      {!traceResult.materials || traceResult.materials.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                             暂无原料追溯信息
@@ -384,8 +464,16 @@ export default function TracePage() {
                           <TableRow key={idx}>
                             <TableCell className="font-mono">{mat.labelNo}</TableCell>
                             <TableCell>
-                              <Badge className={mat.materialType === '1' || mat.materialType === '主材' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}>
-                                {mat.materialType === '1' || mat.materialType === '主材' ? '主材' : '辅料'}
+                              <Badge
+                                className={
+                                  mat.materialType === '1' || mat.materialType === '主材'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-green-100 text-green-800'
+                                }
+                              >
+                                {mat.materialType === '1' || mat.materialType === '主材'
+                                  ? '主材'
+                                  : '辅料'}
                               </Badge>
                             </TableCell>
                             <TableCell>{mat.materialCode || '-'}</TableCell>
@@ -430,36 +518,52 @@ export default function TracePage() {
                 <TableExportToolbar
                   selectedCount={selectedIds.length}
                   totalCount={sortedData.length}
-                  onSelectAll={() => setSelectedIds(sortedData.map(r => r.id))}
+                  onSelectAll={() => setSelectedIds(sortedData.map((r) => r.id))}
                   onDeselectAll={() => setSelectedIds([])}
                   onPrint={() => {}}
-                  onExportPDF={() => exportTableToPDF(sortedData, '追溯记录报告', [
-                    { key: 'trace_no', header: '追溯单号' },
-                    { key: 'card_no', header: '流程卡号' },
-                    { key: 'work_order_no', header: '工单号' },
-                    { key: 'product_code', header: '成品料号' },
-                    { key: 'trace_type', header: '类型' },
-                    { key: 'operator_name', header: '操作员' },
-                    { key: 'trace_time', header: '追溯时间' },
-                  ], '追溯记录报告')}
-                  onExportXLS={() => exportTableToXLS(sortedData, '追溯记录报告', [
-                    { key: 'trace_no', header: '追溯单号' },
-                    { key: 'card_no', header: '流程卡号' },
-                    { key: 'work_order_no', header: '工单号' },
-                    { key: 'product_code', header: '成品料号' },
-                    { key: 'trace_type', header: '类型' },
-                    { key: 'operator_name', header: '操作员' },
-                    { key: 'trace_time', header: '追溯时间' },
-                  ])}
-                  onExportWORD={() => exportTableToWORD(sortedData, '追溯记录报告', [
-                    { key: 'trace_no', header: '追溯单号' },
-                    { key: 'card_no', header: '流程卡号' },
-                    { key: 'work_order_no', header: '工单号' },
-                    { key: 'product_code', header: '成品料号' },
-                    { key: 'trace_type', header: '类型' },
-                    { key: 'operator_name', header: '操作员' },
-                    { key: 'trace_time', header: '追溯时间' },
-                  ], '追溯记录报告')}
+                  onExportPDF={() =>
+                    exportTableToPDF(
+                      sortedData,
+                      '追溯记录报告',
+                      [
+                        { key: 'trace_no', header: '追溯单号' },
+                        { key: 'card_no', header: '流程卡号' },
+                        { key: 'work_order_no', header: '工单号' },
+                        { key: 'product_code', header: '成品料号' },
+                        { key: 'trace_type', header: '类型' },
+                        { key: 'operator_name', header: '操作员' },
+                        { key: 'trace_time', header: '追溯时间' },
+                      ],
+                      '追溯记录报告'
+                    )
+                  }
+                  onExportXLS={() =>
+                    exportTableToXLS(sortedData, '追溯记录报告', [
+                      { key: 'trace_no', header: '追溯单号' },
+                      { key: 'card_no', header: '流程卡号' },
+                      { key: 'work_order_no', header: '工单号' },
+                      { key: 'product_code', header: '成品料号' },
+                      { key: 'trace_type', header: '类型' },
+                      { key: 'operator_name', header: '操作员' },
+                      { key: 'trace_time', header: '追溯时间' },
+                    ])
+                  }
+                  onExportWORD={() =>
+                    exportTableToWORD(
+                      sortedData,
+                      '追溯记录报告',
+                      [
+                        { key: 'trace_no', header: '追溯单号' },
+                        { key: 'card_no', header: '流程卡号' },
+                        { key: 'work_order_no', header: '工单号' },
+                        { key: 'product_code', header: '成品料号' },
+                        { key: 'trace_type', header: '类型' },
+                        { key: 'operator_name', header: '操作员' },
+                        { key: 'trace_time', header: '追溯时间' },
+                      ],
+                      '追溯记录报告'
+                    )
+                  }
                 />
               </div>
             </div>
@@ -471,17 +575,51 @@ export default function TracePage() {
                   <TableHead className="w-12">
                     <Checkbox
                       checked={selectedIds.length === sortedData.length && sortedData.length > 0}
-                      onCheckedChange={() => setSelectedIds(selectedIds.length === sortedData.length ? [] : sortedData.map(r => r.id))}
+                      onCheckedChange={() =>
+                        setSelectedIds(
+                          selectedIds.length === sortedData.length
+                            ? []
+                            : sortedData.map((r) => r.id)
+                        )
+                      }
                     />
                   </TableHead>
                   <TableHead className="w-12 text-center">序号</TableHead>
-                  <SortableTableHeader field="trace_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>追溯单号</SortableTableHeader>
-                  <SortableTableHeader field="card_no" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>流程卡号</SortableTableHeader>
+                  <SortableTableHeader
+                    field="trace_no"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    追溯单号
+                  </SortableTableHeader>
+                  <SortableTableHeader
+                    field="card_no"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    流程卡号
+                  </SortableTableHeader>
                   <TableHead>工单号</TableHead>
                   <TableHead>成品料号</TableHead>
-                  <SortableTableHeader field="trace_type" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>类型</SortableTableHeader>
+                  <SortableTableHeader
+                    field="trace_type"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    类型
+                  </SortableTableHeader>
                   <TableHead>操作员</TableHead>
-                  <SortableTableHeader field="trace_time" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>追溯时间</SortableTableHeader>
+                  <SortableTableHeader
+                    field="trace_time"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    追溯时间
+                  </SortableTableHeader>
                   <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -498,10 +636,16 @@ export default function TracePage() {
                       <TableCell>
                         <Checkbox
                           checked={selectedIds.includes(r.id)}
-                          onCheckedChange={() => setSelectedIds(prev => prev.includes(r.id) ? prev.filter(i => i !== r.id) : [...prev, r.id])}
+                          onCheckedChange={() =>
+                            setSelectedIds((prev) =>
+                              prev.includes(r.id) ? prev.filter((i) => i !== r.id) : [...prev, r.id]
+                            )
+                          }
                         />
                       </TableCell>
-                      <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
+                      <TableCell className="text-center text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
                       <TableCell className="font-mono">{r.trace_no}</TableCell>
                       <TableCell>{r.card_no || '-'}</TableCell>
                       <TableCell>{r.work_order_no || '-'}</TableCell>
@@ -530,9 +674,7 @@ export default function TracePage() {
           <DialogContent className="max-w-md" resizable>
             <DialogHeader>
               <DialogTitle>扫码追溯</DialogTitle>
-              <DialogDescription>
-                扫描流程卡二维码进行物料追溯查询
-              </DialogDescription>
+              <DialogDescription>扫描流程卡二维码进行物料追溯查询</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="p-8 border-2 border-dashed rounded-lg text-center">

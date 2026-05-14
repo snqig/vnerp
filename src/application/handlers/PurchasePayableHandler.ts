@@ -5,7 +5,8 @@ import { secureLog } from '@/lib/logger';
 
 export class PurchasePayableHandler implements EventHandler<PurchaseOrderReceivedEvent> {
   async handle(event: PurchaseOrderReceivedEvent): Promise<void> {
-    const { orderId, orderNo, supplierId, supplierName, receivedItems, totalReceivedAmount } = event.payload;
+    const { orderId, orderNo, supplierId, supplierName, receivedItems, totalReceivedAmount } =
+      event.payload;
 
     if (totalReceivedAmount <= 0) return;
 
@@ -17,7 +18,18 @@ export class PurchasePayableHandler implements EventHandler<PurchaseOrderReceive
         await conn.execute(
           `INSERT INTO fin_voucher (voucher_no, voucher_date, source_type, source_id, source_no, debit_account, credit_account, amount, cost_price, quantity, batch_no, material_id, material_name, warehouse_id)
            VALUES (?, CURDATE(), 'purchase', ?, ?, '原材料库存', '应付账款', ?, ?, ?, ?, ?, ?, ?)`,
-          [voucherNo, orderId, orderNo, totalItemAmount, item.unitPrice, item.quantity, item.batchNo, item.materialId, item.materialName, item.warehouseId]
+          [
+            voucherNo,
+            orderId,
+            orderNo,
+            totalItemAmount,
+            item.unitPrice,
+            item.quantity,
+            item.batchNo,
+            item.materialId,
+            item.materialName,
+            item.warehouseId,
+          ]
         );
       }
 
@@ -31,7 +43,15 @@ export class PurchasePayableHandler implements EventHandler<PurchaseOrderReceive
       await conn.execute(
         `INSERT INTO fin_payable (payable_no, supplier_id, supplier_name, source_type, source_id, source_no, amount, paid_amount, status, due_date, remark, create_time)
          VALUES (?, ?, ?, 'purchase', ?, ?, ?, 0, 1, DATE_ADD(CURDATE(), INTERVAL 30 DAY), ?, NOW())`,
-        [payableNo, dbSupplierId, supplierName, orderId, orderNo, totalReceivedAmount, `采购订单 ${orderNo} 入库自动生成`]
+        [
+          payableNo,
+          dbSupplierId,
+          supplierName,
+          orderId,
+          orderNo,
+          totalReceivedAmount,
+          `采购订单 ${orderNo} 入库自动生成`,
+        ]
       );
     });
 

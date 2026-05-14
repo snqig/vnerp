@@ -1,6 +1,12 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler, validateRequestBody } from '@/lib/api-response';
+import {
+  successResponse,
+  errorResponse,
+  commonErrors,
+  withErrorHandler,
+  validateRequestBody,
+} from '@/lib/api-response';
 
 const ASSET_TYPE_MAP: Record<string, string> = {
   die: '刀模',
@@ -16,7 +22,11 @@ const DIE_STATUS_MAP: Record<string, string> = {
   scrap: '已报废',
 };
 
-function computeDieStatus(cumulative: number, maxImpressions: number, warningThreshold: number): string {
+function computeDieStatus(
+  cumulative: number,
+  maxImpressions: number,
+  warningThreshold: number
+): string {
   if (maxImpressions <= 0) return 'available';
   const pct = (cumulative / maxImpressions) * 100;
   if (pct >= 95) return 're_rule_needed';
@@ -65,26 +75,26 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const list = await query(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM prd_die_template WHERE deleted = 0`;
-  const countResult = await queryOne(countSql) as any;
+  const countResult = (await queryOne(countSql)) as any;
 
-  const warningList = await query(
+  const warningList = (await query(
     `SELECT * FROM prd_die_template WHERE deleted = 0 AND (
       (die_status IN ('maintenance_needed', 're_rule_needed')) OR
       (current_usage >= warning_usage AND status = 1) OR
       (cumulative_impressions >= max_impressions * warning_threshold / 100 AND max_impressions > 0)
     )`
-  ) as any[];
+  )) as any[];
 
-  const typeStats = await query(
+  const typeStats = (await query(
     `SELECT template_type, asset_type, COUNT(*) as count,
       AVG(CASE WHEN max_impressions > 0 THEN cumulative_impressions / max_impressions * 100 ELSE 0 END) as avg_usage_pct,
       SUM(CASE WHEN die_status = 'maintenance_needed' THEN 1 ELSE 0 END) as maintenance_needed_count,
       SUM(CASE WHEN die_status = 're_rule_needed' THEN 1 ELSE 0 END) as re_rule_needed_count,
       SUM(CASE WHEN die_status = 'scrap' THEN 1 ELSE 0 END) as scrap_count
     FROM prd_die_template WHERE deleted = 0 GROUP BY template_type, asset_type`
-  ) as any[];
+  )) as any[];
 
-  const dashboardStats = await query(
+  const dashboardStats = (await query(
     `SELECT
       COUNT(*) as total_count,
       SUM(CASE WHEN die_status = 'available' OR status = 1 THEN 1 ELSE 0 END) as available_count,
@@ -93,7 +103,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       SUM(CASE WHEN die_status = 'scrap' OR status = 4 THEN 1 ELSE 0 END) as scrap_count,
       SUM(CASE WHEN maintenance_interval > 0 AND (cumulative_impressions - last_maintenance_impressions) >= maintenance_interval THEN 1 ELSE 0 END) as maintenance_due_count
     FROM prd_die_template WHERE deleted = 0`
-  ) as any[];
+  )) as any[];
 
   return successResponse({
     list,
@@ -115,7 +125,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
-  const existing = await queryOne('SELECT id FROM prd_die_template WHERE template_code = ? AND deleted = 0', [body.template_code]);
+  const existing = await queryOne(
+    'SELECT id FROM prd_die_template WHERE template_code = ? AND deleted = 0',
+    [body.template_code]
+  );
   if (existing) {
     return errorResponse('刀模板/网版编号已存在', 409, 409);
   }
@@ -144,14 +157,32 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       unit_price, qr_code, remark
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      body.template_code, body.template_name, assetType, layoutType, piecesPerImpression,
-      body.template_type, body.specification || null, body.material || null,
-      maxUsage, currentUsage, maxUsage - currentUsage, warningUsage,
-      maxImpressions, cumulativeImpressions, warningThreshold,
-      maintenanceInterval, 0, 0,
-      body.status || 1, dieStatus,
-      body.storage_location || null, body.purchase_date || null, body.supplier_id || null,
-      body.unit_price || 0, body.qr_code || null, body.remark || null,
+      body.template_code,
+      body.template_name,
+      assetType,
+      layoutType,
+      piecesPerImpression,
+      body.template_type,
+      body.specification || null,
+      body.material || null,
+      maxUsage,
+      currentUsage,
+      maxUsage - currentUsage,
+      warningUsage,
+      maxImpressions,
+      cumulativeImpressions,
+      warningThreshold,
+      maintenanceInterval,
+      0,
+      0,
+      body.status || 1,
+      dieStatus,
+      body.storage_location || null,
+      body.purchase_date || null,
+      body.supplier_id || null,
+      body.unit_price || 0,
+      body.qr_code || null,
+      body.remark || null,
     ]
   );
 
@@ -162,7 +193,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   if (!body.id) return commonErrors.badRequest('ID不能为空');
 
-  const existing = await queryOne('SELECT id FROM prd_die_template WHERE id = ? AND deleted = 0', [body.id]);
+  const existing = await queryOne('SELECT id FROM prd_die_template WHERE id = ? AND deleted = 0', [
+    body.id,
+  ]);
   if (!existing) return commonErrors.notFound('刀模板/网版不存在');
 
   return await transaction(async (conn) => {
@@ -186,7 +219,11 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       }
     }
 
-    if (maxImpressions !== undefined && cumulativeImpressions !== undefined && warningThreshold !== undefined) {
+    if (
+      maxImpressions !== undefined &&
+      cumulativeImpressions !== undefined &&
+      warningThreshold !== undefined
+    ) {
       newDieStatus = computeDieStatus(cumulativeImpressions, maxImpressions, warningThreshold);
     } else if (maxImpressions !== undefined && cumulativeImpressions !== undefined) {
       const wt = warningThreshold || 80;
@@ -209,18 +246,31 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         unit_price = ?, qr_code = ?, remark = ?
       WHERE id = ?`,
       [
-        body.template_name, body.asset_type || existing.asset_type,
-        body.layout_type || existing.layout_type, body.pieces_per_impression || existing.pieces_per_impression,
-        body.template_type, body.specification, body.material,
-        maxUsage, currentUsage, remainingUsage, body.warning_usage,
-        maxImpressions, cumulativeImpressions, warningThreshold,
-        body.maintenance_interval, body.maintenance_count, body.last_maintenance_impressions,
+        body.template_name,
+        body.asset_type || existing.asset_type,
+        body.layout_type || existing.layout_type,
+        body.pieces_per_impression || existing.pieces_per_impression,
+        body.template_type,
+        body.specification,
+        body.material,
+        maxUsage,
+        currentUsage,
+        remainingUsage,
+        body.warning_usage,
+        maxImpressions,
+        cumulativeImpressions,
+        warningThreshold,
+        body.maintenance_interval,
+        body.maintenance_count,
+        body.last_maintenance_impressions,
         body.last_maintenance_date || existing.last_maintenance_date,
         body.last_used_date || existing.last_used_date,
         newStatus || body.status || existing.status,
         newDieStatus || existing.die_status,
         body.storage_location,
-        body.unit_price, body.qr_code, body.remark,
+        body.unit_price,
+        body.qr_code,
+        body.remark,
         body.id,
       ]
     );

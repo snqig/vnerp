@@ -266,10 +266,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return commonErrors.notFound('考勤记录不存在');
   }
 
-  await execute(
-    'UPDATE hr_attendance SET deleted = 1 WHERE id = ?',
-    [id]
-  );
+  await execute('UPDATE hr_attendance SET deleted = 1 WHERE id = ?', [id]);
 
   return successResponse(null, '考勤记录删除成功');
 }, '删除考勤记录失败');

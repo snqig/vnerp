@@ -84,36 +84,48 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     results.push('===== 【1】BOM 体系外键 =====');
 
     if (await tableExists('bom_line')) {
-      results.push(await addConstraintSafe(
-        `ALTER TABLE bom_line ADD CONSTRAINT fk_bom_line_header FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE`,
-        'fk_bom_line_header'
-      ));
-      results.push(await addConstraintSafe(
-        `ALTER TABLE bom_line ADD CONSTRAINT fk_bom_line_material FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT`,
-        'fk_bom_line_material'
-      ));
+      results.push(
+        await addConstraintSafe(
+          `ALTER TABLE bom_line ADD CONSTRAINT fk_bom_line_header FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE`,
+          'fk_bom_line_header'
+        )
+      );
+      results.push(
+        await addConstraintSafe(
+          `ALTER TABLE bom_line ADD CONSTRAINT fk_bom_line_material FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT`,
+          'fk_bom_line_material'
+        )
+      );
     }
 
     if (await tableExists('bom_alternative')) {
-      results.push(await addConstraintSafe(
-        `ALTER TABLE bom_alternative ADD CONSTRAINT fk_bom_alt_header FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE`,
-        'fk_bom_alt_header'
-      ));
-      results.push(await addConstraintSafe(
-        `ALTER TABLE bom_alternative ADD CONSTRAINT fk_bom_alt_line FOREIGN KEY (bom_line_id) REFERENCES bom_line(id) ON DELETE CASCADE`,
-        'fk_bom_alt_line'
-      ));
-      results.push(await addConstraintSafe(
-        `ALTER TABLE bom_alternative ADD CONSTRAINT fk_bom_alt_material FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT`,
-        'fk_bom_alt_material'
-      ));
+      results.push(
+        await addConstraintSafe(
+          `ALTER TABLE bom_alternative ADD CONSTRAINT fk_bom_alt_header FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE`,
+          'fk_bom_alt_header'
+        )
+      );
+      results.push(
+        await addConstraintSafe(
+          `ALTER TABLE bom_alternative ADD CONSTRAINT fk_bom_alt_line FOREIGN KEY (bom_line_id) REFERENCES bom_line(id) ON DELETE CASCADE`,
+          'fk_bom_alt_line'
+        )
+      );
+      results.push(
+        await addConstraintSafe(
+          `ALTER TABLE bom_alternative ADD CONSTRAINT fk_bom_alt_material FOREIGN KEY (material_id) REFERENCES bom_material(id) ON DELETE RESTRICT`,
+          'fk_bom_alt_material'
+        )
+      );
     }
 
     if (await tableExists('bom_version_history')) {
-      results.push(await addConstraintSafe(
-        `ALTER TABLE bom_version_history ADD CONSTRAINT fk_bom_history_header FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE`,
-        'fk_bom_history_header'
-      ));
+      results.push(
+        await addConstraintSafe(
+          `ALTER TABLE bom_version_history ADD CONSTRAINT fk_bom_history_header FOREIGN KEY (bom_id) REFERENCES bom_header(id) ON DELETE CASCADE`,
+          'fk_bom_history_header'
+        )
+      );
     }
   }
 
@@ -125,10 +137,12 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     if (await tableExists('base_ink')) {
       if (await columnExists('base_ink', 'supplier_id')) {
-        results.push(await addConstraintSafe(
-          `ALTER TABLE base_ink ADD CONSTRAINT fk_base_ink_supplier FOREIGN KEY (supplier_id) REFERENCES pur_supplier(id) ON DELETE SET NULL`,
-          'fk_base_ink_supplier'
-        ));
+        results.push(
+          await addConstraintSafe(
+            `ALTER TABLE base_ink ADD CONSTRAINT fk_base_ink_supplier FOREIGN KEY (supplier_id) REFERENCES pur_supplier(id) ON DELETE SET NULL`,
+            'fk_base_ink_supplier'
+          )
+        );
       }
     }
   }
@@ -141,22 +155,28 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     if (await tableExists('prd_screen_plate')) {
       if (await columnExists('prd_screen_plate', 'customer_id')) {
-        results.push(await addConstraintSafe(
-          `ALTER TABLE prd_screen_plate ADD CONSTRAINT fk_screen_plate_customer FOREIGN KEY (customer_id) REFERENCES mdm_customer(id) ON DELETE SET NULL`,
-          'fk_screen_plate_customer'
-        ));
+        results.push(
+          await addConstraintSafe(
+            `ALTER TABLE prd_screen_plate ADD CONSTRAINT fk_screen_plate_customer FOREIGN KEY (customer_id) REFERENCES mdm_customer(id) ON DELETE SET NULL`,
+            'fk_screen_plate_customer'
+          )
+        );
       }
       if (await columnExists('prd_screen_plate', 'warehouse_id')) {
-        results.push(await addConstraintSafe(
-          `ALTER TABLE prd_screen_plate ADD CONSTRAINT fk_screen_plate_warehouse FOREIGN KEY (warehouse_id) REFERENCES inv_warehouse(id) ON DELETE SET NULL`,
-          'fk_screen_plate_warehouse'
-        ));
+        results.push(
+          await addConstraintSafe(
+            `ALTER TABLE prd_screen_plate ADD CONSTRAINT fk_screen_plate_warehouse FOREIGN KEY (warehouse_id) REFERENCES inv_warehouse(id) ON DELETE SET NULL`,
+            'fk_screen_plate_warehouse'
+          )
+        );
       }
       if (await columnExists('prd_screen_plate', 'location_id')) {
-        results.push(await addConstraintSafe(
-          `ALTER TABLE prd_screen_plate ADD CONSTRAINT fk_screen_plate_location FOREIGN KEY (location_id) REFERENCES inv_location(id) ON DELETE SET NULL`,
-          'fk_screen_plate_location'
-        ));
+        results.push(
+          await addConstraintSafe(
+            `ALTER TABLE prd_screen_plate ADD CONSTRAINT fk_screen_plate_location FOREIGN KEY (location_id) REFERENCES inv_location(id) ON DELETE SET NULL`,
+            'fk_screen_plate_location'
+          )
+        );
       }
     }
   }
@@ -169,37 +189,47 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     if (await tableExists('inv_material_label')) {
       if (await columnExists('inv_material_label', 'parent_label_id')) {
-        results.push(await addConstraintSafe(
-          `ALTER TABLE inv_material_label ADD CONSTRAINT fk_label_parent FOREIGN KEY (parent_label_id) REFERENCES inv_material_label(id) ON DELETE SET NULL`,
-          'fk_label_parent'
-        ));
+        results.push(
+          await addConstraintSafe(
+            `ALTER TABLE inv_material_label ADD CONSTRAINT fk_label_parent FOREIGN KEY (parent_label_id) REFERENCES inv_material_label(id) ON DELETE SET NULL`,
+            'fk_label_parent'
+          )
+        );
       }
       if (await columnExists('inv_material_label', 'warehouse_id')) {
-        results.push(await addConstraintSafe(
-          `ALTER TABLE inv_material_label ADD CONSTRAINT fk_label_warehouse FOREIGN KEY (warehouse_id) REFERENCES inv_warehouse(id) ON DELETE SET NULL`,
-          'fk_label_warehouse'
-        ));
+        results.push(
+          await addConstraintSafe(
+            `ALTER TABLE inv_material_label ADD CONSTRAINT fk_label_warehouse FOREIGN KEY (warehouse_id) REFERENCES inv_warehouse(id) ON DELETE SET NULL`,
+            'fk_label_warehouse'
+          )
+        );
       }
       if (await columnExists('inv_material_label', 'location_id')) {
-        results.push(await addConstraintSafe(
-          `ALTER TABLE inv_material_label ADD CONSTRAINT fk_label_location FOREIGN KEY (location_id) REFERENCES inv_location(id) ON DELETE SET NULL`,
-          'fk_label_location'
-        ));
+        results.push(
+          await addConstraintSafe(
+            `ALTER TABLE inv_material_label ADD CONSTRAINT fk_label_location FOREIGN KEY (location_id) REFERENCES inv_location(id) ON DELETE SET NULL`,
+            'fk_label_location'
+          )
+        );
       }
       if (await columnExists('inv_material_label', 'ink_id')) {
-        results.push(await addConstraintSafe(
-          `ALTER TABLE inv_material_label ADD CONSTRAINT fk_label_ink FOREIGN KEY (ink_id) REFERENCES base_ink(id) ON DELETE SET NULL`,
-          'fk_label_ink'
-        ));
+        results.push(
+          await addConstraintSafe(
+            `ALTER TABLE inv_material_label ADD CONSTRAINT fk_label_ink FOREIGN KEY (ink_id) REFERENCES base_ink(id) ON DELETE SET NULL`,
+            'fk_label_ink'
+          )
+        );
       }
     }
 
     if (await tableExists('prd_process_card')) {
       if (await columnExists('prd_process_card', 'main_label_id')) {
-        results.push(await addConstraintSafe(
-          `ALTER TABLE prd_process_card ADD CONSTRAINT fk_process_card_main_label FOREIGN KEY (main_label_id) REFERENCES inv_material_label(id) ON DELETE SET NULL`,
-          'fk_process_card_main_label'
-        ));
+        results.push(
+          await addConstraintSafe(
+            `ALTER TABLE prd_process_card ADD CONSTRAINT fk_process_card_main_label FOREIGN KEY (main_label_id) REFERENCES inv_material_label(id) ON DELETE SET NULL`,
+            'fk_process_card_main_label'
+          )
+        );
       }
     }
   }
@@ -212,10 +242,12 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     if (await tableExists('sys_user')) {
       if (await columnExists('sys_user', 'department_id')) {
-        results.push(await addConstraintSafe(
-          `ALTER TABLE sys_user ADD CONSTRAINT fk_user_department FOREIGN KEY (department_id) REFERENCES sys_department(id) ON DELETE SET NULL`,
-          'fk_user_department'
-        ));
+        results.push(
+          await addConstraintSafe(
+            `ALTER TABLE sys_user ADD CONSTRAINT fk_user_department FOREIGN KEY (department_id) REFERENCES sys_department(id) ON DELETE SET NULL`,
+            'fk_user_department'
+          )
+        );
       }
     }
   }
@@ -228,12 +260,32 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     results.push(await addIndexSafe('bom_line', 'idx_bom_line_material_id', 'material_id'));
     results.push(await addIndexSafe('base_ink', 'idx_base_ink_supplier_id', 'supplier_id'));
-    results.push(await addIndexSafe('prd_screen_plate', 'idx_prd_screen_plate_customer_id', 'customer_id'));
-    results.push(await addIndexSafe('prd_screen_plate', 'idx_prd_screen_plate_plate_code', 'plate_code'));
-    results.push(await addIndexSafe('inv_material_label', 'idx_inv_material_label_parent_id', 'parent_label_id'));
-    results.push(await addIndexSafe('inv_material_label', 'idx_inv_material_label_label_no', 'label_no'));
-    results.push(await addIndexSafe('inv_material_label', 'idx_inv_material_label_material_code', 'material_code'));
-    results.push(await addIndexSafe('prd_process_card', 'idx_prd_process_card_main_label', 'main_label_id'));
+    results.push(
+      await addIndexSafe('prd_screen_plate', 'idx_prd_screen_plate_customer_id', 'customer_id')
+    );
+    results.push(
+      await addIndexSafe('prd_screen_plate', 'idx_prd_screen_plate_plate_code', 'plate_code')
+    );
+    results.push(
+      await addIndexSafe(
+        'inv_material_label',
+        'idx_inv_material_label_parent_id',
+        'parent_label_id'
+      )
+    );
+    results.push(
+      await addIndexSafe('inv_material_label', 'idx_inv_material_label_label_no', 'label_no')
+    );
+    results.push(
+      await addIndexSafe(
+        'inv_material_label',
+        'idx_inv_material_label_material_code',
+        'material_code'
+      )
+    );
+    results.push(
+      await addIndexSafe('prd_process_card', 'idx_prd_process_card_main_label', 'main_label_id')
+    );
     results.push(await addIndexSafe('sys_user', 'idx_sys_user_department_id', 'department_id'));
   }
 
@@ -244,23 +296,109 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     results.push('===== 【7】网版表字段优化 =====');
 
     if (await tableExists('prd_screen_plate')) {
-      results.push(await addColumnSafe('prd_screen_plate', 'plate_code', "VARCHAR(50) NULL UNIQUE COMMENT '网版编号'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'mesh_count', "INT NULL COMMENT '网目数'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'mesh_material', "VARCHAR(30) NULL COMMENT '丝网材质'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'size', "VARCHAR(50) NULL COMMENT '网版尺寸'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'tension_value', "DECIMAL(6,2) NULL COMMENT '张力值(N/cm)'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'tension_date', "DATETIME NULL COMMENT '最后测张力时间'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'status', "VARCHAR(20) NULL DEFAULT 'New' COMMENT '状态'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'life_count', "INT UNSIGNED NULL DEFAULT 0 COMMENT '已印刷次数'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'max_life_count', "INT UNSIGNED NULL DEFAULT 800 COMMENT '最大寿命'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'reclaim_count', "INT UNSIGNED NULL DEFAULT 0 COMMENT '已再生次数'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'exposure_date', "DATETIME NULL COMMENT '曝光日期'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'last_used_date', "DATETIME NULL COMMENT '最后使用日期'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'last_clean_date', "DATETIME NULL COMMENT '最后清洗日期'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'last_reclaim_date', "DATETIME NULL COMMENT '最后再生日期'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'scrap_reason', "VARCHAR(200) NULL COMMENT '报废原因'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'storage_location', "VARCHAR(100) NULL COMMENT '存放位置'"));
-      results.push(await addColumnSafe('prd_screen_plate', 'frame_type', "VARCHAR(30) NULL COMMENT '框类型'"));
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'plate_code',
+          "VARCHAR(50) NULL UNIQUE COMMENT '网版编号'"
+        )
+      );
+      results.push(
+        await addColumnSafe('prd_screen_plate', 'mesh_count', "INT NULL COMMENT '网目数'")
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'mesh_material',
+          "VARCHAR(30) NULL COMMENT '丝网材质'"
+        )
+      );
+      results.push(
+        await addColumnSafe('prd_screen_plate', 'size', "VARCHAR(50) NULL COMMENT '网版尺寸'")
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'tension_value',
+          "DECIMAL(6,2) NULL COMMENT '张力值(N/cm)'"
+        )
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'tension_date',
+          "DATETIME NULL COMMENT '最后测张力时间'"
+        )
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'status',
+          "VARCHAR(20) NULL DEFAULT 'New' COMMENT '状态'"
+        )
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'life_count',
+          "INT UNSIGNED NULL DEFAULT 0 COMMENT '已印刷次数'"
+        )
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'max_life_count',
+          "INT UNSIGNED NULL DEFAULT 800 COMMENT '最大寿命'"
+        )
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'reclaim_count',
+          "INT UNSIGNED NULL DEFAULT 0 COMMENT '已再生次数'"
+        )
+      );
+      results.push(
+        await addColumnSafe('prd_screen_plate', 'exposure_date', "DATETIME NULL COMMENT '曝光日期'")
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'last_used_date',
+          "DATETIME NULL COMMENT '最后使用日期'"
+        )
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'last_clean_date',
+          "DATETIME NULL COMMENT '最后清洗日期'"
+        )
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'last_reclaim_date',
+          "DATETIME NULL COMMENT '最后再生日期'"
+        )
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'scrap_reason',
+          "VARCHAR(200) NULL COMMENT '报废原因'"
+        )
+      );
+      results.push(
+        await addColumnSafe(
+          'prd_screen_plate',
+          'storage_location',
+          "VARCHAR(100) NULL COMMENT '存放位置'"
+        )
+      );
+      results.push(
+        await addColumnSafe('prd_screen_plate', 'frame_type', "VARCHAR(30) NULL COMMENT '框类型'")
+      );
     }
   }
 

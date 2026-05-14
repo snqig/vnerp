@@ -3,23 +3,23 @@ import { query, queryOne } from '@/lib/db';
 import { successResponse, withErrorHandler } from '@/lib/api-response';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
-  const receivableSummary = await queryOne(`SELECT
+  const receivableSummary = (await queryOne(`SELECT
     COALESCE(SUM(amount), 0) as total_amount,
     COALESCE(SUM(received_amount), 0) as total_received,
     COALESCE(SUM(balance), 0) as total_balance,
     COALESCE(SUM(CASE WHEN status = 1 THEN balance ELSE 0 END), 0) as unpaid_balance,
     COALESCE(SUM(CASE WHEN status = 2 THEN balance ELSE 0 END), 0) as partial_balance,
     COALESCE(SUM(CASE WHEN due_date < CURDATE() AND status IN (1, 2) THEN balance ELSE 0 END), 0) as overdue_balance
-  FROM fin_receivable WHERE deleted = 0`) as any;
+  FROM fin_receivable WHERE deleted = 0`)) as any;
 
-  const payableSummary = await queryOne(`SELECT
+  const payableSummary = (await queryOne(`SELECT
     COALESCE(SUM(amount), 0) as total_amount,
     COALESCE(SUM(paid_amount), 0) as total_paid,
     COALESCE(SUM(balance), 0) as total_balance,
     COALESCE(SUM(CASE WHEN status = 1 THEN balance ELSE 0 END), 0) as unpaid_balance,
     COALESCE(SUM(CASE WHEN status = 2 THEN balance ELSE 0 END), 0) as partial_balance,
     COALESCE(SUM(CASE WHEN due_date < CURDATE() AND status IN (1, 2) THEN balance ELSE 0 END), 0) as overdue_balance
-  FROM fin_payable WHERE deleted = 0`) as any;
+  FROM fin_payable WHERE deleted = 0`)) as any;
 
   const receivableByStatus = await query(`SELECT
     status,
@@ -68,7 +68,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const totalRevenue = parseFloat(summary?.total_revenue || 0);
   const totalCost = parseFloat(summary?.total_cost || 0);
   const totalProfit = totalRevenue - totalCost;
-  const profitRate = totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
+  const profitRate = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
   return successResponse({
     total_revenue: totalRevenue,

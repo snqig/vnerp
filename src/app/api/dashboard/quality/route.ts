@@ -6,11 +6,25 @@ export async function GET(request: NextRequest) {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
-    let overview: any = { totalInspections: 0, passRate: 96.8, todayInspections: 0, todayPassRate: 0, pendingInspections: 0, defectRate: 3.2, passedInspections: 0, failedInspections: 0 };
+    const overview: any = {
+      totalInspections: 0,
+      passRate: 96.8,
+      todayInspections: 0,
+      todayPassRate: 0,
+      pendingInspections: 0,
+      defectRate: 3.2,
+      passedInspections: 0,
+      failedInspections: 0,
+    };
     try {
-      const rows: any = await query(`SELECT COUNT(*) as total FROM qc_inspection WHERE deleted = 0`);
-      if (Array.isArray(rows) && rows.length > 0) overview.totalInspections = Number(rows[0].total || 0);
-    } catch (e) { console.error('quality overview failed:', e); }
+      const rows: any = await query(
+        `SELECT COUNT(*) as total FROM qc_inspection WHERE deleted = 0`
+      );
+      if (Array.isArray(rows) && rows.length > 0)
+        overview.totalInspections = Number(rows[0].total || 0);
+    } catch (e) {
+      console.error('quality overview failed:', e);
+    }
 
     try {
       const rows: any = await query(`
@@ -22,10 +36,18 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0) {
         overview.passedInspections = Number(rows[0].passed || 0);
         overview.failedInspections = Number(rows[0].failed || 0);
-        overview.passRate = overview.totalInspections > 0 ? Math.round((overview.passedInspections / overview.totalInspections) * 1000) / 10 : 0;
-        overview.defectRate = overview.totalInspections > 0 ? Math.round((overview.failedInspections / overview.totalInspections) * 1000) / 10 : 0;
+        overview.passRate =
+          overview.totalInspections > 0
+            ? Math.round((overview.passedInspections / overview.totalInspections) * 1000) / 10
+            : 0;
+        overview.defectRate =
+          overview.totalInspections > 0
+            ? Math.round((overview.failedInspections / overview.totalInspections) * 1000) / 10
+            : 0;
       }
-    } catch (e) { console.error('quality detail failed:', e); }
+    } catch (e) {
+      console.error('quality detail failed:', e);
+    }
 
     let byType: any[] = [];
     try {
@@ -35,7 +57,9 @@ export async function GET(request: NextRequest) {
         FROM qc_inspection WHERE deleted = 0 GROUP BY inspection_type
       `);
       byType = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('quality byType failed:', e); }
+    } catch (e) {
+      console.error('quality byType failed:', e);
+    }
 
     let defectTrend: any[] = [];
     try {
@@ -46,7 +70,9 @@ export async function GET(request: NextRequest) {
         GROUP BY DATE(inspection_date) ORDER BY date
       `);
       defectTrend = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('quality defectTrend failed:', e); }
+    } catch (e) {
+      console.error('quality defectTrend failed:', e);
+    }
 
     let topDefects: any[] = [];
     try {
@@ -55,16 +81,20 @@ export async function GET(request: NextRequest) {
         GROUP BY defect_type ORDER BY count DESC LIMIT 5
       `);
       topDefects = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('quality topDefects failed:', e); }
+    } catch (e) {
+      console.error('quality topDefects failed:', e);
+    }
 
     let recentInspections: any[] = [];
     try {
       const rows: any = await query(`
-        SELECT id, inspection_no, inspection_type, inspection_result, inspector, inspection_date, remark
+        SELECT id, inspection_no, inspection_type, inspection_result, inspector, inspection_date as inspect_time, remark
         FROM qc_inspection WHERE deleted = 0 ORDER BY inspection_date DESC LIMIT 10
       `);
       recentInspections = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('quality recent failed:', e); }
+    } catch (e) {
+      console.error('quality recent failed:', e);
+    }
 
     let processQuality: any[] = [];
     try {
@@ -77,7 +107,9 @@ export async function GET(request: NextRequest) {
         WHERE pc.deleted = 0 GROUP BY pc.id ORDER BY pc.update_time DESC LIMIT 10
       `);
       processQuality = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('quality processQuality failed:', e); }
+    } catch (e) {
+      console.error('quality processQuality failed:', e);
+    }
 
     return NextResponse.json({
       success: true,

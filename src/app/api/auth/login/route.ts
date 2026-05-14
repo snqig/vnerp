@@ -24,7 +24,7 @@ async function verifyPassword(password: string, hashedPassword: string): Promise
 function getClientIP(request: NextRequest): string {
   const xff = request.headers.get('x-forwarded-for');
   if (xff) {
-    const ips = xff.split(',').map(ip => ip.trim());
+    const ips = xff.split(',').map((ip) => ip.trim());
     return ips[0] || '127.0.0.1';
   }
   return request.headers.get('x-real-ip') || '127.0.0.1';
@@ -40,27 +40,33 @@ export async function POST(request: NextRequest) {
     });
 
     if (!rateResult.allowed) {
-      return NextResponse.json({
-        success: false,
-        message: `请求过于频繁，请${Math.ceil(rateResult.retryAfterMs / 60000)}分钟后再试`
-      }, {
-        status: 429,
-        headers: {
-          'Retry-After': String(Math.ceil(rateResult.retryAfterMs / 1000)),
-          'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': String(Math.ceil(rateResult.resetTime / 1000)),
+      return NextResponse.json(
+        {
+          success: false,
+          message: `请求过于频繁，请${Math.ceil(rateResult.retryAfterMs / 60000)}分钟后再试`,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil(rateResult.retryAfterMs / 1000)),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(Math.ceil(rateResult.resetTime / 1000)),
+          },
         }
-      });
+      );
     }
 
     const body = await request.json();
     const { username, password } = body;
 
     if (!username || !password) {
-      return NextResponse.json({
-        success: false,
-        message: '用户名和密码不能为空'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: '用户名和密码不能为空',
+        },
+        { status: 400 }
+      );
     }
 
     let users: any;
@@ -82,20 +88,26 @@ export async function POST(request: NextRequest) {
 
     if (users.length === 0) {
       await logLogin(username, request, false, '用户名或密码错误');
-      return NextResponse.json({
-        success: false,
-        message: '用户名或密码错误'
-      }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: '用户名或密码错误',
+        },
+        { status: 401 }
+      );
     }
 
     const user = users[0];
 
     if (user.status === 0) {
       await logLogin(username, request, false, '账号已被禁用');
-      return NextResponse.json({
-        success: false,
-        message: '账号已被禁用，请联系管理员'
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: '账号已被禁用，请联系管理员',
+        },
+        { status: 403 }
+      );
     }
 
     if (user.lock_time) {
@@ -105,52 +117,65 @@ export async function POST(request: NextRequest) {
       if (diffMinutes < LOCKOUT_MINUTES) {
         const remaining = Math.ceil(LOCKOUT_MINUTES - diffMinutes);
         await logLogin(username, request, false, `账号已锁定，请${remaining}分钟后再试`);
-        return NextResponse.json({
-          success: false,
-          message: `账号已锁定，请${remaining}分钟后再试`
-        }, { status: 429 });
-      } else {
-        await execute(
-          'UPDATE sys_user SET login_fail_count = 0, lock_time = NULL WHERE id = ?',
-          [user.id]
+        return NextResponse.json(
+          {
+            success: false,
+            message: `账号已锁定，请${remaining}分钟后再试`,
+          },
+          { status: 429 }
         );
+      } else {
+        await execute('UPDATE sys_user SET login_fail_count = 0, lock_time = NULL WHERE id = ?', [
+          user.id,
+        ]);
         user.login_fail_count = 0;
       }
     }
 
-    const isPasswordValid = await verifyPassword(password, user.password)
-      || (process.env.NODE_ENV !== 'production' && password === '521223' && username === 'admin');
+    const isPasswordValid =
+      (await verifyPassword(password, user.password)) ||
+      (process.env.NODE_ENV !== 'production' && password === '521223' && username === 'admin');
 
     if (!isPasswordValid) {
       const failCount = (user.login_fail_count || 0) + 1;
       if (failCount >= MAX_LOGIN_ATTEMPTS) {
-        await execute(
-          'UPDATE sys_user SET login_fail_count = ?, lock_time = NOW() WHERE id = ?',
-          [failCount, user.id]
+        await execute('UPDATE sys_user SET login_fail_count = ?, lock_time = NOW() WHERE id = ?', [
+          failCount,
+          user.id,
+        ]);
+        await logLogin(
+          username,
+          request,
+          false,
+          `密码错误次数过多，账号已锁定${LOCKOUT_MINUTES}分钟`
         );
-        await logLogin(username, request, false, `密码错误次数过多，账号已锁定${LOCKOUT_MINUTES}分钟`);
-        return NextResponse.json({
-          success: false,
-          message: `密码错误次数过多，账号已锁定${LOCKOUT_MINUTES}分钟`
-        }, { status: 429 });
+        return NextResponse.json(
+          {
+            success: false,
+            message: `密码错误次数过多，账号已锁定${LOCKOUT_MINUTES}分钟`,
+          },
+          { status: 429 }
+        );
       } else {
-        await execute(
-          'UPDATE sys_user SET login_fail_count = ? WHERE id = ?',
-          [failCount, user.id]
-        );
+        await execute('UPDATE sys_user SET login_fail_count = ? WHERE id = ?', [
+          failCount,
+          user.id,
+        ]);
         const remaining = MAX_LOGIN_ATTEMPTS - failCount;
         await logLogin(username, request, false, `用户名或密码错误，还剩${remaining}次尝试机会`);
-        return NextResponse.json({
-          success: false,
-          message: `用户名或密码错误，还剩${remaining}次尝试机会`
-        }, { status: 401 });
+        return NextResponse.json(
+          {
+            success: false,
+            message: `用户名或密码错误，还剩${remaining}次尝试机会`,
+          },
+          { status: 401 }
+        );
       }
     }
 
-    await execute(
-      'UPDATE sys_user SET login_fail_count = 0, lock_time = NULL WHERE id = ?',
-      [user.id]
-    );
+    await execute('UPDATE sys_user SET login_fail_count = 0, lock_time = NULL WHERE id = ?', [
+      user.id,
+    ]);
 
     const userRoles = await query(
       `SELECT r.id, r.role_code, r.role_name, r.data_scope
@@ -163,10 +188,9 @@ export async function POST(request: NextRequest) {
     let departmentName: string | null = null;
     if (user.department_id) {
       try {
-        const deptResult: any = await query(
-          'SELECT dept_name FROM sys_department WHERE id = ?',
-          [user.department_id]
-        );
+        const deptResult: any = await query('SELECT dept_name FROM sys_department WHERE id = ?', [
+          user.department_id,
+        ]);
         if (deptResult.length > 0) {
           departmentName = deptResult[0].dept_name;
         }
@@ -177,7 +201,7 @@ export async function POST(request: NextRequest) {
 
     let permissions: string[] = [];
     if (userRoles.length > 0) {
-      const roleIds = (userRoles as any[]).map(r => r.id);
+      const roleIds = (userRoles as any[]).map((r) => r.id);
       const placeholders = roleIds.map(() => '?').join(',');
       const perms = await query(
         `SELECT DISTINCT m.permission
@@ -187,14 +211,14 @@ export async function POST(request: NextRequest) {
          AND m.permission IS NOT NULL AND m.permission != ''`,
         roleIds
       );
-      permissions = (perms as any[]).map(p => p.permission).filter(Boolean);
+      permissions = (perms as any[]).map((p) => p.permission).filter(Boolean);
     }
 
     const token = await new SignJWT({
       userId: user.id,
       username: user.username,
       realName: user.real_name,
-      roles: (userRoles as any[]).map(r => r.role_code)
+      roles: (userRoles as any[]).map((r) => r.role_code),
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
@@ -202,10 +226,7 @@ export async function POST(request: NextRequest) {
       .sign(new TextEncoder().encode(SECRET_KEY));
 
     try {
-      await execute(
-        'UPDATE sys_user SET last_login_time = NOW() WHERE id = ?',
-        [user.id]
-      );
+      await execute('UPDATE sys_user SET last_login_time = NOW() WHERE id = ?', [user.id]);
     } catch (e) {
       console.error('更新最后登录时间失败:', e);
     }
@@ -219,13 +240,13 @@ export async function POST(request: NextRequest) {
       phone: user.phone,
       departmentId: user.department_id,
       departmentName,
-      roles: (userRoles as any[]).map(r => ({
+      roles: (userRoles as any[]).map((r) => ({
         id: r.id,
         role_code: r.role_code,
         role_name: r.role_name,
       })),
       permissions: [...new Set(permissions)],
-      firstLogin: Number(user.first_login || 0) === 1
+      firstLogin: Number(user.first_login || 0) === 1,
     };
 
     await logLogin(username, request, true, '登录成功');
@@ -235,16 +256,18 @@ export async function POST(request: NextRequest) {
       message: '登录成功',
       data: {
         token,
-        user: userInfo
-      }
+        user: userInfo,
+      },
     });
-
   } catch (error) {
     console.error('登录失败:', error);
-    return NextResponse.json({
-      success: false,
-      message: '登录失败，请稍后重试'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        message: '登录失败，请稍后重试',
+      },
+      { status: 500 }
+    );
   }
 }
 

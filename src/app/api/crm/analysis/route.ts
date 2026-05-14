@@ -12,13 +12,28 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let where = 'WHERE 1=1';
   const params: any[] = [];
-  if (customerName) { where += ' AND customer_name LIKE ?'; params.push('%' + customerName + '%'); }
-  if (customerLevel) { where += ' AND customer_level = ?'; params.push(customerLevel); }
-  if (analysisPeriod) { where += ' AND analysis_period = ?'; params.push(analysisPeriod); }
+  if (customerName) {
+    where += ' AND customer_name LIKE ?';
+    params.push('%' + customerName + '%');
+  }
+  if (customerLevel) {
+    where += ' AND customer_level = ?';
+    params.push(customerLevel);
+  }
+  if (analysisPeriod) {
+    where += ' AND analysis_period = ?';
+    params.push(analysisPeriod);
+  }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM crm_customer_analysis ' + where, params);
+  const totalRows: any = await query(
+    'SELECT COUNT(*) as total FROM crm_customer_analysis ' + where,
+    params
+  );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query('SELECT * FROM crm_customer_analysis ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?', [...params, pageSize, (page - 1) * pageSize]);
+  const rows: any = await query(
+    'SELECT * FROM crm_customer_analysis ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
+    [...params, pageSize, (page - 1) * pageSize]
+  );
 
   const summaryRows: any = await query(
     `SELECT 
@@ -37,14 +52,46 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { customer_id, customer_name, analysis_period, period_start, period_end, order_count, order_amount, delivery_count, return_count, complaint_count, on_time_rate, satisfaction_score, customer_level, growth_rate, remark } = body;
+  const {
+    customer_id,
+    customer_name,
+    analysis_period,
+    period_start,
+    period_end,
+    order_count,
+    order_amount,
+    delivery_count,
+    return_count,
+    complaint_count,
+    on_time_rate,
+    satisfaction_score,
+    customer_level,
+    growth_rate,
+    remark,
+  } = body;
 
   if (!customer_id) return errorResponse('客户ID不能为空', 400, 400);
 
   const result: any = await execute(
     `INSERT INTO crm_customer_analysis (customer_id, customer_name, analysis_period, period_start, period_end, order_count, order_amount, delivery_count, return_count, complaint_count, on_time_rate, satisfaction_score, customer_level, growth_rate, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [customer_id, customer_name || '', analysis_period || 'month', period_start || null, period_end || null, order_count || 0, order_amount || 0, delivery_count || 0, return_count || 0, complaint_count || 0, on_time_rate || null, satisfaction_score || null, customer_level || 'C', growth_rate || null, remark || null]
+    [
+      customer_id,
+      customer_name || '',
+      analysis_period || 'month',
+      period_start || null,
+      period_end || null,
+      order_count || 0,
+      order_amount || 0,
+      delivery_count || 0,
+      return_count || 0,
+      complaint_count || 0,
+      on_time_rate || null,
+      satisfaction_score || null,
+      customer_level || 'C',
+      growth_rate || null,
+      remark || null,
+    ]
   );
 
   return successResponse({ id: result.insertId }, '客户分析记录创建成功');
@@ -57,12 +104,29 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
   const updateFields: string[] = [];
   const updateValues: any[] = [];
-  const allowedFields = ['order_count', 'order_amount', 'delivery_count', 'return_count', 'complaint_count', 'on_time_rate', 'satisfaction_score', 'customer_level', 'growth_rate', 'remark'];
+  const allowedFields = [
+    'order_count',
+    'order_amount',
+    'delivery_count',
+    'return_count',
+    'complaint_count',
+    'on_time_rate',
+    'satisfaction_score',
+    'customer_level',
+    'growth_rate',
+    'remark',
+  ];
   for (const field of allowedFields) {
-    if (fields[field] !== undefined) { updateFields.push(`${field} = ?`); updateValues.push(fields[field]); }
+    if (fields[field] !== undefined) {
+      updateFields.push(`${field} = ?`);
+      updateValues.push(fields[field]);
+    }
   }
   if (updateFields.length > 0) {
-    await execute(`UPDATE crm_customer_analysis SET ${updateFields.join(', ')} WHERE id = ?`, [...updateValues, id]);
+    await execute(`UPDATE crm_customer_analysis SET ${updateFields.join(', ')} WHERE id = ?`, [
+      ...updateValues,
+      id,
+    ]);
   }
   return successResponse(null, '更新成功');
 });

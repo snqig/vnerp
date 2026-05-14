@@ -1,15 +1,13 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
 
-// 获取产品分类列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const parentId = searchParams.get('parentId');
+  const page = parseInt(searchParams.get('page') || '1');
+  const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let sql = `
     SELECT
@@ -26,130 +24,157 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     WHERE deleted = 0
   `;
 
+  let countSql = `SELECT COUNT(*) as total FROM mdm_product_category WHERE deleted = 0`;
   const params: any[] = [];
+  const countParams: any[] = [];
 
   if (parentId !== null) {
     sql += ` AND parent_id = ?`;
+    countSql += ` AND parent_id = ?`;
     params.push(parentId);
+    countParams.push(parentId);
   }
 
-  sql += ` ORDER BY sort_order ASC, create_time DESC`;
+  sql += ` ORDER BY sort_order ASC, create_time DESC LIMIT ? OFFSET ?`;
+  params.push(pageSize, (page - 1) * pageSize);
 
   const categories = await query(sql, params);
+  const countResult = await query(countSql, countParams);
+  const total = (countResult as any[])[0]?.total || 0;
 
-  return successResponse(categories);
+  return successResponse({
+    list: categories,
+    total,
+    page,
+    pageSize,
+  });
 });
 
 // 创建产品分类
-export const POST = withErrorHandler(async (request: NextRequest) => {
-  const body = await request.json();
-  const { categoryCode, categoryName, parentId = 0, level = 1, sortOrder = 0, description } = body;
+export const POST = withAuthAndErrorHandler(
+  async (request: NextRequest, userInfo: UserInfo) => {
+    const body = await request.json();
+    const {
+      categoryCode,
+      categoryName,
+      parentId = 0,
+      level = 1,
+      sortOrder = 0,
+      description,
+    } = body;
 
-  if (!categoryCode || !categoryName) {
-    return errorResponse('分类编码和名称不能为空', 400, 400);
-  }
+    if (!categoryCode || !categoryName) {
+      return errorResponse('分类编码和名称不能为空', 400, 400);
+    }
 
-  // 检查分类编码是否已存在
-  const existingCategories = await query(
-    'SELECT id FROM mdm_product_category WHERE category_code = ? AND deleted = 0',
-    [categoryCode]
-  );
+    // 检查分类编码是否已存在
+    const existingCategories = await query(
+      'SELECT id FROM mdm_product_category WHERE category_code = ? AND deleted = 0',
+      [categoryCode]
+    );
 
-  if ((existingCategories as any[]).length > 0) {
-    return errorResponse('分类编码已存在', 400, 400);
-  }
+    if ((existingCategories as any[]).length > 0) {
+      return errorResponse('分类编码已存在', 400, 400);
+    }
 
-  const result = await query(
-    `INSERT INTO mdm_product_category 
+    const result = await query(
+      `INSERT INTO mdm_product_category 
      (category_code, category_name, parent_id, level, sort_order, description, status, create_time) 
      VALUES (?, ?, ?, ?, ?, ?, 1, NOW())`,
-    [categoryCode, categoryName, parentId, level, sortOrder, description || '']
-  );
+      [categoryCode, categoryName, parentId, level, sortOrder, description || '']
+    );
 
-  const insertId = (result as any).insertId;
+    const insertId = (result as any).insertId;
 
-  return successResponse({ id: insertId, categoryCode }, '产品分类创建成功');
-}, '创建产品分类失败');
+    return successResponse({ id: insertId, categoryCode }, '产品分类创建成功');
+  },
+  { errorMessage: '创建产品分类失败' }
+);
 
 // 更新产品分类
-export const PUT = withErrorHandler(async (request: NextRequest) => {
-  const body = await request.json();
-  const { id, categoryName, sortOrder, description, status } = body;
+export const PUT = withAuthAndErrorHandler(
+  async (request: NextRequest, userInfo: UserInfo) => {
+    const body = await request.json();
+    const { id, categoryName, sortOrder, description, status } = body;
 
-  if (!id) {
-    return errorResponse('分类ID不能为空', 400, 400);
-  }
+    if (!id) {
+      return errorResponse('分类ID不能为空', 400, 400);
+    }
 
-  const updateFields: string[] = [];
-  const updateParams: any[] = [];
+    const updateFields: string[] = [];
+    const updateParams: any[] = [];
 
-  if (categoryName !== undefined) {
-    updateFields.push('category_name = ?');
-    updateParams.push(categoryName);
-  }
+    if (categoryName !== undefined) {
+      updateFields.push('category_name = ?');
+      updateParams.push(categoryName);
+    }
 
-  if (sortOrder !== undefined) {
-    updateFields.push('sort_order = ?');
-    updateParams.push(sortOrder);
-  }
+    if (sortOrder !== undefined) {
+      updateFields.push('sort_order = ?');
+      updateParams.push(sortOrder);
+    }
 
-  if (description !== undefined) {
-    updateFields.push('description = ?');
-    updateParams.push(description);
-  }
+    if (description !== undefined) {
+      updateFields.push('description = ?');
+      updateParams.push(description);
+    }
 
-  if (status !== undefined) {
-    updateFields.push('status = ?');
-    updateParams.push(status);
-  }
+    if (status !== undefined) {
+      updateFields.push('status = ?');
+      updateParams.push(status);
+    }
 
-  if (updateFields.length === 0) {
-    return errorResponse('没有要更新的字段', 400, 400);
-  }
+    if (updateFields.length === 0) {
+      return errorResponse('没有要更新的字段', 400, 400);
+    }
 
-  updateParams.push(id);
-  await query(
-    `UPDATE mdm_product_category SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
-    updateParams
-  );
+    updateParams.push(id);
+    await query(
+      `UPDATE mdm_product_category SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
+      updateParams
+    );
 
-  return successResponse({ id }, '产品分类更新成功');
-}, '更新产品分类失败');
+    return successResponse({ id }, '产品分类更新成功');
+  },
+  { errorMessage: '更新产品分类失败' }
+);
 
 // 删除产品分类
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withAuthAndErrorHandler(
+  async (request: NextRequest, userInfo: UserInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return errorResponse('分类ID不能为空', 400, 400);
-  }
+    if (!id) {
+      return errorResponse('分类ID不能为空', 400, 400);
+    }
 
-  // 检查是否有子分类
-  const childCategories = await query(
-    'SELECT id FROM mdm_product_category WHERE parent_id = ? AND deleted = 0',
-    [id]
-  );
+    // 检查是否有子分类
+    const childCategories = await query(
+      'SELECT id FROM mdm_product_category WHERE parent_id = ? AND deleted = 0',
+      [id]
+    );
 
-  if ((childCategories as any[]).length > 0) {
-    return errorResponse('该分类下有子分类，不能删除', 400, 400);
-  }
+    if ((childCategories as any[]).length > 0) {
+      return errorResponse('该分类下有子分类，不能删除', 400, 400);
+    }
 
-  // 检查是否有关联产品
-  const products = await query(
-    'SELECT id FROM mdm_product WHERE category_id = ? AND deleted = 0',
-    [id]
-  );
+    // 检查是否有关联产品
+    const products = await query(
+      'SELECT id FROM mdm_product WHERE category_id = ? AND deleted = 0',
+      [id]
+    );
 
-  if ((products as any[]).length > 0) {
-    return errorResponse('该分类下有关联产品，不能删除', 400, 400);
-  }
+    if ((products as any[]).length > 0) {
+      return errorResponse('该分类下有关联产品，不能删除', 400, 400);
+    }
 
-  // 软删除
-  await query(
-    'UPDATE mdm_product_category SET deleted = 1, update_time = NOW() WHERE id = ?',
-    [id]
-  );
+    // 软删除
+    await query('UPDATE mdm_product_category SET deleted = 1, update_time = NOW() WHERE id = ?', [
+      id,
+    ]);
 
-  return successResponse(null, '产品分类删除成功');
-}, '删除产品分类失败');
+    return successResponse(null, '产品分类删除成功');
+  },
+  { errorMessage: '删除产品分类失败' }
+);

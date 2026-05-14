@@ -12,7 +12,7 @@ interface Transfer {
   from_location: string | null;
   to_location: string | null;
   status: number;
-  applicant_id: number | null;
+  operator_id: number | null;
   approver_id: number | null;
   out_time: string | null;
   in_time: string | null;
@@ -35,7 +35,7 @@ interface TransferItem {
 
 const TYPE_MAP: Record<number, string> = {
   1: '库位调拨',
-  2: '仓库调拨'
+  2: '仓库调拨',
 };
 
 const STATUS_MAP: Record<number, string> = {
@@ -43,7 +43,7 @@ const STATUS_MAP: Record<number, string> = {
   1: '待审批',
   2: '已出库',
   3: '已入库',
-  4: '已取消'
+  4: '已取消',
 };
 
 function generateTransferNo(): string {
@@ -70,22 +70,20 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   const totalRows: any = await query(
-    `SELECT COUNT(*) as total FROM transfers ${where}`,
+    `SELECT COUNT(*) as total FROM inv_transfer_order t ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
   const rows: any[] = await query(
     `SELECT t.*,
-            w1.name as from_warehouse_name,
-            w2.name as to_warehouse_name,
-            u1.real_name as applicant_name,
-            u2.real_name as approver_name
-     FROM transfers t
+            w1.warehouse_name as from_warehouse_name,
+            w2.warehouse_name as to_warehouse_name,
+            u1.real_name as operator_name
+     FROM inv_transfer_order t
      LEFT JOIN inv_warehouse w1 ON t.from_warehouse_id = w1.id
      LEFT JOIN inv_warehouse w2 ON t.to_warehouse_id = w2.id
-     LEFT JOIN sys_user u1 ON t.applicant_id = u1.id
-     LEFT JOIN sys_user u2 ON t.approver_id = u2.id
+     LEFT JOIN sys_user u1 ON t.operator_id = u1.id
      ${where}
      ORDER BY t.create_time DESC
      LIMIT ? OFFSET ?`,
@@ -96,11 +94,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     list: rows.map((row: any) => ({
       ...row,
       type_name: TYPE_MAP[row.type] || '未知',
-      status_name: STATUS_MAP[row.status] || '未知'
+      status_name: STATUS_MAP[row.status] || '未知',
     })),
     total,
     page,
-    pageSize
+    pageSize,
   });
 });
 
@@ -112,9 +110,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     to_warehouse_id,
     from_location,
     to_location,
-    applicant_id,
+    operator_id,
     remark,
-    items
+    items,
   } = body;
 
   if (!from_warehouse_id) {
@@ -144,9 +142,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const transferNo = generateTransferNo();
 
   const result: any = await execute(
-    `INSERT INTO transfers (
+    `INSERT INTO inv_transfer_order (
       transfer_no, type, from_warehouse_id, to_warehouse_id,
-      from_location, to_location, status, applicant_id,
+      from_location, to_location, status, operator_id,
       remark, create_time, update_time
     ) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, NOW(), NOW())`,
     [
@@ -156,8 +154,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       to_warehouse_id,
       from_location || null,
       to_location || null,
-      applicant_id || null,
-      remark || null
+      operator_id || null,
+      remark || null,
     ]
   );
 
@@ -168,26 +166,23 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       if (!item.material_id || !item.quantity) continue;
 
       await execute(
-        `INSERT INTO transfer_items (
+        `INSERT INTO inv_transfer_order_item (
           transfer_id, material_id, quantity,
           unit, batch_no
         ) VALUES (?, ?, ?, ?, ?)`,
-        [
-          transferId,
-          item.material_id,
-          item.quantity,
-          item.unit || null,
-          item.batch_no || null
-        ]
+        [transferId, item.material_id, item.quantity, item.unit || null, item.batch_no || null]
       );
     }
   }
 
-  return successResponse({
-    id: transferId,
-    transfer_no: transferNo,
-    status: 0
-  }, '调拨单创建成功');
+  return successResponse(
+    {
+      id: transferId,
+      transfer_no: transferNo,
+      status: 0,
+    },
+    '调拨单创建成功'
+  );
 });
 
 export const PUT = withErrorHandler(async (request: NextRequest) => {
@@ -195,7 +190,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const { id, action, approver_id } = body;
 
   const transfer: any = await queryOne(
-    `SELECT * FROM transfers WHERE id = ? AND deleted = 0`,
+    `SELECT * FROM inv_transfer_order WHERE id = ? AND deleted = 0`,
     [id]
   );
 
@@ -214,7 +209,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       }
 
       await execute(
-        `UPDATE transfers
+        `UPDATE inv_transfer_order
          SET status = 1, approver_id = ?, update_time = NOW()
          WHERE id = ?`,
         [approver_id, id]
@@ -227,10 +222,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         return errorResponse('只有待审批的调拨单才能驳回', 400, 400);
       }
 
-      await execute(
-        `UPDATE transfers SET status = 4, update_time = NOW() WHERE id = ?`,
-        [id]
-      );
+      await execute(`UPDATE inv_transfer_order SET status = 4, update_time = NOW() WHERE id = ?`, [
+        id,
+      ]);
 
       return successResponse(null, '调拨单已驳回');
 
@@ -239,10 +233,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         return errorResponse('只能取消草稿或待审批的调拨单', 400, 400);
       }
 
-      await execute(
-        `UPDATE transfers SET status = 4, update_time = NOW() WHERE id = ?`,
-        [id]
-      );
+      await execute(`UPDATE inv_transfer_order SET status = 4, update_time = NOW() WHERE id = ?`, [
+        id,
+      ]);
 
       return successResponse(null, '调拨单已取消');
 
@@ -260,7 +253,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
 
   const transfer: any = await queryOne(
-    `SELECT * FROM transfers WHERE id = ? AND deleted = 0`,
+    `SELECT * FROM inv_transfer_order WHERE id = ? AND deleted = 0`,
     [Number(id)]
   );
 
@@ -272,10 +265,9 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('只能删除草稿或已取消的调拨单', 400, 400);
   }
 
-  await execute(
-    `UPDATE transfers SET deleted = 1, update_time = NOW() WHERE id = ?`,
-    [Number(id)]
-  );
+  await execute(`UPDATE inv_transfer_order SET deleted = 1, update_time = NOW() WHERE id = ?`, [
+    Number(id),
+  ]);
 
   return successResponse(null, '调拨单删除成功');
 });

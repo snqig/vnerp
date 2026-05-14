@@ -78,9 +78,9 @@ const DAYS_AHEAD = 30;
 export async function getAvailableEquipment(workshop?: string): Promise<Equipment[]> {
   let sql = `
     SELECT id, equipment_code, equipment_name, equipment_type, workshop,
-           capacity_per_hour, status, max_colors, setup_time_minutes
+           rated_capacity as capacity_per_hour, current_status as status, 4 as max_colors, 30 as setup_time_minutes
     FROM eqp_equipment
-    WHERE status = 'available' AND deleted = 0
+    WHERE current_status = 1
   `;
   const params: any[] = [];
   if (workshop) {
@@ -124,9 +124,30 @@ export function calculateScheduleWithColorDependencies(
   currentTime.setHours(8, 0, 0, 0);
 
   for (const colorSeq of workOrder.color_sequences) {
-    const suitableEquipment = equipmentList.filter(
-      (eq) => eq.equipment_type === colorSeq.equipment_type_required && eq.status === 'available'
-    );
+    const suitableEquipment = equipmentList.filter((eq) => {
+      // 设备类型映射：字符串类型到数字类型的匹配
+      let typeMatch = false;
+      if (typeof colorSeq.equipment_type_required === 'string') {
+        // 如果工序要求的是字符串类型，映射到数字类型
+        const typeMap: Record<string, number[]> = {
+          printing: [1],
+          die_cutting: [3],
+          inspection: [4],
+          drying: [5],
+          plate_making: [5],
+        };
+        const matchingTypes = typeMap[colorSeq.equipment_type_required.toLowerCase()] || [colorSeq.equipment_type_required];
+        typeMatch = matchingTypes.includes(Number(eq.equipment_type));
+      } else {
+        // 如果工序要求的是数字类型，直接匹配
+        typeMatch = eq.equipment_type === colorSeq.equipment_type_required;
+      }
+      
+      // 状态匹配：'1' 表示可用
+      const statusMatch = eq.status === '1';
+      
+      return typeMatch && statusMatch;
+    });
 
     if (suitableEquipment.length === 0) {
       result.conflicts.push({
@@ -155,7 +176,10 @@ export function calculateScheduleWithColorDependencies(
 
     const durationHours = Math.max(
       1,
-      Math.ceil((workOrder.plan_qty / (suitableEquipment[0].capacity_per_hour || 100)) * colorSeq.estimated_duration_hours)
+      Math.ceil(
+        (workOrder.plan_qty / (suitableEquipment[0].capacity_per_hour || 100)) *
+          colorSeq.estimated_duration_hours
+      )
     );
 
     let bestEquipment = suitableEquipment[0];
@@ -163,12 +187,7 @@ export function calculateScheduleWithColorDependencies(
     let foundSlot = false;
 
     for (const equipment of suitableEquipment) {
-      const slot = findEarliestSlot(
-        equipment,
-        existingSchedules,
-        currentTime,
-        durationHours
-      );
+      const slot = findEarliestSlot(equipment, existingSchedules, currentTime, durationHours);
       if (slot && (!foundSlot || slot.start < earliestStart)) {
         earliestStart = slot.start;
         bestEquipment = equipment;
@@ -247,7 +266,7 @@ function findEarliestSlot(
   afterTime: Date,
   durationHours: number
 ): { start: Date; end: Date } | null {
-  let candidateStart = new Date(afterTime);
+  const candidateStart = new Date(afterTime);
   const maxSearchDays = DAYS_AHEAD;
 
   for (let day = 0; day < maxSearchDays; day++) {
@@ -259,7 +278,11 @@ function findEarliestSlot(
     const workStart = 8;
     const workEnd = 8 + WORKING_HOURS_PER_DAY;
 
-    for (let hour = Math.max(workStart, candidateStart.getHours()); hour <= workEnd - durationHours; hour++) {
+    for (
+      let hour = Math.max(workStart, candidateStart.getHours());
+      hour <= workEnd - durationHours;
+      hour++
+    ) {
       const slotStart = new Date(candidateStart);
       slotStart.setHours(hour, 0, 0, 0);
       const slotEnd = new Date(slotStart);
@@ -299,30 +322,35 @@ export async function autoScheduleWorkOrders(
 
   const workOrders: WorkOrderWithColors[] = [];
   for (const woId of workOrderIds) {
-    const [woRows]: any = await query(
-      `SELECT id, work_order_no, product_id, product_name, plan_qty, priority, deadline
-       FROM prd_work_order WHERE id = ? AND deleted = 0`,
+    const rows: any = await query(
+      `SELECT id, work_order_no, product_name, quantity, priority, plan_end_date as deadline
+       FROM prod_work_order WHERE id = ? AND deleted = 0`,
       [woId]
     );
-    if (woRows.length === 0) continue;
+    if (rows.length === 0) continue;
 
-    const wo = woRows[0];
+    const wo = rows[0];
     const colorSeqs = await getWorkOrderColorSequences(woId);
 
     workOrders.push({
       id: wo.id,
       work_order_no: wo.work_order_no,
-      product_id: wo.product_id,
+      product_id: wo.id,
       product_name: wo.product_name,
-      plan_qty: wo.plan_qty,
-      color_sequences: colorSeqs.length > 0 ? colorSeqs : [{
-        seq_no: 1,
-        color_name: '默认工序',
-        screen_plate_id: 0,
-        ink_formula_id: 0,
-        estimated_duration_hours: 4,
-        equipment_type_required: 'printing',
-      }],
+      plan_qty: Number(wo.quantity) || 0,
+      color_sequences:
+        colorSeqs.length > 0
+          ? colorSeqs
+          : [
+              {
+                seq_no: 1,
+                color_name: '默认工序',
+                screen_plate_id: 0,
+                ink_formula_id: 0,
+                estimated_duration_hours: 4,
+                equipment_type_required: 'printing',
+              },
+            ],
       priority: wo.priority || 'normal',
       deadline: wo.deadline,
     });
@@ -341,7 +369,12 @@ export async function autoScheduleWorkOrders(
 
   const results: SchedulingResultEnhanced[] = [];
   for (const wo of workOrders) {
-    const result = calculateScheduleWithColorDependencies(wo, equipmentList, existingSchedules, startDate);
+    const result = calculateScheduleWithColorDependencies(
+      wo,
+      equipmentList,
+      existingSchedules,
+      startDate
+    );
     results.push(result);
 
     secureLog('info', '自动排程完成', {
@@ -355,9 +388,7 @@ export async function autoScheduleWorkOrders(
   return results;
 }
 
-export async function saveScheduleResult(
-  result: SchedulingResultEnhanced
-): Promise<boolean> {
+export async function saveScheduleResult(result: SchedulingResultEnhanced): Promise<boolean> {
   try {
     await transaction(async (conn) => {
       for (const seq of result.color_sequences) {
@@ -384,15 +415,17 @@ export async function saveScheduleResult(
         );
       }
 
-      await conn.execute(
-        `UPDATE prd_work_order SET status = 20 WHERE id = ? AND status < 20`,
-        [result.work_order_id]
-      );
+      await conn.execute(`UPDATE prod_work_order SET status = 'producing' WHERE id = ?`, [
+        result.work_order_id,
+      ]);
     });
 
     return true;
   } catch (error: any) {
-    secureLog('error', '保存排程结果失败', { error: error.message, workOrderId: result.work_order_id });
+    secureLog('error', '保存排程结果失败', {
+      error: error.message,
+      workOrderId: result.work_order_id,
+    });
     return false;
   }
 }
@@ -416,10 +449,9 @@ export function generateGanttData(
   const totalDays = (dateRange.end.getTime() - startTime) / (1000 * 60 * 60 * 24);
 
   return results.map((result) => {
-    const woInfo: any = query(
-      `SELECT product_name FROM prod_work_order WHERE id = ?`,
-      [result.work_order_id]
-    );
+    const woInfo: any = query(`SELECT product_name FROM prod_work_order WHERE id = ?`, [
+      result.work_order_id,
+    ]);
 
     return {
       work_order_no: result.work_order_no,

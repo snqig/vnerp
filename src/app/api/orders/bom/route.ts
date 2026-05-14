@@ -22,7 +22,7 @@ const BOM_STATUS = {
  */
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
-  
+
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
   const keyword = searchParams.get('keyword') || '';
@@ -394,10 +394,9 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('BOM ID不能为空', 400, 400);
   }
 
-  const bom = await query(
-    'SELECT status, version FROM bom_header WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  const bom = await query('SELECT status, version FROM bom_header WHERE id = ? AND deleted = 0', [
+    id,
+  ]);
 
   if ((bom as any[]).length === 0) {
     return errorResponse('BOM不存在', 404, 404);

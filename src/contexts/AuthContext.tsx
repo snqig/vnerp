@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  ReactNode,
+} from 'react';
 
 interface User {
   id: number;
@@ -35,7 +43,11 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  login: (username: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; message?: string }>;
+  login: (
+    username: string,
+    password: string,
+    rememberMe?: boolean
+  ) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   register: (data: any) => Promise<any>;
   hasPermission: (permission: string) => boolean;
@@ -51,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     menus: [],
     permissions: [],
     isAuthenticated: false,
-    isLoading: true
+    isLoading: true,
   });
 
   const authChecked = useRef(false);
@@ -59,64 +71,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const menusCountRef = useRef(0);
 
-  const fetchMenus = useCallback(async (token: string, force: boolean = false, clearOnAuthError: boolean = true) => {
-    if (!force && menusLoadedRef.current && menusCountRef.current > 0) {
-      return;
-    }
+  const fetchMenus = useCallback(
+    async (token: string, force: boolean = false, clearOnAuthError: boolean = true) => {
+      if (!force && menusLoadedRef.current && menusCountRef.current > 0) {
+        return;
+      }
 
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
 
-    try {
-      const response = await fetch('/api/auth/menus', {
-        headers: { 'Authorization': `Bearer ${token}` },
-        signal: abortControllerRef.current.signal
-      });
+      try {
+        const response = await fetch('/api/auth/menus', {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: abortControllerRef.current.signal,
+        });
 
-      if (response.status === 401) {
-        console.error('[AuthContext] 菜单API返回401');
-        if (clearOnAuthError) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          sessionStorage.removeItem('token');
-          sessionStorage.removeItem('user');
-          menusLoadedRef.current = false;
-          menusCountRef.current = 0;
-          setState({
-            user: null,
-            menus: [],
-            permissions: [],
-            isAuthenticated: false,
-            isLoading: false
-          });
-        } else {
-          setState(prev => ({ ...prev, isLoading: false }));
+        if (!response.ok) {
+          if (response.status === 401) {
+            console.error('[AuthContext] 菜单API返回401');
+            if (clearOnAuthError) {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              sessionStorage.removeItem('token');
+              sessionStorage.removeItem('user');
+              menusLoadedRef.current = false;
+              menusCountRef.current = 0;
+              setState({
+                user: null,
+                menus: [],
+                permissions: [],
+                isAuthenticated: false,
+                isLoading: false,
+              });
+            } else {
+              setState((prev) => ({ ...prev, isLoading: false }));
+            }
+          } else {
+            console.error('[AuthContext] 菜单API返回错误:', response.status);
+            setState((prev) => ({ ...prev, isLoading: false }));
+          }
+          return;
         }
-        return;
-      }
 
-      const result = await response.json();
-      if (result.success) {
-        menusLoadedRef.current = true;
-        const menus = result.data.menus || [];
-        menusCountRef.current = menus.length;
-        setState(prev => ({
-          ...prev,
-          menus: menus,
-          permissions: result.data.permissions || [],
-          isLoading: false
-        }));
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          console.error('[AuthContext] 菜单API返回非JSON响应');
+          setState((prev) => ({ ...prev, isLoading: false }));
+          return;
+        }
+
+        const result = await response.json();
+        if (result.success) {
+          menusLoadedRef.current = true;
+          const menus = Array.isArray(result.data?.menus) ? result.data.menus : [];
+          menusCountRef.current = menus.length;
+          setState((prev) => ({
+            ...prev,
+            menus: menus,
+            permissions: Array.isArray(result.data?.permissions) ? result.data.permissions : [],
+            isLoading: false,
+          }));
+        }
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          return;
+        }
+        console.error('获取菜单失败:', error);
+        setState((prev) => ({ ...prev, isLoading: false }));
       }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        return;
-      }
-      console.error('获取菜单失败:', error);
-      setState(prev => ({ ...prev, isLoading: false }));
-    }
-  }, []);
+    },
+    []
+  );
 
   useEffect(() => {
     if (authChecked.current) return;
@@ -134,15 +161,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             menus: [],
             permissions: user.permissions || [],
             isAuthenticated: true,
-            isLoading: true
+            isLoading: true,
           });
           await fetchMenus(token);
         } catch (e) {
           console.error('[AuthContext] 解析失败:', e);
-          setState(prev => ({ ...prev, isLoading: false }));
+          setState((prev) => ({ ...prev, isLoading: false }));
         }
       } else {
-        setState(prev => ({ ...prev, isLoading: false }));
+        setState((prev) => ({ ...prev, isLoading: false }));
       }
     };
 
@@ -155,42 +182,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchMenus]);
 
-  const login = useCallback(async (username: string, password: string, rememberMe: boolean = true) => {
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        const storage = rememberMe ? localStorage : sessionStorage;
-        storage.setItem('token', result.data.token);
-        storage.setItem('user', JSON.stringify(result.data.user));
-
-        menusLoadedRef.current = false;
-        menusCountRef.current = 0;
-        setState({
-          user: result.data.user,
-          menus: [],
-          permissions: result.data.user.permissions || [],
-          isAuthenticated: true,
-          isLoading: true
+  const login = useCallback(
+    async (username: string, password: string, rememberMe: boolean = true) => {
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
         });
 
-        fetchMenus(result.data.token, true, false).catch((e) => {
-          console.error('[AuthContext] 登录后加载菜单失败:', e);
-        });
-        return { success: true };
-      } else {
-        return { success: false, message: result.message };
+        const result = await response.json();
+
+        if (result.success) {
+          const storage = rememberMe ? localStorage : sessionStorage;
+          storage.setItem('token', result.data.token);
+          storage.setItem('user', JSON.stringify(result.data.user));
+
+          menusLoadedRef.current = false;
+          menusCountRef.current = 0;
+          setState({
+            user: result.data.user,
+            menus: [],
+            permissions: result.data.user.permissions || [],
+            isAuthenticated: true,
+            isLoading: true,
+          });
+
+          fetchMenus(result.data.token, true, false).catch((e) => {
+            console.error('[AuthContext] 登录后加载菜单失败:', e);
+          });
+          return { success: true };
+        } else {
+          return { success: false, message: result.message };
+        }
+      } catch (error) {
+        return { success: false, message: '登录失败' };
       }
-    } catch (error) {
-      return { success: false, message: '登录失败' };
-    }
-  }, [fetchMenus]);
+    },
+    [fetchMenus]
+  );
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
@@ -205,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       menus: [],
       permissions: [],
       isAuthenticated: false,
-      isLoading: false
+      isLoading: false,
     });
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
@@ -217,7 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       });
       return await response.json();
     } catch (error) {
@@ -225,32 +255,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const hasPermission = useCallback((permission: string): boolean => {
-    const { permissions, user } = state;
-    if (user?.roles?.some((r: any) => r.role_code === 'super_admin')) {
-      return true;
-    }
-    return permissions.includes(permission) || permissions.includes('*');
-  }, [state.permissions, state.user]);
+  const hasPermission = useCallback(
+    (permission: string): boolean => {
+      const { permissions, user } = state;
+      if (user?.roles?.some((r: any) => r.role_code === 'super_admin')) {
+        return true;
+      }
+      return permissions.includes(permission) || permissions.includes('*');
+    },
+    [state.permissions, state.user]
+  );
 
-  const hasAnyPermission = useCallback((perms: string[]): boolean => {
-    return perms.some(p => hasPermission(p));
-  }, [hasPermission]);
+  const hasAnyPermission = useCallback(
+    (perms: string[]): boolean => {
+      return perms.some((p) => hasPermission(p));
+    },
+    [hasPermission]
+  );
 
-  const hasRole = useCallback((roleCode: string): boolean => {
-    return state.user?.roles?.some((r: any) => r.role_code === roleCode) || false;
-  }, [state.user]);
+  const hasRole = useCallback(
+    (roleCode: string): boolean => {
+      return state.user?.roles?.some((r: any) => r.role_code === roleCode) || false;
+    },
+    [state.user]
+  );
 
   return (
-    <AuthContext.Provider value={{
-      ...state,
-      login,
-      logout,
-      register,
-      hasPermission,
-      hasAnyPermission,
-      hasRole
-    }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        logout,
+        register,
+        hasPermission,
+        hasAnyPermission,
+        hasRole,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

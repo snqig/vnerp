@@ -24,7 +24,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const totalRows: any = await query(countSql, params);
   const total = totalRows[0]?.total || 0;
 
-  const dataSql = 'SELECT * FROM sys_notice ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?';
+  const dataSql =
+    'SELECT * FROM sys_notice ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?';
   const rows: any = await query(dataSql, [...params, pageSize, (page - 1) * pageSize]);
 
   return successResponse({ list: rows, total, page, pageSize });

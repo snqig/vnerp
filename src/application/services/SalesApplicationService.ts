@@ -21,7 +21,9 @@ export class SalesApplicationService {
   }
 
   async listOrders(
-    status: string, page: number, pageSize: number,
+    status: string,
+    page: number,
+    pageSize: number,
     filters?: { keyword?: string; customerId?: number; startDate?: string; endDate?: string }
   ) {
     return this.orderRepo.findByStatus(status, { page, pageSize }, filters);
@@ -70,10 +72,12 @@ export class SalesApplicationService {
     const order = await this.getOrderById(id);
 
     for (const shipment of lineShipments) {
-      const line = order.lines.find(l => l.lineNo === shipment.lineNo);
+      const line = order.lines.find((l) => l.lineNo === shipment.lineNo);
       if (!line) throw new DomainError(`行号${shipment.lineNo}不存在`);
       const check = await InventoryValidationService.checkStock(
-        line.materialId, shipment.warehouseId, shipment.quantity
+        line.materialId,
+        shipment.warehouseId,
+        shipment.quantity
       );
       if (!check.sufficient) throw new DomainError(check.message || '库存不足');
     }
@@ -137,13 +141,17 @@ export class SalesApplicationService {
       try {
         const pendingEvents = await DomainEventOutbox.fetchPendingEvents();
         for (const eventRow of pendingEvents) {
-          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'SalesOrder') continue;
+          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'SalesOrder')
+            continue;
           try {
             const event = JSON.parse(eventRow.payload);
             await this.eventBus.publish({ ...event, occurredAt: new Date(event.occurredAt) });
             await DomainEventOutbox.markAsProcessed(eventRow.id);
           } catch (error: any) {
-            secureLog('error', 'Outbox event publish failed', { eventId: eventRow.id, error: error.message });
+            secureLog('error', 'Outbox event publish failed', {
+              eventId: eventRow.id,
+              error: error.message,
+            });
             await DomainEventOutbox.markAsFailed(eventRow.id, error.message);
           }
         }

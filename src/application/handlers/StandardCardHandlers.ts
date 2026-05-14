@@ -1,8 +1,7 @@
-import { EventHandler } from '@/infrastructure/events/EventHandler';
+import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { DomainEvent } from '@/domain/standard-card/events/StandardCardEvents';
 import { db } from '@/lib/db';
-import { sql } from 'drizzle-orm';
-import { CacheManager } from '@/lib/cache';
+import { getCacheManager } from '@/lib/cache';
 
 export class StandardCardNotificationHandler implements EventHandler {
   async handle(event: DomainEvent): Promise<void> {
@@ -40,10 +39,10 @@ export class StandardCardNotificationHandler implements EventHandler {
       source_type: 'standard_card',
       source_id: standardCardId,
       receive_user: this.getProcessManagerUserId(),
-      is_read: 0
+      is_read: 0,
     } as any);
 
-    CacheManager.invalidate(`standard_card_list`);
+    await getCacheManager().delete(`standard_card_list`);
   }
 
   private async handleApproved(event: DomainEvent): Promise<void> {
@@ -57,10 +56,10 @@ export class StandardCardNotificationHandler implements EventHandler {
       source_type: 'standard_card',
       source_id: standardCardId,
       receive_user: this.getGeneralManagerUserId(),
-      is_read: 0
+      is_read: 0,
     } as any);
 
-    CacheManager.invalidate(`standard_card_${standardCardId}`);
+    await getCacheManager().delete(`standard_card_${standardCardId}`);
   }
 
   private async handleConfirmed(event: DomainEvent): Promise<void> {
@@ -74,19 +73,19 @@ export class StandardCardNotificationHandler implements EventHandler {
       source_type: 'standard_card',
       source_id: standardCardId,
       receive_user: userId,
-      is_read: 0
+      is_read: 0,
     } as any);
 
-    CacheManager.invalidate(`standard_card_${standardCardId}`);
-    CacheManager.invalidate(`material_standard_card_${materialId}`);
+    await getCacheManager().delete(`standard_card_${standardCardId}`);
+    await getCacheManager().delete(`material_standard_card_${materialId}`);
   }
 
   private async handleObsoleted(event: DomainEvent): Promise<void> {
     const { standardCardId, code, version, reason, userId } = event.payload;
     console.log(`[StandardCardNotification] 标准卡已作废: ${code} V${version}`);
 
-    CacheManager.invalidate(`standard_card_${standardCardId}`);
-    CacheManager.invalidate(`standard_card_list`);
+    await getCacheManager().delete(`standard_card_${standardCardId}`);
+    await getCacheManager().delete(`standard_card_list`);
   }
 
   private getProcessManagerUserId(): number {
@@ -103,7 +102,7 @@ export class StandardCardNotificationHandler implements EventHandler {
       'StandardCardSubmitted',
       'StandardCardApproved',
       'StandardCardConfirmed',
-      'StandardCardObsoleted'
+      'StandardCardObsoleted',
     ].includes(eventType);
   }
 }
@@ -118,9 +117,12 @@ export class StandardCardWorkOrderLinkHandler implements EventHandler {
     }
   }
 
-  private async updateWorkOrdersWithNewStandardCard(materialId: number, standardCardId: number): Promise<void> {
-    const pendingWorkOrders = await db.execute(
-      sql`SELECT id FROM prd_work_order 
+  private async updateWorkOrdersWithNewStandardCard(
+    materialId: number,
+    standardCardId: number
+  ): Promise<void> {
+    const pendingWorkOrders = await db.query(
+      `SELECT id FROM prd_work_order 
           WHERE material_id = ${materialId} 
           AND status IN ('created', 'scheduled') 
           AND standard_card_id IS NULL
@@ -129,12 +131,14 @@ export class StandardCardWorkOrderLinkHandler implements EventHandler {
 
     for (const wo of pendingWorkOrders) {
       await db.execute(
-        sql`UPDATE prd_work_order SET standard_card_id = ${standardCardId}, update_time = NOW() WHERE id = ${wo.id}`
+        `UPDATE prd_work_order SET standard_card_id = ${standardCardId}, update_time = NOW() WHERE id = ${(wo as any).id}`
       );
     }
 
     if (pendingWorkOrders.length > 0) {
-      console.log(`[StandardCardWorkOrderLink] 为 ${pendingWorkOrders.length} 个待开工工单关联了新标准卡`);
+      console.log(
+        `[StandardCardWorkOrderLink] 为 ${pendingWorkOrders.length} 个待开工工单关联了新标准卡`
+      );
     }
   }
 

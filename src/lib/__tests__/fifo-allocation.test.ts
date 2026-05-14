@@ -5,7 +5,20 @@ describe('FIFO Allocation Logic', () => {
   describe('allocateFIFO - quantity calculation', () => {
     it('should calculate shortage when total available is less than required', async () => {
       const batches = [
-        { id: 1, batch_no: 'B001', material_id: 1, material_code: 'M001', material_name: '物料X', available_qty: '30', unit_price: '10', inbound_date: '2026-01-01', unit: '个', expire_date: null, opened_at: null, version: 1 },
+        {
+          id: 1,
+          batch_no: 'B001',
+          material_id: 1,
+          material_code: 'M001',
+          material_name: '物料X',
+          available_qty: '30',
+          unit_price: '10',
+          inbound_date: '2026-01-01',
+          unit: '个',
+          expire_date: null,
+          opened_at: null,
+          version: 1,
+        },
       ];
       const conn = {
         query: vi.fn().mockResolvedValue([batches]),
@@ -22,9 +35,48 @@ describe('FIFO Allocation Logic', () => {
 
     it('should allocate across multiple batches when single batch is insufficient', async () => {
       const batches = [
-        { id: 1, batch_no: 'B001', material_id: 1, material_code: 'M001', material_name: '物料Y', available_qty: '40', unit_price: '20', inbound_date: '2026-01-01', unit: '个', expire_date: null, opened_at: null, version: 1 },
-        { id: 2, batch_no: 'B002', material_id: 1, material_code: 'M001', material_name: '物料Y', available_qty: '60', unit_price: '20', inbound_date: '2026-02-01', unit: '个', expire_date: null, opened_at: null, version: 1 },
-        { id: 3, batch_no: 'B003', material_id: 1, material_code: 'M001', material_name: '物料Y', available_qty: '50', unit_price: '20', inbound_date: '2026-03-01', unit: '个', expire_date: null, opened_at: null, version: 1 },
+        {
+          id: 1,
+          batch_no: 'B001',
+          material_id: 1,
+          material_code: 'M001',
+          material_name: '物料Y',
+          available_qty: '40',
+          unit_price: '20',
+          inbound_date: '2026-01-01',
+          unit: '个',
+          expire_date: null,
+          opened_at: null,
+          version: 1,
+        },
+        {
+          id: 2,
+          batch_no: 'B002',
+          material_id: 1,
+          material_code: 'M001',
+          material_name: '物料Y',
+          available_qty: '60',
+          unit_price: '20',
+          inbound_date: '2026-02-01',
+          unit: '个',
+          expire_date: null,
+          opened_at: null,
+          version: 1,
+        },
+        {
+          id: 3,
+          batch_no: 'B003',
+          material_id: 1,
+          material_code: 'M001',
+          material_name: '物料Y',
+          available_qty: '50',
+          unit_price: '20',
+          inbound_date: '2026-03-01',
+          unit: '个',
+          expire_date: null,
+          opened_at: null,
+          version: 1,
+        },
       ];
       const conn = {
         query: vi.fn().mockResolvedValue([batches]),
@@ -59,7 +111,20 @@ describe('FIFO Allocation Logic', () => {
 
     it('should return zero shortage when exactly enough stock', async () => {
       const batches = [
-        { id: 1, batch_no: 'B001', material_id: 1, material_code: 'M001', material_name: '物料Z', available_qty: '100', unit_price: '15', inbound_date: '2026-01-01', unit: '个', expire_date: null, opened_at: null, version: 1 },
+        {
+          id: 1,
+          batch_no: 'B001',
+          material_id: 1,
+          material_code: 'M001',
+          material_name: '物料Z',
+          available_qty: '100',
+          unit_price: '15',
+          inbound_date: '2026-01-01',
+          unit: '个',
+          expire_date: null,
+          opened_at: null,
+          version: 1,
+        },
       ];
       const conn = {
         query: vi.fn().mockResolvedValue([batches]),
@@ -75,7 +140,20 @@ describe('FIFO Allocation Logic', () => {
 
     it('should include version field in allocation items', async () => {
       const batches = [
-        { id: 1, batch_no: 'B001', material_id: 1, material_code: 'M001', material_name: '物料V', available_qty: '50', unit_price: '10', inbound_date: '2026-01-01', unit: '个', expire_date: null, opened_at: null, version: 5 },
+        {
+          id: 1,
+          batch_no: 'B001',
+          material_id: 1,
+          material_code: 'M001',
+          material_name: '物料V',
+          available_qty: '50',
+          unit_price: '10',
+          inbound_date: '2026-01-01',
+          unit: '个',
+          expire_date: null,
+          opened_at: null,
+          version: 5,
+        },
       ];
       const conn = {
         query: vi.fn().mockResolvedValue([batches]),
@@ -89,9 +167,26 @@ describe('FIFO Allocation Logic', () => {
     });
 
     it('should use FOR UPDATE in batch query SQL', async () => {
-      const queryMock = vi.fn().mockResolvedValue([[
-        { id: 1, batch_no: 'B001', material_id: 1, material_code: 'M001', material_name: '物料', available_qty: '100', unit_price: '10', inbound_date: '2026-01-01', unit: '个', expire_date: null, opened_at: null, version: 1 },
-      ]]);
+      const queryMock = vi
+        .fn()
+        .mockResolvedValue([
+          [
+            {
+              id: 1,
+              batch_no: 'B001',
+              material_id: 1,
+              material_code: 'M001',
+              material_name: '物料',
+              available_qty: '100',
+              unit_price: '10',
+              inbound_date: '2026-01-01',
+              unit: '个',
+              expire_date: null,
+              opened_at: null,
+              version: 1,
+            },
+          ],
+        ]);
       const conn = {
         query: queryMock,
         execute: vi.fn(),
@@ -105,14 +200,14 @@ describe('FIFO Allocation Logic', () => {
     });
   });
 
-  describe('executeFIFODeduction - concurrency safety', () => {
+  describe('executeFIFODeductionWithRetry - concurrency safety', () => {
     it('should throw error when optimistic lock fails (affectedRows = 0)', async () => {
       const conn = {
         query: vi.fn(),
         execute: vi.fn().mockResolvedValue([{ affectedRows: 0, insertId: 0 }]),
       };
 
-      const { executeFIFODeduction } = await import('@/lib/fifo-allocation');
+      const { executeFIFODeductionWithRetry } = await import('@/lib/fifo-allocation');
       const allocation = {
         material_id: 1,
         material_code: 'M001',
@@ -121,34 +216,39 @@ describe('FIFO Allocation Logic', () => {
         total_available: 100,
         allocated_qty: 50,
         shortage: 0,
-        allocations: [{
-          batch_id: 1,
-          batch_no: 'B001',
-          material_id: 1,
-          material_code: 'M001',
-          material_name: '测试物料',
-          allocate_qty: 50,
-          available_qty_before: 100,
-          unit_cost: 10,
-          inbound_date: '2026-01-01',
-          expire_date: undefined,
-          version: 1,
-        }],
+        allocations: [
+          {
+            batch_id: 1,
+            batch_no: 'B001',
+            material_id: 1,
+            material_code: 'M001',
+            material_name: '测试物料',
+            allocate_qty: 50,
+            available_qty_before: 100,
+            unit_cost: 10,
+            inbound_date: '2026-01-01',
+            expire_date: undefined,
+            version: 1,
+          },
+        ],
       };
 
-      await expect(executeFIFODeduction(conn, allocation, {
-        sourceType: 'outbound',
-        sourceId: 1,
-        sourceNo: 'CK001',
-        warehouseId: 1,
-        warehouseCode: 'WH001',
-        operatorId: null,
-        operatorName: 'admin',
-      })).rejects.toThrow();
+      await expect(
+        executeFIFODeductionWithRetry(conn, allocation, {
+          sourceType: 'outbound',
+          sourceId: 1,
+          sourceNo: 'CK001',
+          warehouseId: 1,
+          warehouseCode: 'WH001',
+          operatorId: null,
+          operatorName: 'admin',
+        })
+      ).rejects.toThrow();
     });
 
     it('should include version increment in UPDATE SQL', async () => {
-      const executeMock = vi.fn()
+      const executeMock = vi
+        .fn()
         .mockResolvedValueOnce([{ affectedRows: 1, insertId: 0 }])
         .mockResolvedValueOnce([{ affectedRows: 1, insertId: 1 }])
         .mockResolvedValueOnce([{ affectedRows: 1, insertId: 1 }]);
@@ -158,7 +258,7 @@ describe('FIFO Allocation Logic', () => {
         execute: executeMock,
       };
 
-      const { executeFIFODeduction } = await import('@/lib/fifo-allocation');
+      const { executeFIFODeductionWithRetry } = await import('@/lib/fifo-allocation');
       const allocation = {
         material_id: 1,
         material_code: 'M001',
@@ -167,22 +267,24 @@ describe('FIFO Allocation Logic', () => {
         total_available: 100,
         allocated_qty: 30,
         shortage: 0,
-        allocations: [{
-          batch_id: 5,
-          batch_no: 'B005',
-          material_id: 1,
-          material_code: 'M001',
-          material_name: '测试物料',
-          allocate_qty: 30,
-          available_qty_before: 100,
-          unit_cost: 15,
-          inbound_date: '2026-01-01',
-          expire_date: undefined,
-          version: 3,
-        }],
+        allocations: [
+          {
+            batch_id: 5,
+            batch_no: 'B005',
+            material_id: 1,
+            material_code: 'M001',
+            material_name: '测试物料',
+            allocate_qty: 30,
+            available_qty_before: 100,
+            unit_cost: 15,
+            inbound_date: '2026-01-01',
+            expire_date: undefined,
+            version: 3,
+          },
+        ],
       };
 
-      await executeFIFODeduction(conn, allocation, {
+      await executeFIFODeductionWithRetry(conn, allocation, {
         sourceType: 'outbound',
         sourceId: 1,
         sourceNo: 'CK001',
@@ -205,54 +307,81 @@ describe('FIFO Allocation Logic', () => {
       };
 
       const { executeSpecifiedBatchDeduction } = await import('@/lib/fifo-allocation');
-      await expect(executeSpecifiedBatchDeduction(conn, {
-        batchNo: 'NONEXIST',
-        materialId: 1,
-        materialCode: 'M001',
-        materialName: '物料',
-        warehouseId: 1,
-        warehouseCode: 'WH001',
-        requiredQty: 10,
-        sourceType: 'outbound',
-        sourceId: 1,
-        sourceNo: 'CK001',
-        operatorId: null,
-        operatorName: 'admin',
-      })).rejects.toThrow('库存批次不存在');
+      await expect(
+        executeSpecifiedBatchDeduction(conn, {
+          batchNo: 'NONEXIST',
+          materialId: 1,
+          materialCode: 'M001',
+          materialName: '物料',
+          warehouseId: 1,
+          warehouseCode: 'WH001',
+          requiredQty: 10,
+          sourceType: 'outbound',
+          sourceId: 1,
+          sourceNo: 'CK001',
+          operatorId: null,
+          operatorName: 'admin',
+        })
+      ).rejects.toThrow('库存批次不存在');
     });
 
     it('should throw error when available quantity is insufficient', async () => {
       const conn = {
-        query: vi.fn().mockResolvedValue([[
-          { id: 1, batch_no: 'B001', available_qty: '5', quantity: '10', unit_price: '20', version: 1 },
-        ]]),
+        query: vi
+          .fn()
+          .mockResolvedValue([
+            [
+              {
+                id: 1,
+                batch_no: 'B001',
+                available_qty: '5',
+                quantity: '10',
+                unit_price: '20',
+                version: 1,
+              },
+            ],
+          ]),
         execute: vi.fn(),
       };
 
       const { executeSpecifiedBatchDeduction } = await import('@/lib/fifo-allocation');
-      await expect(executeSpecifiedBatchDeduction(conn, {
-        batchNo: 'B001',
-        materialId: 1,
-        materialCode: 'M001',
-        materialName: '物料',
-        warehouseId: 1,
-        warehouseCode: 'WH001',
-        requiredQty: 50,
-        sourceType: 'outbound',
-        sourceId: 1,
-        sourceNo: 'CK001',
-        operatorId: null,
-        operatorName: 'admin',
-      })).rejects.toThrow('库存不足');
+      await expect(
+        executeSpecifiedBatchDeduction(conn, {
+          batchNo: 'B001',
+          materialId: 1,
+          materialCode: 'M001',
+          materialName: '物料',
+          warehouseId: 1,
+          warehouseCode: 'WH001',
+          requiredQty: 50,
+          sourceType: 'outbound',
+          sourceId: 1,
+          sourceNo: 'CK001',
+          operatorId: null,
+          operatorName: 'admin',
+        })
+      ).rejects.toThrow('库存不足');
     });
 
     it('should use SELECT FOR UPDATE to lock the batch row', async () => {
-      const queryMock = vi.fn().mockResolvedValue([[
-        { id: 1, batch_no: 'B001', available_qty: '100', quantity: '100', unit_price: '20', version: 1 },
-      ]]);
+      const queryMock = vi
+        .fn()
+        .mockResolvedValue([
+          [
+            {
+              id: 1,
+              batch_no: 'B001',
+              available_qty: '100',
+              quantity: '100',
+              unit_price: '20',
+              version: 1,
+            },
+          ],
+        ]);
       const conn = {
         query: queryMock,
-        execute: vi.fn()
+        execute: vi
+          .fn()
           .mockResolvedValueOnce([{ affectedRows: 1 }])
           .mockResolvedValueOnce([{ affectedRows: 1 }])
           .mockResolvedValueOnce([{ affectedRows: 1 }]),

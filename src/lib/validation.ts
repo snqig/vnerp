@@ -24,7 +24,19 @@ export interface ValidationRule {
 export class Validator {
   // 验证单个值
   static validateValue(value: any, rule: ValidationRule): string | null {
-    const { field, required, type, min, max, minLength, maxLength, pattern, enum: enumValues, message, custom } = rule;
+    const {
+      field,
+      required,
+      type,
+      min,
+      max,
+      minLength,
+      maxLength,
+      pattern,
+      enum: enumValues,
+      message,
+      custom,
+    } = rule;
 
     // 必填验证
     if (required && (value === undefined || value === null || value === '')) {
@@ -86,7 +98,7 @@ export class Validator {
     if (custom) {
       const customResult = custom(value);
       if (customResult !== true) {
-        return typeof customResult === 'string' ? customResult : (message || `${field} 验证失败`);
+        return typeof customResult === 'string' ? customResult : message || `${field} 验证失败`;
       }
     }
 
@@ -312,7 +324,12 @@ export const CommonValidations = {
   qualityInspection: (data: Record<string, any>): ValidationResult => {
     return Validator.validate(data, [
       { field: 'cardId', required: true, type: 'number', min: 1 },
-      { field: 'inspectResult', required: true, type: 'string', enum: ['pending', 'inspecting', 'pass', 'fail', 'rework', 'scrap'] },
+      {
+        field: 'inspectResult',
+        required: true,
+        type: 'string',
+        enum: ['pending', 'inspecting', 'pass', 'fail', 'rework', 'scrap'],
+      },
       ValidationPresets.quantity('qualifiedQty', false, 0),
       ValidationPresets.quantity('defectQty', false, 0),
       ValidationPresets.name('inspector', false),

@@ -57,11 +57,9 @@ export function maskSensitiveData<T>(obj: T): T {
   const masked: Record<string, any> = {};
   for (const [key, value] of Object.entries(obj)) {
     const lowerKey = key.toLowerCase();
-    
+
     // 检查是否为敏感字段
-    const sensitiveField = SENSITIVE_FIELDS.find((f) => 
-      lowerKey.includes(f.toLowerCase())
-    );
+    const sensitiveField = SENSITIVE_FIELDS.find((f) => lowerKey.includes(f.toLowerCase()));
 
     if (sensitiveField && typeof value === 'string') {
       // 应用脱敏规则
@@ -145,7 +143,7 @@ export function secureLog(
 ) {
   const timestamp = new Date().toISOString();
   const maskedData = data ? maskSensitiveData(data) : undefined;
-  
+
   const logEntry = {
     timestamp,
     level: level.toUpperCase(),
@@ -217,7 +215,7 @@ export async function logApiAccess(
  */
 export function logDbQuery(sql: string, params?: any[], duration?: number) {
   const maskedParams = params ? maskSqlParams(params) : undefined;
-  
+
   secureLog('debug', 'DB Query', {
     sql: sql.substring(0, 200), // 限制长度
     params: maskedParams,

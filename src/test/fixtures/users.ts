@@ -3,18 +3,18 @@
  */
 
 export interface UserFixture {
-  id: number
-  username: string
-  password: string
-  real_name: string
-  email: string
-  phone: string | null
-  department_id: number | null
-  status: number
-  avatar: string | null
-  first_login: number
-  login_fail_count: number
-  lock_time: string | null
+  id: number;
+  username: string;
+  password: string;
+  real_name: string;
+  email: string;
+  phone: string | null;
+  department_id: number | null;
+  status: number;
+  avatar: string | null;
+  first_login: number;
+  login_fail_count: number;
+  lock_time: string | null;
 }
 
 export function createUser(overrides: Partial<UserFixture> = {}): UserFixture {
@@ -32,7 +32,7 @@ export function createUser(overrides: Partial<UserFixture> = {}): UserFixture {
     login_fail_count: 0,
     lock_time: null,
     ...overrides,
-  }
+  };
 }
 
 export function createAdminUser(): UserFixture {
@@ -41,7 +41,7 @@ export function createAdminUser(): UserFixture {
     username: 'admin',
     real_name: '超级管理员',
     email: 'admin@dcprint.com',
-  })
+  });
 }
 
 export function createNormalUser(): UserFixture {
@@ -51,7 +51,7 @@ export function createNormalUser(): UserFixture {
     real_name: '普通用户',
     email: 'user@dcprint.com',
     department_id: 2,
-  })
+  });
 }
 
 export function createDisabledUser(): UserFixture {
@@ -60,7 +60,7 @@ export function createDisabledUser(): UserFixture {
     username: 'disabled',
     real_name: '禁用用户',
     status: 0,
-  })
+  });
 }
 
 export function createLockedUser(): UserFixture {
@@ -70,5 +70,5 @@ export function createLockedUser(): UserFixture {
     real_name: '锁定用户',
     login_fail_count: 5,
     lock_time: new Date().toISOString(),
-  })
+  });
 }

@@ -1,4 +1,8 @@
-import { IPurchaseOrderRepository, Pagination, PaginatedResult } from '@/domain/purchase/repositories/IPurchaseOrderRepository';
+import {
+  IPurchaseOrderRepository,
+  Pagination,
+  PaginatedResult,
+} from '@/domain/purchase/repositories/IPurchaseOrderRepository';
 import { PurchaseOrder, PurchaseOrderProps } from '@/domain/purchase/aggregates/PurchaseOrder';
 import { PurchaseOrderStatus } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
@@ -137,13 +141,25 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
           status, over_receipt_tolerance, payment_terms, delivery_address, remark, create_by, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
-          orderNo, order.supplierId, order.supplierName, order.supplierCode,
-          order.orderDate, order.deliveryDate || null,
-          order.currency, order.exchangeRate,
-          order.totalAmount, order.totalQuantity, order.taxRate, order.taxAmount, order.grandTotal,
+          orderNo,
+          order.supplierId,
+          order.supplierName,
+          order.supplierCode,
+          order.orderDate,
+          order.deliveryDate || null,
+          order.currency,
+          order.exchangeRate,
+          order.totalAmount,
+          order.totalQuantity,
+          order.taxRate,
+          order.taxAmount,
+          order.grandTotal,
           order.status.toDbCode(),
-          order.overReceiptTolerance, order.paymentTerms, order.deliveryAddress,
-          order.remark, order.createBy || null,
+          order.overReceiptTolerance,
+          order.paymentTerms,
+          order.deliveryAddress,
+          order.remark,
+          order.createBy || null,
         ]
       );
 
@@ -157,10 +173,23 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
             tax_rate, tax_amount, line_total, require_date, remark, create_time)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
           [
-            orderId, line.lineNo, line.materialId, line.materialCode, line.materialName,
-            line.materialSpec, line.unit, line.orderQty, line.receivedQty, line.returnedQty,
-            line.unitPrice, line.amount, line.taxRate, line.taxAmount, line.lineTotal,
-            line.requireDate || null, line.remark || null,
+            orderId,
+            line.lineNo,
+            line.materialId,
+            line.materialCode,
+            line.materialName,
+            line.materialSpec,
+            line.unit,
+            line.orderQty,
+            line.receivedQty,
+            line.returnedQty,
+            line.unitPrice,
+            line.amount,
+            line.taxRate,
+            line.taxAmount,
+            line.lineTotal,
+            line.requireDate || null,
+            line.remark || null,
           ]
         );
       }
@@ -194,10 +223,9 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
   }
 
   async softDelete(id: number): Promise<void> {
-    await execute(
-      'UPDATE pur_purchase_order SET deleted = 1, update_time = NOW() WHERE id = ?',
-      [id]
-    );
+    await execute('UPDATE pur_purchase_order SET deleted = 1, update_time = NOW() WHERE id = ?', [
+      id,
+    ]);
   }
 
   private mapToProps(order: any, lines: any[]): PurchaseOrderProps {

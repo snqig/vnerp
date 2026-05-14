@@ -2,13 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -147,12 +141,22 @@ interface MRPRunResult {
 }
 
 const priorityConfig: Record<string, { label: string; className: string }> = {
-  urgent: { label: '紧急', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
-  normal: { label: '正常', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  urgent: {
+    label: '紧急',
+    className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  },
+  normal: {
+    label: '正常',
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  },
   low: { label: '低', className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' },
 };
 
-function flattenBOMTree(node: BOMNode, result: (BOMNode & { indent: number })[] = [], indent: number = 0): (BOMNode & { indent: number })[] {
+function flattenBOMTree(
+  node: BOMNode,
+  result: (BOMNode & { indent: number })[] = [],
+  indent: number = 0
+): (BOMNode & { indent: number })[] {
   result.push({ ...node, indent });
   if (node.children && node.children.length > 0) {
     for (const child of node.children) {
@@ -164,6 +168,18 @@ function flattenBOMTree(node: BOMNode, result: (BOMNode & { indent: number })[] 
 
 export default function MRPPage() {
   const [activeTab, setActiveTab] = useState('mrp-run');
+
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
 
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
@@ -198,18 +214,20 @@ export default function MRPPage() {
 
   const fetchWorkOrders = useCallback(async () => {
     try {
-      const res = await fetch('/api/production/orders');
+      const res = await authFetch('/api/production/orders');
       const data = await res.json();
       if (data.success || data.data) {
         const list = Array.isArray(data.data) ? data.data : [];
-        setWorkOrders(list.map((item: Record<string, unknown>) => ({
-          id: item.id as number,
-          work_order_no: (item.work_order_no || item.workOrderNo || '') as string,
-          material_name: (item.material_name || item.productName || '') as string,
-          plan_qty: Number(item.plan_qty || item.planQty || 0),
-          plan_start_date: (item.plan_start_date || item.planStartDate || '') as string,
-          status: (item.status ?? 0) as number,
-        })));
+        setWorkOrders(
+          list.map((item: Record<string, unknown>) => ({
+            id: item.id as number,
+            work_order_no: (item.work_order_no || item.workOrderNo || '') as string,
+            material_name: (item.material_name || item.productName || '') as string,
+            plan_qty: Number(item.plan_qty || item.planQty || 0),
+            plan_start_date: (item.plan_start_date || item.planStartDate || '') as string,
+            status: (item.status ?? 0) as number,
+          }))
+        );
       }
     } catch (e) {
       console.error('获取工单失败:', e);
@@ -218,15 +236,17 @@ export default function MRPPage() {
 
   const fetchWarehouses = useCallback(async () => {
     try {
-      const res = await fetch('/api/organization/warehouse-category');
+      const res = await authFetch('/api/organization/warehouse-category');
       const data = await res.json();
       if (data.success || data.data) {
         const list = Array.isArray(data.data) ? data.data : [];
-        setWarehouses(list.map((item: Record<string, unknown>) => ({
-          id: item.id as number,
-          warehouse_name: (item.warehouse_name || item.name || '') as string,
-          warehouse_code: (item.warehouse_code || item.code || '') as string,
-        })));
+        setWarehouses(
+          list.map((item: Record<string, unknown>) => ({
+            id: item.id as number,
+            warehouse_name: (item.warehouse_name || item.name || '') as string,
+            warehouse_code: (item.warehouse_code || item.code || '') as string,
+          }))
+        );
       }
     } catch (e) {
       console.error('获取仓库失败:', e);
@@ -239,12 +259,14 @@ export default function MRPPage() {
       const data = await res.json();
       if (data.success || data.data) {
         const list = Array.isArray(data.data) ? data.data : [];
-        setMaterials(list.map((item: Record<string, unknown>) => ({
-          id: item.id as number,
-          material_code: (item.material_code || '') as string,
-          material_name: (item.material_name || '') as string,
-          unit: (item.unit || '') as string,
-        })));
+        setMaterials(
+          list.map((item: Record<string, unknown>) => ({
+            id: item.id as number,
+            material_code: (item.material_code || '') as string,
+            material_name: (item.material_name || '') as string,
+            unit: (item.unit || '') as string,
+          }))
+        );
       }
     } catch (e) {
       console.error('获取物料失败:', e);
@@ -261,9 +283,8 @@ export default function MRPPage() {
     if (selectedWorkOrderIds.length === 0 || !selectedWarehouseId) return;
     setMrpLoading(true);
     try {
-      const res = await fetch('/api/production/mrp', {
+      const res = await authFetch('/api/production/mrp', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workOrderIds: selectedWorkOrderIds,
           warehouseId: Number(selectedWarehouseId),
@@ -285,7 +306,9 @@ export default function MRPPage() {
     if (!bomProductId) return;
     setBomLoading(true);
     try {
-      const res = await fetch(`/api/production/mrp?action=bom-explode&productId=${bomProductId}&quantity=${bomQuantity}`);
+      const res = await authFetch(
+        `/api/production/mrp?action=bom-explode&productId=${bomProductId}&quantity=${bomQuantity}`
+      );
       const data = await res.json();
       if (data.success || data.data) {
         setBomTree(data.data || data);
@@ -316,8 +339,8 @@ export default function MRPPage() {
   };
 
   const toggleWorkOrder = (id: number) => {
-    setSelectedWorkOrderIds(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    setSelectedWorkOrderIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
@@ -356,9 +379,11 @@ export default function MRPPage() {
                       <Label>选择工单</Label>
                       <div className="border rounded-lg max-h-48 overflow-y-auto p-2 space-y-1 bg-muted/30">
                         {workOrders.length === 0 ? (
-                          <div className="text-sm text-muted-foreground text-center py-4">暂无工单数据</div>
+                          <div className="text-sm text-muted-foreground text-center py-4">
+                            暂无工单数据
+                          </div>
                         ) : (
-                          workOrders.map(wo => (
+                          workOrders.map((wo) => (
                             <label
                               key={wo.id}
                               className="flex items-center gap-2 p-2 rounded hover:bg-muted/50 cursor-pointer text-sm"
@@ -370,7 +395,9 @@ export default function MRPPage() {
                                 className="rounded border-border"
                               />
                               <span className="font-medium">{wo.work_order_no}</span>
-                              <span className="text-muted-foreground truncate">{wo.material_name}</span>
+                              <span className="text-muted-foreground truncate">
+                                {wo.material_name}
+                              </span>
                               <Badge variant="outline" className="ml-auto text-xs">
                                 {wo.plan_qty}
                               </Badge>
@@ -393,7 +420,7 @@ export default function MRPPage() {
                             <SelectValue placeholder="选择仓库" />
                           </SelectTrigger>
                           <SelectContent>
-                            {warehouses.map(wh => (
+                            {warehouses.map((wh) => (
                               <SelectItem key={wh.id} value={String(wh.id)}>
                                 {wh.warehouse_name} ({wh.warehouse_code})
                               </SelectItem>
@@ -403,13 +430,12 @@ export default function MRPPage() {
                       </div>
 
                       <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-                        <Switch
-                          checked={autoGeneratePR}
-                          onCheckedChange={setAutoGeneratePR}
-                        />
+                        <Switch checked={autoGeneratePR} onCheckedChange={setAutoGeneratePR} />
                         <div>
                           <Label className="cursor-pointer">自动生成采购申请</Label>
-                          <p className="text-xs text-muted-foreground">MRP运算后自动创建采购申请单</p>
+                          <p className="text-xs text-muted-foreground">
+                            MRP运算后自动创建采购申请单
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -417,7 +443,9 @@ export default function MRPPage() {
                     <div className="flex flex-col items-end justify-end gap-2">
                       <Button
                         onClick={handleRunMRP}
-                        disabled={mrpLoading || selectedWorkOrderIds.length === 0 || !selectedWarehouseId}
+                        disabled={
+                          mrpLoading || selectedWorkOrderIds.length === 0 || !selectedWarehouseId
+                        }
                         className="w-full md:w-auto"
                         size="lg"
                       >
@@ -448,7 +476,9 @@ export default function MRPPage() {
                           <Layers className="h-4 w-4 text-blue-600" />
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold">{mrpResult.summary.total_materials}</div>
+                          <div className="text-2xl font-bold">
+                            {mrpResult.summary.total_materials}
+                          </div>
                         </CardContent>
                       </Card>
                       <Card>
@@ -457,7 +487,9 @@ export default function MRPPage() {
                           <AlertTriangle className="h-4 w-4 text-red-600" />
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold text-red-600">{mrpResult.summary.total_shortages}</div>
+                          <div className="text-2xl font-bold text-red-600">
+                            {mrpResult.summary.total_shortages}
+                          </div>
                         </CardContent>
                       </Card>
                       <Card>
@@ -466,7 +498,9 @@ export default function MRPPage() {
                           <ShoppingCart className="h-4 w-4 text-orange-600" />
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold">{mrpResult.summary.total_planned_qty.toLocaleString()}</div>
+                          <div className="text-2xl font-bold">
+                            {mrpResult.summary.total_planned_qty.toLocaleString()}
+                          </div>
                         </CardContent>
                       </Card>
                       <Card>
@@ -475,7 +509,9 @@ export default function MRPPage() {
                           <FileSpreadsheet className="h-4 w-4 text-green-600" />
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold">¥{mrpResult.summary.total_planned_amount.toLocaleString()}</div>
+                          <div className="text-2xl font-bold">
+                            ¥{mrpResult.summary.total_planned_amount.toLocaleString()}
+                          </div>
                         </CardContent>
                       </Card>
                     </div>
@@ -525,16 +561,33 @@ export default function MRPPage() {
                             </TableHeader>
                             <TableBody>
                               {mrpResult.net_requirements.map((req, idx) => (
-                                <TableRow key={idx} className={req.shortage_warning ? 'bg-red-50 dark:bg-red-950/20' : ''}>
+                                <TableRow
+                                  key={idx}
+                                  className={
+                                    req.shortage_warning ? 'bg-red-50 dark:bg-red-950/20' : ''
+                                  }
+                                >
                                   <TableCell className="font-medium">{req.material_code}</TableCell>
                                   <TableCell>{req.material_name}</TableCell>
-                                  <TableCell className="text-right">{req.gross_requirement.toLocaleString()}</TableCell>
-                                  <TableCell className="text-right">{req.on_hand_qty.toLocaleString()}</TableCell>
-                                  <TableCell className="text-right">{req.allocated_qty.toLocaleString()}</TableCell>
-                                  <TableCell className="text-right">{req.in_transit_qty.toLocaleString()}</TableCell>
-                                  <TableCell className="text-right">{req.safety_stock.toLocaleString()}</TableCell>
+                                  <TableCell className="text-right">
+                                    {req.gross_requirement.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {req.on_hand_qty.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {req.allocated_qty.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {req.in_transit_qty.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {req.safety_stock.toLocaleString()}
+                                  </TableCell>
                                   <TableCell className="text-right font-semibold">
-                                    {req.net_requirement > 0 ? req.net_requirement.toLocaleString() : '-'}
+                                    {req.net_requirement > 0
+                                      ? req.net_requirement.toLocaleString()
+                                      : '-'}
                                   </TableCell>
                                   <TableCell className="text-right">{req.lead_time_days}</TableCell>
                                   <TableCell>{req.suggested_order_date}</TableCell>
@@ -545,7 +598,10 @@ export default function MRPPage() {
                                         缺料
                                       </Badge>
                                     ) : (
-                                      <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                      <Badge
+                                        variant="outline"
+                                        className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                      >
                                         充足
                                       </Badge>
                                     )}
@@ -554,7 +610,10 @@ export default function MRPPage() {
                               ))}
                               {mrpResult.net_requirements.length === 0 && (
                                 <TableRow>
-                                  <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                                  <TableCell
+                                    colSpan={11}
+                                    className="text-center text-muted-foreground py-8"
+                                  >
                                     暂无净需求数据
                                   </TableCell>
                                 </TableRow>
@@ -586,9 +645,13 @@ export default function MRPPage() {
                             <TableBody>
                               {mrpResult.planned_orders.map((order, idx) => (
                                 <TableRow key={idx}>
-                                  <TableCell className="font-medium">{order.material_code}</TableCell>
+                                  <TableCell className="font-medium">
+                                    {order.material_code}
+                                  </TableCell>
                                   <TableCell>{order.material_name}</TableCell>
-                                  <TableCell className="text-right">{order.quantity.toLocaleString()}</TableCell>
+                                  <TableCell className="text-right">
+                                    {order.quantity.toLocaleString()}
+                                  </TableCell>
                                   <TableCell>{order.required_date}</TableCell>
                                   <TableCell>{order.order_date}</TableCell>
                                   <TableCell>
@@ -600,7 +663,10 @@ export default function MRPPage() {
                               ))}
                               {mrpResult.planned_orders.length === 0 && (
                                 <TableRow>
-                                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                  <TableCell
+                                    colSpan={6}
+                                    className="text-center text-muted-foreground py-8"
+                                  >
                                     暂无计划订单
                                   </TableCell>
                                 </TableRow>
@@ -635,7 +701,7 @@ export default function MRPPage() {
                           <SelectValue placeholder="选择产品" />
                         </SelectTrigger>
                         <SelectContent>
-                          {materials.map(m => (
+                          {materials.map((m) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               {m.material_code} - {m.material_name}
                             </SelectItem>
@@ -649,7 +715,7 @@ export default function MRPPage() {
                         type="number"
                         min={1}
                         value={bomQuantity}
-                        onChange={e => setBomQuantity(Number(e.target.value) || 1)}
+                        onChange={(e) => setBomQuantity(Number(e.target.value) || 1)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -707,8 +773,8 @@ export default function MRPPage() {
                                     node.level === 0
                                       ? 'bg-muted/50 font-semibold'
                                       : node.is_leaf
-                                      ? ''
-                                      : 'bg-blue-50/50 dark:bg-blue-950/20'
+                                        ? ''
+                                        : 'bg-blue-50/50 dark:bg-blue-950/20'
                                   }
                                 >
                                   <TableCell>
@@ -719,17 +785,29 @@ export default function MRPPage() {
                                       {node.level > 0 && (
                                         <ChevronRight className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                                       )}
-                                      <span className="text-xs text-muted-foreground">L{node.level}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        L{node.level}
+                                      </span>
                                     </div>
                                   </TableCell>
-                                  <TableCell className="font-mono text-sm">{node.material_code}</TableCell>
-                                  <TableCell className={node.is_leaf ? '' : 'font-medium'}>{node.material_name}</TableCell>
-                                  <TableCell className="text-right">{node.quantity.toLocaleString()}</TableCell>
+                                  <TableCell className="font-mono text-sm">
+                                    {node.material_code}
+                                  </TableCell>
+                                  <TableCell className={node.is_leaf ? '' : 'font-medium'}>
+                                    {node.material_name}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {node.quantity.toLocaleString()}
+                                  </TableCell>
                                   <TableCell>{node.unit}</TableCell>
                                   <TableCell className="text-right">
-                                    {node.scrap_rate > 0 ? `${(node.scrap_rate * 100).toFixed(1)}%` : '-'}
+                                    {node.scrap_rate > 0
+                                      ? `${(node.scrap_rate * 100).toFixed(1)}%`
+                                      : '-'}
                                   </TableCell>
-                                  <TableCell className="text-right">{node.lead_time_days}</TableCell>
+                                  <TableCell className="text-right">
+                                    {node.lead_time_days}
+                                  </TableCell>
                                   <TableCell>
                                     {node.level === 0 ? (
                                       <Badge variant="outline">成品</Badge>
@@ -775,7 +853,7 @@ export default function MRPPage() {
                           <SelectValue placeholder="选择物料" />
                         </SelectTrigger>
                         <SelectContent>
-                          {materials.map(m => (
+                          {materials.map((m) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               {m.material_code} - {m.material_name}
                             </SelectItem>
@@ -790,7 +868,7 @@ export default function MRPPage() {
                           <SelectValue placeholder="选择仓库" />
                         </SelectTrigger>
                         <SelectContent>
-                          {warehouses.map(wh => (
+                          {warehouses.map((wh) => (
                             <SelectItem key={wh.id} value={String(wh.id)}>
                               {wh.warehouse_name}
                             </SelectItem>
@@ -803,7 +881,7 @@ export default function MRPPage() {
                       <Input
                         type="date"
                         value={bucketStartDate}
-                        onChange={e => setBucketStartDate(e.target.value)}
+                        onChange={(e) => setBucketStartDate(e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -811,7 +889,7 @@ export default function MRPPage() {
                       <Input
                         type="date"
                         value={bucketEndDate}
-                        onChange={e => setBucketEndDate(e.target.value)}
+                        onChange={(e) => setBucketEndDate(e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -860,7 +938,10 @@ export default function MRPPage() {
                       <CardContent>
                         <div className="h-[400px]">
                           <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={timeBuckets} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                            <ComposedChart
+                              data={timeBuckets}
+                              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                            >
                               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                               <XAxis
                                 dataKey="date"
@@ -942,19 +1023,36 @@ export default function MRPPage() {
                             </TableHeader>
                             <TableBody>
                               {timeBuckets.map((bucket, idx) => (
-                                <TableRow key={idx} className={bucket.net_requirement > 0 ? 'bg-red-50 dark:bg-red-950/20' : ''}>
+                                <TableRow
+                                  key={idx}
+                                  className={
+                                    bucket.net_requirement > 0 ? 'bg-red-50 dark:bg-red-950/20' : ''
+                                  }
+                                >
                                   <TableCell className="font-medium">{bucket.date}</TableCell>
-                                  <TableCell className="text-right">{bucket.gross_requirement.toLocaleString()}</TableCell>
-                                  <TableCell className="text-right">{bucket.scheduled_receipt.toLocaleString()}</TableCell>
-                                  <TableCell className="text-right">{bucket.on_hand.toLocaleString()}</TableCell>
+                                  <TableCell className="text-right">
+                                    {bucket.gross_requirement.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {bucket.scheduled_receipt.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {bucket.on_hand.toLocaleString()}
+                                  </TableCell>
                                   <TableCell className="text-right font-semibold">
-                                    {bucket.net_requirement > 0 ? bucket.net_requirement.toLocaleString() : '-'}
+                                    {bucket.net_requirement > 0
+                                      ? bucket.net_requirement.toLocaleString()
+                                      : '-'}
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    {bucket.planned_order_release > 0 ? bucket.planned_order_release.toLocaleString() : '-'}
+                                    {bucket.planned_order_release > 0
+                                      ? bucket.planned_order_release.toLocaleString()
+                                      : '-'}
                                   </TableCell>
                                   <TableCell className="text-right">
-                                    {bucket.planned_order_receipt > 0 ? bucket.planned_order_receipt.toLocaleString() : '-'}
+                                    {bucket.planned_order_receipt > 0
+                                      ? bucket.planned_order_receipt.toLocaleString()
+                                      : '-'}
                                   </TableCell>
                                 </TableRow>
                               ))}

@@ -7,10 +7,52 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Edit, Trash2, UserCircle, RefreshCw, Printer, QrCode, Upload, X, CheckSquare, Square, FileSpreadsheet, FileText, BarChart3, Users, GraduationCap, Calendar, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  UserCircle,
+  RefreshCw,
+  Printer,
+  QrCode,
+  Upload,
+  X,
+  CheckSquare,
+  Square,
+  FileSpreadsheet,
+  FileText,
+  BarChart3,
+  Users,
+  GraduationCap,
+  Calendar,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
@@ -18,6 +60,18 @@ import { usePermission } from '@/hooks/usePermission';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
+
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
 
 // 员工接口
 interface Employee {
@@ -89,7 +143,7 @@ export default function EmployeePage() {
     male: 0,
     female: 0,
     avgAge: 0,
-    education: {} as Record<string, number>
+    education: {} as Record<string, number>,
   });
 
   // 排序状态
@@ -101,13 +155,13 @@ export default function EmployeePage() {
   // 计算统计数据
   const calculateStats = useCallback((data: Employee[]) => {
     const total = data.length;
-    const male = data.filter(e => e.gender === 1).length;
-    const female = data.filter(e => e.gender === 2).length;
-    const ages = data.filter(e => e.age).map(e => e.age!);
+    const male = data.filter((e) => e.gender === 1).length;
+    const female = data.filter((e) => e.gender === 2).length;
+    const ages = data.filter((e) => e.age).map((e) => e.age!);
     const avgAge = ages.length > 0 ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
-    
+
     const education: Record<string, number> = {};
-    data.forEach(e => {
+    data.forEach((e) => {
       const edu = e.education || '未填写';
       education[edu] = (education[edu] || 0) + 1;
     });
@@ -127,26 +181,24 @@ export default function EmployeePage() {
   // 获取排序后的员工列表
   const sortedEmployees = useCallback(() => {
     if (!sortConfig.key) return employees;
-    
+
     return [...employees].sort((a, b) => {
       const aValue = a[sortConfig.key!];
       const bValue = b[sortConfig.key!];
-      
+
       if (aValue === null || aValue === undefined) return 1;
       if (bValue === null || bValue === undefined) return -1;
-      
+
       if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortConfig.direction === 'asc' 
+        return sortConfig.direction === 'asc'
           ? aValue.localeCompare(bValue, 'zh-CN')
           : bValue.localeCompare(aValue, 'zh-CN');
       }
-      
+
       if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortConfig.direction === 'asc' 
-          ? aValue - bValue 
-          : bValue - aValue;
+        return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
       }
-      
+
       return 0;
     });
   }, [employees, sortConfig]);
@@ -155,14 +207,15 @@ export default function EmployeePage() {
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
     try {
-      const url = debouncedSearch 
+      const url = debouncedSearch
         ? `/api/organization/employee?keyword=${encodeURIComponent(debouncedSearch)}`
         : '/api/organization/employee';
-      const response = await fetch(url);
+      const response = await authFetch(url);
       const result = await response.json();
       if (result.success) {
-        setEmployees(result.data);
-        calculateStats(result.data);
+        const employeeList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        setEmployees(employeeList);
+        calculateStats(employeeList);
       }
     } catch (error) {
       console.error('获取员工列表失败:', error);
@@ -178,7 +231,8 @@ export default function EmployeePage() {
       const response = await fetch('/api/organization/department');
       const result = await response.json();
       if (result.success) {
-        setDepartments(result.data);
+        const deptList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        setDepartments(deptList);
       }
     } catch (error) {
       console.error('获取部门列表失败:', error);
@@ -188,10 +242,11 @@ export default function EmployeePage() {
   // 获取角色列表
   const fetchRoles = useCallback(async () => {
     try {
-      const response = await fetch('/api/organization/role');
+      const response = await authFetch('/api/organization/role');
       const result = await response.json();
       if (result.success) {
-        setRoles(result.data);
+        const roleList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        setRoles(roleList);
       }
     } catch (error) {
       console.error('获取角色列表失败:', error);
@@ -228,9 +283,9 @@ export default function EmployeePage() {
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
-      const response = await fetch('/api/upload', {
+      const response = await authFetch('/api/upload', {
         method: 'POST',
-        body: uploadFormData
+        body: uploadFormData,
       });
 
       const result = await response.json();
@@ -269,14 +324,13 @@ export default function EmployeePage() {
       // 确保 employee_no 有值
       const submitData = {
         ...form,
-        employee_no: form.employee_no || generateEmployeeNo()
+        employee_no: form.employee_no || generateEmployeeNo(),
       };
 
       const method = editing ? 'PUT' : 'POST';
-      const response = await fetch('/api/organization/employee', {
+      const response = await authFetch('/api/organization/employee', {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData)
+        body: JSON.stringify(submitData),
       });
       const result = await response.json();
       if (result.success) {
@@ -296,8 +350,8 @@ export default function EmployeePage() {
   const deleteEmployee = async (id: number) => {
     if (!confirm('确定要删除该员工吗？')) return;
     try {
-      const response = await fetch(`/api/organization/employee?id=${id}`, {
-        method: 'DELETE'
+      const response = await authFetch(`/api/organization/employee?id=${id}`, {
+        method: 'DELETE',
       });
       const result = await response.json();
       if (result.success) {
@@ -314,10 +368,8 @@ export default function EmployeePage() {
 
   // 选择/取消选择员工
   const toggleSelectEmployee = (id: number) => {
-    setSelectedEmployees(prev => 
-      prev.includes(id) 
-        ? prev.filter(empId => empId !== id)
-        : [...prev, id]
+    setSelectedEmployees((prev) =>
+      prev.includes(id) ? prev.filter((empId) => empId !== id) : [...prev, id]
     );
   };
 
@@ -326,14 +378,15 @@ export default function EmployeePage() {
     if (selectedEmployees.length === employees.length) {
       setSelectedEmployees([]);
     } else {
-      setSelectedEmployees(employees.map(emp => emp.id));
+      setSelectedEmployees(employees.map((emp) => emp.id));
     }
   };
 
   const handlePrintList = () => {
-    const dataToPrint = selectedEmployees.length > 0
-      ? employees.filter(emp => selectedEmployees.includes(emp.id))
-      : employees;
+    const dataToPrint =
+      selectedEmployees.length > 0
+        ? employees.filter((emp) => selectedEmployees.includes(emp.id))
+        : employees;
 
     if (dataToPrint.length === 0) {
       toast.error('没有数据可打印');
@@ -347,7 +400,9 @@ export default function EmployeePage() {
       return;
     }
 
-    const rows = dataToPrint.map((emp, index) => `
+    const rows = dataToPrint
+      .map(
+        (emp, index) => `
       <tr>
         <td>${index + 1}</td>
         <td>${emp.employee_no}</td>
@@ -362,7 +417,9 @@ export default function EmployeePage() {
         <td>${emp.native_place || '-'}</td>
         <td>${emp.phone}</td>
         <td>${statusLabels[emp.status] || '未知'}</td>
-      </tr>`).join('');
+      </tr>`
+      )
+      .join('');
 
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>员工列表打印</title>
       <style>
@@ -402,9 +459,10 @@ export default function EmployeePage() {
 
   // 导出Excel
   const exportToExcel = () => {
-    const dataToExport = selectedEmployees.length > 0 
-      ? employees.filter(emp => selectedEmployees.includes(emp.id))
-      : employees;
+    const dataToExport =
+      selectedEmployees.length > 0
+        ? employees.filter((emp) => selectedEmployees.includes(emp.id))
+        : employees;
 
     if (dataToExport.length === 0) {
       toast.error('没有数据可导出');
@@ -412,8 +470,21 @@ export default function EmployeePage() {
     }
 
     // 创建CSV内容
-    const headers = ['员工编号', '姓名', '性别', '年龄', '部门', '课室', '职位', '学历', '入职日期', '籍贯', '联系方式', '状态'];
-    const rows = dataToExport.map(emp => [
+    const headers = [
+      '员工编号',
+      '姓名',
+      '性别',
+      '年龄',
+      '部门',
+      '课室',
+      '职位',
+      '学历',
+      '入职日期',
+      '籍贯',
+      '联系方式',
+      '状态',
+    ];
+    const rows = dataToExport.map((emp) => [
       emp.employee_no,
       emp.name,
       emp.gender === 1 ? '男' : '女',
@@ -425,11 +496,14 @@ export default function EmployeePage() {
       emp.entry_date,
       emp.native_place || '',
       emp.phone,
-      emp.status === 1 ? '在职' : emp.status === 2 ? '试用期' : emp.status === 3 ? '离职' : '停用'
+      emp.status === 1 ? '在职' : emp.status === 2 ? '试用期' : emp.status === 3 ? '离职' : '停用',
     ]);
 
-    const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
-    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+
     // 添加BOM以支持中文
     const BOM = '\uFEFF';
     const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -445,9 +519,10 @@ export default function EmployeePage() {
 
   // 导出PDF
   const exportToPDF = () => {
-    const dataToExport = selectedEmployees.length > 0 
-      ? employees.filter(emp => selectedEmployees.includes(emp.id))
-      : employees;
+    const dataToExport =
+      selectedEmployees.length > 0
+        ? employees.filter((emp) => selectedEmployees.includes(emp.id))
+        : employees;
 
     if (dataToExport.length === 0) {
       toast.error('没有数据可导出');
@@ -502,7 +577,9 @@ export default function EmployeePage() {
             </tr>
           </thead>
           <tbody>
-            ${dataToExport.map((emp, index) => `
+            ${dataToExport
+              .map(
+                (emp, index) => `
               <tr>
                 <td>${index + 1}</td>
                 <td>${emp.employee_no}</td>
@@ -517,7 +594,9 @@ export default function EmployeePage() {
                 <td>${emp.phone}</td>
                 <td>${emp.status === 1 ? '在职' : emp.status === 2 ? '试用期' : emp.status === 3 ? '离职' : '停用'}</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
         <script>
@@ -538,15 +617,17 @@ export default function EmployeePage() {
 
   // 批量打印全部
   const handleBatchPrintAll = () => {
-    const selectedEmps = employees.filter(emp => selectedEmployees.includes(emp.id));
-    
+    const selectedEmps = employees.filter((emp) => selectedEmployees.includes(emp.id));
+
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       toast.error('请允许弹出窗口以进行打印');
       return;
     }
 
-    const cardsHtml = selectedEmps.map((emp, index) => `
+    const cardsHtml = selectedEmps
+      .map(
+        (emp, index) => `
       <div class="card" style="${index > 0 ? 'page-break-before: always;' : ''}">
         <div class="header">
           <div class="company-name">${companyName}</div>
@@ -584,7 +665,9 @@ export default function EmployeePage() {
         </div>
         <div class="employee-no">NO: ${emp.employee_no}</div>
       </div>
-    `).join('');
+    `
+      )
+      .join('');
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -642,18 +725,18 @@ export default function EmployeePage() {
       </html>
     `);
     printWindow.document.close();
-    
+
     setTimeout(() => {
       printWindow.print();
     }, 500);
-    
+
     toast.success('打印窗口已打开');
   };
 
   // 批量打印卡片组件
   const BatchPrintCard = ({ employee, index }: { employee: Employee; index: number }) => {
     const [qrUrl, setQrUrl] = useState('');
-    
+
     useEffect(() => {
       const generateQR = async () => {
         const queryUrl = `${window.location.origin}/hr/employee/query?id=${employee.id}`;
@@ -662,7 +745,7 @@ export default function EmployeePage() {
       };
       generateQR();
     }, [employee.id]);
-    
+
     return (
       <div className="border rounded-lg p-4 bg-card">
         <div className="flex items-start gap-4">
@@ -672,11 +755,15 @@ export default function EmployeePage() {
         <div className="flex gap-4">
           <div className="w-20 h-24 bg-muted rounded flex items-center justify-center overflow-hidden">
             {employee.photo ? (
-              <img src={employee.photo} alt={employee.name} className="w-full h-full object-cover" />
+              <img
+                src={employee.photo}
+                alt={employee.name}
+                className="w-full h-full object-cover"
+              />
             ) : (
               <UserCircle className="w-10 h-10 text-muted-foreground" />
-              )}
-            </div>
+            )}
+          </div>
           <div className="flex-1 text-sm space-y-1">
             <div>编号: {employee.employee_no}</div>
             <div>部门: {employee.dept_name}</div>
@@ -701,8 +788,8 @@ export default function EmployeePage() {
         margin: 2,
         color: {
           dark: '#000000',
-          light: '#ffffff'
-        }
+          light: '#ffffff',
+        },
       });
       setQrCodeUrl(url);
       setSelectedEmployee(employee);
@@ -916,13 +1003,13 @@ export default function EmployeePage() {
       1: 'bg-green-100 text-green-800',
       0: 'bg-muted text-muted-foreground',
       2: 'bg-yellow-100 text-yellow-800',
-      3: 'bg-red-100 text-red-800'
+      3: 'bg-red-100 text-red-800',
     };
     const labels: Record<number, string> = {
       1: '在职',
       0: '停用',
       2: '试用期',
-      3: '离职'
+      3: '离职',
     };
     return <Badge className={styles[status] || styles[1]}>{labels[status] || '未知'}</Badge>;
   };
@@ -955,7 +1042,7 @@ export default function EmployeePage() {
             <div className="flex items-center gap-4 mb-4">
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
+                <Input
                   placeholder="搜索员工姓名、编号、手机号..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -1000,9 +1087,13 @@ export default function EmployeePage() {
                     <div>
                       <p className="text-sm text-green-600 font-medium">男性</p>
                       <p className="text-2xl font-bold text-green-800">{stats.male}</p>
-                      <p className="text-xs text-green-500">{stats.total > 0 ? ((stats.male / stats.total) * 100).toFixed(1) : 0}%</p>
+                      <p className="text-xs text-green-500">
+                        {stats.total > 0 ? ((stats.male / stats.total) * 100).toFixed(1) : 0}%
+                      </p>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-green-400 flex items-center justify-center text-white font-bold">男</div>
+                    <div className="w-8 h-8 rounded-full bg-green-400 flex items-center justify-center text-white font-bold">
+                      男
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1012,9 +1103,13 @@ export default function EmployeePage() {
                     <div>
                       <p className="text-sm text-pink-600 font-medium">女性</p>
                       <p className="text-2xl font-bold text-pink-800">{stats.female}</p>
-                      <p className="text-xs text-pink-500">{stats.total > 0 ? ((stats.female / stats.total) * 100).toFixed(1) : 0}%</p>
+                      <p className="text-xs text-pink-500">
+                        {stats.total > 0 ? ((stats.female / stats.total) * 100).toFixed(1) : 0}%
+                      </p>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-pink-400 flex items-center justify-center text-white font-bold">女</div>
+                    <div className="w-8 h-8 rounded-full bg-pink-400 flex items-center justify-center text-white font-bold">
+                      女
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1059,35 +1154,24 @@ export default function EmployeePage() {
               <>
                 {selectedEmployees.length > 0 && (
                   <div className="flex items-center gap-2 mb-4 p-2 bg-blue-50 rounded-lg">
-                    <span className="text-sm text-blue-600">已选择 {selectedEmployees.length} 名员工</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleBatchPrint}
-                      className="ml-2"
-                    >
+                    <span className="text-sm text-blue-600">
+                      已选择 {selectedEmployees.length} 名员工
+                    </span>
+                    <Button variant="outline" size="sm" onClick={handleBatchPrint} className="ml-2">
                       <Printer className="w-4 h-4 mr-2" />
                       批量打印上岗证
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={exportToExcel}
-                    >
+                    <Button variant="outline" size="sm" onClick={exportToExcel}>
                       <FileSpreadsheet className="w-4 h-4 mr-2" />
                       导出Excel
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={exportToPDF}
-                    >
+                    <Button variant="outline" size="sm" onClick={exportToPDF}>
                       <FileText className="w-4 h-4 mr-2" />
                       导出PDF
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setSelectedEmployees([])}
                       className="ml-auto text-muted-foreground"
                     >
@@ -1099,114 +1183,194 @@ export default function EmployeePage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <Checkbox 
-                          checked={selectedEmployees.length === employees.length && employees.length > 0}
+                        <Checkbox
+                          checked={
+                            selectedEmployees.length === employees.length && employees.length > 0
+                          }
                           onCheckedChange={toggleSelectAll}
                         />
                       </TableHead>
-                      <TableHead className="w-16 cursor-pointer hover:bg-muted/50" onClick={() => handleSort('id')}>
+                      <TableHead
+                        className="w-16 cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('id')}
+                      >
                         <div className="flex items-center gap-1">
                           序号
-                          {sortConfig.key === 'id' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'id' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
                       <TableHead>照片</TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('employee_no')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('employee_no')}
+                      >
                         <div className="flex items-center gap-1">
                           员工编号
-                          {sortConfig.key === 'employee_no' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'employee_no' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('name')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('name')}
+                      >
                         <div className="flex items-center gap-1">
                           姓名
-                          {sortConfig.key === 'name' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'name' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('gender')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('gender')}
+                      >
                         <div className="flex items-center gap-1">
                           性别
-                          {sortConfig.key === 'gender' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'gender' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('age')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('age')}
+                      >
                         <div className="flex items-center gap-1">
                           年龄
-                          {sortConfig.key === 'age' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'age' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('dept_name')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('dept_name')}
+                      >
                         <div className="flex items-center gap-1">
                           部门
-                          {sortConfig.key === 'dept_name' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'dept_name' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('section')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('section')}
+                      >
                         <div className="flex items-center gap-1">
                           课室
-                          {sortConfig.key === 'section' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'section' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('position')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('position')}
+                      >
                         <div className="flex items-center gap-1">
                           职位
-                          {sortConfig.key === 'position' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'position' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('entry_date')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('entry_date')}
+                      >
                         <div className="flex items-center gap-1">
                           入职日期
-                          {sortConfig.key === 'entry_date' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'entry_date' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('education')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('education')}
+                      >
                         <div className="flex items-center gap-1">
                           学历
-                          {sortConfig.key === 'education' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'education' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('native_place')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('native_place')}
+                      >
                         <div className="flex items-center gap-1">
                           籍贯
-                          {sortConfig.key === 'native_place' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'native_place' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('phone')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('phone')}
+                      >
                         <div className="flex items-center gap-1">
                           联系方式
-                          {sortConfig.key === 'phone' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'phone' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
-                      <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('status')}>
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('status')}
+                      >
                         <div className="flex items-center gap-1">
                           状态
-                          {sortConfig.key === 'status' && (
-                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
-                          )}
+                          {sortConfig.key === 'status' &&
+                            (sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3 h-3" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3" />
+                            ))}
                         </div>
                       </TableHead>
                       <TableHead className="text-right">操作</TableHead>
@@ -1216,72 +1380,74 @@ export default function EmployeePage() {
                     {sortedEmployees().map((emp, index) => (
                       <TableRow key={emp.id}>
                         <TableCell>
-                          <Checkbox 
+                          <Checkbox
                             checked={selectedEmployees.includes(emp.id)}
                             onCheckedChange={() => toggleSelectEmployee(emp.id)}
                           />
                         </TableCell>
-                        <TableCell className="text-center text-muted-foreground">{index + 1}</TableCell>
-                      <TableCell>
-                        {emp.photo ? (
-                          <img 
-                            src={emp.photo} 
-                            alt={emp.name}
-                            className="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-600"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                            <UserCircle className="w-6 h-6 text-gray-400" />
+                        <TableCell className="text-center text-muted-foreground">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell>
+                          {emp.photo ? (
+                            <img
+                              src={emp.photo}
+                              alt={emp.name}
+                              className="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-600"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                              <UserCircle className="w-6 h-6 text-gray-400" />
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium">{emp.employee_no}</TableCell>
+                        <TableCell>{emp.name}</TableCell>
+                        <TableCell>{emp.gender === 1 ? '男' : '女'}</TableCell>
+                        <TableCell>{emp.age || '-'}</TableCell>
+                        <TableCell>{emp.dept_name}</TableCell>
+                        <TableCell>{emp.section || '-'}</TableCell>
+                        <TableCell>{emp.position}</TableCell>
+                        <TableCell>{emp.entry_date}</TableCell>
+                        <TableCell>{emp.education || '-'}</TableCell>
+                        <TableCell>{emp.native_place || '-'}</TableCell>
+                        <TableCell>{emp.phone}</TableCell>
+                        <TableCell>{getStatusBadge(emp.status)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => generateEmployeeQR(emp)}
+                              title="打印上岗证"
+                            >
+                              <Printer className="w-4 h-4 text-blue-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setForm(emp);
+                                setEditing(true);
+                                setDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteEmployee(emp.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
                           </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">{emp.employee_no}</TableCell>
-                      <TableCell>{emp.name}</TableCell>
-                      <TableCell>{emp.gender === 1 ? '男' : '女'}</TableCell>
-                      <TableCell>{emp.age || '-'}</TableCell>
-                      <TableCell>{emp.dept_name}</TableCell>
-                      <TableCell>{emp.section || '-'}</TableCell>
-                      <TableCell>{emp.position}</TableCell>
-                      <TableCell>{emp.entry_date}</TableCell>
-                      <TableCell>{emp.education || '-'}</TableCell>
-                      <TableCell>{emp.native_place || '-'}</TableCell>
-                      <TableCell>{emp.phone}</TableCell>
-                      <TableCell>{getStatusBadge(emp.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => generateEmployeeQR(emp)}
-                            title="打印上岗证"
-                          >
-                            <Printer className="w-4 h-4 text-blue-500" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => {
-                              setForm(emp);
-                              setEditing(true);
-                              setDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => deleteEmployee(emp.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </>
             )}
           </CardContent>
         </Card>
@@ -1292,9 +1458,7 @@ export default function EmployeePage() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" resizable>
           <DialogHeader>
             <DialogTitle>{editing ? '编辑员工' : '新增员工'}</DialogTitle>
-            <DialogDescription>
-              {editing ? '修改员工信息' : '填写新员工信息'}
-            </DialogDescription>
+            <DialogDescription>{editing ? '修改员工信息' : '填写新员工信息'}</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-3 gap-4 py-4">
             {/* 照片上传区域 */}
@@ -1310,11 +1474,7 @@ export default function EmployeePage() {
                 />
                 {form.photo ? (
                   <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600">
-                    <img 
-                      src={form.photo} 
-                      alt="员工照片" 
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={form.photo} alt="员工照片" className="w-full h-full object-cover" />
                     <button
                       onClick={handleRemovePhoto}
                       className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
@@ -1344,26 +1504,30 @@ export default function EmployeePage() {
             </div>
             <div className="space-y-2">
               <Label>员工编号</Label>
-              <Input 
-                value={form.employee_no || ''} 
-                onChange={(e) => setForm({...form, employee_no: e.target.value})}
+              <Input
+                value={form.employee_no || ''}
+                onChange={(e) => setForm({ ...form, employee_no: e.target.value })}
                 placeholder="系统自动生成"
                 readOnly={!editing}
               />
             </div>
             <div className="space-y-2">
-              <Label>姓名 <span className="text-red-500">*</span></Label>
-              <Input 
-                value={form.name || ''} 
-                onChange={(e) => setForm({...form, name: e.target.value})}
+              <Label>
+                姓名 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={form.name || ''}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="请输入姓名"
               />
             </div>
             <div className="space-y-2">
-              <Label>性别 <span className="text-gray-400 text-xs">(身份证自动识别)</span></Label>
-              <Select 
-                value={form.gender?.toString() || '1'} 
-                onValueChange={(v) => setForm({...form, gender: parseInt(v)})}
+              <Label>
+                性别 <span className="text-gray-400 text-xs">(身份证自动识别)</span>
+              </Label>
+              <Select
+                value={form.gender?.toString() || '1'}
+                onValueChange={(v) => setForm({ ...form, gender: parseInt(v) })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择性别" />
@@ -1376,25 +1540,25 @@ export default function EmployeePage() {
             </div>
             <div className="space-y-2">
               <Label>手机号</Label>
-              <Input 
-                value={form.phone || ''} 
-                onChange={(e) => setForm({...form, phone: e.target.value})}
+              <Input
+                value={form.phone || ''}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="请输入手机号"
               />
             </div>
             <div className="space-y-2">
               <Label>邮箱</Label>
-              <Input 
-                value={form.email || ''} 
-                onChange={(e) => setForm({...form, email: e.target.value})}
+              <Input
+                value={form.email || ''}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="请输入邮箱"
               />
             </div>
             <div className="space-y-2">
               <Label>部门</Label>
-              <Select 
-                value={form.dept_id?.toString() || ''} 
-                onValueChange={(v) => setForm({...form, dept_id: parseInt(v)})}
+              <Select
+                value={form.dept_id?.toString() || ''}
+                onValueChange={(v) => setForm({ ...form, dept_id: parseInt(v) })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择部门" />
@@ -1410,17 +1574,17 @@ export default function EmployeePage() {
             </div>
             <div className="space-y-2">
               <Label>职位</Label>
-              <Input 
-                value={form.position || ''} 
-                onChange={(e) => setForm({...form, position: e.target.value})}
+              <Input
+                value={form.position || ''}
+                onChange={(e) => setForm({ ...form, position: e.target.value })}
                 placeholder="请输入职位"
               />
             </div>
             <div className="space-y-2">
               <Label>角色</Label>
-              <Select 
-                value={form.role_id?.toString() || ''} 
-                onValueChange={(v) => setForm({...form, role_id: parseInt(v)})}
+              <Select
+                value={form.role_id?.toString() || ''}
+                onValueChange={(v) => setForm({ ...form, role_id: parseInt(v) })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择角色" />
@@ -1436,17 +1600,17 @@ export default function EmployeePage() {
             </div>
             <div className="space-y-2">
               <Label>入职日期</Label>
-              <Input 
+              <Input
                 type="date"
-                value={form.entry_date || ''} 
-                onChange={(e) => setForm({...form, entry_date: e.target.value})}
+                value={form.entry_date || ''}
+                onChange={(e) => setForm({ ...form, entry_date: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label>状态</Label>
-              <Select 
-                value={form.status?.toString() || '1'} 
-                onValueChange={(v) => setForm({...form, status: parseInt(v)})}
+              <Select
+                value={form.status?.toString() || '1'}
+                onValueChange={(v) => setForm({ ...form, status: parseInt(v) })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择状态" />
@@ -1460,10 +1624,12 @@ export default function EmployeePage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>年龄 <span className="text-gray-400 text-xs">(自动计算)</span></Label>
-              <Input 
+              <Label>
+                年龄 <span className="text-gray-400 text-xs">(自动计算)</span>
+              </Label>
+              <Input
                 type="number"
-                value={form.age || ''} 
+                value={form.age || ''}
                 readOnly
                 className="bg-gray-50"
                 placeholder="自动计算"
@@ -1471,25 +1637,22 @@ export default function EmployeePage() {
             </div>
             <div className="space-y-2">
               <Label>课室</Label>
-              <Input 
-                value={form.section || ''} 
-                onChange={(e) => setForm({...form, section: e.target.value})}
+              <Input
+                value={form.section || ''}
+                onChange={(e) => setForm({ ...form, section: e.target.value })}
                 placeholder="请输入课室"
               />
             </div>
             <div className="space-y-2">
-              <Label>出生日期 <span className="text-gray-400 text-xs">(自动计算)</span></Label>
-              <Input 
-                type="date"
-                value={form.birth_date || ''} 
-                readOnly
-                className="bg-gray-50"
-              />
+              <Label>
+                出生日期 <span className="text-gray-400 text-xs">(自动计算)</span>
+              </Label>
+              <Input type="date" value={form.birth_date || ''} readOnly className="bg-gray-50" />
             </div>
             <div className="space-y-2">
               <Label>身份证号</Label>
-              <Input 
-                value={form.id_card || ''} 
+              <Input
+                value={form.id_card || ''}
                 onChange={(e) => {
                   const idCard = e.target.value.replace(/[^0-9Xx]/g, '');
                   let birthDate = '';
@@ -1517,7 +1680,7 @@ export default function EmployeePage() {
                     gender = genderDigit % 2 === 1 ? 1 : 2;
                   }
                   setForm({
-                    ...form, 
+                    ...form,
                     id_card: idCard,
                     birth_date: birthDate || form.birth_date,
                     age: age || form.age,
@@ -1529,17 +1692,17 @@ export default function EmployeePage() {
             </div>
             <div className="space-y-2">
               <Label>籍贯</Label>
-              <Input 
-                value={form.native_place || ''} 
-                onChange={(e) => setForm({...form, native_place: e.target.value})}
+              <Input
+                value={form.native_place || ''}
+                onChange={(e) => setForm({ ...form, native_place: e.target.value })}
                 placeholder="请输入籍贯"
               />
             </div>
             <div className="space-y-2">
               <Label>学历</Label>
-              <Select 
-                value={form.education || ''} 
-                onValueChange={(v) => setForm({...form, education: v})}
+              <Select
+                value={form.education || ''}
+                onValueChange={(v) => setForm({ ...form, education: v })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择学历" />
@@ -1557,17 +1720,17 @@ export default function EmployeePage() {
             </div>
             <div className="space-y-2">
               <Label>家庭住址</Label>
-              <Input 
-                value={form.home_address || ''} 
-                onChange={(e) => setForm({...form, home_address: e.target.value})}
+              <Input
+                value={form.home_address || ''}
+                onChange={(e) => setForm({ ...form, home_address: e.target.value })}
                 placeholder="请输入家庭住址"
               />
             </div>
             <div className="space-y-2">
               <Label>现住址</Label>
-              <Input 
-                value={form.current_address || ''} 
-                onChange={(e) => setForm({...form, current_address: e.target.value})}
+              <Input
+                value={form.current_address || ''}
+                onChange={(e) => setForm({ ...form, current_address: e.target.value })}
                 placeholder="请输入现住址"
               />
             </div>
@@ -1588,9 +1751,7 @@ export default function EmployeePage() {
         <DialogContent className="max-w-lg" resizable>
           <DialogHeader>
             <DialogTitle>员工上岗证预览</DialogTitle>
-            <DialogDescription>
-              点击下方按钮打印上岗证
-            </DialogDescription>
+            <DialogDescription>点击下方按钮打印上岗证</DialogDescription>
           </DialogHeader>
           <div className="flex justify-center py-4 overflow-auto">
             {/* 上岗证卡片 - 打印内容 */}
@@ -1601,8 +1762,8 @@ export default function EmployeePage() {
               </div>
               <div className="photo-area">
                 {selectedEmployee?.photo ? (
-                  <img 
-                    src={selectedEmployee.photo} 
+                  <img
+                    src={selectedEmployee.photo}
                     alt={selectedEmployee.name}
                     className="w-full h-full object-cover rounded-lg"
                   />
@@ -1628,7 +1789,9 @@ export default function EmployeePage() {
                     </div>
                     <div className="info-row">
                       <span className="info-label">性别</span>
-                      <span className="info-value">{selectedEmployee?.gender === 1 ? '男' : '女'}</span>
+                      <span className="info-value">
+                        {selectedEmployee?.gender === 1 ? '男' : '女'}
+                      </span>
                     </div>
                     <div className="info-row">
                       <span className="info-label">部门</span>
@@ -1661,14 +1824,12 @@ export default function EmployeePage() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto" resizable>
           <DialogHeader>
             <DialogTitle>批量打印上岗证</DialogTitle>
-            <DialogDescription>
-              共选择 {selectedEmployees.length} 名员工
-            </DialogDescription>
+            <DialogDescription>共选择 {selectedEmployees.length} 名员工</DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <div className="grid grid-cols-2 gap-4">
               {employees
-                .filter(emp => selectedEmployees.includes(emp.id))
+                .filter((emp) => selectedEmployees.includes(emp.id))
                 .map((emp, index) => (
                   <BatchPrintCard key={emp.id} employee={emp} index={index} />
                 ))}
@@ -1694,7 +1855,7 @@ export default function EmployeePage() {
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           border-radius: 16px;
           padding: 24px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
           color: white;
           position: relative;
           overflow: hidden;
@@ -1706,7 +1867,7 @@ export default function EmployeePage() {
           right: -50%;
           width: 100%;
           height: 100%;
-          background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
         }
         .header {
           text-align: center;
@@ -1728,14 +1889,14 @@ export default function EmployeePage() {
         .photo-area {
           width: 120px;
           height: 160px;
-          background: rgba(255,255,255,0.2);
+          background: rgba(255, 255, 255, 0.2);
           border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
           position: relative;
           z-index: 1;
-          border: 2px dashed rgba(255,255,255,0.4);
+          border: 2px dashed rgba(255, 255, 255, 0.4);
           overflow: hidden;
           margin: 0 auto 20px;
         }
@@ -1797,7 +1958,7 @@ export default function EmployeePage() {
         .info-value {
           flex: 1;
           font-weight: 500;
-          border-bottom: 1px solid rgba(255,255,255,0.3);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.3);
           padding-bottom: 2px;
         }
         .qr-section {

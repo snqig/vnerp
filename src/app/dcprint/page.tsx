@@ -1,13 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -84,9 +78,7 @@ export default function DCPrintPage() {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold mb-2">全程二维码追溯系统</h1>
-                <p className="text-blue-100">
-                  仓库先进先出 · 物料分切 · 生产流程卡 · 全程追溯
-                </p>
+                <p className="text-blue-100">仓库先进先出 · 物料分切 · 生产流程卡 · 全程追溯</p>
               </div>
               <div className="flex gap-3">
                 <Link href="/warehouse/inbound/cutting">
@@ -96,7 +88,10 @@ export default function DCPrintPage() {
                   </Button>
                 </Link>
                 <Link href="/dcprint/process-cards">
-                  <Button variant="secondary" className="bg-white text-purple-600 hover:bg-purple-50">
+                  <Button
+                    variant="secondary"
+                    className="bg-white text-purple-600 hover:bg-purple-50"
+                  >
                     <FileText className="h-4 w-4 mr-2" />
                     生成流程卡
                   </Button>
@@ -137,9 +132,7 @@ export default function DCPrintPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold mb-1">{module.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        {module.description}
-                      </p>
+                      <p className="text-sm text-muted-foreground mb-3">{module.description}</p>
                       <div className="flex items-center justify-between">
                         <Badge variant="secondary">{module.stats}</Badge>
                         <ArrowRight className="h-4 w-4 text-muted-foreground" />

@@ -22,12 +22,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
   }
 
-  return successResponse({
-    results,
-    summary: {
-      total: results.length,
-      scheduled: results.filter((r) => r.conflicts.length === 0).length,
-      with_conflicts: results.filter((r) => r.conflicts.length > 0).length,
+  return successResponse(
+    {
+      results,
+      summary: {
+        total: results.length,
+        scheduled: results.filter((r) => r.conflicts.length === 0).length,
+        with_conflicts: results.filter((r) => r.conflicts.length > 0).length,
+      },
     },
-  }, '自动排程完成');
+    '自动排程完成'
+  );
 });

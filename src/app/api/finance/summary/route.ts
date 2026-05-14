@@ -5,29 +5,32 @@ import { FinanceApplicationService } from '@/application/services/FinanceApplica
 
 const financeService = new FinanceApplicationService();
 
-export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
-  const { searchParams } = new URL(request.url);
-  const supplierId = searchParams.get('supplierId');
-  const customerId = searchParams.get('customerId');
-  const startDate = searchParams.get('startDate') || '';
-  const endDate = searchParams.get('endDate') || '';
+export const GET = withAuthAndErrorHandler(
+  async (request: NextRequest, userInfo: UserInfo) => {
+    const { searchParams } = new URL(request.url);
+    const supplierId = searchParams.get('supplierId');
+    const customerId = searchParams.get('customerId');
+    const startDate = searchParams.get('startDate') || '';
+    const endDate = searchParams.get('endDate') || '';
 
-  const [payableSummary, receivableSummary] = await Promise.all([
-    financeService.getPayableSummary({
-      supplierId: supplierId ? parseInt(supplierId) : undefined,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-    }),
-    financeService.getReceivableSummary({
-      customerId: customerId ? parseInt(customerId) : undefined,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-    }),
-  ]);
+    const [payableSummary, receivableSummary] = await Promise.all([
+      financeService.getPayableSummary({
+        supplierId: supplierId ? parseInt(supplierId) : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      }),
+      financeService.getReceivableSummary({
+        customerId: customerId ? parseInt(customerId) : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      }),
+    ]);
 
-  return successResponse({
-    payable: payableSummary,
-    receivable: receivableSummary,
-    netCashFlow: receivableSummary.totalReceived - payableSummary.totalPaid,
-  });
-}, { permission: 'finance:view' });
+    return successResponse({
+      payable: payableSummary,
+      receivable: receivableSummary,
+      netCashFlow: receivableSummary.totalReceived - payableSummary.totalPaid,
+    });
+  },
+  { permission: 'finance:view' }
+);

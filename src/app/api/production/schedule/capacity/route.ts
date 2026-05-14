@@ -62,7 +62,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   // 4. 组装车间级产能数据
   const workshopMap = new Map();
-  
+
   for (const row of equipmentRows) {
     const key = row.workshop;
     if (!workshopMap.has(key)) {
@@ -78,7 +78,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const item = workshopMap.get(key);
     item.equipmentCount += row.equipment_count;
     // 假设每天8小时，计算日产能
-    item.totalCapacity += (row.total_capacity_per_hour * 8);
+    item.totalCapacity += row.total_capacity_per_hour * 8;
   }
 
   // 计算已用产能（基于排程小时数）
@@ -88,18 +88,15 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       // 已用产能 = 已排程小时数 * 平均产能
       item.usedCapacity = row.total_planned_hours * 100; // 简化计算
       item.availableCapacity = Math.max(0, item.totalCapacity - item.usedCapacity);
-      item.utilizationRate = item.totalCapacity > 0 
-        ? Math.round((item.usedCapacity / item.totalCapacity) * 100) 
-        : 0;
+      item.utilizationRate =
+        item.totalCapacity > 0 ? Math.round((item.usedCapacity / item.totalCapacity) * 100) : 0;
     }
   }
 
   // 设备级利用率
   const equipmentUtilization = equipmentUsageRows.map((row: any) => {
     const dailyCapacity = row.capacity_per_hour * 8;
-    const utilizationRate = dailyCapacity > 0 
-      ? Math.round((row.used_hours / 8) * 100) 
-      : 0;
+    const utilizationRate = dailyCapacity > 0 ? Math.round((row.used_hours / 8) * 100) : 0;
     return {
       equipmentId: row.equipment_id,
       equipmentName: row.equipment_name,
@@ -114,15 +111,22 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   const capacityData = Array.from(workshopMap.values());
 
-  return successResponse({
-    workshopCapacity: capacityData,
-    equipmentUtilization,
-    summary: {
-      totalEquipment: equipmentRows.reduce((sum: number, r: any) => sum + r.equipment_count, 0),
-      totalWorkshops: workshopMap.size,
-      avgUtilization: capacityData.length > 0 
-        ? Math.round(capacityData.reduce((sum: number, c: any) => sum + c.utilizationRate, 0) / capacityData.length)
-        : 0,
+  return successResponse(
+    {
+      workshopCapacity: capacityData,
+      equipmentUtilization,
+      summary: {
+        totalEquipment: equipmentRows.reduce((sum: number, r: any) => sum + r.equipment_count, 0),
+        totalWorkshops: workshopMap.size,
+        avgUtilization:
+          capacityData.length > 0
+            ? Math.round(
+                capacityData.reduce((sum: number, c: any) => sum + c.utilizationRate, 0) /
+                  capacityData.length
+              )
+            : 0,
+      },
     },
-  }, '获取产能分析成功');
+    '获取产能分析成功'
+  );
 });

@@ -1,6 +1,13 @@
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
-import { runAllFixes, fixRequestItemMaterialId, fixAttendanceEmpId, fixInventoryBatchConsistency, fixExpiredBatches, scanGhostData } from '@/lib/services/data-fix-tool';
+import {
+  runAllFixes,
+  fixRequestItemMaterialId,
+  fixAttendanceEmpId,
+  fixInventoryBatchConsistency,
+  fixExpiredBatches,
+  scanGhostData,
+} from '@/lib/services/data-fix-tool';
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();

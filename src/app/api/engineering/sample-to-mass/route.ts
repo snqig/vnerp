@@ -37,7 +37,18 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { sample_order_id, sample_order_no, product_id, product_name, customer_id, customer_name, standard_card_id, standard_card_no, process_card_id, process_card_no } = body;
+  const {
+    sample_order_id,
+    sample_order_no,
+    product_id,
+    product_name,
+    customer_id,
+    customer_name,
+    standard_card_id,
+    standard_card_no,
+    process_card_id,
+    process_card_no,
+  } = body;
 
   if (!sample_order_id || !sample_order_no) {
     return errorResponse('缺少必填字段: sample_order_id, sample_order_no', 400, 400);
@@ -60,10 +71,17 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           standard_card_id = ?, standard_card_no = ?,
           process_card_id = ?, process_card_no = ?
         WHERE id = ?`,
-        [product_id || null, product_name || null, customer_id || null, customer_name || null,
-         standard_card_id || null, standard_card_no || null,
-         process_card_id || null, process_card_no || null,
-         existing[0].id]
+        [
+          product_id || null,
+          product_name || null,
+          customer_id || null,
+          customer_name || null,
+          standard_card_id || null,
+          standard_card_no || null,
+          process_card_id || null,
+          process_card_no || null,
+          existing[0].id,
+        ]
       );
       return { id: existing[0].id, updated: true };
     }
@@ -71,10 +89,18 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const [insertResult]: any = await conn.execute(
       `INSERT INTO eng_sample_to_mass (sample_order_id, sample_order_no, product_id, product_name, customer_id, customer_name, standard_card_id, standard_card_no, process_card_id, process_card_no, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-      [sample_order_id, sample_order_no, product_id || null, product_name || null,
-       customer_id || null, customer_name || null,
-       standard_card_id || null, standard_card_no || null,
-       process_card_id || null, process_card_no || null]
+      [
+        sample_order_id,
+        sample_order_no,
+        product_id || null,
+        product_name || null,
+        customer_id || null,
+        customer_name || null,
+        standard_card_id || null,
+        standard_card_no || null,
+        process_card_id || null,
+        process_card_no || null,
+      ]
     );
 
     return { id: insertResult.insertId, created: true };
@@ -118,8 +144,15 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
           bom_id = ?, workorder_id = ?, workorder_no = ?,
           conversion_date = ?, approved_by = ?, status = 3, remark = ?
         WHERE id = ?`,
-        [bom_id || null, workorder_id || null, workorder_no || null,
-         conversionDate, approved_by || null, remark || null, id]
+        [
+          bom_id || null,
+          workorder_id || null,
+          workorder_no || null,
+          conversionDate,
+          approved_by || null,
+          remark || null,
+          id,
+        ]
       );
 
       if (workorder_id) {

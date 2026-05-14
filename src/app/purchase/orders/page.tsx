@@ -1,13 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -68,6 +62,7 @@ import { useState, useEffect, useCallback, useMemo, Fragment } from 'react';
 import { useToastContext } from '@/components/ui/toast';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import ApiClient from '@/lib/api-client';
 
 interface PurchaseOrder {
   id: number;
@@ -91,6 +86,7 @@ interface PurchaseOrder {
   update_time: string;
   audit_time: string | null;
   lines?: OrderItem[];
+  [key: string]: unknown;
 }
 
 interface Supplier {
@@ -113,10 +109,22 @@ interface OrderItem {
 
 const STATUS_MAP: Record<number, { label: string; className: string }> = {
   10: { label: '草稿', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  20: { label: '待审批', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200' },
-  30: { label: '已审批', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200' },
-  40: { label: '部分到货', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200' },
-  50: { label: '已完成', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200' },
+  20: {
+    label: '待审批',
+    className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200',
+  },
+  30: {
+    label: '已审批',
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
+  },
+  40: {
+    label: '部分到货',
+    className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200',
+  },
+  50: {
+    label: '已完成',
+    className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
+  },
   90: { label: '已关闭', className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' },
 };
 
@@ -130,7 +138,10 @@ const PO_STATUS = {
 } as const;
 
 const getStatusBadge = (status: number) => {
-  const config = STATUS_MAP[status] || { label: `未知(${status})`, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+  const config = STATUS_MAP[status] || {
+    label: `未知(${status})`,
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -175,39 +186,44 @@ export default function PurchaseOrdersPage() {
     remark: '',
   });
   const [orderItems, setOrderItems] = useState<OrderItem[]>([
-    { id: 1, material_code: '', material_name: '', quantity: 1, unit: '件', unit_price: 0 }
+    { id: 1, material_code: '', material_name: '', quantity: 1, unit: '件', unit_price: 0 },
   ]);
 
-  const fetchOrders = useCallback(async (searchKeyword?: string) => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      params.append('page', page.toString());
-      params.append('pageSize', pageSize.toString());
-      if (searchKeyword) params.append('keyword', searchKeyword);
-      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
+  const fetchOrders = useCallback(
+    async (searchKeyword?: string) => {
+      try {
+        setLoading(true);
+        const data = await ApiClient.get('/api/purchase/orders', {
+          page,
+          pageSize,
+          keyword: searchKeyword,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+        });
 
-      const res = await fetch(`/api/purchase/orders?${params}`);
-      const data = await res.json();
-
-      if (data.success) {
-        setOrders(Array.isArray(data.data) ? data.data : []);
-        setTotal(data.pagination?.total || 0);
-        setSelectedOrders([]);
-      } else {
-        toast({ title: '错误', description: data.message || '获取采购单列表失败', variant: 'destructive' });
+        if (data.success) {
+          const ordersList = Array.isArray(data.data) ? data.data : (data.data?.list || []);
+        setOrders(ordersList);
+          setTotal(data.pagination?.total || 0);
+          setSelectedOrders([]);
+        } else {
+          toast({
+            title: '错误',
+            description: data.message || '获取采购单列表失败',
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        toast({ title: '错误', description: '获取采购单列表失败', variant: 'destructive' });
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      toast({ title: '错误', description: '获取采购单列表失败', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, statusFilter, toast]);
+    },
+    [page, pageSize, statusFilter, toast]
+  );
 
   const fetchSuppliers = useCallback(async () => {
     try {
-      const res = await fetch('/api/purchase/suppliers');
-      const data = await res.json();
+      const data = await ApiClient.get('/api/purchase/suppliers');
       if (data.success) {
         setSuppliers(data.data?.list || data.data || []);
       }
@@ -252,41 +268,37 @@ export default function PurchaseOrdersPage() {
       return;
     }
 
-    const validItems = orderItems.filter(item => item.material_code && item.quantity > 0);
+    const validItems = orderItems.filter((item) => item.material_code && item.quantity > 0);
     if (validItems.length === 0) {
       toast({ title: '错误', description: '请添加至少一项采购物料', variant: 'destructive' });
       return;
     }
 
-    const selectedSupplier = suppliers.find(s => s.id === parseInt(newOrder.supplier_id));
+    const selectedSupplier = suppliers.find((s) => s.id === parseInt(newOrder.supplier_id));
 
     try {
       setLoading(true);
-      const res = await fetch('/api/purchase/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          supplier_id: parseInt(newOrder.supplier_id),
-          supplier_name: selectedSupplier?.supplier_name || '',
-          supplier_code: selectedSupplier?.supplier_code || '',
-          delivery_date: newOrder.delivery_date || null,
-          remark: newOrder.remark,
-          lines: validItems.map(item => ({
-            material_code: item.material_code,
-            material_name: item.material_name,
-            order_qty: item.quantity,
-            unit: item.unit,
-            unit_price: item.unit_price,
-          })),
-        }),
+      const data = await ApiClient.post('/api/purchase/orders', {
+        supplier_id: parseInt(newOrder.supplier_id),
+        supplier_name: selectedSupplier?.supplier_name || '',
+        supplier_code: selectedSupplier?.supplier_code || '',
+        delivery_date: newOrder.delivery_date || null,
+        remark: newOrder.remark,
+        lines: validItems.map((item) => ({
+          material_code: item.material_code,
+          material_name: item.material_name,
+          order_qty: item.quantity,
+          unit: item.unit,
+          unit_price: item.unit_price,
+        })),
       });
-
-      const data = await res.json();
       if (data.success) {
         toast({ title: '成功', description: '采购单创建成功' });
         setIsCreateOpen(false);
         setNewOrder({ supplier_id: '', delivery_date: '', remark: '' });
-        setOrderItems([{ id: 1, material_code: '', material_name: '', quantity: 1, unit: '件', unit_price: 0 }]);
+        setOrderItems([
+          { id: 1, material_code: '', material_name: '', quantity: 1, unit: '件', unit_price: 0 },
+        ]);
         fetchOrders();
       } else {
         toast({ title: '错误', description: data.message || '创建失败', variant: 'destructive' });
@@ -302,8 +314,7 @@ export default function PurchaseOrdersPage() {
     if (!confirm(`确定要删除采购单 ${order.po_no} 吗？`)) return;
 
     try {
-      const res = await fetch(`/api/purchase/orders?id=${order.id}`, { method: 'DELETE' });
-      const data = await res.json();
+      const data = await ApiClient.delete('/api/purchase/orders', { id: order.id });
       if (data.success) {
         toast({ title: '成功', description: '删除成功' });
         fetchOrders();
@@ -317,20 +328,22 @@ export default function PurchaseOrdersPage() {
 
   const handleBatchDelete = async () => {
     if (!selectedOrders.length) return;
-    
-    const selectedOrderInfo = orders.filter(o => selectedOrders.includes(o.id));
-    const orderNumbers = selectedOrderInfo.map(o => o.po_no).join(', ');
-    
-    if (!confirm(`确定要删除选中的 ${selectedOrders.length} 个采购单吗？\n采购单号: ${orderNumbers}`)) return;
+
+    const selectedOrderInfo = orders.filter((o) => selectedOrders.includes(o.id));
+    const orderNumbers = selectedOrderInfo.map((o) => o.po_no).join(', ');
+
+    if (
+      !confirm(`确定要删除选中的 ${selectedOrders.length} 个采购单吗？\n采购单号: ${orderNumbers}`)
+    )
+      return;
 
     try {
       setLoading(true);
-      
+
       // 逐个删除采购单
       let successCount = 0;
       for (const orderId of selectedOrders) {
-        const res = await fetch(`/api/purchase/orders?id=${orderId}`, { method: 'DELETE' });
-        const data = await res.json();
+        const data = await ApiClient.delete('/api/purchase/orders', { id: orderId });
         if (data.success) {
           successCount++;
         }
@@ -356,17 +369,16 @@ export default function PurchaseOrdersPage() {
     else return;
 
     try {
-      const res = await fetch('/api/purchase/orders', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: orderId, status: newStatus }),
-      });
-      const data = await res.json();
+      const data = await ApiClient.put('/api/purchase/orders', { id: orderId, action });
       if (data.success) {
         toast({ title: '成功', description: '状态更新成功' });
         fetchOrders();
       } else {
-        toast({ title: '错误', description: data.message || '状态更新失败', variant: 'destructive' });
+        toast({
+          title: '错误',
+          description: data.message || '状态更新失败',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       toast({ title: '错误', description: '状态更新失败', variant: 'destructive' });
@@ -380,24 +392,31 @@ export default function PurchaseOrdersPage() {
 
   const handleExport = (format: string) => {
     const statusMap: Record<number, string> = {
-      10: '草稿', 20: '待审批', 30: '已审批', 40: '部分到货', 50: '已完成', 90: '已关闭'
+      10: '草稿',
+      20: '待审批',
+      30: '已审批',
+      40: '部分到货',
+      50: '已完成',
+      90: '已关闭',
     };
-    const data = orders.map(o => ({
-      '采购单号': o.po_no,
-      '供应商': o.supplier_name,
-      '下单日期': formatDate(o.order_date),
-      '期望到货': formatDate(o.delivery_date),
-      '总数量': o.total_quantity,
-      '金额': Number(o.grand_total || o.total_amount || 0).toFixed(2),
-      '状态': statusMap[o.status] || `未知(${o.status})`,
-      '备注': o.remark || '',
+    const data = orders.map((o) => ({
+      采购单号: o.po_no,
+      供应商: o.supplier_name,
+      下单日期: formatDate(o.order_date),
+      期望到货: formatDate(o.delivery_date),
+      总数量: o.total_quantity,
+      金额: Number(o.grand_total || o.total_amount || 0).toFixed(2),
+      状态: statusMap[o.status] || `未知(${o.status})`,
+      备注: o.remark || '',
     }));
 
     if (format === 'xls' || format === 'excel') {
       const headers = Object.keys(data[0] || {});
       const csvContent = [
         headers.join('\t'),
-        ...data.map(row => headers.map(h => (row as Record<string, unknown>)[h] ?? '').join('\t'))
+        ...data.map((row) =>
+          headers.map((h) => (row as Record<string, unknown>)[h] ?? '').join('\t')
+        ),
       ].join('\n');
       const bom = '\uFEFF';
       const blob = new Blob([bom + csvContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
@@ -412,10 +431,15 @@ export default function PurchaseOrdersPage() {
       const printWindow = window.open('', '_blank');
       if (!printWindow) return;
       const headers = Object.keys(data[0] || {});
-      const thCells = headers.map(h => `<th>${h}</th>`).join('');
-      const rows = data.map(row =>
-        '<tr>' + headers.map(h => `<td>${(row as Record<string, unknown>)[h] ?? ''}</td>`).join('') + '</tr>'
-      ).join('');
+      const thCells = headers.map((h) => `<th>${h}</th>`).join('');
+      const rows = data
+        .map(
+          (row) =>
+            '<tr>' +
+            headers.map((h) => `<td>${(row as Record<string, unknown>)[h] ?? ''}</td>`).join('') +
+            '</tr>'
+        )
+        .join('');
       printWindow.document.write(`<!DOCTYPE html><html><head><title>采购订单导出</title>
 <style>
   body{font-family:"Microsoft YaHei",sans-serif;padding:20px}
@@ -435,10 +459,22 @@ export default function PurchaseOrdersPage() {
       toast({ title: '导出成功', description: '已导出为 PDF（打印保存）' });
     } else if (format === 'word') {
       const headers = Object.keys(data[0] || {});
-      const thCells = headers.map(h => `<th style="border:1px solid #333;padding:6px;background:#f0f0f0">${h}</th>`).join('');
-      const rows = data.map(row =>
-        '<tr>' + headers.map(h => `<td style="border:1px solid #333;padding:6px">${(row as Record<string, unknown>)[h] ?? ''}</td>`).join('') + '</tr>'
-      ).join('');
+      const thCells = headers
+        .map((h) => `<th style="border:1px solid #333;padding:6px;background:#f0f0f0">${h}</th>`)
+        .join('');
+      const rows = data
+        .map(
+          (row) =>
+            '<tr>' +
+            headers
+              .map(
+                (h) =>
+                  `<td style="border:1px solid #333;padding:6px">${(row as Record<string, unknown>)[h] ?? ''}</td>`
+              )
+              .join('') +
+            '</tr>'
+        )
+        .join('');
       const htmlContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head><meta charset="utf-8"><title>采购订单</title></head>
 <body style="font-family:'Microsoft YaHei',sans-serif;padding:20px">
@@ -462,14 +498,12 @@ export default function PurchaseOrdersPage() {
     if (selectedOrders.length === orders.length) {
       setSelectedOrders([]);
     } else {
-      setSelectedOrders(orders.map(o => o.id));
+      setSelectedOrders(orders.map((o) => o.id));
     }
   };
 
   const toggleSelect = (id: number) => {
-    setSelectedOrders(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
+    setSelectedOrders((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
 
   const handleSort = (field: string) => {
@@ -497,7 +531,12 @@ export default function PurchaseOrdersPage() {
     return [...orders].sort((a, b) => {
       let aVal: string | number = (a as Record<string, unknown>)[sortField] as string | number;
       let bVal: string | number = (b as Record<string, unknown>)[sortField] as string | number;
-      if (sortField === 'total_amount' || sortField === 'grand_total' || sortField === 'total_quantity' || sortField === 'status') {
+      if (
+        sortField === 'total_amount' ||
+        sortField === 'grand_total' ||
+        sortField === 'total_quantity' ||
+        sortField === 'status'
+      ) {
         aVal = Number(aVal) || 0;
         bVal = Number(bVal) || 0;
       } else {
@@ -511,9 +550,8 @@ export default function PurchaseOrdersPage() {
   }, [orders, sortField, sortOrder]);
 
   const handlePrintList = () => {
-    const dataToPrint = selectedOrders.length > 0
-      ? orders.filter(o => selectedOrders.includes(o.id))
-      : orders;
+    const dataToPrint =
+      selectedOrders.length > 0 ? orders.filter((o) => selectedOrders.includes(o.id)) : orders;
 
     if (dataToPrint.length === 0) {
       toast({ title: '提示', description: '没有数据可打印', variant: 'destructive' });
@@ -521,19 +559,32 @@ export default function PurchaseOrdersPage() {
     }
 
     const statusLabels: Record<number, string> = {
-      10: '草稿', 20: '待审批', 30: '已审批', 40: '部分到货', 50: '已完成', 90: '已关闭'
+      10: '草稿',
+      20: '待审批',
+      30: '已审批',
+      40: '部分到货',
+      50: '已完成',
+      90: '已关闭',
     };
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast({ title: '错误', description: '无法打开打印窗口，请检查浏览器弹窗设置', variant: 'destructive' });
+      toast({
+        title: '错误',
+        description: '无法打开打印窗口，请检查浏览器弹窗设置',
+        variant: 'destructive',
+      });
       return;
     }
 
-    const orderSections = dataToPrint.map((o, orderIndex) => {
-      const lines = o.lines || [];
-      const lineRows = lines.length > 0
-        ? lines.map((item: any, idx: number) => `
+    const orderSections = dataToPrint
+      .map((o, orderIndex) => {
+        const lines = o.lines || [];
+        const lineRows =
+          lines.length > 0
+            ? lines
+                .map(
+                  (item: any, idx: number) => `
           <tr>
             <td>${idx + 1}</td>
             <td>${item.material_code || '-'}</td>
@@ -544,10 +595,12 @@ export default function PurchaseOrdersPage() {
             <td class="num">${Number(item.unit_price || 0).toFixed(2)}</td>
             <td class="num">${Number(item.amount || (item.order_qty || item.quantity) * (item.unit_price || 0)).toFixed(2)}</td>
             <td class="num">${item.received_qty ?? 0}</td>
-          </tr>`).join('')
-        : '<tr><td colspan="9" style="color:#999;text-align:center;padding:8px;">暂无明细数据</td></tr>';
+          </tr>`
+                )
+                .join('')
+            : '<tr><td colspan="9" style="color:#999;text-align:center;padding:8px;">暂无明细数据</td></tr>';
 
-      return `
+        return `
         <div class="order-block">
           <div class="order-header">
             <span class="order-no">${o.po_no}</span>
@@ -569,7 +622,8 @@ export default function PurchaseOrdersPage() {
           </table>
           ${o.remark ? `<div class="remark">备注：${o.remark}</div>` : ''}
         </div>`;
-    }).join('');
+      })
+      .join('');
 
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>采购订单打印</title>
       <style>
@@ -603,24 +657,33 @@ export default function PurchaseOrdersPage() {
   };
 
   const addItem = () => {
-    setOrderItems(prev => [
+    setOrderItems((prev) => [
       ...prev,
-      { id: Date.now(), material_code: '', material_name: '', quantity: 1, unit: '件', unit_price: 0 }
+      {
+        id: Date.now(),
+        material_code: '',
+        material_name: '',
+        quantity: 1,
+        unit: '件',
+        unit_price: 0,
+      },
     ]);
   };
 
   const removeItem = (id: number) => {
     if (orderItems.length <= 1) return;
-    setOrderItems(prev => prev.filter(item => item.id !== id));
+    setOrderItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   const updateItem = (id: number, field: keyof OrderItem, value: any) => {
-    setOrderItems(prev => prev.map(item => {
-      if (item.id === id) {
-        return { ...item, [field]: value };
-      }
-      return item;
-    }));
+    setOrderItems((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          return { ...item, [field]: value };
+        }
+        return item;
+      })
+    );
   };
 
   return (
@@ -634,10 +697,19 @@ export default function PurchaseOrdersPage() {
                   placeholder="搜索采购单号/供应商/日期/物料..."
                   value={keyword}
                   onChange={setKeyword}
-                  onSearch={(kw) => { setPage(1); fetchOrders(kw); }}
+                  onSearch={(kw) => {
+                    setPage(1);
+                    fetchOrders(kw);
+                  }}
                   className="flex-1 max-w-sm"
                 />
-                <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(v) => {
+                    setStatusFilter(v);
+                    setPage(1);
+                  }}
+                >
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="订单状态" />
                   </SelectTrigger>
@@ -707,7 +779,9 @@ export default function PurchaseOrdersPage() {
                           <Label>供应商 *</Label>
                           <Select
                             value={newOrder.supplier_id}
-                            onValueChange={(v) => setNewOrder(prev => ({ ...prev, supplier_id: v }))}
+                            onValueChange={(v) =>
+                              setNewOrder((prev) => ({ ...prev, supplier_id: v }))
+                            }
                           >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="选择供应商" />
@@ -728,7 +802,9 @@ export default function PurchaseOrdersPage() {
                           <Input
                             type="date"
                             value={newOrder.delivery_date}
-                            onChange={(e) => setNewOrder(prev => ({ ...prev, delivery_date: e.target.value }))}
+                            onChange={(e) =>
+                              setNewOrder((prev) => ({ ...prev, delivery_date: e.target.value }))
+                            }
                           />
                         </div>
                       </div>
@@ -736,76 +812,92 @@ export default function PurchaseOrdersPage() {
                       <div className="space-y-2">
                         <Label>采购明细</Label>
                         <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="min-w-[140px]">物料编码</TableHead>
-                              <TableHead className="min-w-[140px]">物料名称</TableHead>
-                              <TableHead className="min-w-[100px]">数量</TableHead>
-                              <TableHead className="min-w-[80px]">单位</TableHead>
-                              <TableHead className="min-w-[100px]">单价</TableHead>
-                              <TableHead className="min-w-[100px]">金额</TableHead>
-                              <TableHead className="w-[60px]"></TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {orderItems.map((item) => (
-                              <TableRow key={item.id}>
-                                <TableCell>
-                                  <Input
-                                    value={item.material_code}
-                                    onChange={(e) => updateItem(item.id, 'material_code', e.target.value)}
-                                    placeholder="物料编码"
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Input
-                                    value={item.material_name}
-                                    onChange={(e) => updateItem(item.id, 'material_name', e.target.value)}
-                                    placeholder="物料名称"
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Input
-                                    type="number"
-                                    min="1"
-                                    value={item.quantity || ''}
-                                    onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Input
-                                    value={item.unit}
-                                    onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
-                                    className="w-20"
-                                  />
-                                </TableCell>
-                                <TableCell>
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={item.unit_price || ''}
-                                    onChange={(e) => updateItem(item.id, 'unit_price', parseFloat(e.target.value) || 0)}
-                                  />
-                                </TableCell>
-                                <TableCell className="font-medium">
-                                  {(item.quantity * item.unit_price).toFixed(2)}
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeItem(item.id)}
-                                    disabled={orderItems.length === 1}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="min-w-[140px]">物料编码</TableHead>
+                                <TableHead className="min-w-[140px]">物料名称</TableHead>
+                                <TableHead className="min-w-[100px]">数量</TableHead>
+                                <TableHead className="min-w-[80px]">单位</TableHead>
+                                <TableHead className="min-w-[100px]">单价</TableHead>
+                                <TableHead className="min-w-[100px]">金额</TableHead>
+                                <TableHead className="w-[60px]"></TableHead>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                            </TableHeader>
+                            <TableBody>
+                              {orderItems.map((item) => (
+                                <TableRow key={item.id}>
+                                  <TableCell>
+                                    <Input
+                                      value={item.material_code}
+                                      onChange={(e) =>
+                                        updateItem(item.id, 'material_code', e.target.value)
+                                      }
+                                      placeholder="物料编码"
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      value={item.material_name}
+                                      onChange={(e) =>
+                                        updateItem(item.id, 'material_name', e.target.value)
+                                      }
+                                      placeholder="物料名称"
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      type="number"
+                                      min="1"
+                                      value={item.quantity || ''}
+                                      onChange={(e) =>
+                                        updateItem(
+                                          item.id,
+                                          'quantity',
+                                          parseFloat(e.target.value) || 0
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      value={item.unit}
+                                      onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
+                                      className="w-20"
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={item.unit_price || ''}
+                                      onChange={(e) =>
+                                        updateItem(
+                                          item.id,
+                                          'unit_price',
+                                          parseFloat(e.target.value) || 0
+                                        )
+                                      }
+                                    />
+                                  </TableCell>
+                                  <TableCell className="font-medium">
+                                    {(item.quantity * item.unit_price).toFixed(2)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => removeItem(item.id)}
+                                      disabled={orderItems.length === 1}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
                         </div>
                         <Button variant="outline" size="sm" onClick={addItem}>
                           <Plus className="h-4 w-4 mr-1" />
@@ -818,7 +910,9 @@ export default function PurchaseOrdersPage() {
                         <Input
                           placeholder="采购备注..."
                           value={newOrder.remark}
-                          onChange={(e) => setNewOrder(prev => ({ ...prev, remark: e.target.value }))}
+                          onChange={(e) =>
+                            setNewOrder((prev) => ({ ...prev, remark: e.target.value }))
+                          }
                         />
                       </div>
                     </div>
@@ -862,25 +956,58 @@ export default function PurchaseOrdersPage() {
                       />
                     </TableHead>
                     <TableHead className="w-10"></TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('po_no')}>
-                      <span className="inline-flex items-center">采购单号{getSortIcon('po_no')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('po_no')}
+                    >
+                      <span className="inline-flex items-center">
+                        采购单号{getSortIcon('po_no')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('supplier_name')}>
-                      <span className="inline-flex items-center">供应商{getSortIcon('supplier_name')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('supplier_name')}
+                    >
+                      <span className="inline-flex items-center">
+                        供应商{getSortIcon('supplier_name')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('order_date')}>
-                      <span className="inline-flex items-center">下单日期{getSortIcon('order_date')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('order_date')}
+                    >
+                      <span className="inline-flex items-center">
+                        下单日期{getSortIcon('order_date')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('delivery_date')}>
-                      <span className="inline-flex items-center">期望到货{getSortIcon('delivery_date')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('delivery_date')}
+                    >
+                      <span className="inline-flex items-center">
+                        期望到货{getSortIcon('delivery_date')}
+                      </span>
                     </TableHead>
-                    <TableHead className="text-right cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('total_quantity')}>
-                      <span className="inline-flex items-center justify-end">总数量{getSortIcon('total_quantity')}</span>
+                    <TableHead
+                      className="text-right cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('total_quantity')}
+                    >
+                      <span className="inline-flex items-center justify-end">
+                        总数量{getSortIcon('total_quantity')}
+                      </span>
                     </TableHead>
-                    <TableHead className="text-right cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('grand_total')}>
-                      <span className="inline-flex items-center justify-end">金额{getSortIcon('grand_total')}</span>
+                    <TableHead
+                      className="text-right cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('grand_total')}
+                    >
+                      <span className="inline-flex items-center justify-end">
+                        金额{getSortIcon('grand_total')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('status')}>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('status')}
+                    >
                       <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
                     </TableHead>
                     <TableHead className="text-right">操作</TableHead>
@@ -935,19 +1062,26 @@ export default function PurchaseOrdersPage() {
                                   查看详情
                                 </DropdownMenuItem>
                                 {order.status === 10 && (
-                                  <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'submit')}>
+                                  <DropdownMenuItem
+                                    onClick={() => handleStatusChange(order.id, 'submit')}
+                                  >
                                     <Send className="h-4 w-4 mr-2" />
                                     提交审批
                                   </DropdownMenuItem>
                                 )}
                                 {order.status === 20 && (
-                                  <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'approve')}>
+                                  <DropdownMenuItem
+                                    onClick={() => handleStatusChange(order.id, 'approve')}
+                                  >
                                     <FileText className="h-4 w-4 mr-2" />
                                     审批通过
                                   </DropdownMenuItem>
                                 )}
                                 {order.status < 30 && (
-                                  <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(order)}>
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => handleDelete(order)}
+                                  >
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     删除
                                   </DropdownMenuItem>
@@ -963,33 +1097,75 @@ export default function PurchaseOrdersPage() {
                                 <Table>
                                   <TableHeader>
                                     <TableRow className="bg-slate-100/50 dark:bg-slate-700/50 hover:bg-slate-100/50 dark:hover:bg-slate-700/50">
-                                      <TableHead className="pl-8 text-xs font-normal text-muted-foreground">物料编码</TableHead>
-                                      <TableHead className="text-xs font-normal text-muted-foreground">物料名称</TableHead>
-                                      <TableHead className="text-xs font-normal text-muted-foreground">规格型号</TableHead>
-                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">数量</TableHead>
-                                      <TableHead className="text-xs font-normal text-muted-foreground">单位</TableHead>
-                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">单价</TableHead>
-                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">金额</TableHead>
-                                      <TableHead className="text-xs font-normal text-muted-foreground">已收数量</TableHead>
+                                      <TableHead className="pl-8 text-xs font-normal text-muted-foreground">
+                                        物料编码
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground">
+                                        物料名称
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground">
+                                        规格型号
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                        数量
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground">
+                                        单位
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                        单价
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                        金额
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground">
+                                        已收数量
+                                      </TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {lines.length > 0 ? lines.map((item: any, idx: number) => (
-                                      <TableRow key={idx} className="bg-transparent hover:bg-white/60 dark:hover:bg-slate-700/60">
-                                        <TableCell className="pl-8 font-mono text-sm">{item.material_code || '-'}</TableCell>
-                                        <TableCell className="text-sm">{item.material_name || '-'}</TableCell>
-                                        <TableCell className="text-sm">{item.material_spec || item.specification || '-'}</TableCell>
-                                        <TableCell className="text-sm text-right">{item.order_qty ?? item.quantity ?? 0}</TableCell>
-                                        <TableCell className="text-sm">{item.unit || '-'}</TableCell>
-                                        <TableCell className="text-sm text-right">{Number(item.unit_price || 0).toFixed(2)}</TableCell>
-                                        <TableCell className="text-sm text-right font-medium">
-                                          {Number(item.amount || (item.order_qty || item.quantity) * (item.unit_price || 0)).toFixed(2)}
-                                        </TableCell>
-                                        <TableCell className="text-sm">{item.received_qty ?? 0}</TableCell>
-                                      </TableRow>
-                                    )) : (
+                                    {lines.length > 0 ? (
+                                      lines.map((item: any, idx: number) => (
+                                        <TableRow
+                                          key={idx}
+                                          className="bg-transparent hover:bg-white/60 dark:hover:bg-slate-700/60"
+                                        >
+                                          <TableCell className="pl-8 font-mono text-sm">
+                                            {item.material_code || '-'}
+                                          </TableCell>
+                                          <TableCell className="text-sm">
+                                            {item.material_name || '-'}
+                                          </TableCell>
+                                          <TableCell className="text-sm">
+                                            {item.material_spec || item.specification || '-'}
+                                          </TableCell>
+                                          <TableCell className="text-sm text-right">
+                                            {item.order_qty ?? item.quantity ?? 0}
+                                          </TableCell>
+                                          <TableCell className="text-sm">
+                                            {item.unit || '-'}
+                                          </TableCell>
+                                          <TableCell className="text-sm text-right">
+                                            {Number(item.unit_price || 0).toFixed(2)}
+                                          </TableCell>
+                                          <TableCell className="text-sm text-right font-medium">
+                                            {Number(
+                                              item.amount ||
+                                                (item.order_qty || item.quantity) *
+                                                  (item.unit_price || 0)
+                                            ).toFixed(2)}
+                                          </TableCell>
+                                          <TableCell className="text-sm">
+                                            {item.received_qty ?? 0}
+                                          </TableCell>
+                                        </TableRow>
+                                      ))
+                                    ) : (
                                       <TableRow>
-                                        <TableCell colSpan={8} className="text-center py-3 text-muted-foreground text-sm">
+                                        <TableCell
+                                          colSpan={8}
+                                          className="text-center py-3 text-muted-foreground text-sm"
+                                        >
                                           暂无明细数据
                                         </TableCell>
                                       </TableRow>
@@ -1039,7 +1215,12 @@ export default function PurchaseOrdersPage() {
                   </div>
                   <div>
                     <Label className="text-muted-foreground">金额</Label>
-                    <p className="font-medium">¥{Number(selectedOrder.grand_total || selectedOrder.total_amount || 0).toLocaleString()}</p>
+                    <p className="font-medium">
+                      ¥
+                      {Number(
+                        selectedOrder.grand_total || selectedOrder.total_amount || 0
+                      ).toLocaleString()}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">状态</Label>
@@ -1074,7 +1255,10 @@ export default function PurchaseOrdersPage() {
                             <TableCell>{item.order_qty || item.quantity}</TableCell>
                             <TableCell>{item.unit}</TableCell>
                             <TableCell>{item.unit_price}</TableCell>
-                            <TableCell>{item.total_price || ((item.order_qty || item.quantity) * item.unit_price).toFixed(2)}</TableCell>
+                            <TableCell>
+                              {item.total_price ||
+                                ((item.order_qty || item.quantity) * item.unit_price).toFixed(2)}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

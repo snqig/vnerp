@@ -11,10 +11,19 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let where = 'WHERE d.deleted = 0';
   const params: any[] = [];
-  if (dictTypeId) { where += ' AND d.dict_type_id = ?'; params.push(Number(dictTypeId)); }
-  if (dictLabel) { where += ' AND d.dict_label LIKE ?'; params.push(`%${dictLabel}%`); }
+  if (dictTypeId) {
+    where += ' AND d.dict_type_id = ?';
+    params.push(Number(dictTypeId));
+  }
+  if (dictLabel) {
+    where += ' AND d.dict_label LIKE ?';
+    params.push(`%${dictLabel}%`);
+  }
 
-  const totalRows: any = await query(`SELECT COUNT(*) as total FROM sys_dict_data d ${where}`, params);
+  const totalRows: any = await query(
+    `SELECT COUNT(*) as total FROM sys_dict_data d ${where}`,
+    params
+  );
   const total = totalRows[0]?.total || 0;
 
   const rows: any = await query(
@@ -29,7 +38,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   const { dict_type_id, dict_label, dict_value, sort_order, status, remark } = body;
 
-  if (!dict_type_id) return NextResponse.json({ success: false, message: '字典类型ID不能为空' }, { status: 400 });
+  if (!dict_type_id)
+    return NextResponse.json({ success: false, message: '字典类型ID不能为空' }, { status: 400 });
 
   const result: any = await execute(
     `INSERT INTO sys_dict_data (dict_type_id, dict_label, dict_value, sort_order, status, remark) VALUES (?, ?, ?, ?, ?, ?)`,

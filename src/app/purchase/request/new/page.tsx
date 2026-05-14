@@ -17,6 +17,18 @@ import {
 import { ArrowLeft, Save, Plus, Trash2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 interface Department {
   id: number;
   dept_code: string;
@@ -78,9 +90,9 @@ export default function NewPurchaseRequestPage() {
   const [departments, setDepartments] = useState<Department[]>([]);
 
   useEffect(() => {
-    fetch('/api/organization/department')
-      .then(res => res.json())
-      .then(result => {
+    authFetch('/api/organization/department')
+      .then((res) => res.json())
+      .then((result) => {
         if (result.success && Array.isArray(result.data)) {
           setDepartments(result.data);
         }
@@ -93,23 +105,23 @@ export default function NewPurchaseRequestPage() {
   };
 
   const updateItem = (index: number, field: keyof RequestItem, value: any) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const newItems = [...prev.items];
       newItems[index] = { ...newItems[index], [field]: value };
-      
+
       // 自动计算金额
       if (field === 'quantity' || field === 'price') {
         const qty = field === 'quantity' ? value : newItems[index].quantity;
         const prc = field === 'price' ? value : newItems[index].price;
         newItems[index].amount = calculateAmount(qty, prc);
       }
-      
+
       return { ...prev, items: newItems };
     });
   };
 
   const addItem = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       items: [...prev.items, { ...initialItem, id: prev.items.length + 1 }],
     }));
@@ -120,7 +132,7 @@ export default function NewPurchaseRequestPage() {
       toast.error('至少需要保留一条明细');
       return;
     }
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       items: prev.items.filter((_, i) => i !== index),
     }));
@@ -132,22 +144,21 @@ export default function NewPurchaseRequestPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.requester_name) {
       toast.error('请输入申请人');
       return;
     }
 
-    if (formData.items.some(item => !item.material_name || item.quantity <= 0)) {
+    if (formData.items.some((item) => !item.material_name || item.quantity <= 0)) {
       toast.error('请完善物料信息，物料名称和数量不能为空');
       return;
     }
 
     try {
       setSaving(true);
-      const response = await fetch('/api/purchase/request', {
+      const response = await authFetch('/api/purchase/request', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           items: formData.items.map((item, index) => ({
@@ -209,16 +220,23 @@ export default function NewPurchaseRequestPage() {
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
-                <Label>申请日期 <span className="text-red-500">*</span></Label>
+                <Label>
+                  申请日期 <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   type="date"
                   value={formData.request_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, request_date: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, request_date: e.target.value }))
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label>申请类型</Label>
-                <Select value={formData.request_type} onValueChange={(v) => setFormData(prev => ({ ...prev, request_type: v }))}>
+                <Select
+                  value={formData.request_type}
+                  onValueChange={(v) => setFormData((prev) => ({ ...prev, request_type: v }))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择类型" />
                   </SelectTrigger>
@@ -233,12 +251,15 @@ export default function NewPurchaseRequestPage() {
               </div>
               <div className="space-y-2">
                 <Label>申请部门</Label>
-                <Select value={formData.request_dept} onValueChange={(v) => setFormData(prev => ({ ...prev, request_dept: v }))}>
+                <Select
+                  value={formData.request_dept}
+                  onValueChange={(v) => setFormData((prev) => ({ ...prev, request_dept: v }))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择部门" />
                   </SelectTrigger>
                   <SelectContent>
-                    {departments.map(dept => (
+                    {departments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.dept_name}>
                         {dept.dept_name}
                       </SelectItem>
@@ -247,16 +268,23 @@ export default function NewPurchaseRequestPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>申请人 <span className="text-red-500">*</span></Label>
+                <Label>
+                  申请人 <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   value={formData.requester_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, requester_name: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, requester_name: e.target.value }))
+                  }
                   placeholder="申请人姓名"
                 />
               </div>
               <div className="space-y-2">
                 <Label>优先级</Label>
-                <Select value={formData.priority.toString()} onValueChange={(v) => setFormData(prev => ({ ...prev, priority: parseInt(v) }))}>
+                <Select
+                  value={formData.priority.toString()}
+                  onValueChange={(v) => setFormData((prev) => ({ ...prev, priority: parseInt(v) }))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择优先级" />
                   </SelectTrigger>
@@ -273,14 +301,18 @@ export default function NewPurchaseRequestPage() {
                 <Input
                   type="date"
                   value={formData.expected_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, expected_date: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, expected_date: e.target.value }))
+                  }
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>建议供应商</Label>
                 <Input
                   value={formData.supplier_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, supplier_name: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, supplier_name: e.target.value }))
+                  }
                   placeholder="供应商名称"
                 />
               </div>
@@ -299,10 +331,15 @@ export default function NewPurchaseRequestPage() {
             <CardContent>
               <div className="space-y-4">
                 {formData.items.map((item, index) => (
-                  <div key={item.id} className="grid grid-cols-12 gap-2 items-end p-4 border rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700">
+                  <div
+                    key={item.id}
+                    className="grid grid-cols-12 gap-2 items-end p-4 border rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700"
+                  >
                     <div className="col-span-1">
                       <Label className="text-xs">行号</Label>
-                      <div className="text-sm font-medium py-2 text-gray-900 dark:text-white">{index + 1}</div>
+                      <div className="text-sm font-medium py-2 text-gray-900 dark:text-white">
+                        {index + 1}
+                      </div>
                     </div>
                     <div className="col-span-2">
                       <Label className="text-xs">物料编码</Label>
@@ -313,7 +350,9 @@ export default function NewPurchaseRequestPage() {
                       />
                     </div>
                     <div className="col-span-2">
-                      <Label className="text-xs">物料名称 <span className="text-red-500">*</span></Label>
+                      <Label className="text-xs">
+                        物料名称 <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         value={item.material_name}
                         onChange={(e) => updateItem(index, 'material_name', e.target.value)}
@@ -337,13 +376,17 @@ export default function NewPurchaseRequestPage() {
                       />
                     </div>
                     <div className="col-span-1">
-                      <Label className="text-xs">数量 <span className="text-red-500">*</span></Label>
+                      <Label className="text-xs">
+                        数量 <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         type="number"
                         min="0"
                         step="0.001"
                         value={item.quantity || ''}
-                        onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                        onChange={(e) =>
+                          updateItem(index, 'quantity', parseFloat(e.target.value) || 0)
+                        }
                       />
                     </div>
                     <div className="col-span-1">
@@ -353,12 +396,16 @@ export default function NewPurchaseRequestPage() {
                         min="0"
                         step="0.0001"
                         value={item.price || ''}
-                        onChange={(e) => updateItem(index, 'price', parseFloat(e.target.value) || 0)}
+                        onChange={(e) =>
+                          updateItem(index, 'price', parseFloat(e.target.value) || 0)
+                        }
                       />
                     </div>
                     <div className="col-span-1">
                       <Label className="text-xs">金额</Label>
-                      <div className="text-sm font-medium py-2 text-gray-900 dark:text-white">{item.amount.toFixed(2)}</div>
+                      <div className="text-sm font-medium py-2 text-gray-900 dark:text-white">
+                        {item.amount.toFixed(2)}
+                      </div>
                     </div>
                     <div className="col-span-1">
                       <Button
@@ -378,8 +425,11 @@ export default function NewPurchaseRequestPage() {
               {/* 合计 */}
               <div className="flex justify-end mt-4 pt-4 border-t">
                 <div className="text-lg font-bold text-gray-900 dark:text-white">
-                合计金额：<span className="text-blue-600 dark:text-blue-400">¥{getTotalAmount().toFixed(2)}</span>
-              </div>
+                  合计金额：
+                  <span className="text-blue-600 dark:text-blue-400">
+                    ¥{getTotalAmount().toFixed(2)}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -393,7 +443,7 @@ export default function NewPurchaseRequestPage() {
               <textarea
                 className="w-full min-h-[100px] p-3 border rounded-md bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                 value={formData.remark}
-                onChange={(e) => setFormData(prev => ({ ...prev, remark: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, remark: e.target.value }))}
                 placeholder="其他备注信息..."
               />
             </CardContent>

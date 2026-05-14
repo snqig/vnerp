@@ -56,7 +56,7 @@ export class PurchaseOrderLine {
 
     const amount = (props.orderQty || 0) * (props.unitPrice || 0);
     const taxRate = props.taxRate || 13;
-    const taxAmount = amount * taxRate / 100;
+    const taxAmount = (amount * taxRate) / 100;
     const lineTotal = amount + taxAmount;
 
     return new PurchaseOrderLine(
@@ -152,7 +152,7 @@ export class PurchaseOrderLine {
 
   recalculate(): void {
     this._amount = this._orderQty * this._unitPrice;
-    this._taxAmount = this._amount * this._taxRate / 100;
+    this._taxAmount = (this._amount * this._taxRate) / 100;
     this._lineTotal = this._amount + this._taxAmount;
   }
 }

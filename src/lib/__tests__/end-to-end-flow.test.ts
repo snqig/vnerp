@@ -76,25 +76,44 @@ describe('P0-1: 端到端业务流程闭环测试', () => {
   });
 
   afterAll(async () => {
-    await execute(`DELETE FROM fin_voucher_line WHERE voucher_id IN (SELECT id FROM fin_voucher WHERE source_no LIKE 'TEST-%')`);
+    await execute(
+      `DELETE FROM fin_voucher_line WHERE voucher_id IN (SELECT id FROM fin_voucher WHERE source_no LIKE 'TEST-%')`
+    );
     await execute(`DELETE FROM fin_voucher WHERE source_no LIKE 'TEST-%'`);
     await execute(`DELETE FROM inv_inventory_transaction WHERE source_no LIKE 'TEST-%'`);
-    await execute(`DELETE FROM inv_inventory_batch WHERE material_id IN (?, ?)`, [testProductId, testMaterialId]);
-    await execute(`DELETE FROM inv_inventory WHERE material_id IN (?, ?)`, [testProductId, testMaterialId]);
-    await execute(`DELETE FROM prd_material_issue_item WHERE issue_id IN (SELECT id FROM prd_material_issue WHERE issue_no LIKE 'TEST-%')`);
+    await execute(`DELETE FROM inv_inventory_batch WHERE material_id IN (?, ?)`, [
+      testProductId,
+      testMaterialId,
+    ]);
+    await execute(`DELETE FROM inv_inventory WHERE material_id IN (?, ?)`, [
+      testProductId,
+      testMaterialId,
+    ]);
+    await execute(
+      `DELETE FROM prd_material_issue_item WHERE issue_id IN (SELECT id FROM prd_material_issue WHERE issue_no LIKE 'TEST-%')`
+    );
     await execute(`DELETE FROM prd_material_issue WHERE issue_no LIKE 'TEST-%'`);
-    await execute(`DELETE FROM inv_production_inbound_item WHERE inbound_id IN (SELECT id FROM inv_production_inbound WHERE inbound_no LIKE 'TEST-%')`);
+    await execute(
+      `DELETE FROM inv_production_inbound_item WHERE inbound_id IN (SELECT id FROM inv_production_inbound WHERE inbound_no LIKE 'TEST-%')`
+    );
     await execute(`DELETE FROM inv_production_inbound WHERE inbound_no LIKE 'TEST-%'`);
-    await execute(`DELETE FROM inv_sales_outbound_item WHERE outbound_id IN (SELECT id FROM inv_sales_outbound WHERE outbound_no LIKE 'TEST-%')`);
+    await execute(
+      `DELETE FROM inv_sales_outbound_item WHERE outbound_id IN (SELECT id FROM inv_sales_outbound WHERE outbound_no LIKE 'TEST-%')`
+    );
     await execute(`DELETE FROM inv_sales_outbound WHERE outbound_no LIKE 'TEST-%'`);
-    await execute(`DELETE FROM prod_work_order_material_req WHERE work_order_id = ?`, [testWorkOrderId]);
+    await execute(`DELETE FROM prod_work_order_material_req WHERE work_order_id = ?`, [
+      testWorkOrderId,
+    ]);
     await execute(`DELETE FROM prod_work_order WHERE id = ?`, [testWorkOrderId]);
     await execute(`DELETE FROM sal_order_detail WHERE order_id = ?`, [testSalesOrderId]);
     await execute(`DELETE FROM sal_order WHERE id = ?`, [testSalesOrderId]);
     await execute(`DELETE FROM prd_bom_line_std WHERE bom_id = ?`, [testBomId]);
     await execute(`DELETE FROM prd_bom_std WHERE id = ?`, [testBomId]);
     await execute(`DELETE FROM inv_warehouse WHERE id = ?`, [testWarehouseId]);
-    await execute(`DELETE FROM inv_material_std WHERE id IN (?, ?)`, [testProductId, testMaterialId]);
+    await execute(`DELETE FROM inv_material_std WHERE id IN (?, ?)`, [
+      testProductId,
+      testMaterialId,
+    ]);
     await execute(`DELETE FROM crm_customer WHERE id = ?`, [testCustomerId]);
   });
 
@@ -109,10 +128,9 @@ describe('P0-1: 端到端业务流程闭环测试', () => {
 
       testWorkOrderId = result.workOrderId;
 
-      const [woRows]: any = await query(
-        `SELECT * FROM prod_work_order WHERE id = ?`,
-        [testWorkOrderId]
-      );
+      const [woRows]: any = await query(`SELECT * FROM prod_work_order WHERE id = ?`, [
+        testWorkOrderId,
+      ]);
       expect(woRows.length).toBe(1);
       expect(woRows[0].sales_order_id).toBe(testSalesOrderId);
       expect(woRows[0].product_id).toBe(testProductId);
@@ -147,10 +165,7 @@ describe('P0-1: 端到端业务流程闭环测试', () => {
       );
       const beforeQty = beforeInv[0].quantity;
 
-      await execute(
-        `UPDATE prd_material_issue SET status = 3 WHERE id = ?`,
-        [testIssueId]
-      );
+      await execute(`UPDATE prd_material_issue SET status = 3 WHERE id = ?`, [testIssueId]);
       await execute(
         `UPDATE inv_inventory SET quantity = quantity - 1200 WHERE material_id = ? AND warehouse_id = ?`,
         [testMaterialId, testWarehouseId]
@@ -179,10 +194,7 @@ describe('P0-1: 端到端业务流程闭环测试', () => {
         [testInboundId, testProductId]
       );
 
-      await execute(
-        `UPDATE inv_production_inbound SET status = 3 WHERE id = ?`,
-        [testInboundId]
-      );
+      await execute(`UPDATE inv_production_inbound SET status = 3 WHERE id = ?`, [testInboundId]);
 
       await execute(
         `INSERT INTO inv_inventory (material_id, material_code, material_name, warehouse_id, quantity, unit)
@@ -220,10 +232,7 @@ describe('P0-1: 端到端业务流程闭环测试', () => {
       );
       const beforeQty = Number(beforeInv[0].quantity);
 
-      await execute(
-        `UPDATE inv_sales_outbound SET status = 3 WHERE id = ?`,
-        [testOutboundId]
-      );
+      await execute(`UPDATE inv_sales_outbound SET status = 3 WHERE id = ?`, [testOutboundId]);
       await execute(
         `UPDATE inv_inventory SET quantity = quantity - 500 WHERE material_id = ? AND warehouse_id = ?`,
         [testProductId, testWarehouseId]
@@ -255,8 +264,8 @@ describe('P0-1: 端到端业务流程闭环测试', () => {
             material_id: testProductId,
             material_name: '测试产品-包装膜',
             quantity: 500,
-            total_cost: 3500.00,
-            avg_cost: 7.00,
+            total_cost: 3500.0,
+            avg_cost: 7.0,
           },
         ],
         testCustomerId,
@@ -268,9 +277,12 @@ describe('P0-1: 端到端业务流程闭环测试', () => {
       expect(result.voucher_id).toBeGreaterThan(0);
       expect(result.voucher_no).toMatch(/^FV\d{14}\d{4}$/);
 
-      const vouchers = await FinanceVoucherHandler.getVouchersBySource('sales_outbound', testOutboundId);
+      const vouchers = await FinanceVoucherHandler.getVouchersBySource(
+        'sales_outbound',
+        testOutboundId
+      );
       expect(vouchers.length).toBeGreaterThanOrEqual(1);
-      expect(vouchers[0].total_amount).toBe(3500.00);
+      expect(vouchers[0].total_amount).toBe(3500.0);
     });
 
     it('应能生成领料财务凭证', async () => {
@@ -284,7 +296,7 @@ describe('P0-1: 端到端业务流程闭环测试', () => {
             material_id: testMaterialId,
             material_name: '测试原材料-PE膜',
             quantity: 1200,
-            total_cost: 2400.00,
+            total_cost: 2400.0,
           },
         ]
       );
@@ -304,8 +316,8 @@ describe('P0-1: 端到端业务流程闭环测试', () => {
             product_id: testProductId,
             product_name: '测试产品-包装膜',
             quantity: 950,
-            standard_cost: 5.00,
-            actual_cost: 5900.00,
+            standard_cost: 5.0,
+            actual_cost: 5900.0,
           },
         ]
       );
@@ -318,7 +330,15 @@ describe('P0-1: 端到端业务流程闭环测试', () => {
       const result = await FinanceVoucherHandler.generateSalesOutboundVoucher(
         testOutboundId,
         'TEST-SO-001',
-        [{ material_id: testProductId, material_name: '测试产品', quantity: 500, total_cost: 3500, avg_cost: 7 }],
+        [
+          {
+            material_id: testProductId,
+            material_name: '测试产品',
+            quantity: 500,
+            total_cost: 3500,
+            avg_cost: 7,
+          },
+        ],
         testCustomerId,
         '测试客户',
         testWarehouseId

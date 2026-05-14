@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿'use client';
+﻿'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -22,13 +22,43 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
-import { TableExportToolbar, exportTableToXLS, exportTableToPDF, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import {
+  TableExportToolbar,
+  exportTableToXLS,
+  exportTableToPDF,
+  exportTableToWORD,
+} from '@/components/ui/table-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { toast } from 'sonner';
 
@@ -82,9 +112,27 @@ const initialIncomingInspections: any[] = [
     inspector: '张三',
     remark: '检验合格',
     items: [
-      { itemName: '外观检查', standard: '无划痕、变形、色差', actualValue: '无划痕、无变形、无色差', result: 'pass', itemRemark: '' },
-      { itemName: '尺寸检查', standard: 'Ф32±0.1mm', actualValue: 'Ф32.05mm', result: 'pass', itemRemark: '' },
-      { itemName: '材质检查', standard: '符合材质标准', actualValue: '符合标准', result: 'pass', itemRemark: '' },
+      {
+        itemName: '外观检查',
+        standard: '无划痕、变形、色差',
+        actualValue: '无划痕、无变形、无色差',
+        result: 'pass',
+        itemRemark: '',
+      },
+      {
+        itemName: '尺寸检查',
+        standard: 'Ф32±0.1mm',
+        actualValue: 'Ф32.05mm',
+        result: 'pass',
+        itemRemark: '',
+      },
+      {
+        itemName: '材质检查',
+        standard: '符合材质标准',
+        actualValue: '符合标准',
+        result: 'pass',
+        itemRemark: '',
+      },
     ],
   },
   {
@@ -101,9 +149,27 @@ const initialIncomingInspections: any[] = [
     inspector: '李四',
     remark: '检验合格',
     items: [
-      { itemName: '外观检查', standard: '无破损、无异味', actualValue: '无破损、无异味', result: 'pass', itemRemark: '' },
-      { itemName: '尺寸检查', standard: '20mm*20m', actualValue: '20mm*20.5m', result: 'pass', itemRemark: '长度略有盈余' },
-      { itemName: '粘性测试', standard: '符合粘性要求', actualValue: '符合要求', result: 'pass', itemRemark: '' },
+      {
+        itemName: '外观检查',
+        standard: '无破损、无异味',
+        actualValue: '无破损、无异味',
+        result: 'pass',
+        itemRemark: '',
+      },
+      {
+        itemName: '尺寸检查',
+        standard: '20mm*20m',
+        actualValue: '20mm*20.5m',
+        result: 'pass',
+        itemRemark: '长度略有盈余',
+      },
+      {
+        itemName: '粘性测试',
+        standard: '符合粘性要求',
+        actualValue: '符合要求',
+        result: 'pass',
+        itemRemark: '',
+      },
     ],
   },
   {
@@ -120,9 +186,27 @@ const initialIncomingInspections: any[] = [
     inspector: '张三',
     remark: '部分线材直径不达标',
     items: [
-      { itemName: '外观检查', standard: '无破损、无氧化', actualValue: '无破损、无氧化', result: 'pass', itemRemark: '' },
-      { itemName: '尺寸检查', standard: '1.5mm²±0.1mm²', actualValue: '1.3mm²', result: 'reject', itemRemark: '直径偏小' },
-      { itemName: '电阻测试', standard: '符合电阻要求', actualValue: '符合要求', result: 'pass', itemRemark: '' },
+      {
+        itemName: '外观检查',
+        standard: '无破损、无氧化',
+        actualValue: '无破损、无氧化',
+        result: 'pass',
+        itemRemark: '',
+      },
+      {
+        itemName: '尺寸检查',
+        standard: '1.5mm²±0.1mm²',
+        actualValue: '1.3mm²',
+        result: 'reject',
+        itemRemark: '直径偏小',
+      },
+      {
+        itemName: '电阻测试',
+        standard: '符合电阻要求',
+        actualValue: '符合要求',
+        result: 'pass',
+        itemRemark: '',
+      },
     ],
   },
   {
@@ -142,7 +226,10 @@ const initialIncomingInspections: any[] = [
   },
 ];
 
-const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const statusConfig: Record<
+  string,
+  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+> = {
   pass: { label: '合格', variant: 'default' },
   reject: { label: '不合格', variant: 'destructive' },
   pending: { label: '待检验', variant: 'outline' },
@@ -195,8 +282,9 @@ export default function IncomingInspectionPage() {
   });
 
   const filteredInspections = useMemo(() => {
-    return incomingInspections.filter(inspection => {
-      const matchesSearch = !searchQuery ||
+    return incomingInspections.filter((inspection) => {
+      const matchesSearch =
+        !searchQuery ||
         inspection.materialName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         inspection.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         inspection.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -206,11 +294,14 @@ export default function IncomingInspectionPage() {
     });
   }, [incomingInspections, searchQuery, statusFilter]);
 
-  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(filteredInspections, 'id');
+  const { sortField, sortDirection, handleSort, sortedData } = useTableSort(
+    filteredInspections,
+    'id'
+  );
 
   const handleRefresh = useCallback(async () => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
     setIsLoading(false);
     toast.success('数据已刷新');
   }, []);
@@ -236,7 +327,7 @@ export default function IncomingInspectionPage() {
       inspectionResult: 'pending',
       inspectorName: '',
       remark: '',
-      items: inspectionItems.map(item => ({
+      items: inspectionItems.map((item) => ({
         itemName: item.name,
         standard: item.standard,
         actualValue: '',
@@ -258,23 +349,33 @@ export default function IncomingInspectionPage() {
       batchNo: inspection.batchNo,
       quantity: inspection.quantity?.toString() || '',
       unit: inspection.unit,
-      inspectionType: inspection.inspectionType === '抽检' ? 'sampling' : inspection.inspectionType === '全检' ? 'full' : inspection.inspectionType === '外观检查' ? 'visual' : 'functional',
+      inspectionType:
+        inspection.inspectionType === '抽检'
+          ? 'sampling'
+          : inspection.inspectionType === '全检'
+            ? 'full'
+            : inspection.inspectionType === '外观检查'
+              ? 'visual'
+              : 'functional',
       inspectionResult: inspection.result,
       inspectorName: inspection.inspector,
       remark: inspection.remark || '',
-      items: inspection.items.length > 0 ? inspection.items.map((item: any) => ({
-        itemName: item.itemName,
-        standard: item.standard,
-        actualValue: item.actualValue,
-        result: item.result,
-        itemRemark: item.itemRemark || '',
-      })) : inspectionItems.map(item => ({
-        itemName: item.name,
-        standard: item.standard,
-        actualValue: '',
-        result: 'pending',
-        itemRemark: '',
-      })),
+      items:
+        inspection.items.length > 0
+          ? inspection.items.map((item: any) => ({
+              itemName: item.itemName,
+              standard: item.standard,
+              actualValue: item.actualValue,
+              result: item.result,
+              itemRemark: item.itemRemark || '',
+            }))
+          : inspectionItems.map((item) => ({
+              itemName: item.name,
+              standard: item.standard,
+              actualValue: '',
+              result: 'pending',
+              itemRemark: '',
+            })),
     });
     setIsEditDialogOpen(true);
   };
@@ -289,7 +390,14 @@ export default function IncomingInspectionPage() {
       batchNo: formData.batchNo,
       quantity: parseFloat(formData.quantity) || 0,
       unit: formData.unit,
-      inspectionType: formData.inspectionType === 'sampling' ? '抽检' : formData.inspectionType === 'full' ? '全检' : formData.inspectionType === 'visual' ? '外观检查' : '功能测试',
+      inspectionType:
+        formData.inspectionType === 'sampling'
+          ? '抽检'
+          : formData.inspectionType === 'full'
+            ? '全检'
+            : formData.inspectionType === 'visual'
+              ? '外观检查'
+              : '功能测试',
       result: formData.inspectionResult,
       inspector: formData.inspectorName,
       remark: formData.remark,
@@ -302,25 +410,34 @@ export default function IncomingInspectionPage() {
 
   const handleUpdate = () => {
     if (!currentInspection) return;
-    setIncomingInspections(incomingInspections.map(i =>
-      i.id === currentInspection.id
-        ? {
-            ...i,
-            date: formData.inspectionDate,
-            supplier: formData.supplierName,
-            materialName: formData.materialName,
-            specification: formData.specification,
-            batchNo: formData.batchNo,
-            quantity: parseFloat(formData.quantity) || 0,
-            unit: formData.unit,
-            inspectionType: formData.inspectionType === 'sampling' ? '抽检' : formData.inspectionType === 'full' ? '全检' : formData.inspectionType === 'visual' ? '外观检查' : '功能测试',
-            result: formData.inspectionResult,
-            inspector: formData.inspectorName,
-            remark: formData.remark,
-            items: formData.items,
-          }
-        : i
-    ));
+    setIncomingInspections(
+      incomingInspections.map((i) =>
+        i.id === currentInspection.id
+          ? {
+              ...i,
+              date: formData.inspectionDate,
+              supplier: formData.supplierName,
+              materialName: formData.materialName,
+              specification: formData.specification,
+              batchNo: formData.batchNo,
+              quantity: parseFloat(formData.quantity) || 0,
+              unit: formData.unit,
+              inspectionType:
+                formData.inspectionType === 'sampling'
+                  ? '抽检'
+                  : formData.inspectionType === 'full'
+                    ? '全检'
+                    : formData.inspectionType === 'visual'
+                      ? '外观检查'
+                      : '功能测试',
+              result: formData.inspectionResult,
+              inspector: formData.inspectorName,
+              remark: formData.remark,
+              items: formData.items,
+            }
+          : i
+      )
+    );
     setIsEditDialogOpen(false);
     toast.success('进料检验单更新成功');
   };
@@ -332,15 +449,15 @@ export default function IncomingInspectionPage() {
 
   const confirmDelete = () => {
     if (!currentInspection) return;
-    setIncomingInspections(incomingInspections.filter(i => i.id !== currentInspection.id));
+    setIncomingInspections(incomingInspections.filter((i) => i.id !== currentInspection.id));
     setIsDeleteDialogOpen(false);
     toast.success('进料检验单删除成功');
   };
 
   const toggleSelectInspection = (inspectionId: string) => {
-    setSelectedInspections(prev =>
+    setSelectedInspections((prev) =>
       prev.includes(inspectionId)
-        ? prev.filter(id => id !== inspectionId)
+        ? prev.filter((id) => id !== inspectionId)
         : [...prev, inspectionId]
     );
   };
@@ -349,14 +466,19 @@ export default function IncomingInspectionPage() {
     if (selectedInspections.length === sortedData.length) {
       setSelectedInspections([]);
     } else {
-      setSelectedInspections(sortedData.map(i => i.id));
+      setSelectedInspections(sortedData.map((i) => i.id));
     }
   };
 
-  const totalInspectionsToday = incomingInspections.filter(i => i.date === new Date().toISOString().slice(0, 10)).length;
-  const totalPassInspections = incomingInspections.filter(i => i.result === 'pass').length;
-  const totalRejectInspections = incomingInspections.filter(i => i.result === 'reject').length;
-  const passRate = incomingInspections.length > 0 ? Math.round((totalPassInspections / incomingInspections.length) * 100) : 0;
+  const totalInspectionsToday = incomingInspections.filter(
+    (i) => i.date === new Date().toISOString().slice(0, 10)
+  ).length;
+  const totalPassInspections = incomingInspections.filter((i) => i.result === 'pass').length;
+  const totalRejectInspections = incomingInspections.filter((i) => i.result === 'reject').length;
+  const passRate =
+    incomingInspections.length > 0
+      ? Math.round((totalPassInspections / incomingInspections.length) * 100)
+      : 0;
 
   const exportColumns = [
     { key: 'id', header: '检验单号' },
@@ -376,58 +498,106 @@ export default function IncomingInspectionPage() {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>检验日期 *</Label>
-          <Input type="date" value={formData.inspectionDate} onChange={(e) => setFormData({ ...formData, inspectionDate: e.target.value })} />
+          <Input
+            type="date"
+            value={formData.inspectionDate}
+            onChange={(e) => setFormData({ ...formData, inspectionDate: e.target.value })}
+          />
         </div>
         <div className="space-y-2">
           <Label>供应商 *</Label>
-          <Input value={formData.supplierName} onChange={(e) => setFormData({ ...formData, supplierName: e.target.value })} placeholder="请输入供应商名称" />
+          <Input
+            value={formData.supplierName}
+            onChange={(e) => setFormData({ ...formData, supplierName: e.target.value })}
+            placeholder="请输入供应商名称"
+          />
         </div>
         <div className="space-y-2">
           <Label>物料编码</Label>
-          <Input value={formData.materialCode} onChange={(e) => setFormData({ ...formData, materialCode: e.target.value })} placeholder="请输入物料编码" />
+          <Input
+            value={formData.materialCode}
+            onChange={(e) => setFormData({ ...formData, materialCode: e.target.value })}
+            placeholder="请输入物料编码"
+          />
         </div>
         <div className="space-y-2">
           <Label>物料名称 *</Label>
-          <Input value={formData.materialName} onChange={(e) => setFormData({ ...formData, materialName: e.target.value })} placeholder="请输入物料名称" />
+          <Input
+            value={formData.materialName}
+            onChange={(e) => setFormData({ ...formData, materialName: e.target.value })}
+            placeholder="请输入物料名称"
+          />
         </div>
         <div className="space-y-2">
           <Label>规格 *</Label>
-          <Input value={formData.specification} onChange={(e) => setFormData({ ...formData, specification: e.target.value })} placeholder="请输入规格" />
+          <Input
+            value={formData.specification}
+            onChange={(e) => setFormData({ ...formData, specification: e.target.value })}
+            placeholder="请输入规格"
+          />
         </div>
         <div className="space-y-2">
           <Label>批次号 *</Label>
-          <Input value={formData.batchNo} onChange={(e) => setFormData({ ...formData, batchNo: e.target.value })} placeholder="请输入批次号" />
+          <Input
+            value={formData.batchNo}
+            onChange={(e) => setFormData({ ...formData, batchNo: e.target.value })}
+            placeholder="请输入批次号"
+          />
         </div>
         <div className="space-y-2">
           <Label>数量 *</Label>
-          <Input type="number" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} placeholder="请输入数量" />
+          <Input
+            type="number"
+            value={formData.quantity}
+            onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+            placeholder="请输入数量"
+          />
         </div>
         <div className="space-y-2">
           <Label>单位 *</Label>
-          <Select value={formData.unit} onValueChange={(value) => setFormData({ ...formData, unit: value })}>
-            <SelectTrigger><SelectValue placeholder="选择单位" /></SelectTrigger>
+          <Select
+            value={formData.unit}
+            onValueChange={(value) => setFormData({ ...formData, unit: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="选择单位" />
+            </SelectTrigger>
             <SelectContent>
-              {unitOptions.map(option => (
-                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+              {unitOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
           <Label>检验类型 *</Label>
-          <Select value={formData.inspectionType} onValueChange={(value) => setFormData({ ...formData, inspectionType: value })}>
-            <SelectTrigger><SelectValue placeholder="选择检验类型" /></SelectTrigger>
+          <Select
+            value={formData.inspectionType}
+            onValueChange={(value) => setFormData({ ...formData, inspectionType: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="选择检验类型" />
+            </SelectTrigger>
             <SelectContent>
-              {inspectionTypeOptions.map(option => (
-                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+              {inspectionTypeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
           <Label>检验结果 *</Label>
-          <Select value={formData.inspectionResult} onValueChange={(value) => setFormData({ ...formData, inspectionResult: value })}>
-            <SelectTrigger><SelectValue placeholder="选择检验结果" /></SelectTrigger>
+          <Select
+            value={formData.inspectionResult}
+            onValueChange={(value) => setFormData({ ...formData, inspectionResult: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="选择检验结果" />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="pending">待检验</SelectItem>
               <SelectItem value="pass">合格</SelectItem>
@@ -437,11 +607,19 @@ export default function IncomingInspectionPage() {
         </div>
         <div className="space-y-2">
           <Label>检验员 *</Label>
-          <Input value={formData.inspectorName} onChange={(e) => setFormData({ ...formData, inspectorName: e.target.value })} placeholder="请输入检验员姓名" />
+          <Input
+            value={formData.inspectorName}
+            onChange={(e) => setFormData({ ...formData, inspectorName: e.target.value })}
+            placeholder="请输入检验员姓名"
+          />
         </div>
         <div className="space-y-2">
           <Label>备注</Label>
-          <Input value={formData.remark} onChange={(e) => setFormData({ ...formData, remark: e.target.value })} placeholder="请输入备注" />
+          <Input
+            value={formData.remark}
+            onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+            placeholder="请输入备注"
+          />
         </div>
       </div>
       <div className="space-y-4">
@@ -452,36 +630,50 @@ export default function IncomingInspectionPage() {
               <div className="grid grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label>项目名称</Label>
-                  <Input value={item.itemName} onChange={(e) => {
-                    const newItems = [...formData.items];
-                    newItems[index].itemName = e.target.value;
-                    setFormData({ ...formData, items: newItems });
-                  }} />
+                  <Input
+                    value={item.itemName}
+                    onChange={(e) => {
+                      const newItems = [...formData.items];
+                      newItems[index].itemName = e.target.value;
+                      setFormData({ ...formData, items: newItems });
+                    }}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>标准要求</Label>
-                  <Input value={item.standard} onChange={(e) => {
-                    const newItems = [...formData.items];
-                    newItems[index].standard = e.target.value;
-                    setFormData({ ...formData, items: newItems });
-                  }} />
+                  <Input
+                    value={item.standard}
+                    onChange={(e) => {
+                      const newItems = [...formData.items];
+                      newItems[index].standard = e.target.value;
+                      setFormData({ ...formData, items: newItems });
+                    }}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>实际值</Label>
-                  <Input value={item.actualValue} onChange={(e) => {
-                    const newItems = [...formData.items];
-                    newItems[index].actualValue = e.target.value;
-                    setFormData({ ...formData, items: newItems });
-                  }} />
+                  <Input
+                    value={item.actualValue}
+                    onChange={(e) => {
+                      const newItems = [...formData.items];
+                      newItems[index].actualValue = e.target.value;
+                      setFormData({ ...formData, items: newItems });
+                    }}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>结果</Label>
-                  <Select value={item.result} onValueChange={(value) => {
-                    const newItems = [...formData.items];
-                    newItems[index].result = value;
-                    setFormData({ ...formData, items: newItems });
-                  }}>
-                    <SelectTrigger><SelectValue placeholder="选择结果" /></SelectTrigger>
+                  <Select
+                    value={item.result}
+                    onValueChange={(value) => {
+                      const newItems = [...formData.items];
+                      newItems[index].result = value;
+                      setFormData({ ...formData, items: newItems });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择结果" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="pending">待检验</SelectItem>
                       <SelectItem value="pass">合格</SelectItem>
@@ -491,11 +683,15 @@ export default function IncomingInspectionPage() {
                 </div>
                 <div className="col-span-4 space-y-2">
                   <Label>备注</Label>
-                  <Input value={item.itemRemark} onChange={(e) => {
-                    const newItems = [...formData.items];
-                    newItems[index].itemRemark = e.target.value;
-                    setFormData({ ...formData, items: newItems });
-                  }} placeholder="请输入备注" />
+                  <Input
+                    value={item.itemRemark}
+                    onChange={(e) => {
+                      const newItems = [...formData.items];
+                      newItems[index].itemRemark = e.target.value;
+                      setFormData({ ...formData, items: newItems });
+                    }}
+                    placeholder="请输入备注"
+                  />
                 </div>
               </div>
             </div>
@@ -512,13 +708,22 @@ export default function IncomingInspectionPage() {
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="搜索物料、供应商、批次号..." className="pl-8 w-64" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+              <Input
+                placeholder="搜索物料、供应商、批次号..."
+                className="pl-8 w-64"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-32"><SelectValue placeholder="选择状态" /></SelectTrigger>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="选择状态" />
+              </SelectTrigger>
               <SelectContent>
-                {statusOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -539,21 +744,38 @@ export default function IncomingInspectionPage() {
             <TableExportToolbar
               selectedCount={selectedInspections.length}
               totalCount={sortedData.length}
-              onSelectAll={() => setSelectedInspections(sortedData.map(i => i.id))}
+              onSelectAll={() => setSelectedInspections(sortedData.map((i) => i.id))}
               onDeselectAll={() => setSelectedInspections([])}
               onPrint={() => {
-                const selectedData = sortedData.filter(i => selectedInspections.includes(i.id));
-                if (selectedData.length === 0) { toast.error('请先选择要打印的记录'); return; }
+                const selectedData = sortedData.filter((i) => selectedInspections.includes(i.id));
+                if (selectedData.length === 0) {
+                  toast.error('请先选择要打印的记录');
+                  return;
+                }
                 const printWindow = window.open('', '_blank');
-                if (!printWindow) { toast.error('无法打开打印窗口'); return; }
-                const rows = selectedData.map(i => `<tr><td>${i.id}</td><td>${i.date}</td><td>${i.supplier}</td><td>${i.materialName}</td><td>${i.specification}</td><td>${i.batchNo}</td><td>${i.quantity} ${i.unit}</td><td>${i.inspectionType}</td><td>${statusConfig[i.result]?.label || i.result}</td><td>${i.inspector}</td></tr>`).join('');
-                printWindow.document.write(`<!DOCTYPE html><html><head><title>进料检验记录打印</title><style>body{font-family:"Microsoft YaHei",sans-serif;padding:20px}h1{text-align:center;font-size:20px;margin-bottom:4px}p.sub{text-align:center;color:#666;font-size:12px;margin-bottom:16px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #333;padding:6px 8px;text-align:center}th{background:#f0f0f0;font-weight:bold}@media print{body{padding:0}}</style></head><body><h1>进料检验记录</h1><p class="sub">打印时间：${new Date().toLocaleString()} | 共 ${selectedData.length} 条记录</p><table><thead><tr><th>检验单号</th><th>日期</th><th>供应商</th><th>物料名称</th><th>规格</th><th>批次号</th><th>数量</th><th>检验类型</th><th>结果</th><th>检验员</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=function(){window.print();}</script></body></html>`);
+                if (!printWindow) {
+                  toast.error('无法打开打印窗口');
+                  return;
+                }
+                const rows = selectedData
+                  .map(
+                    (i) =>
+                      `<tr><td>${i.id}</td><td>${i.date}</td><td>${i.supplier}</td><td>${i.materialName}</td><td>${i.specification}</td><td>${i.batchNo}</td><td>${i.quantity} ${i.unit}</td><td>${i.inspectionType}</td><td>${statusConfig[i.result]?.label || i.result}</td><td>${i.inspector}</td></tr>`
+                  )
+                  .join('');
+                printWindow.document.write(
+                  `<!DOCTYPE html><html><head><title>进料检验记录打印</title><style>body{font-family:"Microsoft YaHei",sans-serif;padding:20px}h1{text-align:center;font-size:20px;margin-bottom:4px}p.sub{text-align:center;color:#666;font-size:12px;margin-bottom:16px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #333;padding:6px 8px;text-align:center}th{background:#f0f0f0;font-weight:bold}@media print{body{padding:0}}</style></head><body><h1>进料检验记录</h1><p class="sub">打印时间：${new Date().toLocaleString()} | 共 ${selectedData.length} 条记录</p><table><thead><tr><th>检验单号</th><th>日期</th><th>供应商</th><th>物料名称</th><th>规格</th><th>批次号</th><th>数量</th><th>检验类型</th><th>结果</th><th>检验员</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=function(){window.print();}</script></body></html>`
+                );
                 printWindow.document.close();
                 toast.success('打印任务已发送');
               }}
-              onExportPDF={() => exportTableToPDF(sortedData, '进料检验报告', exportColumns, '进料检验报告')}
+              onExportPDF={() =>
+                exportTableToPDF(sortedData, '进料检验报告', exportColumns, '进料检验报告')
+              }
               onExportXLS={() => exportTableToXLS(sortedData, '进料检验报告', exportColumns)}
-              onExportWORD={() => exportTableToWORD(sortedData, '进料检验报告', exportColumns, '进料检验报告')}
+              onExportWORD={() =>
+                exportTableToWORD(sortedData, '进料检验报告', exportColumns, '进料检验报告')
+              }
             />
           </div>
         </div>
@@ -628,20 +850,57 @@ export default function IncomingInspectionPage() {
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox
-                      checked={selectedInspections.length === sortedData.length && sortedData.length > 0}
+                      checked={
+                        selectedInspections.length === sortedData.length && sortedData.length > 0
+                      }
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
                   <TableHead className="w-12 text-center">序号</TableHead>
-                  <SortableTableHeader field="id" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>检验单号</SortableTableHeader>
-                  <SortableTableHeader field="date" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>日期</SortableTableHeader>
-                  <SortableTableHeader field="supplier" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>供应商</SortableTableHeader>
-                  <SortableTableHeader field="materialName" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>物料名称</SortableTableHeader>
+                  <SortableTableHeader
+                    field="id"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    检验单号
+                  </SortableTableHeader>
+                  <SortableTableHeader
+                    field="date"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    日期
+                  </SortableTableHeader>
+                  <SortableTableHeader
+                    field="supplier"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    供应商
+                  </SortableTableHeader>
+                  <SortableTableHeader
+                    field="materialName"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    物料名称
+                  </SortableTableHeader>
                   <TableHead>规格</TableHead>
                   <TableHead>批次号</TableHead>
                   <TableHead>数量</TableHead>
                   <TableHead>检验类型</TableHead>
-                  <SortableTableHeader field="result" sortField={sortField} sortDirection={sortDirection} onSort={handleSort}>状态</SortableTableHeader>
+                  <SortableTableHeader
+                    field="result"
+                    sortField={sortField}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                  >
+                    状态
+                  </SortableTableHeader>
                   <TableHead>检验员</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
@@ -662,7 +921,9 @@ export default function IncomingInspectionPage() {
                     <TableCell>{inspection.materialName}</TableCell>
                     <TableCell>{inspection.specification}</TableCell>
                     <TableCell>{inspection.batchNo}</TableCell>
-                    <TableCell>{inspection.quantity} {inspection.unit}</TableCell>
+                    <TableCell>
+                      {inspection.quantity} {inspection.unit}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline">{inspection.inspectionType}</Badge>
                     </TableCell>
@@ -714,7 +975,9 @@ export default function IncomingInspectionPage() {
             </DialogHeader>
             <div className="py-4">{renderFormItems()}</div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                取消
+              </Button>
               <Button onClick={handleSave}>保存</Button>
             </DialogFooter>
           </DialogContent>
@@ -728,7 +991,9 @@ export default function IncomingInspectionPage() {
             </DialogHeader>
             <div className="py-4">{renderFormItems()}</div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                取消
+              </Button>
               <Button onClick={handleUpdate}>更新</Button>
             </DialogFooter>
           </DialogContent>
@@ -738,11 +1003,17 @@ export default function IncomingInspectionPage() {
           <DialogContent className="sm:max-w-md" resizable>
             <DialogHeader>
               <DialogTitle>删除进料检验单</DialogTitle>
-              <DialogDescription>确定要删除检验单 {currentInspection?.id} 吗？此操作不可撤销。</DialogDescription>
+              <DialogDescription>
+                确定要删除检验单 {currentInspection?.id} 吗？此操作不可撤销。
+              </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>取消</Button>
-              <Button variant="destructive" onClick={confirmDelete}>删除</Button>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                取消
+              </Button>
+              <Button variant="destructive" onClick={confirmDelete}>
+                删除
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

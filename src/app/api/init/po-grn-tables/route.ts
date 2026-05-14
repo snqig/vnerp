@@ -254,10 +254,19 @@ export async function GET(request: NextRequest) {
     const inboundColumns = [
       { name: 'po_id', def: "po_id INT UNSIGNED DEFAULT NULL COMMENT '关联采购单ID'" },
       { name: 'po_no', def: "po_no VARCHAR(50) DEFAULT NULL COMMENT '采购单号'" },
-      { name: 'grn_type', def: "grn_type ENUM('po', 'blind', 'return') DEFAULT 'po' COMMENT '入库类型'" },
+      {
+        name: 'grn_type',
+        def: "grn_type ENUM('po', 'blind', 'return') DEFAULT 'po' COMMENT '入库类型'",
+      },
       { name: 'asn_no', def: "asn_no VARCHAR(50) DEFAULT NULL COMMENT '到货通知单号'" },
-      { name: 'delivery_no', def: "delivery_no VARCHAR(100) DEFAULT NULL COMMENT '送货单号/快递单号'" },
-      { name: 'qc_status', def: "qc_status ENUM('pending', 'pass', 'fail', 'partial') DEFAULT 'pending' COMMENT '质检状态'" },
+      {
+        name: 'delivery_no',
+        def: "delivery_no VARCHAR(100) DEFAULT NULL COMMENT '送货单号/快递单号'",
+      },
+      {
+        name: 'qc_status',
+        def: "qc_status ENUM('pending', 'pass', 'fail', 'partial') DEFAULT 'pending' COMMENT '质检状态'",
+      },
       { name: 'qc_remark', def: "qc_remark TEXT DEFAULT NULL COMMENT '质检备注'" },
       { name: 'post_time', def: "post_time DATETIME DEFAULT NULL COMMENT '过账时间'" },
       { name: 'post_by', def: "post_by INT UNSIGNED DEFAULT NULL COMMENT '过账人ID'" },
@@ -265,7 +274,7 @@ export async function GET(request: NextRequest) {
 
     let inboundUpdated = false;
     for (const col of inboundColumns) {
-      if (!await columnExists('inv_inbound_order', col.name)) {
+      if (!(await columnExists('inv_inbound_order', col.name))) {
         await addColumnSafe('inv_inbound_order', col.def);
         inboundUpdated = true;
       }
@@ -274,13 +283,19 @@ export async function GET(request: NextRequest) {
     // 添加索引
     try {
       await query(`CREATE INDEX idx_po_id ON inv_inbound_order(po_id)`);
-    } catch (e) { /* 索引可能已存在 */ }
+    } catch (e) {
+      /* 索引可能已存在 */
+    }
     try {
       await query(`CREATE INDEX idx_po_no ON inv_inbound_order(po_no)`);
-    } catch (e) { /* 索引可能已存在 */ }
+    } catch (e) {
+      /* 索引可能已存在 */
+    }
     try {
       await query(`CREATE INDEX idx_grn_type ON inv_inbound_order(grn_type)`);
-    } catch (e) { /* 索引可能已存在 */ }
+    } catch (e) {
+      /* 索引可能已存在 */
+    }
 
     if (inboundUpdated) {
       results.push('✅ 更新表: inv_inbound_order (添加PO关联字段)');
@@ -294,18 +309,30 @@ export async function GET(request: NextRequest) {
       { name: 'line_no', def: "line_no INT UNSIGNED DEFAULT NULL COMMENT '行号'" },
       { name: 'accepted_qty', def: "accepted_qty DECIMAL(14,3) DEFAULT 0 COMMENT '合格数量'" },
       { name: 'rejected_qty', def: "rejected_qty DECIMAL(14,3) DEFAULT 0 COMMENT '不良数量'" },
-      { name: 'qc_result', def: "qc_result ENUM('pending', 'pass', 'fail', 'partial') DEFAULT 'pending' COMMENT '质检结果'" },
-      { name: 'qc_inspector_id', def: "qc_inspector_id INT UNSIGNED DEFAULT NULL COMMENT '质检员ID'" },
+      {
+        name: 'qc_result',
+        def: "qc_result ENUM('pending', 'pass', 'fail', 'partial') DEFAULT 'pending' COMMENT '质检结果'",
+      },
+      {
+        name: 'qc_inspector_id',
+        def: "qc_inspector_id INT UNSIGNED DEFAULT NULL COMMENT '质检员ID'",
+      },
       { name: 'qc_time', def: "qc_time DATETIME DEFAULT NULL COMMENT '质检时间'" },
-      { name: 'supplier_batch_no', def: "supplier_batch_no VARCHAR(100) DEFAULT NULL COMMENT '供应商批次号'" },
+      {
+        name: 'supplier_batch_no',
+        def: "supplier_batch_no VARCHAR(100) DEFAULT NULL COMMENT '供应商批次号'",
+      },
       { name: 'warehouse_id', def: "warehouse_id INT UNSIGNED DEFAULT NULL COMMENT '仓库ID'" },
       { name: 'location_id', def: "location_id INT UNSIGNED DEFAULT NULL COMMENT '库位ID'" },
-      { name: 'putaway_status', def: "putaway_status ENUM('pending', 'done') DEFAULT 'pending' COMMENT '上架状态'" },
+      {
+        name: 'putaway_status',
+        def: "putaway_status ENUM('pending', 'done') DEFAULT 'pending' COMMENT '上架状态'",
+      },
     ];
 
     let itemUpdated = false;
     for (const col of itemColumns) {
-      if (!await columnExists('inv_inbound_item', col.name)) {
+      if (!(await columnExists('inv_inbound_item', col.name))) {
         await addColumnSafe('inv_inbound_item', col.def);
         itemUpdated = true;
       }
@@ -318,7 +345,9 @@ export async function GET(request: NextRequest) {
     }
 
     // 插入测试数据
-    const supplierCount = await query(`SELECT COUNT(*) as count FROM pur_supplier WHERE deleted = 0`);
+    const supplierCount = await query(
+      `SELECT COUNT(*) as count FROM pur_supplier WHERE deleted = 0`
+    );
     if ((supplierCount as any[])[0].count === 0) {
       await query(`
         INSERT INTO pur_supplier (supplier_code, supplier_name, supplier_type, contact_person, contact_phone, over_receipt_tolerance) VALUES
@@ -329,7 +358,9 @@ export async function GET(request: NextRequest) {
       results.push('✅ 插入测试数据: 3个供应商');
     }
 
-    const poCount = await query(`SELECT COUNT(*) as count FROM pur_purchase_order WHERE deleted = 0`);
+    const poCount = await query(
+      `SELECT COUNT(*) as count FROM pur_purchase_order WHERE deleted = 0`
+    );
     if ((poCount as any[])[0].count === 0) {
       // 创建测试采购单
       await query(`
@@ -373,7 +404,7 @@ export async function GET(request: NextRequest) {
 
     return successResponse({
       message: '采购单与入库单逻辑关系表初始化完成',
-      details: results
+      details: results,
     });
   } catch (error: any) {
     console.error('初始化失败:', error);

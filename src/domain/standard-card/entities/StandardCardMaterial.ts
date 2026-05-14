@@ -60,7 +60,7 @@ export class StandardCardMaterial {
       spec: this.spec,
       unitConsumption: this.unitConsumption,
       lossRate: this.lossRate,
-      remark: this.remark
+      remark: this.remark,
     };
   }
 }

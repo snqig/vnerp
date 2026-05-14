@@ -133,9 +133,8 @@ export async function allocateFIFO(
   }
 
   result.shortage = Decimal.max(remainingDecimal, 0).toNumber();
-  result.shortage_percentage = requiredQty > 0
-    ? new Decimal(result.shortage).dividedBy(requiredQty).times(100).toNumber()
-    : 0;
+  result.shortage_percentage =
+    requiredQty > 0 ? new Decimal(result.shortage).dividedBy(requiredQty).times(100).toNumber() : 0;
 
   return result;
 }
@@ -206,12 +205,13 @@ export async function executeFIFODeductionWithRetry(
       return { ...result, attempts };
     } catch (error: any) {
       lastError = error.message;
-      if (attempts < maxRetries && (
-        lastError.includes('已被其他操作修改') ||
-        lastError.includes('version') ||
-        lastError.includes('affectedRows')
-      )) {
-        await new Promise(resolve => setTimeout(resolve, DEFAULT_RETRY_DELAY_MS * attempts));
+      if (
+        attempts < maxRetries &&
+        (lastError.includes('已被其他操作修改') ||
+          lastError.includes('version') ||
+          lastError.includes('affectedRows'))
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, DEFAULT_RETRY_DELAY_MS * attempts));
         continue;
       }
       throw error;
@@ -256,7 +256,7 @@ async function executeFIFODeductionInternal(
       if (currentBatch.length > 0) {
         throw new Error(
           `批次${alloc.batch_no}乐观锁冲突: 期望版本${alloc.version}, ` +
-          `实际版本${currentBatch[0].version}, 可用量${currentBatch[0].available_qty}`
+            `实际版本${currentBatch[0].version}, 可用量${currentBatch[0].available_qty}`
         );
       }
       throw new Error(`FIFO库存更新失败: 批次${alloc.batch_no}，可能已被其他操作修改`);
@@ -284,9 +284,17 @@ async function executeFIFODeductionInternal(
         operated_by, operated_at, remark
       ) VALUES (?, 'outbound', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
       [
-        transNo, alloc.batch_no, alloc.material_id, alloc.material_code, alloc.material_name,
-        params.warehouseId, params.warehouseCode, -alloc.allocate_qty,
-        params.sourceType, params.sourceNo, params.operatorId,
+        transNo,
+        alloc.batch_no,
+        alloc.material_id,
+        alloc.material_code,
+        alloc.material_name,
+        params.warehouseId,
+        params.warehouseCode,
+        -alloc.allocate_qty,
+        params.sourceType,
+        params.sourceNo,
+        params.operatorId,
         `FIFO出库-批次${alloc.batch_no}`,
       ]
     );
@@ -299,13 +307,23 @@ async function executeFIFODeductionInternal(
           fifo_mode, operator_id, operator_name
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'fifo_auto', ?, ?)`,
         [
-          params.sourceType, params.sourceId, params.sourceNo, params.warehouseId,
-          alloc.material_id, alloc.batch_id, alloc.batch_no,
-          alloc.allocate_qty, alloc.unit_cost, lineCostDecimal.toNumber(),
-          params.operatorId, params.operatorName,
+          params.sourceType,
+          params.sourceId,
+          params.sourceNo,
+          params.warehouseId,
+          alloc.material_id,
+          alloc.batch_id,
+          alloc.batch_no,
+          alloc.allocate_qty,
+          alloc.unit_cost,
+          lineCostDecimal.toNumber(),
+          params.operatorId,
+          params.operatorName,
         ]
       );
-    } catch (e) { console.error('[FIFO分配] 出库批次分配记录写入失败:', e); }
+    } catch (e) {
+      console.error('[FIFO分配] 出库批次分配记录写入失败:', e);
+    }
   }
 
   return { deductionDetails, totalCost: totalCostDecimal.toNumber() };
@@ -340,9 +358,15 @@ export async function executeFIFOWithTransaction(
   try {
     const finalResult = await transaction(async (conn) => {
       for (const alloc of allocations) {
-        const allocation = await allocateFIFO(conn, alloc.materialId, alloc.warehouseId, alloc.requiredQty, {
-          excludeBatchIds: alloc.excludeBatchIds,
-        });
+        const allocation = await allocateFIFO(
+          conn,
+          alloc.materialId,
+          alloc.warehouseId,
+          alloc.requiredQty,
+          {
+            excludeBatchIds: alloc.excludeBatchIds,
+          }
+        );
 
         if (allocation.shortage > 0) {
           const warning = await checkShortageAndWarn(alloc.materialId, alloc.requiredQty);
@@ -424,7 +448,7 @@ export async function executeSpecifiedBatchDeduction(
   if (availableQtyDecimal.lessThan(requiredQtyDecimal)) {
     throw new Error(
       `库存不足: ${params.materialName}(${params.batchNo}), ` +
-      `可用: ${availableQtyDecimal.toFixed(2)}, 需要: ${requiredQtyDecimal.toFixed(2)}`
+        `可用: ${availableQtyDecimal.toFixed(2)}, 需要: ${requiredQtyDecimal.toFixed(2)}`
     );
   }
 
@@ -453,9 +477,17 @@ export async function executeSpecifiedBatchDeduction(
       operated_by, operated_at, remark
     ) VALUES (?, 'outbound', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
     [
-      transNo, params.batchNo, params.materialId, params.materialCode, params.materialName,
-      params.warehouseId, params.warehouseCode, -params.requiredQty,
-      params.sourceType, params.sourceNo, params.operatorId,
+      transNo,
+      params.batchNo,
+      params.materialId,
+      params.materialCode,
+      params.materialName,
+      params.warehouseId,
+      params.warehouseCode,
+      -params.requiredQty,
+      params.sourceType,
+      params.sourceNo,
+      params.operatorId,
       `指定批次出库-${params.batchNo}`,
     ]
   );
@@ -468,13 +500,23 @@ export async function executeSpecifiedBatchDeduction(
         fifo_mode, operator_id, operator_name
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'specified_batch', ?, ?)`,
       [
-        params.sourceType, params.sourceId, params.sourceNo, params.warehouseId,
-        params.materialId, batchData.id, params.batchNo,
-        params.requiredQty, unitCostDecimal.toNumber(), totalCostDecimal.toNumber(),
-        params.operatorId, params.operatorName,
+        params.sourceType,
+        params.sourceId,
+        params.sourceNo,
+        params.warehouseId,
+        params.materialId,
+        batchData.id,
+        params.batchNo,
+        params.requiredQty,
+        unitCostDecimal.toNumber(),
+        totalCostDecimal.toNumber(),
+        params.operatorId,
+        params.operatorName,
       ]
     );
-  } catch (e) { console.error('[指定批次出库] 出库批次分配记录写入失败:', e); }
+  } catch (e) {
+    console.error('[指定批次出库] 出库批次分配记录写入失败:', e);
+  }
 
   return {
     deductionDetail: {

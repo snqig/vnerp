@@ -43,13 +43,17 @@ export async function getNumberingConfig(): Promise<DocumentNumberingConfig> {
     });
     return {
       sales_order_prefix: configs['sales_order_prefix'] || DEFAULT_CONFIG.sales_order_prefix,
-      purchase_order_prefix: configs['purchase_order_prefix'] || DEFAULT_CONFIG.purchase_order_prefix,
+      purchase_order_prefix:
+        configs['purchase_order_prefix'] || DEFAULT_CONFIG.purchase_order_prefix,
       work_order_prefix: configs['work_order_prefix'] || DEFAULT_CONFIG.work_order_prefix,
       sample_prefix: configs['sample_prefix'] || DEFAULT_CONFIG.sample_prefix,
-      purchase_request_prefix: configs['purchase_request_prefix'] || DEFAULT_CONFIG.purchase_request_prefix,
+      purchase_request_prefix:
+        configs['purchase_request_prefix'] || DEFAULT_CONFIG.purchase_request_prefix,
       inbound_prefix: configs['inbound_prefix'] || DEFAULT_CONFIG.inbound_prefix,
       outbound_prefix: configs['outbound_prefix'] || DEFAULT_CONFIG.outbound_prefix,
-      serial_length: configs['serial_length'] ? Number(configs['serial_length']) : DEFAULT_CONFIG.serial_length,
+      serial_length: configs['serial_length']
+        ? Number(configs['serial_length'])
+        : DEFAULT_CONFIG.serial_length,
     };
   } catch (e) {
     console.error('获取编码配置失败', e);
@@ -57,30 +61,29 @@ export async function getNumberingConfig(): Promise<DocumentNumberingConfig> {
   }
 }
 
-export type DocumentType = 
-  | 'sales_order' 
-  | 'purchase_order' 
-  | 'work_order' 
-  | 'sample' 
-  | 'purchase_request' 
-  | 'inbound' 
+export type DocumentType =
+  | 'sales_order'
+  | 'purchase_order'
+  | 'work_order'
+  | 'sample'
+  | 'purchase_request'
+  | 'inbound'
   | 'outbound'
   // 采购全流程新增
-  | 'inquiry'           // 询价单
-  | 'arrival_notice'    // 到货通知单
-  | 'iqc'               // IQC质检单
+  | 'inquiry' // 询价单
+  | 'arrival_notice' // 到货通知单
+  | 'iqc' // IQC质检单
   | 'purchase_reconcile' // 对账单
   | 'purchase_settlement' // 结算单
   // 生产全流程新增
-  | 'material_pick'     // 领料单
-  | 'material_return'   // 退料单
-  | 'process_report'    // 工序汇报单
-  | 'finish_inbound'    // 完工入库单
+  | 'material_pick' // 领料单
+  | 'material_return' // 退料单
+  | 'process_report' // 工序汇报单
+  | 'finish_inbound' // 完工入库单
   // 批次管理新增
-  | 'batch'             // 批次号
-  ;
+  | 'batch'; // 批次号
 
-const DOCUMENT_PREFIX_MAP: Record<DocumentType, keyof DocumentNumberingConfig> = {
+const DOCUMENT_PREFIX_MAP: Partial<Record<DocumentType, keyof DocumentNumberingConfig>> = {
   sales_order: 'sales_order_prefix',
   purchase_order: 'purchase_order_prefix',
   work_order: 'work_order_prefix',
@@ -90,7 +93,7 @@ const DOCUMENT_PREFIX_MAP: Record<DocumentType, keyof DocumentNumberingConfig> =
   outbound: 'outbound_prefix',
 };
 
-const DOCUMENT_TABLE_MAP: Record<DocumentType, { table: string; field: string }> = {
+const DOCUMENT_TABLE_MAP: Partial<Record<DocumentType, { table: string; field: string }>> = {
   sales_order: { table: 'sal_order', field: 'order_no' },
   purchase_order: { table: 'pur_purchase_order', field: 'po_no' },
   work_order: { table: 'prod_work_order', field: 'work_order_no' },
@@ -110,6 +113,9 @@ export function validateDocumentNoFormat(
   }
 
   const prefixKey = DOCUMENT_PREFIX_MAP[docType];
+  if (!prefixKey) {
+    return { valid: true }; // 如果没有配置该类型的前缀，跳过格式校验
+  }
   const expectedPrefix = config[prefixKey] as string;
   const serialLength = config.serial_length;
 
@@ -186,7 +192,7 @@ export async function validateDocumentNo(
 export async function generateDocumentNo(docType: DocumentType): Promise<string> {
   const config = await getNumberingConfig();
   const prefixKey = DOCUMENT_PREFIX_MAP[docType];
-  const prefix = config[prefixKey] as string;
+  const prefix = prefixKey ? (config[prefixKey] as string) : 'DOC';
   const serialLength = config.serial_length;
 
   const today = new Date();

@@ -12,14 +12,16 @@ describe('InboundOrder 并发冲突测试', () => {
       orderType: 'purchase',
       remark: '',
       operatorId: 1,
-      items: [{
-        materialId: 1,
-        materialName: '测试物料',
-        batchNo: 'B001',
-        quantity: 100,
-        unit: '件',
-        unitPrice: 10,
-      }],
+      items: [
+        {
+          materialId: 1,
+          materialName: '测试物料',
+          batchNo: 'B001',
+          quantity: 100,
+          unit: '件',
+          unitPrice: 10,
+        },
+      ],
     });
   });
 
@@ -73,7 +75,7 @@ describe('InboundOrder 并发冲突测试', () => {
     order.approve('测试仓库');
     const events = order.getDomainEvents();
     expect(events.length).toBeGreaterThan(0);
-    expect(events.some(e => e.eventType === 'inbound.approved')).toBe(true);
+    expect(events.some((e) => e.eventType === 'inbound.approved')).toBe(true);
   });
 
   it('反审核后应产生领域事件', () => {

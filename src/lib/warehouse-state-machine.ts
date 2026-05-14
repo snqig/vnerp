@@ -5,17 +5,17 @@
 import { secureLog } from '@/lib/logger';
 
 export type InboundStatus =
-  | 'draft'        // 草稿
-  | 'pending'      // 待审核
-  | 'completed'    // 已完成
-  | 'cancelled';   // 已取消
+  | 'draft' // 草稿
+  | 'pending' // 待审核
+  | 'completed' // 已完成
+  | 'cancelled'; // 已取消
 
 // 出库单状态
 export type OutboundStatus =
-  | 'draft'        // 草稿
-  | 'pending'      // 待确认
-  | 'completed'    // 已完成
-  | 'cancelled';   // 已取消
+  | 'draft' // 草稿
+  | 'pending' // 待确认
+  | 'completed' // 已完成
+  | 'cancelled'; // 已取消
 
 // 状态配置
 interface StatusConfig {
@@ -84,20 +84,14 @@ export const outboundStateMachine: Record<OutboundStatus, StatusConfig> = {
 // 状态机验证器
 export class WarehouseStateMachine {
   // 验证入库单状态流转是否合法
-  static canTransitionInbound(
-    fromStatus: InboundStatus,
-    toStatus: InboundStatus
-  ): boolean {
+  static canTransitionInbound(fromStatus: InboundStatus, toStatus: InboundStatus): boolean {
     const config = inboundStateMachine[fromStatus];
     if (!config) return false;
     return config.allowedTransitions.includes(toStatus);
   }
 
   // 验证出库单状态流转是否合法
-  static canTransitionOutbound(
-    fromStatus: OutboundStatus,
-    toStatus: OutboundStatus
-  ): boolean {
+  static canTransitionOutbound(fromStatus: OutboundStatus, toStatus: OutboundStatus): boolean {
     const config = outboundStateMachine[fromStatus];
     if (!config) return false;
     return config.allowedTransitions.includes(toStatus);
@@ -161,7 +155,8 @@ export class WarehouseStateMachine {
   ): string {
     const typeLabel = type === 'inbound' ? '入库单' : '出库单';
     const stateMachine = type === 'inbound' ? inboundStateMachine : outboundStateMachine;
-    const fromLabel = stateMachine[fromStatus as InboundStatus | OutboundStatus]?.label || fromStatus;
+    const fromLabel =
+      stateMachine[fromStatus as InboundStatus | OutboundStatus]?.label || fromStatus;
     const toLabel = stateMachine[toStatus as InboundStatus | OutboundStatus]?.label || toStatus;
     return `${typeLabel}状态流转不合法: ${fromLabel} -> ${toLabel}`;
   }
@@ -169,14 +164,14 @@ export class WarehouseStateMachine {
 
 // 库存操作类型
 export type InventoryTransType =
-  | 'inbound'           // 入库
-  | 'inbound_cancel'    // 入库撤销
-  | 'outbound'          // 出库
-  | 'outbound_cancel'   // 出库撤销
-  | 'transfer_in'       // 调拨入库
-  | 'transfer_out'      // 调拨出库
-  | 'adjust_add'        // 盘盈
-  | 'adjust_sub'        // 盘亏;
+  | 'inbound' // 入库
+  | 'inbound_cancel' // 入库撤销
+  | 'outbound' // 出库
+  | 'outbound_cancel' // 出库撤销
+  | 'transfer_in' // 调拨入库
+  | 'transfer_out' // 调拨出库
+  | 'adjust_add' // 盘盈
+  | 'adjust_sub'; // 盘亏;
 
 // 库存交易记录接口
 export interface InventoryTransaction {
@@ -201,11 +196,11 @@ export interface InventoryTransaction {
 export class InventoryTransactionLogger {
   static async log(transaction: InventoryTransaction): Promise<void> {
     // 这里可以将日志保存到数据库或发送到日志服务
-    secureLog('debug', 'Inventory transaction', { 
-      transType: transaction.transType, 
-      materialName: transaction.materialName, 
-      quantity: transaction.quantity, 
-      materialCode: transaction.materialCode 
+    secureLog('debug', 'Inventory transaction', {
+      transType: transaction.transType,
+      materialName: transaction.materialName,
+      quantity: transaction.quantity,
+      materialCode: transaction.materialCode,
     });
   }
 }

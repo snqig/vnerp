@@ -20,11 +20,28 @@ import {
   X,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button, PrimaryButton, SecondaryButton, OutlineButton, DestructiveButton, SuccessButton, WarningButton, InfoButton, GhostButton, LinkButton } from '@/components/ui/button';
+import {
+  Button,
+  PrimaryButton,
+  SecondaryButton,
+  OutlineButton,
+  DestructiveButton,
+  SuccessButton,
+  WarningButton,
+  InfoButton,
+  GhostButton,
+  LinkButton,
+} from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 
@@ -154,7 +171,7 @@ export default function ButtonDemoPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col space-y-4">
                     <div className="flex flex-wrap gap-4">
                       <Button
@@ -178,7 +195,7 @@ export default function ButtonDemoPage() {
                       </Button>
                       <Button
                         variant={selectedVariant as any}
-                        size={selectedSize as any === 'icon' ? 'icon' : 'default'}
+                        size={(selectedSize as any) === 'icon' ? 'icon' : 'default'}
                         shape={selectedShape as any}
                         fullWidth={fullWidth}
                         disabled={disabled}
@@ -186,7 +203,7 @@ export default function ButtonDemoPage() {
                         <Plus className="w-4 h-4" />
                       </Button>
                     </div>
-                    
+
                     <div className="flex gap-4">
                       <Button
                         variant={selectedVariant as any}
@@ -233,45 +250,25 @@ export default function ButtonDemoPage() {
                       <TabsTrigger value="colored">彩色风格</TabsTrigger>
                       <TabsTrigger value="special">特殊风格</TabsTrigger>
                     </TabsList>
-                    
+
                     <TabsContent value="default" className="space-y-4">
                       <div className="flex flex-wrap gap-4">
-                        <PrimaryButton>
-                          主要按钮
-                        </PrimaryButton>
-                        <SecondaryButton>
-                          次要按钮
-                        </SecondaryButton>
-                        <OutlineButton>
-                          轮廓按钮
-                        </OutlineButton>
-                        <GhostButton>
-                          幽灵按钮
-                        </GhostButton>
-                        <LinkButton>
-                          链接按钮
-                        </LinkButton>
+                        <PrimaryButton>主要按钮</PrimaryButton>
+                        <SecondaryButton>次要按钮</SecondaryButton>
+                        <OutlineButton>轮廓按钮</OutlineButton>
+                        <GhostButton>幽灵按钮</GhostButton>
+                        <LinkButton>链接按钮</LinkButton>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-4">
-                        <PrimaryButton disabled>
-                          禁用状态
-                        </PrimaryButton>
-                        <SecondaryButton disabled>
-                          禁用状态
-                        </SecondaryButton>
-                        <OutlineButton disabled>
-                          禁用状态
-                        </OutlineButton>
-                        <GhostButton disabled>
-                          禁用状态
-                        </GhostButton>
-                        <LinkButton disabled>
-                          禁用状态
-                        </LinkButton>
+                        <PrimaryButton disabled>禁用状态</PrimaryButton>
+                        <SecondaryButton disabled>禁用状态</SecondaryButton>
+                        <OutlineButton disabled>禁用状态</OutlineButton>
+                        <GhostButton disabled>禁用状态</GhostButton>
+                        <LinkButton disabled>禁用状态</LinkButton>
                       </div>
                     </TabsContent>
-                    
+
                     <TabsContent value="colored" className="space-y-4">
                       <div className="flex flex-wrap gap-4">
                         <SuccessButton>
@@ -291,7 +288,7 @@ export default function ButtonDemoPage() {
                           危险按钮
                         </DestructiveButton>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-4">
                         <SuccessButton disabled>
                           <CheckCircle2 className="w-4 h-4" />
@@ -311,30 +308,18 @@ export default function ButtonDemoPage() {
                         </DestructiveButton>
                       </div>
                     </TabsContent>
-                    
+
                     <TabsContent value="special" className="space-y-4">
                       <div className="flex flex-wrap gap-4">
-                        <PrimaryButton shape="pill">
-                          胶囊按钮
-                        </PrimaryButton>
-                        <SecondaryButton shape="square">
-                          方形按钮
-                        </SecondaryButton>
-                        <OutlineButton shape="pill">
-                          胶囊轮廓
-                        </OutlineButton>
-                        <DestructiveButton shape="square">
-                          方形危险
-                        </DestructiveButton>
+                        <PrimaryButton shape="pill">胶囊按钮</PrimaryButton>
+                        <SecondaryButton shape="square">方形按钮</SecondaryButton>
+                        <OutlineButton shape="pill">胶囊轮廓</OutlineButton>
+                        <DestructiveButton shape="square">方形危险</DestructiveButton>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-4">
-                        <PrimaryButton fullWidth>
-                          全宽按钮
-                        </PrimaryButton>
-                        <SecondaryButton fullWidth>
-                          全宽次要
-                        </SecondaryButton>
+                        <PrimaryButton fullWidth>全宽按钮</PrimaryButton>
+                        <SecondaryButton fullWidth>全宽次要</SecondaryButton>
                       </div>
                     </TabsContent>
                   </Tabs>
@@ -355,23 +340,13 @@ export default function ButtonDemoPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-wrap gap-4 items-center">
-                    <PrimaryButton size="xs">
-                      超小按钮
-                    </PrimaryButton>
-                    <PrimaryButton size="sm">
-                      小按钮
-                    </PrimaryButton>
-                    <PrimaryButton size="default">
-                      默认按钮
-                    </PrimaryButton>
-                    <PrimaryButton size="lg">
-                      大按钮
-                    </PrimaryButton>
-                    <PrimaryButton size="xl">
-                      超大按钮
-                    </PrimaryButton>
+                    <PrimaryButton size="xs">超小按钮</PrimaryButton>
+                    <PrimaryButton size="sm">小按钮</PrimaryButton>
+                    <PrimaryButton size="default">默认按钮</PrimaryButton>
+                    <PrimaryButton size="lg">大按钮</PrimaryButton>
+                    <PrimaryButton size="xl">超大按钮</PrimaryButton>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-4 items-center">
                     <PrimaryButton size="icon-sm">
                       <Plus className="w-4 h-4" />
@@ -411,12 +386,10 @@ export default function ButtonDemoPage() {
                         <RefreshCw className="w-4 h-4" />
                         重置
                       </OutlineButton>
-                      <LinkButton>
-                        取消
-                      </LinkButton>
+                      <LinkButton>取消</LinkButton>
                     </div>
                   </div>
-                  
+
                   {/* 表格操作 */}
                   <div>
                     <h3 className="text-lg font-medium mb-4">表格操作</h3>
@@ -439,7 +412,7 @@ export default function ButtonDemoPage() {
                       </OutlineButton>
                     </div>
                   </div>
-                  
+
                   {/* 上传下载 */}
                   <div>
                     <h3 className="text-lg font-medium mb-4">上传下载</h3>
@@ -454,7 +427,7 @@ export default function ButtonDemoPage() {
                       </OutlineButton>
                     </div>
                   </div>
-                  
+
                   {/* 用户操作 */}
                   <div>
                     <h3 className="text-lg font-medium mb-4">用户操作</h3>
@@ -505,7 +478,7 @@ export default function ButtonDemoPage() {
 </Button>`}
                     </pre>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <h3 className="text-lg font-medium">带图标的按钮</h3>
                     <pre className="bg-slate-100 p-4 rounded-md text-sm overflow-x-auto">
@@ -519,7 +492,7 @@ export default function ButtonDemoPage() {
 </Button>`}
                     </pre>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <h3 className="text-lg font-medium">加载状态</h3>
                     <pre className="bg-slate-100 p-4 rounded-md text-sm overflow-x-auto">
@@ -532,7 +505,7 @@ export default function ButtonDemoPage() {
 </Button>`}
                     </pre>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <h3 className="text-lg font-medium">便捷组件</h3>
                     <pre className="bg-slate-100 p-4 rounded-md text-sm overflow-x-auto">

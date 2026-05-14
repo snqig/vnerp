@@ -59,12 +59,12 @@ import Link from 'next/link';
 // 标准卡列表项接口（符合设计文档 5.1 节 standard_cards 表结构）
 interface StandardCardListItem {
   id: number;
-  card_no: string;                    // 格式：SC+类型代码+YYYYMMDD+3位序号
-  name: string;                       // 标准卡名称
-  type: string;                       // 类型：color/process/quality/comprehensive
-  version: string;                    // 版本号
-  material_id?: number;               // 适用产品 ID
-  status: number;                     // 状态：1=草稿 2=待审核 3=已生效 4=已失效
+  card_no: string; // 格式：SC+类型代码+YYYYMMDD+3位序号
+  name: string; // 标准卡名称
+  type: string; // 类型：color/process/quality/comprehensive
+  version: string; // 版本号
+  material_id?: number; // 适用产品 ID
+  status: number; // 状态：1=草稿 2=待审核 3=已生效 4=已失效
 
   // 扩展字段（兼容丝网印刷行业特性）
   customer_name: string;
@@ -93,37 +93,66 @@ type StandardCardType = 'color' | 'process' | 'quality' | 'comprehensive';
 const typeMap: Record<StandardCardType, { label: string; color: string }> = {
   color: {
     label: '颜色标准卡',
-    color: 'bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-700'
+    color:
+      'bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-700',
   },
   process: {
     label: '工艺标准卡',
-    color: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700'
+    color:
+      'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
   },
   quality: {
     label: '质量标准卡',
-    color: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700'
+    color:
+      'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
   },
   comprehensive: {
     label: '综合标准卡',
-    color: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700'
-  }
+    color:
+      'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700',
+  },
 };
 
 // 审核状态接口
 interface ApprovalStatus {
+  status?: number;
+  statusLabel?: string;
   currentStep?: number;
   totalSteps?: number;
   canApprove?: boolean;
   canReject?: boolean;
   message?: string;
+  steps?: Array<{
+    type: string;
+    label: string;
+    status: string;
+    approver?: string;
+    time?: string;
+  }>;
 }
 
 // 状态映射（符合设计文档 5.1 节：草稿、待审核、已生效、已失效）
 const statusMap: Record<number, { label: string; color: string }> = {
-  1: { label: '草稿', color: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' },
-  2: { label: '待审核', color: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700' },
-  3: { label: '已生效', color: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700' },
-  4: { label: '已失效', color: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700' },
+  1: {
+    label: '草稿',
+    color:
+      'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
+  },
+  2: {
+    label: '待审核',
+    color:
+      'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
+  },
+  3: {
+    label: '已生效',
+    color:
+      'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
+  },
+  4: {
+    label: '已失效',
+    color:
+      'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
+  },
 };
 
 // 印刷类型选项
@@ -168,34 +197,13 @@ export default function StandardCardPage() {
         params.append('keyword', debouncedSearchTerm);
       }
 
-      const response = await fetch(`/api/standard-cards?${params.toString()}`);
+      const response = await authFetch(`/api/standard-cards?${params.toString()}`);
       const result = await response.json();
 
       if (result.success) {
-        // 转换数据库字段为前端格式
-        const formattedCards: StandardCardListItem[] = result.data.map((item: any) => ({
-          id: item.id,
-          cardNo: item.card_no,
-          customerName: item.customer_name,
-          customerCode: item.customer_code,
-          productName: item.product_name,
-          version: item.version,
-          date: item.date ? item.date.split('T')[0] : '',
-          finishedSize: item.finished_size,
-          tolerance: item.tolerance,
-          materialName: item.material_name,
-          materialType: item.material_type,
-          layoutType: item.layout_type,
-          printType: item.print_type,
-          processMethod: item.process_method,
-          glueType: item.glue_type,
-          packingType: item.packing_type,
-          status: item.status,
-          createTime: item.create_time,
-          updateTime: item.update_time,
-        }));
-        setCards(formattedCards);
-        setTotalCount(result.pagination?.total || 0);
+        const cardList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        setCards(cardList);
+        setTotalCount(result.pagination?.total || result.data?.total || 0);
       } else {
         console.error('加载数据失败:', result.message);
       }
@@ -228,17 +236,21 @@ export default function StandardCardPage() {
 
   // 分页计算
   const totalPages = Math.ceil(totalCount / pageSize);
-  
-  // 直接使用 API 返回的数据，不再进行客户端筛选
-  const filteredCards = cards.filter(card => {
-    if (printTypeFilter !== '全部' && card.printType !== printTypeFilter) return false;
-    if (processMethodFilter !== '全部' && card.processMethod !== processMethodFilter) return false;
-    if (materialTypeFilter !== '全部' && card.materialType !== materialTypeFilter) return false;
+
+  // 客户端筛选
+  const filteredCards = cards.filter((card) => {
+    if (printTypeFilter !== '全部' && card.print_type !== printTypeFilter) return false;
+    if (processMethodFilter !== '全部' && card.process_method !== processMethodFilter) return false;
+    if (materialTypeFilter !== '全部' && card.material_type !== materialTypeFilter) return false;
     return true;
   });
 
   const handleView = (card: StandardCardListItem) => {
-    window.open(`/sample/standard-card/print?id=${card.id}`, '_blank', 'width=1200,height=800,scrollbars=yes');
+    window.open(
+      `/sample/standard-card/print?id=${card.id}`,
+      '_blank',
+      'width=1200,height=800,scrollbars=yes'
+    );
   };
 
   const handlePrint = (card: StandardCardListItem) => {
@@ -344,7 +356,7 @@ export default function StandardCardPage() {
         const response = await fetch(`/api/standard-cards?id=${cardToDelete.id}`, {
           method: 'DELETE',
         });
-        
+
         // 尝试解析 JSON，如果失败则使用文本
         let result;
         const contentType = response.headers.get('content-type');
@@ -372,7 +384,9 @@ export default function StandardCardPage() {
   const getStatusBadge = (status: number) => {
     const { label, color } = statusMap[status] || statusMap[1];
     return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${color}`}>
+      <span
+        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${color}`}
+      >
         {label}
       </span>
     );
@@ -427,9 +441,7 @@ export default function StandardCardPage() {
                 <Package className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">
-                  {cards.filter((c) => c.status === 3).length}
-                </p>
+                <p className="text-2xl font-bold">{cards.filter((c) => c.status === 3).length}</p>
                 <p className="text-xs text-muted-foreground">已生效</p>
               </div>
             </CardContent>
@@ -440,9 +452,7 @@ export default function StandardCardPage() {
                 <Factory className="h-5 w-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">
-                  {cards.filter((c) => c.status === 2).length}
-                </p>
+                <p className="text-2xl font-bold">{cards.filter((c) => c.status === 2).length}</p>
                 <p className="text-xs text-muted-foreground">待审核</p>
               </div>
             </CardContent>
@@ -453,9 +463,7 @@ export default function StandardCardPage() {
                 <Settings className="h-5 w-5 text-gray-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">
-                  {cards.filter((c) => c.status === 1).length}
-                </p>
+                <p className="text-2xl font-bold">{cards.filter((c) => c.status === 1).length}</p>
                 <p className="text-xs text-muted-foreground">草稿</p>
               </div>
             </CardContent>
@@ -466,9 +474,7 @@ export default function StandardCardPage() {
                 <Palette className="h-5 w-5 text-red-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">
-                  {cards.filter((c) => c.status === 4).length}
-                </p>
+                <p className="text-2xl font-bold">{cards.filter((c) => c.status === 4).length}</p>
                 <p className="text-xs text-muted-foreground">已失效</p>
               </div>
             </CardContent>
@@ -608,21 +614,32 @@ export default function StandardCardPage() {
                           {card.card_no}
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium truncate max-w-[120px] block" title={card.name}>
+                          <span
+                            className="font-medium truncate max-w-[120px] block"
+                            title={card.name}
+                          >
                             {card.name}
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={`text-xs ${typeMap[card.type as StandardCardType]?.color || 'bg-gray-100'}`}>
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${typeMap[card.type as StandardCardType]?.color || 'bg-gray-100'}`}
+                          >
                             {typeMap[card.type as StandardCardType]?.label || card.type}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span className="font-medium truncate max-w-[100px]" title={card.customer_name}>
+                            <span
+                              className="font-medium truncate max-w-[100px]"
+                              title={card.customer_name}
+                            >
                               {card.customer_name}
                             </span>
-                            <span className="text-xs text-muted-foreground">{card.customer_code}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {card.customer_code}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -693,7 +710,10 @@ export default function StandardCardPage() {
                                   <Edit className="h-4 w-4 mr-2" />
                                   编辑
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDelete(card)} className="text-red-600">
+                                <DropdownMenuItem
+                                  onClick={() => handleDelete(card)}
+                                  className="text-red-600"
+                                >
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   删除
                                 </DropdownMenuItem>
@@ -747,7 +767,7 @@ export default function StandardCardPage() {
             <DialogHeader>
               <DialogTitle>确认删除</DialogTitle>
               <DialogDescription>
-                您确定要删除标准卡 <strong>{cardToDelete?.cardNo}</strong> 吗？此操作不可恢复。
+                您确定要删除标准卡 <strong>{cardToDelete?.card_no}</strong> 吗？此操作不可恢复。
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -766,9 +786,7 @@ export default function StandardCardPage() {
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
               <DialogTitle>标准卡审核流程</DialogTitle>
-              <DialogDescription>
-                标准卡编号：{cardToApprove?.cardNo}
-              </DialogDescription>
+              <DialogDescription>标准卡编号：{cardToApprove?.card_no}</DialogDescription>
             </DialogHeader>
             {loadingApproval ? (
               <div className="flex items-center justify-center py-8">
@@ -784,9 +802,11 @@ export default function StandardCardPage() {
                 </div>
 
                 <div className="space-y-3">
-                  {approvalStatus.steps.map((step: any, index: number) => (
+                  {approvalStatus.steps?.map((step: any, index: number) => (
                     <div key={step.type} className="flex items-center gap-3 p-3 border rounded-lg">
-                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : step.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
+                      <div
+                        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step.status === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : step.status === 'pending' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}
+                      >
                         {index + 1}
                       </div>
                       <div className="flex-1">
@@ -799,19 +819,13 @@ export default function StandardCardPage() {
                           )}
                         </div>
                         {step.status === 'completed' && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            已审核
-                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">已审核</div>
                         )}
                         {step.status === 'pending' && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            待审核
-                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">待审核</div>
                         )}
                         {step.status === 'waiting' && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            等待前置审核
-                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">等待前置审核</div>
                         )}
                       </div>
                       <div className="flex gap-2">
@@ -826,7 +840,9 @@ export default function StandardCardPage() {
                           <Button
                             size="sm"
                             onClick={() => {
-                              const input = document.getElementById(`approve-input-${step.type}`) as HTMLInputElement;
+                              const input = document.getElementById(
+                                `approve-input-${step.type}`
+                              ) as HTMLInputElement;
                               if (input?.value.trim() !== '') {
                                 handleApproveAction(step.type, input.value.trim());
                               } else {

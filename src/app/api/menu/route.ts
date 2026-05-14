@@ -1,20 +1,21 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
+import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
 
 // 构建菜单树
 function buildMenuTree(menus: any[], parentId: number = 0): any[] {
   return menus
-    .filter(menu => menu.parent_id === parentId)
+    .filter((menu) => menu.parent_id === parentId)
     .sort((a, b) => a.sort_order - b.sort_order)
-    .map(menu => ({
+    .map((menu) => ({
       ...menu,
-      children: buildMenuTree(menus, menu.id)
+      children: buildMenuTree(menus, menu.id),
     }));
 }
 
 // 获取菜单列表
-export async function GET(request: NextRequest) {
+export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
@@ -56,4 +57,4 @@ export async function GET(request: NextRequest) {
     console.error('获取菜单列表失败:', error);
     return errorResponse('获取菜单列表失败', 500);
   }
-}
+});

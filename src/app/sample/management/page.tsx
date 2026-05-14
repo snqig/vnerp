@@ -26,12 +26,41 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Search, Plus, Eye, Edit, Trash2, MoreHorizontal, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  Eye,
+  Edit,
+  Trash2,
+  MoreHorizontal,
+  Loader2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
-import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import {
+  TableExportToolbar,
+  printTable,
+  exportTableToPDF,
+  exportTableToXLS,
+  exportTableToWORD,
+} from '@/components/ui/table-export-toolbar';
 import { formatDate } from '@/lib/date-utils';
+
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
 
 interface SampleOrder {
   id: number;
@@ -61,6 +90,24 @@ const statusColorMap: Record<string, { className: string }> = {
   completed: { className: 'bg-blue-100 text-blue-700' },
   delivered: { className: 'bg-cyan-100 text-cyan-700' },
   signed: { className: 'bg-emerald-100 text-emerald-700' },
+};
+
+const statusLabelMap: Record<string, string> = {
+  pending: '待处理',
+  approved: '已批准',
+  rejected: '已拒绝',
+  producing: '生产中',
+  completed: '已完成',
+  delivered: '已发货',
+  signed: '已签收',
+};
+
+const deliveryStatusLabelMap: Record<number, string> = {
+  0: '未发货',
+  1: '部分发货',
+  2: '已发货',
+  3: '部分签收',
+  4: '全部签收',
 };
 
 const emptyForm = {
@@ -100,7 +147,7 @@ export default function SampleManagementPage() {
 
   const handleSort = (field: string) => {
     if (sortField === field) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortDir('asc');
@@ -109,7 +156,11 @@ export default function SampleManagementPage() {
 
   const getSortIcon = (field: string) => {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-40" />;
-    return sortDir === 'asc' ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
+    return sortDir === 'asc' ? (
+      <ArrowUp className="ml-1 h-3 w-3" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3" />
+    );
   };
 
   const sortedList = [...list].sort((a, b) => {
@@ -133,7 +184,9 @@ export default function SampleManagementPage() {
     const label = item.delivery_status_label || status;
     const colorConfig = statusColorMap[status] || statusColorMap.pending;
     return (
-      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colorConfig.className}`}>
+      <span
+        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colorConfig.className}`}
+      >
         {label}
       </span>
     );
@@ -148,11 +201,12 @@ export default function SampleManagementPage() {
         keyword: debouncedKeyword,
       });
       if (statusFilter !== 'all') params.set('deliveryStatus', statusFilter);
-      const res = await fetch(`/api/sample/orders?${params}`);
+      const res = await authFetch(`/api/sample/orders?${params}`);
       const result = await res.json();
       if (result.success) {
-        setList(result.data || []);
-        setTotal(result.pagination?.total || (result.data || []).length);
+        const sampleList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        setList(sampleList);
+        setTotal(result.pagination?.total || result.data?.total || sampleList.length);
       }
     } catch (e) {
       console.error('获取样品列表失败:', e);
@@ -161,7 +215,9 @@ export default function SampleManagementPage() {
     }
   }, [page, pageSize, debouncedKeyword, statusFilter]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleViewDetail = (item: SampleOrder) => {
     setDetailItem(item);
@@ -193,7 +249,10 @@ export default function SampleManagementPage() {
 
   const handleSave = async () => {
     if (!form.notify_date || !form.customer_name || !form.product_name || !form.material_no) {
-      toast({ title: '请填写必填字段（通知日期、客户、产品名称、物料编号）', variant: 'destructive' });
+      toast({
+        title: '请填写必填字段（通知日期、客户、产品名称、物料编号）',
+        variant: 'destructive',
+      });
       return;
     }
     setSaving(true);
@@ -224,7 +283,7 @@ export default function SampleManagementPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定要删除这个样品订单吗？')) return;
     try {
-      const res = await fetch(`/api/sample/orders?id=${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/sample/orders?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });
@@ -245,23 +304,25 @@ export default function SampleManagementPage() {
     { key: 'customer_require_date', header: '要求交付日期' },
     { key: 'delivery_status', header: '状态' },
   ];
-  const getExportData = () => sortedList.map(s => ({
-    order_no: s.order_no,
-    product_name: s.product_name,
-    customer_name: s.customer_name,
-    notify_date: formatDate(s.notify_date),
-    customer_require_date: formatDate(s.customer_require_date),
-    delivery_status: statusLabelMap[s.delivery_status] || s.delivery_status,
-  }));
+  const getExportData = () =>
+    sortedList.map((s) => ({
+      order_no: s.order_no,
+      product_name: s.product_name,
+      customer_name: s.customer_name,
+      notify_date: formatDate(s.notify_date),
+      customer_require_date: formatDate(s.customer_require_date),
+      delivery_status: statusLabelMap[s.delivery_status] || s.delivery_status,
+    }));
 
   const toggleSelect = (id: number) => {
     const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id); else next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     setSelectedIds(next);
   };
   const toggleSelectAll = () => {
     if (selectedIds.size === sortedList.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(sortedList.map(s => s.id)));
+    else setSelectedIds(new Set(sortedList.map((s) => s.id)));
   };
 
   return (
@@ -302,9 +363,13 @@ export default function SampleManagementPage() {
                   onSelectAll={toggleSelectAll}
                   onDeselectAll={() => setSelectedIds(new Set())}
                   onPrint={() => printTable(getExportData(), exportColumns, '样品列表')}
-                  onExportPDF={() => exportTableToPDF(getExportData(), '样品列表', exportColumns, '样品列表')}
+                  onExportPDF={() =>
+                    exportTableToPDF(getExportData(), '样品列表', exportColumns, '样品列表')
+                  }
                   onExportXLS={() => exportTableToXLS(getExportData(), '样品列表', exportColumns)}
-                  onExportWORD={() => exportTableToWORD(getExportData(), '样品列表', exportColumns, '样品列表')}
+                  onExportWORD={() =>
+                    exportTableToWORD(getExportData(), '样品列表', exportColumns, '样品列表')
+                  }
                 />
                 <Button onClick={handleOpenAdd}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -338,47 +403,90 @@ export default function SampleManagementPage() {
                           onCheckedChange={toggleSelectAll}
                         />
                       </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium w-[60px]">序号</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('order_no')}>
-                        <span className="inline-flex items-center">样品编号{getSortIcon('order_no')}</span>
+                      <th className="h-12 px-4 text-left align-middle font-medium w-[60px]">
+                        序号
                       </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('product_name')}>
-                        <span className="inline-flex items-center">产品名称{getSortIcon('product_name')}</span>
+                      <th
+                        className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
+                        onClick={() => handleSort('order_no')}
+                      >
+                        <span className="inline-flex items-center">
+                          样品编号{getSortIcon('order_no')}
+                        </span>
                       </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('customer_name')}>
-                        <span className="inline-flex items-center">客户{getSortIcon('customer_name')}</span>
+                      <th
+                        className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
+                        onClick={() => handleSort('product_name')}
+                      >
+                        <span className="inline-flex items-center">
+                          产品名称{getSortIcon('product_name')}
+                        </span>
+                      </th>
+                      <th
+                        className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
+                        onClick={() => handleSort('customer_name')}
+                      >
+                        <span className="inline-flex items-center">
+                          客户{getSortIcon('customer_name')}
+                        </span>
                       </th>
                       <th className="h-12 px-4 text-left align-middle font-medium">规格</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('quantity')}>
-                        <span className="inline-flex items-center">数量{getSortIcon('quantity')}</span>
+                      <th
+                        className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
+                        onClick={() => handleSort('quantity')}
+                      >
+                        <span className="inline-flex items-center">
+                          数量{getSortIcon('quantity')}
+                        </span>
                       </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('notify_date')}>
-                        <span className="inline-flex items-center">通知日期{getSortIcon('notify_date')}</span>
+                      <th
+                        className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
+                        onClick={() => handleSort('notify_date')}
+                      >
+                        <span className="inline-flex items-center">
+                          通知日期{getSortIcon('notify_date')}
+                        </span>
                       </th>
                       <th className="h-12 px-4 text-left align-middle font-medium">要求交付日期</th>
-                      <th className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80" onClick={() => handleSort('delivery_status')}>
-                        <span className="inline-flex items-center">状态{getSortIcon('delivery_status')}</span>
+                      <th
+                        className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
+                        onClick={() => handleSort('delivery_status')}
+                      >
+                        <span className="inline-flex items-center">
+                          状态{getSortIcon('delivery_status')}
+                        </span>
                       </th>
                       <th className="h-12 px-4 text-right align-middle font-medium">操作</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sortedList.map((item, index) => (
-                      <tr key={item.id} className={`border-b transition-colors hover:bg-muted/50 ${selectedIds.has(item.id) ? 'bg-primary/5' : ''}`}>
+                      <tr
+                        key={item.id}
+                        className={`border-b transition-colors hover:bg-muted/50 ${selectedIds.has(item.id) ? 'bg-primary/5' : ''}`}
+                      >
                         <td className="p-4">
                           <Checkbox
                             checked={selectedIds.has(item.id)}
                             onCheckedChange={() => toggleSelect(item.id)}
                           />
                         </td>
-                        <td className="p-4 text-sm text-muted-foreground">{(page - 1) * pageSize + index + 1}</td>
+                        <td className="p-4 text-sm text-muted-foreground">
+                          {(page - 1) * pageSize + index + 1}
+                        </td>
                         <td className="p-4 font-mono text-sm">{item.order_no}</td>
                         <td className="p-4 font-medium">{item.product_name}</td>
                         <td className="p-4">{item.customer_name}</td>
-                        <td className="p-4 text-sm text-muted-foreground">{item.size_spec || '-'}</td>
+                        <td className="p-4 text-sm text-muted-foreground">
+                          {item.size_spec || '-'}
+                        </td>
                         <td className="p-4">{item.quantity || 0}</td>
-                        <td className="p-4 text-muted-foreground">{formatDate(item.notify_date)}</td>
-                        <td className="p-4 text-muted-foreground">{formatDate(item.customer_require_date)}</td>
+                        <td className="p-4 text-muted-foreground">
+                          {formatDate(item.notify_date)}
+                        </td>
+                        <td className="p-4 text-muted-foreground">
+                          {formatDate(item.customer_require_date)}
+                        </td>
                         <td className="p-4">{getStatusBadge(item)}</td>
                         <td className="p-4 text-right">
                           <DropdownMenu>
@@ -396,7 +504,10 @@ export default function SampleManagementPage() {
                                 <Edit className="h-4 w-4 mr-2" />
                                 编辑
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600" onClick={() => handleDelete(item.id)}>
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => handleDelete(item.id)}
+                              >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 删除
                               </DropdownMenuItem>
@@ -415,8 +526,22 @@ export default function SampleManagementPage() {
                   共 {total} 条，第 {page}/{Math.ceil(total / pageSize)} 页
                 </span>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</Button>
-                  <Button variant="outline" size="sm" disabled={page >= Math.ceil(total / pageSize)} onClick={() => setPage(p => p + 1)}>下一页</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    上一页
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= Math.ceil(total / pageSize)}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    下一页
+                  </Button>
                 </div>
               </div>
             )}
@@ -431,25 +556,76 @@ export default function SampleManagementPage() {
           </DialogHeader>
           {detailItem && (
             <div className="grid grid-cols-2 gap-4 py-4">
-              <div><Label className="text-muted-foreground">样品编号</Label><p className="font-mono">{detailItem.order_no}</p></div>
-              <div><Label className="text-muted-foreground">客户名称</Label><p>{detailItem.customer_name}</p></div>
-              <div><Label className="text-muted-foreground">产品名称</Label><p className="font-medium">{detailItem.product_name}</p></div>
-              <div><Label className="text-muted-foreground">物料编号</Label><p className="font-mono">{detailItem.material_no}</p></div>
-              <div><Label className="text-muted-foreground">版本</Label><p>{detailItem.version || '-'}</p></div>
-              <div><Label className="text-muted-foreground">规格</Label><p>{detailItem.size_spec || '-'}</p></div>
-              <div><Label className="text-muted-foreground">材料规格</Label><p>{detailItem.material_spec || '-'}</p></div>
-              <div><Label className="text-muted-foreground">数量</Label><p>{detailItem.quantity || 0}</p></div>
-              <div><Label className="text-muted-foreground">通知日期</Label><p>{formatDate(detailItem.notify_date)}</p></div>
-              <div><Label className="text-muted-foreground">要求交付日期</Label><p>{formatDate(detailItem.customer_require_date)}</p></div>
-              <div><Label className="text-muted-foreground">实际交付日期</Label><p>{formatDate(detailItem.actual_delivery_date) || '-'}</p></div>
-              <div><Label className="text-muted-foreground">状态</Label><p>{getStatusBadge(detailItem)}</p></div>
-              <div className="col-span-2"><Label className="text-muted-foreground">备注</Label><p>{detailItem.remark || '-'}</p></div>
-              <div><Label className="text-muted-foreground">创建时间</Label><p className="text-sm text-muted-foreground">{formatDate(detailItem.create_time)}</p></div>
-              <div><Label className="text-muted-foreground">更新时间</Label><p className="text-sm text-muted-foreground">{formatDate(detailItem.update_time)}</p></div>
+              <div>
+                <Label className="text-muted-foreground">样品编号</Label>
+                <p className="font-mono">{detailItem.order_no}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">客户名称</Label>
+                <p>{detailItem.customer_name}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">产品名称</Label>
+                <p className="font-medium">{detailItem.product_name}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">物料编号</Label>
+                <p className="font-mono">{detailItem.material_no}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">版本</Label>
+                <p>{detailItem.version || '-'}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">规格</Label>
+                <p>{detailItem.size_spec || '-'}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">材料规格</Label>
+                <p>{detailItem.material_spec || '-'}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">数量</Label>
+                <p>{detailItem.quantity || 0}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">通知日期</Label>
+                <p>{formatDate(detailItem.notify_date)}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">要求交付日期</Label>
+                <p>{formatDate(detailItem.customer_require_date)}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">实际交付日期</Label>
+                <p>{formatDate(detailItem.actual_delivery_date) || '-'}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">状态</Label>
+                <p>{getStatusBadge(detailItem)}</p>
+              </div>
+              <div className="col-span-2">
+                <Label className="text-muted-foreground">备注</Label>
+                <p>{detailItem.remark || '-'}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">创建时间</Label>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(detailItem.create_time)}
+                </p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">更新时间</Label>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(detailItem.update_time)}
+                </p>
+              </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>关闭</Button>
+            <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+              关闭
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -461,48 +637,98 @@ export default function SampleManagementPage() {
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div>
-              <Label>通知日期 <span className="text-red-500">*</span></Label>
-              <Input type="date" value={form.notify_date} onChange={e => setForm(f => ({ ...f, notify_date: e.target.value }))} />
+              <Label>
+                通知日期 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="date"
+                value={form.notify_date}
+                onChange={(e) => setForm((f) => ({ ...f, notify_date: e.target.value }))}
+              />
             </div>
             <div>
-              <Label>客户名称 <span className="text-red-500">*</span></Label>
-              <Input value={form.customer_name} onChange={e => setForm(f => ({ ...f, customer_name: e.target.value }))} placeholder="输入客户名称" />
+              <Label>
+                客户名称 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={form.customer_name}
+                onChange={(e) => setForm((f) => ({ ...f, customer_name: e.target.value }))}
+                placeholder="输入客户名称"
+              />
             </div>
             <div>
-              <Label>产品名称 <span className="text-red-500">*</span></Label>
-              <Input value={form.product_name} onChange={e => setForm(f => ({ ...f, product_name: e.target.value }))} placeholder="输入产品名称" />
+              <Label>
+                产品名称 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={form.product_name}
+                onChange={(e) => setForm((f) => ({ ...f, product_name: e.target.value }))}
+                placeholder="输入产品名称"
+              />
             </div>
             <div>
-              <Label>物料编号 <span className="text-red-500">*</span></Label>
-              <Input value={form.material_no} onChange={e => setForm(f => ({ ...f, material_no: e.target.value }))} placeholder="输入物料编号" />
+              <Label>
+                物料编号 <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={form.material_no}
+                onChange={(e) => setForm((f) => ({ ...f, material_no: e.target.value }))}
+                placeholder="输入物料编号"
+              />
             </div>
             <div>
               <Label>版本</Label>
-              <Input value={form.version} onChange={e => setForm(f => ({ ...f, version: e.target.value }))} placeholder="如 A、B、C" />
+              <Input
+                value={form.version}
+                onChange={(e) => setForm((f) => ({ ...f, version: e.target.value }))}
+                placeholder="如 A、B、C"
+              />
             </div>
             <div>
               <Label>规格</Label>
-              <Input value={form.size_spec} onChange={e => setForm(f => ({ ...f, size_spec: e.target.value }))} placeholder="如 150×80mm" />
+              <Input
+                value={form.size_spec}
+                onChange={(e) => setForm((f) => ({ ...f, size_spec: e.target.value }))}
+                placeholder="如 150×80mm"
+              />
             </div>
             <div>
               <Label>材料规格</Label>
-              <Input value={form.material_spec} onChange={e => setForm(f => ({ ...f, material_spec: e.target.value }))} placeholder="如 PET材料" />
+              <Input
+                value={form.material_spec}
+                onChange={(e) => setForm((f) => ({ ...f, material_spec: e.target.value }))}
+                placeholder="如 PET材料"
+              />
             </div>
             <div>
               <Label>数量</Label>
-              <Input type="number" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: Number(e.target.value) }))} />
+              <Input
+                type="number"
+                value={form.quantity}
+                onChange={(e) => setForm((f) => ({ ...f, quantity: Number(e.target.value) }))}
+              />
             </div>
             <div>
               <Label>要求交付日期</Label>
-              <Input type="date" value={form.customer_require_date} onChange={e => setForm(f => ({ ...f, customer_require_date: e.target.value }))} />
+              <Input
+                type="date"
+                value={form.customer_require_date}
+                onChange={(e) => setForm((f) => ({ ...f, customer_require_date: e.target.value }))}
+              />
             </div>
             <div className="col-span-2">
               <Label>备注</Label>
-              <Input value={form.remark} onChange={e => setForm(f => ({ ...f, remark: e.target.value }))} placeholder="输入备注" />
+              <Input
+                value={form.remark}
+                onChange={(e) => setForm((f) => ({ ...f, remark: e.target.value }))}
+                placeholder="输入备注"
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowFormDialog(false)}>取消</Button>
+            <Button variant="outline" onClick={() => setShowFormDialog(false)}>
+              取消
+            </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {editId ? '保存' : '创建'}

@@ -20,9 +20,7 @@ export class InMemoryEventBus implements EventBus {
       return;
     }
 
-    const results = await Promise.allSettled(
-      handlers.map(handler => handler.handle(event))
-    );
+    const results = await Promise.allSettled(handlers.map((handler) => handler.handle(event)));
 
     for (let i = 0; i < results.length; i++) {
       const result = results[i];

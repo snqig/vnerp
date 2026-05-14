@@ -107,11 +107,18 @@ export const QualityInspectionSchema = z.object({
 });
 
 export const RegisterSchema = z.object({
-  username: z.string().min(4).max(20).regex(/^[a-zA-Z0-9_]+$/),
+  username: z
+    .string()
+    .min(4)
+    .max(20)
+    .regex(/^[a-zA-Z0-9_]+$/),
   password: z.string().min(6),
   real_name: z.string().optional(),
   email: z.string().email().optional(),
-  phone: z.string().regex(/^1[3-9]\d{9}$/).optional(),
+  phone: z
+    .string()
+    .regex(/^1[3-9]\d{9}$/)
+    .optional(),
   department_id: z.number().optional(),
   role_id: z.number().optional(),
 });
@@ -126,10 +133,16 @@ export const PaginationSchema = z.object({
   pageSize: z.number().min(1).max(100).default(20),
 });
 
-export function validateWithZod<T>(schema: z.ZodType<T>, data: unknown): { success: true; data: T } | { success: false; errors: string[] } {
+export function validateWithZod<T>(
+  schema: z.ZodType<T>,
+  data: unknown
+): { success: true; data: T } | { success: false; errors: string[] } {
   const result = schema.safeParse(data);
   if (result.success) {
     return { success: true, data: result.data };
   }
-  return { success: false, errors: result.error.issues.map(e => `${e.path.join('.')}: ${e.message}`) };
+  return {
+    success: false,
+    errors: result.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`),
+  };
 }

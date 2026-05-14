@@ -4,7 +4,7 @@ import { StandardCardApplicationService } from '@/application/services/StandardC
 
 const service = new StandardCardApplicationService();
 
-async function getHandler(request: NextRequest, { user }: { user: UserInfo }) {
+async function getHandler(request: NextRequest, user: UserInfo) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const code = searchParams.get('code');
@@ -19,7 +19,7 @@ async function getHandler(request: NextRequest, { user }: { user: UserInfo }) {
     const details = await service.getDetailItems(parseInt(id));
     return NextResponse.json({
       code: 200,
-      data: { ...card.toProps(), ...details }
+      data: { ...card.toProps(), ...details },
     });
   }
 
@@ -31,7 +31,7 @@ async function getHandler(request: NextRequest, { user }: { user: UserInfo }) {
     const details = await service.getDetailItems(card.id!);
     return NextResponse.json({
       code: 200,
-      data: { ...card.toProps(), ...details }
+      data: { ...card.toProps(), ...details },
     });
   }
 
@@ -43,7 +43,7 @@ async function getHandler(request: NextRequest, { user }: { user: UserInfo }) {
     const details = await service.getDetailItems(card.id!);
     return NextResponse.json({
       code: 200,
-      data: { ...card.toProps(), ...details }
+      data: { ...card.toProps(), ...details },
     });
   }
 
@@ -52,48 +52,60 @@ async function getHandler(request: NextRequest, { user }: { user: UserInfo }) {
     name: searchParams.get('name') || undefined,
     type: searchParams.get('type') || undefined,
     status: searchParams.get('status') || undefined,
-    materialId: searchParams.get('materialId') ? parseInt(searchParams.get('materialId')!) : undefined,
-    customerId: searchParams.get('customerId') ? parseInt(searchParams.get('customerId')!) : undefined,
+    materialId: searchParams.get('materialId')
+      ? parseInt(searchParams.get('materialId')!)
+      : undefined,
+    customerId: searchParams.get('customerId')
+      ? parseInt(searchParams.get('customerId')!)
+      : undefined,
     isCurrent: searchParams.get('isCurrent') === 'true',
-    isObsolete: searchParams.get('isObsolete') === 'true' ? true : searchParams.get('isObsolete') === 'false' ? false : undefined,
+    isObsolete:
+      searchParams.get('isObsolete') === 'true'
+        ? true
+        : searchParams.get('isObsolete') === 'false'
+          ? false
+          : undefined,
     page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1,
-    pageSize: searchParams.get('pageSize') ? parseInt(searchParams.get('pageSize')!) : 20
+    pageSize: searchParams.get('pageSize') ? parseInt(searchParams.get('pageSize')!) : 20,
   };
 
   const result = await service.query(filters);
   return NextResponse.json({
     code: 200,
     data: {
-      list: result.list.map(card => card.toProps()),
+      list: result.list.map((card) => card.toProps()),
       total: result.total,
       page: filters.page,
-      pageSize: filters.pageSize
-    }
+      pageSize: filters.pageSize,
+    },
   });
 }
 
-async function postHandler(request: NextRequest, { user }: { user: UserInfo }) {
+async function postHandler(request: NextRequest, user: UserInfo) {
   try {
     const body = await request.json();
     const dto = {
       ...body,
-      userId: user.userId
+      userId: user.userId,
     };
     const card = await service.create(dto);
     return NextResponse.json({
       code: 200,
       message: '创建成功',
-      data: card.toProps()
+      data: card.toProps(),
     });
   } catch (error: any) {
-    return NextResponse.json({
-      code: 400,
-      message: error.message || '创建失败'
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        code: 400,
+        message: error.message || '创建失败',
+      },
+      { status: 400 }
+    );
   }
 }
 
-async function putHandler(request: NextRequest, { user }: { user: UserInfo }) {
+async function putHandler(request: NextRequest, user: UserInfo) {
   try {
     const body = await request.json();
     if (!body.id) {
@@ -101,23 +113,26 @@ async function putHandler(request: NextRequest, { user }: { user: UserInfo }) {
     }
     const dto = {
       ...body,
-      userId: user.userId
+      userId: user.userId,
     };
     const card = await service.update(dto);
     return NextResponse.json({
       code: 200,
       message: '更新成功',
-      data: card.toProps()
+      data: card.toProps(),
     });
   } catch (error: any) {
-    return NextResponse.json({
-      code: 400,
-      message: error.message || '更新失败'
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        code: 400,
+        message: error.message || '更新失败',
+      },
+      { status: 400 }
+    );
   }
 }
 
-async function deleteHandler(request: NextRequest, { user }: { user: UserInfo }) {
+async function deleteHandler(request: NextRequest, user: UserInfo) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -127,13 +142,16 @@ async function deleteHandler(request: NextRequest, { user }: { user: UserInfo })
     await service.delete(parseInt(id));
     return NextResponse.json({
       code: 200,
-      message: '删除成功'
+      message: '删除成功',
     });
   } catch (error: any) {
-    return NextResponse.json({
-      code: 400,
-      message: error.message || '删除失败'
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        code: 400,
+        message: error.message || '删除失败',
+      },
+      { status: 400 }
+    );
   }
 }
 

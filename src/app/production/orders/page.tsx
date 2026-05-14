@@ -1,13 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -155,19 +149,37 @@ const processes = [
 
 const getStatusBadge = (status: string) => {
   const statusMap: Record<string, { label: string; className: string }> = {
-    created: { label: '已创建', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-    scheduled: { label: '已排产', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-    producing: { label: '生产中', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-    completed: { label: '已完成', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-    closed: { label: '已关闭', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+    created: {
+      label: '已创建',
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    },
+    scheduled: {
+      label: '已排产',
+      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    },
+    producing: {
+      label: '生产中',
+      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+    },
+    completed: {
+      label: '已完成',
+      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    },
+    closed: {
+      label: '已关闭',
+      className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    },
   };
-  const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+  const config = statusMap[status] || {
+    label: status,
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
 export default function WorkOrdersPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<typeof workOrders[0] | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<(typeof workOrders)[0] | null>(null);
 
   return (
     <MainLayout title="生产工单">
@@ -261,7 +273,12 @@ export default function WorkOrdersPage() {
         {/* 工单列表 */}
         <div className="grid gap-4">
           {workOrders.map((order) => (
-            <Card key={order.id} className={order.efficiency < 80 && order.status === 'producing' ? 'border-orange-300' : ''}>
+            <Card
+              key={order.id}
+              className={
+                order.efficiency < 80 && order.status === 'producing' ? 'border-orange-300' : ''
+              }
+            >
               <CardContent className="p-6">
                 <div className="flex flex-col lg:flex-row gap-6">
                   {/* 基本信息 */}
@@ -309,7 +326,7 @@ export default function WorkOrdersPage() {
                         </DropdownMenu>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">产品：</span>
@@ -325,7 +342,9 @@ export default function WorkOrdersPage() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">优先级：</span>
-                        <span className={order.priority >= 8 ? 'text-red-600 font-bold' : ''}>{order.priority}</span>
+                        <span className={order.priority >= 8 ? 'text-red-600 font-bold' : ''}>
+                          {order.priority}
+                        </span>
                       </div>
                     </div>
 
@@ -334,26 +353,38 @@ export default function WorkOrdersPage() {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">生产进度</span>
                         <span>
-                          {order.completedQty.toLocaleString()} / {order.quantity.toLocaleString()} {order.unit}
+                          {order.completedQty.toLocaleString()} / {order.quantity.toLocaleString()}{' '}
+                          {order.unit}
                           {order.scrapQty > 0 && (
                             <span className="text-red-500 ml-2">(报废: {order.scrapQty})</span>
                           )}
                         </span>
                       </div>
-                      <Progress value={(order.completedQty / order.quantity) * 100} className="h-2" />
+                      <Progress
+                        value={(order.completedQty / order.quantity) * 100}
+                        className="h-2"
+                      />
                     </div>
 
                     {/* 效率 */}
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">效率：</span>
-                        <span className={order.efficiency < 80 ? 'text-red-600 font-bold' : 'text-green-600 font-medium'}>
+                        <span
+                          className={
+                            order.efficiency < 80
+                              ? 'text-red-600 font-bold'
+                              : 'text-green-600 font-medium'
+                          }
+                        >
                           {order.efficiency}%
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{order.planStartDate} ~ {order.planEndDate}</span>
+                        <span>
+                          {order.planStartDate} ~ {order.planEndDate}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -366,9 +397,11 @@ export default function WorkOrdersPage() {
                         <div
                           key={process.code}
                           className={`flex items-center gap-2 text-xs p-2 rounded ${
-                            process.status === 'completed' ? 'bg-green-50 text-green-700' :
-                            process.status === 'producing' ? 'bg-orange-50 text-orange-700' :
-                            'bg-gray-50 text-gray-500'
+                            process.status === 'completed'
+                              ? 'bg-green-50 text-green-700'
+                              : process.status === 'producing'
+                                ? 'bg-orange-50 text-orange-700'
+                                : 'bg-gray-50 text-gray-500'
                           }`}
                         >
                           {process.status === 'completed' ? (

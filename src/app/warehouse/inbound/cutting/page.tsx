@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -20,19 +14,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Search,
-  RefreshCw,
-  FileText,
-  Trash2,
-  Scissors,
-  Package,
-  QrCode,
-} from 'lucide-react';
+import { Search, RefreshCw, FileText, Trash2, Scissors, Package, QrCode } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
-import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import {
+  TableExportToolbar,
+  printTable,
+  exportTableToPDF,
+  exportTableToXLS,
+  exportTableToWORD,
+} from '@/components/ui/table-export-toolbar';
 
 // 分切记录类型
 interface CuttingRecord {
@@ -58,15 +50,39 @@ interface CuttingRecord {
 // 状态徽章
 const getStatusBadge = (status: string) => {
   const statusMap: Record<string, { label: string; className: string }> = {
-    active: { label: '正常', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-    frozen: { label: '冻结', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-    disabled: { label: '禁用', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+    active: {
+      label: '正常',
+      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    },
+    frozen: {
+      label: '冻结',
+      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+    },
+    disabled: {
+      label: '禁用',
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    },
   };
-  const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+  const config = statusMap[status] || {
+    label: status,
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
 export default function CuttingRecordsPage() {
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const { user } = useAuth();
   const [records, setRecords] = useState<CuttingRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,24 +94,38 @@ export default function CuttingRecordsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const exportColumns = [
-    { key: '记录号', header: '记录号' }, { key: '源标签号', header: '源标签号' },
-    { key: '物料名称', header: '物料名称' }, { key: '物料编码', header: '物料编码' },
-    { key: '规格', header: '规格' }, { key: '原宽幅', header: '原宽幅(mm)' },
-    { key: '分切宽幅', header: '分切宽幅(mm)' }, { key: '分切总和', header: '分切总和(mm)' },
-    { key: '剩余宽幅', header: '剩余宽幅(mm)' }, { key: '操作人', header: '操作人' },
-    { key: '分切时间', header: '分切时间' }, { key: '状态', header: '状态' },
+    { key: '记录号', header: '记录号' },
+    { key: '源标签号', header: '源标签号' },
+    { key: '物料名称', header: '物料名称' },
+    { key: '物料编码', header: '物料编码' },
+    { key: '规格', header: '规格' },
+    { key: '原宽幅', header: '原宽幅(mm)' },
+    { key: '分切宽幅', header: '分切宽幅(mm)' },
+    { key: '分切总和', header: '分切总和(mm)' },
+    { key: '剩余宽幅', header: '剩余宽幅(mm)' },
+    { key: '操作人', header: '操作人' },
+    { key: '分切时间', header: '分切时间' },
+    { key: '状态', header: '状态' },
   ];
-  const getExportData = () => records.map(r => ({
-    记录号: r.recordNo, 源标签号: r.sourceLabelNo, 物料名称: r.materialName,
-    物料编码: r.materialCode, 规格: r.specification, 原宽幅: r.originalWidth,
-    分切宽幅: r.cutWidthStr, 分切总和: r.cutTotalWidth, 剩余宽幅: r.remainWidth,
-    操作人: r.operatorName, 分切时间: new Date(r.cutTime).toLocaleString(),
-    状态: r.status === 'active' ? '正常' : r.status === 'frozen' ? '冻结' : '禁用',
-  }));
+  const getExportData = () =>
+    records.map((r) => ({
+      记录号: r.recordNo,
+      源标签号: r.sourceLabelNo,
+      物料名称: r.materialName,
+      物料编码: r.materialCode,
+      规格: r.specification,
+      原宽幅: r.originalWidth,
+      分切宽幅: r.cutWidthStr,
+      分切总和: r.cutTotalWidth,
+      剩余宽幅: r.remainWidth,
+      操作人: r.operatorName,
+      分切时间: new Date(r.cutTime).toLocaleString(),
+      状态: r.status === 'active' ? '正常' : r.status === 'frozen' ? '冻结' : '禁用',
+    }));
 
   useEffect(() => {
     const controller = new AbortController();
-    
+
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -105,16 +135,16 @@ export default function CuttingRecordsPage() {
         params.append('page', page.toString());
         params.append('pageSize', pageSize.toString());
 
-        const response = await fetch(`/api/warehouse/inbound/cutting?${params}`, {
-          signal: controller.signal
+        const response = await authFetch(`/api/warehouse/inbound/cutting?${params}`, {
+          signal: controller.signal,
         });
-        
+
         if (!response.ok) {
           throw new Error(`API 响应错误: ${response.status}`);
         }
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
           setRecords(result.data?.list || []);
           setTotal(result.data?.pagination?.total || 0);
@@ -153,9 +183,7 @@ export default function CuttingRecordsPage() {
               <Scissors className="h-5 w-5" />
               分切记录查询
             </CardTitle>
-            <CardDescription>
-              查询和管理物料分切记录
-            </CardDescription>
+            <CardDescription>查询和管理物料分切记录</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4 items-end">
@@ -201,22 +229,24 @@ export default function CuttingRecordsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>分切记录列表</CardTitle>
-                <CardDescription>
-                  共 {total} 条记录
-                </CardDescription>
+                <CardDescription>共 {total} 条记录</CardDescription>
               </div>
               <div className="flex gap-2">
                 <TableExportToolbar
                   selectedCount={selectedIds.size}
                   totalCount={records.length}
-                  onSelectAll={() => setSelectedIds(new Set(records.map(r => r.id)))}
+                  onSelectAll={() => setSelectedIds(new Set(records.map((r) => r.id)))}
                   onDeselectAll={() => setSelectedIds(new Set())}
                   onPrint={() => printTable(getExportData(), exportColumns, '分切记录')}
-                  onExportPDF={() => exportTableToPDF(getExportData(), '分切记录', exportColumns, '分切记录')}
+                  onExportPDF={() =>
+                    exportTableToPDF(getExportData(), '分切记录', exportColumns, '分切记录')
+                  }
                   onExportXLS={() => exportTableToXLS(getExportData(), '分切记录', exportColumns)}
-                  onExportWORD={() => exportTableToWORD(getExportData(), '分切记录', exportColumns, '分切记录')}
+                  onExportWORD={() =>
+                    exportTableToWORD(getExportData(), '分切记录', exportColumns, '分切记录')
+                  }
                 />
-                <Button variant="outline" onClick={() => setPage(prevPage => prevPage)}>
+                <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
                   <RefreshCw className="h-4 w-4 mr-2" />
                   刷新
                 </Button>
@@ -232,7 +262,7 @@ export default function CuttingRecordsPage() {
                       <Checkbox
                         checked={selectedIds.size > 0 && selectedIds.size === records.length}
                         onCheckedChange={(checked) => {
-                          if (checked) setSelectedIds(new Set(records.map(r => r.id)));
+                          if (checked) setSelectedIds(new Set(records.map((r) => r.id)));
                           else setSelectedIds(new Set());
                         }}
                       />
@@ -270,20 +300,23 @@ export default function CuttingRecordsPage() {
                             checked={selectedIds.has(record.id)}
                             onCheckedChange={(checked) => {
                               const next = new Set(selectedIds);
-                              if (checked) next.add(record.id); else next.delete(record.id);
+                              if (checked) next.add(record.id);
+                              else next.delete(record.id);
                               setSelectedIds(next);
                             }}
                           />
                         </TableCell>
-                        <TableCell className="font-medium">
-                          {record.recordNo}
-                        </TableCell>
+                        <TableCell className="font-medium">{record.recordNo}</TableCell>
                         <TableCell>{record.sourceLabelNo}</TableCell>
                         <TableCell>
                           <div className="space-y-1">
                             <div className="font-medium">{record.materialName}</div>
-                            <div className="text-sm text-muted-foreground">{record.materialCode}</div>
-                            <div className="text-sm text-muted-foreground">{record.specification}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {record.materialCode}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {record.specification}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>{record.originalWidth}mm</TableCell>
@@ -310,7 +343,7 @@ export default function CuttingRecordsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
                   >
                     上一页
@@ -318,7 +351,7 @@ export default function CuttingRecordsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(p => p + 1)}
+                    onClick={() => setPage((p) => p + 1)}
                     disabled={page * pageSize >= total}
                   >
                     下一页

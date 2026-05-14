@@ -113,8 +113,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   if (keyword) {
-    const condition =
-      ' AND (request_no LIKE ? OR requester_name LIKE ? OR request_dept LIKE ?)';
+    const condition = ' AND (request_no LIKE ? OR requester_name LIKE ? OR request_dept LIKE ?)';
     sql += condition;
     countSql += condition;
     params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
@@ -122,12 +121,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   sql += ' ORDER BY create_time DESC';
 
-  const result = await queryPaginated<PurchaseRequest>(
-    sql,
-    countSql,
-    params,
-    { page, pageSize }
-  );
+  const result = await queryPaginated<PurchaseRequest>(sql, countSql, params, { page, pageSize });
 
   if (result.data && result.data.length > 0) {
     const requestIds = (result.data as any[]).map((r: any) => r.id);
@@ -164,11 +158,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   ]);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 验证明细
@@ -303,10 +293,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     );
 
     // 软删除旧明细
-    await connection.execute(
-      'UPDATE pur_request_item SET deleted = 1 WHERE request_id = ?',
-      [requestId]
-    );
+    await connection.execute('UPDATE pur_request_item SET deleted = 1 WHERE request_id = ?', [
+      requestId,
+    ]);
 
     // 批量插入新明细
     if (body.items && body.items.length > 0) {
@@ -375,14 +364,10 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
 
   // 使用事务软删除主表和明细
   await transaction(async (connection) => {
-    await connection.execute(
-      'UPDATE pur_request SET deleted = 1 WHERE id = ?',
-      [requestId]
-    );
-    await connection.execute(
-      'UPDATE pur_request_item SET deleted = 1 WHERE request_id = ?',
-      [requestId]
-    );
+    await connection.execute('UPDATE pur_request SET deleted = 1 WHERE id = ?', [requestId]);
+    await connection.execute('UPDATE pur_request_item SET deleted = 1 WHERE request_id = ?', [
+      requestId,
+    ]);
   });
 
   return successResponse(null, '采购申请删除成功');

@@ -17,6 +17,18 @@ import {
 import { ArrowLeft, Edit, Printer, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 interface PurchaseRequest {
   id: number;
   request_no: string;
@@ -53,17 +65,32 @@ interface RequestItem {
 
 const statusMap: Record<number, { label: string; color: string }> = {
   0: { label: '草稿', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  1: { label: '待审批', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
-  2: { label: '已批准', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+  1: {
+    label: '待审批',
+    color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+  },
+  2: {
+    label: '已批准',
+    color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  },
   3: { label: '已拒绝', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
-  4: { label: '已转采购', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  5: { label: '已完成', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
+  4: {
+    label: '已转采购',
+    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  },
+  5: {
+    label: '已完成',
+    color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  },
 };
 
 const priorityMap: Record<number, { label: string; color: string }> = {
   0: { label: '低', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
   1: { label: '中', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  2: { label: '高', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
+  2: {
+    label: '高',
+    color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  },
   3: { label: '紧急', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
 };
 
@@ -71,7 +98,7 @@ export default function PurchaseRequestDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  
+
   const [request, setRequest] = useState<PurchaseRequest | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -84,7 +111,7 @@ export default function PurchaseRequestDetailPage() {
   const fetchRequest = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/purchase/request?id=${id}`);
+      const response = await authFetch(`/api/purchase/request?id=${id}`);
       const result = await response.json();
 
       if (result.success) {
@@ -128,9 +155,7 @@ export default function PurchaseRequestDetailPage() {
     return (
       <MainLayout>
         <div className="container mx-auto py-6">
-          <div className="text-center py-20 text-muted-foreground">
-            采购申请不存在或已被删除
-          </div>
+          <div className="text-center py-20 text-muted-foreground">采购申请不存在或已被删除</div>
         </div>
       </MainLayout>
     );
@@ -150,9 +175,7 @@ export default function PurchaseRequestDetailPage() {
                 <FileText className="h-6 w-6" />
                 采购申请详情
               </h1>
-              <p className="text-sm text-muted-foreground">
-                单号：{request.request_no}
-              </p>
+              <p className="text-sm text-muted-foreground">单号：{request.request_no}</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -183,10 +206,14 @@ export default function PurchaseRequestDetailPage() {
 
         {/* 状态栏 */}
         <div className="flex items-center gap-4 mb-6">
-          <span className={`px-3 py-1 rounded text-sm font-medium ${statusMap[request.status]?.color}`}>
+          <span
+            className={`px-3 py-1 rounded text-sm font-medium ${statusMap[request.status]?.color}`}
+          >
             {statusMap[request.status]?.label || '未知'}
           </span>
-          <span className={`px-3 py-1 rounded text-sm font-medium ${priorityMap[request.priority]?.color}`}>
+          <span
+            className={`px-3 py-1 rounded text-sm font-medium ${priorityMap[request.priority]?.color}`}
+          >
             优先级：{priorityMap[request.priority]?.label || '中'}
           </span>
         </div>
@@ -265,7 +292,9 @@ export default function PurchaseRequestDetailPage() {
                     <TableCell>{item.material_spec || '-'}</TableCell>
                     <TableCell>{item.material_unit || '-'}</TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right">{Number(item.price || 0).toFixed(4)}</TableCell>
+                    <TableCell className="text-right">
+                      {Number(item.price || 0).toFixed(4)}
+                    </TableCell>
                     <TableCell className="text-right font-medium">
                       {formatAmount(Number(item.amount || 0), request.currency)}
                     </TableCell>
@@ -278,7 +307,10 @@ export default function PurchaseRequestDetailPage() {
             {/* 合计 */}
             <div className="flex justify-end mt-4 pt-4 border-t">
               <div className="text-lg font-bold">
-                合计金额：<span className="text-blue-600">{formatAmount(request.total_amount, request.currency)}</span>
+                合计金额：
+                <span className="text-blue-600">
+                  {formatAmount(request.total_amount, request.currency)}
+                </span>
               </div>
             </div>
           </CardContent>

@@ -7,12 +7,42 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, RefreshCw, DollarSign, TrendingUp, TrendingDown, AlertTriangle, Eye, Trash2 } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  RefreshCw,
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  Eye,
+  Trash2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Receivable {
@@ -115,10 +145,34 @@ export default function FinancePage() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
 
-  const [receivableForm, setReceivableForm] = useState({ customer_id: '', amount: '', source_no: '', due_date: '', remark: '' });
-  const [payableForm, setPayableForm] = useState({ supplier_id: '', amount: '', source_no: '', due_date: '', remark: '' });
-  const [receiptForm, setReceiptForm] = useState({ receivable_id: '', amount: '', payment_method: 'bank_transfer', receipt_date: '', remark: '' });
-  const [paymentForm, setPaymentForm] = useState({ payable_id: '', amount: '', payment_method: 'bank_transfer', payment_date: '', remark: '' });
+  const [receivableForm, setReceivableForm] = useState({
+    customer_id: '',
+    amount: '',
+    source_no: '',
+    due_date: '',
+    remark: '',
+  });
+  const [payableForm, setPayableForm] = useState({
+    supplier_id: '',
+    amount: '',
+    source_no: '',
+    due_date: '',
+    remark: '',
+  });
+  const [receiptForm, setReceiptForm] = useState({
+    receivable_id: '',
+    amount: '',
+    payment_method: 'bank_transfer',
+    receipt_date: '',
+    remark: '',
+  });
+  const [paymentForm, setPaymentForm] = useState({
+    payable_id: '',
+    amount: '',
+    payment_method: 'bank_transfer',
+    payment_date: '',
+    remark: '',
+  });
 
   const [summary, setSummary] = useState({
     receivable: { total_amount: 0, total_received: 0, total_balance: 0, overdue_balance: 0 },
@@ -137,7 +191,7 @@ export default function FinancePage() {
       if (data.success) {
         setReceivables(data.data?.list || []);
         if (data.data?.summary) {
-          setSummary(prev => ({ ...prev, receivable: data.data.summary }));
+          setSummary((prev) => ({ ...prev, receivable: data.data.summary }));
         }
       }
     } catch (e) {
@@ -159,7 +213,7 @@ export default function FinancePage() {
       if (data.success) {
         setPayables(data.data?.list || []);
         if (data.data?.summary) {
-          setSummary(prev => ({ ...prev, payable: data.data.summary }));
+          setSummary((prev) => ({ ...prev, payable: data.data.summary }));
         }
       }
     } catch (e) {
@@ -206,7 +260,9 @@ export default function FinancePage() {
       if (data.success) {
         setCustomers(data.data?.list || data.data || []);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchSuppliers = async () => {
@@ -216,7 +272,9 @@ export default function FinancePage() {
       if (data.success) {
         setSuppliers(data.data?.list || data.data || []);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   useEffect(() => {
@@ -314,7 +372,13 @@ export default function FinancePage() {
       if (data.success) {
         toast.success('收款记录创建成功');
         setReceiptDialogOpen(false);
-        setReceiptForm({ receivable_id: '', amount: '', payment_method: 'bank_transfer', receipt_date: '', remark: '' });
+        setReceiptForm({
+          receivable_id: '',
+          amount: '',
+          payment_method: 'bank_transfer',
+          receipt_date: '',
+          remark: '',
+        });
         fetchReceipts();
         fetchReceivables();
       } else {
@@ -346,7 +410,13 @@ export default function FinancePage() {
       if (data.success) {
         toast.success('付款记录创建成功');
         setPaymentDialogOpen(false);
-        setPaymentForm({ payable_id: '', amount: '', payment_method: 'bank_transfer', payment_date: '', remark: '' });
+        setPaymentForm({
+          payable_id: '',
+          amount: '',
+          payment_method: 'bank_transfer',
+          payment_date: '',
+          remark: '',
+        });
         fetchPayments();
         fetchPayables();
       } else {
@@ -391,7 +461,10 @@ export default function FinancePage() {
 
   const handleViewDetail = async (id: number, type: 'receivable' | 'payable') => {
     try {
-      const url = type === 'receivable' ? `/api/finance/receivable?id=${id}` : `/api/finance/payable?id=${id}`;
+      const url =
+        type === 'receivable'
+          ? `/api/finance/receivable?id=${id}`
+          : `/api/finance/payable?id=${id}`;
       const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
@@ -406,7 +479,9 @@ export default function FinancePage() {
 
   const formatAmount = (val: any) => {
     const num = parseFloat(val || 0);
-    return isNaN(num) ? '0.00' : num.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return isNaN(num)
+      ? '0.00'
+      : num.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   return (
@@ -419,7 +494,9 @@ export default function FinancePage() {
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">¥{formatAmount(summary.receivable.total_amount)}</div>
+              <div className="text-2xl font-bold text-green-600">
+                ¥{formatAmount(summary.receivable.total_amount)}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 未收: ¥{formatAmount(summary.receivable.total_balance)}
               </p>
@@ -431,7 +508,9 @@ export default function FinancePage() {
               <TrendingDown className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">¥{formatAmount(summary.payable.total_amount)}</div>
+              <div className="text-2xl font-bold text-red-600">
+                ¥{formatAmount(summary.payable.total_amount)}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 未付: ¥{formatAmount(summary.payable.total_balance)}
               </p>
@@ -443,7 +522,9 @@ export default function FinancePage() {
               <DollarSign className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">¥{formatAmount(summary.receivable.total_received)}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                ¥{formatAmount(summary.receivable.total_received)}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 逾期: ¥{formatAmount(summary.receivable.overdue_balance)}
               </p>
@@ -455,7 +536,9 @@ export default function FinancePage() {
               <DollarSign className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">¥{formatAmount(summary.payable.total_paid)}</div>
+              <div className="text-2xl font-bold text-orange-600">
+                ¥{formatAmount(summary.payable.total_paid)}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 逾期: ¥{formatAmount(summary.payable.overdue_balance)}
               </p>
@@ -479,7 +562,10 @@ export default function FinancePage() {
                   className="pl-10"
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (activeTab === 'receivable' ? fetchReceivables() : fetchPayables())}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' &&
+                    (activeTab === 'receivable' ? fetchReceivables() : fetchPayables())
+                  }
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -488,7 +574,7 @@ export default function FinancePage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
-                  {(activeTab === 'receivable' || activeTab === 'receipt') ? (
+                  {activeTab === 'receivable' || activeTab === 'receipt' ? (
                     <>
                       <SelectItem value="1">未收款</SelectItem>
                       <SelectItem value="2">部分收款</SelectItem>
@@ -503,7 +589,18 @@ export default function FinancePage() {
                   )}
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={() => { activeTab === 'receivable' ? fetchReceivables() : activeTab === 'payable' ? fetchPayables() : activeTab === 'receipt' ? fetchReceipts() : fetchPayments(); }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  activeTab === 'receivable'
+                    ? fetchReceivables()
+                    : activeTab === 'payable'
+                      ? fetchPayables()
+                      : activeTab === 'receipt'
+                        ? fetchReceipts()
+                        : fetchPayments();
+                }}
+              >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 刷新
               </Button>
@@ -564,9 +661,15 @@ export default function FinancePage() {
                           <TableCell className="font-medium">{r.receivable_no}</TableCell>
                           <TableCell>{r.customer_name || '-'}</TableCell>
                           <TableCell>{r.source_no || '-'}</TableCell>
-                          <TableCell className="text-green-600">¥{formatAmount(r.amount)}</TableCell>
+                          <TableCell className="text-green-600">
+                            ¥{formatAmount(r.amount)}
+                          </TableCell>
                           <TableCell>¥{formatAmount(r.received_amount)}</TableCell>
-                          <TableCell className={Number(r.balance) > 0 ? 'text-red-600 font-medium' : ''}>¥{formatAmount(r.balance)}</TableCell>
+                          <TableCell
+                            className={Number(r.balance) > 0 ? 'text-red-600 font-medium' : ''}
+                          >
+                            ¥{formatAmount(r.balance)}
+                          </TableCell>
                           <TableCell>{r.due_date || '-'}</TableCell>
                           <TableCell>
                             <Badge className={RECEIVABLE_STATUS[r.status]?.color || 'bg-gray-100'}>
@@ -575,11 +678,19 @@ export default function FinancePage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => handleViewDetail(r.id, 'receivable')}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewDetail(r.id, 'receivable')}
+                              >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               {r.status !== 3 && (
-                                <Button variant="ghost" size="sm" onClick={() => handleDeleteReceivable(r.id)}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteReceivable(r.id)}
+                                >
                                   <Trash2 className="h-4 w-4 text-red-500" />
                                 </Button>
                               )}
@@ -626,7 +737,11 @@ export default function FinancePage() {
                           <TableCell>{p.source_no || '-'}</TableCell>
                           <TableCell className="text-red-600">¥{formatAmount(p.amount)}</TableCell>
                           <TableCell>¥{formatAmount(p.paid_amount)}</TableCell>
-                          <TableCell className={Number(p.balance) > 0 ? 'text-orange-600 font-medium' : ''}>¥{formatAmount(p.balance)}</TableCell>
+                          <TableCell
+                            className={Number(p.balance) > 0 ? 'text-orange-600 font-medium' : ''}
+                          >
+                            ¥{formatAmount(p.balance)}
+                          </TableCell>
                           <TableCell>{p.due_date || '-'}</TableCell>
                           <TableCell>
                             <Badge className={PAYABLE_STATUS[p.status]?.color || 'bg-gray-100'}>
@@ -635,11 +750,19 @@ export default function FinancePage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => handleViewDetail(p.id, 'payable')}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewDetail(p.id, 'payable')}
+                              >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               {p.status !== 3 && (
-                                <Button variant="ghost" size="sm" onClick={() => handleDeletePayable(p.id)}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeletePayable(p.id)}
+                                >
                                   <Trash2 className="h-4 w-4 text-red-500" />
                                 </Button>
                               )}
@@ -680,8 +803,12 @@ export default function FinancePage() {
                         <TableRow key={r.id}>
                           <TableCell className="font-medium">{r.receipt_no}</TableCell>
                           <TableCell>{r.customer_name || '-'}</TableCell>
-                          <TableCell className="text-green-600">¥{formatAmount(r.amount)}</TableCell>
-                          <TableCell>{PAYMENT_METHODS[r.payment_method] || r.payment_method || '-'}</TableCell>
+                          <TableCell className="text-green-600">
+                            ¥{formatAmount(r.amount)}
+                          </TableCell>
+                          <TableCell>
+                            {PAYMENT_METHODS[r.payment_method] || r.payment_method || '-'}
+                          </TableCell>
                           <TableCell>{r.receipt_date || '-'}</TableCell>
                           <TableCell>{r.remark || '-'}</TableCell>
                         </TableRow>
@@ -720,7 +847,9 @@ export default function FinancePage() {
                           <TableCell className="font-medium">{p.payment_no}</TableCell>
                           <TableCell>{p.supplier_name || '-'}</TableCell>
                           <TableCell className="text-red-600">¥{formatAmount(p.amount)}</TableCell>
-                          <TableCell>{PAYMENT_METHODS[p.payment_method] || p.payment_method || '-'}</TableCell>
+                          <TableCell>
+                            {PAYMENT_METHODS[p.payment_method] || p.payment_method || '-'}
+                          </TableCell>
                           <TableCell>{p.payment_date || '-'}</TableCell>
                           <TableCell>{p.remark || '-'}</TableCell>
                         </TableRow>
@@ -742,34 +871,69 @@ export default function FinancePage() {
             <div className="space-y-4">
               <div>
                 <Label>客户 *</Label>
-                <Select value={receivableForm.customer_id} onValueChange={(v) => setReceivableForm(prev => ({ ...prev, customer_id: v }))}>
-                  <SelectTrigger><SelectValue placeholder="选择客户" /></SelectTrigger>
+                <Select
+                  value={receivableForm.customer_id}
+                  onValueChange={(v) => setReceivableForm((prev) => ({ ...prev, customer_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择客户" />
+                  </SelectTrigger>
                   <SelectContent>
                     {customers.map((c: any) => (
-                      <SelectItem key={c.id} value={String(c.id)}>{c.customer_name}</SelectItem>
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.customer_name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>应收金额 *</Label>
-                <Input type="number" step="0.01" value={receivableForm.amount} onChange={(e) => setReceivableForm(prev => ({ ...prev, amount: e.target.value }))} placeholder="请输入金额" />
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={receivableForm.amount}
+                  onChange={(e) =>
+                    setReceivableForm((prev) => ({ ...prev, amount: e.target.value }))
+                  }
+                  placeholder="请输入金额"
+                />
               </div>
               <div>
                 <Label>来源单号</Label>
-                <Input value={receivableForm.source_no} onChange={(e) => setReceivableForm(prev => ({ ...prev, source_no: e.target.value }))} placeholder="如：销售订单号" />
+                <Input
+                  value={receivableForm.source_no}
+                  onChange={(e) =>
+                    setReceivableForm((prev) => ({ ...prev, source_no: e.target.value }))
+                  }
+                  placeholder="如：销售订单号"
+                />
               </div>
               <div>
                 <Label>到期日期</Label>
-                <Input type="date" value={receivableForm.due_date} onChange={(e) => setReceivableForm(prev => ({ ...prev, due_date: e.target.value }))} />
+                <Input
+                  type="date"
+                  value={receivableForm.due_date}
+                  onChange={(e) =>
+                    setReceivableForm((prev) => ({ ...prev, due_date: e.target.value }))
+                  }
+                />
               </div>
               <div>
                 <Label>备注</Label>
-                <Textarea value={receivableForm.remark} onChange={(e) => setReceivableForm(prev => ({ ...prev, remark: e.target.value }))} placeholder="备注信息" />
+                <Textarea
+                  value={receivableForm.remark}
+                  onChange={(e) =>
+                    setReceivableForm((prev) => ({ ...prev, remark: e.target.value }))
+                  }
+                  placeholder="备注信息"
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setReceivableDialogOpen(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setReceivableDialogOpen(false)}>
+                取消
+              </Button>
               <Button onClick={handleCreateReceivable}>确认创建</Button>
             </DialogFooter>
           </DialogContent>
@@ -784,34 +948,65 @@ export default function FinancePage() {
             <div className="space-y-4">
               <div>
                 <Label>供应商 *</Label>
-                <Select value={payableForm.supplier_id} onValueChange={(v) => setPayableForm(prev => ({ ...prev, supplier_id: v }))}>
-                  <SelectTrigger><SelectValue placeholder="选择供应商" /></SelectTrigger>
+                <Select
+                  value={payableForm.supplier_id}
+                  onValueChange={(v) => setPayableForm((prev) => ({ ...prev, supplier_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择供应商" />
+                  </SelectTrigger>
                   <SelectContent>
                     {suppliers.map((s: any) => (
-                      <SelectItem key={s.id} value={String(s.id)}>{s.supplier_name}</SelectItem>
+                      <SelectItem key={s.id} value={String(s.id)}>
+                        {s.supplier_name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>应付金额 *</Label>
-                <Input type="number" step="0.01" value={payableForm.amount} onChange={(e) => setPayableForm(prev => ({ ...prev, amount: e.target.value }))} placeholder="请输入金额" />
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={payableForm.amount}
+                  onChange={(e) => setPayableForm((prev) => ({ ...prev, amount: e.target.value }))}
+                  placeholder="请输入金额"
+                />
               </div>
               <div>
                 <Label>来源单号</Label>
-                <Input value={payableForm.source_no} onChange={(e) => setPayableForm(prev => ({ ...prev, source_no: e.target.value }))} placeholder="如：采购订单号" />
+                <Input
+                  value={payableForm.source_no}
+                  onChange={(e) =>
+                    setPayableForm((prev) => ({ ...prev, source_no: e.target.value }))
+                  }
+                  placeholder="如：采购订单号"
+                />
               </div>
               <div>
                 <Label>到期日期</Label>
-                <Input type="date" value={payableForm.due_date} onChange={(e) => setPayableForm(prev => ({ ...prev, due_date: e.target.value }))} />
+                <Input
+                  type="date"
+                  value={payableForm.due_date}
+                  onChange={(e) =>
+                    setPayableForm((prev) => ({ ...prev, due_date: e.target.value }))
+                  }
+                />
               </div>
               <div>
                 <Label>备注</Label>
-                <Textarea value={payableForm.remark} onChange={(e) => setPayableForm(prev => ({ ...prev, remark: e.target.value }))} placeholder="备注信息" />
+                <Textarea
+                  value={payableForm.remark}
+                  onChange={(e) => setPayableForm((prev) => ({ ...prev, remark: e.target.value }))}
+                  placeholder="备注信息"
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setPayableDialogOpen(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setPayableDialogOpen(false)}>
+                取消
+              </Button>
               <Button onClick={handleCreatePayable}>确认创建</Button>
             </DialogFooter>
           </DialogContent>
@@ -826,43 +1021,75 @@ export default function FinancePage() {
             <div className="space-y-4">
               <div>
                 <Label>应收单 *</Label>
-                <Select value={receiptForm.receivable_id} onValueChange={(v) => setReceiptForm(prev => ({ ...prev, receivable_id: v }))}>
-                  <SelectTrigger><SelectValue placeholder="选择应收单" /></SelectTrigger>
+                <Select
+                  value={receiptForm.receivable_id}
+                  onValueChange={(v) => setReceiptForm((prev) => ({ ...prev, receivable_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择应收单" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {receivables.filter(r => r.status !== 3).map((r) => (
-                      <SelectItem key={r.id} value={String(r.id)}>
-                        {r.receivable_no} - {r.customer_name} (余额: ¥{formatAmount(r.balance)})
+                    {receivables
+                      .filter((r) => r.status !== 3)
+                      .map((r) => (
+                        <SelectItem key={r.id} value={String(r.id)}>
+                          {r.receivable_no} - {r.customer_name} (余额: ¥{formatAmount(r.balance)})
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>收款金额 *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={receiptForm.amount}
+                  onChange={(e) => setReceiptForm((prev) => ({ ...prev, amount: e.target.value }))}
+                  placeholder="请输入金额"
+                />
+              </div>
+              <div>
+                <Label>付款方式</Label>
+                <Select
+                  value={receiptForm.payment_method}
+                  onValueChange={(v) => setReceiptForm((prev) => ({ ...prev, payment_method: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(PAYMENT_METHODS).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>
+                        {v}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>收款金额 *</Label>
-                <Input type="number" step="0.01" value={receiptForm.amount} onChange={(e) => setReceiptForm(prev => ({ ...prev, amount: e.target.value }))} placeholder="请输入金额" />
-              </div>
-              <div>
-                <Label>付款方式</Label>
-                <Select value={receiptForm.payment_method} onValueChange={(v) => setReceiptForm(prev => ({ ...prev, payment_method: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(PAYMENT_METHODS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
                 <Label>收款日期</Label>
-                <Input type="date" value={receiptForm.receipt_date} onChange={(e) => setReceiptForm(prev => ({ ...prev, receipt_date: e.target.value }))} />
+                <Input
+                  type="date"
+                  value={receiptForm.receipt_date}
+                  onChange={(e) =>
+                    setReceiptForm((prev) => ({ ...prev, receipt_date: e.target.value }))
+                  }
+                />
               </div>
               <div>
                 <Label>备注</Label>
-                <Textarea value={receiptForm.remark} onChange={(e) => setReceiptForm(prev => ({ ...prev, remark: e.target.value }))} placeholder="备注信息" />
+                <Textarea
+                  value={receiptForm.remark}
+                  onChange={(e) => setReceiptForm((prev) => ({ ...prev, remark: e.target.value }))}
+                  placeholder="备注信息"
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setReceiptDialogOpen(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setReceiptDialogOpen(false)}>
+                取消
+              </Button>
               <Button onClick={handleCreateReceipt}>确认收款</Button>
             </DialogFooter>
           </DialogContent>
@@ -877,43 +1104,75 @@ export default function FinancePage() {
             <div className="space-y-4">
               <div>
                 <Label>应付单 *</Label>
-                <Select value={paymentForm.payable_id} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, payable_id: v }))}>
-                  <SelectTrigger><SelectValue placeholder="选择应付单" /></SelectTrigger>
+                <Select
+                  value={paymentForm.payable_id}
+                  onValueChange={(v) => setPaymentForm((prev) => ({ ...prev, payable_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择应付单" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {payables.filter(p => p.status !== 3).map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)}>
-                        {p.payable_no} - {p.supplier_name} (余额: ¥{formatAmount(p.balance)})
+                    {payables
+                      .filter((p) => p.status !== 3)
+                      .map((p) => (
+                        <SelectItem key={p.id} value={String(p.id)}>
+                          {p.payable_no} - {p.supplier_name} (余额: ¥{formatAmount(p.balance)})
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>付款金额 *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={paymentForm.amount}
+                  onChange={(e) => setPaymentForm((prev) => ({ ...prev, amount: e.target.value }))}
+                  placeholder="请输入金额"
+                />
+              </div>
+              <div>
+                <Label>付款方式</Label>
+                <Select
+                  value={paymentForm.payment_method}
+                  onValueChange={(v) => setPaymentForm((prev) => ({ ...prev, payment_method: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(PAYMENT_METHODS).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>
+                        {v}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>付款金额 *</Label>
-                <Input type="number" step="0.01" value={paymentForm.amount} onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))} placeholder="请输入金额" />
-              </div>
-              <div>
-                <Label>付款方式</Label>
-                <Select value={paymentForm.payment_method} onValueChange={(v) => setPaymentForm(prev => ({ ...prev, payment_method: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(PAYMENT_METHODS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
                 <Label>付款日期</Label>
-                <Input type="date" value={paymentForm.payment_date} onChange={(e) => setPaymentForm(prev => ({ ...prev, payment_date: e.target.value }))} />
+                <Input
+                  type="date"
+                  value={paymentForm.payment_date}
+                  onChange={(e) =>
+                    setPaymentForm((prev) => ({ ...prev, payment_date: e.target.value }))
+                  }
+                />
               </div>
               <div>
                 <Label>备注</Label>
-                <Textarea value={paymentForm.remark} onChange={(e) => setPaymentForm(prev => ({ ...prev, remark: e.target.value }))} placeholder="备注信息" />
+                <Textarea
+                  value={paymentForm.remark}
+                  onChange={(e) => setPaymentForm((prev) => ({ ...prev, remark: e.target.value }))}
+                  placeholder="备注信息"
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
+                取消
+              </Button>
               <Button onClick={handleCreatePayment}>确认付款</Button>
             </DialogFooter>
           </DialogContent>
@@ -929,30 +1188,78 @@ export default function FinancePage() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   {detailType === 'receivable' ? (
                     <>
-                      <div><span className="text-muted-foreground">应收单号：</span>{detailData.receivable_no}</div>
-                      <div><span className="text-muted-foreground">客户：</span>{detailData.customer_name}</div>
-                      <div><span className="text-muted-foreground">来源单号：</span>{detailData.source_no || '-'}</div>
-                      <div><span className="text-muted-foreground">到期日期：</span>{detailData.due_date || '-'}</div>
-                      <div><span className="text-muted-foreground">应收金额：</span>¥{formatAmount(detailData.amount)}</div>
-                      <div><span className="text-muted-foreground">已收金额：</span>¥{formatAmount(detailData.received_amount)}</div>
-                      <div><span className="text-muted-foreground">未收余额：</span>¥{formatAmount(detailData.balance)}</div>
-                      <div><span className="text-muted-foreground">状态：</span>
-                        <Badge className={RECEIVABLE_STATUS[detailData.status]?.color || 'bg-gray-100'}>
+                      <div>
+                        <span className="text-muted-foreground">应收单号：</span>
+                        {detailData.receivable_no}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">客户：</span>
+                        {detailData.customer_name}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">来源单号：</span>
+                        {detailData.source_no || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">到期日期：</span>
+                        {detailData.due_date || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">应收金额：</span>¥
+                        {formatAmount(detailData.amount)}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">已收金额：</span>¥
+                        {formatAmount(detailData.received_amount)}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">未收余额：</span>¥
+                        {formatAmount(detailData.balance)}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">状态：</span>
+                        <Badge
+                          className={RECEIVABLE_STATUS[detailData.status]?.color || 'bg-gray-100'}
+                        >
                           {RECEIVABLE_STATUS[detailData.status]?.label || detailData.status}
                         </Badge>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div><span className="text-muted-foreground">应付单号：</span>{detailData.payable_no}</div>
-                      <div><span className="text-muted-foreground">供应商：</span>{detailData.supplier_name}</div>
-                      <div><span className="text-muted-foreground">来源单号：</span>{detailData.source_no || '-'}</div>
-                      <div><span className="text-muted-foreground">到期日期：</span>{detailData.due_date || '-'}</div>
-                      <div><span className="text-muted-foreground">应付金额：</span>¥{formatAmount(detailData.amount)}</div>
-                      <div><span className="text-muted-foreground">已付金额：</span>¥{formatAmount(detailData.paid_amount)}</div>
-                      <div><span className="text-muted-foreground">未付余额：</span>¥{formatAmount(detailData.balance)}</div>
-                      <div><span className="text-muted-foreground">状态：</span>
-                        <Badge className={PAYABLE_STATUS[detailData.status]?.color || 'bg-gray-100'}>
+                      <div>
+                        <span className="text-muted-foreground">应付单号：</span>
+                        {detailData.payable_no}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">供应商：</span>
+                        {detailData.supplier_name}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">来源单号：</span>
+                        {detailData.source_no || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">到期日期：</span>
+                        {detailData.due_date || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">应付金额：</span>¥
+                        {formatAmount(detailData.amount)}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">已付金额：</span>¥
+                        {formatAmount(detailData.paid_amount)}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">未付余额：</span>¥
+                        {formatAmount(detailData.balance)}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">状态：</span>
+                        <Badge
+                          className={PAYABLE_STATUS[detailData.status]?.color || 'bg-gray-100'}
+                        >
                           {PAYABLE_STATUS[detailData.status]?.label || detailData.status}
                         </Badge>
                       </div>
@@ -976,7 +1283,9 @@ export default function FinancePage() {
                           <TableRow key={r.id}>
                             <TableCell>{r.receipt_no}</TableCell>
                             <TableCell>¥{formatAmount(r.amount)}</TableCell>
-                            <TableCell>{PAYMENT_METHODS[r.payment_method] || r.payment_method}</TableCell>
+                            <TableCell>
+                              {PAYMENT_METHODS[r.payment_method] || r.payment_method}
+                            </TableCell>
                             <TableCell>{r.receipt_date}</TableCell>
                           </TableRow>
                         ))}
@@ -1001,7 +1310,9 @@ export default function FinancePage() {
                           <TableRow key={p.id}>
                             <TableCell>{p.payment_no}</TableCell>
                             <TableCell>¥{formatAmount(p.amount)}</TableCell>
-                            <TableCell>{PAYMENT_METHODS[p.payment_method] || p.payment_method}</TableCell>
+                            <TableCell>
+                              {PAYMENT_METHODS[p.payment_method] || p.payment_method}
+                            </TableCell>
                             <TableCell>{p.payment_date}</TableCell>
                           </TableRow>
                         ))}

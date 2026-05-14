@@ -7,11 +7,41 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, RefreshCw, Clock, AlertTriangle, Droplets, Eye, Trash2, Timer } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  RefreshCw,
+  Clock,
+  AlertTriangle,
+  Droplets,
+  Eye,
+  Trash2,
+  Timer,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 
@@ -43,7 +73,10 @@ const INK_TYPE_MAP: Record<string, { label: string; color: string }> = {
 };
 
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: '使用中', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  1: {
+    label: '使用中',
+    color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  },
   2: { label: '已过期', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
   3: { label: '已报废', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
 };
@@ -263,7 +296,9 @@ export default function InkOpeningPage() {
               <Clock className="h-4 w-4 text-yellow-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{summary.overdue_using_count}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {summary.overdue_using_count}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">使用中但已超时</p>
             </CardContent>
           </Card>
@@ -315,10 +350,19 @@ export default function InkOpeningPage() {
                       <TableCell>{r.open_time}</TableCell>
                       <TableCell className="text-red-600 font-medium">{r.expire_time}</TableCell>
                       <TableCell>
-                        <Button size="sm" variant="outline" onClick={() => handleStatusChange(r.id, 2)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleStatusChange(r.id, 2)}
+                        >
                           标记过期
                         </Button>
-                        <Button size="sm" variant="outline" className="ml-1" onClick={() => handleStatusChange(r.id, 3)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="ml-1"
+                          onClick={() => handleStatusChange(r.id, 3)}
+                        >
                           标记报废
                         </Button>
                       </TableCell>
@@ -409,9 +453,20 @@ export default function InkOpeningPage() {
                   records.map((r) => {
                     const timeRemaining = r.status === 1 ? getTimeRemaining(r.expire_time) : null;
                     return (
-                      <TableRow key={r.id} className={timeRemaining?.isOverdue ? 'bg-red-50' : timeRemaining?.isWarning ? 'bg-yellow-50' : ''}>
+                      <TableRow
+                        key={r.id}
+                        className={
+                          timeRemaining?.isOverdue
+                            ? 'bg-red-50'
+                            : timeRemaining?.isWarning
+                              ? 'bg-yellow-50'
+                              : ''
+                        }
+                      >
                         <TableCell className="font-mono">{r.record_no}</TableCell>
-                        <TableCell className="font-medium">{r.material_name || r.material_code}</TableCell>
+                        <TableCell className="font-medium">
+                          {r.material_name || r.material_code}
+                        </TableCell>
                         <TableCell>
                           <Badge className={INK_TYPE_MAP[r.ink_type]?.color || 'bg-gray-100'}>
                             {INK_TYPE_MAP[r.ink_type]?.label || r.ink_type || '-'}
@@ -423,17 +478,23 @@ export default function InkOpeningPage() {
                         <TableCell>{r.expire_time}</TableCell>
                         <TableCell>
                           {timeRemaining ? (
-                            <span className={`flex items-center gap-1 font-medium ${timeRemaining.isOverdue ? 'text-red-600' : timeRemaining.isWarning ? 'text-yellow-600' : 'text-green-600'}`}>
+                            <span
+                              className={`flex items-center gap-1 font-medium ${timeRemaining.isOverdue ? 'text-red-600' : timeRemaining.isWarning ? 'text-yellow-600' : 'text-green-600'}`}
+                            >
                               {timeRemaining.isOverdue && <AlertTriangle className="h-3 w-3" />}
                               {timeRemaining.isWarning && <Clock className="h-3 w-3" />}
-                              {!timeRemaining.isOverdue && !timeRemaining.isWarning && <Timer className="h-3 w-3" />}
+                              {!timeRemaining.isOverdue && !timeRemaining.isWarning && (
+                                <Timer className="h-3 w-3" />
+                              )}
                               {timeRemaining.text}
                             </span>
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
-                        <TableCell>{r.remaining_qty ? `${r.remaining_qty} ${r.unit || ''}` : '-'}</TableCell>
+                        <TableCell>
+                          {r.remaining_qty ? `${r.remaining_qty} ${r.unit || ''}` : '-'}
+                        </TableCell>
                         <TableCell>
                           <Badge className={STATUS_MAP[r.status]?.color || 'bg-gray-100'}>
                             {STATUS_MAP[r.status]?.label || r.status}
@@ -446,16 +507,31 @@ export default function InkOpeningPage() {
                             </Button>
                             {r.status === 1 && (
                               <>
-                                <Button variant="ghost" size="sm" onClick={() => handleStatusChange(r.id, 2)} title="标记过期">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleStatusChange(r.id, 2)}
+                                  title="标记过期"
+                                >
                                   <Clock className="h-4 w-4 text-yellow-500" />
                                 </Button>
-                                <Button variant="ghost" size="sm" onClick={() => handleStatusChange(r.id, 3)} title="标记报废">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleStatusChange(r.id, 3)}
+                                  title="标记报废"
+                                >
                                   <Trash2 className="h-4 w-4 text-red-500" />
                                 </Button>
                               </>
                             )}
                             {r.status === 2 && (
-                              <Button variant="ghost" size="sm" onClick={() => handleStatusChange(r.id, 3)} title="标记报废">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleStatusChange(r.id, 3)}
+                                title="标记报废"
+                              >
                                 <Trash2 className="h-4 w-4 text-red-500" />
                               </Button>
                             )}
@@ -480,18 +556,35 @@ export default function InkOpeningPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>物料编码</Label>
-                  <Input value={form.material_code} onChange={(e) => setForm(prev => ({ ...prev, material_code: e.target.value }))} placeholder="如：MAT006" />
+                  <Input
+                    value={form.material_code}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, material_code: e.target.value }))
+                    }
+                    placeholder="如：MAT006"
+                  />
                 </div>
                 <div>
                   <Label>物料名称</Label>
-                  <Input value={form.material_name} onChange={(e) => setForm(prev => ({ ...prev, material_name: e.target.value }))} placeholder="如：丝印油墨-黑色" />
+                  <Input
+                    value={form.material_name}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, material_name: e.target.value }))
+                    }
+                    placeholder="如：丝印油墨-黑色"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>油墨类型</Label>
-                  <Select value={form.ink_type} onValueChange={(v) => setForm(prev => ({ ...prev, ink_type: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={form.ink_type}
+                    onValueChange={(v) => setForm((prev) => ({ ...prev, ink_type: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="solvent">溶剂型</SelectItem>
                       <SelectItem value="uv">UV型</SelectItem>
@@ -501,21 +594,38 @@ export default function InkOpeningPage() {
                 </div>
                 <div>
                   <Label>批号</Label>
-                  <Input value={form.batch_no} onChange={(e) => setForm(prev => ({ ...prev, batch_no: e.target.value }))} placeholder="批次号" />
+                  <Input
+                    value={form.batch_no}
+                    onChange={(e) => setForm((prev) => ({ ...prev, batch_no: e.target.value }))}
+                    placeholder="批次号"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>开罐时间 *</Label>
-                  <Input type="datetime-local" value={form.open_time} onChange={(e) => setForm(prev => ({ ...prev, open_time: e.target.value }))} />
+                  <Input
+                    type="datetime-local"
+                    value={form.open_time}
+                    onChange={(e) => setForm((prev) => ({ ...prev, open_time: e.target.value }))}
+                  />
                 </div>
                 <div>
                   <Label>有效时长 *</Label>
-                  <Select value={String(form.expire_hours)} onValueChange={(v) => setForm(prev => ({ ...prev, expire_hours: parseInt(v) }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={String(form.expire_hours)}
+                    onValueChange={(v) =>
+                      setForm((prev) => ({ ...prev, expire_hours: parseInt(v) }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                      {EXPIRE_HOURS_OPTIONS.map(opt => (
-                        <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+                      {EXPIRE_HOURS_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={String(opt.value)}>
+                          {opt.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -524,12 +634,25 @@ export default function InkOpeningPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>剩余数量</Label>
-                  <Input type="number" step="0.01" value={form.remaining_qty} onChange={(e) => setForm(prev => ({ ...prev, remaining_qty: e.target.value }))} placeholder="剩余数量" />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={form.remaining_qty}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, remaining_qty: e.target.value }))
+                    }
+                    placeholder="剩余数量"
+                  />
                 </div>
                 <div>
                   <Label>单位</Label>
-                  <Select value={form.unit} onValueChange={(v) => setForm(prev => ({ ...prev, unit: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={form.unit}
+                    onValueChange={(v) => setForm((prev) => ({ ...prev, unit: v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="kg">kg</SelectItem>
                       <SelectItem value="L">L</SelectItem>
@@ -540,15 +663,24 @@ export default function InkOpeningPage() {
               </div>
               <div>
                 <Label>操作员</Label>
-                <UserSelect value={form.operator_name} onChange={(v) => setForm(prev => ({ ...prev, operator_name: v }))} />
+                <UserSelect
+                  value={form.operator_name}
+                  onChange={(v) => setForm((prev) => ({ ...prev, operator_name: v }))}
+                />
               </div>
               <div>
                 <Label>备注</Label>
-                <Textarea value={form.remark} onChange={(e) => setForm(prev => ({ ...prev, remark: e.target.value }))} placeholder="备注信息" />
+                <Textarea
+                  value={form.remark}
+                  onChange={(e) => setForm((prev) => ({ ...prev, remark: e.target.value }))}
+                  placeholder="备注信息"
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                取消
+              </Button>
               <Button onClick={handleCreate}>确认开罐</Button>
             </DialogFooter>
           </DialogContent>
@@ -562,28 +694,62 @@ export default function InkOpeningPage() {
             {detailData && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><span className="text-muted-foreground">记录单号：</span>{detailData.record_no}</div>
-                  <div><span className="text-muted-foreground">物料编码：</span>{detailData.material_code}</div>
-                  <div><span className="text-muted-foreground">物料名称：</span>{detailData.material_name}</div>
-                  <div><span className="text-muted-foreground">油墨类型：</span>
+                  <div>
+                    <span className="text-muted-foreground">记录单号：</span>
+                    {detailData.record_no}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">物料编码：</span>
+                    {detailData.material_code}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">物料名称：</span>
+                    {detailData.material_name}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">油墨类型：</span>
                     <Badge className={INK_TYPE_MAP[detailData.ink_type]?.color || 'bg-gray-100'}>
                       {INK_TYPE_MAP[detailData.ink_type]?.label || detailData.ink_type}
                     </Badge>
                   </div>
-                  <div><span className="text-muted-foreground">批号：</span>{detailData.batch_no || '-'}</div>
-                  <div><span className="text-muted-foreground">有效时长：</span>{detailData.expire_hours}小时</div>
-                  <div><span className="text-muted-foreground">开罐时间：</span>{detailData.open_time}</div>
-                  <div><span className="text-muted-foreground">过期时间：</span>{detailData.expire_time}</div>
-                  <div><span className="text-muted-foreground">剩余数量：</span>{detailData.remaining_qty ? `${detailData.remaining_qty} ${detailData.unit}` : '-'}</div>
-                  <div><span className="text-muted-foreground">操作员：</span>{detailData.operator_name || '-'}</div>
-                  <div><span className="text-muted-foreground">状态：</span>
+                  <div>
+                    <span className="text-muted-foreground">批号：</span>
+                    {detailData.batch_no || '-'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">有效时长：</span>
+                    {detailData.expire_hours}小时
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">开罐时间：</span>
+                    {detailData.open_time}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">过期时间：</span>
+                    {detailData.expire_time}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">剩余数量：</span>
+                    {detailData.remaining_qty
+                      ? `${detailData.remaining_qty} ${detailData.unit}`
+                      : '-'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">操作员：</span>
+                    {detailData.operator_name || '-'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">状态：</span>
                     <Badge className={STATUS_MAP[detailData.status]?.color || 'bg-gray-100'}>
                       {STATUS_MAP[detailData.status]?.label || detailData.status}
                     </Badge>
                   </div>
                 </div>
                 {detailData.remark && (
-                  <div className="text-sm"><span className="text-muted-foreground">备注：</span>{detailData.remark}</div>
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">备注：</span>
+                    {detailData.remark}
+                  </div>
                 )}
               </div>
             )}

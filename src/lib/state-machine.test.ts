@@ -61,7 +61,9 @@ describe('StateMachineValidator', () => {
     });
 
     it('allows material_ready → in_progress', () => {
-      expect(StateMachineValidator.canTransitionProcess('material_ready', 'in_progress')).toBe(true);
+      expect(StateMachineValidator.canTransitionProcess('material_ready', 'in_progress')).toBe(
+        true
+      );
     });
 
     it('allows in_progress → qc_pending', () => {
@@ -90,8 +92,13 @@ describe('StateMachineValidator', () => {
 
     it('disallows completed → anything except completed', () => {
       const statuses: ProcessStatus[] = [
-        'created', 'material_ready', 'in_progress', 'qc_pending',
-        'qc_pass', 'qc_fail', 'rework',
+        'created',
+        'material_ready',
+        'in_progress',
+        'qc_pending',
+        'qc_pass',
+        'qc_fail',
+        'rework',
       ];
       for (const to of statuses) {
         expect(StateMachineValidator.canTransitionProcess('completed', to)).toBe(false);
@@ -141,7 +148,10 @@ describe('StateMachineValidator', () => {
     });
 
     it('returns [pass, fail] for inspecting', () => {
-      expect(StateMachineValidator.getAllowedInspectTransitions('inspecting')).toEqual(['pass', 'fail']);
+      expect(StateMachineValidator.getAllowedInspectTransitions('inspecting')).toEqual([
+        'pass',
+        'fail',
+      ]);
     });
 
     it('returns [] for pass', () => {
@@ -151,7 +161,9 @@ describe('StateMachineValidator', () => {
 
   describe('getAllowedProcessTransitions', () => {
     it('returns [material_ready] for created', () => {
-      expect(StateMachineValidator.getAllowedProcessTransitions('created')).toEqual(['material_ready']);
+      expect(StateMachineValidator.getAllowedProcessTransitions('created')).toEqual([
+        'material_ready',
+      ]);
     });
 
     it('returns [] for completed', () => {

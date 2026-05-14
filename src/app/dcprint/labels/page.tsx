@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -17,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -30,25 +25,16 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Search,
-  QrCode,
-  Scissors,
-  Package,
-  Printer,
-  RefreshCw,
-  Plus,
-  FileText,
-  Trash2,
-} from 'lucide-react';
+import { Search, QrCode, Scissors, Printer, RefreshCw, Trash2, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { LabelPrintTrigger, LabelData } from '@/components/printing/LabelPrintPreview';
+import { PrinterManagement } from '@/components/printing/PrinterManagement';
 
 // 物料标签类型
 interface MaterialLabel {
@@ -78,19 +64,36 @@ interface MaterialLabel {
 // 状态徽章
 const getStatusBadge = (status: string) => {
   const statusMap: Record<string, { label: string; className: string }> = {
-    active: { label: '正常', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-    frozen: { label: '冻结', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-    cut: { label: '已分切', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-    disabled: { label: '禁用', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+    active: {
+      label: '正常',
+      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    },
+    frozen: {
+      label: '冻结',
+      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+    },
+    cut: {
+      label: '已分切',
+      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    },
+    disabled: {
+      label: '禁用',
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    },
   };
-  const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+  const config = statusMap[status] || {
+    label: status,
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
 // 是否徽章
 const getYesNoBadge = (value: number) => {
   return value === 1 ? (
-    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">是</Badge>
+    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+      是
+    </Badge>
   ) : (
     <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">否</Badge>
   );
@@ -106,7 +109,9 @@ export default function MaterialLabelsPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
-  
+  const [selectedLabels, setSelectedLabels] = useState<Set<number>>(new Set());
+  const [showPrinterSettings, setShowPrinterSettings] = useState(false);
+
   // 分切相关状态
   const [cuttingDialogOpen, setCuttingDialogOpen] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState<MaterialLabel | null>(null);
@@ -116,27 +121,28 @@ export default function MaterialLabelsPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    
+
     const fetchData = async () => {
       try {
         setLoading(true);
         const params = new URLSearchParams();
         if (keyword) params.append('keyword', keyword);
-        if (isMainMaterial && isMainMaterial !== 'all') params.append('isMainMaterial', isMainMaterial);
+        if (isMainMaterial && isMainMaterial !== 'all')
+          params.append('isMainMaterial', isMainMaterial);
         if (isCut && isCut !== 'all') params.append('isCut', isCut);
         params.append('page', page.toString());
         params.append('pageSize', pageSize.toString());
 
         const response = await fetch(`/api/dcprint/labels?${params}`, {
-          signal: controller.signal
+          signal: controller.signal,
         });
-        
+
         if (!response.ok) {
           throw new Error(`API 响应错误: ${response.status}`);
         }
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
           setLabels(result.data?.list || []);
           setTotal(result.data?.pagination?.total || 0);
@@ -183,7 +189,7 @@ export default function MaterialLabelsPage() {
 
     try {
       setCuttingLoading(true);
-      
+
       const response = await fetch('/api/warehouse/inbound/cutting', {
         method: 'POST',
         headers: {
@@ -206,8 +212,7 @@ export default function MaterialLabelsPage() {
       if (result.success) {
         toast.success('分切操作成功');
         setCuttingDialogOpen(false);
-        // 触发数据刷新
-        setPage(prevPage => prevPage);
+        setPage((prevPage) => prevPage);
       } else {
         toast.error(result.message || '分切操作失败');
       }
@@ -219,6 +224,23 @@ export default function MaterialLabelsPage() {
     }
   };
 
+  // 转换为打印数据格式
+  const toPrintData = (label: MaterialLabel): LabelData => ({
+    id: String(label.id),
+    labelNo: label.labelNo,
+    qrCode: label.qrCode,
+    materialCode: label.materialCode,
+    materialName: label.materialName,
+    specification: label.specification,
+    batchNo: label.batchNo,
+    quantity: label.quantity,
+    unit: label.unit,
+    warehouseName: label.warehouseName,
+  });
+
+  // 获取选中的打印标签
+  const selectedPrintLabels = labels.filter((l) => selectedLabels.has(l.id)).map(toPrintData);
+
   return (
     <MainLayout title="物料标签管理">
       <div className="space-y-6">
@@ -229,9 +251,7 @@ export default function MaterialLabelsPage() {
               <QrCode className="h-5 w-5" />
               物料标签查询
             </CardTitle>
-            <CardDescription>
-              查询和管理物料标签，支持二维码追溯
-            </CardDescription>
+            <CardDescription>查询和管理物料标签，支持二维码追溯</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4 items-end">
@@ -285,7 +305,6 @@ export default function MaterialLabelsPage() {
                 </Button>
               </div>
             </div>
-
           </CardContent>
         </Card>
 
@@ -295,12 +314,22 @@ export default function MaterialLabelsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>标签列表</CardTitle>
-                <CardDescription>
-                  共 {total} 条记录
-                </CardDescription>
+                <CardDescription>共 {total} 条记录</CardDescription>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setPage(prevPage => prevPage)}>
+                {selectedPrintLabels.length > 0 && (
+                  <LabelPrintTrigger labels={selectedPrintLabels}>
+                    <Button>
+                      <Printer className="h-4 w-4 mr-2" />
+                      打印选中 ({selectedPrintLabels.length})
+                    </Button>
+                  </LabelPrintTrigger>
+                )}
+                <Button variant="outline" onClick={() => setShowPrinterSettings(true)}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  打印机设置
+                </Button>
+                <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
                   <RefreshCw className="h-4 w-4 mr-2" />
                   刷新
                 </Button>
@@ -312,6 +341,18 @@ export default function MaterialLabelsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={labels.length > 0 && selectedLabels.size === labels.length}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedLabels(new Set(labels.map((l) => l.id)));
+                          } else {
+                            setSelectedLabels(new Set());
+                          }
+                        }}
+                      />
+                    </TableHead>
                     <TableHead>标签编号</TableHead>
                     <TableHead>物料信息</TableHead>
                     <TableHead>规格</TableHead>
@@ -328,32 +369,48 @@ export default function MaterialLabelsPage() {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={11} className="text-center py-8">
+                      <TableCell colSpan={12} className="text-center py-8">
                         加载中...
                       </TableCell>
                     </TableRow>
                   ) : labels.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={11} className="text-center py-8">
+                      <TableCell colSpan={12} className="text-center py-8">
                         暂无数据
                       </TableCell>
                     </TableRow>
                   ) : (
                     labels.map((label) => (
                       <TableRow key={label.id}>
-                        <TableCell className="font-medium">
-                          {label.labelNo}
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedLabels.has(label.id)}
+                            onCheckedChange={(checked) => {
+                              const newSelected = new Set(selectedLabels);
+                              if (checked) {
+                                newSelected.add(label.id);
+                              } else {
+                                newSelected.delete(label.id);
+                              }
+                              setSelectedLabels(newSelected);
+                            }}
+                          />
                         </TableCell>
+                        <TableCell className="font-medium">{label.labelNo}</TableCell>
                         <TableCell>
                           <div className="space-y-1">
                             <div className="font-medium">{label.materialName}</div>
-                            <div className="text-sm text-muted-foreground">{label.materialCode}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {label.materialCode}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>{label.specification}</TableCell>
                         <TableCell>
                           {label.width && (
-                            <div>{label.width}mm / {label.lengthPerRoll}m</div>
+                            <div>
+                              {label.width}mm / {label.lengthPerRoll}m
+                            </div>
                           )}
                         </TableCell>
                         <TableCell>{label.batchNo}</TableCell>
@@ -378,13 +435,9 @@ export default function MaterialLabelsPage() {
                               <DialogContent>
                                 <DialogHeader>
                                   <DialogTitle>二维码信息</DialogTitle>
-                                  <DialogDescription>
-                                    标签号: {label.labelNo}
-                                  </DialogDescription>
                                 </DialogHeader>
                                 <div className="flex flex-col items-center gap-4 py-4">
                                   <div className="p-4 bg-white border rounded-lg">
-                                    {/* 这里可以显示实际的二维码图片 */}
                                     <QrCode className="h-32 w-32" />
                                   </div>
                                   <code className="text-xs bg-muted p-2 rounded">
@@ -393,8 +446,8 @@ export default function MaterialLabelsPage() {
                                 </div>
                               </DialogContent>
                             </Dialog>
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -405,9 +458,11 @@ export default function MaterialLabelsPage() {
                             >
                               <Scissors className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
-                              <Printer className="h-4 w-4" />
-                            </Button>
+                            <LabelPrintTrigger labels={[toPrintData(label)]}>
+                              <Button variant="ghost" size="sm">
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                            </LabelPrintTrigger>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -427,7 +482,7 @@ export default function MaterialLabelsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
                   >
                     上一页
@@ -435,7 +490,7 @@ export default function MaterialLabelsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(p => p + 1)}
+                    onClick={() => setPage((p) => p + 1)}
                     disabled={page * pageSize >= total}
                   >
                     下一页
@@ -449,16 +504,12 @@ export default function MaterialLabelsPage() {
 
       {/* 分切对话框 */}
       <Dialog open={cuttingDialogOpen} onOpenChange={setCuttingDialogOpen}>
-        <DialogContent className="sm:max-w-md" resizable>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>物料分切</DialogTitle>
-            <DialogDescription>
-              为标签 {selectedLabel?.labelNo} 执行分切操作
-            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">源标签信息</label>
               <div className="bg-muted p-3 rounded-md">
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
@@ -468,14 +519,6 @@ export default function MaterialLabelsPage() {
                   <div>
                     <span className="text-muted-foreground">物料:</span>
                     <span className="ml-2 font-medium">{selectedLabel?.materialName}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">物料代号:</span>
-                    <span className="ml-2 font-medium">{selectedLabel?.materialCode}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">原宽幅:</span>
-                    <span className="ml-2 font-medium">{selectedLabel?.width}mm</span>
                   </div>
                 </div>
               </div>
@@ -488,9 +531,6 @@ export default function MaterialLabelsPage() {
                 onChange={(e) => setCutWidthStr(e.target.value)}
                 className="w-full"
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                请输入分切后的宽幅，多个宽幅用"+"分隔
-              </p>
             </div>
             <div>
               <label className="text-sm font-medium mb-2 block">备注</label>
@@ -506,14 +546,20 @@ export default function MaterialLabelsPage() {
             <Button variant="outline" onClick={() => setCuttingDialogOpen(false)}>
               取消
             </Button>
-            <Button 
-              onClick={handleCutting}
-              loading={cuttingLoading}
-              disabled={!cutWidthStr}
-            >
+            <Button onClick={handleCutting} loading={cuttingLoading} disabled={!cutWidthStr}>
               执行分切
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 打印机设置对话框 */}
+      <Dialog open={showPrinterSettings} onOpenChange={setShowPrinterSettings}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>打印机管理</DialogTitle>
+          </DialogHeader>
+          <PrinterManagement />
         </DialogContent>
       </Dialog>
     </MainLayout>

@@ -8,7 +8,7 @@ import {
   validateRequestBody,
   logOperation,
 } from '@/lib/api-response';
-import { allocateFIFO, executeFIFODeduction } from '@/lib/fifo-allocation';
+import { allocateFIFO, executeFIFODeductionWithRetry } from '@/lib/fifo-allocation';
 import { generateTransNo, generateBatchNo } from '@/lib/utils';
 
 class InventoryError extends Error {
@@ -115,7 +115,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   const processedData = (data as any[]).map((item) => ({
     ...item,
-    alertLevel: calculateAlertLevel(parseFloat(item.available_qty) || 0, item.safety_stock ? parseFloat(item.safety_stock) : undefined),
+    alertLevel: calculateAlertLevel(
+      parseFloat(item.available_qty) || 0,
+      item.safety_stock ? parseFloat(item.safety_stock) : undefined
+    ),
   }));
 
   return successResponse({
@@ -138,7 +141,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   if (action === 'inbound') {
     const inboundValidation = validateRequestBody(body, ['warehouseId', 'materialId']);
     if (!inboundValidation.valid) {
-      return errorResponse(`入库操作缺少必填字段: ${inboundValidation.missing.join(', ')}`, 400, 400);
+      return errorResponse(
+        `入库操作缺少必填字段: ${inboundValidation.missing.join(', ')}`,
+        400,
+        400
+      );
     }
 
     const material = await queryOne<any>(
@@ -164,7 +171,17 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       await conn.execute(
         `INSERT INTO inv_inventory_batch (batch_no, material_id, material_name, warehouse_id, warehouse_name, quantity, available_qty, locked_qty, unit, unit_price, inbound_date, status, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, CURDATE(), 'normal', NOW())`,
-        [batchNoNew, materialId, material.material_name, warehouseId, warehouse.warehouse_name, quantity, quantity, material.unit || '个', material.purchase_price || 0]
+        [
+          batchNoNew,
+          materialId,
+          material.material_name,
+          warehouseId,
+          warehouse.warehouse_name,
+          quantity,
+          quantity,
+          material.unit || '个',
+          material.purchase_price || 0,
+        ]
       );
 
       const [idRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
@@ -173,13 +190,32 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       await conn.execute(
         `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, material_id, material_code, batch_no, warehouse_id, quantity, unit_cost, total_cost, remark, create_time)
          VALUES (?, 'in', ?, ?, ?, ?, ?, ?, ?, ?, '入库操作', NOW())`,
-        [transNo, sourceType || 'manual', materialId, material.material_code, batchNoNew, warehouseId, quantity, material.purchase_price || 0, quantity * (material.purchase_price || 0)]
+        [
+          transNo,
+          sourceType || 'manual',
+          materialId,
+          material.material_code,
+          batchNoNew,
+          warehouseId,
+          quantity,
+          material.purchase_price || 0,
+          quantity * (material.purchase_price || 0),
+        ]
       );
 
       await conn.execute(
         `INSERT INTO inv_inventory_log (warehouse_id, material_id, batch_no, trans_type, quantity, before_qty, after_qty, unit, source_type, source_no, create_time)
          VALUES (?, ?, ?, 'in', ?, 0, ?, ?, ?, ?, NOW())`,
-        [warehouseId, materialId, batchNoNew, quantity, quantity, material.unit || '个', sourceType || 'manual', sourceNo || transNo]
+        [
+          warehouseId,
+          materialId,
+          batchNoNew,
+          quantity,
+          quantity,
+          material.unit || '个',
+          sourceType || 'manual',
+          sourceNo || transNo,
+        ]
       );
 
       return newBatchId;
@@ -190,24 +226,36 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       oper_type: 'inventory',
       oper_method: 'POST',
       oper_url: '/api/inventory',
-      oper_param: JSON.stringify({ action: 'inbound', batchNo: batchNoNew, quantity, warehouseId, materialId }),
+      oper_param: JSON.stringify({
+        action: 'inbound',
+        batchNo: batchNoNew,
+        quantity,
+        warehouseId,
+        materialId,
+      }),
       oper_result: '入库成功',
       status: 1,
     });
 
-    return successResponse({
-      transNo,
-      batchNo: batchNoNew,
-      batchId,
-      quantity,
-      warehouseId,
-      materialId,
-    }, '入库成功');
-
+    return successResponse(
+      {
+        transNo,
+        batchNo: batchNoNew,
+        batchId,
+        quantity,
+        warehouseId,
+        materialId,
+      },
+      '入库成功'
+    );
   } else if (action === 'outbound') {
     const outboundValidation = validateRequestBody(body, ['quantity']);
     if (!outboundValidation.valid) {
-      return errorResponse(`出库操作缺少必填字段: ${outboundValidation.missing.join(', ')}`, 400, 400);
+      return errorResponse(
+        `出库操作缺少必填字段: ${outboundValidation.missing.join(', ')}`,
+        400,
+        400
+      );
     }
 
     if (quantity <= 0) {
@@ -220,7 +268,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       if (batchNo) {
         const specifiedBatchValidation = validateRequestBody(body, ['batchNo']);
         if (!specifiedBatchValidation.valid) {
-          return errorResponse(`指定批次出库缺少必填字段: ${specifiedBatchValidation.missing.join(', ')}`, 400, 400);
+          return errorResponse(
+            `指定批次出库缺少必填字段: ${specifiedBatchValidation.missing.join(', ')}`,
+            400,
+            400
+          );
         }
 
         const result = await transaction(async (conn) => {
@@ -270,13 +322,33 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           await conn.execute(
             `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, material_id, batch_no, warehouse_id, quantity, unit_cost, total_cost, remark, create_time)
              VALUES (?, 'out', ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-            [transNo, sourceType || 'manual', batch.material_id, batchNo, batch.warehouse_id, quantity, batch.unit_price, quantity * parseFloat(batch.unit_price || 0), isFifoRecommended ? '指定批次出库(FIFO推荐)' : '指定批次出库(非FIFO推荐-手动覆盖)']
+            [
+              transNo,
+              sourceType || 'manual',
+              batch.material_id,
+              batchNo,
+              batch.warehouse_id,
+              quantity,
+              batch.unit_price,
+              quantity * parseFloat(batch.unit_price || 0),
+              isFifoRecommended ? '指定批次出库(FIFO推荐)' : '指定批次出库(非FIFO推荐-手动覆盖)',
+            ]
           );
 
           await conn.execute(
             `INSERT INTO inv_inventory_log (warehouse_id, material_id, batch_no, trans_type, quantity, before_qty, after_qty, unit, source_type, source_no, create_time)
              VALUES (?, ?, ?, 'out', ?, ?, ?, ?, ?, ?, NOW())`,
-            [batch.warehouse_id, batch.material_id, batchNo, quantity, batch.available_qty, newAvailableQty, batch.unit, sourceType || 'manual', sourceNo || transNo]
+            [
+              batch.warehouse_id,
+              batch.material_id,
+              batchNo,
+              quantity,
+              batch.available_qty,
+              newAvailableQty,
+              batch.unit,
+              sourceType || 'manual',
+              sourceNo || transNo,
+            ]
           );
 
           try {
@@ -286,9 +358,20 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
                 material_id, batch_id, batch_no, allocated_qty, unit_cost, total_cost,
                 fifo_mode, operator_id, operator_name
               ) VALUES ('inventory_out', 0, ?, ?, ?, ?, ?, ?, ?, ?, 'specified_batch', NULL, NULL)`,
-              [transNo, batch.warehouse_id, batch.material_id, batch.id, batchNo, quantity, parseFloat(batch.unit_price) || 0, quantity * (parseFloat(batch.unit_price) || 0)]
+              [
+                transNo,
+                batch.warehouse_id,
+                batch.material_id,
+                batch.id,
+                batchNo,
+                quantity,
+                parseFloat(batch.unit_price) || 0,
+                quantity * (parseFloat(batch.unit_price) || 0),
+              ]
             );
-          } catch (e) { console.error('[库存] 出库批次分配记录写入失败:', e); }
+          } catch (e) {
+            console.error('[库存] 出库批次分配记录写入失败:', e);
+          }
 
           return { batchNo, quantity, batch, isFifoRecommended };
         });
@@ -298,24 +381,39 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           oper_type: 'inventory',
           oper_method: 'POST',
           oper_url: '/api/inventory',
-          oper_param: JSON.stringify({ action: 'outbound', batchNo, quantity, fifoRecommended: result.isFifoRecommended }),
-          oper_result: result.isFifoRecommended ? '指定批次出库成功(FIFO推荐批次)' : '指定批次出库成功(非FIFO推荐批次-手动覆盖)',
+          oper_param: JSON.stringify({
+            action: 'outbound',
+            batchNo,
+            quantity,
+            fifoRecommended: result.isFifoRecommended,
+          }),
+          oper_result: result.isFifoRecommended
+            ? '指定批次出库成功(FIFO推荐批次)'
+            : '指定批次出库成功(非FIFO推荐批次-手动覆盖)',
           status: 1,
         });
 
-        return successResponse({
-          transNo,
-          batchNo: result.batchNo,
-          quantity,
-          fifoRecommended: result.isFifoRecommended,
-          warning: result.isFifoRecommended ? undefined : '当前出库批次不是FIFO推荐批次，存在过期物料风险',
-          operatedAt: new Date().toISOString(),
-        }, '出库成功');
-
+        return successResponse(
+          {
+            transNo,
+            batchNo: result.batchNo,
+            quantity,
+            fifoRecommended: result.isFifoRecommended,
+            warning: result.isFifoRecommended
+              ? undefined
+              : '当前出库批次不是FIFO推荐批次，存在过期物料风险',
+            operatedAt: new Date().toISOString(),
+          },
+          '出库成功'
+        );
       } else {
         const fifoValidation = validateRequestBody(body, ['materialId', 'warehouseId']);
         if (!fifoValidation.valid) {
-          return errorResponse(`FIFO出库缺少必填字段: ${fifoValidation.missing.join(', ')}，或指定batchNo`, 400, 400);
+          return errorResponse(
+            `FIFO出库缺少必填字段: ${fifoValidation.missing.join(', ')}，或指定batchNo`,
+            400,
+            400
+          );
         }
 
         const material = await queryOne<any>(
@@ -344,21 +442,35 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
             );
           }
 
-          const { deductionDetails, totalCost } = await executeFIFODeduction(conn, allocation, {
-            sourceType: 'inventory_out',
-            sourceId: 0,
-            sourceNo: transNo,
-            warehouseId,
-            warehouseCode: warehouse.warehouse_code || '',
-            operatorId: null,
-            operatorName: null,
-          });
+          const { deductionDetails, totalCost } = await executeFIFODeductionWithRetry(
+            conn,
+            allocation,
+            {
+              sourceType: 'inventory_out',
+              sourceId: 0,
+              sourceNo: transNo,
+              warehouseId,
+              warehouseCode: warehouse.warehouse_code || '',
+              operatorId: null,
+              operatorName: null,
+            }
+          );
 
           for (const detail of deductionDetails) {
             await conn.execute(
               `INSERT INTO inv_inventory_log (warehouse_id, material_id, batch_no, trans_type, quantity, before_qty, after_qty, unit, source_type, source_no, create_time)
                VALUES (?, ?, ?, 'out', ?, ?, ?, ?, ?, ?, NOW())`,
-              [warehouseId, materialId, detail.batch_no, detail.deducted_qty, detail.available_qty_before || 0, (detail.available_qty_before || 0) - detail.deducted_qty, material.unit || '个', sourceType || 'fifo', sourceNo || transNo]
+              [
+                warehouseId,
+                materialId,
+                detail.batch_no,
+                detail.deducted_qty,
+                detail.available_qty_before || 0,
+                (detail.available_qty_before || 0) - detail.deducted_qty,
+                material.unit || '个',
+                sourceType || 'fifo',
+                sourceNo || transNo,
+              ]
             );
           }
 
@@ -370,37 +482,48 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           oper_type: 'inventory',
           oper_method: 'POST',
           oper_url: '/api/inventory',
-          oper_param: JSON.stringify({ action: 'outbound', materialId, warehouseId, quantity, fifoMode: true }),
+          oper_param: JSON.stringify({
+            action: 'outbound',
+            materialId,
+            warehouseId,
+            quantity,
+            fifoMode: true,
+          }),
           oper_result: `FIFO出库成功，扣减${result.deductionDetails.length}个批次，总成本${result.totalCost.toFixed(2)}`,
           status: 1,
         });
 
-        return successResponse({
-          transNo,
-          materialId,
-          warehouseId,
-          quantity,
-          allocatedQty: result.allocation.allocated_qty,
-          fifoMode: true,
-          batchDetails: result.deductionDetails.map((d: any) => ({
-            batchNo: d.batch_no,
-            deductedQty: d.deducted_qty,
-            unitCost: d.unit_cost,
-            lineCost: d.line_cost,
-          })),
-          totalCost: result.totalCost,
-          operatedAt: new Date().toISOString(),
-        }, 'FIFO出库成功');
+        return successResponse(
+          {
+            transNo,
+            materialId,
+            warehouseId,
+            quantity,
+            allocatedQty: result.allocation.allocated_qty,
+            fifoMode: true,
+            batchDetails: result.deductionDetails.map((d: any) => ({
+              batchNo: d.batch_no,
+              deductedQty: d.deducted_qty,
+              unitCost: d.unit_cost,
+              lineCost: d.line_cost,
+            })),
+            totalCost: result.totalCost,
+            operatedAt: new Date().toISOString(),
+          },
+          'FIFO出库成功'
+        );
       }
-
     } catch (error) {
       return handleInventoryError(error);
     }
-
   } else if (action === 'transfer') {
     const transferValidation = validateRequestBody(body, ['batchNo', 'warehouseId']);
     if (!transferValidation.valid) {
-      return errorResponse(`调拨操作缺少必填字段: ${transferValidation.missing.join(', ')}`, 400, 400);
+      return errorResponse(
+        `调拨操作缺少必填字段: ${transferValidation.missing.join(', ')}`,
+        400,
+        400
+      );
     }
 
     const transNo = generateTransNo('TRF');
@@ -443,13 +566,32 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         await conn.execute(
           `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, material_id, batch_no, warehouse_id, quantity, unit_cost, total_cost, remark, create_time)
            VALUES (?, 'transfer', ?, ?, ?, ?, ?, ?, ?, '调拨操作', NOW())`,
-          [transNo, sourceType || 'manual', batch.material_id, batchNo, warehouseId, batch.quantity, batch.unit_price, parseFloat(batch.quantity) * parseFloat(batch.unit_price || 0)]
+          [
+            transNo,
+            sourceType || 'manual',
+            batch.material_id,
+            batchNo,
+            warehouseId,
+            batch.quantity,
+            batch.unit_price,
+            parseFloat(batch.quantity) * parseFloat(batch.unit_price || 0),
+          ]
         );
 
         await conn.execute(
           `INSERT INTO inv_inventory_log (warehouse_id, material_id, batch_no, trans_type, quantity, before_qty, after_qty, unit, source_type, source_no, create_time)
            VALUES (?, ?, ?, 'transfer', ?, ?, ?, ?, ?, ?, NOW())`,
-          [fromWarehouseId, batch.material_id, batchNo, batch.quantity, batch.available_qty, batch.available_qty, batch.unit, sourceType || 'manual', sourceNo || transNo]
+          [
+            fromWarehouseId,
+            batch.material_id,
+            batchNo,
+            batch.quantity,
+            batch.available_qty,
+            batch.available_qty,
+            batch.unit,
+            sourceType || 'manual',
+            sourceNo || transNo,
+          ]
         );
 
         return {
@@ -473,7 +615,6 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       });
 
       return successResponse(result, '调拨成功');
-
     } catch (error) {
       return handleInventoryError(error);
     }

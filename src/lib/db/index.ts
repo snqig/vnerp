@@ -57,7 +57,10 @@ export async function query<T = any>(sql: string, values?: any[]): Promise<T[]> 
       const pool = getPool();
       if (DEBUG_DB) {
         const sqlStr = typeof sql === 'string' ? sql : String(sql);
-        secureLog('debug', 'DB query', { sql: sqlStr.substring(0, 100), valueCount: values?.length });
+        secureLog('debug', 'DB query', {
+          sql: sqlStr.substring(0, 100),
+          valueCount: values?.length,
+        });
       }
       const [rows] = await pool.query(sql, values);
       if (DEBUG_DB) {
@@ -71,7 +74,7 @@ export async function query<T = any>(sql: string, values?: any[]): Promise<T[]> 
         retries--;
         if (retries > 0) {
           console.warn(`[DB] Connection error, retrying... (${2 - retries}/2)`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           continue;
         }
       }
@@ -107,7 +110,9 @@ export async function queryOne<T = any>(sql: string, values?: any[]): Promise<T 
 }
 
 // 事务处理
-export async function transaction<T>(callback: (connection: mysql.PoolConnection) => Promise<T>): Promise<T> {
+export async function transaction<T>(
+  callback: (connection: mysql.PoolConnection) => Promise<T>
+): Promise<T> {
   const pool = getPool();
   const connection = await pool.getConnection();
 
@@ -143,7 +148,7 @@ export async function transactionWithRetry<T>(
         throw error;
       }
       const delay = Math.min(100 * Math.pow(2, attempt) + Math.random() * 50, 1000);
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
   throw lastError;
@@ -177,14 +182,22 @@ export async function queryPaginated<T = any>(
   let countSql: string;
 
   // 处理不同的参数格式
-  if (Array.isArray(valuesOrCountSql) && typeof pageOrValues === 'number' && typeof pageSizeOrPagination === 'number') {
+  if (
+    Array.isArray(valuesOrCountSql) &&
+    typeof pageOrValues === 'number' &&
+    typeof pageSizeOrPagination === 'number'
+  ) {
     // 旧格式: (sql, values, page, pageSize)
     values = valuesOrCountSql;
     page = pageOrValues;
     pageSize = pageSizeOrPagination;
     // 自动生成countSql
     countSql = `SELECT COUNT(*) as total FROM (${sql}) as count_table`;
-  } else if (typeof valuesOrCountSql === 'string' && Array.isArray(pageOrValues) && typeof pageSizeOrPagination === 'object') {
+  } else if (
+    typeof valuesOrCountSql === 'string' &&
+    Array.isArray(pageOrValues) &&
+    typeof pageSizeOrPagination === 'object'
+  ) {
     // 新格式: (sql, countSql, values, pagination)
     countSql = valuesOrCountSql;
     values = pageOrValues;
@@ -196,8 +209,8 @@ export async function queryPaginated<T = any>(
   }
 
   // 获取总数
-  const [countResult] = await query<{ total: number }>(countSql, values);
-  const total = countResult?.total || 0;
+  const countResult = await query<{ total: number }>(countSql, values);
+  const total = countResult?.[0]?.total || 0;
 
   // 分页查询
   const paginatedSql = `${sql} LIMIT ? OFFSET ?`;
@@ -217,3 +230,30 @@ export async function queryPaginated<T = any>(
 
 // 为了保持向后兼容，导出 getPool 和 dbConfig
 export { dbConfig };
+
+// 为了向后兼容，导出 db 对象
+export const db = {
+  query,
+  execute,
+  queryOne,
+  insert: async (table: string, data: Record<string, any>): Promise<{ insertId: number }> => {
+    const keys = Object.keys(data);
+    const values = Object.values(data);
+    const placeholders = keys.map(() => '?').join(', ');
+    const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
+    const result = await execute(sql, values);
+    return { insertId: result.insertId };
+  },
+  update: async (table: string, data: Record<string, any>, where: string, whereValues: any[] = []): Promise<number> => {
+    const sets = Object.keys(data).map(k => `${k} = ?`).join(', ');
+    const values = [...Object.values(data), ...whereValues];
+    const sql = `UPDATE ${table} SET ${sets} WHERE ${where}`;
+    const result = await execute(sql, values);
+    return result.affectedRows;
+  },
+  delete: async (table: string, where: string, whereValues: any[] = []): Promise<number> => {
+    const sql = `DELETE FROM ${table} WHERE ${where}`;
+    const result = await execute(sql, whereValues);
+    return result.affectedRows;
+  },
+};

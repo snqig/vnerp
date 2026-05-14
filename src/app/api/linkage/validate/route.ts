@@ -1,10 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 
 // 状态常量定义
 const BIZ_ORDER_STATUS = {
@@ -39,7 +35,7 @@ const PO_STATUS = {
  * 获取容差配置
  */
 async function getToleranceConfig(materialId?: number, orderType: string = 'PURCHASE') {
-  let config = await query(
+  const config = await query(
     `SELECT over_delivery_tolerance, under_delivery_tolerance, action_on_exceed
      FROM order_tolerance_config
      WHERE (material_id = ? OR (material_id IS NULL AND is_default = 1))
@@ -51,8 +47,8 @@ async function getToleranceConfig(materialId?: number, orderType: string = 'PURC
 
   if ((config as any[]).length === 0) {
     return {
-      over_delivery_tolerance: 5.00,
-      under_delivery_tolerance: 5.00,
+      over_delivery_tolerance: 5.0,
+      under_delivery_tolerance: 5.0,
       action_on_exceed: 'WARNING',
     };
   }
@@ -136,19 +132,12 @@ async function updateBizOrderStatus(orderId: number, triggerBy: string) {
 
   // 只允许向前推进（状态值增大）
   if (newStatus > oldStatus) {
-    await query(
-      `UPDATE biz_order_header SET status = ?, update_time = NOW() WHERE id = ?`,
-      [newStatus, orderId]
-    );
-
-    await recordStatusHistory(
-      'BIZ',
-      orderId,
-      orderData.order_no,
-      oldStatus,
+    await query(`UPDATE biz_order_header SET status = ?, update_time = NOW() WHERE id = ?`, [
       newStatus,
-      triggerBy
-    );
+      orderId,
+    ]);
+
+    await recordStatusHistory('BIZ', orderId, orderData.order_no, oldStatus, newStatus, triggerBy);
 
     return { orderId, oldStatus, newStatus, changed: true };
   }
@@ -402,10 +391,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
       // 更新入库行消耗标记
       if (grnLineId) {
-        await connection.execute(
-          `UPDATE inv_inbound_item SET is_consumed = 1 WHERE id = ?`,
-          [grnLineId]
-        );
+        await connection.execute(`UPDATE inv_inbound_item SET is_consumed = 1 WHERE id = ?`, [
+          grnLineId,
+        ]);
       }
 
       // 更新业务订单状态
@@ -469,9 +457,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   // 计算差异
   const diffOrdered = totalOrdered - totalReq;
   const diffReceived = totalReceived - totalReq;
-  const fulfillmentRate = totalReq > 0
-    ? (totalConsumed / totalReq * 100).toFixed(2)
-    : 0;
+  const fulfillmentRate = totalReq > 0 ? ((totalConsumed / totalReq) * 100).toFixed(2) : 0;
 
   // 查询关联的PO信息
   const linkedPOs = await query(

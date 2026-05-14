@@ -2,6 +2,14 @@ import { DomainError } from '../../shared/DomainTypes';
 
 export type InboundStatus = 'draft' | 'pending' | 'completed' | 'cancelled';
 
+const DB_TO_DOMAIN_STATUS: Record<string, InboundStatus> = {
+  draft: 'draft',
+  pending: 'pending',
+  approved: 'completed',
+  completed: 'completed',
+  cancelled: 'cancelled',
+};
+
 export class OrderStatus {
   private constructor(public readonly value: InboundStatus) {}
 
@@ -18,11 +26,12 @@ export class OrderStatus {
     return new OrderStatus('cancelled');
   }
   static from(value: string): OrderStatus {
+    const mappedValue = DB_TO_DOMAIN_STATUS[value] || value as InboundStatus;
     const validStatuses: InboundStatus[] = ['draft', 'pending', 'completed', 'cancelled'];
-    if (!validStatuses.includes(value as InboundStatus)) {
+    if (!validStatuses.includes(mappedValue)) {
       throw new DomainError(`无效的入库单状态: ${value}`);
     }
-    return new OrderStatus(value as InboundStatus);
+    return new OrderStatus(mappedValue);
   }
 
   private static transitions: Record<InboundStatus, InboundStatus[]> = {

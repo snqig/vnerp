@@ -35,24 +35,82 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { MainLayout } from '@/components/layout';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 // 状态类型
 const statusOptions = [
-  { value: 'all', label: '全部', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  { value: 'normal', label: '正常', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-  { value: 'late', label: '迟到', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
-  { value: 'absent', label: '缺勤', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
-  { value: 'leave', label: '请假', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  {
+    value: 'all',
+    label: '全部',
+    color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  },
+  {
+    value: 'normal',
+    label: '正常',
+    color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  },
+  {
+    value: 'late',
+    label: '迟到',
+    color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+  },
+  {
+    value: 'absent',
+    label: '缺勤',
+    color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  },
+  {
+    value: 'leave',
+    label: '请假',
+    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  },
 ];
 
 // 部门选项
@@ -73,12 +131,12 @@ const departmentOptions = [
 // 考勤记录接口
 interface AttendanceRecord {
   id: number;
-  attendanceDate: string;
+  date: string;
   employeeId: string;
   employeeName: string;
-  departmentName: string;
-  checkInTime?: string;
-  checkOutTime?: string;
+  department: string;
+  checkIn?: string;
+  checkOut?: string;
   status: 'normal' | 'late' | 'absent' | 'leave';
   workingHours?: number;
   overtimeHours?: number;
@@ -86,8 +144,15 @@ interface AttendanceRecord {
 }
 
 // 示例考勤记录数据
-const statusConfig: Record<string, { label: string; color: string; icon: React.ComponentType<any> }> = {
-  normal: { label: '正常', color: 'bg-green-100 text-green-700 border-green-200', icon: CheckCircle2 },
+const statusConfig: Record<
+  string,
+  { label: string; color: string; icon: React.ComponentType<any> }
+> = {
+  normal: {
+    label: '正常',
+    color: 'bg-green-100 text-green-700 border-green-200',
+    icon: CheckCircle2,
+  },
   late: { label: '迟到', color: 'bg-yellow-100 text-yellow-700 border-yellow-200', icon: Clock3 },
   absent: { label: '缺勤', color: 'bg-red-100 text-red-700 border-red-200', icon: AlertCircle },
   leave: { label: '请假', color: 'bg-blue-100 text-blue-700 border-blue-200', icon: Calendar },
@@ -102,7 +167,7 @@ export default function AttendancePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  
+
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [selectedRecords, setSelectedRecords] = useState<number[]>([]);
 
@@ -110,7 +175,7 @@ export default function AttendancePage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentRecord, setCurrentRecord] = useState<AttendanceRecord | null>(null);
-  
+
   const [formData, setFormData] = useState({
     attendanceDate: '',
     employeeId: '',
@@ -131,29 +196,39 @@ export default function AttendancePage() {
   const fetchAttendanceRecords = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('/api/hr/attendance?pageSize=9999');
+      const res = await authFetch('/api/hr/attendance?pageSize=9999');
       const data = await res.json();
       if (data.success || data.code === 200) {
-        const records = data.data || [];
-        setAttendanceRecords(records.map((r: any, idx: number) => {
-          let dateStr = r.attendanceDate || r.attendance_date || r.date || '';
-          if (dateStr && dateStr.includes('T')) {
-            dateStr = dateStr.slice(0, 10);
-          }
-          return {
-            id: r.id || idx + 1,
-            date: dateStr,
-            employeeId: r.employeeId || r.employee_id,
-            employeeName: r.employeeName || r.employee_name,
-            department: r.departmentName || r.department_name || r.department,
-            checkIn: r.checkInTime || r.check_in_time || r.check_in,
-            checkOut: r.checkOutTime || r.check_out_time || r.check_out,
-            status: r.status || 'normal',
-            workingHours: r.workingHours || r.working_hours || calculateWorkingHours(r.checkInTime || r.check_in_time || r.check_in, r.checkOutTime || r.check_out_time || r.check_out),
-            overtimeHours: r.overtimeHours || r.overtime_hours || 0,
-            remark: r.remark || '',
-          };
-        }));
+        // 统一处理API返回的数据结构
+        const rawData = data.data;
+        const rawList = Array.isArray(rawData) ? rawData : (rawData?.list || []);
+        setAttendanceRecords(
+          rawList.map((r: any, idx: number) => {
+            let dateStr = r.attendanceDate || r.attendance_date || r.date || '';
+            if (dateStr && dateStr.includes('T')) {
+              dateStr = dateStr.slice(0, 10);
+            }
+            return {
+              id: r.id || idx + 1,
+              date: dateStr,
+              employeeId: r.employeeId || r.employee_id,
+              employeeName: r.employeeName || r.employee_name,
+              department: r.departmentName || r.department_name || r.department,
+              checkIn: r.checkInTime || r.check_in_time || r.check_in,
+              checkOut: r.checkOutTime || r.check_out_time || r.check_out,
+              status: r.status || 'normal',
+              workingHours:
+                r.workingHours ||
+                r.working_hours ||
+                calculateWorkingHours(
+                  r.checkInTime || r.check_in_time || r.check_in,
+                  r.checkOutTime || r.check_out_time || r.check_out
+                ),
+              overtimeHours: r.overtimeHours || r.overtime_hours || 0,
+              remark: r.remark || '',
+            };
+          })
+        );
       }
     } catch (error) {
       console.error('Failed to fetch attendance records:', error);
@@ -182,13 +257,13 @@ export default function AttendancePage() {
     if (!checkIn || !checkOut) return 0;
     const [inH, inM] = checkIn.split(':').map(Number);
     const [outH, outM] = checkOut.split(':').map(Number);
-    const diffMinutes = (outH * 60 + outM) - (inH * 60 + inM);
+    const diffMinutes = outH * 60 + outM - (inH * 60 + inM);
     return diffMinutes > 0 ? Math.round((diffMinutes / 60) * 100) / 100 : 0;
   };
 
   const handleSort = (field: string) => {
     if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortDirection('asc');
@@ -203,7 +278,11 @@ export default function AttendancePage() {
       <div className="flex items-center justify-center gap-1">
         {children}
         {sortField === field ? (
-          sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+          sortDirection === 'asc' ? (
+            <ArrowUp className="w-3 h-3" />
+          ) : (
+            <ArrowDown className="w-3 h-3" />
+          )
         ) : (
           <ArrowUpDown className="w-3 h-3 opacity-30" />
         )}
@@ -213,16 +292,18 @@ export default function AttendancePage() {
 
   // 筛选考勤记录
   const filteredRecords = useMemo(() => {
-    let records = attendanceRecords.filter(record => {
-      const matchesSearch = !searchQuery || 
+    let records = attendanceRecords.filter((record) => {
+      const matchesSearch =
+        !searchQuery ||
         record.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         record.employeeId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         record.department.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
       const matchesStatus = statusFilter === 'all' || record.status === statusFilter;
-      
-      const matchesDepartment = departmentFilter === 'all' || record.department === departmentFilter;
-      
+
+      const matchesDepartment =
+        departmentFilter === 'all' || record.department === departmentFilter;
+
       return matchesSearch && matchesStatus && matchesDepartment;
     });
 
@@ -230,16 +311,44 @@ export default function AttendancePage() {
       records = [...records].sort((a, b) => {
         let aVal: any, bVal: any;
         switch (sortField) {
-          case 'date': aVal = a.date; bVal = b.date; break;
-          case 'employeeId': aVal = a.employeeId; bVal = b.employeeId; break;
-          case 'employeeName': aVal = a.employeeName; bVal = b.employeeName; break;
-          case 'department': aVal = a.department; bVal = b.department; break;
-          case 'checkIn': aVal = a.checkIn; bVal = b.checkIn; break;
-          case 'checkOut': aVal = a.checkOut; bVal = b.checkOut; break;
-          case 'workingHours': aVal = a.workingHours; bVal = b.workingHours; break;
-          case 'overtimeHours': aVal = a.overtimeHours; bVal = b.overtimeHours; break;
-          case 'status': aVal = a.status; bVal = b.status; break;
-          default: return 0;
+          case 'date':
+            aVal = a.date;
+            bVal = b.date;
+            break;
+          case 'employeeId':
+            aVal = a.employeeId;
+            bVal = b.employeeId;
+            break;
+          case 'employeeName':
+            aVal = a.employeeName;
+            bVal = b.employeeName;
+            break;
+          case 'department':
+            aVal = a.department;
+            bVal = b.department;
+            break;
+          case 'checkIn':
+            aVal = a.checkIn;
+            bVal = b.checkIn;
+            break;
+          case 'checkOut':
+            aVal = a.checkOut;
+            bVal = b.checkOut;
+            break;
+          case 'workingHours':
+            aVal = a.workingHours;
+            bVal = b.workingHours;
+            break;
+          case 'overtimeHours':
+            aVal = a.overtimeHours;
+            bVal = b.overtimeHours;
+            break;
+          case 'status':
+            aVal = a.status;
+            bVal = b.status;
+            break;
+          default:
+            return 0;
         }
         if (typeof aVal === 'number' && typeof bVal === 'number') {
           return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
@@ -256,7 +365,10 @@ export default function AttendancePage() {
   const handleFormTimeChange = (field: 'checkInTime' | 'checkOutTime', value: string) => {
     const updated = { ...formData, [field]: value };
     if (updated.checkInTime && updated.checkOutTime) {
-      updated.workingHours = calculateWorkingHours(updated.checkInTime, updated.checkOutTime).toString();
+      updated.workingHours = calculateWorkingHours(
+        updated.checkInTime,
+        updated.checkOutTime
+      ).toString();
     }
     setFormData(updated);
   };
@@ -299,9 +411,8 @@ export default function AttendancePage() {
   // 保存考勤记录
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/hr/attendance', {
+      const res = await authFetch('/api/hr/attendance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           attendanceDate: formData.attendanceDate,
           employeeId: formData.employeeId,
@@ -332,9 +443,8 @@ export default function AttendancePage() {
   const handleUpdate = async () => {
     if (!currentRecord) return;
     try {
-      const res = await fetch('/api/hr/attendance', {
+      const res = await authFetch('/api/hr/attendance', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: currentRecord.id,
           attendanceDate: formData.attendanceDate,
@@ -391,14 +501,21 @@ export default function AttendancePage() {
       toast.error('请先选择要打印的记录');
       return;
     }
-    const recordsToPrint = filteredRecords.filter(r => selectedRecords.includes(r.id));
-    const statusLabels: Record<string, string> = { normal: '正常', late: '迟到', absent: '缺勤', leave: '请假' };
+    const recordsToPrint = filteredRecords.filter((r) => selectedRecords.includes(r.id));
+    const statusLabels: Record<string, string> = {
+      normal: '正常',
+      late: '迟到',
+      absent: '缺勤',
+      leave: '请假',
+    };
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       toast.error('无法打开打印窗口，请检查浏览器弹窗设置');
       return;
     }
-    const rows = recordsToPrint.map(r => `
+    const rows = recordsToPrint
+      .map(
+        (r) => `
       <tr>
         <td>${r.date}</td>
         <td>${r.employeeId}</td>
@@ -410,7 +527,9 @@ export default function AttendancePage() {
         <td>${r.overtimeHours} 小时</td>
         <td>${statusLabels[r.status] || r.status}</td>
         <td>${r.remark || '-'}</td>
-      </tr>`).join('');
+      </tr>`
+      )
+      .join('');
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>考勤记录打印</title>
       <style>
         @page { size: A4 landscape; margin: 10mm; }
@@ -440,10 +559,8 @@ export default function AttendancePage() {
 
   // 选择记录
   const toggleSelectRecord = (recordId: number) => {
-    setSelectedRecords(prev => 
-      prev.includes(recordId) 
-        ? prev.filter(id => id !== recordId)
-        : [...prev, recordId]
+    setSelectedRecords((prev) =>
+      prev.includes(recordId) ? prev.filter((id) => id !== recordId) : [...prev, recordId]
     );
   };
 
@@ -452,19 +569,18 @@ export default function AttendancePage() {
     if (selectedRecords.length === filteredRecords.length) {
       setSelectedRecords([]);
     } else {
-      setSelectedRecords(filteredRecords.map(r => r.id));
+      setSelectedRecords(filteredRecords.map((r) => r.id));
     }
   };
 
   // 计算统计数据
   const totalRecords = attendanceRecords.length;
-  const normalRecords = attendanceRecords.filter(r => r.status === 'normal').length;
-  const lateRecords = attendanceRecords.filter(r => r.status === 'late').length;
-  const absentRecords = attendanceRecords.filter(r => r.status === 'absent').length;
-  const leaveRecords = attendanceRecords.filter(r => r.status === 'leave').length;
-  const attendanceRate = totalRecords > 0 
-    ? Math.round(((totalRecords - absentRecords) / totalRecords) * 100)
-    : 0;
+  const normalRecords = attendanceRecords.filter((r) => r.status === 'normal').length;
+  const lateRecords = attendanceRecords.filter((r) => r.status === 'late').length;
+  const absentRecords = attendanceRecords.filter((r) => r.status === 'absent').length;
+  const leaveRecords = attendanceRecords.filter((r) => r.status === 'leave').length;
+  const attendanceRate =
+    totalRecords > 0 ? Math.round(((totalRecords - absentRecords) / totalRecords) * 100) : 0;
 
   return (
     <MainLayout title="考勤管理">
@@ -505,235 +621,238 @@ export default function AttendancePage() {
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">状态：</span>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="选择状态" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">部门：</span>
-                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="选择部门" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departmentOptions.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Search className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">关键字：</span>
-                <Input
-                  placeholder="搜索员工姓名、工号..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64"
-                />
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">时间：</span>
-                <Select value={dateRange} onValueChange={setDateRange}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="时间范围" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部</SelectItem>
-                    <SelectItem value="today">今日</SelectItem>
-                    <SelectItem value="week">本周</SelectItem>
-                    <SelectItem value="month">本月</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="选择状态" />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              {selectedRecords.length > 0 && (
-                <Badge variant="secondary" className="ml-auto">
-                  已选择 {selectedRecords.length} 条记录
-                </Badge>
-              )}
+          <div className="flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">部门：</span>
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="选择部门" />
+              </SelectTrigger>
+              <SelectContent>
+                {departmentOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">关键字：</span>
+            <Input
+              placeholder="搜索员工姓名、工号..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-64"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">时间：</span>
+            <Select value={dateRange} onValueChange={setDateRange}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="时间范围" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部</SelectItem>
+                <SelectItem value="today">今日</SelectItem>
+                <SelectItem value="week">本周</SelectItem>
+                <SelectItem value="month">本月</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedRecords.length > 0 && (
+            <Badge variant="secondary" className="ml-auto">
+              已选择 {selectedRecords.length} 条记录
+            </Badge>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">考勤率</p>
+                  <p className="text-3xl font-bold text-blue-600 mt-1">{attendanceRate}%</p>
+                  <p className="text-xs text-muted-foreground mt-1">整体考勤率</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-md bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">正常出勤</p>
+                  <p className="text-3xl font-bold text-green-600 mt-1">{normalRecords}</p>
+                  <p className="text-xs text-muted-foreground mt-1">条正常记录</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-md bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/50 dark:to-amber-950/50">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">迟到记录</p>
+                  <p className="text-3xl font-bold text-yellow-600 mt-1">{lateRecords}</p>
+                  <p className="text-xs text-muted-foreground mt-1">条迟到记录</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center">
+                  <Clock3 className="w-6 h-6 text-yellow-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-md bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-950/50 dark:to-pink-950/50">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">缺勤记录</p>
+                  <p className="text-3xl font-bold text-red-600 mt-1">{absentRecords}</p>
+                  <p className="text-xs text-muted-foreground mt-1">条缺勤记录</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="border shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between border-b">
+            <CardTitle>考勤记录</CardTitle>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                共 {filteredRecords.length} 条记录
+              </span>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">考勤率</p>
-                      <p className="text-3xl font-bold text-blue-600 mt-1">{attendanceRate}%</p>
-                      <p className="text-xs text-muted-foreground mt-1">整体考勤率</p>
-                    </div>
-                    <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                      <CheckCircle2 className="w-6 h-6 text-blue-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-md bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">正常出勤</p>
-                      <p className="text-3xl font-bold text-green-600 mt-1">{normalRecords}</p>
-                      <p className="text-xs text-muted-foreground mt-1">条正常记录</p>
-                    </div>
-                    <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                      <CheckCircle2 className="w-6 h-6 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-md bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/50 dark:to-amber-950/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">迟到记录</p>
-                      <p className="text-3xl font-bold text-yellow-600 mt-1">{lateRecords}</p>
-                      <p className="text-xs text-muted-foreground mt-1">条迟到记录</p>
-                    </div>
-                    <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center">
-                      <Clock3 className="w-6 h-6 text-yellow-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-md bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-950/50 dark:to-pink-950/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">缺勤记录</p>
-                      <p className="text-3xl font-bold text-red-600 mt-1">{absentRecords}</p>
-                      <p className="text-xs text-muted-foreground mt-1">条缺勤记录</p>
-                    </div>
-                    <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
-                      <AlertCircle className="w-6 h-6 text-red-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-center w-12">
+                      <Checkbox
+                        checked={
+                          selectedRecords.length === filteredRecords.length &&
+                          filteredRecords.length > 0
+                        }
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                    <SortableHeader field="date">日期</SortableHeader>
+                    <SortableHeader field="employeeId">工号</SortableHeader>
+                    <SortableHeader field="employeeName">姓名</SortableHeader>
+                    <SortableHeader field="department">部门</SortableHeader>
+                    <SortableHeader field="checkIn">上班时间</SortableHeader>
+                    <SortableHeader field="checkOut">下班时间</SortableHeader>
+                    <SortableHeader field="workingHours">工作时长</SortableHeader>
+                    <SortableHeader field="overtimeHours">加班时长</SortableHeader>
+                    <SortableHeader field="status">状态</SortableHeader>
+                    <TableHead className="text-center">备注</TableHead>
+                    <TableHead className="text-center">操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredRecords.map((record) => {
+                    const StatusIcon = statusConfig[record.status]?.icon || Clock;
+                    return (
+                      <TableRow key={record.id} className="hover:bg-accent/50 even:bg-muted/30">
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={selectedRecords.includes(record.id)}
+                            onCheckedChange={() => toggleSelectRecord(record.id)}
+                          />
+                        </TableCell>
+                        <TableCell className="text-center">{record.date}</TableCell>
+                        <TableCell className="text-center font-mono">{record.employeeId}</TableCell>
+                        <TableCell className="text-center">{record.employeeName}</TableCell>
+                        <TableCell className="text-center">{record.department}</TableCell>
+                        <TableCell className="text-center">{record.checkIn || '-'}</TableCell>
+                        <TableCell className="text-center">{record.checkOut || '-'}</TableCell>
+                        <TableCell className="text-center">{record.workingHours} 小时</TableCell>
+                        <TableCell className="text-center">{record.overtimeHours} 小时</TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <StatusIcon className="w-4 h-4" />
+                            <span>{statusConfig[record.status]?.label || record.status}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">{record.remark || '-'}</TableCell>
+                        <TableCell className="text-center">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(record)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                编辑
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDelete(record)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                删除
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
+            {filteredRecords.length === 0 && (
+              <div className="text-center py-12">
+                <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <Calendar className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground">暂无考勤记录</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-            <Card className="border shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between border-b">
-                <CardTitle>考勤记录</CardTitle>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">共 {filteredRecords.length} 条记录</span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-center w-12">
-                            <Checkbox
-                              checked={selectedRecords.length === filteredRecords.length && filteredRecords.length > 0}
-                              onCheckedChange={toggleSelectAll}
-                            />
-                          </TableHead>
-                          <SortableHeader field="date">日期</SortableHeader>
-                          <SortableHeader field="employeeId">工号</SortableHeader>
-                          <SortableHeader field="employeeName">姓名</SortableHeader>
-                          <SortableHeader field="department">部门</SortableHeader>
-                          <SortableHeader field="checkIn">上班时间</SortableHeader>
-                          <SortableHeader field="checkOut">下班时间</SortableHeader>
-                          <SortableHeader field="workingHours">工作时长</SortableHeader>
-                          <SortableHeader field="overtimeHours">加班时长</SortableHeader>
-                          <SortableHeader field="status">状态</SortableHeader>
-                          <TableHead className="text-center">备注</TableHead>
-                          <TableHead className="text-center">操作</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredRecords.map((record) => {
-                          const StatusIcon = statusConfig[record.status]?.icon || Clock;
-                          return (
-                            <TableRow key={record.id} className="hover:bg-accent/50 even:bg-muted/30">
-                              <TableCell className="text-center">
-                                <Checkbox
-                                  checked={selectedRecords.includes(record.id)}
-                                  onCheckedChange={() => toggleSelectRecord(record.id)}
-                                />
-                              </TableCell>
-                              <TableCell className="text-center">{record.date}</TableCell>
-                              <TableCell className="text-center font-mono">{record.employeeId}</TableCell>
-                              <TableCell className="text-center">{record.employeeName}</TableCell>
-                              <TableCell className="text-center">{record.department}</TableCell>
-                              <TableCell className="text-center">{record.checkIn || '-'}</TableCell>
-                              <TableCell className="text-center">{record.checkOut || '-'}</TableCell>
-                              <TableCell className="text-center">{record.workingHours} 小时</TableCell>
-                              <TableCell className="text-center">{record.overtimeHours} 小时</TableCell>
-                              <TableCell className="text-center">
-                                <div className="flex items-center justify-center gap-1">
-                                  <StatusIcon className="w-4 h-4" />
-                                  <span>{statusConfig[record.status]?.label || record.status}</span>
-                                </div>
-                              </TableCell>
-                              <TableCell className="text-center">{record.remark || '-'}</TableCell>
-                              <TableCell className="text-center">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEdit(record)}>
-                                      <Edit className="mr-2 h-4 w-4" />
-                                      编辑
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDelete(record)}>
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      删除
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {filteredRecords.length === 0 && (
-                    <div className="text-center py-12">
-                      <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                        <Calendar className="w-8 h-8 text-muted-foreground" />
-                      </div>
-                      <p className="text-muted-foreground">暂无考勤记录</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-          {/* 新增考勤记录对话框 */}
+      {/* 新增考勤记录对话框 */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-2xl" resizable>
           <DialogHeader>
             <DialogTitle>新增考勤记录</DialogTitle>
-            <DialogDescription>
-              填写考勤记录信息，带 * 为必填项
-            </DialogDescription>
+            <DialogDescription>填写考勤记录信息，带 * 为必填项</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -766,16 +885,21 @@ export default function AttendancePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="departmentName">部门 *</Label>
-                <Select value={formData.departmentName} onValueChange={(value) => setFormData({ ...formData, departmentName: value })}>
+                <Select
+                  value={formData.departmentName}
+                  onValueChange={(value) => setFormData({ ...formData, departmentName: value })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择部门" />
                   </SelectTrigger>
                   <SelectContent>
-                    {departmentOptions.filter(opt => opt.value !== 'all').map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
+                    {departmentOptions
+                      .filter((opt) => opt.value !== 'all')
+                      .map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -799,16 +923,21 @@ export default function AttendancePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">状态 *</Label>
-                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择状态" />
                   </SelectTrigger>
                   <SelectContent>
-                    {statusOptions.filter(opt => opt.value !== 'all').map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
+                    {statusOptions
+                      .filter((opt) => opt.value !== 'all')
+                      .map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -861,9 +990,7 @@ export default function AttendancePage() {
         <DialogContent className="sm:max-w-2xl" resizable>
           <DialogHeader>
             <DialogTitle>编辑考勤记录</DialogTitle>
-            <DialogDescription>
-              修改考勤记录信息，带 * 为必填项
-            </DialogDescription>
+            <DialogDescription>修改考勤记录信息，带 * 为必填项</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -896,16 +1023,21 @@ export default function AttendancePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="departmentName">部门 *</Label>
-                <Select value={formData.departmentName} onValueChange={(value) => setFormData({ ...formData, departmentName: value })}>
+                <Select
+                  value={formData.departmentName}
+                  onValueChange={(value) => setFormData({ ...formData, departmentName: value })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择部门" />
                   </SelectTrigger>
                   <SelectContent>
-                    {departmentOptions.filter(opt => opt.value !== 'all').map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
+                    {departmentOptions
+                      .filter((opt) => opt.value !== 'all')
+                      .map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -929,16 +1061,21 @@ export default function AttendancePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="status">状态 *</Label>
-                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择状态" />
                   </SelectTrigger>
                   <SelectContent>
-                    {statusOptions.filter(opt => opt.value !== 'all').map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
+                    {statusOptions
+                      .filter((opt) => opt.value !== 'all')
+                      .map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -992,7 +1129,8 @@ export default function AttendancePage() {
           <DialogHeader>
             <DialogTitle>删除考勤记录</DialogTitle>
             <DialogDescription>
-              确定要删除 {currentRecord?.employeeName} 在 {currentRecord?.date} 的考勤记录吗？此操作不可撤销。
+              确定要删除 {currentRecord?.employeeName} 在 {currentRecord?.date}{' '}
+              的考勤记录吗？此操作不可撤销。
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

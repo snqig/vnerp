@@ -2,13 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -44,25 +38,61 @@ import {
 
 const getStatusBadge = (status: string) => {
   const statusMap: Record<string, { label: string; className: string }> = {
-    normal: { label: '正常', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-    frozen: { label: '冻结', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-    expired: { label: '过期', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+    normal: {
+      label: '正常',
+      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    },
+    frozen: {
+      label: '冻结',
+      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+    },
+    expired: {
+      label: '过期',
+      className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    },
   };
-  const config = statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+  const config = statusMap[status] || {
+    label: status,
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
 const getAlertBadge = (alertLevel: string) => {
   const alertMap: Record<string, { label: string; className: string }> = {
-    normal: { label: '正常', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-    warning: { label: '预警', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
-    critical: { label: '紧急', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+    normal: {
+      label: '正常',
+      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    },
+    warning: {
+      label: '预警',
+      className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+    },
+    critical: {
+      label: '紧急',
+      className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    },
   };
-  const config = alertMap[alertLevel] || { label: alertLevel, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+  const config = alertMap[alertLevel] || {
+    label: alertLevel,
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
 export default function InventoryPage() {
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const [inventoryItems, setInventoryItems] = useState<any[]>([]);
   const [warehouseStats, setWarehouseStats] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -77,12 +107,22 @@ export default function InventoryPage() {
   const handleSort = (field: string) => {
     if (sortField === field) {
       if (sortOrder === 'asc') setSortOrder('desc');
-      else if (sortOrder === 'desc') { setSortField(null); setSortOrder(null); }
-    } else { setSortField(field); setSortOrder('asc'); }
+      else if (sortOrder === 'desc') {
+        setSortField(null);
+        setSortOrder(null);
+      }
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
   };
   const getSortIcon = (field: string) => {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
-    return sortOrder === 'asc' ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
+    return sortOrder === 'asc' ? (
+      <ArrowUp className="ml-1 h-3 w-3" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3" />
+    );
   };
   const sortedInventory = useMemo(() => {
     if (!sortField || !sortOrder) return inventoryItems;
@@ -102,10 +142,10 @@ export default function InventoryPage() {
 
   const fetchWarehouses = async () => {
     try {
-      const response = await fetch('/api/warehouse');
+      const response = await authFetch('/api/warehouse');
       const result = await response.json();
       if (result.success && result.data) {
-        const list = Array.isArray(result.data) ? result.data : (result.data.list || []);
+        const list = Array.isArray(result.data) ? result.data : result.data.list || [];
         setWarehouses(list);
       }
     } catch (error) {
@@ -122,20 +162,24 @@ export default function InventoryPage() {
       if (status && status !== 'all') params.set('status', status);
       params.set('pageSize', '100');
 
-      const response = await fetch(`/api/inventory?${params.toString()}`);
+      const response = await authFetch(`/api/inventory?${params.toString()}`);
       const result = await response.json();
       if (result.success && result.data) {
         const list = result.data.list || [];
         setInventoryItems(list);
 
-        const alertItems = list.filter((item: any) => item.alertLevel === 'warning' || item.alertLevel === 'critical');
-        setAlerts(alertItems.map((item: any) => ({
-          material: item.material_name,
-          current: parseFloat(item.available_qty) || 0,
-          safety: parseFloat(item.safety_stock) || 0,
-          unit: item.unit,
-          type: item.alertLevel === 'critical' ? 'out' : 'low',
-        })));
+        const alertItems = list.filter(
+          (item: any) => item.alertLevel === 'warning' || item.alertLevel === 'critical'
+        );
+        setAlerts(
+          alertItems.map((item: any) => ({
+            material: item.material_name,
+            current: parseFloat(item.available_qty) || 0,
+            safety: parseFloat(item.safety_stock) || 0,
+            unit: item.unit,
+            type: item.alertLevel === 'critical' ? 'out' : 'low',
+          }))
+        );
 
         const whMap = new Map<number, { name: string; count: number; value: number }>();
         list.forEach((item: any) => {
@@ -222,11 +266,23 @@ export default function InventoryPage() {
                 {alerts.map((alert, index) => (
                   <div key={index} className="bg-white rounded-lg p-3 border border-orange-200">
                     <div className="flex items-center gap-2 mb-2">
-                      <TrendingDown className={`h-4 w-4 ${alert.type === 'out' ? 'text-red-500' : 'text-orange-500'}`} />
+                      <TrendingDown
+                        className={`h-4 w-4 ${alert.type === 'out' ? 'text-red-500' : 'text-orange-500'}`}
+                      />
                       <span className="font-medium text-sm">{alert.material}</span>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      当前: <span className={alert.type === 'out' ? 'text-red-500 font-medium' : 'text-orange-500 font-medium'}>{alert.current}</span> {alert.unit}
+                      当前:{' '}
+                      <span
+                        className={
+                          alert.type === 'out'
+                            ? 'text-red-500 font-medium'
+                            : 'text-orange-500 font-medium'
+                        }
+                      >
+                        {alert.current}
+                      </span>{' '}
+                      {alert.unit}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       安全库存: {alert.safety} {alert.unit}
@@ -253,18 +309,30 @@ export default function InventoryPage() {
                   onSearch={() => fetchInventory()}
                   className="flex-1"
                 />
-                <Select value={warehouseId} onValueChange={(v) => { setWarehouseId(v); }}>
+                <Select
+                  value={warehouseId}
+                  onValueChange={(v) => {
+                    setWarehouseId(v);
+                  }}
+                >
                   <SelectTrigger className="w-[140px]">
                     <SelectValue placeholder="仓库" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部仓库</SelectItem>
                     {warehouses.map((wh: any) => (
-                      <SelectItem key={wh.id} value={String(wh.id)}>{wh.warehouse_name}</SelectItem>
+                      <SelectItem key={wh.id} value={String(wh.id)}>
+                        {wh.warehouse_name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={status} onValueChange={(v) => { setStatus(v); }}>
+                <Select
+                  value={status}
+                  onValueChange={(v) => {
+                    setStatus(v);
+                  }}
+                >
                   <SelectTrigger className="w-[120px]">
                     <SelectValue placeholder="状态" />
                   </SelectTrigger>
@@ -291,36 +359,84 @@ export default function InventoryPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('batch_no')}>
-                      <span className="inline-flex items-center">批次号{getSortIcon('batch_no')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('batch_no')}
+                    >
+                      <span className="inline-flex items-center">
+                        批次号{getSortIcon('batch_no')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('material_code')}>
-                      <span className="inline-flex items-center">物料编码{getSortIcon('material_code')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('material_code')}
+                    >
+                      <span className="inline-flex items-center">
+                        物料编码{getSortIcon('material_code')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('material_name')}>
-                      <span className="inline-flex items-center">物料{getSortIcon('material_name')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('material_name')}
+                    >
+                      <span className="inline-flex items-center">
+                        物料{getSortIcon('material_name')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('specification')}>
-                      <span className="inline-flex items-center">规格{getSortIcon('specification')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('specification')}
+                    >
+                      <span className="inline-flex items-center">
+                        规格{getSortIcon('specification')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('warehouse_name')}>
-                      <span className="inline-flex items-center">仓库{getSortIcon('warehouse_name')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('warehouse_name')}
+                    >
+                      <span className="inline-flex items-center">
+                        仓库{getSortIcon('warehouse_name')}
+                      </span>
                     </TableHead>
-                    <TableHead className="text-right cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('quantity')}>
-                      <span className="inline-flex items-center justify-end">数量{getSortIcon('quantity')}</span>
+                    <TableHead
+                      className="text-right cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('quantity')}
+                    >
+                      <span className="inline-flex items-center justify-end">
+                        数量{getSortIcon('quantity')}
+                      </span>
                     </TableHead>
-                    <TableHead className="text-right cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('available_qty')}>
-                      <span className="inline-flex items-center justify-end">可用{getSortIcon('available_qty')}</span>
+                    <TableHead
+                      className="text-right cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('available_qty')}
+                    >
+                      <span className="inline-flex items-center justify-end">
+                        可用{getSortIcon('available_qty')}
+                      </span>
                     </TableHead>
-                    <TableHead className="text-right cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('locked_qty')}>
-                      <span className="inline-flex items-center justify-end">锁定{getSortIcon('locked_qty')}</span>
+                    <TableHead
+                      className="text-right cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('locked_qty')}
+                    >
+                      <span className="inline-flex items-center justify-end">
+                        锁定{getSortIcon('locked_qty')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('status')}>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('status')}
+                    >
                       <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
                     </TableHead>
                     <TableHead>预警</TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('expiry_date')}>
-                      <span className="inline-flex items-center">有效期{getSortIcon('expiry_date')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('expiry_date')}
+                    >
+                      <span className="inline-flex items-center">
+                        有效期{getSortIcon('expiry_date')}
+                      </span>
                     </TableHead>
                     <TableHead className="text-right">操作</TableHead>
                   </TableRow>
@@ -334,17 +450,25 @@ export default function InventoryPage() {
                           {item.batch_no}
                         </div>
                       </TableCell>
-                      <TableCell className="font-mono text-xs">{item.material_code || '-'}</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {item.material_code || '-'}
+                      </TableCell>
                       <TableCell className="font-medium">{item.material_name}</TableCell>
-                      <TableCell className="text-muted-foreground">{item.material_spec || '-'}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {item.material_spec || '-'}
+                      </TableCell>
                       <TableCell>
                         <span className="text-sm">{item.warehouse_name || '-'}</span>
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {parseFloat(item.quantity || 0).toLocaleString()} {item.unit}
                       </TableCell>
-                      <TableCell className="text-right">{parseFloat(item.available_qty || 0).toLocaleString()}</TableCell>
-                      <TableCell className="text-right text-orange-600">{parseFloat(item.locked_qty || 0).toLocaleString()}</TableCell>
+                      <TableCell className="text-right">
+                        {parseFloat(item.available_qty || 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right text-orange-600">
+                        {parseFloat(item.locked_qty || 0).toLocaleString()}
+                      </TableCell>
                       <TableCell>{getStatusBadge(item.status)}</TableCell>
                       <TableCell>{getAlertBadge(item.alertLevel)}</TableCell>
                       <TableCell className="text-muted-foreground">

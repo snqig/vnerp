@@ -80,9 +80,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('获取排程统计失败:', error);
-    return NextResponse.json(
-      { success: false, message: '获取排程统计失败' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: '获取排程统计失败' }, { status: 500 });
   }
 }

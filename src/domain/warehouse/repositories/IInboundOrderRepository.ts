@@ -24,6 +24,10 @@ export interface IInboundOrderRepository {
   ): Promise<PaginatedResult<InboundOrder>>;
   save(order: InboundOrder): Promise<{ id: number; orderNo: string }>;
   updateStatus(id: number, status: string, currentStatus: string): Promise<boolean>;
-  updateInspectionAndFinance(id: number, inspectionStatus: number, financePosted: boolean): Promise<void>;
+  updateInspectionAndFinance(
+    id: number,
+    inspectionStatus: number,
+    financePosted: boolean
+  ): Promise<void>;
   softDelete(id: number): Promise<void>;
 }

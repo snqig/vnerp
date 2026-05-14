@@ -1,10 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query, queryOne, execute } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 
 // POST - 扫描二维码查询信息
 export const POST = withErrorHandler(async (request: NextRequest) => {
@@ -54,16 +50,27 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   if (!result) {
-    await logScan(scanType, qrContent, labelNo, operatorId, operatorName, 'failed', '未找到对应记录');
+    await logScan(
+      scanType,
+      qrContent,
+      labelNo,
+      operatorId,
+      operatorName,
+      'failed',
+      '未找到对应记录'
+    );
     return errorResponse('未找到对应记录', 404, 404);
   }
 
   await logScan(scanType, qrContent, labelNo, operatorId, operatorName, 'success');
 
-  return successResponse({
-    type,
-    data: result,
-  }, '扫码查询成功');
+  return successResponse(
+    {
+      type,
+      data: result,
+    },
+    '扫码查询成功'
+  );
 }, '扫码查询失败');
 
 // 查询物料标签
@@ -275,9 +282,14 @@ async function logScan(
         operator_id, operator_name, scan_time
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
-        scanType, qrContent, labelNo, operation,
-        message ? 'failed' : 'success', message,
-        operatorId, operatorName,
+        scanType,
+        qrContent,
+        labelNo,
+        operation,
+        message ? 'failed' : 'success',
+        message,
+        operatorId,
+        operatorName,
       ]
     );
   } catch (error) {

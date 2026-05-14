@@ -3,7 +3,36 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, User, Settings, Warehouse, LogOut, ChevronDown, LayoutDashboard, FileText, Package, Factory, ClipboardCheck, ShoppingCart, Printer, Users, Banknote, ShieldCheck, Home, ShoppingBag, Globe, Database, Zap, Palette, QrCode, Scissors, Search, Droplets, Wrench, Truck } from 'lucide-react';
+import {
+  Bell,
+  User,
+  Settings,
+  Warehouse,
+  LogOut,
+  ChevronDown,
+  LayoutDashboard,
+  FileText,
+  Package,
+  Factory,
+  ClipboardCheck,
+  ShoppingCart,
+  Printer,
+  Users,
+  Banknote,
+  ShieldCheck,
+  Home,
+  ShoppingBag,
+  Globe,
+  Database,
+  Zap,
+  Palette,
+  QrCode,
+  Scissors,
+  Search,
+  Droplets,
+  Wrench,
+  Truck,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -22,7 +51,29 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCompanyName } from '@/hooks/useCompanyName';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Home, LayoutDashboard, FileText, Package, Factory, ClipboardCheck, ShoppingCart, Printer, Users, Warehouse, Banknote, ShieldCheck, ShoppingBag, Globe, Database, Zap, Palette, QrCode, Scissors, Search, Droplets, Wrench, Truck,
+  Home,
+  LayoutDashboard,
+  FileText,
+  Package,
+  Factory,
+  ClipboardCheck,
+  ShoppingCart,
+  Printer,
+  Users,
+  Warehouse,
+  Banknote,
+  ShieldCheck,
+  ShoppingBag,
+  Globe,
+  Database,
+  Zap,
+  Palette,
+  QrCode,
+  Scissors,
+  Search,
+  Droplets,
+  Wrench,
+  Truck,
 };
 
 interface MenuItem {
@@ -65,7 +116,11 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
   const getIcon = (iconName?: string) => {
     if (!iconName) return <LayoutDashboard className="w-4 h-4" />;
     const IconComponent = iconMap[iconName];
-    return IconComponent ? <IconComponent className="w-4 h-4" /> : <LayoutDashboard className="w-4 h-4" />;
+    return IconComponent ? (
+      <IconComponent className="w-4 h-4" />
+    ) : (
+      <LayoutDashboard className="w-4 h-4" />
+    );
   };
 
   const isActive = (path?: string) => {
@@ -89,6 +144,18 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
     setActiveTopMenu(findActiveParent());
   }, [findActiveParent]);
 
+  const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  }, []);
+
   const fetchNotifications = useCallback(async () => {
     try {
       const res = await fetch('/api/system/notice?page=1&pageSize=10');
@@ -107,7 +174,14 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
       }
     } catch (e) {
       setNotifications([
-        { id: 1, title: '系统通知', content: '欢迎使用ERP系统', time: new Date().toLocaleString('zh-CN'), type: '系统', read: false },
+        {
+          id: 1,
+          title: '系统通知',
+          content: '欢迎使用ERP系统',
+          time: new Date().toLocaleString('zh-CN'),
+          type: '系统',
+          read: false,
+        },
       ]);
       setUnreadCount(1);
     }
@@ -135,7 +209,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
   }, [fetchNotifications, fetchUserInfo]);
 
   const handleMarkAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnreadCount(0);
   };
 
@@ -153,7 +227,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await authFetch('/api/auth/logout', { method: 'POST' });
     } catch (e) {
       // ignore
     }
@@ -166,7 +240,9 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
         {navigationMode !== 'sidebar' && (
           <div className="flex items-center gap-2 mr-2">
             <img src="/loginlogo.png" alt="达昌" className="w-7 h-7 rounded-lg object-contain" />
-            <span className="font-bold text-sm text-foreground hidden md:inline">{companyName}</span>
+            <span className="font-bold text-sm text-foreground hidden md:inline">
+              {companyName}
+            </span>
           </div>
         )}
         {title && navigationMode === 'sidebar' && (
@@ -174,56 +250,49 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
         )}
         {(navigationMode === 'top' || navigationMode === 'mixed') && (
           <nav className="snow-top-nav flex items-center gap-1 ml-2">
-            {Array.isArray(menus) && menus.map((menu) => {
-              const isTopActive = activeTopMenu === menu.code;
-              if (menu.children && menu.children.length > 0) {
+            {Array.isArray(menus) &&
+              menus.map((menu) => {
+                const isTopActive = activeTopMenu === menu.code;
+                if (menu.children && menu.children.length > 0) {
+                  return (
+                    <DropdownMenu key={menu.id}>
+                      <DropdownMenuTrigger asChild>
+                        <button className={cn('snow-top-nav-item', isTopActive && 'active')}>
+                          {getIcon(menu.icon)}
+                          <span>{menu.name}</span>
+                          <ChevronDown className="w-3 h-3 ml-1" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        {menu.children.map((child) => (
+                          <DropdownMenuItem key={child.id} asChild>
+                            <Link
+                              href={child.path || '#'}
+                              className={cn(
+                                'flex items-center gap-2 cursor-pointer',
+                                isActive(child.path) && 'text-primary font-medium'
+                              )}
+                            >
+                              {getIcon(child.icon)}
+                              <span>{child.name}</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                }
                 return (
-                  <DropdownMenu key={menu.id}>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className={cn(
-                          'snow-top-nav-item',
-                          isTopActive && 'active'
-                        )}
-                      >
-                        {getIcon(menu.icon)}
-                        <span>{menu.name}</span>
-                        <ChevronDown className="w-3 h-3 ml-1" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-48">
-                      {menu.children.map((child) => (
-                        <DropdownMenuItem key={child.id} asChild>
-                          <Link
-                            href={child.path || '#'}
-                            className={cn(
-                              'flex items-center gap-2 cursor-pointer',
-                              isActive(child.path) && 'text-primary font-medium'
-                            )}
-                          >
-                            {getIcon(child.icon)}
-                            <span>{child.name}</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Link
+                    key={menu.id}
+                    href={menu.path || '#'}
+                    className={cn('snow-top-nav-item', isTopActive && 'active')}
+                  >
+                    {getIcon(menu.icon)}
+                    <span>{menu.name}</span>
+                  </Link>
                 );
-              }
-              return (
-                <Link
-                  key={menu.id}
-                  href={menu.path || '#'}
-                  className={cn(
-                    'snow-top-nav-item',
-                    isTopActive && 'active'
-                  )}
-                >
-                  {getIcon(menu.icon)}
-                  <span>{menu.name}</span>
-                </Link>
-              );
-            })}
+              })}
           </nav>
         )}
       </div>
@@ -246,7 +315,12 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
             <div className="flex items-center justify-between px-2">
               <DropdownMenuLabel className="p-0">通知中心</DropdownMenuLabel>
               {unreadCount > 0 && (
-                <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleMarkAllRead}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs"
+                  onClick={handleMarkAllRead}
+                >
                   全部已读
                 </Button>
               )}
@@ -262,13 +336,18 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
                     <span className="font-medium">{n.title}</span>
                     <span className="text-xs text-muted-foreground ml-auto">{n.type}</span>
                   </div>
-                  {n.content && <span className="text-xs text-muted-foreground line-clamp-2">{n.content}</span>}
+                  {n.content && (
+                    <span className="text-xs text-muted-foreground line-clamp-2">{n.content}</span>
+                  )}
                   <span className="text-xs text-muted-foreground">{n.time}</span>
                 </DropdownMenuItem>
               ))
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-center text-primary justify-center" onClick={handleViewAllNotifications}>
+            <DropdownMenuItem
+              className="text-center text-primary justify-center"
+              onClick={handleViewAllNotifications}
+            >
               查看全部通知
             </DropdownMenuItem>
           </DropdownMenuContent>

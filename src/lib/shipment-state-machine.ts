@@ -1,17 +1,17 @@
 import { secureLog } from '@/lib/logger';
 
 export type ShipmentStatus =
-  | 'draft'           // 草稿
-  | 'pending_review'  // 待审批
-  | 'approved'        // 已审批（待发货）
-  | 'picking'         // 拣货中
-  | 'picked'          // 已拣货
-  | 'partial_ship'    // 部分发货
-  | 'shipped'         // 已发货
-  | 'in_transit'      // 运输中
-  | 'delivered'       // 已签收
-  | 'returned'        // 已退货
-  | 'cancelled';      // 已取消
+  | 'draft' // 草稿
+  | 'pending_review' // 待审批
+  | 'approved' // 已审批（待发货）
+  | 'picking' // 拣货中
+  | 'picked' // 已拣货
+  | 'partial_ship' // 部分发货
+  | 'shipped' // 已发货
+  | 'in_transit' // 运输中
+  | 'delivered' // 已签收
+  | 'returned' // 已退货
+  | 'cancelled'; // 已取消
 
 export interface ShipmentStatusConfig {
   label: string;
@@ -116,7 +116,7 @@ export class ShipmentStateMachine {
   static canTransition(from: ShipmentStatus, to: ShipmentStatus): boolean {
     const config = shipmentStateMachineConfig[from];
     if (!config) {
-      secureLog.error('无效的源状态', { from });
+      secureLog('error', '无效的源状态', { from });
       return false;
     }
     return config.allowedTransitions.includes(to);
@@ -157,7 +157,9 @@ export class ShipmentStateMachine {
     return { valid: true };
   }
 
-  static getNextMilestones(status: ShipmentStatus): Array<{ step: number; status: ShipmentStatus; label: string; completed: boolean }> {
+  static getNextMilestones(
+    status: ShipmentStatus
+  ): Array<{ step: number; status: ShipmentStatus; label: string; completed: boolean }> {
     const allSteps: ShipmentStatus[] = [
       'draft',
       'pending_review',
@@ -170,7 +172,7 @@ export class ShipmentStateMachine {
     ];
 
     const currentIndex = allSteps.indexOf(status);
-    
+
     return allSteps.map((step, index) => ({
       step: index + 1,
       status: step,

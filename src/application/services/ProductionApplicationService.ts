@@ -19,7 +19,9 @@ export class ProductionApplicationService {
   }
 
   async listWorkOrders(
-    status: string, page: number, pageSize: number,
+    status: string,
+    page: number,
+    pageSize: number,
     filters?: { keyword?: string; productId?: number }
   ) {
     return this.workOrderRepo.findByStatus(status, { page, pageSize }, filters);
@@ -48,7 +50,8 @@ export class ProductionApplicationService {
     wo.start();
 
     await transaction(async (conn) => {
-      const { WorkOrderStatusVO } = await import('@/domain/production/value-objects/WorkOrderStatus');
+      const { WorkOrderStatusVO } =
+        await import('@/domain/production/value-objects/WorkOrderStatus');
       const [result]: any = await conn.execute(
         'UPDATE prod_work_order SET status = ?, actual_start_date = NOW(), update_time = NOW() WHERE id = ? AND status = ?',
         [wo.status.toDbCode(), id, WorkOrderStatusVO.from(previousStatus).toDbCode()]
@@ -122,14 +125,17 @@ export class ProductionApplicationService {
   }
 
   async completeWorkOrder(
-    id: number, completedQty: number, warehouseId: number
+    id: number,
+    completedQty: number,
+    warehouseId: number
   ): Promise<{ id: number; status: string }> {
     const wo = await this.getWorkOrderById(id);
     const previousStatus = wo.status.value;
     wo.complete(completedQty, warehouseId);
 
     await transaction(async (conn) => {
-      const { WorkOrderStatusVO } = await import('@/domain/production/value-objects/WorkOrderStatus');
+      const { WorkOrderStatusVO } =
+        await import('@/domain/production/value-objects/WorkOrderStatus');
       const [result]: any = await conn.execute(
         'UPDATE prod_work_order SET status = ?, completed_qty = completed_qty + ?, actual_end_date = NOW(), update_time = NOW() WHERE id = ? AND status = ?',
         [wo.status.toDbCode(), completedQty, id, WorkOrderStatusVO.from(previousStatus).toDbCode()]
@@ -192,13 +198,17 @@ export class ProductionApplicationService {
       try {
         const pendingEvents = await DomainEventOutbox.fetchPendingEvents();
         for (const eventRow of pendingEvents) {
-          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'WorkOrder') continue;
+          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'WorkOrder')
+            continue;
           try {
             const event = JSON.parse(eventRow.payload);
             await this.eventBus.publish({ ...event, occurredAt: new Date(event.occurredAt) });
             await DomainEventOutbox.markAsProcessed(eventRow.id);
           } catch (error: any) {
-            secureLog('error', 'Outbox event publish failed', { eventId: eventRow.id, error: error.message });
+            secureLog('error', 'Outbox event publish failed', {
+              eventId: eventRow.id,
+              error: error.message,
+            });
             await DomainEventOutbox.markAsFailed(eventRow.id, error.message);
           }
         }

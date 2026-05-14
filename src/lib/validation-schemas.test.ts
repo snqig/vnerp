@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { RegisterSchema, LoginSchema, PaginationSchema, InboundCreateSchema, OutboundCreateSchema, WorkOrderCreateSchema, QualityInspectionSchema, validateWithZod } from './validation-schemas';
+import {
+  RegisterSchema,
+  LoginSchema,
+  PaginationSchema,
+  InboundCreateSchema,
+  OutboundCreateSchema,
+  WorkOrderCreateSchema,
+  QualityInspectionSchema,
+  validateWithZod,
+} from './validation-schemas';
 
 describe('RegisterSchema', () => {
   it('valid data passes', () => {
@@ -354,7 +363,7 @@ describe('validateWithZod', () => {
       password: '123',
     });
     if (!result.success) {
-      const hasUsernameError = result.errors.some(e => e.includes('username'));
+      const hasUsernameError = result.errors.some((e) => e.includes('username'));
       expect(hasUsernameError).toBe(true);
     }
   });

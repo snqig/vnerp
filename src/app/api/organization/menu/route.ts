@@ -49,18 +49,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['menu_name', 'menu_code']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查菜单编码是否已存在
-  const existing = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_menu WHERE menu_code = ?',
-    [body.menu_code]
-  );
+  const existing = await queryOne<{ id: number }>('SELECT id FROM sys_menu WHERE menu_code = ?', [
+    body.menu_code,
+  ]);
 
   if (existing) {
     return errorResponse('菜单编码已存在', 409, 409);
@@ -101,18 +96,11 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['menu_name', 'menu_code']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查菜单是否存在
-  const existingMenu = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_menu WHERE id = ?',
-    [id]
-  );
+  const existingMenu = await queryOne<{ id: number }>('SELECT id FROM sys_menu WHERE id = ?', [id]);
 
   if (!existingMenu) {
     return commonErrors.notFound('菜单不存在');
@@ -169,10 +157,9 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   const menuId = parseInt(id);
 
   // 检查菜单是否存在
-  const existingMenu = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_menu WHERE id = ?',
-    [menuId]
-  );
+  const existingMenu = await queryOne<{ id: number }>('SELECT id FROM sys_menu WHERE id = ?', [
+    menuId,
+  ]);
 
   if (!existingMenu) {
     return commonErrors.notFound('菜单不存在');
@@ -191,16 +178,10 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   // 使用事务删除菜单和关联的角色权限
   await transaction(async (connection) => {
     // 删除角色菜单关联
-    await connection.execute(
-      'DELETE FROM sys_role_menu WHERE menu_id = ?',
-      [menuId]
-    );
+    await connection.execute('DELETE FROM sys_role_menu WHERE menu_id = ?', [menuId]);
 
     // 删除菜单
-    await connection.execute(
-      'DELETE FROM sys_menu WHERE id = ?',
-      [menuId]
-    );
+    await connection.execute('DELETE FROM sys_menu WHERE id = ?', [menuId]);
   });
 
   return successResponse(null, '菜单删除成功');

@@ -1,13 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -70,7 +64,13 @@ import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
 
-type SortField = 'order_no' | 'customer_name' | 'order_date' | 'delivery_date' | 'total_amount' | 'status';
+type SortField =
+  | 'order_no'
+  | 'customer_name'
+  | 'order_date'
+  | 'delivery_date'
+  | 'total_amount'
+  | 'status';
 type SortOrder = 'asc' | 'desc' | null;
 
 interface Order {
@@ -112,15 +112,30 @@ interface Material {
 }
 
 const STATUS_MAP: Record<number, { label: string; className: string }> = {
-  1: { label: '待确认', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  2: { label: '已确认', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-  3: { label: '部分发货', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-  4: { label: '已完成', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
+  1: {
+    label: '待确认',
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  },
+  2: {
+    label: '已确认',
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  },
+  3: {
+    label: '部分发货',
+    className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  },
+  4: {
+    label: '已完成',
+    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  },
   5: { label: '已取消', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
 };
 
 const getStatusBadge = (status: number) => {
-  const config = STATUS_MAP[status] || { label: `未知(${status})`, className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' };
+  const config = STATUS_MAP[status] || {
+    label: `未知(${status})`,
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
   return <Badge className={config.className}>{config.label}</Badge>;
 };
 
@@ -160,9 +175,21 @@ export default function SalesOrdersPage() {
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const fetchCustomers = async () => {
     try {
-      const response = await fetch('/api/customers');
+      const response = await authFetch('/api/customers');
       const result = await response.json();
       if (result.success || result.code === 200) {
         setCustomers(result.data?.list || result.data || []);
@@ -174,7 +201,7 @@ export default function SalesOrdersPage() {
 
   const fetchMaterials = async () => {
     try {
-      const response = await fetch('/api/inventory/materials');
+      const response = await authFetch('/api/inventory/materials');
       const result = await response.json();
       if (result.success || result.code === 200) {
         setMaterials(result.data?.list || result.data || []);
@@ -184,28 +211,31 @@ export default function SalesOrdersPage() {
     }
   };
 
-  const fetchOrders = useCallback(async (keyword?: string, status?: string) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (keyword) params.append('keyword', keyword);
-      const st = status ?? statusFilter;
-      if (st && st !== 'all') params.append('status', st);
-      const response = await fetch(`/api/orders?${params}`);
-      const result = await response.json();
-      if (result.success) {
-        const orderList = result.data?.list || [];
-        setOrders(orderList);
-      } else {
-        toast.error(result.message || '获取订单列表失败');
+  const fetchOrders = useCallback(
+    async (keyword?: string, status?: string) => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (keyword) params.append('keyword', keyword);
+        const st = status ?? statusFilter;
+        if (st && st !== 'all') params.append('status', st);
+        const response = await authFetch(`/api/orders?${params}`);
+        const result = await response.json();
+        if (result.success) {
+          const orderList = result.data?.list || [];
+          setOrders(orderList);
+        } else {
+          toast.error(result.message || '获取订单列表失败');
+        }
+      } catch (error) {
+        console.error('获取订单列表失败:', error);
+        toast.error('获取订单列表失败');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('获取订单列表失败:', error);
-      toast.error('获取订单列表失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter]);
+    },
+    [statusFilter]
+  );
 
   useEffect(() => {
     fetchOrders();
@@ -240,7 +270,7 @@ export default function SalesOrdersPage() {
   };
 
   const filteredOrders = useMemo(() => {
-    let filtered = [...orders];
+    const filtered = [...orders];
 
     if (sortField && sortOrder) {
       filtered.sort((a, b) => {
@@ -281,14 +311,12 @@ export default function SalesOrdersPage() {
     if (selectedOrders.length === filteredOrders.length) {
       setSelectedOrders([]);
     } else {
-      setSelectedOrders(filteredOrders.map(o => o.id));
+      setSelectedOrders(filteredOrders.map((o) => o.id));
     }
   };
 
   const toggleSelect = (id: number) => {
-    setSelectedOrders(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
+    setSelectedOrders((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
 
   const addOrderItem = () => {
@@ -312,7 +340,7 @@ export default function SalesOrdersPage() {
   const handleDeleteOrder = async (orderId: number) => {
     if (confirm('确定要删除该订单吗？')) {
       try {
-        const response = await fetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
+        const response = await authFetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
         const result = await response.json();
         if (result.success) {
           toast.success('订单删除成功');
@@ -328,9 +356,8 @@ export default function SalesOrdersPage() {
 
   const handleConfirmOrder = async (orderId: number) => {
     try {
-      const response = await fetch('/api/orders', {
+      const response = await authFetch('/api/orders', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: orderId, status: 2 }),
       });
       const result = await response.json();
@@ -350,7 +377,9 @@ export default function SalesOrdersPage() {
       toast.warning('请先选择订单');
       return;
     }
-    const pendingOrders = filteredOrders.filter(o => selectedOrders.includes(o.id) && o.status === 1);
+    const pendingOrders = filteredOrders.filter(
+      (o) => selectedOrders.includes(o.id) && o.status === 1
+    );
     if (pendingOrders.length === 0) {
       toast.warning('选中的订单中没有待确认状态的订单');
       return;
@@ -360,9 +389,8 @@ export default function SalesOrdersPage() {
     try {
       let successCount = 0;
       for (const order of pendingOrders) {
-        const res = await fetch('/api/orders', {
+        const res = await authFetch('/api/orders', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: order.id, status: 2 }),
         });
         const data = await res.json();
@@ -387,7 +415,7 @@ export default function SalesOrdersPage() {
       setLoading(true);
       let successCount = 0;
       for (const orderId of selectedOrders) {
-        const res = await fetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
+        const res = await authFetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
         const data = await res.json();
         if (data.success) successCount++;
       }
@@ -420,14 +448,13 @@ export default function SalesOrdersPage() {
     if (!confirm(`确认为订单 ${order.order_no} 生成工单？`)) return;
 
     try {
-      const response = await fetch('/api/workorders', {
+      const response = await authFetch('/api/workorders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           order_id: order.id,
           order_no: order.order_no,
           customer_name: order.customer_name,
-          items: order.items.map(item => ({
+          items: order.items.map((item) => ({
             material_name: item.material_name,
             quantity: item.quantity,
             unit: item.unit,
@@ -448,9 +475,10 @@ export default function SalesOrdersPage() {
   };
 
   const handleExport = (format: string) => {
-    const dataToExport = selectedOrders.length > 0
-      ? filteredOrders.filter(o => selectedOrders.includes(o.id))
-      : filteredOrders;
+    const dataToExport =
+      selectedOrders.length > 0
+        ? filteredOrders.filter((o) => selectedOrders.includes(o.id))
+        : filteredOrders;
 
     if (dataToExport.length === 0) {
       toast.warning('没有可导出的订单');
@@ -458,13 +486,18 @@ export default function SalesOrdersPage() {
     }
 
     const statusLabels: Record<number, string> = {
-      1: '待确认', 2: '已确认', 3: '部分发货', 4: '已完成', 5: '已取消'
+      1: '待确认',
+      2: '已确认',
+      3: '部分发货',
+      4: '已完成',
+      5: '已取消',
     };
 
     if (format === 'excel') {
       const headers = ['订单号', '客户', '订单日期', '交货日期', '金额', '状态', '产品明细'];
-      const rows = dataToExport.map(o => {
-        const itemsStr = o.items?.map(i => `${i.material_name} x${i.quantity}${i.unit}`).join('; ') || '';
+      const rows = dataToExport.map((o) => {
+        const itemsStr =
+          o.items?.map((i) => `${i.material_name} x${i.quantity}${i.unit}`).join('; ') || '';
         return [
           o.order_no,
           o.customer_name || '-',
@@ -475,10 +508,7 @@ export default function SalesOrdersPage() {
           itemsStr,
         ];
       });
-      const csvContent = [
-        headers.join('\t'),
-        ...rows.map(row => row.join('\t'))
-      ].join('\n');
+      const csvContent = [headers.join('\t'), ...rows.map((row) => row.join('\t'))].join('\n');
       const bom = '\uFEFF';
       const blob = new Blob([bom + csvContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -494,9 +524,11 @@ export default function SalesOrdersPage() {
         toast.error('无法打开打印窗口');
         return;
       }
-      const tableRows = dataToExport.map(o => {
-        const itemsStr = o.items?.map(i => `${i.material_name} x${i.quantity}${i.unit}`).join('<br>') || '-';
-        return `<tr>
+      const tableRows = dataToExport
+        .map((o) => {
+          const itemsStr =
+            o.items?.map((i) => `${i.material_name} x${i.quantity}${i.unit}`).join('<br>') || '-';
+          return `<tr>
           <td>${o.order_no}</td>
           <td>${o.customer_name || '-'}</td>
           <td>${formatDate(o.order_date)}</td>
@@ -505,7 +537,8 @@ export default function SalesOrdersPage() {
           <td>${statusLabels[o.status] || '未知'}</td>
           <td>${itemsStr}</td>
         </tr>`;
-      }).join('');
+        })
+        .join('');
       const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>销售订单列表</title>
         <style>
           @page { size: A4 landscape; margin: 10mm; }
@@ -532,9 +565,11 @@ export default function SalesOrdersPage() {
       printWindow.document.close();
       toast.success('已导出为 PDF（打印保存）');
     } else if (format === 'word') {
-      const tableRows = dataToExport.map(o => {
-        const itemsStr = o.items?.map(i => `${i.material_name} x${i.quantity}${i.unit}`).join('<br>') || '-';
-        return `<tr>
+      const tableRows = dataToExport
+        .map((o) => {
+          const itemsStr =
+            o.items?.map((i) => `${i.material_name} x${i.quantity}${i.unit}`).join('<br>') || '-';
+          return `<tr>
           <td style="border:1px solid #333;padding:6px">${o.order_no}</td>
           <td style="border:1px solid #333;padding:6px">${o.customer_name || '-'}</td>
           <td style="border:1px solid #333;padding:6px">${formatDate(o.order_date)}</td>
@@ -543,9 +578,11 @@ export default function SalesOrdersPage() {
           <td style="border:1px solid #333;padding:6px">${statusLabels[o.status] || '未知'}</td>
           <td style="border:1px solid #333;padding:6px">${itemsStr}</td>
         </tr>`;
-      }).join('');
+        })
+        .join('');
       const thCells = ['订单号', '客户', '订单日期', '交货日期', '金额', '状态', '产品明细']
-        .map(h => `<th style="border:1px solid #333;padding:6px;background:#f0f0f0">${h}</th>`).join('');
+        .map((h) => `<th style="border:1px solid #333;padding:6px;background:#f0f0f0">${h}</th>`)
+        .join('');
       const htmlContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
         <head><meta charset="utf-8"><title>销售订单</title></head>
         <body style="font-family:'Microsoft YaHei',sans-serif;padding:20px">
@@ -568,9 +605,10 @@ export default function SalesOrdersPage() {
   };
 
   const handlePrintList = () => {
-    const dataToPrint = selectedOrders.length > 0
-      ? filteredOrders.filter(o => selectedOrders.includes(o.id))
-      : filteredOrders;
+    const dataToPrint =
+      selectedOrders.length > 0
+        ? filteredOrders.filter((o) => selectedOrders.includes(o.id))
+        : filteredOrders;
 
     if (dataToPrint.length === 0) {
       toast.warning('没有数据可打印');
@@ -578,7 +616,11 @@ export default function SalesOrdersPage() {
     }
 
     const statusLabels: Record<number, string> = {
-      1: '待确认', 2: '已确认', 3: '部分发货', 4: '已完成', 5: '已取消'
+      1: '待确认',
+      2: '已确认',
+      3: '部分发货',
+      4: '已完成',
+      5: '已取消',
     };
 
     const printWindow = window.open('', '_blank');
@@ -587,7 +629,9 @@ export default function SalesOrdersPage() {
       return;
     }
 
-    const rows = dataToPrint.map((o, index) => `
+    const rows = dataToPrint
+      .map(
+        (o, index) => `
       <tr>
         <td>${index + 1}</td>
         <td>${o.order_no}</td>
@@ -597,7 +641,9 @@ export default function SalesOrdersPage() {
         <td>¥${Number(o.total_amount || 0).toLocaleString()}</td>
         <td>${statusLabels[o.status] || '未知'}</td>
         <td>${o.remark || ''}</td>
-      </tr>`).join('');
+      </tr>`
+      )
+      .join('');
 
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>销售订单打印</title>
       <style>
@@ -638,7 +684,9 @@ export default function SalesOrdersPage() {
       return;
     }
 
-    const validItems = orderItems.filter(item => item.material_name && item.quantity && item.unit_price);
+    const validItems = orderItems.filter(
+      (item) => item.material_name && item.quantity && item.unit_price
+    );
     if (validItems.length === 0) {
       toast.warning('请至少添加一个有效的订单明细');
       return;
@@ -658,13 +706,12 @@ export default function SalesOrdersPage() {
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/orders', {
+      const response = await authFetch('/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customer_id: parseInt(selectedCustomer),
           delivery_date: deliveryDate,
-          items: validItems.map(item => ({
+          items: validItems.map((item) => ({
             material_name: item.material_name,
             quantity: parseFloat(item.quantity),
             unit: item.unit || '个',
@@ -693,13 +740,12 @@ export default function SalesOrdersPage() {
 
   const handleSaveDraft = async () => {
     try {
-      const response = await fetch('/api/orders', {
+      const response = await authFetch('/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customer_id: parseInt(selectedCustomer) || null,
           delivery_date: (document.getElementById('deliveryDate') as HTMLInputElement)?.value,
-          items: orderItems.map(item => ({
+          items: orderItems.map((item) => ({
             material_name: item.material_name,
             quantity: parseFloat(item.quantity) || 0,
             unit: item.unit || '个',
@@ -724,9 +770,8 @@ export default function SalesOrdersPage() {
   const handleSaveEdit = async () => {
     if (!selectedOrder) return;
     try {
-      const response = await fetch('/api/orders', {
+      const response = await authFetch('/api/orders', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: selectedOrder.id,
           delivery_date: (document.getElementById('editDeliveryDate') as HTMLInputElement)?.value,
@@ -773,7 +818,14 @@ export default function SalesOrdersPage() {
                     <SelectItem value="5">已取消</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="icon" onClick={() => { setStatusFilter('all'); setSearchKeyword(''); }}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    setStatusFilter('all');
+                    setSearchKeyword('');
+                  }}
+                >
                   <Filter className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" onClick={() => fetchOrders()}>
@@ -784,7 +836,12 @@ export default function SalesOrdersPage() {
                 {selectedOrders.length > 0 && (
                   <Button variant="default" onClick={handleBatchConfirm}>
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    确认({filteredOrders.filter(o => selectedOrders.includes(o.id) && o.status === 1).length})
+                    确认(
+                    {
+                      filteredOrders.filter((o) => selectedOrders.includes(o.id) && o.status === 1)
+                        .length
+                    }
+                    )
                   </Button>
                 )}
                 <Button variant="outline" onClick={handlePrintList}>
@@ -879,23 +936,31 @@ export default function SalesOrdersPage() {
                               {orderItems.map((item, index) => (
                                 <TableRow key={index}>
                                   <TableCell>
-                                    <Select onValueChange={(value) => {
-                                      const material = materials.find(m => String(m.id) === value);
-                                      const newItems = [...orderItems];
-                                      newItems[index].material_name = material?.material_name || '';
-                                      newItems[index].unit_price = material?.sale_price?.toString() || '';
-                                      newItems[index].unit = material?.unit || '';
-                                      setOrderItems(newItems);
-                                    }}>
+                                    <Select
+                                      onValueChange={(value) => {
+                                        const material = materials.find(
+                                          (m) => String(m.id) === value
+                                        );
+                                        const newItems = [...orderItems];
+                                        newItems[index].material_name =
+                                          material?.material_name || '';
+                                        newItems[index].unit_price =
+                                          material?.sale_price?.toString() || '';
+                                        newItems[index].unit = material?.unit || '';
+                                        setOrderItems(newItems);
+                                      }}
+                                    >
                                       <SelectTrigger>
                                         <SelectValue placeholder="选择产品" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        {materials.filter(m => m.material_type === 3).map((m) => (
-                                          <SelectItem key={m.id} value={String(m.id)}>
-                                            {m.material_name}
-                                          </SelectItem>
-                                        ))}
+                                        {materials
+                                          .filter((m) => m.material_type === 3)
+                                          .map((m) => (
+                                            <SelectItem key={m.id} value={String(m.id)}>
+                                              {m.material_name}
+                                            </SelectItem>
+                                          ))}
                                       </SelectContent>
                                     </Select>
                                   </TableCell>
@@ -936,7 +1001,10 @@ export default function SalesOrdersPage() {
                                   </TableCell>
                                   <TableCell>
                                     <span className="font-medium">
-                                      {((parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0)).toFixed(2)}
+                                      {(
+                                        (parseFloat(item.quantity) || 0) *
+                                        (parseFloat(item.unit_price) || 0)
+                                      ).toFixed(2)}
                                     </span>
                                   </TableCell>
                                   <TableCell>
@@ -963,8 +1031,12 @@ export default function SalesOrdersPage() {
                       </div>
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsCreateOpen(false)}>取消</Button>
-                      <Button variant="outline" onClick={handleSaveDraft}>保存草稿</Button>
+                      <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+                        取消
+                      </Button>
+                      <Button variant="outline" onClick={handleSaveDraft}>
+                        保存草稿
+                      </Button>
                       <Button onClick={handleSubmitOrder} disabled={submitting}>
                         {submitting ? '提交中...' : '提交订单'}
                       </Button>
@@ -979,7 +1051,9 @@ export default function SalesOrdersPage() {
         <Card>
           <CardHeader>
             <CardTitle>订单列表</CardTitle>
-            <CardDescription>共 {filteredOrders.length} 条订单记录{statusFilter !== 'all' && ' (已筛选)'}</CardDescription>
+            <CardDescription>
+              共 {filteredOrders.length} 条订单记录{statusFilter !== 'all' && ' (已筛选)'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loading && orders.length === 0 ? (
@@ -995,27 +1069,58 @@ export default function SalesOrdersPage() {
                   <TableRow>
                     <TableHead className="w-12">
                       <Checkbox
-                        checked={filteredOrders.length > 0 && selectedOrders.length === filteredOrders.length}
+                        checked={
+                          filteredOrders.length > 0 &&
+                          selectedOrders.length === filteredOrders.length
+                        }
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
                     <TableHead className="w-10"></TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('order_no')}>
-                      <span className="inline-flex items-center">订单号{getSortIcon('order_no')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('order_no')}
+                    >
+                      <span className="inline-flex items-center">
+                        订单号{getSortIcon('order_no')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('customer_name')}>
-                      <span className="inline-flex items-center">客户{getSortIcon('customer_name')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('customer_name')}
+                    >
+                      <span className="inline-flex items-center">
+                        客户{getSortIcon('customer_name')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('order_date')}>
-                      <span className="inline-flex items-center">订单日期{getSortIcon('order_date')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('order_date')}
+                    >
+                      <span className="inline-flex items-center">
+                        订单日期{getSortIcon('order_date')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('delivery_date')}>
-                      <span className="inline-flex items-center">交货日期{getSortIcon('delivery_date')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('delivery_date')}
+                    >
+                      <span className="inline-flex items-center">
+                        交货日期{getSortIcon('delivery_date')}
+                      </span>
                     </TableHead>
-                    <TableHead className="text-right cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('total_amount')}>
-                      <span className="inline-flex items-center justify-end">金额{getSortIcon('total_amount')}</span>
+                    <TableHead
+                      className="text-right cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('total_amount')}
+                    >
+                      <span className="inline-flex items-center justify-end">
+                        金额{getSortIcon('total_amount')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted/50" onClick={() => handleSort('status')}>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('status')}
+                    >
                       <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
                     </TableHead>
                     <TableHead className="text-right">操作</TableHead>
@@ -1100,27 +1205,56 @@ export default function SalesOrdersPage() {
                                 <Table>
                                   <TableHeader>
                                     <TableRow className="bg-slate-100/50 hover:bg-slate-100/50 dark:bg-gray-700/30 dark:hover:bg-gray-700/50">
-                                      <TableHead className="pl-8 text-xs font-normal text-muted-foreground">产品名称</TableHead>
-                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">数量</TableHead>
-                                      <TableHead className="text-xs font-normal text-muted-foreground">单位</TableHead>
-                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">单价</TableHead>
-                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">金额</TableHead>
+                                      <TableHead className="pl-8 text-xs font-normal text-muted-foreground">
+                                        产品名称
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                        数量
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground">
+                                        单位
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                        单价
+                                      </TableHead>
+                                      <TableHead className="text-xs font-normal text-muted-foreground text-right">
+                                        金额
+                                      </TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {lines.length > 0 ? lines.map((item, idx) => (
-                                      <TableRow key={idx} className="bg-transparent hover:bg-white/60 dark:hover:bg-gray-700/30">
-                                        <TableCell className="pl-8 text-sm">{item.material_name || '-'}</TableCell>
-                                        <TableCell className="text-sm text-right">{item.quantity ?? 0}</TableCell>
-                                        <TableCell className="text-sm">{item.unit || '-'}</TableCell>
-                                        <TableCell className="text-sm text-right">{Number(item.unit_price || 0).toFixed(2)}</TableCell>
-                                        <TableCell className="text-sm text-right font-medium">
-                                          {Number(item.total_price || (item.quantity || 0) * (item.unit_price || 0)).toFixed(2)}
-                                        </TableCell>
-                                      </TableRow>
-                                    )) : (
+                                    {lines.length > 0 ? (
+                                      lines.map((item, idx) => (
+                                        <TableRow
+                                          key={idx}
+                                          className="bg-transparent hover:bg-white/60 dark:hover:bg-gray-700/30"
+                                        >
+                                          <TableCell className="pl-8 text-sm">
+                                            {item.material_name || '-'}
+                                          </TableCell>
+                                          <TableCell className="text-sm text-right">
+                                            {item.quantity ?? 0}
+                                          </TableCell>
+                                          <TableCell className="text-sm">
+                                            {item.unit || '-'}
+                                          </TableCell>
+                                          <TableCell className="text-sm text-right">
+                                            {Number(item.unit_price || 0).toFixed(2)}
+                                          </TableCell>
+                                          <TableCell className="text-sm text-right font-medium">
+                                            {Number(
+                                              item.total_price ||
+                                                (item.quantity || 0) * (item.unit_price || 0)
+                                            ).toFixed(2)}
+                                          </TableCell>
+                                        </TableRow>
+                                      ))
+                                    ) : (
                                       <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-3 text-muted-foreground text-sm">
+                                        <TableCell
+                                          colSpan={5}
+                                          className="text-center py-3 text-muted-foreground text-sm"
+                                        >
                                           暂无明细数据
                                         </TableCell>
                                       </TableRow>
@@ -1166,7 +1300,9 @@ export default function SalesOrdersPage() {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">订单金额</Label>
-                  <p className="font-medium text-lg">¥{Number(selectedOrder?.total_amount || 0).toLocaleString()}</p>
+                  <p className="font-medium text-lg">
+                    ¥{Number(selectedOrder?.total_amount || 0).toLocaleString()}
+                  </p>
                 </div>
               </div>
               <div>
@@ -1221,7 +1357,15 @@ export default function SalesOrdersPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="editDeliveryDate">交货日期</Label>
-                  <Input type="date" id="editDeliveryDate" defaultValue={selectedOrder?.delivery_date ? new Date(selectedOrder.delivery_date).toISOString().split('T')[0] : ''} />
+                  <Input
+                    type="date"
+                    id="editDeliveryDate"
+                    defaultValue={
+                      selectedOrder?.delivery_date
+                        ? new Date(selectedOrder.delivery_date).toISOString().split('T')[0]
+                        : ''
+                    }
+                  />
                 </div>
               </div>
               <div className="space-y-2">
@@ -1255,7 +1399,9 @@ export default function SalesOrdersPage() {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsEditOpen(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                取消
+              </Button>
               <Button onClick={handleSaveEdit}>保存</Button>
             </div>
           </DialogContent>

@@ -6,14 +6,15 @@ import { generateDocumentNo } from '@/lib/document-numbering';
 
 export class MysqlWorkOrderRepository implements IWorkOrderRepository {
   async findById(id: number): Promise<WorkOrder | null> {
-    const orders = await query<any>(
-      'SELECT * FROM prod_work_order WHERE id = ? AND deleted = 0', [id]
-    );
+    const orders = await query<any>('SELECT * FROM prod_work_order WHERE id = ? AND deleted = 0', [
+      id,
+    ]);
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
     const materials = await query<any>(
-      'SELECT * FROM prod_work_order_material WHERE work_order_id = ? AND deleted = 0 ORDER BY id ASC', [id]
+      'SELECT * FROM prod_work_order_material WHERE work_order_id = ? AND deleted = 0 ORDER BY id ASC',
+      [id]
     );
 
     return WorkOrder.reconstitute(this.mapToProps(order, materials));
@@ -65,11 +66,20 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
           process_id, process_name, warehouse_id, planned_start_date, planned_end_date, status, remark, create_by, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
-          workOrderNo, order.productId, order.productName, order.productCode,
-          order.plannedQty, order.completedQty,
-          order.processId || null, order.processName || null, order.warehouseId,
-          order.plannedStartDate || null, order.plannedEndDate || null,
-          order.status.toDbCode(), order.remark, order.createBy || null,
+          workOrderNo,
+          order.productId,
+          order.productName,
+          order.productCode,
+          order.plannedQty,
+          order.completedQty,
+          order.processId || null,
+          order.processName || null,
+          order.warehouseId,
+          order.plannedStartDate || null,
+          order.plannedEndDate || null,
+          order.status.toDbCode(),
+          order.remark,
+          order.createBy || null,
         ]
       );
 
@@ -80,8 +90,14 @@ export class MysqlWorkOrderRepository implements IWorkOrderRepository {
           `INSERT INTO prod_work_order_material (work_order_id, material_id, material_code, material_name, specification, unit, required_qty, issued_qty, returned_qty, warehouse_id, create_time)
            VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?, NOW())`,
           [
-            orderId, mr.materialId, mr.materialCode, mr.materialName,
-            mr.specification, mr.unit, mr.requiredQty, mr.warehouseId,
+            orderId,
+            mr.materialId,
+            mr.materialCode,
+            mr.materialName,
+            mr.specification,
+            mr.unit,
+            mr.requiredQty,
+            mr.warehouseId,
           ]
         );
       }

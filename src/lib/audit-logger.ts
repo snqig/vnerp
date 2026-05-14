@@ -139,13 +139,13 @@ export function getAuditUserContext() {
 
 function getClientIp(request?: NextRequest): string {
   if (!request) return currentUserContext.ip || 'unknown';
-  
+
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) return forwarded.split(',')[0].trim();
-  
+
   const realIp = request.headers.get('x-real-ip');
   if (realIp) return realIp;
-  
+
   return 'unknown';
 }
 
@@ -165,7 +165,8 @@ function safeJsonStringify(data: any): string | null {
 
 function generateFlowNo(prefix: string): string {
   const now = new Date();
-  const dateStr = now.getFullYear().toString() +
+  const dateStr =
+    now.getFullYear().toString() +
     String(now.getMonth() + 1).padStart(2, '0') +
     String(now.getDate()).padStart(2, '0');
   const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
@@ -231,22 +232,22 @@ export async function logLogin(
   try {
     const ip = getClientIp(request);
     const userAgent = getUserAgent(request);
-    
+
     // 解析浏览器和操作系统
     let browser = 'Unknown';
     let os = 'Unknown';
     let device = 'Unknown';
-    
+
     if (userAgent && userAgent !== 'unknown') {
       if (userAgent.includes('Chrome')) browser = 'Chrome';
       else if (userAgent.includes('Firefox')) browser = 'Firefox';
       else if (userAgent.includes('Safari')) browser = 'Safari';
       else if (userAgent.includes('Edge')) browser = 'Edge';
-      
+
       if (userAgent.includes('Windows')) os = 'Windows';
       else if (userAgent.includes('Mac')) os = 'macOS';
       else if (userAgent.includes('Linux')) os = 'Linux';
-      
+
       if (userAgent.includes('Mobile')) device = 'Mobile';
       else device = 'Desktop';
     }
@@ -256,17 +257,7 @@ export async function logLogin(
         username, user_id, login_type, status, ip, 
         browser, os, device, error_msg
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        username,
-        userId,
-        loginType,
-        status,
-        ip,
-        browser,
-        os,
-        device,
-        errorMsg || '',
-      ]
+      [username, userId, loginType, status, ip, browser, os, device, errorMsg || '']
     );
 
     // 如果登录失败，检查是否需要记录异常
@@ -295,9 +286,9 @@ async function checkAbnormalLogin(
        AND create_time > DATE_SUB(NOW(), INTERVAL 30 MINUTE)`,
       [username]
     );
-    
+
     const failCount = rows[0]?.fail_count || 0;
-    
+
     if (failCount >= 5) {
       // 记录异常登录
       await execute(
@@ -321,19 +312,13 @@ async function checkAbnormalLogin(
        ORDER BY create_time DESC LIMIT 1`,
       [username]
     );
-    
+
     if (lastLogin.length > 0 && lastLogin[0].ip !== ip) {
       await execute(
         `INSERT INTO login_abnormal (
           username, ip, abnormal_type, risk_level, description
         ) VALUES (?, ?, ?, ?, ?)`,
-        [
-          username,
-          ip,
-          'location_change',
-          1,
-          `异地登录: 上次IP ${lastLogin[0].ip}, 本次IP ${ip}`,
-        ]
+        [username, ip, 'location_change', 1, `异地登录: 上次IP ${lastLogin[0].ip}, 本次IP ${ip}`]
       );
     }
   } catch (error: any) {
@@ -531,11 +516,11 @@ export async function logObjectChanges(
   fieldsMapping?: Record<string, string>
 ): Promise<void> {
   const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)]);
-  
+
   for (const key of allKeys) {
     const oldValue = oldData[key];
     const newValue = newData[key];
-    
+
     // 只记录发生变化的字段
     if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
       await logDataChange({
@@ -570,15 +555,18 @@ export async function logAuditAction(
   afterStatus: string,
   request?: NextRequest
 ): Promise<void> {
-  await logOperation({
-    module,
-    type: action,
-    title: recordNo,
-    content: `${action} ${documentType}: ${recordNo}`,
-    beforeData: { status: beforeStatus },
-    afterData: { status: afterStatus },
-    status: 1,
-  }, request);
+  await logOperation(
+    {
+      module,
+      type: action,
+      title: recordNo,
+      content: `${action} ${documentType}: ${recordNo}`,
+      beforeData: { status: beforeStatus },
+      afterData: { status: afterStatus },
+      status: 1,
+    },
+    request
+  );
 
   await logDataChange({
     tableName: documentType,
@@ -594,6 +582,63 @@ export async function logAuditAction(
 }
 
 /**
+ * 记录库存变更（用于 inv_inventory_log 统一的库存同步）
+ */
+export async function logInventoryChange(params: {
+  materialId: number;
+  warehouseId: number;
+  batchNo?: string;
+  operationType: string;
+  quantity: number;
+  beforeQty: number;
+  afterQty: number;
+  businessType: string;
+  businessNo: string;
+  operatorId?: number;
+}): Promise<void> {
+  try {
+    const user = getAuditUserContext();
+    const operationTypeMap: Record<string, string> = {
+      inbound: '入库',
+      outbound: '出库',
+      adjust: '盘点调整',
+      transfer: '调拨',
+      scrap: '报废',
+      lock: '锁定',
+      unlock: '解锁',
+    };
+
+    await logOperation({
+      module: '库存管理',
+      type: operationTypeMap[params.operationType] || '库存调整',
+      title: params.businessNo,
+      content: `${operationTypeMap[params.operationType] || '库存调整'}: 物料${params.materialId}, 数量${params.quantity}, 库存 ${params.beforeQty} → ${params.afterQty}`,
+      beforeData: { quantity: params.beforeQty },
+      afterData: { quantity: params.afterQty },
+      status: 1,
+    });
+
+    // 同时记录库存流水
+    await logStockFlow({
+      flowNo: generateFlowNo('SF'),
+      businessType: params.businessType,
+      sourceNo: params.businessNo,
+      warehouseId: params.warehouseId,
+      materialId: params.materialId,
+      quantity: params.quantity,
+      stockBefore: params.beforeQty,
+      stockAfter: params.afterQty,
+      batchNo: params.batchNo,
+      createBy: user.username || 'system',
+      createById: user.userId || params.operatorId || 0,
+      remark: `${params.operationType}: ${params.quantity}`,
+    });
+  } catch (error: any) {
+    console.error('[AuditLogger] 库存变更记录失败:', error.message);
+  }
+}
+
+/**
  * 记录删除操作（实际是逻辑删除/作废）
  */
 export async function logDeleteAction(
@@ -604,15 +649,18 @@ export async function logDeleteAction(
   snapshotData: Record<string, any>,
   request?: NextRequest
 ): Promise<void> {
-  await logOperation({
-    module,
-    type: '删除',
-    title: recordNo,
-    content: `删除 ${documentType}: ${recordNo}（逻辑删除）`,
-    beforeData: snapshotData,
-    afterData: { deleted: 1, status: 'deleted' },
-    status: 1,
-  }, request);
+  await logOperation(
+    {
+      module,
+      type: '删除',
+      title: recordNo,
+      content: `删除 ${documentType}: ${recordNo}（逻辑删除）`,
+      beforeData: snapshotData,
+      afterData: { deleted: 1, status: 'deleted' },
+      status: 1,
+    },
+    request
+  );
 }
 
 // ============================================================
@@ -632,21 +680,35 @@ export async function queryOperateLogs(params: {
   page?: number;
   pageSize?: number;
 }): Promise<{ list: any[]; total: number }> {
-  const {
-    module, type, username, status,
-    startTime, endTime,
-    page = 1, pageSize = 20,
-  } = params;
+  const { module, type, username, status, startTime, endTime, page = 1, pageSize = 20 } = params;
 
   let where = 'WHERE 1=1';
   const queryParams: any[] = [];
 
-  if (module) { where += ' AND module = ?'; queryParams.push(module); }
-  if (type) { where += ' AND type = ?'; queryParams.push(type); }
-  if (username) { where += ' AND username = ?'; queryParams.push(username); }
-  if (status !== undefined) { where += ' AND status = ?'; queryParams.push(status); }
-  if (startTime) { where += ' AND create_time >= ?'; queryParams.push(startTime); }
-  if (endTime) { where += ' AND create_time <= ?'; queryParams.push(endTime); }
+  if (module) {
+    where += ' AND module = ?';
+    queryParams.push(module);
+  }
+  if (type) {
+    where += ' AND type = ?';
+    queryParams.push(type);
+  }
+  if (username) {
+    where += ' AND username = ?';
+    queryParams.push(username);
+  }
+  if (status !== undefined) {
+    where += ' AND status = ?';
+    queryParams.push(status);
+  }
+  if (startTime) {
+    where += ' AND create_time >= ?';
+    queryParams.push(startTime);
+  }
+  if (endTime) {
+    where += ' AND create_time <= ?';
+    queryParams.push(endTime);
+  }
 
   const countRows: any = await query(
     `SELECT COUNT(*) as total FROM sys_operate_log ${where}`,
@@ -674,19 +736,27 @@ export async function queryLoginLogs(params: {
   page?: number;
   pageSize?: number;
 }): Promise<{ list: any[]; total: number }> {
-  const {
-    username, status,
-    startTime, endTime,
-    page = 1, pageSize = 20,
-  } = params;
+  const { username, status, startTime, endTime, page = 1, pageSize = 20 } = params;
 
   let where = 'WHERE 1=1';
   const queryParams: any[] = [];
 
-  if (username) { where += ' AND username = ?'; queryParams.push(username); }
-  if (status !== undefined) { where += ' AND status = ?'; queryParams.push(status); }
-  if (startTime) { where += ' AND create_time >= ?'; queryParams.push(startTime); }
-  if (endTime) { where += ' AND create_time <= ?'; queryParams.push(endTime); }
+  if (username) {
+    where += ' AND username = ?';
+    queryParams.push(username);
+  }
+  if (status !== undefined) {
+    where += ' AND status = ?';
+    queryParams.push(status);
+  }
+  if (startTime) {
+    where += ' AND create_time >= ?';
+    queryParams.push(startTime);
+  }
+  if (endTime) {
+    where += ' AND create_time <= ?';
+    queryParams.push(endTime);
+  }
 
   const countRows: any = await query(
     `SELECT COUNT(*) as total FROM sys_login_log ${where}`,
@@ -718,21 +788,48 @@ export async function queryStockFlows(params: {
   pageSize?: number;
 }): Promise<{ list: any[]; total: number }> {
   const {
-    businessType, warehouseId, materialId, productId, sourceNo,
-    startTime, endTime,
-    page = 1, pageSize = 20,
+    businessType,
+    warehouseId,
+    materialId,
+    productId,
+    sourceNo,
+    startTime,
+    endTime,
+    page = 1,
+    pageSize = 20,
   } = params;
 
   let where = 'WHERE 1=1';
   const queryParams: any[] = [];
 
-  if (businessType) { where += ' AND business_type = ?'; queryParams.push(businessType); }
-  if (warehouseId) { where += ' AND warehouse_id = ?'; queryParams.push(warehouseId); }
-  if (materialId) { where += ' AND material_id = ?'; queryParams.push(materialId); }
-  if (productId) { where += ' AND product_id = ?'; queryParams.push(productId); }
-  if (sourceNo) { where += ' AND source_no = ?'; queryParams.push(sourceNo); }
-  if (startTime) { where += ' AND create_time >= ?'; queryParams.push(startTime); }
-  if (endTime) { where += ' AND create_time <= ?'; queryParams.push(endTime); }
+  if (businessType) {
+    where += ' AND business_type = ?';
+    queryParams.push(businessType);
+  }
+  if (warehouseId) {
+    where += ' AND warehouse_id = ?';
+    queryParams.push(warehouseId);
+  }
+  if (materialId) {
+    where += ' AND material_id = ?';
+    queryParams.push(materialId);
+  }
+  if (productId) {
+    where += ' AND product_id = ?';
+    queryParams.push(productId);
+  }
+  if (sourceNo) {
+    where += ' AND source_no = ?';
+    queryParams.push(sourceNo);
+  }
+  if (startTime) {
+    where += ' AND create_time >= ?';
+    queryParams.push(startTime);
+  }
+  if (endTime) {
+    where += ' AND create_time <= ?';
+    queryParams.push(endTime);
+  }
 
   const countRows: any = await query(
     `SELECT COUNT(*) as total FROM stock_flow ${where}`,
@@ -764,21 +861,48 @@ export async function queryFinanceFlows(params: {
   pageSize?: number;
 }): Promise<{ list: any[]; total: number }> {
   const {
-    type, customerId, supplierId, voucherNo, period,
-    startTime, endTime,
-    page = 1, pageSize = 20,
+    type,
+    customerId,
+    supplierId,
+    voucherNo,
+    period,
+    startTime,
+    endTime,
+    page = 1,
+    pageSize = 20,
   } = params;
 
   let where = 'WHERE 1=1';
   const queryParams: any[] = [];
 
-  if (type) { where += ' AND type = ?'; queryParams.push(type); }
-  if (customerId) { where += ' AND customer_id = ?'; queryParams.push(customerId); }
-  if (supplierId) { where += ' AND supplier_id = ?'; queryParams.push(supplierId); }
-  if (voucherNo) { where += ' AND voucher_no = ?'; queryParams.push(voucherNo); }
-  if (period) { where += ' AND period = ?'; queryParams.push(period); }
-  if (startTime) { where += ' AND create_time >= ?'; queryParams.push(startTime); }
-  if (endTime) { where += ' AND create_time <= ?'; queryParams.push(endTime); }
+  if (type) {
+    where += ' AND type = ?';
+    queryParams.push(type);
+  }
+  if (customerId) {
+    where += ' AND customer_id = ?';
+    queryParams.push(customerId);
+  }
+  if (supplierId) {
+    where += ' AND supplier_id = ?';
+    queryParams.push(supplierId);
+  }
+  if (voucherNo) {
+    where += ' AND voucher_no = ?';
+    queryParams.push(voucherNo);
+  }
+  if (period) {
+    where += ' AND period = ?';
+    queryParams.push(period);
+  }
+  if (startTime) {
+    where += ' AND create_time >= ?';
+    queryParams.push(startTime);
+  }
+  if (endTime) {
+    where += ' AND create_time <= ?';
+    queryParams.push(endTime);
+  }
 
   const countRows: any = await query(
     `SELECT COUNT(*) as total FROM finance_flow ${where}`,
@@ -820,11 +944,14 @@ export async function generateAuditReport(params: {
   dailyStats: any[];
 }> {
   const { startTime, endTime, module } = params;
-  
+
   let where = 'WHERE create_time >= ? AND create_time <= ?';
   const queryParams: any[] = [startTime, endTime];
-  
-  if (module) { where += ' AND module = ?'; queryParams.push(module); }
+
+  if (module) {
+    where += ' AND module = ?';
+    queryParams.push(module);
+  }
 
   // 汇总统计
   const summaryRows: any = await query(

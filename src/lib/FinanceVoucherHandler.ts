@@ -2,20 +2,20 @@ import { transaction, query } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import { getConfig } from '@/lib/global-config';
 
-export type VoucherSource = 
-  | 'sales_outbound'      // 销售出库
-  | 'purchase_inbound'    // 采购入库
-  | 'production_inbound'  // 生产入库
-  | 'material_issue'      // 生产领料
-  | 'material_return'     // 材料退回
-  | 'stock_adjust'        // 库存调整
-  | 'cost_allocation';    // 成本分摊
+export type VoucherSource =
+  | 'sales_outbound' // 销售出库
+  | 'purchase_inbound' // 采购入库
+  | 'production_inbound' // 生产入库
+  | 'material_issue' // 生产领料
+  | 'material_return' // 材料退回
+  | 'stock_adjust' // 库存调整
+  | 'cost_allocation'; // 成本分摊
 
 export interface VoucherLine {
-  debit_account: string;   // 借方科目
-  credit_account: string;  // 贷方科目
-  amount: number;          // 金额
-  description?: string;    // 摘要
+  debit_account: string; // 借方科目
+  credit_account: string; // 贷方科目
+  amount: number; // 金额
+  description?: string; // 摘要
 }
 
 export interface VoucherData {
@@ -49,7 +49,6 @@ const VOUCHER_SOURCE_LABELS: Record<VoucherSource, string> = {
 };
 
 export class FinanceVoucherHandler {
-
   static async generateSalesOutboundVoucher(
     outboundId: number,
     outboundNo: string,
@@ -97,7 +96,7 @@ export class FinanceVoucherHandler {
         remark: `销售出库 - ${customerName || ''}`,
       });
     } catch (error: any) {
-      secureLog.error('生成销售出库凭证失败', { error: error.message, outboundId });
+      secureLog('error', '生成销售出库凭证失败', { error: error.message, outboundId });
       return { success: false, error: error.message };
     }
   }
@@ -147,7 +146,7 @@ export class FinanceVoucherHandler {
         remark: `采购入库 - ${supplierName || ''}`,
       });
     } catch (error: any) {
-      secureLog.error('生成采购入库凭证失败', { error: error.message, inboundId });
+      secureLog('error', '生成采购入库凭证失败', { error: error.message, inboundId });
       return { success: false, error: error.message };
     }
   }
@@ -209,7 +208,7 @@ export class FinanceVoucherHandler {
         remark: `生产入库 - 工单${workOrderNo}`,
       });
     } catch (error: any) {
-      secureLog.error('生成生产入库凭证失败', { error: error.message, inboundId });
+      secureLog('error', '生成生产入库凭证失败', { error: error.message, inboundId });
       return { success: false, error: error.message };
     }
   }
@@ -258,7 +257,7 @@ export class FinanceVoucherHandler {
         remark: `生产领料 - 工单${workOrderNo}`,
       });
     } catch (error: any) {
-      secureLog.error('生成领料凭证失败', { error: error.message, issueId });
+      secureLog('error', '生成领料凭证失败', { error: error.message, issueId });
       return { success: false, error: error.message };
     }
   }
@@ -271,9 +270,9 @@ export class FinanceVoucherHandler {
       );
 
       if (existing && existing.length > 0) {
-        return { 
-          success: false, 
-          error: `该业务已存在凭证（ID: ${existing[0].id}），请勿重复生成` 
+        return {
+          success: false,
+          error: `该业务已存在凭证（ID: ${existing[0].id}），请勿重复生成`,
         };
       }
 
@@ -313,7 +312,7 @@ export class FinanceVoucherHandler {
         );
       }
 
-      secureLog.info('财务凭证生成成功', {
+      secureLog('info', '财务凭证生成成功', {
         voucherId,
         voucherNo: data.voucher_no,
         sourceType: data.source_type,
@@ -332,7 +331,8 @@ export class FinanceVoucherHandler {
 
   private static async generateVoucherNo(prefix: string): Promise<string> {
     const today = new Date();
-    const dateStr = today.getFullYear().toString() +
+    const dateStr =
+      today.getFullYear().toString() +
       String(today.getMonth() + 1).padStart(2, '0') +
       String(today.getDate()).padStart(2, '0');
 
@@ -346,10 +346,7 @@ export class FinanceVoucherHandler {
     return `${prefix}${dateStr}${String(nextNo).padStart(4, '0')}`;
   }
 
-  static async getVouchersBySource(
-    sourceType: VoucherSource,
-    sourceId: number
-  ): Promise<any[]> {
+  static async getVouchersBySource(sourceType: VoucherSource, sourceId: number): Promise<any[]> {
     const rows: any = await query(
       `SELECT v.*, 
               GROUP_CONCAT(
@@ -372,21 +369,27 @@ export class FinanceVoucherHandler {
 
     return rows.map((row: any) => ({
       ...row,
-      lines: row.lines_data ? row.lines_data.split(';;').map((lineStr: string) => {
-        const parts = lineStr.split('|');
-        return {
-          line_no: parseInt(parts[0]),
-          debit_account: parts[1],
-          credit_account: parts[2],
-          amount: parseFloat(parts[3]),
-          description: parts[4] || '',
-        };
-      }) : [],
+      lines: row.lines_data
+        ? row.lines_data.split(';;').map((lineStr: string) => {
+            const parts = lineStr.split('|');
+            return {
+              line_no: parseInt(parts[0]),
+              debit_account: parts[1],
+              credit_account: parts[2],
+              amount: parseFloat(parts[3]),
+              description: parts[4] || '',
+            };
+          })
+        : [],
       lines_data: undefined,
     }));
   }
 
-  static async reverseVoucher(voucherId: number, reason: string, operatorName: string): Promise<VoucherResult> {
+  static async reverseVoucher(
+    voucherId: number,
+    reason: string,
+    operatorName: string
+  ): Promise<VoucherResult> {
     try {
       const [voucherRows]: any = await query(
         `SELECT * FROM fin_voucher WHERE id = ? AND deleted = 0`,
@@ -402,10 +405,9 @@ export class FinanceVoucherHandler {
         return { success: false, error: '凭证已审核，无法冲销' };
       }
 
-      const [lineRows]: any = await query(
-        `SELECT * FROM fin_voucher_line WHERE voucher_id = ?`,
-        [voucherId]
-      );
+      const [lineRows]: any = await query(`SELECT * FROM fin_voucher_line WHERE voucher_id = ?`, [
+        voucherId,
+      ]);
 
       const reversedLines: VoucherLine[] = lineRows.map((line: any) => ({
         debit_account: line.credit_account,
@@ -427,7 +429,7 @@ export class FinanceVoucherHandler {
         remark: `冲销原凭证${voucher.voucher_no} - 原因：${reason}`,
       });
     } catch (error: any) {
-      secureLog.error('冲销凭证失败', { error: error.message, voucherId });
+      secureLog('error', '冲销凭证失败', { error: error.message, voucherId });
       return { success: false, error: error.message };
     }
   }

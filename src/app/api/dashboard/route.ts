@@ -3,8 +3,14 @@ import { query } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    let todayOrders = 0, orderChange = 0, pendingOrders = 0, producingOrders = 0;
-    let completedToday = 0, totalCustomers = 0, todayProduction = 0, productionChange = 0;
+    let todayOrders = 0,
+      orderChange = 0,
+      pendingOrders = 0,
+      producingOrders = 0;
+    let completedToday = 0,
+      totalCustomers = 0,
+      todayProduction = 0,
+      productionChange = 0;
 
     try {
       const rows: any = await query(`
@@ -22,12 +28,16 @@ export async function GET(request: NextRequest) {
         producingOrders = Number(rows[0].producing || 0);
         completedToday = Number(rows[0].completed_today || 0);
       }
-    } catch (e) { console.error('orderStats failed:', e); }
+    } catch (e) {
+      console.error('orderStats failed:', e);
+    }
 
     try {
       const rows: any = await query(`SELECT COUNT(*) as total FROM crm_customer WHERE deleted = 0`);
       if (Array.isArray(rows) && rows.length > 0) totalCustomers = Number(rows[0].total || 0);
-    } catch (e) { console.error('customerStats failed:', e); }
+    } catch (e) {
+      console.error('customerStats failed:', e);
+    }
 
     let inventoryAlert = 0;
     try {
@@ -37,13 +47,19 @@ export async function GET(request: NextRequest) {
         WHERE i.deleted = 0 AND m.status = 1 AND i.quantity <= COALESCE(m.safety_stock, 0)
       `);
       if (Array.isArray(rows) && rows.length > 0) inventoryAlert = Number(rows[0].total || 0);
-    } catch (e) { console.error('inventoryAlert failed:', e); }
+    } catch (e) {
+      console.error('inventoryAlert failed:', e);
+    }
 
     let totalEmployees = 0;
     try {
-      const rows: any = await query(`SELECT COUNT(*) as total FROM sys_user WHERE deleted = 0 AND status = 1`);
+      const rows: any = await query(
+        `SELECT COUNT(*) as total FROM sys_user WHERE deleted = 0 AND status = 1`
+      );
       if (Array.isArray(rows) && rows.length > 0) totalEmployees = Number(rows[0].total || 0);
-    } catch (e) { console.error('employeeStats failed:', e); }
+    } catch (e) {
+      console.error('employeeStats failed:', e);
+    }
 
     let recentOrders: any[] = [];
     try {
@@ -55,24 +71,48 @@ export async function GET(request: NextRequest) {
         WHERE pc.deleted = 0 ORDER BY pc.update_time DESC LIMIT 8
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('recentOrders failed:', e); }
+    } catch (e) {
+      console.error('recentOrders failed:', e);
+    }
 
-    let alerts: any[] = [];
+    const alerts: any[] = [];
     try {
       const inkRows: any = await query(`
         SELECT COUNT(*) as total FROM ink_opening_record WHERE deleted = 0 AND status = 1 AND DATEDIFF(expire_time, NOW()) <= 1
       `);
-      const inkAlert = Array.isArray(inkRows) && inkRows.length > 0 ? Number(inkRows[0].total || 0) : 0;
-      if (inkAlert > 0) alerts.push({ type: 'quality', message: `${inkAlert}罐油墨即将过期`, severity: 'high', time: '刚刚' });
+      const inkAlert =
+        Array.isArray(inkRows) && inkRows.length > 0 ? Number(inkRows[0].total || 0) : 0;
+      if (inkAlert > 0)
+        alerts.push({
+          type: 'quality',
+          message: `${inkAlert}罐油墨即将过期`,
+          severity: 'high',
+          time: '刚刚',
+        });
 
       const dieRows: any = await query(`
         SELECT COUNT(*) as total FROM prd_die_template WHERE deleted = 0 AND status = 1 AND max_usage > 0 AND (current_usage / max_usage) >= 0.8
       `);
-      const dieAlert = Array.isArray(dieRows) && dieRows.length > 0 ? Number(dieRows[0].total || 0) : 0;
-      if (dieAlert > 0) alerts.push({ type: 'production', message: `${dieAlert}个刀模/网版使用率超80%`, severity: 'medium', time: '刚刚' });
+      const dieAlert =
+        Array.isArray(dieRows) && dieRows.length > 0 ? Number(dieRows[0].total || 0) : 0;
+      if (dieAlert > 0)
+        alerts.push({
+          type: 'production',
+          message: `${dieAlert}个刀模/网版使用率超80%`,
+          severity: 'medium',
+          time: '刚刚',
+        });
 
-      if (inventoryAlert > 0) alerts.push({ type: 'inventory', message: `${inventoryAlert}种物料库存不足`, severity: 'high', time: '刚刚' });
-    } catch (e) { console.error('alerts failed:', e); }
+      if (inventoryAlert > 0)
+        alerts.push({
+          type: 'inventory',
+          message: `${inventoryAlert}种物料库存不足`,
+          severity: 'high',
+          time: '刚刚',
+        });
+    } catch (e) {
+      console.error('alerts failed:', e);
+    }
 
     let orderStats: any[] = [];
     try {
@@ -82,7 +122,9 @@ export async function GET(request: NextRequest) {
         GROUP BY DATE(create_time) ORDER BY date
       `);
       orderStats = Array.isArray(rows) ? rows : [];
-    } catch (e) { console.error('orderStatsChart failed:', e); }
+    } catch (e) {
+      console.error('orderStatsChart failed:', e);
+    }
 
     return NextResponse.json({
       success: true,

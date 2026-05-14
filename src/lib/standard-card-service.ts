@@ -72,15 +72,15 @@ function deepMerge(target: TechParams, source: TechParams): TechParams {
   return result;
 }
 
-export function compareVersions(
-  oldParams: TechParams,
-  newParams: TechParams
-): VersionDiff[] {
+export function compareVersions(oldParams: TechParams, newParams: TechParams): VersionDiff[] {
   const diffs: VersionDiff[] = [];
 
   const paramKeys: (keyof TechParams)[] = [
-    'print_params', 'screen_params', 'ink_params',
-    'cutting_params', 'quality_standards',
+    'print_params',
+    'screen_params',
+    'ink_params',
+    'cutting_params',
+    'quality_standards',
   ];
 
   for (const key of paramKeys) {
@@ -112,10 +112,9 @@ export function compareVersions(
     }
 
     if (oldSection && newSection) {
-      const allSubKeys = Array.from(new Set([
-        ...Object.keys(oldSection),
-        ...Object.keys(newSection),
-      ]));
+      const allSubKeys = Array.from(
+        new Set([...Object.keys(oldSection), ...Object.keys(newSection)])
+      );
 
       for (const subKey of allSubKeys) {
         const oldVal = (oldSection as any)[subKey];
@@ -166,16 +165,16 @@ export async function createCardWithVersion(
       if (templateRows && templateRows.length > 0) {
         const template = templateRows[0];
         try {
-          const templateParams = typeof template.tech_params === 'string'
-            ? JSON.parse(template.tech_params)
-            : template.tech_params;
+          const templateParams =
+            typeof template.tech_params === 'string'
+              ? JSON.parse(template.tech_params)
+              : template.tech_params;
           techParams = deepMerge(techParams, templateParams);
         } catch {
           techParams = {};
         }
       }
-    } catch {
-    }
+    } catch {}
   }
 
   if (copyFromId) {
@@ -185,9 +184,10 @@ export async function createCardWithVersion(
     );
     if (sourceRows && sourceRows.length > 0) {
       try {
-        const sourceParams = typeof sourceRows[0].tech_params === 'string'
-          ? JSON.parse(sourceRows[0].tech_params)
-          : sourceRows[0].tech_params;
+        const sourceParams =
+          typeof sourceRows[0].tech_params === 'string'
+            ? JSON.parse(sourceRows[0].tech_params)
+            : sourceRows[0].tech_params;
         techParams = deepMerge(techParams, sourceParams);
       } catch {
         techParams = {};
@@ -196,9 +196,10 @@ export async function createCardWithVersion(
   }
 
   if (cardData.tech_params) {
-    const cardParams = typeof cardData.tech_params === 'string'
-      ? JSON.parse(cardData.tech_params)
-      : cardData.tech_params;
+    const cardParams =
+      typeof cardData.tech_params === 'string'
+        ? JSON.parse(cardData.tech_params)
+        : cardData.tech_params;
     techParams = deepMerge(techParams, cardParams);
   }
 
@@ -255,18 +256,18 @@ export async function updateCardWithVersion(
 
   let oldTechParams: TechParams = {};
   try {
-    oldTechParams = typeof card.tech_params === 'string'
-      ? JSON.parse(card.tech_params)
-      : card.tech_params || {};
+    oldTechParams =
+      typeof card.tech_params === 'string' ? JSON.parse(card.tech_params) : card.tech_params || {};
   } catch {
     oldTechParams = {};
   }
 
   let newTechParams: TechParams = JSON.parse(JSON.stringify(oldTechParams));
   if (updates.tech_params) {
-    const updateParams = typeof updates.tech_params === 'string'
-      ? JSON.parse(updates.tech_params)
-      : updates.tech_params;
+    const updateParams =
+      typeof updates.tech_params === 'string'
+        ? JSON.parse(updates.tech_params)
+        : updates.tech_params;
     newTechParams = deepMerge(newTechParams, updateParams);
   }
 
@@ -280,21 +281,32 @@ export async function updateCardWithVersion(
   const setClauses: string[] = ['version = ?', 'tech_params = ?', 'update_time = NOW()'];
   const params: any[] = [newVersion, techParamsJson];
 
-  if (updates.card_no !== undefined) { setClauses.push('card_no = ?'); params.push(updates.card_no); }
-  if (updates.customer_id !== undefined) { setClauses.push('customer_id = ?'); params.push(updates.customer_id); }
-  if (updates.customer_name !== undefined) { setClauses.push('customer_name = ?'); params.push(updates.customer_name); }
-  if (updates.product_name !== undefined) { setClauses.push('product_name = ?'); params.push(updates.product_name); }
+  if (updates.card_no !== undefined) {
+    setClauses.push('card_no = ?');
+    params.push(updates.card_no);
+  }
+  if (updates.customer_id !== undefined) {
+    setClauses.push('customer_id = ?');
+    params.push(updates.customer_id);
+  }
+  if (updates.customer_name !== undefined) {
+    setClauses.push('customer_name = ?');
+    params.push(updates.customer_name);
+  }
+  if (updates.product_name !== undefined) {
+    setClauses.push('product_name = ?');
+    params.push(updates.product_name);
+  }
 
   params.push(cardId);
 
-  await conn.execute(
-    `UPDATE prd_process_card SET ${setClauses.join(', ')} WHERE id = ?`,
-    params
-  );
+  await conn.execute(`UPDATE prd_process_card SET ${setClauses.join(', ')} WHERE id = ?`, params);
 
-  const description = changeDescription || (diff.length > 0
-    ? `版本升级 ${currentVersion} -> ${newVersion}，变更字段: ${diff.map((d) => d.field).join(', ')}`
-    : `版本升级 ${currentVersion} -> ${newVersion}`);
+  const description =
+    changeDescription ||
+    (diff.length > 0
+      ? `版本升级 ${currentVersion} -> ${newVersion}，变更字段: ${diff.map((d) => d.field).join(', ')}`
+      : `版本升级 ${currentVersion} -> ${newVersion}`);
 
   await conn.execute(
     `INSERT INTO prd_process_card_audit (
@@ -306,10 +318,7 @@ export async function updateCardWithVersion(
   return { card_id: cardId, new_version: newVersion, diff };
 }
 
-export async function getVersionHistory(
-  conn: any,
-  cardId: number
-): Promise<CardVersion[]> {
+export async function getVersionHistory(conn: any, cardId: number): Promise<CardVersion[]> {
   const [auditRows]: any = await conn.query(
     `SELECT id, card_id, version, action, operator, change_description, tech_params, create_time
      FROM prd_process_card_audit
@@ -336,9 +345,8 @@ export async function getVersionHistory(
     const row = auditRows[i];
     let techParams: TechParams = {};
     try {
-      techParams = typeof row.tech_params === 'string'
-        ? JSON.parse(row.tech_params)
-        : row.tech_params || {};
+      techParams =
+        typeof row.tech_params === 'string' ? JSON.parse(row.tech_params) : row.tech_params || {};
     } catch {
       techParams = {};
     }
@@ -352,7 +360,13 @@ export async function getVersionHistory(
       parent_id: parentId,
       tech_params: techParams,
       status: isLatest
-        ? (currentStatus === 3 ? 'approved' : currentStatus === 1 ? 'draft' : currentStatus === 2 ? 'pending_approval' : 'obsolete')
+        ? currentStatus === 3
+          ? 'approved'
+          : currentStatus === 1
+            ? 'draft'
+            : currentStatus === 2
+              ? 'pending_approval'
+              : 'obsolete'
         : 'obsolete',
       approved_by: null,
       approved_at: null,
@@ -401,10 +415,7 @@ export async function approveCardVersion(
   );
 }
 
-export async function getTemplates(
-  conn: any,
-  category?: string
-): Promise<ProcessCardTemplate[]> {
+export async function getTemplates(conn: any, category?: string): Promise<ProcessCardTemplate[]> {
   try {
     let sql = `SELECT id, name, category, tech_params, description FROM prd_process_card_templates WHERE deleted = 0`;
     const params: any[] = [];
@@ -425,9 +436,8 @@ export async function getTemplates(
     return rows.map((row: any) => {
       let techParams: TechParams = {};
       try {
-        techParams = typeof row.tech_params === 'string'
-          ? JSON.parse(row.tech_params)
-          : row.tech_params || {};
+        techParams =
+          typeof row.tech_params === 'string' ? JSON.parse(row.tech_params) : row.tech_params || {};
       } catch {
         techParams = {};
       }
@@ -466,9 +476,10 @@ export async function convertSampleToMass(
 
   let techParams: TechParams = {};
   try {
-    techParams = typeof sample.tech_params === 'string'
-      ? JSON.parse(sample.tech_params)
-      : sample.tech_params || {};
+    techParams =
+      typeof sample.tech_params === 'string'
+        ? JSON.parse(sample.tech_params)
+        : sample.tech_params || {};
   } catch {
     techParams = {};
   }
@@ -505,13 +516,7 @@ export async function convertSampleToMass(
     `INSERT INTO prd_process_card_audit (
       card_id, version, action, operator, change_description, tech_params, create_time
     ) VALUES (?, ?, 'create', ?, ?, ?, NOW())`,
-    [
-      cardId,
-      version,
-      operatorName,
-      `从样品卡 ${sample.card_no} 转换为量产卡`,
-      techParamsJson,
-    ]
+    [cardId, version, operatorName, `从样品卡 ${sample.card_no} 转换为量产卡`, techParamsJson]
   );
 
   return { card_id: cardId, version };

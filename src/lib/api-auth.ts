@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractToken, verifyToken, getUserInfo, hasPermission, validateResourceAccess, UserInfo } from './auth';
+import {
+  extractToken,
+  verifyToken,
+  getUserInfo,
+  hasPermission,
+  validateResourceAccess,
+  UserInfo,
+} from './auth';
 import { errorResponse } from './api-response';
 
 export type { UserInfo } from './auth';
@@ -41,13 +48,9 @@ export function withAuth(
     if (options?.resourceType && options?.resourceIdParam) {
       const { searchParams } = new URL(request.url);
       const resourceId = searchParams.get(options.resourceIdParam);
-      
+
       if (resourceId) {
-        const hasAccess = await validateResourceAccess(
-          userInfo,
-          options.resourceType,
-          resourceId
-        );
+        const hasAccess = await validateResourceAccess(userInfo, options.resourceType, resourceId);
         if (!hasAccess) {
           return errorResponse('没有权限访问此资源', 403);
         }
@@ -98,7 +101,7 @@ export function withAuthAndErrorHandler(
       if (options?.resourceType && options?.resourceIdParam) {
         const { searchParams } = new URL(request.url);
         const resourceId = searchParams.get(options.resourceIdParam);
-        
+
         if (resourceId) {
           const hasAccess = await validateResourceAccess(
             userInfo,
@@ -115,10 +118,7 @@ export function withAuthAndErrorHandler(
       return await handler(request, userInfo);
     } catch (error) {
       console.error(`[API Error] ${options?.errorMessage || '请求处理失败'}:`, error);
-      return errorResponse(
-        options?.errorMessage || '服务器内部错误',
-        500
-      );
+      return errorResponse(options?.errorMessage || '服务器内部错误', 500);
     }
   };
 }

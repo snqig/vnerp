@@ -104,7 +104,11 @@ export const AttendanceStatusLabel: Record<AttendanceStatus, string> = {
   [AttendanceStatus.OVERTIME]: '加班',
 };
 
-export function canTransition(current: number, target: number, statusEnum: Record<string, number>): boolean {
+export function canTransition(
+  current: number,
+  target: number,
+  statusEnum: Record<string, number>
+): boolean {
   if (current === target) return false;
   return true;
 }

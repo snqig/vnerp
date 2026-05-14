@@ -76,7 +76,7 @@ export class ProcessStandardItem {
       standardTime: this.standardTime,
       machineType: this.machineType,
       description: this.description,
-      remark: this.remark
+      remark: this.remark,
     };
   }
 }

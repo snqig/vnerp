@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { useEffect, useRef, useState } from "react";
+import * as React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export interface AnimatedTabsProps {
   tabs: { label: string }[];
@@ -9,7 +9,11 @@ export interface AnimatedTabsProps {
   onTabChange?: (label: string) => void;
 }
 
-export function AnimatedTabs({ tabs, activeTab: controlledActive, onTabChange }: AnimatedTabsProps) {
+export function AnimatedTabs({
+  tabs,
+  activeTab: controlledActive,
+  onTabChange,
+}: AnimatedTabsProps) {
   const [internalActiveTab, setInternalActiveTab] = useState(tabs[0].label);
   const activeTab = controlledActive ?? internalActiveTab;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -33,10 +37,8 @@ export function AnimatedTabs({ tabs, activeTab: controlledActive, onTabChange }:
         const clipRight = offsetLeft + offsetWidth + 16;
 
         container.style.clipPath = `inset(0 ${Number(
-          100 - (clipRight / container.offsetWidth) * 100,
-        ).toFixed()}% 0 ${Number(
-          (clipLeft / container.offsetWidth) * 100,
-        ).toFixed()}% round 17px)`;
+          100 - (clipRight / container.offsetWidth) * 100
+        ).toFixed()}% 0 ${Number((clipLeft / container.offsetWidth) * 100).toFixed()}% round 17px)`;
       }
     }
   }, [activeTab]);

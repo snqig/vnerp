@@ -6,13 +6,38 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import {
+  TableExportToolbar,
+  printTable,
+  exportTableToPDF,
+  exportTableToXLS,
+  exportTableToWORD,
+} from '@/components/ui/table-export-toolbar';
 import { Plus, Search, Edit, Trash2, FileCheck, Upload, FileText, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -45,14 +70,20 @@ interface ContractReviewRecord {
   create_time: string;
 }
 
-const sampleStatusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  'pending': { label: '未打样', variant: 'outline' },
-  'sampling': { label: '打样中', variant: 'secondary' },
-  'approved': { label: '样品OK', variant: 'default' },
-  'rejected': { label: '样品NG', variant: 'destructive' },
-  'not_required': { label: '无需打样', variant: 'secondary' },
+const sampleStatusMap: Record<
+  string,
+  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+> = {
+  pending: { label: '未打样', variant: 'outline' },
+  sampling: { label: '打样中', variant: 'secondary' },
+  approved: { label: '样品OK', variant: 'default' },
+  rejected: { label: '样品NG', variant: 'destructive' },
+  not_required: { label: '无需打样', variant: 'secondary' },
 };
-const statusMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const statusMap: Record<
+  number,
+  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+> = {
   1: { label: '待评审', variant: 'outline' },
   2: { label: '评审中', variant: 'secondary' },
   3: { label: '已通过', variant: 'default' },
@@ -86,13 +117,16 @@ export default function ContractReviewPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [attachments, setAttachments] = useState<{name: string; url: string}[]>([]);
+  const [attachments, setAttachments] = useState<{ name: string; url: string }[]>([]);
 
   const fetchData = useCallback(async () => {
     try {
       const params = new URLSearchParams({
-        page: String(page), pageSize: '20',
-        customerName: searchCustomer, productName: searchProduct, status: searchStatus
+        page: String(page),
+        pageSize: '20',
+        customerName: searchCustomer,
+        productName: searchProduct,
+        status: searchStatus,
       });
       const res = await fetch('/api/business/contract-review?' + params);
       const result = await res.json();
@@ -100,15 +134,20 @@ export default function ContractReviewPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   }, [page, searchCustomer, searchProduct, searchStatus]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const toggleSelect = (id: number) => {
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -117,12 +156,12 @@ export default function ContractReviewPage() {
     if (selectedIds.size === list.length && list.length > 0) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(list.map(i => i.id!)));
+      setSelectedIds(new Set(list.map((i) => i.id!)));
     }
   };
 
   const getExportData = () =>
-    list.map(item => ({
+    list.map((item) => ({
       ...item,
       sample_status_label: sampleStatusMap[item.sample_status]?.label || '未知',
       status_label: statusMap[item.status]?.label || '未知',
@@ -150,7 +189,7 @@ export default function ContractReviewPage() {
       const res = await fetch('/api/business/contract-review', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editItem)
+        body: JSON.stringify(editItem),
       });
       const result = await res.json();
       if (result.success) {
@@ -170,7 +209,7 @@ export default function ContractReviewPage() {
       const res = await fetch('/api/business/contract-review', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editItem)
+        body: JSON.stringify(editItem),
       });
       const result = await res.json();
       if (result.success) {
@@ -213,7 +252,7 @@ export default function ContractReviewPage() {
       const res = await fetch('/api/upload/contract', { method: 'POST', body: formData });
       const result = await res.json();
       if (result.success) {
-        setAttachments(prev => [...prev, { name: uploadFile.name, url: result.data.url }]);
+        setAttachments((prev) => [...prev, { name: uploadFile.name, url: result.data.url }]);
         setUploadFile(null);
         toast({ title: '文件上传成功' });
       } else {
@@ -227,7 +266,7 @@ export default function ContractReviewPage() {
   };
 
   const removeAttachment = (idx: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== idx));
+    setAttachments((prev) => prev.filter((_, i) => i !== idx));
   };
 
   return (
@@ -239,22 +278,38 @@ export default function ContractReviewPage() {
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="搜索客户名称" className="pl-8 w-48" value={searchCustomer} onChange={e => setSearchCustomer(e.target.value)} />
+                  <Input
+                    placeholder="搜索客户名称"
+                    className="pl-8 w-48"
+                    value={searchCustomer}
+                    onChange={(e) => setSearchCustomer(e.target.value)}
+                  />
                 </div>
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="搜索产品名称" className="pl-8 w-48" value={searchProduct} onChange={e => setSearchProduct(e.target.value)} />
+                  <Input
+                    placeholder="搜索产品名称"
+                    className="pl-8 w-48"
+                    value={searchProduct}
+                    onChange={(e) => setSearchProduct(e.target.value)}
+                  />
                 </div>
                 <Select value={searchStatus} onValueChange={setSearchStatus}>
-                  <SelectTrigger className="w-36"><SelectValue placeholder="状态筛选" /></SelectTrigger>
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="状态筛选" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部状态</SelectItem>
                     {Object.entries(statusMap).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                      <SelectItem key={k} value={k}>
+                        {v.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant="outline" onClick={fetchData}>查询</Button>
+                <Button variant="outline" onClick={fetchData}>
+                  查询
+                </Button>
               </div>
               <div className="flex items-center gap-2">
                 <TableExportToolbar
@@ -267,8 +322,14 @@ export default function ContractReviewPage() {
                   onExportXLS={handleExportXLS}
                   onExportWORD={handleExportWORD}
                 />
-                <Button onClick={() => { setEditItem({ sample_status: 'pending' }); setShowDialog(true); }}>
-                  <Plus className="h-4 w-4 mr-2" />新建评审
+                <Button
+                  onClick={() => {
+                    setEditItem({ sample_status: 'pending' });
+                    setShowDialog(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  新建评审
                 </Button>
               </div>
             </div>
@@ -295,7 +356,7 @@ export default function ContractReviewPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {list.map(item => (
+                {list.map((item) => (
                   <TableRow key={item.id} className={selectedIds.has(item.id!) ? 'bg-blue-50' : ''}>
                     <TableCell>
                       <Checkbox
@@ -308,7 +369,9 @@ export default function ContractReviewPage() {
                     <TableCell>{item.customer_name}</TableCell>
                     <TableCell>{item.product_name}</TableCell>
                     <TableCell>{item.quantity}</TableCell>
-                    <TableCell>{item.amount ? '¥' + Number(item.amount).toLocaleString() : '-'}</TableCell>
+                    <TableCell>
+                      {item.amount ? '¥' + Number(item.amount).toLocaleString() : '-'}
+                    </TableCell>
                     <TableCell>{item.delivery_date?.substring(0, 10) || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={sampleStatusMap[item.sample_status]?.variant || 'outline'}>
@@ -325,7 +388,14 @@ export default function ContractReviewPage() {
                         <Button size="sm" variant="outline" onClick={() => openReview(item)}>
                           评审
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => { setEditItem(item); setShowDialog(true); }}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditItem(item);
+                            setShowDialog(true);
+                          }}
+                        >
                           <Edit className="h-3 w-3" />
                         </Button>
                         <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id!)}>
@@ -337,17 +407,35 @@ export default function ContractReviewPage() {
                 ))}
                 {list.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
+                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                      暂无数据
+                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
 
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">共 {total} 条{selectedIds.size > 0 && `，已选 ${selectedIds.size} 条`}</span>
+              <span className="text-sm text-muted-foreground">
+                共 {total} 条{selectedIds.size > 0 && `，已选 ${selectedIds.size} 条`}
+              </span>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</Button>
-                <Button variant="outline" size="sm" disabled={page * 20 >= total} onClick={() => setPage(p => p + 1)}>下一页</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  上一页
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page * 20 >= total}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  下一页
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -359,29 +447,99 @@ export default function ContractReviewPage() {
               <DialogTitle>{editItem.id ? '编辑评审' : '新建评审'}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
-              <div><Label>订单号</Label><Input value={editItem.order_no || ''} onChange={e => setEditItem({ ...editItem, order_no: e.target.value })} /></div>
-              <div><Label>客户名称 *</Label><Input value={editItem.customer_name || ''} onChange={e => setEditItem({ ...editItem, customer_name: e.target.value })} /></div>
-              <div><Label>产品编码</Label><Input value={editItem.product_code || ''} onChange={e => setEditItem({ ...editItem, product_code: e.target.value })} /></div>
-              <div><Label>产品名称 *</Label><Input value={editItem.product_name || ''} onChange={e => setEditItem({ ...editItem, product_name: e.target.value })} /></div>
-              <div><Label>数量</Label><Input type="number" value={editItem.quantity || 0} onChange={e => setEditItem({ ...editItem, quantity: Number(e.target.value) })} /></div>
-              <div><Label>金额</Label><Input type="number" value={editItem.amount || 0} onChange={e => setEditItem({ ...editItem, amount: Number(e.target.value) })} /></div>
-              <div><Label>交货日期</Label><Input type="date" value={editItem.delivery_date || ''} onChange={e => setEditItem({ ...editItem, delivery_date: e.target.value })} /></div>
+              <div>
+                <Label>订单号</Label>
+                <Input
+                  value={editItem.order_no || ''}
+                  onChange={(e) => setEditItem({ ...editItem, order_no: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>客户名称 *</Label>
+                <Input
+                  value={editItem.customer_name || ''}
+                  onChange={(e) => setEditItem({ ...editItem, customer_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>产品编码</Label>
+                <Input
+                  value={editItem.product_code || ''}
+                  onChange={(e) => setEditItem({ ...editItem, product_code: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>产品名称 *</Label>
+                <Input
+                  value={editItem.product_name || ''}
+                  onChange={(e) => setEditItem({ ...editItem, product_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>数量</Label>
+                <Input
+                  type="number"
+                  value={editItem.quantity || 0}
+                  onChange={(e) => setEditItem({ ...editItem, quantity: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label>金额</Label>
+                <Input
+                  type="number"
+                  value={editItem.amount || 0}
+                  onChange={(e) => setEditItem({ ...editItem, amount: Number(e.target.value) })}
+                />
+              </div>
+              <div>
+                <Label>交货日期</Label>
+                <Input
+                  type="date"
+                  value={editItem.delivery_date || ''}
+                  onChange={(e) => setEditItem({ ...editItem, delivery_date: e.target.value })}
+                />
+              </div>
               <div>
                 <Label>样品状态</Label>
-                <Select value={editItem.sample_status || 'pending'} onValueChange={v => setEditItem({ ...editItem, sample_status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={editItem.sample_status || 'pending'}
+                  onValueChange={(v) => setEditItem({ ...editItem, sample_status: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     {Object.entries(sampleStatusMap).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                      <SelectItem key={k} value={k}>
+                        {v.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2"><Label>质量要求</Label><Textarea rows={2} value={editItem.quality_requirement || ''} onChange={e => setEditItem({ ...editItem, quality_requirement: e.target.value })} /></div>
-              <div className="col-span-2"><Label>备注</Label><Textarea rows={2} value={editItem.remark || ''} onChange={e => setEditItem({ ...editItem, remark: e.target.value })} /></div>
+              <div className="col-span-2">
+                <Label>质量要求</Label>
+                <Textarea
+                  rows={2}
+                  value={editItem.quality_requirement || ''}
+                  onChange={(e) =>
+                    setEditItem({ ...editItem, quality_requirement: e.target.value })
+                  }
+                />
+              </div>
+              <div className="col-span-2">
+                <Label>备注</Label>
+                <Textarea
+                  rows={2}
+                  value={editItem.remark || ''}
+                  onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
+                />
+              </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDialog(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setShowDialog(false)}>
+                取消
+              </Button>
               <Button onClick={handleSave}>保存</Button>
             </DialogFooter>
           </DialogContent>
@@ -393,9 +551,18 @@ export default function ContractReviewPage() {
               <DialogTitle>合同评审 - {editItem.review_no}</DialogTitle>
             </DialogHeader>
             <div className="mb-4 grid grid-cols-3 gap-4 text-sm">
-              <div><span className="text-muted-foreground">客户：</span>{editItem.customer_name}</div>
-              <div><span className="text-muted-foreground">产品：</span>{editItem.product_name}</div>
-              <div><span className="text-muted-foreground">数量：</span>{editItem.quantity}</div>
+              <div>
+                <span className="text-muted-foreground">客户：</span>
+                {editItem.customer_name}
+              </div>
+              <div>
+                <span className="text-muted-foreground">产品：</span>
+                {editItem.product_name}
+              </div>
+              <div>
+                <span className="text-muted-foreground">数量：</span>
+                {editItem.quantity}
+              </div>
             </div>
             <Tabs value={activeReviewTab} onValueChange={setActiveReviewTab}>
               <TabsList className="grid grid-cols-5">
@@ -407,50 +574,151 @@ export default function ContractReviewPage() {
               </TabsList>
               <TabsContent value="biz" className="space-y-4 mt-4">
                 <h3 className="font-semibold">业务部评审意见</h3>
-                <div><Label>评审意见</Label><Textarea rows={4} value={editItem.biz_opinion || ''} onChange={e => setEditItem({ ...editItem, biz_opinion: e.target.value })} placeholder="业务部对合同条款、交期、价格等方面的评审意见" /></div>
+                <div>
+                  <Label>评审意见</Label>
+                  <Textarea
+                    rows={4}
+                    value={editItem.biz_opinion || ''}
+                    onChange={(e) => setEditItem({ ...editItem, biz_opinion: e.target.value })}
+                    placeholder="业务部对合同条款、交期、价格等方面的评审意见"
+                  />
+                </div>
               </TabsContent>
               <TabsContent value="eng" className="space-y-4 mt-4">
                 <h3 className="font-semibold">工程技术部评审意见</h3>
-                <div><Label>工程可行性评估</Label><Textarea rows={3} value={editItem.engineering_feasibility || ''} onChange={e => setEditItem({ ...editItem, engineering_feasibility: e.target.value })} placeholder="工艺可行性、打样状态、技术难点等评估" /></div>
-                <div><Label>评审意见</Label><Textarea rows={3} value={editItem.eng_opinion || ''} onChange={e => setEditItem({ ...editItem, eng_opinion: e.target.value })} placeholder="工程技术部评审意见" /></div>
+                <div>
+                  <Label>工程可行性评估</Label>
+                  <Textarea
+                    rows={3}
+                    value={editItem.engineering_feasibility || ''}
+                    onChange={(e) =>
+                      setEditItem({ ...editItem, engineering_feasibility: e.target.value })
+                    }
+                    placeholder="工艺可行性、打样状态、技术难点等评估"
+                  />
+                </div>
+                <div>
+                  <Label>评审意见</Label>
+                  <Textarea
+                    rows={3}
+                    value={editItem.eng_opinion || ''}
+                    onChange={(e) => setEditItem({ ...editItem, eng_opinion: e.target.value })}
+                    placeholder="工程技术部评审意见"
+                  />
+                </div>
               </TabsContent>
               <TabsContent value="quality" className="space-y-4 mt-4">
                 <h3 className="font-semibold">品质部评审意见</h3>
-                <div><Label>质量要求评估</Label><Textarea rows={3} value={editItem.quality_requirement || ''} onChange={e => setEditItem({ ...editItem, quality_requirement: e.target.value })} placeholder="客户质量要求是否可达成、检验标准等评估" /></div>
-                <div><Label>评审意见</Label><Textarea rows={3} value={editItem.quality_opinion || ''} onChange={e => setEditItem({ ...editItem, quality_opinion: e.target.value })} placeholder="品质部评审意见" /></div>
+                <div>
+                  <Label>质量要求评估</Label>
+                  <Textarea
+                    rows={3}
+                    value={editItem.quality_requirement || ''}
+                    onChange={(e) =>
+                      setEditItem({ ...editItem, quality_requirement: e.target.value })
+                    }
+                    placeholder="客户质量要求是否可达成、检验标准等评估"
+                  />
+                </div>
+                <div>
+                  <Label>评审意见</Label>
+                  <Textarea
+                    rows={3}
+                    value={editItem.quality_opinion || ''}
+                    onChange={(e) => setEditItem({ ...editItem, quality_opinion: e.target.value })}
+                    placeholder="品质部评审意见"
+                  />
+                </div>
               </TabsContent>
               <TabsContent value="prod" className="space-y-4 mt-4">
                 <h3 className="font-semibold">生产部评审意见</h3>
-                <div><Label>产能评估</Label><Textarea rows={3} value={editItem.production_capacity || ''} onChange={e => setEditItem({ ...editItem, production_capacity: e.target.value })} placeholder="产能是否满足、排产计划等评估" /></div>
-                <div><Label>评审意见</Label><Textarea rows={3} value={editItem.prod_opinion || ''} onChange={e => setEditItem({ ...editItem, prod_opinion: e.target.value })} placeholder="生产部评审意见" /></div>
+                <div>
+                  <Label>产能评估</Label>
+                  <Textarea
+                    rows={3}
+                    value={editItem.production_capacity || ''}
+                    onChange={(e) =>
+                      setEditItem({ ...editItem, production_capacity: e.target.value })
+                    }
+                    placeholder="产能是否满足、排产计划等评估"
+                  />
+                </div>
+                <div>
+                  <Label>评审意见</Label>
+                  <Textarea
+                    rows={3}
+                    value={editItem.prod_opinion || ''}
+                    onChange={(e) => setEditItem({ ...editItem, prod_opinion: e.target.value })}
+                    placeholder="生产部评审意见"
+                  />
+                </div>
               </TabsContent>
               <TabsContent value="purchase" className="space-y-4 mt-4">
                 <h3 className="font-semibold">采购部评审意见</h3>
-                <div><Label>物料供应评估</Label><Textarea rows={3} value={editItem.material_availability || ''} onChange={e => setEditItem({ ...editItem, material_availability: e.target.value })} placeholder="物料供应能力、交期等评估" /></div>
-                <div><Label>评审意见</Label><Textarea rows={3} value={editItem.purchase_opinion || ''} onChange={e => setEditItem({ ...editItem, purchase_opinion: e.target.value })} placeholder="采购部评审意见" /></div>
+                <div>
+                  <Label>物料供应评估</Label>
+                  <Textarea
+                    rows={3}
+                    value={editItem.material_availability || ''}
+                    onChange={(e) =>
+                      setEditItem({ ...editItem, material_availability: e.target.value })
+                    }
+                    placeholder="物料供应能力、交期等评估"
+                  />
+                </div>
+                <div>
+                  <Label>评审意见</Label>
+                  <Textarea
+                    rows={3}
+                    value={editItem.purchase_opinion || ''}
+                    onChange={(e) => setEditItem({ ...editItem, purchase_opinion: e.target.value })}
+                    placeholder="采购部评审意见"
+                  />
+                </div>
               </TabsContent>
             </Tabs>
             <div className="border-t pt-4 mt-4 space-y-3">
-              <h3 className="font-semibold flex items-center gap-2"><Upload className="h-4 w-4" />附件上传</h3>
+              <h3 className="font-semibold flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                附件上传
+              </h3>
               <div className="flex items-center gap-2">
                 <Input
                   type="file"
                   accept=".pdf,.doc,.docx,.xls,.xlsx"
-                  onChange={e => { if (e.target.files?.[0]) setUploadFile(e.target.files[0]); }}
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) setUploadFile(e.target.files[0]);
+                  }}
                   className="max-w-xs"
                 />
                 <Button size="sm" disabled={!uploadFile || uploading} onClick={handleFileUpload}>
                   {uploading ? '上传中...' : '上传'}
                 </Button>
-                {uploadFile && <span className="text-sm text-muted-foreground truncate max-w-[200px]">{uploadFile.name}</span>}
+                {uploadFile && (
+                  <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                    {uploadFile.name}
+                  </span>
+                )}
               </div>
               {attachments.length > 0 && (
                 <div className="space-y-1">
                   {attachments.map((att, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-sm">
                       <FileText className="h-4 w-4 text-blue-500" />
-                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate">{att.name}</a>
-                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => removeAttachment(idx)}>
+                      <a
+                        href={att.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline truncate"
+                      >
+                        {att.name}
+                      </a>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        onClick={() => removeAttachment(idx)}
+                      >
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
@@ -459,7 +727,9 @@ export default function ContractReviewPage() {
               )}
             </div>
             <DialogFooter className="mt-4">
-              <Button variant="outline" onClick={() => setShowReviewDialog(false)}>关闭</Button>
+              <Button variant="outline" onClick={() => setShowReviewDialog(false)}>
+                关闭
+              </Button>
               <Button onClick={handleSaveReview}>保存评审意见</Button>
             </DialogFooter>
           </DialogContent>

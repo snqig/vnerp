@@ -12,7 +12,7 @@ export function sanitizeInput(input: string): string {
 export function sanitizeObject<T>(obj: T): T {
   if (typeof obj === 'string') return sanitizeInput(obj) as T;
   if (obj instanceof Date) return (obj as Date).toISOString().slice(0, 10) as T;
-  if (Array.isArray(obj)) return obj.map(item => sanitizeObject(item)) as T;
+  if (Array.isArray(obj)) return obj.map((item) => sanitizeObject(item)) as T;
   if (obj && typeof obj === 'object') {
     const sanitized: any = {};
     for (const [key, value] of Object.entries(obj)) {
@@ -30,7 +30,12 @@ export interface ApiResponse<T = any> {
   data: T | null;
 }
 
-export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
+export interface PaginatedResponse<T = any> extends ApiResponse<{
+  list: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+}> {
   pagination: {
     page: number;
     pageSize: number;
@@ -39,7 +44,11 @@ export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
   };
 }
 
-export function successResponse<T>(data: T, message = '操作成功', code = 200): NextResponse<ApiResponse<T>> {
+export function successResponse<T>(
+  data: T,
+  message = '操作成功',
+  code = 200
+): NextResponse<ApiResponse<T>> {
   return NextResponse.json({
     code,
     success: true,
@@ -57,12 +66,21 @@ export function paginatedResponse<T>(
     code: 200,
     success: true,
     message,
-    data: sanitizeObject(data),
+    data: {
+      list: sanitizeObject(data),
+      total: pagination.total,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+    },
     pagination,
   });
 }
 
-export function errorResponse(message: string, code = 500, statusCode = 500): NextResponse<ApiResponse<null>> {
+export function errorResponse(
+  message: string,
+  code = 500,
+  statusCode = 500
+): NextResponse<ApiResponse<null>> {
   return NextResponse.json(
     {
       code,
@@ -106,7 +124,7 @@ export function validateRequestBody<T extends Record<string, any>>(
   body: T,
   requiredFields: string[]
 ): { valid: boolean; missing: string[] } {
-  const missing = requiredFields.filter(field => {
+  const missing = requiredFields.filter((field) => {
     const value = body[field];
     return value === undefined || value === null || value === '';
   });

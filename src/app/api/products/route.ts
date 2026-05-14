@@ -87,11 +87,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
 
   // 验证必填字段
-  const validation = validateRequestBody(body, [
-    'productCode',
-    'productName',
-    'categoryId',
-  ]);
+  const validation = validateRequestBody(body, ['productCode', 'productName', 'categoryId']);
 
   if (!validation.valid) {
     return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
@@ -166,10 +162,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 查询产品
-  const products = await query(
-    'SELECT * FROM mdm_product WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  const products = await query('SELECT * FROM mdm_product WHERE id = ? AND deleted = 0', [id]);
 
   if (!products || (products as any[]).length === 0) {
     return commonErrors.notFound('产品不存在');
@@ -227,20 +220,14 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 查询产品
-  const products = await query(
-    'SELECT * FROM mdm_product WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  const products = await query('SELECT * FROM mdm_product WHERE id = ? AND deleted = 0', [id]);
 
   if (!products || (products as any[]).length === 0) {
     return commonErrors.notFound('产品不存在');
   }
 
   // 软删除
-  await query(
-    'UPDATE mdm_product SET deleted = 1, update_time = NOW() WHERE id = ?',
-    [id]
-  );
+  await query('UPDATE mdm_product SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
   return successResponse(null, '产品删除成功');
 }, '删除产品失败');

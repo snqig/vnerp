@@ -98,10 +98,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   // 查询单个员工
   if (id) {
-    const employee = await queryOne<Employee>(
-      'SELECT * FROM sys_employee WHERE id = ?',
-      [parseInt(id)]
-    );
+    const employee = await queryOne<Employee>('SELECT * FROM sys_employee WHERE id = ?', [
+      parseInt(id),
+    ]);
 
     if (!employee) {
       return commonErrors.notFound('员工不存在');
@@ -135,11 +134,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['employee_no', 'name']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查员工编号是否已存在
@@ -202,11 +197,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['employee_no', 'name']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查员工是否存在
@@ -315,10 +306,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
 
   // 使用事务软删除
   await transaction(async (connection) => {
-    await connection.execute(
-      'UPDATE sys_employee SET status = 0 WHERE id = ?',
-      [employeeId]
-    );
+    await connection.execute('UPDATE sys_employee SET status = 0 WHERE id = ?', [employeeId]);
   });
 
   return successResponse(null, '员工删除成功');

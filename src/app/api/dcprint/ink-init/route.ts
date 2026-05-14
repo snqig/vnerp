@@ -14,7 +14,10 @@ async function safeCreateTable(tableName: string, sql: string) {
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const results: any[] = [];
 
-  results.push(await safeCreateTable('ink_formula', `
+  results.push(
+    await safeCreateTable(
+      'ink_formula',
+      `
     CREATE TABLE IF NOT EXISTS ink_formula (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       formula_no VARCHAR(50) NOT NULL COMMENT '配方编号',
@@ -38,9 +41,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       KEY idx_pantone (pantone_code),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨配方表'
-  `));
+  `
+    )
+  );
 
-  results.push(await safeCreateTable('ink_formula_item', `
+  results.push(
+    await safeCreateTable(
+      'ink_formula_item',
+      `
     CREATE TABLE IF NOT EXISTS ink_formula_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       formula_id BIGINT UNSIGNED NOT NULL COMMENT '配方ID',
@@ -59,9 +67,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       PRIMARY KEY (id),
       KEY idx_formula_id (formula_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨配方明细表'
-  `));
+  `
+    )
+  );
 
-  results.push(await safeCreateTable('ink_formula_workorder', `
+  results.push(
+    await safeCreateTable(
+      'ink_formula_workorder',
+      `
     CREATE TABLE IF NOT EXISTS ink_formula_workorder (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       formula_id BIGINT UNSIGNED NOT NULL COMMENT '配方ID',
@@ -74,9 +87,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       UNIQUE KEY uk_formula_workorder (formula_id, workorder_id),
       KEY idx_workorder_no (workorder_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨配方与工单关联表'
-  `));
+  `
+    )
+  );
 
-  results.push(await safeCreateTable('ink_dispatch', `
+  results.push(
+    await safeCreateTable(
+      'ink_dispatch',
+      `
     CREATE TABLE IF NOT EXISTS ink_dispatch (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       dispatch_no VARCHAR(50) NOT NULL COMMENT '配料单号',
@@ -108,9 +126,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       KEY idx_workorder (workorder_no),
       KEY idx_formula (formula_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨调色配料表'
-  `));
+  `
+    )
+  );
 
-  results.push(await safeCreateTable('ink_dispatch_item', `
+  results.push(
+    await safeCreateTable(
+      'ink_dispatch_item',
+      `
     CREATE TABLE IF NOT EXISTS ink_dispatch_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       dispatch_id BIGINT UNSIGNED NOT NULL COMMENT '配料单ID',
@@ -133,9 +156,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       KEY idx_dispatch_id (dispatch_id),
       KEY idx_source_batch (source_batch_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨配料明细表'
-  `))
+  `
+    )
+  );
 
-  results.push(await safeCreateTable('ink_usage', `
+  results.push(
+    await safeCreateTable(
+      'ink_usage',
+      `
     CREATE TABLE IF NOT EXISTS ink_usage (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       usage_no VARCHAR(50) NOT NULL COMMENT '使用记录号',
@@ -167,37 +195,66 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       KEY idx_usage_type (usage_type),
       KEY idx_usage_time (usage_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨使用记录表'
-  `));
+  `
+    )
+  );
 
   try {
     const [cols]: any = await execute("SHOW COLUMNS FROM ink_opening_record LIKE 'workorder_id'");
     if (cols.length === 0) {
-      await execute("ALTER TABLE ink_opening_record ADD COLUMN workorder_id BIGINT UNSIGNED COMMENT '工单ID' AFTER remark");
-      await execute("ALTER TABLE ink_opening_record ADD COLUMN workorder_no VARCHAR(50) COMMENT '工单号' AFTER workorder_id");
-      results.push({ table: 'ink_opening_record', action: 'add_columns', columns: ['workorder_id', 'workorder_no'] });
+      await execute(
+        "ALTER TABLE ink_opening_record ADD COLUMN workorder_id BIGINT UNSIGNED COMMENT '工单ID' AFTER remark"
+      );
+      await execute(
+        "ALTER TABLE ink_opening_record ADD COLUMN workorder_no VARCHAR(50) COMMENT '工单号' AFTER workorder_id"
+      );
+      results.push({
+        table: 'ink_opening_record',
+        action: 'add_columns',
+        columns: ['workorder_id', 'workorder_no'],
+      });
     }
   } catch (e: any) {
-    results.push({ table: 'ink_opening_record', action: 'add_columns', status: 'error', message: e.message });
+    results.push({
+      table: 'ink_opening_record',
+      action: 'add_columns',
+      status: 'error',
+      message: e.message,
+    });
   }
 
   try {
     const [cols]: any = await execute("SHOW COLUMNS FROM inv_inventory_batch LIKE 'inspection_id'");
     if (cols.length === 0) {
-      await execute("ALTER TABLE inv_inventory_batch ADD COLUMN inspection_id BIGINT UNSIGNED COMMENT '检验记录ID' AFTER status");
+      await execute(
+        "ALTER TABLE inv_inventory_batch ADD COLUMN inspection_id BIGINT UNSIGNED COMMENT '检验记录ID' AFTER status"
+      );
       results.push({ table: 'inv_inventory_batch', action: 'add_column', column: 'inspection_id' });
     }
   } catch (e: any) {
-    results.push({ table: 'inv_inventory_batch', action: 'add_column', status: 'error', message: e.message });
+    results.push({
+      table: 'inv_inventory_batch',
+      action: 'add_column',
+      status: 'error',
+      message: e.message,
+    });
   }
 
   try {
     const [cols]: any = await execute("SHOW COLUMNS FROM inv_scan_log LIKE 'batch_no'");
     if (cols.length === 0) {
-      await execute("ALTER TABLE inv_scan_log ADD COLUMN batch_no VARCHAR(50) COMMENT '批次号' AFTER sn");
+      await execute(
+        "ALTER TABLE inv_scan_log ADD COLUMN batch_no VARCHAR(50) COMMENT '批次号' AFTER sn"
+      );
       results.push({ table: 'inv_scan_log', action: 'add_column', column: 'batch_no' });
     }
   } catch (e: any) {
-    results.push({ table: 'inv_scan_log', action: 'add_column', status: 'error', message: e.message });
+    results.push({
+      table: 'inv_scan_log',
+      action: 'add_column',
+      status: 'error',
+      message: e.message,
+    });
   }
 
   return successResponse(results, '油墨管理相关表初始化完成');

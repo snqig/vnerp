@@ -65,9 +65,7 @@ export function useTableSort<T>(data: T[], defaultField: string = '') {
       }
       const aStr = String(aVal ?? '');
       const bStr = String(bVal ?? '');
-      return sortDirection === 'asc'
-        ? aStr.localeCompare(bStr)
-        : bStr.localeCompare(aStr);
+      return sortDirection === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
     });
   })();
 

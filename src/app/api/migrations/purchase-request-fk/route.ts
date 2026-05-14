@@ -5,11 +5,7 @@ import { successResponse, withErrorHandler } from '@/lib/api-response';
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const results: string[] = [];
 
-  const addColumnIfNotExists = async (
-    table: string,
-    column: string,
-    definition: string
-  ) => {
+  const addColumnIfNotExists = async (table: string, column: string, definition: string) => {
     const cols = await query(
       `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
@@ -23,11 +19,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
   };
 
-  const addIndexIfNotExists = async (
-    table: string,
-    indexName: string,
-    definition: string
-  ) => {
+  const addIndexIfNotExists = async (table: string, indexName: string, definition: string) => {
     const idx = await query(
       `SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS 
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?`,
@@ -41,14 +33,42 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
   };
 
-  await addColumnIfNotExists('pur_request', 'request_dept_id', "INT UNSIGNED DEFAULT NULL COMMENT '申请部门ID' AFTER request_type");
-  await addColumnIfNotExists('pur_request', 'requester_id', "INT UNSIGNED DEFAULT NULL COMMENT '申请人ID' AFTER request_dept");
-  await addColumnIfNotExists('pur_request', 'reviewer_id', "INT UNSIGNED DEFAULT NULL COMMENT '审校人ID' AFTER requester_name");
-  await addColumnIfNotExists('pur_request', 'reviewer_name', "VARCHAR(50) DEFAULT NULL COMMENT '审校人姓名' AFTER reviewer_id");
-  await addColumnIfNotExists('pur_request', 'approver_id', "INT UNSIGNED DEFAULT NULL COMMENT '批准人ID' AFTER reviewer_name");
-  await addColumnIfNotExists('pur_request', 'approver_name', "VARCHAR(50) DEFAULT NULL COMMENT '批准人姓名' AFTER approver_id");
+  await addColumnIfNotExists(
+    'pur_request',
+    'request_dept_id',
+    "INT UNSIGNED DEFAULT NULL COMMENT '申请部门ID' AFTER request_type"
+  );
+  await addColumnIfNotExists(
+    'pur_request',
+    'requester_id',
+    "INT UNSIGNED DEFAULT NULL COMMENT '申请人ID' AFTER request_dept"
+  );
+  await addColumnIfNotExists(
+    'pur_request',
+    'reviewer_id',
+    "INT UNSIGNED DEFAULT NULL COMMENT '审校人ID' AFTER requester_name"
+  );
+  await addColumnIfNotExists(
+    'pur_request',
+    'reviewer_name',
+    "VARCHAR(50) DEFAULT NULL COMMENT '审校人姓名' AFTER reviewer_id"
+  );
+  await addColumnIfNotExists(
+    'pur_request',
+    'approver_id',
+    "INT UNSIGNED DEFAULT NULL COMMENT '批准人ID' AFTER reviewer_name"
+  );
+  await addColumnIfNotExists(
+    'pur_request',
+    'approver_name',
+    "VARCHAR(50) DEFAULT NULL COMMENT '批准人姓名' AFTER approver_id"
+  );
 
-  await addColumnIfNotExists('pur_request_item', 'material_id', "INT UNSIGNED DEFAULT NULL COMMENT '物料ID' AFTER line_no");
+  await addColumnIfNotExists(
+    'pur_request_item',
+    'material_id',
+    "INT UNSIGNED DEFAULT NULL COMMENT '物料ID' AFTER line_no"
+  );
   await addIndexIfNotExists('pur_request_item', 'idx_material_id', 'material_id');
 
   try {

@@ -130,11 +130,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   ]);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   const {
@@ -304,9 +300,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('已使用的标签不能删除', 409, 409);
   }
 
-  await execute('UPDATE inv_inbound_label SET deleted = 1 WHERE id = ?', [
-    labelId,
-  ]);
+  await execute('UPDATE inv_inbound_label SET deleted = 1 WHERE id = ?', [labelId]);
 
   return successResponse(null, '物料标签删除成功');
 }, '删除物料标签失败');

@@ -7,15 +7,74 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { AnimatedTabs } from '@/components/ui/animated-tabs';
-import { Plus, Search, RefreshCw, AlertTriangle, Shield, Lock, Unlock, Eye, Edit, Trash2, Wrench, QrCode, Activity, BarChart3, Clock, WrenchIcon, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  RefreshCw,
+  AlertTriangle,
+  Shield,
+  Lock,
+  Unlock,
+  Eye,
+  Edit,
+  Trash2,
+  Wrench,
+  QrCode,
+  Activity,
+  BarChart3,
+  Clock,
+  WrenchIcon,
+  RotateCcw,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
-import { TableExportToolbar, printTable, exportTableToPDF, exportTableToXLS, exportTableToWORD } from '@/components/ui/table-export-toolbar';
+import {
+  TableExportToolbar,
+  printTable,
+  exportTableToPDF,
+  exportTableToXLS,
+  exportTableToWORD,
+} from '@/components/ui/table-export-toolbar';
+
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
 
 interface DieTemplate {
   id: number;
@@ -51,13 +110,23 @@ interface DieTemplate {
 }
 
 interface DashboardStats {
+  total_count?: number;
   totalTemplates?: number;
   warningCount?: number;
+  warning_count?: number;
   inUseCount?: number;
+  in_use_count?: number;
   availableCount?: number;
+  available_count?: number;
   maintenanceCount?: number;
+  maintenance_count?: number;
   totalImpressions?: number;
+  total_impressions?: number;
   avgUsageRate?: number;
+  avg_usage_rate?: number;
+  locked_count?: number;
+  scrap_count?: number;
+  maintenance_due_count?: number;
 }
 
 interface MaintenanceRecord {
@@ -217,7 +286,7 @@ export default function DieTemplatePage() {
 
   const fetchMaintenanceList = useCallback(async () => {
     try {
-      const res = await fetch('/api/prepress/die-maintenance?pageSize=50');
+      const res = await authFetch('/api/prepress/die-maintenance?pageSize=50');
       const data = await res.json();
       if (data.success) {
         setMaintenanceList(data.data?.list || []);
@@ -250,7 +319,7 @@ export default function DieTemplatePage() {
 
   const handleSort = (field: string) => {
     if (sortField === field) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortDir('asc');
@@ -259,13 +328,17 @@ export default function DieTemplatePage() {
 
   const getSortIcon = (field: string) => {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-40" />;
-    return sortDir === 'asc' ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
+    return sortDir === 'asc' ? (
+      <ArrowUp className="ml-1 h-3 w-3" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3" />
+    );
   };
 
   const sortedList = [...list].sort((a, b) => {
     if (!sortField) return 0;
-    const aVal = (a as Record<string, unknown>)[sortField];
-    const bVal = (b as Record<string, unknown>)[sortField];
+    const aVal = (a as Record<string, any>)[sortField];
+    const bVal = (b as Record<string, any>)[sortField];
     if (aVal == null && bVal == null) return 0;
     if (aVal == null) return 1;
     if (bVal == null) return -1;
@@ -280,13 +353,14 @@ export default function DieTemplatePage() {
 
   const toggleSelect = (id: number) => {
     const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id); else next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     setSelectedIds(next);
   };
 
   const toggleSelectAll = () => {
     if (selectedIds.size === sortedList.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(sortedList.map(s => s.id)));
+    else setSelectedIds(new Set(sortedList.map((s) => s.id)));
   };
 
   const exportColumns = [
@@ -300,16 +374,18 @@ export default function DieTemplatePage() {
     { key: 'storage_location', header: '存放位置' },
   ];
 
-  const getExportData = () => sortedList.map(item => ({
-    template_code: item.template_code,
-    template_name: item.template_name,
-    asset_type_label: (ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.label || '-',
-    specification: item.specification || '-',
-    usage_info: `${item.cumulative_impressions || item.current_usage} / ${item.max_impressions || item.max_usage}`,
-    usage_rate: `${getUsagePercent(item)}%`,
-    lifecycle_status: (DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label || '-',
-    storage_location: item.storage_location || '-',
-  }));
+  const getExportData = () =>
+    sortedList.map((item) => ({
+      template_code: item.template_code,
+      template_name: item.template_name,
+      asset_type_label:
+        (ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.label || '-',
+      specification: item.specification || '-',
+      usage_info: `${item.cumulative_impressions || item.current_usage} / ${item.max_impressions || item.max_usage}`,
+      usage_rate: `${getUsagePercent(item)}%`,
+      lifecycle_status: (DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label || '-',
+      storage_location: item.storage_location || '-',
+    }));
 
   const handleCreate = async () => {
     if (!form.template_code || !form.template_name) {
@@ -465,9 +541,8 @@ export default function DieTemplatePage() {
   const handleCompleteMaintenance = async (record: MaintenanceRecord) => {
     if (!confirm('确定完成此保养？')) return;
     try {
-      const res = await fetch('/api/prepress/die-maintenance', {
+      const res = await authFetch('/api/prepress/die-maintenance', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: record.id,
           status: 3,
@@ -610,19 +685,21 @@ export default function DieTemplatePage() {
     let filtered: DieTemplate[] = [];
     switch (type) {
       case 'available':
-        filtered = list.filter(i => i.die_status === 'available' || (!i.die_status && i.status === 1));
+        filtered = list.filter(
+          (i) => i.die_status === 'available' || (!i.die_status && i.status === 1)
+        );
         break;
       case 'maintenance_needed':
-        filtered = list.filter(i => i.die_status === 'maintenance_needed');
+        filtered = list.filter((i) => i.die_status === 'maintenance_needed');
         break;
       case 're_rule_needed':
-        filtered = list.filter(i => i.die_status === 're_rule_needed');
+        filtered = list.filter((i) => i.die_status === 're_rule_needed');
         break;
       case 'scrap':
-        filtered = list.filter(i => i.die_status === 'scrap' || i.status === 4);
+        filtered = list.filter((i) => i.die_status === 'scrap' || i.status === 4);
         break;
       case 'maintenance_due':
-        filtered = list.filter(i => {
+        filtered = list.filter((i) => {
           const pct = getMaintenanceProgress(i);
           return pct >= 80;
         });
@@ -637,12 +714,18 @@ export default function DieTemplatePage() {
 
   const getStatusCardTitle = () => {
     switch (statusCardType) {
-      case 'available': return '可用刀模/网版';
-      case 'maintenance_needed': return '需保养刀模/网版';
-      case 're_rule_needed': return '需重做刀模/网版';
-      case 'scrap': return '已报废刀模/网版';
-      case 'maintenance_due': return '待保养刀模/网版';
-      default: return '全部刀模/网版';
+      case 'available':
+        return '可用刀模/网版';
+      case 'maintenance_needed':
+        return '需保养刀模/网版';
+      case 're_rule_needed':
+        return '需重做刀模/网版';
+      case 'scrap':
+        return '已报废刀模/网版';
+      case 'maintenance_due':
+        return '待保养刀模/网版';
+      default:
+        return '全部刀模/网版';
     }
   };
 
@@ -728,40 +811,68 @@ export default function DieTemplatePage() {
     <MainLayout title="刀模/网版寿命管理">
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-6">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('all')}>
+          <Card
+            className="cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleStatusCardClick('all')}
+          >
             <CardContent className="pt-4">
               <div className="text-sm text-muted-foreground">总数</div>
               <div className="text-2xl font-bold">{dashboardStats.total_count || 0}</div>
             </CardContent>
           </Card>
-          <Card className="border-green-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('available')}>
+          <Card
+            className="border-green-200 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleStatusCardClick('available')}
+          >
             <CardContent className="pt-4">
               <div className="text-sm text-green-600">可用</div>
-              <div className="text-2xl font-bold text-green-600">{dashboardStats.available_count || 0}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {dashboardStats.available_count || 0}
+              </div>
             </CardContent>
           </Card>
-          <Card className="border-yellow-500/30 dark:border-yellow-400/30 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('maintenance_needed')}>
+          <Card
+            className="border-yellow-500/30 dark:border-yellow-400/30 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleStatusCardClick('maintenance_needed')}
+          >
             <CardContent className="pt-4">
               <div className="text-sm text-yellow-600">需保养</div>
-              <div className="text-2xl font-bold text-yellow-600">{dashboardStats.warning_count || 0}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {dashboardStats.warning_count || 0}
+              </div>
             </CardContent>
           </Card>
-          <Card className="border-orange-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('re_rule_needed')}>
+          <Card
+            className="border-orange-200 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleStatusCardClick('re_rule_needed')}
+          >
             <CardContent className="pt-4">
               <div className="text-sm text-orange-600">需重做</div>
-              <div className="text-2xl font-bold text-orange-600">{dashboardStats.locked_count || 0}</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {dashboardStats.locked_count || 0}
+              </div>
             </CardContent>
           </Card>
-          <Card className="border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('scrap')}>
+          <Card
+            className="border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleStatusCardClick('scrap')}
+          >
             <CardContent className="pt-4">
               <div className="text-sm text-muted-foreground">已报废</div>
-              <div className="text-2xl font-bold text-muted-foreground">{dashboardStats.scrap_count || 0}</div>
+              <div className="text-2xl font-bold text-muted-foreground">
+                {dashboardStats.scrap_count || 0}
+              </div>
             </CardContent>
           </Card>
-          <Card className="border-blue-200 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleStatusCardClick('maintenance_due')}>
+          <Card
+            className="border-blue-200 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => handleStatusCardClick('maintenance_due')}
+          >
             <CardContent className="pt-4">
               <div className="text-sm text-blue-600">待保养</div>
-              <div className="text-2xl font-bold text-blue-600">{dashboardStats.maintenance_due_count || 0}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {dashboardStats.maintenance_due_count || 0}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -797,39 +908,74 @@ export default function DieTemplatePage() {
                       <TableCell className="font-mono">{item.template_code}</TableCell>
                       <TableCell>{item.template_name}</TableCell>
                       <TableCell>
-                        <Badge className={(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.color || 'bg-secondary'}>
-                          {(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.label || '-'}
+                        <Badge
+                          className={
+                            (ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])
+                              ?.color || 'bg-secondary'
+                          }
+                        >
+                          {(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])
+                            ?.label || '-'}
                         </Badge>
                       </TableCell>
-                      <TableCell>{item.cumulative_impressions || item.current_usage} / {item.max_impressions || item.max_usage}</TableCell>
+                      <TableCell>
+                        {item.cumulative_impressions || item.current_usage} /{' '}
+                        {item.max_impressions || item.max_usage}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                            <div className={`h-full ${getUsageBarColor(item)}`} style={{ width: `${getUsagePercent(item)}%` }} />
+                            <div
+                              className={`h-full ${getUsageBarColor(item)}`}
+                              style={{ width: `${getUsagePercent(item)}%` }}
+                            />
                           </div>
                           <span className="text-sm font-medium">{getUsagePercent(item)}%</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className={(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color || 'bg-secondary'}>
-                          {(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label || '-'}
+                        <Badge
+                          className={
+                            (DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color ||
+                            'bg-secondary'
+                          }
+                        >
+                          {(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label ||
+                            '-'}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                            <div className={`h-full ${getMaintenanceBarColor(item)}`} style={{ width: `${getMaintenanceProgress(item)}%` }} />
+                            <div
+                              className={`h-full ${getMaintenanceBarColor(item)}`}
+                              style={{ width: `${getMaintenanceProgress(item)}%` }}
+                            />
                           </div>
                           <span className="text-xs">{getMaintenanceProgress(item)}%</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1">
-                          <Button size="sm" variant="outline" onClick={() => { setSelectedItem(item); setMaintenanceDialogOpen(true); }}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setMaintenanceDialogOpen(true);
+                            }}
+                          >
                             <Wrench className="h-3 w-3 mr-1" />
                             保养
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => { setSelectedItem(item); setUsageDialogOpen(true); }}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedItem(item);
+                              setUsageDialogOpen(true);
+                            }}
+                          >
                             <Activity className="h-3 w-3 mr-1" />
                             记录
                           </Button>
@@ -894,11 +1040,33 @@ export default function DieTemplatePage() {
                   onSelectAll={toggleSelectAll}
                   onDeselectAll={() => setSelectedIds(new Set())}
                   onPrint={() => printTable(getExportData(), exportColumns, '刀模/网版列表')}
-                  onExportPDF={() => exportTableToPDF(getExportData(), '刀模/网版列表', exportColumns, '刀模/网版列表')}
-                  onExportXLS={() => exportTableToXLS(getExportData(), '刀模/网版列表', exportColumns)}
-                  onExportWORD={() => exportTableToWORD(getExportData(), '刀模/网版列表', exportColumns, '刀模/网版列表')}
+                  onExportPDF={() =>
+                    exportTableToPDF(
+                      getExportData(),
+                      '刀模/网版列表',
+                      exportColumns,
+                      '刀模/网版列表'
+                    )
+                  }
+                  onExportXLS={() =>
+                    exportTableToXLS(getExportData(), '刀模/网版列表', exportColumns)
+                  }
+                  onExportWORD={() =>
+                    exportTableToWORD(
+                      getExportData(),
+                      '刀模/网版列表',
+                      exportColumns,
+                      '刀模/网版列表'
+                    )
+                  }
                 />
-                <Button onClick={() => { resetForm(); setEditing(false); setDialogOpen(true); }}>
+                <Button
+                  onClick={() => {
+                    resetForm();
+                    setEditing(false);
+                    setDialogOpen(true);
+                  }}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   新增
                 </Button>
@@ -908,12 +1076,14 @@ export default function DieTemplatePage() {
           <CardContent>
             <div className="mb-6">
               <AnimatedTabs
-                tabs={[
-                  { label: '资产列表' },
-                  { label: '保养记录' },
-                  { label: '使用记录' },
-                ]}
-                activeTab={activeTab === 'list' ? '资产列表' : activeTab === 'maintenance' ? '保养记录' : '使用记录'}
+                tabs={[{ label: '资产列表' }, { label: '保养记录' }, { label: '使用记录' }]}
+                activeTab={
+                  activeTab === 'list'
+                    ? '资产列表'
+                    : activeTab === 'maintenance'
+                      ? '保养记录'
+                      : '使用记录'
+                }
                 onTabChange={(label) => {
                   if (label === '资产列表') setActiveTab('list');
                   else if (label === '保养记录') setActiveTab('maintenance');
@@ -933,11 +1103,21 @@ export default function DieTemplatePage() {
                       />
                     </TableHead>
                     <TableHead className="w-[60px]">序号</TableHead>
-                    <TableHead className="cursor-pointer select-none" onClick={() => handleSort('template_code')}>
-                      <span className="inline-flex items-center">编号{getSortIcon('template_code')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none"
+                      onClick={() => handleSort('template_code')}
+                    >
+                      <span className="inline-flex items-center">
+                        编号{getSortIcon('template_code')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none" onClick={() => handleSort('template_name')}>
-                      <span className="inline-flex items-center">名称{getSortIcon('template_name')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none"
+                      onClick={() => handleSort('template_name')}
+                    >
+                      <span className="inline-flex items-center">
+                        名称{getSortIcon('template_name')}
+                      </span>
                     </TableHead>
                     <TableHead>资产类型</TableHead>
                     <TableHead>规格</TableHead>
@@ -958,13 +1138,22 @@ export default function DieTemplatePage() {
                     </TableRow>
                   ) : (
                     sortedList.map((item, index) => (
-                      <TableRow key={item.id} className={
-                        item.die_status === 'scrap' ? 'bg-gray-50 dark:bg-gray-900' :
-                        item.die_status === 're_rule_needed' ? 'bg-orange-50 dark:bg-orange-950' :
-                        item.die_status === 'maintenance_needed' ? 'bg-yellow-50 dark:bg-yellow-950' :
-                        item.status === 3 ? 'bg-red-50 dark:bg-red-950' :
-                        item.status === 2 ? 'bg-yellow-50 dark:bg-yellow-950' : ''
-                      }>
+                      <TableRow
+                        key={item.id}
+                        className={
+                          item.die_status === 'scrap'
+                            ? 'bg-gray-50 dark:bg-gray-900'
+                            : item.die_status === 're_rule_needed'
+                              ? 'bg-orange-50 dark:bg-orange-950'
+                              : item.die_status === 'maintenance_needed'
+                                ? 'bg-yellow-50 dark:bg-yellow-950'
+                                : item.status === 3
+                                  ? 'bg-red-50 dark:bg-red-950'
+                                  : item.status === 2
+                                    ? 'bg-yellow-50 dark:bg-yellow-950'
+                                    : ''
+                        }
+                      >
                         <TableCell>
                           <Checkbox
                             checked={selectedIds.has(item.id)}
@@ -975,34 +1164,57 @@ export default function DieTemplatePage() {
                         <TableCell className="font-mono">{item.template_code}</TableCell>
                         <TableCell className="font-medium">{item.template_name}</TableCell>
                         <TableCell>
-                          <Badge className={(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.color || 'bg-secondary'}>
-                            {(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.label || '-'}
+                          <Badge
+                            className={
+                              (ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])
+                                ?.color || 'bg-secondary'
+                            }
+                          >
+                            {(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])
+                              ?.label || '-'}
                           </Badge>
                         </TableCell>
                         <TableCell>{item.specification || '-'}</TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            <span className="font-medium">{item.cumulative_impressions || item.current_usage}</span>
-                            <span className="text-gray-400"> / {item.max_impressions || item.max_usage}</span>
+                            <span className="font-medium">
+                              {item.cumulative_impressions || item.current_usage}
+                            </span>
+                            <span className="text-gray-400">
+                              {' '}
+                              / {item.max_impressions || item.max_usage}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                              <div className={`h-full ${getUsageBarColor(item)}`} style={{ width: `${getUsagePercent(item)}%` }} />
+                              <div
+                                className={`h-full ${getUsageBarColor(item)}`}
+                                style={{ width: `${getUsagePercent(item)}%` }}
+                              />
                             </div>
                             <span className="text-sm font-medium">{getUsagePercent(item)}%</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color || 'bg-secondary'}>
-                            {(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label || '-'}
+                          <Badge
+                            className={
+                              (DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color ||
+                              'bg-secondary'
+                            }
+                          >
+                            {(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label ||
+                              '-'}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                              <div className={`h-full ${getMaintenanceBarColor(item)}`} style={{ width: `${getMaintenanceProgress(item)}%` }} />
+                              <div
+                                className={`h-full ${getMaintenanceBarColor(item)}`}
+                                style={{ width: `${getMaintenanceProgress(item)}%` }}
+                              />
                             </div>
                             <span className="text-xs">{item.maintenance_count || 0}次</span>
                           </div>
@@ -1010,22 +1222,60 @@ export default function DieTemplatePage() {
                         <TableCell>{item.storage_location || '-'}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => { setDetailData(item); setDetailOpen(true); }}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setDetailData(item);
+                                setDetailOpen(true);
+                              }}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="sm" onClick={() => openEditDialog(item)}>
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => { setSelectedItem(item); setUsageDialogOpen(true); }} title="记录使用">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedItem(item);
+                                setUsageDialogOpen(true);
+                              }}
+                              title="记录使用"
+                            >
                               <Activity className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => { setSelectedItem(item); setMaintenanceDialogOpen(true); }} title="保养">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedItem(item);
+                                setMaintenanceDialogOpen(true);
+                              }}
+                              title="保养"
+                            >
                               <Wrench className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleLock(item)} title={item.status === 3 ? '解锁' : '锁定'}>
-                              {item.status === 3 ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleLock(item)}
+                              title={item.status === 3 ? '解锁' : '锁定'}
+                            >
+                              {item.status === 3 ? (
+                                <Unlock className="h-4 w-4" />
+                              ) : (
+                                <Lock className="h-4 w-4" />
+                              )}
                             </Button>
-                            <Button variant="ghost" size="sm" className="text-red-500" onClick={() => handleScrap(item)} title="报废">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500"
+                              onClick={() => handleScrap(item)}
+                              title="报废"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -1042,7 +1292,8 @@ export default function DieTemplatePage() {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-medium">保养记录</h3>
                   <Button variant="outline" onClick={fetchMaintenanceList}>
-                    <RefreshCw className="h-4 w-4 mr-2" />刷新
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    刷新
                   </Button>
                 </div>
                 <Table>
@@ -1074,8 +1325,14 @@ export default function DieTemplatePage() {
                           <TableCell className="font-mono">{record.die_code}</TableCell>
                           <TableCell>{record.template_name}</TableCell>
                           <TableCell>
-                            <Badge className={MAINTENANCE_TYPE_MAP[record.maintenance_type]?.color || 'bg-secondary'}>
-                              {MAINTENANCE_TYPE_MAP[record.maintenance_type]?.label || record.maintenance_type}
+                            <Badge
+                              className={
+                                MAINTENANCE_TYPE_MAP[record.maintenance_type]?.color ||
+                                'bg-secondary'
+                              }
+                            >
+                              {MAINTENANCE_TYPE_MAP[record.maintenance_type]?.label ||
+                                record.maintenance_type}
                             </Badge>
                           </TableCell>
                           <TableCell>{record.impressions_before}</TableCell>
@@ -1083,13 +1340,21 @@ export default function DieTemplatePage() {
                           <TableCell>{record.cost ? `¥${record.cost}` : '-'}</TableCell>
                           <TableCell>{record.technician_name || '-'}</TableCell>
                           <TableCell>
-                            <Badge className={MAINTENANCE_STATUS_MAP[record.status]?.color || 'bg-secondary'}>
+                            <Badge
+                              className={
+                                MAINTENANCE_STATUS_MAP[record.status]?.color || 'bg-secondary'
+                              }
+                            >
                               {MAINTENANCE_STATUS_MAP[record.status]?.label || record.status}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             {record.status !== 3 && (
-                              <Button size="sm" variant="outline" onClick={() => handleCompleteMaintenance(record)}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleCompleteMaintenance(record)}
+                              >
                                 完成保养
                               </Button>
                             )}
@@ -1107,7 +1372,8 @@ export default function DieTemplatePage() {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-medium">使用记录</h3>
                   <Button variant="outline" onClick={fetchUsageLogs}>
-                    <RefreshCw className="h-4 w-4 mr-2" />刷新
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    刷新
                   </Button>
                 </div>
                 <Table>
@@ -1155,24 +1421,50 @@ export default function DieTemplatePage() {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" resizable>
             <DialogHeader>
               <DialogTitle>{editing ? '编辑刀模/网版' : '新增刀模/网版'}</DialogTitle>
-              <DialogDescription>{editing ? '修改刀模/网版信息' : '创建新的刀模/网版记录'}</DialogDescription>
+              <DialogDescription>
+                {editing ? '修改刀模/网版信息' : '创建新的刀模/网版记录'}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>编号 <span className="text-red-500">*</span></Label>
-                  <Input value={form.template_code} onChange={(e) => setForm({ ...form, template_code: e.target.value })} disabled={editing} placeholder="如 DM-001" />
+                  <Label>
+                    编号 <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={form.template_code}
+                    onChange={(e) => setForm({ ...form, template_code: e.target.value })}
+                    disabled={editing}
+                    placeholder="如 DM-001"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>名称 <span className="text-red-500">*</span></Label>
-                  <Input value={form.template_name} onChange={(e) => setForm({ ...form, template_name: e.target.value })} placeholder="刀模/网版名称" />
+                  <Label>
+                    名称 <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    value={form.template_name}
+                    onChange={(e) => setForm({ ...form, template_name: e.target.value })}
+                    placeholder="刀模/网版名称"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>传统类型</Label>
-                  <Select value={form.template_type} onValueChange={(v) => setForm({ ...form, template_type: v, asset_type: v === '2' ? 'screen_mesh' : 'die' })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={form.template_type}
+                    onValueChange={(v) =>
+                      setForm({
+                        ...form,
+                        template_type: v,
+                        asset_type: v === '2' ? 'screen_mesh' : 'die',
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1">刀模</SelectItem>
                       <SelectItem value="2">丝网版</SelectItem>
@@ -1181,8 +1473,13 @@ export default function DieTemplatePage() {
                 </div>
                 <div className="space-y-2">
                   <Label>资产类型</Label>
-                  <Select value={form.asset_type} onValueChange={(v) => setForm({ ...form, asset_type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={form.asset_type}
+                    onValueChange={(v) => setForm({ ...form, asset_type: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="die">刀模</SelectItem>
                       <SelectItem value="flexo_plate">柔印版</SelectItem>
@@ -1192,8 +1489,13 @@ export default function DieTemplatePage() {
                 </div>
                 <div className="space-y-2">
                   <Label>布局类型</Label>
-                  <Select value={form.layout_type} onValueChange={(v) => setForm({ ...form, layout_type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={form.layout_type}
+                    onValueChange={(v) => setForm({ ...form, layout_type: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="single_row">单排</SelectItem>
                       <SelectItem value="multi_row">多排</SelectItem>
@@ -1204,59 +1506,129 @@ export default function DieTemplatePage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>单次出件数</Label>
-                  <Input type="number" value={form.pieces_per_impression} onChange={(e) => setForm({ ...form, pieces_per_impression: e.target.value })} placeholder="1" />
+                  <Input
+                    type="number"
+                    value={form.pieces_per_impression}
+                    onChange={(e) => setForm({ ...form, pieces_per_impression: e.target.value })}
+                    placeholder="1"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>规格</Label>
-                  <Input value={form.specification} onChange={(e) => setForm({ ...form, specification: e.target.value })} placeholder="如 300x200mm" />
+                  <Input
+                    value={form.specification}
+                    onChange={(e) => setForm({ ...form, specification: e.target.value })}
+                    placeholder="如 300x200mm"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>材质</Label>
-                  <Input value={form.material} onChange={(e) => setForm({ ...form, material: e.target.value })} placeholder="材质" />
+                  <Input
+                    value={form.material}
+                    onChange={(e) => setForm({ ...form, material: e.target.value })}
+                    placeholder="材质"
+                  />
                 </div>
               </div>
               <div className="border-t pt-4">
-                <h4 className="font-medium mb-3 flex items-center gap-2"><Activity className="h-4 w-4" />寿命参数</h4>
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  寿命参数
+                </h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>最大使用次数</Label>
-                    <Input type="number" value={form.max_impressions || form.max_usage} onChange={(e) => setForm({ ...form, max_impressions: e.target.value, max_usage: e.target.value })} placeholder="如 50000" />
+                    <Input
+                      type="number"
+                      value={form.max_impressions || form.max_usage}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          max_impressions: e.target.value,
+                          max_usage: e.target.value,
+                        })
+                      }
+                      placeholder="如 50000"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>已使用次数</Label>
-                    <Input type="number" value={form.cumulative_impressions || form.current_usage} onChange={(e) => setForm({ ...form, cumulative_impressions: e.target.value, current_usage: e.target.value })} placeholder="0" />
+                    <Input
+                      type="number"
+                      value={form.cumulative_impressions || form.current_usage}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          cumulative_impressions: e.target.value,
+                          current_usage: e.target.value,
+                        })
+                      }
+                      placeholder="0"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>预警比例(%)</Label>
-                    <Input type="number" value={form.warning_threshold} onChange={(e) => setForm({ ...form, warning_threshold: e.target.value })} placeholder="80" />
+                    <Input
+                      type="number"
+                      value={form.warning_threshold}
+                      onChange={(e) => setForm({ ...form, warning_threshold: e.target.value })}
+                      placeholder="80"
+                    />
                   </div>
                 </div>
               </div>
               <div className="border-t pt-4">
-                <h4 className="font-medium mb-3 flex items-center gap-2"><WrenchIcon className="h-4 w-4" />保养参数</h4>
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <WrenchIcon className="h-4 w-4" />
+                  保养参数
+                </h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>保养间隔次数</Label>
-                    <Input type="number" value={form.maintenance_interval} onChange={(e) => setForm({ ...form, maintenance_interval: e.target.value })} placeholder="8000" />
+                    <Input
+                      type="number"
+                      value={form.maintenance_interval}
+                      onChange={(e) => setForm({ ...form, maintenance_interval: e.target.value })}
+                      placeholder="8000"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>单价(元)</Label>
-                    <Input type="number" value={form.unit_price} onChange={(e) => setForm({ ...form, unit_price: e.target.value })} placeholder="0" />
+                    <Input
+                      type="number"
+                      value={form.unit_price}
+                      onChange={(e) => setForm({ ...form, unit_price: e.target.value })}
+                      placeholder="0"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>存放位置</Label>
-                    <Input value={form.storage_location} onChange={(e) => setForm({ ...form, storage_location: e.target.value })} placeholder="A区-01架" />
+                    <Input
+                      value={form.storage_location}
+                      onChange={(e) => setForm({ ...form, storage_location: e.target.value })}
+                      placeholder="A区-01架"
+                    />
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>备注</Label>
-                <Textarea value={form.remark} onChange={(e) => setForm({ ...form, remark: e.target.value })} placeholder="备注信息" rows={2} />
+                <Textarea
+                  value={form.remark}
+                  onChange={(e) => setForm({ ...form, remark: e.target.value })}
+                  placeholder="备注信息"
+                  rows={2}
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>取消</Button>
-              <Button onClick={editing ? handleUpdate : handleCreate} className="bg-blue-600 hover:bg-blue-700">
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                取消
+              </Button>
+              <Button
+                onClick={editing ? handleUpdate : handleCreate}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 {editing ? '保存' : '创建'}
               </Button>
             </DialogFooter>
@@ -1268,7 +1640,8 @@ export default function DieTemplatePage() {
             <DialogHeader>
               <DialogTitle>记录使用</DialogTitle>
               <DialogDescription>
-                {selectedItem && `为 ${selectedItem.template_name} (${selectedItem.template_code}) 记录使用次数`}
+                {selectedItem &&
+                  `为 ${selectedItem.template_name} (${selectedItem.template_code}) 记录使用次数`}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -1276,7 +1649,10 @@ export default function DieTemplatePage() {
                 <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">当前累计</span>
-                    <span className="font-medium">{selectedItem.cumulative_impressions || selectedItem.current_usage} / {selectedItem.max_impressions || selectedItem.max_usage}</span>
+                    <span className="font-medium">
+                      {selectedItem.cumulative_impressions || selectedItem.current_usage} /{' '}
+                      {selectedItem.max_impressions || selectedItem.max_usage}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">使用率</span>
@@ -1284,20 +1660,37 @@ export default function DieTemplatePage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">生命周期</span>
-                    <Badge className={(DIE_STATUS_MAP[selectedItem.die_status] || STATUS_MAP[selectedItem.status])?.color || 'bg-secondary'}>
-                      {(DIE_STATUS_MAP[selectedItem.die_status] || STATUS_MAP[selectedItem.status])?.label || '-'}
+                    <Badge
+                      className={
+                        (DIE_STATUS_MAP[selectedItem.die_status] || STATUS_MAP[selectedItem.status])
+                          ?.color || 'bg-secondary'
+                      }
+                    >
+                      {(DIE_STATUS_MAP[selectedItem.die_status] || STATUS_MAP[selectedItem.status])
+                        ?.label || '-'}
                     </Badge>
                   </div>
                 </div>
               )}
               <div className="space-y-2">
-                <Label>本次使用次数 <span className="text-red-500">*</span></Label>
-                <Input type="number" value={usageAmount} onChange={(e) => setUsageAmount(e.target.value)} placeholder="输入使用次数" />
+                <Label>
+                  本次使用次数 <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="number"
+                  value={usageAmount}
+                  onChange={(e) => setUsageAmount(e.target.value)}
+                  placeholder="输入使用次数"
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setUsageDialogOpen(false)}>取消</Button>
-              <Button onClick={handleDeductUsage} className="bg-blue-600 hover:bg-blue-700">确认记录</Button>
+              <Button variant="outline" onClick={() => setUsageDialogOpen(false)}>
+                取消
+              </Button>
+              <Button onClick={handleDeductUsage} className="bg-blue-600 hover:bg-blue-700">
+                确认记录
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1307,7 +1700,8 @@ export default function DieTemplatePage() {
             <DialogHeader>
               <DialogTitle>创建保养记录</DialogTitle>
               <DialogDescription>
-                {selectedItem && `为 ${selectedItem.template_name} (${selectedItem.template_code}) 创建保养记录`}
+                {selectedItem &&
+                  `为 ${selectedItem.template_name} (${selectedItem.template_code}) 创建保养记录`}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -1315,7 +1709,10 @@ export default function DieTemplatePage() {
                 <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">累计使用</span>
-                    <span className="font-medium">{selectedItem.cumulative_impressions || selectedItem.current_usage} / {selectedItem.max_impressions || selectedItem.max_usage}</span>
+                    <span className="font-medium">
+                      {selectedItem.cumulative_impressions || selectedItem.current_usage} /{' '}
+                      {selectedItem.max_impressions || selectedItem.max_usage}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">已保养次数</span>
@@ -1323,14 +1720,27 @@ export default function DieTemplatePage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">距上次保养</span>
-                    <span className="font-medium">{(selectedItem.cumulative_impressions || 0) - (selectedItem.last_maintenance_impressions || 0)}次</span>
+                    <span className="font-medium">
+                      {(selectedItem.cumulative_impressions || 0) -
+                        (selectedItem.last_maintenance_impressions || 0)}
+                      次
+                    </span>
                   </div>
                 </div>
               )}
               <div className="space-y-2">
-                <Label>保养类型 <span className="text-red-500">*</span></Label>
-                <Select value={maintenanceForm.maintenance_type} onValueChange={(v) => setMaintenanceForm({ ...maintenanceForm, maintenance_type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label>
+                  保养类型 <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={maintenanceForm.maintenance_type}
+                  onValueChange={(v) =>
+                    setMaintenanceForm({ ...maintenanceForm, maintenance_type: v })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="routine">常规保养</SelectItem>
                     <SelectItem value="grinding">磨刃/修版</SelectItem>
@@ -1342,31 +1752,62 @@ export default function DieTemplatePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>保养费用(元)</Label>
-                  <Input type="number" value={maintenanceForm.cost} onChange={(e) => setMaintenanceForm({ ...maintenanceForm, cost: e.target.value })} placeholder="0" />
+                  <Input
+                    type="number"
+                    value={maintenanceForm.cost}
+                    onChange={(e) =>
+                      setMaintenanceForm({ ...maintenanceForm, cost: e.target.value })
+                    }
+                    placeholder="0"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>保养人员</Label>
-                  <Input value={maintenanceForm.technician_name} onChange={(e) => setMaintenanceForm({ ...maintenanceForm, technician_name: e.target.value })} placeholder="保养人员姓名" />
+                  <Input
+                    value={maintenanceForm.technician_name}
+                    onChange={(e) =>
+                      setMaintenanceForm({ ...maintenanceForm, technician_name: e.target.value })
+                    }
+                    placeholder="保养人员姓名"
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>备注</Label>
-                <Textarea value={maintenanceForm.remark} onChange={(e) => setMaintenanceForm({ ...maintenanceForm, remark: e.target.value })} placeholder="保养备注" rows={2} />
+                <Textarea
+                  value={maintenanceForm.remark}
+                  onChange={(e) =>
+                    setMaintenanceForm({ ...maintenanceForm, remark: e.target.value })
+                  }
+                  placeholder="保养备注"
+                  rows={2}
+                />
               </div>
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="complete_immediately"
                   checked={maintenanceForm.complete_immediately}
-                  onChange={(e) => setMaintenanceForm({ ...maintenanceForm, complete_immediately: e.target.checked })}
+                  onChange={(e) =>
+                    setMaintenanceForm({
+                      ...maintenanceForm,
+                      complete_immediately: e.target.checked,
+                    })
+                  }
                   className="rounded"
                 />
-                <Label htmlFor="complete_immediately" className="text-sm">立即完成保养</Label>
+                <Label htmlFor="complete_immediately" className="text-sm">
+                  立即完成保养
+                </Label>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setMaintenanceDialogOpen(false)}>取消</Button>
-              <Button onClick={handleMaintenance} className="bg-blue-600 hover:bg-blue-700">创建保养</Button>
+              <Button variant="outline" onClick={() => setMaintenanceDialogOpen(false)}>
+                取消
+              </Button>
+              <Button onClick={handleMaintenance} className="bg-blue-600 hover:bg-blue-700">
+                创建保养
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1379,22 +1820,56 @@ export default function DieTemplatePage() {
             {detailData && (
               <div className="space-y-4 py-4">
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div><span className="text-muted-foreground">编号：</span>{detailData.template_code}</div>
-                  <div><span className="text-muted-foreground">名称：</span>{detailData.template_name}</div>
-                  <div><span className="text-muted-foreground">资产类型：</span>
-                    <Badge className={(ASSET_TYPE_MAP[detailData.asset_type] || TYPE_MAP[detailData.template_type])?.color || 'bg-secondary'}>
-                      {(ASSET_TYPE_MAP[detailData.asset_type] || TYPE_MAP[detailData.template_type])?.label || '-'}
+                  <div>
+                    <span className="text-muted-foreground">编号：</span>
+                    {detailData.template_code}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">名称：</span>
+                    {detailData.template_name}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">资产类型：</span>
+                    <Badge
+                      className={
+                        (
+                          ASSET_TYPE_MAP[detailData.asset_type] ||
+                          TYPE_MAP[detailData.template_type]
+                        )?.color || 'bg-secondary'
+                      }
+                    >
+                      {(ASSET_TYPE_MAP[detailData.asset_type] || TYPE_MAP[detailData.template_type])
+                        ?.label || '-'}
                     </Badge>
                   </div>
-                  <div><span className="text-muted-foreground">生命周期：</span>
-                    <Badge className={(DIE_STATUS_MAP[detailData.die_status] || STATUS_MAP[detailData.status])?.color || 'bg-secondary'}>
-                      {(DIE_STATUS_MAP[detailData.die_status] || STATUS_MAP[detailData.status])?.label || '-'}
+                  <div>
+                    <span className="text-muted-foreground">生命周期：</span>
+                    <Badge
+                      className={
+                        (DIE_STATUS_MAP[detailData.die_status] || STATUS_MAP[detailData.status])
+                          ?.color || 'bg-secondary'
+                      }
+                    >
+                      {(DIE_STATUS_MAP[detailData.die_status] || STATUS_MAP[detailData.status])
+                        ?.label || '-'}
                     </Badge>
                   </div>
-                  <div><span className="text-muted-foreground">规格：</span>{detailData.specification || '-'}</div>
-                  <div><span className="text-muted-foreground">材质：</span>{detailData.material || '-'}</div>
-                  <div><span className="text-muted-foreground">布局：</span>{detailData.layout_type === 'multi_row' ? '多排' : '单排'}</div>
-                  <div><span className="text-muted-foreground">单次出件：</span>{detailData.pieces_per_impression || 1}</div>
+                  <div>
+                    <span className="text-muted-foreground">规格：</span>
+                    {detailData.specification || '-'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">材质：</span>
+                    {detailData.material || '-'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">布局：</span>
+                    {detailData.layout_type === 'multi_row' ? '多排' : '单排'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">单次出件：</span>
+                    {detailData.pieces_per_impression || 1}
+                  </div>
                 </div>
                 <div className="border-t pt-3">
                   <h4 className="font-medium mb-2">寿命信息</h4>
@@ -1404,20 +1879,36 @@ export default function DieTemplatePage() {
                       <span className="text-sm font-medium">{getUsagePercent(detailData)}%</span>
                     </div>
                     <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
-                      <div className={`h-full ${getUsageBarColor(detailData)}`} style={{ width: `${getUsagePercent(detailData)}%` }} />
+                      <div
+                        className={`h-full ${getUsageBarColor(detailData)}`}
+                        style={{ width: `${getUsagePercent(detailData)}%` }}
+                      />
                     </div>
                     <div className="text-xs text-gray-400">
-                      {detailData.cumulative_impressions || detailData.current_usage} / {detailData.max_impressions || detailData.max_usage} 次
+                      {detailData.cumulative_impressions || detailData.current_usage} /{' '}
+                      {detailData.max_impressions || detailData.max_usage} 次
                     </div>
                   </div>
                 </div>
                 <div className="border-t pt-3">
                   <h4 className="font-medium mb-2">保养信息</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div><span className="text-muted-foreground">已保养：</span>{detailData.maintenance_count || 0}次</div>
-                    <div><span className="text-muted-foreground">间隔：</span>{detailData.maintenance_interval || '-'}次</div>
-                    <div><span className="text-muted-foreground">上次保养：</span>{detailData.last_maintenance_date || '-'}</div>
-                    <div><span className="text-muted-foreground">最后使用：</span>{detailData.last_used_date || '-'}</div>
+                    <div>
+                      <span className="text-muted-foreground">已保养：</span>
+                      {detailData.maintenance_count || 0}次
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">间隔：</span>
+                      {detailData.maintenance_interval || '-'}次
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">上次保养：</span>
+                      {detailData.last_maintenance_date || '-'}
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">最后使用：</span>
+                      {detailData.last_used_date || '-'}
+                    </div>
                   </div>
                   <div className="mt-2">
                     <div className="flex items-center justify-between">
@@ -1425,19 +1916,35 @@ export default function DieTemplatePage() {
                       <span className="text-sm">{getMaintenanceProgress(detailData)}%</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden mt-1">
-                      <div className={`h-full ${getMaintenanceBarColor(detailData)}`} style={{ width: `${getMaintenanceProgress(detailData)}%` }} />
+                      <div
+                        className={`h-full ${getMaintenanceBarColor(detailData)}`}
+                        style={{ width: `${getMaintenanceProgress(detailData)}%` }}
+                      />
                     </div>
                   </div>
                 </div>
                 <div className="border-t pt-3 grid grid-cols-2 gap-2 text-sm">
-                  <div><span className="text-muted-foreground">单价：</span>¥{detailData.unit_price || 0}</div>
-                  <div><span className="text-muted-foreground">存放位置：</span>{detailData.storage_location || '-'}</div>
-                  <div><span className="text-muted-foreground">购买日期：</span>{detailData.purchase_date || '-'}</div>
-                  <div><span className="text-muted-foreground">二维码：</span>{detailData.qr_code || '-'}</div>
+                  <div>
+                    <span className="text-muted-foreground">单价：</span>¥
+                    {detailData.unit_price || 0}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">存放位置：</span>
+                    {detailData.storage_location || '-'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">购买日期：</span>
+                    {detailData.purchase_date || '-'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">二维码：</span>
+                    {detailData.qr_code || '-'}
+                  </div>
                 </div>
                 {detailData.remark && (
                   <div className="border-t pt-3 text-sm">
-                    <span className="text-muted-foreground">备注：</span>{detailData.remark}
+                    <span className="text-muted-foreground">备注：</span>
+                    {detailData.remark}
                   </div>
                 )}
               </div>
@@ -1465,67 +1972,111 @@ export default function DieTemplatePage() {
               <TableBody>
                 {statusCardList.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">暂无记录</TableCell>
-                  </TableRow>
-                ) : statusCardList.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-mono">{item.template_code}</TableCell>
-                    <TableCell>{item.template_name}</TableCell>
-                    <TableCell>
-                      <Badge className={(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.color || 'bg-secondary'}>
-                        {(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])?.label || '-'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                          <div className={`h-full ${getUsageBarColor(item)}`} style={{ width: `${getUsagePercent(item)}%` }} />
-                        </div>
-                        <span className="text-sm font-medium">{getUsagePercent(item)}%</span>
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {item.cumulative_impressions || item.current_usage} / {item.max_impressions || item.max_usage}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color || 'bg-secondary'}>
-                        {(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label || '-'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                          <div className={`h-full ${getMaintenanceBarColor(item)}`} style={{ width: `${getMaintenanceProgress(item)}%` }} />
-                        </div>
-                        <span className="text-xs">{getMaintenanceProgress(item)}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {(statusCardType === 'maintenance_needed' || statusCardType === 'maintenance_due') && (
-                          <Button size="sm" variant="outline" className="text-yellow-700 border-yellow-300 hover:bg-yellow-50" onClick={() => handleCardMaintenance(item)}>
-                            <Wrench className="h-3 w-3 mr-1" />
-                            保养
-                          </Button>
-                        )}
-                        {(statusCardType === 're_rule_needed' || statusCardType === 'maintenance_needed') && (
-                          <Button size="sm" variant="outline" className="text-orange-700 border-orange-300 hover:bg-orange-50" onClick={() => handleCardReRule(item)}>
-                            <RotateCcw className="h-3 w-3 mr-1" />
-                            重做
-                          </Button>
-                        )}
-                        <Button size="sm" variant="outline" onClick={() => { setDetailData(item); setDetailOpen(true); }}>
-                          <Eye className="h-3 w-3 mr-1" />
-                          详情
-                        </Button>
-                      </div>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      暂无记录
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  statusCardList.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-mono">{item.template_code}</TableCell>
+                      <TableCell>{item.template_name}</TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            (ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])
+                              ?.color || 'bg-secondary'
+                          }
+                        >
+                          {(ASSET_TYPE_MAP[item.asset_type] || TYPE_MAP[item.template_type])
+                            ?.label || '-'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${getUsageBarColor(item)}`}
+                              style={{ width: `${getUsagePercent(item)}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-medium">{getUsagePercent(item)}%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          {item.cumulative_impressions || item.current_usage} /{' '}
+                          {item.max_impressions || item.max_usage}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            (DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.color ||
+                            'bg-secondary'
+                          }
+                        >
+                          {(DIE_STATUS_MAP[item.die_status] || STATUS_MAP[item.status])?.label ||
+                            '-'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${getMaintenanceBarColor(item)}`}
+                              style={{ width: `${getMaintenanceProgress(item)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs">{getMaintenanceProgress(item)}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {(statusCardType === 'maintenance_needed' ||
+                            statusCardType === 'maintenance_due') && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-yellow-700 border-yellow-300 hover:bg-yellow-50"
+                              onClick={() => handleCardMaintenance(item)}
+                            >
+                              <Wrench className="h-3 w-3 mr-1" />
+                              保养
+                            </Button>
+                          )}
+                          {(statusCardType === 're_rule_needed' ||
+                            statusCardType === 'maintenance_needed') && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-orange-700 border-orange-300 hover:bg-orange-50"
+                              onClick={() => handleCardReRule(item)}
+                            >
+                              <RotateCcw className="h-3 w-3 mr-1" />
+                              重做
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setDetailData(item);
+                              setDetailOpen(true);
+                            }}
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            详情
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setStatusCardDialogOpen(false)}>关闭</Button>
+              <Button variant="outline" onClick={() => setStatusCardDialogOpen(false)}>
+                关闭
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

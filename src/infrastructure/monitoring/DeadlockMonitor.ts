@@ -86,11 +86,11 @@ export class DeadlockMonitor {
 
       if (result.longTransactions.length > 0) {
         result.alerts.push(
-          `发现${result.longTransactions.length}个超过30秒的长事务，最长${Math.max(...result.longTransactions.map(t => t.duration))}秒`
+          `发现${result.longTransactions.length}个超过30秒的长事务，最长${Math.max(...result.longTransactions.map((t) => t.duration))}秒`
         );
         secureLog('warn', 'Long running transactions detected', {
           count: result.longTransactions.length,
-          maxDuration: Math.max(...result.longTransactions.map(t => t.duration)),
+          maxDuration: Math.max(...result.longTransactions.map((t) => t.duration)),
         });
       }
     } catch (error: any) {

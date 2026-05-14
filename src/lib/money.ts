@@ -91,9 +91,7 @@ export function divideMoney(amount: number, divisor: number): number {
  * @param items 订单项数组，每项包含price（分）和quantity
  * @returns 总金额（分）
  */
-export function calculateOrderTotal(
-  items: Array<{ price: number; quantity: number }>
-): number {
+export function calculateOrderTotal(items: Array<{ price: number; quantity: number }>): number {
   return items.reduce((total, item) => {
     return total + multiplyMoney(item.price, item.quantity);
   }, 0);

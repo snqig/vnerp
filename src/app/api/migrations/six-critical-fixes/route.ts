@@ -163,7 +163,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
 
     try {
-      const po2Count = await query('SELECT COUNT(*) as cnt FROM pur_purchase_order WHERE deleted = 0');
+      const po2Count = await query(
+        'SELECT COUNT(*) as cnt FROM pur_purchase_order WHERE deleted = 0'
+      );
       const cnt2 = (po2Count as any[])[0]?.cnt || 0;
       if (cnt2 > 0) {
         await execute(`
@@ -524,7 +526,13 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       results.push('Created hr_attendance with employee_id_int');
     } else {
       try {
-        results.push(await addColumnSafe('hr_attendance', 'employee_id_int', "INT UNSIGNED DEFAULT NULL COMMENT '员工ID(标准INT)' AFTER employee_id"));
+        results.push(
+          await addColumnSafe(
+            'hr_attendance',
+            'employee_id_int',
+            "INT UNSIGNED DEFAULT NULL COMMENT '员工ID(标准INT)' AFTER employee_id"
+          )
+        );
 
         await execute(`
           UPDATE hr_attendance ha
@@ -534,13 +542,21 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         `);
         results.push('Backfilled employee_id_int from sys_employee');
 
-        const nullCount = await query('SELECT COUNT(*) as cnt FROM hr_attendance WHERE employee_id_int IS NULL AND employee_id IS NOT NULL AND deleted = 0');
+        const nullCount = await query(
+          'SELECT COUNT(*) as cnt FROM hr_attendance WHERE employee_id_int IS NULL AND employee_id IS NOT NULL AND deleted = 0'
+        );
         const nullCnt = (nullCount as any[])[0]?.cnt || 0;
         if (nullCnt > 0) {
           results.push(`WARNING: ${nullCnt} rows could not be matched to sys_employee`);
         }
 
-        results.push(await addIndexSafe('hr_attendance', 'idx_hr_attendance_employee_id_int', 'employee_id_int'));
+        results.push(
+          await addIndexSafe(
+            'hr_attendance',
+            'idx_hr_attendance_employee_id_int',
+            'employee_id_int'
+          )
+        );
       } catch (e: any) {
         results.push(`Fix hr_attendance skipped: ${e.message}`);
       }

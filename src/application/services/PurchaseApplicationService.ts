@@ -30,9 +30,7 @@ export class PurchaseApplicationService {
     return this.orderRepo.findByStatus(status, { page, pageSize }, filters);
   }
 
-  async createOrder(
-    props: PurchaseOrderProps
-  ): Promise<{ id: number; orderNo: string }> {
+  async createOrder(props: PurchaseOrderProps): Promise<{ id: number; orderNo: string }> {
     const order = PurchaseOrder.create(props);
     const result = await this.orderRepo.save(order);
 
@@ -59,10 +57,7 @@ export class PurchaseApplicationService {
     return { id, status: 'submitted' };
   }
 
-  async approveOrder(
-    id: number,
-    auditBy: number
-  ): Promise<{ id: number; status: string }> {
+  async approveOrder(id: number, auditBy: number): Promise<{ id: number; status: string }> {
     const order = await this.getOrderById(id);
 
     const previousStatus = order.status.value;
@@ -99,11 +94,7 @@ export class PurchaseApplicationService {
     await transaction(async (conn) => {
       const [result]: any = await conn.execute(
         'UPDATE pur_purchase_order SET status = ?, update_time = NOW() WHERE id = ? AND status = ?',
-        [
-          order.status.toDbCode(),
-          id,
-          PurchaseOrderStatus.from(previousStatus).toDbCode(),
-        ]
+        [order.status.toDbCode(), id, PurchaseOrderStatus.from(previousStatus).toDbCode()]
       );
       if (result.affectedRows === 0) {
         throw new VersionConflictError();
@@ -152,10 +143,7 @@ export class PurchaseApplicationService {
     await this.orderRepo.softDelete(id);
   }
 
-  private async persistAndPublishEvents(
-    aggregateId: number,
-    order: PurchaseOrder
-  ): Promise<void> {
+  private async persistAndPublishEvents(aggregateId: number, order: PurchaseOrder): Promise<void> {
     const events = order.getDomainEvents();
     if (events.length === 0) return;
 
@@ -172,7 +160,8 @@ export class PurchaseApplicationService {
       try {
         const pendingEvents = await DomainEventOutbox.fetchPendingEvents();
         for (const eventRow of pendingEvents) {
-          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'PurchaseOrder') continue;
+          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'PurchaseOrder')
+            continue;
           try {
             const event = JSON.parse(eventRow.payload);
             const domainEvent = { ...event, occurredAt: new Date(event.occurredAt) };

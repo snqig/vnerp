@@ -10,11 +10,14 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('缺少网版ID', 400);
   }
 
-  const rows = await query(`
+  const rows = await query(
+    `
     SELECT * FROM screen_plate_history
     WHERE screen_plate_id = ?
     ORDER BY created_at DESC
-  `, [plateId]);
+  `,
+    [plateId]
+  );
 
   return successResponse(rows, '网版生命周期记录');
 });
@@ -27,10 +30,21 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('缺少必要参数', 400);
   }
 
-  const result = await execute(`
+  const result = await execute(
+    `
     INSERT INTO screen_plate_history (screen_plate_id, action, tension_value, life_increment, remark, operator_id, operator_name)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `, [plateId, action, tensionValue ?? null, lifeIncrement || 0, remark ?? null, operatorId ?? null, operatorName ?? null]);
+  `,
+    [
+      plateId,
+      action,
+      tensionValue ?? null,
+      lifeIncrement || 0,
+      remark ?? null,
+      operatorId ?? null,
+      operatorName ?? null,
+    ]
+  );
 
   const updateFields: string[] = ['update_time = NOW()'];
   const params: any[] = [];

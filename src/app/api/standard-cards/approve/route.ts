@@ -1,10 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 
 // 审核类型
 type ApproveType = 'review' | 'factory' | 'quality' | 'sales' | 'approve';
@@ -20,11 +16,11 @@ const APPROVE_FIELD_MAP: Record<ApproveType, string> = {
 
 // 审核状态流转
 const STATUS_FLOW: Record<ApproveType, { from: number; to: number }> = {
-  review: { from: 1, to: 2 },      // 草稿 -> 待审核
-  factory: { from: 2, to: 2 },     // 待审核 -> 待审核（厂务审核）
-  quality: { from: 2, to: 2 },     // 待审核 -> 待审核（品管审核）
-  sales: { from: 2, to: 2 },      // 待审核 -> 待审核（业务审核）
-  approve: { from: 2, to: 3 },    // 待审核 -> 已启用
+  review: { from: 1, to: 2 }, // 草稿 -> 待审核
+  factory: { from: 2, to: 2 }, // 待审核 -> 待审核（厂务审核）
+  quality: { from: 2, to: 2 }, // 待审核 -> 待审核（品管审核）
+  sales: { from: 2, to: 2 }, // 待审核 -> 待审核（业务审核）
+  approve: { from: 2, to: 3 }, // 待审核 -> 已启用
 };
 
 // 审核标准卡
@@ -53,10 +49,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     status: number;
     card_no: string;
     [key: string]: any;
-  }>(
-    `SELECT id, status, card_no, ${field} FROM prd_standard_card WHERE id = ? AND deleted = 0`,
-    [id]
-  );
+  }>(`SELECT id, status, card_no, ${field} FROM prd_standard_card WHERE id = ? AND deleted = 0`, [
+    id,
+  ]);
 
   if (!card) {
     return errorResponse('标准卡不存在', 404);
@@ -66,18 +61,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   // 检查状态流转是否合法
   if (card.status !== flow.from) {
-    return errorResponse(
-      `当前状态不允许此操作，当前状态：${getStatusLabel(card.status)}`,
-      400
-    );
+    return errorResponse(`当前状态不允许此操作，当前状态：${getStatusLabel(card.status)}`, 400);
   }
 
   // 检查是否已审核
   if (card[field]) {
-    return errorResponse(
-      `该环节已审核，审核人：${card[field]}`,
-      400
-    );
+    return errorResponse(`该环节已审核，审核人：${card[field]}`, 400);
   }
 
   // 更新审核信息
@@ -91,10 +80,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   // 如果是最后核准环节，更新状态为已启用
   if (approveType === 'approve') {
-    await execute(
-      `UPDATE prd_standard_card SET status = 3, update_time = NOW() WHERE id = ?`,
-      [id]
-    );
+    await execute(`UPDATE prd_standard_card SET status = 3, update_time = NOW() WHERE id = ?`, [
+      id,
+    ]);
   }
 
   return successResponse(
@@ -124,10 +112,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     id: number;
     status: number;
     [key: string]: any;
-  }>(
-    `SELECT id, status, ${field} FROM prd_standard_card WHERE id = ? AND deleted = 0`,
-    [id]
-  );
+  }>(`SELECT id, status, ${field} FROM prd_standard_card WHERE id = ? AND deleted = 0`, [id]);
 
   if (!card) {
     return errorResponse('标准卡不存在', 404);
@@ -158,10 +143,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     );
   }
 
-  return successResponse(
-    { id, type, status: 2 },
-    `撤销${getApproveTypeName(approveType)}成功`
-  );
+  return successResponse({ id, type, status: 2 }, `撤销${getApproveTypeName(approveType)}成功`);
 }, '撤销审核失败');
 
 // 获取审核状态
@@ -202,31 +184,31 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         type: 'review',
         name: '审核',
         approver: card.reviewer,
-        status: card.reviewer ? 'completed' : (card.status >= 2 ? 'pending' : 'waiting'),
+        status: card.reviewer ? 'completed' : card.status >= 2 ? 'pending' : 'waiting',
       },
       {
         type: 'factory',
         name: '厂务',
         approver: card.factory_manager,
-        status: card.factory_manager ? 'completed' : (card.status >= 2 ? 'pending' : 'waiting'),
+        status: card.factory_manager ? 'completed' : card.status >= 2 ? 'pending' : 'waiting',
       },
       {
         type: 'quality',
         name: '品管',
         approver: card.quality_manager,
-        status: card.quality_manager ? 'completed' : (card.status >= 2 ? 'pending' : 'waiting'),
+        status: card.quality_manager ? 'completed' : card.status >= 2 ? 'pending' : 'waiting',
       },
       {
         type: 'sales',
         name: '业务',
         approver: card.sales,
-        status: card.sales ? 'completed' : (card.status >= 2 ? 'pending' : 'waiting'),
+        status: card.sales ? 'completed' : card.status >= 2 ? 'pending' : 'waiting',
       },
       {
         type: 'approve',
         name: '核准',
         approver: card.approver,
-        status: card.approver ? 'completed' : (card.status >= 2 ? 'pending' : 'waiting'),
+        status: card.approver ? 'completed' : card.status >= 2 ? 'pending' : 'waiting',
       },
     ],
   };

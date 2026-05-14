@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       AND TABLE_NAME IN ('mdm_product', 'mdm_product_category', 'mdm_product_bom', 'mdm_product_route')
     `);
 
-    const existingTables = (tables as any[]).map(t => t.TABLE_NAME);
+    const existingTables = (tables as any[]).map((t) => t.TABLE_NAME);
 
     // 1. 创建产品主表
     if (!existingTables.includes('mdm_product')) {
@@ -141,7 +141,9 @@ export async function GET(request: NextRequest) {
     }
 
     // 插入产品分类测试数据
-    const categoryCount = await query('SELECT COUNT(*) as count FROM mdm_product_category WHERE deleted = 0');
+    const categoryCount = await query(
+      'SELECT COUNT(*) as count FROM mdm_product_category WHERE deleted = 0'
+    );
     if ((categoryCount as any[])[0].count === 0) {
       await query(`
         INSERT INTO mdm_product_category (category_code, category_name, parent_id, level, sort_order, description, status) VALUES
@@ -177,7 +179,7 @@ export async function GET(request: NextRequest) {
 
     return successResponse({
       message: '产品管理表初始化完成',
-      details: results
+      details: results,
     });
   } catch (error: any) {
     console.error('创建产品管理表失败:', error);

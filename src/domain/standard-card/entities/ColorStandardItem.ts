@@ -56,7 +56,7 @@ export class ColorStandardItem {
       rgbValue: this.rgbValue,
       colorSampleImage: this.colorSampleImage,
       tolerance: this.tolerance,
-      remark: this.remark
+      remark: this.remark,
     };
   }
 }

@@ -1,6 +1,12 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler, validateRequestBody } from '@/lib/api-response';
+import {
+  successResponse,
+  errorResponse,
+  commonErrors,
+  withErrorHandler,
+  validateRequestBody,
+} from '@/lib/api-response';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -46,13 +52,25 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let countSql = `SELECT COUNT(*) as total FROM prd_die_usage_log ul WHERE 1=1`;
   const countValues: any[] = [];
-  if (die_id) { countSql += ' AND ul.die_id = ?'; countValues.push(parseInt(die_id)); }
-  if (work_order_id) { countSql += ' AND ul.work_order_id = ?'; countValues.push(parseInt(work_order_id)); }
-  if (start_date) { countSql += ' AND ul.usage_date >= ?'; countValues.push(start_date); }
-  if (end_date) { countSql += ' AND ul.usage_date <= ?'; countValues.push(end_date); }
-  const countResult = await queryOne(countSql, countValues) as any;
+  if (die_id) {
+    countSql += ' AND ul.die_id = ?';
+    countValues.push(parseInt(die_id));
+  }
+  if (work_order_id) {
+    countSql += ' AND ul.work_order_id = ?';
+    countValues.push(parseInt(work_order_id));
+  }
+  if (start_date) {
+    countSql += ' AND ul.usage_date >= ?';
+    countValues.push(start_date);
+  }
+  if (end_date) {
+    countSql += ' AND ul.usage_date <= ?';
+    countValues.push(end_date);
+  }
+  const countResult = (await queryOne(countSql, countValues)) as any;
 
-  const summaryStats = await query(
+  const summaryStats = (await query(
     `SELECT
       COUNT(*) as total_records,
       COALESCE(SUM(impressions), 0) as total_impressions,
@@ -64,7 +82,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     ${start_date ? ' AND usage_date >= ?' : ''}
     ${end_date ? ' AND usage_date <= ?' : ''}`,
     [die_id, start_date, end_date].filter(Boolean)
-  ) as any[];
+  )) as any[];
 
   return successResponse({
     list,
@@ -97,12 +115,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const die = dieRows?.[0];
     if (!die) return errorResponse('刀模/网版不存在', 404, 404);
     if (die.die_status === 'scrap') return errorResponse('已报废的刀模/网版不能继续使用', 400, 400);
-    if (die.die_status === 're_rule_needed') return errorResponse('需重做的刀模/网版请先保养后再使用', 400, 400);
+    if (die.die_status === 're_rule_needed')
+      return errorResponse('需重做的刀模/网版请先保养后再使用', 400, 400);
 
     if (die.max_impressions > 0 && die.cumulative_impressions >= die.max_impressions) {
       return errorResponse(
         `刀模/网版已达最大使用次数(${die.cumulative_impressions}/${die.max_impressions})，请更换或保养后再使用`,
-        400, 400
+        400,
+        400
       );
     }
 
@@ -115,13 +135,18 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       if (projectedCumulative > die.max_impressions * 1.05) {
         return errorResponse(
           `本次使用后累计次数(${projectedCumulative})将远超最大限制(${die.max_impressions})，请确认使用次数是否正确`,
-          400, 400
+          400,
+          400
         );
       }
     }
 
     const newCumulative = die.cumulative_impressions + actualImpressions;
-    const newDieStatus = computeDieStatus(newCumulative, die.max_impressions, die.warning_threshold);
+    const newDieStatus = computeDieStatus(
+      newCumulative,
+      die.max_impressions,
+      die.warning_threshold
+    );
 
     await conn.execute(
       `UPDATE prd_die_template
@@ -136,14 +161,23 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
              ELSE 1
            END
        WHERE id = ?`,
-      [newCumulative, newCumulative, newCumulative, newDieStatus, newCumulative, newCumulative, dieId]
+      [
+        newCumulative,
+        newCumulative,
+        newCumulative,
+        newDieStatus,
+        newCumulative,
+        newCumulative,
+        dieId,
+      ]
     );
 
     await conn.execute(
       `INSERT INTO prd_die_usage_log (die_id, die_code, work_report_id, work_order_id, work_order_no, process_name, impressions, cumulative_after, operator_id, operator_name, equipment_id, usage_date, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?)`,
       [
-        dieId, die.template_code,
+        dieId,
+        die.template_code,
         body.work_report_id || null,
         body.work_order_id || null,
         body.work_order_no || null,
@@ -157,17 +191,25 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       ]
     );
 
-    return successResponse({
-      die_id: dieId,
-      impressions_added: actualImpressions,
-      cumulative_after: newCumulative,
-      die_status: newDieStatus,
-      usage_pct: die.max_impressions > 0 ? Math.round((newCumulative / die.max_impressions) * 100) : 0,
-    }, '刀模使用记录已更新');
+    return successResponse(
+      {
+        die_id: dieId,
+        impressions_added: actualImpressions,
+        cumulative_after: newCumulative,
+        die_status: newDieStatus,
+        usage_pct:
+          die.max_impressions > 0 ? Math.round((newCumulative / die.max_impressions) * 100) : 0,
+      },
+      '刀模使用记录已更新'
+    );
   });
 }, '记录刀模使用失败');
 
-function computeDieStatus(cumulative: number, maxImpressions: number, warningThreshold: number): string {
+function computeDieStatus(
+  cumulative: number,
+  maxImpressions: number,
+  warningThreshold: number
+): string {
   if (maxImpressions <= 0) return 'available';
   const pct = (cumulative / maxImpressions) * 100;
   if (pct >= 95) return 're_rule_needed';

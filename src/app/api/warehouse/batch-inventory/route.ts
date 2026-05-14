@@ -36,7 +36,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   const offset = (page - 1) * pageSize;
-  const [rows]: any = await query(
+  const rows: any = await query(
     `SELECT bi.*, w.warehouse_name 
      FROM inv_batch_inventory bi
      LEFT JOIN inv_warehouse w ON bi.warehouse_id = w.id
@@ -46,7 +46,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     [...params, pageSize, offset]
   );
 
-  const [countRows]: any = await query(
+  const countRows: any = await query(
     `SELECT COUNT(*) as total FROM inv_batch_inventory bi ${whereClause}`,
     params
   );
@@ -55,7 +55,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     list: rows,
     total: countRows[0].total,
     page,
-    pageSize
+    pageSize,
   });
 });
 
@@ -77,7 +77,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 按入库日期升序（先进先出）
-  const [rows]: any = await query(
+  const rows: any = await query(
     `SELECT bi.*, w.warehouse_name 
      FROM inv_batch_inventory bi
      LEFT JOIN inv_warehouse w ON bi.warehouse_id = w.id
@@ -100,7 +100,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         warehouse_id: batch.warehouse_id,
         warehouse_name: batch.warehouse_name,
         allocate_qty: allocateQty,
-        available_qty: batch.available_quantity
+        available_qty: batch.available_quantity,
       });
       remaining -= allocateQty;
     }
@@ -109,21 +109,18 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   return successResponse({
     batches: rows,
     allocation_plan: allocationPlan,
-    total_available: rows.reduce((sum: number, b: any) => sum + parseFloat(b.available_quantity), 0),
-    shortage: remaining > 0 ? remaining : 0
+    total_available: rows.reduce(
+      (sum: number, b: any) => sum + parseFloat(b.available_quantity),
+      0
+    ),
+    shortage: remaining > 0 ? remaining : 0,
   });
 });
 
 // 入库操作（新增批次库存）
 export const PUT = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const {
-    inbound_no,
-    warehouse_id,
-    inbound_date,
-    items,
-    remark
-  } = body;
+  const { inbound_no, warehouse_id, inbound_date, items, remark } = body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return errorResponse('入库明细不能为空', 400, 400);
@@ -134,22 +131,49 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     const [orderResult]: any = await conn.execute(
       `INSERT INTO inv_production_inbound (inbound_no, warehouse_id, inbound_date, qc_status, status, operator_name, remark) 
        VALUES (?, ?, ?, 1, 2, '系统', ?)`,
-      [inbound_no || `IN${Date.now()}`, warehouse_id, inbound_date || new Date().toISOString().split('T')[0], remark || '']
+      [
+        inbound_no || `IN${Date.now()}`,
+        warehouse_id,
+        inbound_date || new Date().toISOString().split('T')[0],
+        remark || '',
+      ]
     );
     const inboundId = orderResult.insertId;
 
     // 2. 处理每个入库明细
     for (const item of items) {
-      const { material_id, material_code, material_name, specification, unit, quantity, batch_no, supplier_id, supplier_name } = item;
+      const {
+        material_id,
+        material_code,
+        material_name,
+        specification,
+        unit,
+        quantity,
+        batch_no,
+        supplier_id,
+        supplier_name,
+      } = item;
 
       // 生成批次号（如果没有提供）
-      const finalBatchNo = batch_no || `B${Date.now().toString().slice(-8)}${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+      const finalBatchNo =
+        batch_no ||
+        `B${Date.now().toString().slice(-8)}${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
 
       // 2a. 插入入库明细
       await conn.execute(
         `INSERT INTO inv_production_inbound_item (inbound_id, material_id, material_code, material_name, quantity, unit, batch_no, remaining_qty, remark) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [inboundId, material_id, material_code, material_name, quantity, unit, finalBatchNo, quantity, remark || '']
+        [
+          inboundId,
+          material_id,
+          material_code,
+          material_name,
+          quantity,
+          unit,
+          finalBatchNo,
+          quantity,
+          remark || '',
+        ]
       );
 
       // 2b. 检查批次库存是否已存在
@@ -174,7 +198,21 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         await conn.execute(
           `INSERT INTO inv_batch_inventory (batch_no, material_id, material_code, material_name, specification, unit, warehouse_id, inbound_no, inbound_date, inbound_quantity, outbound_quantity, available_quantity, supplier_id, supplier_name, qc_status, status) 
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 1, 1)`,
-          [finalBatchNo, material_id, material_code, material_name, specification || '', unit, warehouse_id, inbound_no, inbound_date, quantity, quantity, supplier_id || null, supplier_name || '']
+          [
+            finalBatchNo,
+            material_id,
+            material_code,
+            material_name,
+            specification || '',
+            unit,
+            warehouse_id,
+            inbound_no,
+            inbound_date,
+            quantity,
+            quantity,
+            supplier_id || null,
+            supplier_name || '',
+          ]
         );
       }
 
@@ -197,15 +235,8 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 // 出库操作（扣减批次库存）
 export const PATCH = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const {
-    outbound_no,
-    customer_id,
-    customer_name,
-    warehouse_id,
-    outbound_date,
-    items,
-    remark
-  } = body;
+  const { outbound_no, customer_id, customer_name, warehouse_id, outbound_date, items, remark } =
+    body;
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return errorResponse('出库明细不能为空', 400, 400);
@@ -216,13 +247,29 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
     const [orderResult]: any = await conn.execute(
       `INSERT INTO inv_sales_outbound (outbound_no, customer_id, customer_name, warehouse_id, outbound_date, status, remark) 
        VALUES (?, ?, ?, ?, ?, 2, ?)`,
-      [outbound_no || `SO${Date.now()}`, customer_id || null, customer_name || '', warehouse_id, outbound_date || new Date().toISOString().split('T')[0], remark || '']
+      [
+        outbound_no || `SO${Date.now()}`,
+        customer_id || null,
+        customer_name || '',
+        warehouse_id,
+        outbound_date || new Date().toISOString().split('T')[0],
+        remark || '',
+      ]
     );
     const outboundId = orderResult.insertId;
 
     // 2. 处理每个出库明细
     for (const item of items) {
-      const { material_id, material_code, material_name, unit, quantity, batch_inventory_id, batch_no, remark: itemRemark } = item;
+      const {
+        material_id,
+        material_code,
+        material_name,
+        unit,
+        quantity,
+        batch_inventory_id,
+        batch_no,
+        remark: itemRemark,
+      } = item;
 
       let targetBatchId = batch_inventory_id;
       let targetBatchNo = batch_no;
@@ -290,7 +337,17 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
       await conn.execute(
         `INSERT INTO inv_sales_outbound_item (outbound_id, material_id, material_code, material_name, quantity, unit, batch_no, batch_inventory_id, remark) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [outboundId, material_id, material_code, material_name, quantity, unit || batch[0].unit, targetBatchNo, targetBatchId, itemRemark || '']
+        [
+          outboundId,
+          material_id,
+          material_code,
+          material_name,
+          quantity,
+          unit || batch[0].unit,
+          targetBatchNo,
+          targetBatchId,
+          itemRemark || '',
+        ]
       );
 
       // 6. 更新总库存表

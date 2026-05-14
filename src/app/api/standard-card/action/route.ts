@@ -4,7 +4,7 @@ import { StandardCardApplicationService } from '@/application/services/StandardC
 
 const service = new StandardCardApplicationService();
 
-async function postHandler(request: NextRequest, { user }: { user: UserInfo }) {
+async function postHandler(request: NextRequest, user: UserInfo) {
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
@@ -22,7 +22,7 @@ async function postHandler(request: NextRequest, { user }: { user: UserInfo }) {
         return NextResponse.json({
           code: 200,
           message: '提交审核成功',
-          data: result.toProps()
+          data: result.toProps(),
         });
 
       case 'approve':
@@ -30,7 +30,7 @@ async function postHandler(request: NextRequest, { user }: { user: UserInfo }) {
         return NextResponse.json({
           code: 200,
           message: '审核通过',
-          data: result.toProps()
+          data: result.toProps(),
         });
 
       case 'confirm':
@@ -38,7 +38,7 @@ async function postHandler(request: NextRequest, { user }: { user: UserInfo }) {
         return NextResponse.json({
           code: 200,
           message: '确认完成',
-          data: result.toProps()
+          data: result.toProps(),
         });
 
       case 'obsolete':
@@ -49,7 +49,7 @@ async function postHandler(request: NextRequest, { user }: { user: UserInfo }) {
         return NextResponse.json({
           code: 200,
           message: '作废成功',
-          data: result.toProps()
+          data: result.toProps(),
         });
 
       case 'newVersion':
@@ -57,17 +57,20 @@ async function postHandler(request: NextRequest, { user }: { user: UserInfo }) {
         return NextResponse.json({
           code: 200,
           message: '创建新版本成功',
-          data: result.toProps()
+          data: result.toProps(),
         });
 
       default:
         return NextResponse.json({ code: 400, message: '无效的操作' }, { status: 400 });
     }
   } catch (error: any) {
-    return NextResponse.json({
-      code: 400,
-      message: error.message || '操作失败'
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        code: 400,
+        message: error.message || '操作失败',
+      },
+      { status: 400 }
+    );
   }
 }
 

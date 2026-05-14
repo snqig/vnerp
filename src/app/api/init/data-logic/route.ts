@@ -36,7 +36,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     // 1. 产品追溯链表 (QR Code Trace Link)
     //    成品标签 ← 生产工单 ← 来料批次
     // ========================================
-    await safeCreateTable('prd_product_trace_link', `CREATE TABLE IF NOT EXISTS prd_product_trace_link (
+    await safeCreateTable(
+      'prd_product_trace_link',
+      `CREATE TABLE IF NOT EXISTS prd_product_trace_link (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       sn VARCHAR(100) NOT NULL COMMENT '成品序列号/标签号',
       parent_sn VARCHAR(100) COMMENT '父级SN(用于分切/组合)',
@@ -60,13 +62,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       KEY idx_parent_sn (parent_sn),
       KEY idx_batch (material_batch),
       KEY idx_workorder (workorder_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='产品追溯链表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='产品追溯链表'`
+    );
 
     // ========================================
     // 2. FIFO覆盖日志表 (FIFO Override Log)
     //    当用户跳过FIFO推荐批次时记录
     // ========================================
-    await safeCreateTable('inv_fifo_override_log', `CREATE TABLE IF NOT EXISTS inv_fifo_override_log (
+    await safeCreateTable(
+      'inv_fifo_override_log',
+      `CREATE TABLE IF NOT EXISTS inv_fifo_override_log (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       source_type VARCHAR(30) NOT NULL COMMENT '来源类型: material_issue/sales_outbound',
       source_id BIGINT UNSIGNED NOT NULL COMMENT '来源单据ID',
@@ -86,13 +91,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       PRIMARY KEY (id),
       KEY idx_source (source_type, source_id),
       KEY idx_material (material_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='FIFO覆盖日志'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='FIFO覆盖日志'`
+    );
 
     // ========================================
     // 3. 财务凭证表 (Finance Voucher)
     //    出入库单据过账生成财务凭证
     // ========================================
-    await safeCreateTable('fin_voucher', `CREATE TABLE IF NOT EXISTS fin_voucher (
+    await safeCreateTable(
+      'fin_voucher',
+      `CREATE TABLE IF NOT EXISTS fin_voucher (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       voucher_no VARCHAR(50) NOT NULL COMMENT '凭证号',
       voucher_date DATE NOT NULL COMMENT '凭证日期',
@@ -115,13 +123,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       UNIQUE KEY uk_voucher_no (voucher_no),
       KEY idx_source (source_type, source_id),
       KEY idx_date (voucher_date)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财务凭证表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财务凭证表'`
+    );
 
     // ========================================
     // 4. 合同评审表 (Contract Review)
     //    销售订单→合同评审→生产/采购/财务联合评审
     // ========================================
-    await safeCreateTable('biz_contract_review', `CREATE TABLE IF NOT EXISTS biz_contract_review (
+    await safeCreateTable(
+      'biz_contract_review',
+      `CREATE TABLE IF NOT EXISTS biz_contract_review (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       review_no VARCHAR(50) NOT NULL COMMENT '评审编号',
       order_id BIGINT UNSIGNED NOT NULL COMMENT '销售订单ID',
@@ -155,13 +166,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       PRIMARY KEY (id),
       UNIQUE KEY uk_review_no (review_no),
       KEY idx_order (order_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合同评审表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合同评审表'`
+    );
 
     // ========================================
     // 5. 样品转量产记录表 (Sample to Mass Production)
     //    打样订单→标准卡→流程卡→量产工单
     // ========================================
-    await safeCreateTable('eng_sample_to_mass', `CREATE TABLE IF NOT EXISTS eng_sample_to_mass (
+    await safeCreateTable(
+      'eng_sample_to_mass',
+      `CREATE TABLE IF NOT EXISTS eng_sample_to_mass (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       sample_order_id BIGINT UNSIGNED NOT NULL COMMENT '打样订单ID',
       sample_order_no VARCHAR(50) NOT NULL COMMENT '打样订单号',
@@ -186,13 +200,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       PRIMARY KEY (id),
       KEY idx_sample (sample_order_id),
       KEY idx_product (product_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='样品转量产记录表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='样品转量产记录表'`
+    );
 
     // ========================================
     // 6. 油墨开罐记录表 (Ink Opening Record)
     //    开罐后重新计算有效期
     // ========================================
-    await safeCreateTable('ink_opening_record', `CREATE TABLE IF NOT EXISTS ink_opening_record (
+    await safeCreateTable(
+      'ink_opening_record',
+      `CREATE TABLE IF NOT EXISTS ink_opening_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       opening_no VARCHAR(50) NOT NULL COMMENT '开罐记录号',
       label_no VARCHAR(50) NOT NULL COMMENT '物料标签号',
@@ -215,13 +232,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       UNIQUE KEY uk_opening_no (opening_no),
       KEY idx_label (label_no),
       KEY idx_batch (batch_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨开罐记录表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨开罐记录表'`
+    );
 
     // ========================================
     // 7. 调色油墨批次表 (Ink Mixed Batch)
     //    调色油墨由多种原墨混合而成
     // ========================================
-    await safeCreateTable('ink_mixed_batch', `CREATE TABLE IF NOT EXISTS ink_mixed_batch (
+    await safeCreateTable(
+      'ink_mixed_batch',
+      `CREATE TABLE IF NOT EXISTS ink_mixed_batch (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       batch_no VARCHAR(50) NOT NULL COMMENT '混合批次号: MIX-YYYYMMDD-配方号-序号',
       formula_no VARCHAR(50) COMMENT '配方号',
@@ -238,9 +258,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_batch_no (batch_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调色油墨批次表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调色油墨批次表'`
+    );
 
-    await safeCreateTable('ink_mixed_batch_detail', `CREATE TABLE IF NOT EXISTS ink_mixed_batch_detail (
+    await safeCreateTable(
+      'ink_mixed_batch_detail',
+      `CREATE TABLE IF NOT EXISTS ink_mixed_batch_detail (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       mixed_batch_id BIGINT UNSIGNED NOT NULL COMMENT '混合批次ID',
       source_batch_no VARCHAR(50) NOT NULL COMMENT '原墨批次号',
@@ -253,13 +276,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       PRIMARY KEY (id),
       KEY idx_mixed (mixed_batch_id),
       KEY idx_source (source_batch_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调色油墨批次明细表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调色油墨批次明细表'`
+    );
 
     // ========================================
     // 8. 扫码日志表 (Scan Log)
     //    统一记录所有扫码操作
     // ========================================
-    await safeCreateTable('inv_scan_log', `CREATE TABLE IF NOT EXISTS inv_scan_log (
+    await safeCreateTable(
+      'inv_scan_log',
+      `CREATE TABLE IF NOT EXISTS inv_scan_log (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       scan_type VARCHAR(30) NOT NULL COMMENT '扫码类型: material_issue/production_report/quality_inspection/sales_outbound/inbound',
       qr_content TEXT NOT NULL COMMENT '二维码内容',
@@ -282,7 +308,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       KEY idx_sn (sn),
       KEY idx_batch (batch_no),
       KEY idx_time (scan_time)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='扫码日志表'`);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='扫码日志表'`
+    );
 
     // ========================================
     // 9. 添加缺失的关联字段
@@ -434,7 +461,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     // 10. 创建数据关联视图
     // ========================================
 
-    await safeCreateTable('v_order_to_delivery', `CREATE OR REPLACE VIEW v_order_to_delivery AS
+    await safeCreateTable(
+      'v_order_to_delivery',
+      `CREATE OR REPLACE VIEW v_order_to_delivery AS
       SELECT
         so.id as order_id,
         so.order_no,
@@ -451,9 +480,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       FROM sal_order so
       LEFT JOIN crm_customer c ON so.customer_id = c.id
       LEFT JOIN sal_delivery_order sd ON sd.order_id = so.id AND sd.deleted = 0
-      WHERE so.deleted = 0`);
+      WHERE so.deleted = 0`
+    );
 
-    await safeCreateTable('v_purchase_to_inbound', `CREATE OR REPLACE VIEW v_purchase_to_inbound AS
+    await safeCreateTable(
+      'v_purchase_to_inbound',
+      `CREATE OR REPLACE VIEW v_purchase_to_inbound AS
       SELECT
         po.id as purchase_id,
         po.order_no as purchase_no,
@@ -469,9 +501,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       FROM pur_order po
       LEFT JOIN pur_supplier ps ON po.supplier_id = ps.id
       LEFT JOIN inv_inbound_order io ON io.purchase_order_id = po.id AND io.deleted = 0
-      WHERE po.deleted = 0`);
+      WHERE po.deleted = 0`
+    );
 
-    await safeCreateTable('v_workorder_to_outbound', `CREATE OR REPLACE VIEW v_workorder_to_outbound AS
+    await safeCreateTable(
+      'v_workorder_to_outbound',
+      `CREATE OR REPLACE VIEW v_workorder_to_outbound AS
       SELECT
         wo.id as workorder_id,
         wo.order_no as workorder_no,
@@ -487,9 +522,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       FROM prod_work_order wo
       LEFT JOIN prd_material_issue mi ON mi.work_order_id = wo.id AND mi.deleted = 0
       LEFT JOIN inv_sales_outbound so2 ON so2.order_id = wo.sales_order_id AND so2.deleted = 0
-      WHERE wo.deleted = 0`);
+      WHERE wo.deleted = 0`
+    );
 
-    await safeCreateTable('v_fifo_cost_analysis', `CREATE OR REPLACE VIEW v_fifo_cost_analysis AS
+    await safeCreateTable(
+      'v_fifo_cost_analysis',
+      `CREATE OR REPLACE VIEW v_fifo_cost_analysis AS
       SELECT
         ib.material_id,
         ib.material_code,
@@ -510,7 +548,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         END as fifo_status
       FROM inv_inventory_batch ib
       LEFT JOIN inv_warehouse w ON ib.warehouse_id = w.id
-      WHERE ib.deleted = 0`);
+      WHERE ib.deleted = 0`
+    );
 
     results.push('=== 数据逻辑关系修正完成 ===');
 

@@ -1,25 +1,49 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Save, Printer, ArrowLeft, Building2, Upload, FileText, Image as ImageIcon, X } from 'lucide-react';
-import { useCompanyName } from '@/hooks/useCompanyName';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+  Save,
+  Printer,
+  ArrowLeft,
+  Sparkles,
+  FileText,
+  Palette,
+  Settings,
+  Package,
+  CheckCircle2,
+  Building2,
+  ChevronDown,
+} from 'lucide-react';
+
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
 
 interface PrintSequence {
   id: number;
@@ -33,20 +57,21 @@ interface PrintSequence {
   printSide: string;
 }
 
+// 客户接口（来自 crm_customer 表）
 interface Customer {
   id: number;
-  code: string;
-  name: string;
+  customerCode: string;
+  customerName: string;
   shortName: string;
-  contact: string;
-  phone: string;
+  contactName: string;
+  contactPhone: string;
+  province: string;
+  city: string;
+  district: string;
   address: string;
 }
 
-const customers: Customer[] = [];
-
 interface FormData {
-  id?: string;
   cardNo: string;
   customer: string;
   version: string;
@@ -68,13 +93,13 @@ interface FormData {
   jumpDistance: string;
   processFlow1: string;
   processFlow2: string;
-  printType: string;
+  printType: '胶印' | '卷料丝印' | '片料丝印' | '轮转印';
   firstJumpDistance: string;
   sequences: PrintSequence[];
   filmManufacturer: string;
   filmCode: string;
   filmSize: string;
-  processMethod: string;
+  processMethod: '模切' | '冲压';
   stampingMethod: string;
   moldCode: string;
   layoutMethod: string;
@@ -113,12 +138,9 @@ interface FormData {
   sales: string;
   approver: string;
   documentCode: string;
-  glueType: string;
-  packingType: string;
-  materialType: string;
-  createdAt?: string;
-  updatedAt?: string;
-  status?: 'draft' | 'pending' | 'active' | 'archived';
+  glueType: '硬胶' | '软胶' | 'PU胶' | '其它胶';
+  packingType: '包装' | 'PCS/卷' | 'PCS/扎' | 'PCS/袋' | 'PCS/箱';
+  materialType: '硬胶' | '软胶';
 }
 
 const initialSequence: PrintSequence = {
@@ -133,119 +155,13 @@ const initialSequence: PrintSequence = {
   printSide: '',
 };
 
-// 输入单元格组件
-const InputCell = ({ 
-  value, 
-  onChange, 
-  placeholder = '', 
-  className = '',
-  type = 'text'
-}: { 
-  value: string; 
-  onChange?: (value: string) => void;
-  placeholder?: string; 
-  className?: string;
-  type?: string;
-}) => (
-  <div className={`min-h-[20px] flex items-center justify-center text-xs ${value ? 'text-black' : 'text-gray-400'} ${className}`}>
-    <Input
-      type={type}
-      value={value}
-      onChange={(e) => onChange?.(e.target.value)}
-      placeholder={placeholder}
-      className="h-5 min-h-[20px] px-1 py-0 text-xs text-center border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
-    />
-  </div>
-);
-
-// 文件上传组件
-const FileUploadCell = ({
-  value,
-  onChange,
-  accept = '.pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp',
-  className = ''
-}: {
-  value: string;
-  onChange?: (value: string) => void;
-  accept?: string;
-  className?: string;
-}) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [fileName, setFileName] = useState(value);
-
-  useEffect(() => {
-    setFileName(value);
-  }, [value]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // 只保存文件名（实际项目中这里应该上传文件到服务器）
-      setFileName(file.name);
-      onChange?.(file.name);
-    }
-  };
-
-  const handleClear = () => {
-    setFileName('');
-    onChange?.('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const getFileIcon = () => {
-    if (!fileName) return <Upload className="h-4 w-4 text-gray-400" />;
-    const ext = fileName.split('.').pop()?.toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext || '')) {
-      return <ImageIcon className="h-4 w-4 text-blue-500" />;
-    }
-    return <FileText className="h-4 w-4 text-red-500" />;
-  };
-
-  return (
-    <div className={`min-h-[24px] flex items-center justify-center gap-1 ${className}`}>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={accept}
-        onChange={handleFileChange}
-        className="hidden"
-      />
-      {fileName ? (
-        <div className="flex items-center gap-1 flex-1 min-w-0">
-          {getFileIcon()}
-          <span className="text-xs truncate flex-1" title={fileName}>{fileName}</span>
-          <button
-            type="button"
-            onClick={handleClear}
-            className="p-0.5 hover:bg-accent/50 rounded"
-          >
-            <X className="h-3 w-3 text-gray-400" />
-          </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
-        >
-          <Upload className="h-4 w-4" />
-          <span>点击上传</span>
-        </button>
-      )}
-    </div>
-  );
-};
-
-export default function InputPage() {
-  const { companyName } = useCompanyName();
+function InputPageContent() {
   const router = useRouter();
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [customerOpen, setCustomerOpen] = useState(false);
-  const [customerList, setCustomerList] = useState<Customer[]>([]);
-  
+  const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('id');
+  const isEditMode = searchParams.get('edit') === 'true';
+  const [activeTab, setActiveTab] = useState('basic');
   const [formData, setFormData] = useState<FormData>({
     cardNo: '',
     customer: '',
@@ -318,168 +234,129 @@ export default function InputPage() {
     materialType: '硬胶',
   });
 
-  useEffect(() => {
-    const editMode = sessionStorage.getItem('editMode');
-    const savedData = sessionStorage.getItem('standardCardData');
-    if (editMode === 'true' && savedData) {
-      setIsEditMode(true);
-      const parsedData = JSON.parse(savedData);
-      if (typeof parsedData.sequences === 'number') {
-        parsedData.sequences = Array.from({ length: parsedData.sequences }, (_, i) => ({
-          id: i + 1,
-          color: '',
-          inkCode: '',
-          linCode: '',
-          storageLocation: '',
-          plateCode: '',
-          mesh: '',
-          plateStorage: '',
-          printSide: '',
-        }));
-      }
-      if (!parsedData.sheetSpecs || typeof parsedData.sheetSpecs !== 'object') {
-        parsedData.sheetSpecs = { width: '', length: '' };
-      }
-      setFormData(parsedData);
-      sessionStorage.removeItem('editMode');
-    }
-  }, []);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedCardId, setSavedCardId] = useState<number | null>(null);
+
+  // 客户列表数据
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
   // 加载客户列表
   useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        const response = await fetch('/api/customers?page=1&pageSize=100');
-        const result = await response.json();
-        if (result.success) {
-          const formattedCustomers: Customer[] = result.data.map((item: any) => ({
-            id: item.id,
-            code: item.customer_code,
-            name: item.customer_name,
-            shortName: item.short_name,
-            contact: item.contact_name,
-            phone: item.contact_phone,
-            address: item.address,
-          }));
-          setCustomerList(formattedCustomers);
-        }
-      } catch (error) {
-        console.error('加载客户列表失败:', error);
-      }
-    };
     fetchCustomers();
   }, []);
 
-  const handleSaveAndPrint = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isNavigating) return;
-    setIsNavigating(true);
-    
+  // 加载编辑数据
+  useEffect(() => {
+    if (isEditMode && editId) {
+      fetchCardData(parseInt(editId));
+    }
+  }, [isEditMode, editId]);
+
+  const fetchCardData = async (id: number) => {
     try {
-      const saveData = {
-        card_no: formData.cardNo || `SC${Date.now()}`,
-        customer_name: formData.customer,
-        customer_code: formData.customerCode,
-        product_name: formData.productName,
-        version: formData.version,
-        date: formData.date,
-        document_code: formData.documentCode,
-        finished_size: formData.finishedSize,
-        tolerance: formData.tolerance,
-        material_name: formData.materialName,
-        material_type: formData.materialType,
-        layout_type: formData.layoutType,
-        spacing: formData.spacing,
-        spacing_value: formData.spacingValue,
-        sheet_width: formData.sheetSpecs.width,
-        sheet_length: formData.sheetSpecs.length,
-        core_type: formData.coreType,
-        paper_direction: formData.paperDirection,
-        roll_width: formData.rollWidth,
-        paper_edge: formData.paperEdge,
-        standard_usage: formData.standardUsage,
-        jump_distance: formData.jumpDistance,
-        process_flow1: formData.processFlow1,
-        process_flow2: formData.processFlow2,
-        print_type: formData.printType,
-        first_jump_distance: formData.firstJumpDistance,
-        sequences: JSON.stringify(formData.sequences),
-        film_manufacturer: formData.filmManufacturer,
-        film_code: formData.filmCode,
-        film_size: formData.filmSize,
-        process_method: formData.processMethod,
-        stamping_method: formData.stampingMethod,
-        mold_code: formData.moldCode,
-        layout_method: formData.layoutMethod,
-        layout_way: formData.layoutWay,
-        jump_distance2: formData.jumpDistance2,
-        mylar_material: formData.mylarMaterial,
-        mylar_specs: formData.mylarSpecs,
-        mylar_layout: formData.mylarLayout,
-        mylar_jump: formData.mylarJump,
-        adhesive_type: formData.adhesiveType,
-        adhesive_manufacturer: formData.adhesiveManufacturer,
-        adhesive_code: formData.adhesiveCode,
-        adhesive_size: formData.adhesiveSize,
-        dashed_knife: formData.dashedKnife ? 1 : 0,
-        slice_per_row: formData.slicePerRow,
-        slice_per_roll: formData.slicePerRoll,
-        slice_per_bundle: formData.slicePerBundle,
-        slice_per_bag: formData.slicePerBag,
-        slice_per_box: formData.slicePerBox,
-        back_knife_mold: formData.backKnifeMold,
-        back_mylar_mold: formData.backMylarMold,
-        release_paper_code: formData.releasePaperCode,
-        release_paper_type: formData.releasePaperType,
-        release_paper_specs: formData.releasePaperSpecs,
-        padding_material: formData.paddingMaterial,
-        packing_material: formData.packingMaterial,
-        glue_type: formData.glueType,
-        packing_type: formData.packingType,
-        special_color: formData.specialColor,
-        color_formula: formData.colorFormula,
-        file_path: formData.filePath,
-        sample_info: formData.sampleInfo,
-        notes: formData.notes,
-        creator: formData.creator,
-        reviewer: formData.reviewer,
-        factory_manager: formData.factoryManager,
-        quality_manager: formData.qualityManager,
-        sales: formData.sales,
-        approver: formData.approver,
-        status: 1,
-      };
-      
-      const response = await fetch('/api/standard-cards', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(saveData),
-      });
-      
+      const response = await authFetch(`/api/standard-cards?id=${id}`);
       const result = await response.json();
-      
-      if (result.success) {
-        // 保存成功后跳转到预览页面
-        router.push(`/sample/standard-card/print?id=${result.data.id}`);
+      if (result.success && result.data) {
+        const card = result.data;
+        // 将加载的数据填充到表单
+        setFormData({
+          ...formData,
+          cardNo: card.card_no || '',
+          customer: card.customer_name || '',
+          version: card.version || '',
+          date: card.date ? card.date.split('T')[0] : new Date().toISOString().split('T')[0],
+          productName: card.product_name || '',
+          customerCode: card.customer_code || '',
+          finishedSize: card.finished_size || '',
+          tolerance: card.tolerance || '',
+          materialName: card.material_name || '',
+          materialType: card.material_type || '硬胶',
+          printType: card.print_type || '卷料丝印',
+          processMethod: card.process_method || '模切',
+          stampingMethod: card.stamping_method || '',
+          layoutMethod: card.layout_method || '',
+          layoutWay: card.layout_way || '',
+          filmManufacturer: card.film_manufacturer || '',
+          filmCode: card.film_code || '',
+          filmSize: card.film_size || '',
+          moldCode: card.mold_code || '',
+          glueType: card.glue_type || '硬胶',
+          creator: card.creator || '',
+          reviewer: card.reviewer || '',
+          factoryManager: card.factory_manager || '',
+          qualityManager: card.quality_manager || '',
+          sales: card.sales || '',
+          approver: card.approver || '',
+          documentCode: card.document_code || '',
+        });
       } else {
-        alert('保存失败: ' + result.message);
-        setIsNavigating(false);
+        toast({ title: '加载标准卡数据失败', variant: 'destructive' });
       }
     } catch (error) {
-      console.error('保存失败:', error);
-      alert('保存失败，请检查网络连接');
-      setIsNavigating(false);
+      console.error('加载标准卡数据失败:', error);
+      toast({ title: '加载标准卡数据失败', variant: 'destructive' });
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isNavigating) return;
-    setIsNavigating(true);
-    
+  // 点击外部关闭客户下拉列表
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.customer-dropdown-container')) {
+        setShowCustomerDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const fetchCustomers = async () => {
     try {
+      const response = await fetch('/api/customers?page=1&pageSize=100');
+      const result = await response.json();
+      if (result.success) {
+        const formattedCustomers: Customer[] = result.data.map((item: any) => ({
+          id: item.id,
+          customerCode: item.customer_code,
+          customerName: item.customer_name,
+          shortName: item.short_name,
+          contactName: item.contact_name,
+          contactPhone: item.contact_phone,
+          province: item.province,
+          city: item.city,
+          district: item.district,
+          address: item.address,
+        }));
+        setCustomers(formattedCustomers);
+      }
+    } catch (error) {
+      console.error('加载客户列表失败:', error);
+    }
+  };
+
+  // 筛选客户
+  const filteredCustomers = customers.filter(
+    (c) =>
+      c.customerName.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+      c.customerCode.toLowerCase().includes(customerSearchTerm.toLowerCase())
+  );
+
+  // 选择客户
+  const handleSelectCustomer = (customer: Customer) => {
+    updateField('customer', customer.customerName);
+    updateField('customerCode', customer.customerCode);
+    setCustomerSearchTerm('');
+    setShowCustomerDropdown(false);
+  };
+
+  // 保存到数据库
+  const saveToDatabase = async (): Promise<boolean> => {
+    try {
+      setIsSaving(true);
+
+      // 转换 formData 为 API 期望的字段格式
       const saveData = {
         card_no: formData.cardNo || `SC${Date.now()}`,
         customer_name: formData.customer,
@@ -538,13 +415,13 @@ export default function InputPage() {
         release_paper_specs: formData.releasePaperSpecs,
         padding_material: formData.paddingMaterial,
         packing_material: formData.packingMaterial,
+        glue_type: formData.glueType,
+        packing_type: formData.packingType,
         special_color: formData.specialColor,
         color_formula: formData.colorFormula,
         file_path: formData.filePath,
         sample_info: formData.sampleInfo,
         notes: formData.notes,
-        glue_type: formData.glueType,
-        packing_type: formData.packingType,
         creator: formData.creator,
         reviewer: formData.reviewer,
         factory_manager: formData.factoryManager,
@@ -553,876 +430,816 @@ export default function InputPage() {
         approver: formData.approver,
         status: 1,
       };
-      
-      const response = await fetch('/api/standard-cards', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(saveData),
+
+      const url = '/api/standard-cards';
+      const method = isEditMode && editId ? 'PUT' : 'POST';
+      const body =
+        isEditMode && editId
+          ? JSON.stringify({ ...saveData, id: parseInt(editId) })
+          : JSON.stringify(saveData);
+
+      const response = await authFetch(url, {
+        method,
+        body,
       });
-      
+
       const result = await response.json();
-      
-      if (result.success) {
-        alert('保存成功！');
-        router.push('/sample/standard-card');
-      } else {
-        alert('保存失败: ' + result.message);
-        setIsNavigating(false);
+
+      if (!result.success) {
+        toast({ title: result.message || '保存失败', variant: 'destructive' });
+        return false;
       }
+
+      setSavedCardId(result.data?.id || parseInt(editId || '0'));
+      toast({ title: isEditMode ? '标准卡更新成功！' : '标准卡保存成功！' });
+      return true;
     } catch (error) {
       console.error('保存失败:', error);
-      alert('保存失败，请检查网络连接');
-      setIsNavigating(false);
+      toast({ title: '保存失败，请检查网络连接', variant: 'destructive' });
+      return false;
+    } finally {
+      setIsSaving(false);
     }
+  };
+
+  const handleSave = async () => {
+    const success = await saveToDatabase();
+    if (success) {
+      // 同时保存到 sessionStorage 用于预览
+      sessionStorage.setItem('standardCardData', JSON.stringify(formData));
+    }
+  };
+
+  const handleSaveAndPreview = async () => {
+    const success = await saveToDatabase();
+    if (success && savedCardId) {
+      router.push(`/sample/standard-card/print?id=${savedCardId}`);
+    }
+  };
+
+  const updateField = (field: keyof FormData, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const updateSequence = (index: number, field: keyof PrintSequence, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      sequences: prev.sequences.map((seq, i) => 
-        i === index ? { ...seq, [field]: value } : seq
-      ),
+      sequences: prev.sequences.map((seq, i) => (i === index ? { ...seq, [field]: value } : seq)),
     }));
   };
 
   return (
-    <MainLayout title="标准卡录入">
-      <form onSubmit={handleSaveAndPrint} className="space-y-4">
-        {/* 工具栏 */}
-        <div className="flex justify-between items-center mb-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push('/sample/standard-card')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            返回列表
-          </Button>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleSave}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              保存
+    <MainLayout>
+      <div className="container mx-auto py-6 max-w-7xl">
+        {/* 头部 */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" onClick={() => router.back()}>
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <Button type="submit">
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-primary" />
+                {isEditMode ? '编辑标准卡' : '新建标准卡（现代化录入）'}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {isEditMode ? `编辑标准卡 ID: ${editId}` : '使用分步式界面录入标准卡信息'}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {savedCardId && (
+              <Badge variant="secondary" className="mr-2">
+                已保存 ID: {savedCardId}
+              </Badge>
+            )}
+            <Button variant="outline" onClick={handleSave} disabled={isSaving}>
+              <Save className="h-4 w-4 mr-2" />
+              {isSaving ? (isEditMode ? '更新中...' : '保存中...') : isEditMode ? '更新' : '保存'}
+            </Button>
+            <Button onClick={handleSaveAndPreview} disabled={isSaving}>
               <Printer className="h-4 w-4 mr-2" />
-              保存并预览
+              {isSaving
+                ? isEditMode
+                  ? '更新中...'
+                  : '保存中...'
+                : isEditMode
+                  ? '更新并预览'
+                  : '保存并预览'}
             </Button>
           </div>
         </div>
 
-        {/* A4 横向录入区域 */}
-        <div 
-          className="bg-white mx-auto shadow-lg flex flex-col"
-          style={{
-            width: '297mm',
-            minHeight: '210mm',
-            padding: '3mm',
-            boxSizing: 'border-box',
-          }}
-        >
-          <style dangerouslySetInnerHTML={{ __html: `
-            table { height: 100%; width: 100%; border-collapse: collapse; font-size: 12px; font-family: Arial, sans-serif; }
-            table td { padding: 4px !important; vertical-align: middle; text-align: center; border: 1px solid #000; font-size: 12px; font-weight: normal; }
-            table td input { text-align: center; }
-            .border-none { border: none !important; }
-            .border-bottom { border: none !important; border-bottom: 1px solid #000 !important; }
-          `}} />
-          
-          <table className="w-full border-collapse text-xs flex-1" style={{ tableLayout: 'fixed' }}>
-            <tbody>
-              {/* 表头：公司名称 */}
-              <tr>
-                <td colSpan={16} className="text-center border-none">
-                  <h1 className="text-2xl font-bold text-[#1a3c7a]">{companyName}</h1>
-                </td>
-                <td colSpan={3} className="py-4 border-none">
-                  <div className="flex items-center w-full h-full">
-                    <span className="font-bold text-sm mr-1">NO:</span>
+        {/* 进度指示器 */}
+        <div className="flex items-center gap-2 mb-6">
+          {[
+            { id: 'basic', label: '基本信息', icon: FileText },
+            { id: 'material', label: '材料规格', icon: Package },
+            { id: 'print', label: '印刷信息', icon: Palette },
+            { id: 'process', label: '工艺流程', icon: Settings },
+          ].map((step, index) => {
+            const Icon = step.icon;
+            const isActive = activeTab === step.id;
+            const isCompleted =
+              ['basic', 'material', 'print'].indexOf(activeTab) >
+              ['basic', 'material', 'print'].indexOf(step.id);
+            return (
+              <div key={step.id} className="flex items-center">
+                <button
+                  onClick={() => setActiveTab(step.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : isCompleted
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                        : 'bg-muted text-muted-foreground hover:bg-accent'
+                  }`}
+                >
+                  {isCompleted ? (
+                    <CheckCircle2 className="h-4 w-4" />
+                  ) : (
+                    <Icon className="h-4 w-4" />
+                  )}
+                  {step.label}
+                </button>
+                {index < 3 && <div className="w-8 h-px bg-border mx-2" />}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 表单内容 */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {/* 基本信息 */}
+          <TabsContent value="basic" className="mt-0">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  基本信息
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>标准卡编号</Label>
                     <Input
                       value={formData.cardNo}
-                      onChange={(e) => setFormData(p => ({ ...p, cardNo: e.target.value }))}
-                      placeholder="编号"
-                      className="h-6 text-base font-bold text-[#1a3c7a] flex-1 min-w-[120px] border-0 border-b border-black rounded-none px-0 text-center"
+                      onChange={(e) => updateField('cardNo', e.target.value)}
+                      placeholder="自动生成或手动输入"
                     />
                   </div>
-                </td>
-              </tr>
+                  <div className="space-y-2">
+                    <Label>日期</Label>
+                    <Input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => updateField('date', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>版本</Label>
+                    <Input
+                      value={formData.version}
+                      onChange={(e) => updateField('version', e.target.value)}
+                      placeholder="如：A"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>文件编号</Label>
+                    <Input
+                      value={formData.documentCode}
+                      onChange={(e) => updateField('documentCode', e.target.value)}
+                      placeholder="如：DOC-001"
+                    />
+                  </div>
+                </div>
 
-              {/* 第一行：客户信息 */}
-              <tr>
-                <td className="font-bold pr-2 border-none">客户：</td>
-                <td colSpan={4} className="font-bold border-none">
-                  <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="w-full justify-center font-normal h-6 min-h-[24px] px-1 py-0 text-xs border-0 border-b border-black rounded-none bg-transparent hover:bg-transparent"
-                      >
-                        {formData.customer || "选择客户..."}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="搜索客户..." />
-                        <CommandList>
-                          <CommandEmpty>未找到客户</CommandEmpty>
-                          <CommandGroup>
-                            {customerList.map((customer) => (
-                              <CommandItem
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="border-dashed">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        客户信息
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2 relative customer-dropdown-container">
+                        <Label>客户名称</Label>
+                        <div className="relative">
+                          <Input
+                            value={formData.customer}
+                            onChange={(e) => {
+                              updateField('customer', e.target.value);
+                              setCustomerSearchTerm(e.target.value);
+                              setShowCustomerDropdown(true);
+                            }}
+                            onFocus={() => setShowCustomerDropdown(true)}
+                            placeholder="输入或选择客户名称"
+                          />
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        </div>
+                        {/* 客户下拉列表 */}
+                        {showCustomerDropdown && filteredCustomers.length > 0 && (
+                          <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-auto">
+                            {filteredCustomers.map((customer) => (
+                              <div
                                 key={customer.id}
-                                value={customer.name}
-                                onSelect={() => {
-                                  setFormData(p => ({
-                                    ...p,
-                                    customer: customer.name,
-                                    customerCode: customer.code
-                                  }));
-                                  setCustomerOpen(false);
-                                }}
+                                className="px-4 py-2 hover:bg-accent/50 cursor-pointer border-b last:border-b-0"
+                                onClick={() => handleSelectCustomer(customer)}
                               >
-                                <Building2 className="mr-2 h-4 w-4" />
-                                <div className="flex flex-col">
-                                  <span>{customer.name}</span>
-                                  <span className="text-xs text-muted-foreground">{customer.code}</span>
+                                <div className="font-medium">{customer.customerName}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  编码: {customer.customerCode} | 联系人:{' '}
+                                  {customer.contactName || '-'}
                                 </div>
-                              </CommandItem>
+                              </div>
                             ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </td>
-                <td className="font-bold px-2 border-none">版次:</td>
-                <td className="font-bold border-none">
-                  <Input
-                    value={formData.version}
-                    onChange={(e) => setFormData(p => ({ ...p, version: e.target.value }))}
-                    placeholder="版次"
-                    className="h-6 border-0 border-b border-black rounded-none px-0 text-center"
-                  />
-                </td>
-                <td colSpan={4} className="text-center text-xl font-bold border-none">
-                  标准卡（流程卡）
-                </td>
-                <td colSpan={4} className="text-center border-none">
-                  <span className="bg-[#1a3c7a] text-white px-3 py-1 rounded font-bold">HSF</span>
-                </td>
-                <td colSpan={2} className="font-bold text-right px-2 border-none">日期：</td>
-                <td colSpan={2} className="font-bold border-none">
-                  <Input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData(p => ({ ...p, date: e.target.value }))}
-                    className="h-6 border-0 border-b border-black rounded-none px-0 text-center"
-                  />
-                </td>
-              </tr>
-
-              {/* 空行分隔 */}
-              <tr>
-                <td colSpan={19} className="h-2 border-none"></td>
-              </tr>
-
-              {/* 第三行：品名信息 */}
-              <tr>
-                <td className="border font-bold text-center w-[4%]">品名</td>
-                <td colSpan={4} className="border font-bold">
-                  <InputCell 
-                    value={formData.productName}
-                    onChange={(v) => setFormData(p => ({ ...p, productName: v }))}
-                  />
-                </td>
-                <td className="border bg-white font-bold text-black text-center w-[8%]">客户料号</td>
-                <td colSpan={3} className="border">
-                  <InputCell 
-                    value={formData.customerCode}
-                    onChange={(v) => setFormData(p => ({ ...p, customerCode: v }))}
-                  />
-                </td>
-                <td className="border bg-white font-bold text-black text-center w-[8%]">成品尺寸</td>
-                <td colSpan={4} className="border">
-                  <InputCell 
-                    value={formData.finishedSize}
-                    onChange={(v) => setFormData(p => ({ ...p, finishedSize: v }))}
-                  />
-                </td>
-                <td className="border w-[4%]">m/m</td>
-                <td colSpan={2} className="border font-bold">公差+</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.tolerance}
-                    onChange={(v) => setFormData(p => ({ ...p, tolerance: v }))}
-                  />
-                </td>
-                <td className="border w-[4%]">mm</td>
-              </tr>
-
-              {/* 第四行：材料信息 */}
-              <tr>
-                <td className="border bg-white font-bold text-black text-center">材料名称</td>
-                <td colSpan={4} className="border font-bold">
-                  <InputCell 
-                    value={formData.materialName}
-                    onChange={(v) => setFormData(p => ({ ...p, materialName: v }))}
-                  />
-                </td>
-                <td className="border bg-white font-bold text-black text-center">排版方式</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.layoutType}
-                    onChange={(v) => setFormData(p => ({ ...p, layoutType: v }))}
-                  />
-                </td>
-                <td rowSpan={2} className="border bg-white font-bold text-black text-center">间距</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.spacing}
-                    onChange={(v) => setFormData(p => ({ ...p, spacing: v }))}
-                  />
-                </td>
-                <td className="border bg-white font-bold text-black text-center">片料规格</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.sheetSpecs.width}
-                    onChange={(v) => setFormData(p => ({ ...p, sheetSpecs: { ...p.sheetSpecs, width: v } }))}
-                  />
-                </td>
-                <td colSpan={2} className="border">m/m宽x</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.sheetSpecs.length}
-                    onChange={(v) => setFormData(p => ({ ...p, sheetSpecs: { ...p.sheetSpecs, length: v } }))}
-                  />
-                </td>
-                <td className="border">m/m长</td>
-                <td colSpan={2} className="border font-bold">标准用量</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.standardUsage}
-                    onChange={(v) => setFormData(p => ({ ...p, standardUsage: v }))}
-                  />
-                </td>
-                <td className="border w-[4%]">c㎡/PCS</td>
-              </tr>
-
-              {/* 第五行：纸芯与卷料 */}
-              <tr>
-                <td className="border bg-white font-bold text-black text-center">纸芯类型</td>
-                <td colSpan={4} className="border font-bold">
-                  <div className="flex justify-center gap-3">
-                    {['3#', '2#', '1#'].map((num) => (
-                      <label key={num} className="flex items-center gap-1 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.coreType?.includes(num)}
-                          onChange={(e) => {
-                            const currentTypes = formData.coreType?.split(',').filter(Boolean) || [];
-                            let newTypes;
-                            if (e.target.checked) {
-                              if (!currentTypes.includes(num)) {
-                                newTypes = [...currentTypes, num];
-                              } else {
-                                newTypes = currentTypes;
-                              }
-                            } else {
-                              newTypes = currentTypes.filter(t => t !== num);
-                            }
-                            setFormData(p => ({ ...p, coreType: newTypes.join(',') }));
-                          }}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm">{num}</span>
-                      </label>
-                    ))}
-                  </div>
-                </td>
-                <td className="border bg-white font-bold text-black text-center">出纸方向</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.paperDirection}
-                    onChange={(v) => setFormData(p => ({ ...p, paperDirection: v }))}
-                  />
-                </td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.spacingValue}
-                    onChange={(v) => setFormData(p => ({ ...p, spacingValue: v }))}
-                  />
-                </td>
-                <td className="border bg-white font-bold text-black text-center">卷料宽度</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.rollWidth}
-                    onChange={(v) => setFormData(p => ({ ...p, rollWidth: v }))}
-                  />
-                </td>
-                <td className="border">mm</td>
-                <td className="border">纸边</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.paperEdge}
-                    onChange={(v) => setFormData(p => ({ ...p, paperEdge: v }))}
-                  />
-                </td>
-                <td className="border">mm</td>
-                <td colSpan={2} className="border font-bold"> 跳距</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.jumpDistance}
-                    onChange={(v) => setFormData(p => ({ ...p, jumpDistance: v }))}
-                  />
-                </td>
-                <td className="border">mm</td>
-              </tr>
-
-              {/* 工艺流程 */}
-              <tr>
-                <td rowSpan={2} className="border bg-white font-bold text-black text-center">工艺<br/>流程</td>
-                <td colSpan={18} className="border">
-                  <InputCell 
-                    value={formData.processFlow1}
-                    onChange={(v) => setFormData(p => ({ ...p, processFlow1: v }))}
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td colSpan={18} className="border">
-                  <InputCell 
-                    value={formData.processFlow2}
-                    onChange={(v) => setFormData(p => ({ ...p, processFlow2: v }))}
-                  />
-                </td>
-              </tr>
-
-              {/* 表面处理 */}
-              <tr>
-                <td className="border bg-white font-bold text-black text-center">表面处理</td>
-                <td colSpan={2} className="border">
-                  <InputCell value="" />
-                </td>
-                <td colSpan={4} className="border">
-                  <div className="flex justify-center gap-3">
-                    {['3#', '2#', '1#'].map((num) => (
-                      <label key={num} className="flex items-center gap-1 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.printType?.includes(num)}
-                          onChange={(e) => {
-                            const currentTypes = formData.printType?.split(',').filter(Boolean) || [];
-                            let newTypes;
-                            if (e.target.checked) {
-                              if (!currentTypes.includes(num)) {
-                                newTypes = [...currentTypes, num];
-                              } else {
-                                newTypes = currentTypes;
-                              }
-                            } else {
-                              newTypes = currentTypes.filter(t => t !== num);
-                            }
-                            setFormData(p => ({ ...p, printType: newTypes.join(',') }));
-                          }}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm">{num}</span>
-                      </label>
-                    ))}
-                  </div>
-                </td>
-                <td className="border bg-white font-bold text-black text-center">第一跳距</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.firstJumpDistance}
-                    onChange={(v) => setFormData(p => ({ ...p, firstJumpDistance: v }))}
-                  />
-                </td>
-                <td colSpan={2} className="border font-bold text-center">覆 膜</td>
-                <td colSpan={4} className="border font-bold text-center">成 型</td>
-                <td colSpan={4} className="border font-bold text-center">滴胶</td>
-              </tr>
-
-              {/* 印序表头 */}
-              <tr>
-                <td className="border bg-white font-bold text-black text-center">印序</td>
-                <td className="border bg-white font-bold text-black text-center">印色</td>
-                <td className="border bg-white font-bold text-black text-center">油墨编号</td>
-                <td className="border bg-white font-bold text-black text-center">林编号</td>
-                <td className="border bg-white font-bold text-black text-center">存放位置</td>
-                <td className="border bg-white font-bold text-black text-center">印版编号</td>
-                <td className="border bg-white font-bold text-black text-center">网目</td>
-                <td className="border bg-white font-bold text-black text-center">存放位置</td>
-                <td className="border bg-white font-bold text-black text-center">印面</td>
-                <td className="border bg-white font-bold text-black text-center">种类</td>
-                <td className="border bg-white font-bold text-black text-center"></td>
-                <td colSpan={4} className="border bg-white font-bold text-black text-center">
-                  <div className="flex justify-center gap-3">
-                    {['模切', '冲压'].map((type) => (
-                      <label key={type} className="flex items-center gap-1 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={formData.processMethod?.includes(type)}
-                          onChange={(e) => {
-                            const currentTypes = formData.processMethod?.split(',').filter(Boolean) || [];
-                            let newTypes;
-                            if (e.target.checked) {
-                              if (!currentTypes.includes(type)) {
-                                newTypes = [...currentTypes, type];
-                              } else {
-                                newTypes = currentTypes;
-                              }
-                            } else {
-                              newTypes = currentTypes.filter(t => t !== type);
-                            }
-                            setFormData(p => ({ ...p, processMethod: newTypes.join(',') }));
-                          }}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm">{type}</span>
-                      </label>
-                    ))}
-                  </div>
-                </td>
-                <td colSpan={4} className="border bg-white font-bold text-black text-center">
-                  <div className="flex justify-center">
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="materialType"
-                        value="硬胶"
-                        checked={formData.materialType === '硬胶'}
-                        onChange={(e) => setFormData(p => ({ ...p, materialType: e.target.value }))}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm">硬胶</span>
-                    </label>
-                  </div>
-                </td>
-              </tr>
-
-              {/* 印序数据 */}
-              {formData.sequences.map((seq, index) => (
-                <tr key={seq.id}>
-                  <td className="border text-center font-bold">{seq.id}</td>
-                  <td className="border">
-                    <InputCell 
-                      value={seq.color}
-                      onChange={(v) => updateSequence(index, 'color', v)}
-                    />
-                  </td>
-                  <td className="border">
-                    <InputCell 
-                      value={seq.inkCode}
-                      onChange={(v) => updateSequence(index, 'inkCode', v)}
-                    />
-                  </td>
-                  <td className="border">
-                    <InputCell 
-                      value={seq.linCode}
-                      onChange={(v) => updateSequence(index, 'linCode', v)}
-                    />
-                  </td>
-                  <td className="border">
-                    <InputCell 
-                      value={seq.storageLocation}
-                      onChange={(v) => updateSequence(index, 'storageLocation', v)}
-                    />
-                  </td>
-                  <td className="border">
-                    <InputCell 
-                      value={seq.plateCode}
-                      onChange={(v) => updateSequence(index, 'plateCode', v)}
-                    />
-                  </td>
-                  <td className="border">
-                    <InputCell 
-                      value={seq.mesh}
-                      onChange={(v) => updateSequence(index, 'mesh', v)}
-                    />
-                  </td>
-                  <td className="border">
-                    <InputCell 
-                      value={seq.plateStorage}
-                      onChange={(v) => updateSequence(index, 'plateStorage', v)}
-                    />
-                  </td>
-                  <td className="border">
-                    <InputCell 
-                      value={seq.printSide}
-                      onChange={(v) => updateSequence(index, 'printSide', v)}
-                    />
-                  </td>
-                  {index === 0 ? (
-                    <>
-                      <td className="border">厂商</td>
-                      <td className="border"></td>
-                      <td colSpan={2} className="border">冲压方法</td>
-                      <td colSpan={2} className="border">
-                        <InputCell 
-                          value={formData.stampingMethod}
-                          onChange={(v) => setFormData(p => ({ ...p, stampingMethod: v }))}
-                        />
-                      </td>
-                      <td colSpan={4} className="border">
-                        <div className="flex justify-center">
-                          <label className="flex items-center gap-1 cursor-pointer text-xs">
-                            <input
-                              type="radio"
-                              name="glueType"
-                              value="软胶"
-                              checked={formData.glueType === '软胶'}
-                              onChange={(e) => setFormData(p => ({ ...p, glueType: e.target.value }))}
-                              className="w-4 h-4"
-                            />
-                            <span>软胶</span>
-                          </label>
-                        </div>
-                      </td>
-                    </>
-                  ) : index === 1 ? (
-                    <>
-                      <td className="border">编号</td>
-                      <td className="border">
-                        <InputCell 
-                          value={formData.moldCode}
-                          onChange={(v) => setFormData(p => ({ ...p, moldCode: v }))}
-                        />
-                      </td>
-                      <td colSpan={2} className="border">模具编号</td>
-                      <td colSpan={2} className="border">
-                        <InputCell 
-                          value={formData.backKnifeMold}
-                          onChange={(v) => setFormData(p => ({ ...p, backKnifeMold: v }))}
-                        />
-                      </td>
-                      <td colSpan={4} className="border">
-                        <div className="flex justify-center gap-2">
-                          <label className="flex items-center space-x-1 cursor-pointer text-xs">
-                            <input
-                              type="radio"
-                              name="glueType"
-                              value="PU胶"
-                              checked={formData.glueType === 'PU胶'}
-                              onChange={(e) => setFormData(p => ({ ...p, glueType: e.target.value as any }))}
-                              className="w-3 h-3"
-                            />
-                            <span>PU胶</span>
-                          </label>
-                        </div>
-                      </td>
-                    </>
-                  ) : index === 2 ? (
-                    <>
-                      <td className="border">尺寸</td>
-                      <td className="border">
-                        <InputCell 
-                          value={formData.adhesiveSize}
-                          onChange={(v) => setFormData(p => ({ ...p, adhesiveSize: v }))}
-                        />
-                      </td>
-                      <td colSpan={2} className="border">存放位置</td>
-                      <td colSpan={2} className="border">
-                        <InputCell 
-                          value={formData.backMylarMold}
-                          onChange={(v) => setFormData(p => ({ ...p, backMylarMold: v }))}
-                        />
-                      </td>
-                      <td colSpan={4} className="border">
-                        <div className="flex justify-center gap-2">
-                          <label className="flex items-center space-x-1 cursor-pointer text-xs">
-                            <input
-                              type="radio"
-                              name="glueType"
-                              value="其它胶"
-                              checked={formData.glueType === '其它胶'}
-                              onChange={(e) => setFormData(p => ({ ...p, glueType: e.target.value as any }))}
-                              className="w-3 h-3"
-                            />
-                            <span>其它胶</span>
-                          </label>
-                        </div>
-                      </td>
-                    </>
-                  ) : index === 3 ? (
-                    <>
-                      <td colSpan={2} className="border">背胶</td>
-                      <td colSpan={2} className="border">加虚线刀</td>
-                      <td colSpan={2} className="border">
-                        <div className="flex justify-center gap-4">
-                          <label className="flex items-center space-x-1 cursor-pointer text-xs">
-                            <input
-                              type="radio"
-                              name="releasePaperCode"
-                              value="是"
-                              checked={formData.releasePaperCode === '是'}
-                              onChange={(e) => setFormData(p => ({ ...p, releasePaperCode: e.target.value }))}
-                              className="w-3 h-3"
-                            />
-                            <span>是</span>
-                          </label>
-                          <label className="flex items-center space-x-1 cursor-pointer text-xs">
-                            <input
-                              type="radio"
-                              name="releasePaperCode"
-                              value="否"
-                              checked={formData.releasePaperCode === '否'}
-                              onChange={(e) => setFormData(p => ({ ...p, releasePaperCode: e.target.value }))}
-                              className="w-3 h-3"
-                            />
-                            <span>否</span>
-                          </label>
-                        </div>
-                      </td>
-                      <td colSpan={4} className="border">包装</td>
-                    </>
-                  ) : index === 4 ? (
-                    <>
-                      <td className="border">种类</td>
-                      <td className="border">
-                        <InputCell 
-                          value={formData.adhesiveType}
-                          onChange={(v) => setFormData(p => ({ ...p, adhesiveType: v }))}
-                        />
-                      </td>
-                      <td rowSpan={3} colSpan={2} className="border font-bold">切片方式</td>
-                      <td className="border">
-                        <InputCell 
-                          value={formData.slicePerRow}
-                          onChange={(v) => setFormData(p => ({ ...p, slicePerRow: v }))}
-                        />
-                      </td>
-                      <td className="border">PCS/排</td>
-                      <td colSpan={2} className="border">
-                        <InputCell 
-                          value={formData.slicePerRoll}
-                          onChange={(v) => setFormData(p => ({ ...p, slicePerRoll: v }))}
-                        />
-                      </td>
-                      <td colSpan={2} className="border">PCS/卷</td>
-                    </>
-                  ) : index === 5 ? (
-                    <>
-                      <td className="border">厂商</td>
-                      <td className="border"></td>
-                      <td className="border">
-                        <InputCell 
-                          value={formData.slicePerBundle}
-                          onChange={(v) => setFormData(p => ({ ...p, slicePerBundle: v }))}
-                        />
-                      </td>
-                      <td className="border">PCS/袋</td>
-                      <td colSpan={2} className="border">
-                        <InputCell 
-                          value={formData.slicePerBag}
-                          onChange={(v) => setFormData(p => ({ ...p, slicePerBag: v }))}
-                        />
-                      </td>
-                      <td colSpan={2} className="border">PCS/扎</td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="border">规格</td>
-                      <td className="border">
-                        <InputCell 
-                          value={formData.mylarSpecs}
-                          onChange={(v) => setFormData(p => ({ ...p, mylarSpecs: v }))}
-                        />
-                      </td>
-                      <td className="border">
-                        <InputCell 
-                          value={formData.slicePerBox}
-                          onChange={(v) => setFormData(p => ({ ...p, slicePerBox: v }))}
-                        />
-                      </td>
-                      <td className="border">PCS/箱</td>
-                      <td colSpan={2} className="border"><InputCell value="" /></td>
-                      <td colSpan={2} className="border">PCS/袋</td>
-                    </>
-                  )}
-                </tr>
-              ))}
-
-              {/* 印序7下面添加5行 */}
-              {[8, 9, 10, 11, 12].map((rowNum) => (
-                <tr key={`extra-${rowNum}`}>
-                  {rowNum === 8 ? (
-                    <td rowSpan={3} className="border text-center font-bold">专色配比</td>
-                  ) : rowNum === 9 || rowNum === 10 ? (
-                    null
-                  ) : rowNum === 11 ? (
-                    <td colSpan={3} className="border">
-                      <InputCell 
-                        value="电脑图档存储路径"
-                        onChange={() => {}}
-                      />
-                    </td>
-                  ) : (
-                    <td className="border text-center font-bold">样品</td>
-                  )}
-                  {rowNum === 8 ? (
-                    <td rowSpan={3} colSpan={8} className="border">
-                      <InputCell 
-                        value={formData.colorFormula}
-                        onChange={(v) => setFormData(p => ({ ...p, colorFormula: v }))}
-                      />
-                    </td>
-                  ) : rowNum === 9 || rowNum === 10 ? (
-                    null
-                  ) : rowNum === 11 ? (
-                    <td colSpan={8} className="border">
-                      <FileUploadCell 
-                        value={formData.filePath}
-                        onChange={(v) => setFormData(p => ({ ...p, filePath: v }))}
-                      />
-                    </td>
-                  ) : rowNum === 12 ? (
-                    <td colSpan={10} className="border">
-                      <InputCell 
-                        value={formData.sampleInfo}
-                        onChange={(v) => setFormData(p => ({ ...p, sampleInfo: v }))}
-                      />
-                    </td>
-                  ) : (
-                    <>
-                      <td className="border"><InputCell value="" /></td>
-                      <td className="border"><InputCell value="" /></td>
-                      <td className="border"><InputCell value="" /></td>
-                      <td className="border"><InputCell value="" /></td>
-                      <td className="border"><InputCell value="" /></td>
-                      <td className="border"><InputCell value="" /></td>
-                      <td className="border"><InputCell value="" /></td>
-                      <td className="border"><InputCell value="" /></td>
-                    </>
-                  )}
-                  {rowNum === 8 || rowNum === 9 || rowNum === 10 ? (
-                    <>
-                      {rowNum === 8 ? (
-                        <td colSpan={2} className="border">
-                          <InputCell 
-                            value="离型纸"
-                            onChange={() => {}}
-                          />
-                        </td>
-                      ) : rowNum === 9 ? (
-                        <td className="border">
-                          <InputCell 
-                            value="种类"
-                            onChange={() => {}}
-                          />
-                        </td>
-                      ) : (
-                        <td className="border">
-                          <InputCell 
-                            value="规格"
-                            onChange={() => {}}
-                          />
-                        </td>
-                      )}
-                      {rowNum === 8 ? null : <td className="border"><InputCell value="" /></td>}
-                      <td colSpan={2} className="border">
-                        {rowNum === 8 ? (
-                          <div className="text-center">适配件</div>
-                        ) : rowNum === 9 ? (
-                          <div className="text-center">背胶刀模</div>
-                        ) : (
-                          <div className="text-center">存放位置</div>
+                          </div>
                         )}
-                      </td>
-                      <td colSpan={2} className="border"><InputCell value="" /></td>
-                      <td colSpan={2} className="border">
-                        {rowNum === 9 ? "垫纸材料" : rowNum === 10 ? "打包材料" : ""}
-                      </td>
-                      <td colSpan={2} className="border">
-                        {rowNum === 8 ? "PCS/箱" : ""}
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      {rowNum === 11 || rowNum === 12 ? null : (
-                        <>
-                          <td className="border"><InputCell value="" /></td>
-                          <td className="border"><InputCell value="" /></td>
-                        </>
-                      )}
-                      {rowNum === 11 ? (
-                        <td rowSpan={2} colSpan={8} className="border align-top">
-                          <InputCell 
-                            value={formData.notes}
-                            onChange={(v) => setFormData(p => ({ ...p, notes: v }))}
-                            placeholder="注意事项："
-                          />
-                        </td>
-                      ) : null}
-                    </>
-                  )}
-                </tr>
-              ))}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>客户代码</Label>
+                        <Input
+                          value={formData.customerCode}
+                          onChange={(e) => updateField('customerCode', e.target.value)}
+                          placeholder="选择客户后自动填充"
+                          readOnly
+                          className="bg-muted"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              {/* 底部签名区域 */}
-              <tr>
-                <td className="border"> 制表 </td>
-                <td colSpan={2} className="border font-bold text-center">
-                  <InputCell 
-                    value={formData.creator}
-                    onChange={(v) => setFormData(p => ({ ...p, creator: v }))}
+                  <Card className="border-dashed">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        产品信息
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>产品名称</Label>
+                        <Input
+                          value={formData.productName}
+                          onChange={(e) => updateField('productName', e.target.value)}
+                          placeholder="输入产品名称"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>成品尺寸</Label>
+                          <Input
+                            value={formData.finishedSize}
+                            onChange={(e) => updateField('finishedSize', e.target.value)}
+                            placeholder="如：100x50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>公差</Label>
+                          <Input
+                            value={formData.tolerance}
+                            onChange={(e) => updateField('tolerance', e.target.value)}
+                            placeholder="如：±0.5"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button onClick={() => setActiveTab('material')}>下一步：材料规格</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 材料规格 */}
+          <TabsContent value="material" className="mt-0">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  材料规格
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>材料名称</Label>
+                    <Input
+                      value={formData.materialName}
+                      onChange={(e) => updateField('materialName', e.target.value)}
+                      placeholder="输入材料名称"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>材料类型</Label>
+                    <Select
+                      value={formData.materialType}
+                      onValueChange={(value) => updateField('materialType', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择材料类型" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="硬胶">硬胶</SelectItem>
+                        <SelectItem value="软胶">软胶</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>排版方式</Label>
+                    <Input
+                      value={formData.layoutType}
+                      onChange={(e) => updateField('layoutType', e.target.value)}
+                      placeholder="输入排版方式"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>间距</Label>
+                    <Input
+                      value={formData.spacing}
+                      onChange={(e) => updateField('spacing', e.target.value)}
+                      placeholder="输入间距"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>片料宽度 (mm)</Label>
+                    <Input
+                      value={formData.sheetSpecs.width}
+                      onChange={(e) =>
+                        setFormData((p) => ({
+                          ...p,
+                          sheetSpecs: { ...p.sheetSpecs, width: e.target.value },
+                        }))
+                      }
+                      placeholder="输入宽度"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>片料长度 (mm)</Label>
+                    <Input
+                      value={formData.sheetSpecs.length}
+                      onChange={(e) =>
+                        setFormData((p) => ({
+                          ...p,
+                          sheetSpecs: { ...p.sheetSpecs, length: e.target.value },
+                        }))
+                      }
+                      placeholder="输入长度"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>纸芯类型</Label>
+                    <Input
+                      value={formData.coreType}
+                      onChange={(e) => updateField('coreType', e.target.value)}
+                      placeholder="如：3#"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>出纸方向</Label>
+                    <Input
+                      value={formData.paperDirection}
+                      onChange={(e) => updateField('paperDirection', e.target.value)}
+                      placeholder="输入出纸方向"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>卷料宽度</Label>
+                    <Input
+                      value={formData.rollWidth}
+                      onChange={(e) => updateField('rollWidth', e.target.value)}
+                      placeholder="输入卷料宽度"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>纸边</Label>
+                    <Input
+                      value={formData.paperEdge}
+                      onChange={(e) => updateField('paperEdge', e.target.value)}
+                      placeholder="输入纸边"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>标准用量</Label>
+                    <Input
+                      value={formData.standardUsage}
+                      onChange={(e) => updateField('standardUsage', e.target.value)}
+                      placeholder="输入标准用量"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>跳距</Label>
+                    <Input
+                      value={formData.jumpDistance}
+                      onChange={(e) => updateField('jumpDistance', e.target.value)}
+                      placeholder="输入跳距"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={() => setActiveTab('basic')}>
+                    上一步
+                  </Button>
+                  <Button onClick={() => setActiveTab('print')}>下一步：印刷信息</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 印刷信息 */}
+          <TabsContent value="print" className="mt-0">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  印刷信息
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>印刷类型</Label>
+                    <Select
+                      value={formData.printType}
+                      onValueChange={(value) => updateField('printType', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择印刷类型" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="胶印">胶印</SelectItem>
+                        <SelectItem value="卷料丝印">卷料丝印</SelectItem>
+                        <SelectItem value="片料丝印">片料丝印</SelectItem>
+                        <SelectItem value="轮转印">轮转印</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>第一跳距</Label>
+                    <Input
+                      value={formData.firstJumpDistance}
+                      onChange={(e) => updateField('firstJumpDistance', e.target.value)}
+                      placeholder="输入第一跳距"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>工艺流程1</Label>
+                    <Input
+                      value={formData.processFlow1}
+                      onChange={(e) => updateField('processFlow1', e.target.value)}
+                      placeholder="输入工艺流程1"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>工艺流程2</Label>
+                    <Input
+                      value={formData.processFlow2}
+                      onChange={(e) => updateField('processFlow2', e.target.value)}
+                      placeholder="输入工艺流程2"
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <Label className="mb-3 block">印序信息</Label>
+                  <ScrollArea className="h-[300px] border rounded-lg">
+                    <div className="p-4 space-y-3">
+                      {formData.sequences.map((seq, index) => (
+                        <Card key={seq.id} className="bg-muted">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Badge variant="secondary">序{index + 1}</Badge>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <Input
+                                placeholder="颜色"
+                                value={seq.color}
+                                onChange={(e) => updateSequence(index, 'color', e.target.value)}
+                              />
+                              <Input
+                                placeholder="油墨编号"
+                                value={seq.inkCode}
+                                onChange={(e) => updateSequence(index, 'inkCode', e.target.value)}
+                              />
+                              <Input
+                                placeholder="林编号"
+                                value={seq.linCode}
+                                onChange={(e) => updateSequence(index, 'linCode', e.target.value)}
+                              />
+                              <Input
+                                placeholder="存放位置"
+                                value={seq.storageLocation}
+                                onChange={(e) =>
+                                  updateSequence(index, 'storageLocation', e.target.value)
+                                }
+                              />
+                              <Input
+                                placeholder="印版编号"
+                                value={seq.plateCode}
+                                onChange={(e) => updateSequence(index, 'plateCode', e.target.value)}
+                              />
+                              <Input
+                                placeholder="网目"
+                                value={seq.mesh}
+                                onChange={(e) => updateSequence(index, 'mesh', e.target.value)}
+                              />
+                              <Input
+                                placeholder="印版存放"
+                                value={seq.plateStorage}
+                                onChange={(e) =>
+                                  updateSequence(index, 'plateStorage', e.target.value)
+                                }
+                              />
+                              <Input
+                                placeholder="印面"
+                                value={seq.printSide}
+                                onChange={(e) => updateSequence(index, 'printSide', e.target.value)}
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={() => setActiveTab('material')}>
+                    上一步
+                  </Button>
+                  <Button onClick={() => setActiveTab('process')}>下一步：工艺流程</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 工艺流程 */}
+          <TabsContent value="process" className="mt-0">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  工艺流程
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>表面处理</Label>
+                    <Input
+                      value={formData.filmManufacturer}
+                      onChange={(e) => updateField('filmManufacturer', e.target.value)}
+                      placeholder="输入表面处理"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>表面处理编号</Label>
+                    <Input
+                      value={formData.filmCode}
+                      onChange={(e) => updateField('filmCode', e.target.value)}
+                      placeholder="输入编号"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>表面处理规格</Label>
+                    <Input
+                      value={formData.filmSize}
+                      onChange={(e) => updateField('filmSize', e.target.value)}
+                      placeholder="输入规格"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>加工工艺</Label>
+                    <Select
+                      value={formData.processMethod}
+                      onValueChange={(value) => updateField('processMethod', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择加工工艺" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="模切">模切</SelectItem>
+                        <SelectItem value="冲压">冲压</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>冲压方式</Label>
+                    <Input
+                      value={formData.stampingMethod}
+                      onChange={(e) => updateField('stampingMethod', e.target.value)}
+                      placeholder="输入冲压方式"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>模具编号</Label>
+                    <Input
+                      value={formData.moldCode}
+                      onChange={(e) => updateField('moldCode', e.target.value)}
+                      placeholder="输入模具编号"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>排版方法</Label>
+                    <Input
+                      value={formData.layoutMethod}
+                      onChange={(e) => updateField('layoutMethod', e.target.value)}
+                      placeholder="输入排版方法"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>排版方式</Label>
+                    <Input
+                      value={formData.layoutWay}
+                      onChange={(e) => updateField('layoutWay', e.target.value)}
+                      placeholder="输入排版方式"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>跳距2</Label>
+                    <Input
+                      value={formData.jumpDistance2}
+                      onChange={(e) => updateField('jumpDistance2', e.target.value)}
+                      placeholder="输入跳距2"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mylar材料</Label>
+                    <Input
+                      value={formData.mylarMaterial}
+                      onChange={(e) => updateField('mylarMaterial', e.target.value)}
+                      placeholder="输入Mylar材料"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mylar规格</Label>
+                    <Input
+                      value={formData.mylarSpecs}
+                      onChange={(e) => updateField('mylarSpecs', e.target.value)}
+                      placeholder="输入Mylar规格"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mylar排版</Label>
+                    <Input
+                      value={formData.mylarLayout}
+                      onChange={(e) => updateField('mylarLayout', e.target.value)}
+                      placeholder="输入Mylar排版"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>Mylar跳距</Label>
+                    <Input
+                      value={formData.mylarJump}
+                      onChange={(e) => updateField('mylarJump', e.target.value)}
+                      placeholder="输入Mylar跳距"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>胶水类型</Label>
+                    <Input
+                      value={formData.adhesiveType}
+                      onChange={(e) => updateField('adhesiveType', e.target.value)}
+                      placeholder="输入胶水类型"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>胶水厂商</Label>
+                    <Input
+                      value={formData.adhesiveManufacturer}
+                      onChange={(e) => updateField('adhesiveManufacturer', e.target.value)}
+                      placeholder="输入胶水厂商"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>胶水编号</Label>
+                    <Input
+                      value={formData.adhesiveCode}
+                      onChange={(e) => updateField('adhesiveCode', e.target.value)}
+                      placeholder="输入胶水编号"
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label>虚线刀</Label>
+                    <Select
+                      value={formData.dashedKnife ? '1' : '0'}
+                      onValueChange={(value) => updateField('dashedKnife', value === '1')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">有</SelectItem>
+                        <SelectItem value="0">无</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>每排片数</Label>
+                    <Input
+                      value={formData.slicePerRow}
+                      onChange={(e) => updateField('slicePerRow', e.target.value)}
+                      placeholder="输入每排片数"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>每卷片数</Label>
+                    <Input
+                      value={formData.slicePerRoll}
+                      onChange={(e) => updateField('slicePerRoll', e.target.value)}
+                      placeholder="输入每卷片数"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>每箱片数</Label>
+                    <Input
+                      value={formData.slicePerBox}
+                      onChange={(e) => updateField('slicePerBox', e.target.value)}
+                      placeholder="输入每箱片数"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>备注</Label>
+                  <Input
+                    value={formData.notes}
+                    onChange={(e) => updateField('notes', e.target.value)}
+                    placeholder="输入备注信息"
                   />
-                </td>
-                <td className="border"> 审核</td>
-                <td className="border">
-                  <InputCell 
-                    value={formData.reviewer}
-                    onChange={(v) => setFormData(p => ({ ...p, reviewer: v }))}
-                  />
-                </td>
-                <td className="border"> 厂务</td>
-                <td colSpan={2} className="border font-bold text-center">
-                  <InputCell 
-                    value={formData.factoryManager}
-                    onChange={(v) => setFormData(p => ({ ...p, factoryManager: v }))}
-                  />
-                </td>
-                <td className="border"> 品管</td>
-                <td colSpan={2} className="border font-bold text-center">
-                  <InputCell 
-                    value={formData.qualityManager}
-                    onChange={(v) => setFormData(p => ({ ...p, qualityManager: v }))}
-                  />
-                </td>
-                <td className="border"> 业务</td>
-                <td colSpan={3} className="border font-bold text-center">
-                  <InputCell 
-                    value={formData.sales}
-                    onChange={(v) => setFormData(p => ({ ...p, sales: v }))}
-                  />
-                </td>
-                <td className="border"> 核准</td>
-                <td colSpan={3} className="border font-bold text-center">
-                  <InputCell 
-                    value={formData.approver}
-                    onChange={(v) => setFormData(p => ({ ...p, approver: v }))}
-                  />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          
-          {/* 编号输入框 */}
-          <div className="mt-2 flex items-center">
-            <span className="font-bold text-sm mr-2">编号：</span>
-            <InputCell 
-              value={formData.documentCode}
-              onChange={(v) => setFormData(p => ({ ...p, documentCode: v }))}
-              className="flex-1 border-b border-black min-w-[200px]"
-            />
-          </div>
-        </div>
-      </form>
+                </div>
+
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={() => setActiveTab('print')}>
+                    上一步
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleSave}>
+                      <Save className="h-4 w-4 mr-2" />
+                      保存
+                    </Button>
+                    <Button onClick={handleSaveAndPreview}>
+                      <Printer className="h-4 w-4 mr-2" />
+                      保存并预览
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </MainLayout>
+  );
+}
+
+function Loading() {
+  return (
+    <MainLayout>
+      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    </MainLayout>
+  );
+}
+
+export default function InputPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <InputPageContent />
+    </Suspense>
   );
 }

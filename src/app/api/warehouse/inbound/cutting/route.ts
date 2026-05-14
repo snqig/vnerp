@@ -11,7 +11,9 @@ import {
 function generateRecordNo(): string {
   const date = new Date();
   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, '0');
   return `CUT${dateStr}${random}`;
 }
 
@@ -19,7 +21,9 @@ function generateRecordNo(): string {
 function generateLabelNo(): string {
   const date = new Date();
   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, '0');
   return `LBL${dateStr}${random}`;
 }
 
@@ -141,10 +145,17 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         label_type, status, deleted
       ) VALUES (?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?, ?, 1, 0, 0, 1, 'active', 0)`,
       [
-        newLabelNo, qrCode, orderNo || '', supplierName || '',
-        materialCode || '', materialName || '', specification || '',
-        unit || '', batchNo || '',
-        quantity || 0, specWidth || 0,
+        newLabelNo,
+        qrCode,
+        orderNo || '',
+        supplierName || '',
+        materialCode || '',
+        materialName || '',
+        specification || '',
+        unit || '',
+        batchNo || '',
+        quantity || 0,
+        specWidth || 0,
       ]
     );
 
@@ -174,19 +185,27 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   const cutWidths = cutWidthStr.split('+').map((w: string) => parseFloat(w.trim()));
-  
+
   for (const width of cutWidths) {
     if (isNaN(width) || width <= 0) {
       return errorResponse('分切宽幅格式不正确，请使用数字+数字的格式，如：300+400+300', 400, 400);
     }
   }
 
-  const originalW = parseFloat(sourceLabel.width) || originalWidth || parseSpecWidth(sourceLabel.specification) || 0;
+  const originalW =
+    parseFloat(sourceLabel.width) ||
+    originalWidth ||
+    parseSpecWidth(sourceLabel.specification) ||
+    0;
   const cutTotalWidth = cutWidths.reduce((sum: number, w: number) => sum + w, 0);
   const remainWidth = originalW - cutTotalWidth;
 
   if (cutTotalWidth > originalW) {
-    return errorResponse(`分切后的宽幅总和【${cutTotalWidth}】不能大于原宽幅【${originalW}】`, 400, 400);
+    return errorResponse(
+      `分切后的宽幅总和【${cutTotalWidth}】不能大于原宽幅【${originalW}】`,
+      400,
+      400
+    );
   }
 
   const recordNo = generateRecordNo();
@@ -199,28 +218,36 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         operator_id, operator_name, remark, status, deleted
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0)`,
       [
-        recordNo, sourceLabel.id, sourceLabel.label_no, cutWidthStr,
-        originalW, cutTotalWidth, remainWidth,
-        finalOperatorId, finalOperatorName, remark,
+        recordNo,
+        sourceLabel.id,
+        sourceLabel.label_no,
+        cutWidthStr,
+        originalW,
+        cutTotalWidth,
+        remainWidth,
+        finalOperatorId,
+        finalOperatorName,
+        remark,
       ]
     );
 
     const recordId = (recordResult as any).insertId;
 
-    await conn.execute(
-      `UPDATE inv_material_label SET is_cut = 1, status = 'cut' WHERE id = ?`,
-      [sourceLabel.id]
-    );
+    await conn.execute(`UPDATE inv_material_label SET is_cut = 1, status = 'cut' WHERE id = ?`, [
+      sourceLabel.id,
+    ]);
 
     const newLabels = [];
     const originalSpec = sourceLabel.specification || '';
-    
+
     for (let i = 0; i < cutWidths.length; i++) {
       const newLabelNo = generateLabelNo();
       const cutWidth = cutWidths[i];
 
       let newSpec = originalSpec;
-      const specMatch = originalSpec.match(/^(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*(mm|m)?$/i);
+      const specMatch = originalSpec.match(
+        /^(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*(mm|m)?$/i
+      );
       if (specMatch) {
         const origLength = specMatch[2];
         const unitStr = specMatch[3] || 'mm';
@@ -229,9 +256,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         newSpec = `${cutWidth}mm`;
       }
 
-      const cutQty = originalW > 0 
-        ? Math.round(parseFloat(sourceLabel.quantity) * (cutWidth / originalW) * 100) / 100
-        : parseFloat(sourceLabel.quantity);
+      const cutQty =
+        originalW > 0
+          ? Math.round(parseFloat(sourceLabel.quantity) * (cutWidth / originalW) * 100) / 100
+          : parseFloat(sourceLabel.quantity);
 
       const qrCode = JSON.stringify({
         ID: newLabelNo,
@@ -248,13 +276,24 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           parent_label_id, label_type, status, deleted
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, ?, 2, 'active', 0)`,
         [
-          newLabelNo, qrCode, sourceLabel.purchase_order_no, sourceLabel.supplier_name,
-          sourceLabel.receive_date, sourceLabel.material_code, sourceLabel.material_name,
-          newSpec, sourceLabel.unit, sourceLabel.batch_no,
-          cutQty, cutWidth, sourceLabel.length_per_roll,
+          newLabelNo,
+          qrCode,
+          sourceLabel.purchase_order_no,
+          sourceLabel.supplier_name,
+          sourceLabel.receive_date,
+          sourceLabel.material_code,
+          sourceLabel.material_name,
+          newSpec,
+          sourceLabel.unit,
+          sourceLabel.batch_no,
+          cutQty,
+          cutWidth,
+          sourceLabel.length_per_roll,
           `分切${i + 1}: ${cutWidth}mm`,
-          sourceLabel.warehouse_id, sourceLabel.location_id,
-          sourceLabel.is_main_material, sourceLabel.id,
+          sourceLabel.warehouse_id,
+          sourceLabel.location_id,
+          sourceLabel.is_main_material,
+          sourceLabel.id,
         ]
       );
 
@@ -279,7 +318,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     if (remainWidth > 0) {
       const remLabelNo = generateLabelNo();
       let remSpec = originalSpec;
-      const specMatch = originalSpec.match(/^(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*(mm|m)?$/i);
+      const specMatch = originalSpec.match(
+        /^(\d+(?:\.\d+)?)\s*[×xX*]\s*(\d+(?:\.\d+)?)\s*(mm|m)?$/i
+      );
       if (specMatch) {
         const origLength = specMatch[2];
         const unitStr = specMatch[3] || 'mm';
@@ -287,9 +328,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       } else {
         remSpec = `${remainWidth}mm`;
       }
-      const remQty = originalW > 0
-        ? Math.round(parseFloat(sourceLabel.quantity) * (remainWidth / originalW) * 100) / 100
-        : 0;
+      const remQty =
+        originalW > 0
+          ? Math.round(parseFloat(sourceLabel.quantity) * (remainWidth / originalW) * 100) / 100
+          : 0;
 
       const remQrCode = JSON.stringify({
         ID: remLabelNo,
@@ -306,14 +348,25 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           parent_label_id, label_type, status, deleted
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, ?, 3, 'active', 0)`,
         [
-          remLabelNo, remQrCode, sourceLabel.purchase_order_no, sourceLabel.supplier_name,
-          sourceLabel.receive_date, sourceLabel.material_code, 
+          remLabelNo,
+          remQrCode,
+          sourceLabel.purchase_order_no,
+          sourceLabel.supplier_name,
+          sourceLabel.receive_date,
+          sourceLabel.material_code,
           `余料${sourceLabel.material_name}`,
-          remSpec, sourceLabel.unit, sourceLabel.batch_no,
-          remQty, remainWidth, remainWidth, sourceLabel.length_per_roll,
+          remSpec,
+          sourceLabel.unit,
+          sourceLabel.batch_no,
+          remQty,
+          remainWidth,
+          remainWidth,
+          sourceLabel.length_per_roll,
           `余料: ${remainWidth}mm`,
-          sourceLabel.warehouse_id, sourceLabel.location_id,
-          sourceLabel.is_main_material, sourceLabel.id,
+          sourceLabel.warehouse_id,
+          sourceLabel.location_id,
+          sourceLabel.is_main_material,
+          sourceLabel.id,
         ]
       );
 

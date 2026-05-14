@@ -1,6 +1,11 @@
 import { IInboundOrderRepository } from '@/domain/warehouse/repositories/IInboundOrderRepository';
 import { InboundOrder, InboundOrderProps } from '@/domain/warehouse/aggregates/InboundOrder';
-import { DomainError, NotFoundError, VersionConflictError, InvalidTransitionError } from '@/domain/shared/DomainTypes';
+import {
+  DomainError,
+  NotFoundError,
+  VersionConflictError,
+  InvalidTransitionError,
+} from '@/domain/shared/DomainTypes';
 import { EventBus } from '@/infrastructure/event-bus/EventBus';
 import { DomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutbox';
 import { query, transaction } from '@/lib/db';
@@ -151,7 +156,8 @@ export class InboundApplicationService {
       try {
         const pendingEvents = await DomainEventOutbox.fetchPendingEvents();
         for (const eventRow of pendingEvents) {
-          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'InboundOrder') continue;
+          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'InboundOrder')
+            continue;
           try {
             const event = JSON.parse(eventRow.payload);
             const domainEvent = { ...event, occurredAt: new Date(event.occurredAt) };

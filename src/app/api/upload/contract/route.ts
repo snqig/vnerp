@@ -3,16 +3,19 @@ import { writeFile } from 'fs/promises';
 import { mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import {
-  successResponse,
-  errorResponse,
-  commonErrors,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
 
 const UPLOAD_CONFIG = {
   maxSize: 20 * 1024 * 1024,
-  allowedTypes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/png'],
+  allowedTypes: [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'image/jpeg',
+    'image/png',
+  ],
   allowedExtensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'],
   uploadDir: 'public/uploads/contracts',
 };
@@ -42,11 +45,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   if (file.size > UPLOAD_CONFIG.maxSize) {
-    return errorResponse(
-      `文件大小不能超过 ${UPLOAD_CONFIG.maxSize / 1024 / 1024}MB`,
-      400,
-      400
-    );
+    return errorResponse(`文件大小不能超过 ${UPLOAD_CONFIG.maxSize / 1024 / 1024}MB`, 400, 400);
   }
 
   const filename = generateUniqueFilename(file.name);

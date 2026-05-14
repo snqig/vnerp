@@ -17,9 +17,7 @@ export function MainLayout({ children, title }: MainLayoutProps) {
     return (
       <div className="flex flex-col h-screen overflow-hidden">
         <Header title={title} navigationMode={navigationMode} />
-        <main className="flex-1 overflow-auto p-4 lg:p-6 bg-muted/30">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto p-4 lg:p-6 bg-muted/30">{children}</main>
       </div>
     );
   }
@@ -30,9 +28,7 @@ export function MainLayout({ children, title }: MainLayoutProps) {
         <Header title={title} navigationMode={navigationMode} />
         <div className="flex flex-1 overflow-hidden">
           <Sidebar navigationMode={navigationMode} />
-          <main className="flex-1 overflow-auto p-4 lg:p-6 bg-muted/30">
-            {children}
-          </main>
+          <main className="flex-1 overflow-auto p-4 lg:p-6 bg-muted/30">{children}</main>
         </div>
       </div>
     );
@@ -43,9 +39,7 @@ export function MainLayout({ children, title }: MainLayoutProps) {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title={title} />
-        <main className="flex-1 overflow-auto p-4 lg:p-6 bg-muted/30">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto p-4 lg:p-6 bg-muted/30">{children}</main>
       </div>
     </div>
   );

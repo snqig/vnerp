@@ -8,7 +8,7 @@ import { StandardCardInk } from '../entities/StandardCardInk';
 import { StandardCardTooling } from '../entities/StandardCardTooling';
 import { StandardCardAttachment } from '../entities/StandardCardAttachment';
 import { VersionChangeLog } from '../entities/VersionChangeLog';
-import { DomainError } from '@/lib/errors/DomainError';
+import { DomainError } from '@/domain/shared/DomainTypes';
 
 export interface StandardCardProps {
   id?: number;
@@ -94,7 +94,12 @@ export class StandardCard {
   private _attachments: StandardCardAttachment[] = [];
   private _versionLogs: VersionChangeLog[] = [];
 
-  private _versionLogsNew: { version: string; changeType: string; changeContent: string; changedBy: number }[] = [];
+  private _versionLogsNew: {
+    version: string;
+    changeType: string;
+    changeContent: string;
+    changedBy: number;
+  }[] = [];
 
   constructor(props: StandardCardProps) {
     this.validateCreation(props);
@@ -145,29 +150,78 @@ export class StandardCard {
     }
   }
 
-  get code(): string { return this._code; }
-  get version(): string { return this._version; }
-  get name(): string { return this._name; }
-  get type(): StandardCardType { return this._type; }
-  get materialId(): number | undefined { return this._materialId; }
-  get customerId(): number | undefined { return this._customerId; }
-  get status(): StandardCardStatus { return this._status; }
-  get effectiveDate(): Date | undefined { return this._effectiveDate; }
-  get isCurrent(): boolean { return this._isCurrent; }
-  get isObsolete(): boolean { return this._isObsolete; }
-  get isLocked(): boolean { return this._isLocked; }
-  get createUser(): number | undefined { return this._createUser; }
-  get createTime(): Date | undefined { return this._createTime; }
+  get code(): string {
+    return this._code;
+  }
+  get version(): string {
+    return this._version;
+  }
+  get name(): string {
+    return this._name;
+  }
+  get type(): StandardCardType {
+    return this._type;
+  }
+  get materialId(): number | undefined {
+    return this._materialId;
+  }
+  get customerId(): number | undefined {
+    return this._customerId;
+  }
+  get status(): StandardCardStatus {
+    return this._status;
+  }
+  get effectiveDate(): Date | undefined {
+    return this._effectiveDate;
+  }
+  get isCurrent(): boolean {
+    return this._isCurrent;
+  }
+  get isObsolete(): boolean {
+    return this._isObsolete;
+  }
+  get isLocked(): boolean {
+    return this._isLocked;
+  }
+  get createUser(): number | undefined {
+    return this._createUser;
+  }
+  get createTime(): Date | undefined {
+    return this._createTime;
+  }
 
-  get colorItems(): ColorStandardItem[] { return [...this._colorItems]; }
-  get processItems(): ProcessStandardItem[] { return [...this._processItems]; }
-  get qualityItems(): QualityStandardItem[] { return [...this._qualityItems]; }
-  get materials(): StandardCardMaterial[] { return [...this._materials]; }
-  get inks(): StandardCardInk[] { return [...this._inks]; }
-  get toolings(): StandardCardTooling[] { return [...this._toolings]; }
-  get attachments(): StandardCardAttachment[] { return [...this._attachments]; }
-  get versionLogs(): VersionChangeLog[] { return [...this._versionLogs]; }
-  get versionLogsNew(): { version: string; changeType: string; changeContent: string; changedBy: number }[] { return [...this._versionLogsNew]; }
+  get colorItems(): ColorStandardItem[] {
+    return [...this._colorItems];
+  }
+  get processItems(): ProcessStandardItem[] {
+    return [...this._processItems];
+  }
+  get qualityItems(): QualityStandardItem[] {
+    return [...this._qualityItems];
+  }
+  get materials(): StandardCardMaterial[] {
+    return [...this._materials];
+  }
+  get inks(): StandardCardInk[] {
+    return [...this._inks];
+  }
+  get toolings(): StandardCardTooling[] {
+    return [...this._toolings];
+  }
+  get attachments(): StandardCardAttachment[] {
+    return [...this._attachments];
+  }
+  get versionLogs(): VersionChangeLog[] {
+    return [...this._versionLogs];
+  }
+  get versionLogsNew(): {
+    version: string;
+    changeType: string;
+    changeContent: string;
+    changedBy: number;
+  }[] {
+    return [...this._versionLogsNew];
+  }
 
   submit(userId: number): void {
     if (this._status !== StandardCardStatus.DRAFT) {
@@ -244,7 +298,7 @@ export class StandardCard {
       confirmUser: undefined,
       changeDescription: undefined,
       createTime: undefined,
-      updateTime: undefined
+      updateTime: undefined,
     });
     newCard.addVersionLog('create', `基于版本 ${this._version} 创建新版本`, userId);
     return newCard;
@@ -252,7 +306,7 @@ export class StandardCard {
 
   setColorItems(items: ColorStandardItem[]): void {
     this._colorItems = items;
-    this._colorItems.forEach(item => {
+    this._colorItems.forEach((item) => {
       if (!item.standardCardId && this.id) {
         (item as any).standardCardId = this.id;
       }
@@ -261,7 +315,7 @@ export class StandardCard {
 
   setProcessItems(items: ProcessStandardItem[]): void {
     this._processItems = items;
-    this._processItems.forEach(item => {
+    this._processItems.forEach((item) => {
       if (!item.standardCardId && this.id) {
         (item as any).standardCardId = this.id;
       }
@@ -270,7 +324,7 @@ export class StandardCard {
 
   setQualityItems(items: QualityStandardItem[]): void {
     this._qualityItems = items;
-    this._qualityItems.forEach(item => {
+    this._qualityItems.forEach((item) => {
       if (!item.standardCardId && this.id) {
         (item as any).standardCardId = this.id;
       }
@@ -308,8 +362,9 @@ export class StandardCard {
       this._materialRequirement = undefined;
       return;
     }
-    const lines = this._materials.map(m => 
-      `${m.materialName || m.materialId} | 规格: ${m.spec || '-'} | 单耗: ${m.unitConsumption} | 损耗: ${m.lossRate}%`
+    const lines = this._materials.map(
+      (m) =>
+        `${m.materialName || m.materialId} | 规格: ${m.spec || '-'} | 单耗: ${m.unitConsumption} | 损耗: ${m.lossRate}%`
     );
     this._materialRequirement = lines.join('\n');
   }
@@ -319,8 +374,9 @@ export class StandardCard {
       this._inkRequirement = undefined;
       return;
     }
-    const lines = this._inks.map(ink => 
-      `${ink.inkName || ink.inkId} | 配比: ${ink.ratio || '-'} | 单耗: ${ink.unitConsumption}`
+    const lines = this._inks.map(
+      (ink) =>
+        `${ink.inkName || ink.inkId} | 配比: ${ink.ratio || '-'} | 单耗: ${ink.unitConsumption}`
     );
     this._inkRequirement = lines.join('\n');
   }
@@ -330,16 +386,20 @@ export class StandardCard {
       this._toolingRequirement = undefined;
       return;
     }
-    const lines = this._toolings.map(t => t.toolingSummary);
+    const lines = this._toolings.map((t) => t.toolingSummary);
     this._toolingRequirement = lines.join('\n');
   }
 
-  private addVersionLog(changeType: 'create' | 'update' | 'obsolete' | 'restore', changeContent: string, changedBy: number): void {
+  private addVersionLog(
+    changeType: 'create' | 'update' | 'obsolete' | 'restore',
+    changeContent: string,
+    changedBy: number
+  ): void {
     this._versionLogsNew.push({
       version: this._version,
       changeType,
       changeContent,
-      changedBy
+      changedBy,
     });
   }
 
@@ -348,10 +408,12 @@ export class StandardCard {
   }
 
   canBeUsedForProduction(): boolean {
-    return this._status === StandardCardStatus.CONFIRMED && 
-           !this._isObsolete && 
-           this._isCurrent &&
-           (!this._expiryDate || new Date() < this._expiryDate);
+    return (
+      this._status === StandardCardStatus.CONFIRMED &&
+      !this._isObsolete &&
+      this._isCurrent &&
+      (!this._expiryDate || new Date() < this._expiryDate)
+    );
   }
 
   toProps(): StandardCardProps {
@@ -388,7 +450,7 @@ export class StandardCard {
       confirmUser: this._confirmUser,
       createTime: this._createTime,
       updateTime: this._updateTime,
-      remark: this._remark
+      remark: this._remark,
     };
   }
 

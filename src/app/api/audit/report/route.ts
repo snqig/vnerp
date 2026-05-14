@@ -9,7 +9,7 @@ import { generateAuditReport } from '@/lib/audit-logger';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
-  
+
   const startTime = searchParams.get('startTime');
   const endTime = searchParams.get('endTime');
   const module = searchParams.get('module') || undefined;

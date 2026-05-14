@@ -6,7 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Loader2, Eye, EyeOff, Sparkles, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -174,7 +180,11 @@ export default function LoginPage() {
   const [error, setError] = useState('');
 
   const [showChangePwd, setShowChangePwd] = useState(false);
-  const [changePwdForm, setChangePwdForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+  const [changePwdForm, setChangePwdForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
   const [changePwdLoading, setChangePwdLoading] = useState(false);
   const [loggedInUserId, setLoggedInUserId] = useState<number | null>(null);
 
@@ -201,13 +211,16 @@ export default function LoginPage() {
 
   useEffect(() => {
     const scheduleBlink = () => {
-      const timeout = setTimeout(() => {
-        setIsPurpleBlinking(true);
-        setTimeout(() => {
-          setIsPurpleBlinking(false);
-          scheduleBlink();
-        }, 150);
-      }, Math.random() * 4000 + 3000);
+      const timeout = setTimeout(
+        () => {
+          setIsPurpleBlinking(true);
+          setTimeout(() => {
+            setIsPurpleBlinking(false);
+            scheduleBlink();
+          }, 150);
+        },
+        Math.random() * 4000 + 3000
+      );
       return timeout;
     };
     const timeout = scheduleBlink();
@@ -216,13 +229,16 @@ export default function LoginPage() {
 
   useEffect(() => {
     const scheduleBlink = () => {
-      const timeout = setTimeout(() => {
-        setIsBlackBlinking(true);
-        setTimeout(() => {
-          setIsBlackBlinking(false);
-          scheduleBlink();
-        }, 150);
-      }, Math.random() * 4000 + 3000);
+      const timeout = setTimeout(
+        () => {
+          setIsBlackBlinking(true);
+          setTimeout(() => {
+            setIsBlackBlinking(false);
+            scheduleBlink();
+          }, 150);
+        },
+        Math.random() * 4000 + 3000
+      );
       return timeout;
     };
     const timeout = scheduleBlink();
@@ -244,12 +260,15 @@ export default function LoginPage() {
   useEffect(() => {
     if (loginForm.password.length > 0 && showPassword) {
       const schedulePeek = () => {
-        const peekInterval = setTimeout(() => {
-          setIsPurplePeeking(true);
-          setTimeout(() => {
-            setIsPurplePeeking(false);
-          }, 800);
-        }, Math.random() * 3000 + 2000);
+        const peekInterval = setTimeout(
+          () => {
+            setIsPurplePeeking(true);
+            setTimeout(() => {
+              setIsPurplePeeking(false);
+            }, 800);
+          },
+          Math.random() * 3000 + 2000
+        );
         return peekInterval;
       };
       const firstPeek = schedulePeek();
@@ -336,7 +355,10 @@ export default function LoginPage() {
         if (userStr) {
           const user = JSON.parse(userStr);
           user.firstLogin = false;
-          (localStorage.getItem('user') ? localStorage : sessionStorage).setItem('user', JSON.stringify(user));
+          (localStorage.getItem('user') ? localStorage : sessionStorage).setItem(
+            'user',
+            JSON.stringify(user)
+          );
         }
         router.replace('/');
       } else {
@@ -375,23 +397,35 @@ export default function LoginPage() {
               style={{
                 left: '70px',
                 width: '180px',
-                height: (isTyping || (loginForm.password.length > 0 && !showPassword)) ? '440px' : '400px',
+                height:
+                  isTyping || (loginForm.password.length > 0 && !showPassword) ? '440px' : '400px',
                 backgroundColor: '#6C3FF5',
                 borderRadius: '10px 10px 0 0',
                 zIndex: 1,
-                transform: (loginForm.password.length > 0 && showPassword)
-                  ? 'skewX(0deg)'
-                  : (isTyping || (loginForm.password.length > 0 && !showPassword))
-                    ? `skewX(${(purplePos.bodySkew || 0) - 12}deg) translateX(40px)`
-                    : `skewX(${purplePos.bodySkew || 0}deg)`,
+                transform:
+                  loginForm.password.length > 0 && showPassword
+                    ? 'skewX(0deg)'
+                    : isTyping || (loginForm.password.length > 0 && !showPassword)
+                      ? `skewX(${(purplePos.bodySkew || 0) - 12}deg) translateX(40px)`
+                      : `skewX(${purplePos.bodySkew || 0}deg)`,
                 transformOrigin: 'bottom center',
               }}
             >
               <div
                 className="absolute flex gap-8 transition-all duration-700 ease-in-out"
                 style={{
-                  left: (loginForm.password.length > 0 && showPassword) ? '20px' : isLookingAtEachOther ? '55px' : `${45 + purplePos.faceX}px`,
-                  top: (loginForm.password.length > 0 && showPassword) ? '35px' : isLookingAtEachOther ? '65px' : `${40 + purplePos.faceY}px`,
+                  left:
+                    loginForm.password.length > 0 && showPassword
+                      ? '20px'
+                      : isLookingAtEachOther
+                        ? '55px'
+                        : `${45 + purplePos.faceX}px`,
+                  top:
+                    loginForm.password.length > 0 && showPassword
+                      ? '35px'
+                      : isLookingAtEachOther
+                        ? '65px'
+                        : `${40 + purplePos.faceY}px`,
                 }}
               >
                 <EyeBall
@@ -401,8 +435,24 @@ export default function LoginPage() {
                   eyeColor="white"
                   pupilColor="#2D2D2D"
                   isBlinking={isPurpleBlinking}
-                  forceLookX={(loginForm.password.length > 0 && showPassword) ? (isPurplePeeking ? 4 : -4) : isLookingAtEachOther ? 3 : undefined}
-                  forceLookY={(loginForm.password.length > 0 && showPassword) ? (isPurplePeeking ? 5 : -4) : isLookingAtEachOther ? 4 : undefined}
+                  forceLookX={
+                    loginForm.password.length > 0 && showPassword
+                      ? isPurplePeeking
+                        ? 4
+                        : -4
+                      : isLookingAtEachOther
+                        ? 3
+                        : undefined
+                  }
+                  forceLookY={
+                    loginForm.password.length > 0 && showPassword
+                      ? isPurplePeeking
+                        ? 5
+                        : -4
+                      : isLookingAtEachOther
+                        ? 4
+                        : undefined
+                  }
                 />
                 <EyeBall
                   size={18}
@@ -411,8 +461,24 @@ export default function LoginPage() {
                   eyeColor="white"
                   pupilColor="#2D2D2D"
                   isBlinking={isPurpleBlinking}
-                  forceLookX={(loginForm.password.length > 0 && showPassword) ? (isPurplePeeking ? 4 : -4) : isLookingAtEachOther ? 3 : undefined}
-                  forceLookY={(loginForm.password.length > 0 && showPassword) ? (isPurplePeeking ? 5 : -4) : isLookingAtEachOther ? 4 : undefined}
+                  forceLookX={
+                    loginForm.password.length > 0 && showPassword
+                      ? isPurplePeeking
+                        ? 4
+                        : -4
+                      : isLookingAtEachOther
+                        ? 3
+                        : undefined
+                  }
+                  forceLookY={
+                    loginForm.password.length > 0 && showPassword
+                      ? isPurplePeeking
+                        ? 5
+                        : -4
+                      : isLookingAtEachOther
+                        ? 4
+                        : undefined
+                  }
                 />
               </div>
             </div>
@@ -427,21 +493,32 @@ export default function LoginPage() {
                 backgroundColor: '#2D2D2D',
                 borderRadius: '8px 8px 0 0',
                 zIndex: 2,
-                transform: (loginForm.password.length > 0 && showPassword)
-                  ? 'skewX(0deg)'
-                  : isLookingAtEachOther
-                    ? `skewX(${(blackPos.bodySkew || 0) * 1.5 + 10}deg) translateX(20px)`
-                    : (isTyping || (loginForm.password.length > 0 && !showPassword))
-                      ? `skewX(${(blackPos.bodySkew || 0) * 1.5}deg)`
-                      : `skewX(${blackPos.bodySkew || 0}deg)`,
+                transform:
+                  loginForm.password.length > 0 && showPassword
+                    ? 'skewX(0deg)'
+                    : isLookingAtEachOther
+                      ? `skewX(${(blackPos.bodySkew || 0) * 1.5 + 10}deg) translateX(20px)`
+                      : isTyping || (loginForm.password.length > 0 && !showPassword)
+                        ? `skewX(${(blackPos.bodySkew || 0) * 1.5}deg)`
+                        : `skewX(${blackPos.bodySkew || 0}deg)`,
                 transformOrigin: 'bottom center',
               }}
             >
               <div
                 className="absolute flex gap-6 transition-all duration-700 ease-in-out"
                 style={{
-                  left: (loginForm.password.length > 0 && showPassword) ? '10px' : isLookingAtEachOther ? '32px' : `${26 + blackPos.faceX}px`,
-                  top: (loginForm.password.length > 0 && showPassword) ? '28px' : isLookingAtEachOther ? '12px' : `${32 + blackPos.faceY}px`,
+                  left:
+                    loginForm.password.length > 0 && showPassword
+                      ? '10px'
+                      : isLookingAtEachOther
+                        ? '32px'
+                        : `${26 + blackPos.faceX}px`,
+                  top:
+                    loginForm.password.length > 0 && showPassword
+                      ? '28px'
+                      : isLookingAtEachOther
+                        ? '12px'
+                        : `${32 + blackPos.faceY}px`,
                 }}
               >
                 <EyeBall
@@ -451,8 +528,20 @@ export default function LoginPage() {
                   eyeColor="white"
                   pupilColor="#2D2D2D"
                   isBlinking={isBlackBlinking}
-                  forceLookX={(loginForm.password.length > 0 && showPassword) ? -4 : isLookingAtEachOther ? 0 : undefined}
-                  forceLookY={(loginForm.password.length > 0 && showPassword) ? -4 : isLookingAtEachOther ? -4 : undefined}
+                  forceLookX={
+                    loginForm.password.length > 0 && showPassword
+                      ? -4
+                      : isLookingAtEachOther
+                        ? 0
+                        : undefined
+                  }
+                  forceLookY={
+                    loginForm.password.length > 0 && showPassword
+                      ? -4
+                      : isLookingAtEachOther
+                        ? -4
+                        : undefined
+                  }
                 />
                 <EyeBall
                   size={16}
@@ -461,8 +550,20 @@ export default function LoginPage() {
                   eyeColor="white"
                   pupilColor="#2D2D2D"
                   isBlinking={isBlackBlinking}
-                  forceLookX={(loginForm.password.length > 0 && showPassword) ? -4 : isLookingAtEachOther ? 0 : undefined}
-                  forceLookY={(loginForm.password.length > 0 && showPassword) ? -4 : isLookingAtEachOther ? -4 : undefined}
+                  forceLookX={
+                    loginForm.password.length > 0 && showPassword
+                      ? -4
+                      : isLookingAtEachOther
+                        ? 0
+                        : undefined
+                  }
+                  forceLookY={
+                    loginForm.password.length > 0 && showPassword
+                      ? -4
+                      : isLookingAtEachOther
+                        ? -4
+                        : undefined
+                  }
                 />
               </div>
             </div>
@@ -477,19 +578,40 @@ export default function LoginPage() {
                 zIndex: 3,
                 backgroundColor: '#FF9B6B',
                 borderRadius: '120px 120px 0 0',
-                transform: (loginForm.password.length > 0 && showPassword) ? 'skewX(0deg)' : `skewX(${orangePos.bodySkew || 0}deg)`,
+                transform:
+                  loginForm.password.length > 0 && showPassword
+                    ? 'skewX(0deg)'
+                    : `skewX(${orangePos.bodySkew || 0}deg)`,
                 transformOrigin: 'bottom center',
               }}
             >
               <div
                 className="absolute flex gap-8 transition-all duration-200 ease-out"
                 style={{
-                  left: (loginForm.password.length > 0 && showPassword) ? '50px' : `${82 + (orangePos.faceX || 0)}px`,
-                  top: (loginForm.password.length > 0 && showPassword) ? '85px' : `${90 + (orangePos.faceY || 0)}px`,
+                  left:
+                    loginForm.password.length > 0 && showPassword
+                      ? '50px'
+                      : `${82 + (orangePos.faceX || 0)}px`,
+                  top:
+                    loginForm.password.length > 0 && showPassword
+                      ? '85px'
+                      : `${90 + (orangePos.faceY || 0)}px`,
                 }}
               >
-                <Pupil size={12} maxDistance={5} pupilColor="#2D2D2D" forceLookX={(loginForm.password.length > 0 && showPassword) ? -5 : undefined} forceLookY={(loginForm.password.length > 0 && showPassword) ? -4 : undefined} />
-                <Pupil size={12} maxDistance={5} pupilColor="#2D2D2D" forceLookX={(loginForm.password.length > 0 && showPassword) ? -5 : undefined} forceLookY={(loginForm.password.length > 0 && showPassword) ? -4 : undefined} />
+                <Pupil
+                  size={12}
+                  maxDistance={5}
+                  pupilColor="#2D2D2D"
+                  forceLookX={loginForm.password.length > 0 && showPassword ? -5 : undefined}
+                  forceLookY={loginForm.password.length > 0 && showPassword ? -4 : undefined}
+                />
+                <Pupil
+                  size={12}
+                  maxDistance={5}
+                  pupilColor="#2D2D2D"
+                  forceLookX={loginForm.password.length > 0 && showPassword ? -5 : undefined}
+                  forceLookY={loginForm.password.length > 0 && showPassword ? -4 : undefined}
+                />
               </div>
             </div>
 
@@ -503,25 +625,52 @@ export default function LoginPage() {
                 backgroundColor: '#E8D754',
                 borderRadius: '70px 70px 0 0',
                 zIndex: 4,
-                transform: (loginForm.password.length > 0 && showPassword) ? 'skewX(0deg)' : `skewX(${yellowPos.bodySkew || 0}deg)`,
+                transform:
+                  loginForm.password.length > 0 && showPassword
+                    ? 'skewX(0deg)'
+                    : `skewX(${yellowPos.bodySkew || 0}deg)`,
                 transformOrigin: 'bottom center',
               }}
             >
               <div
                 className="absolute flex gap-6 transition-all duration-200 ease-out"
                 style={{
-                  left: (loginForm.password.length > 0 && showPassword) ? '20px' : `${52 + (yellowPos.faceX || 0)}px`,
-                  top: (loginForm.password.length > 0 && showPassword) ? '35px' : `${40 + (yellowPos.faceY || 0)}px`,
+                  left:
+                    loginForm.password.length > 0 && showPassword
+                      ? '20px'
+                      : `${52 + (yellowPos.faceX || 0)}px`,
+                  top:
+                    loginForm.password.length > 0 && showPassword
+                      ? '35px'
+                      : `${40 + (yellowPos.faceY || 0)}px`,
                 }}
               >
-                <Pupil size={12} maxDistance={5} pupilColor="#2D2D2D" forceLookX={(loginForm.password.length > 0 && showPassword) ? -5 : undefined} forceLookY={(loginForm.password.length > 0 && showPassword) ? -4 : undefined} />
-                <Pupil size={12} maxDistance={5} pupilColor="#2D2D2D" forceLookX={(loginForm.password.length > 0 && showPassword) ? -5 : undefined} forceLookY={(loginForm.password.length > 0 && showPassword) ? -4 : undefined} />
+                <Pupil
+                  size={12}
+                  maxDistance={5}
+                  pupilColor="#2D2D2D"
+                  forceLookX={loginForm.password.length > 0 && showPassword ? -5 : undefined}
+                  forceLookY={loginForm.password.length > 0 && showPassword ? -4 : undefined}
+                />
+                <Pupil
+                  size={12}
+                  maxDistance={5}
+                  pupilColor="#2D2D2D"
+                  forceLookX={loginForm.password.length > 0 && showPassword ? -5 : undefined}
+                  forceLookY={loginForm.password.length > 0 && showPassword ? -4 : undefined}
+                />
               </div>
               <div
                 className="absolute w-20 h-[4px] bg-[#2D2D2D] rounded-full transition-all duration-200 ease-out"
                 style={{
-                  left: (loginForm.password.length > 0 && showPassword) ? '10px' : `${40 + (yellowPos.faceX || 0)}px`,
-                  top: (loginForm.password.length > 0 && showPassword) ? '88px' : `${88 + (yellowPos.faceY || 0)}px`,
+                  left:
+                    loginForm.password.length > 0 && showPassword
+                      ? '10px'
+                      : `${40 + (yellowPos.faceX || 0)}px`,
+                  top:
+                    loginForm.password.length > 0 && showPassword
+                      ? '88px'
+                      : `${88 + (yellowPos.faceY || 0)}px`,
                 }}
               />
             </div>
@@ -552,7 +701,9 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-5" data-testid="login-form">
             <div className="space-y-2">
-              <Label htmlFor="username" className="text-sm font-medium">用户名</Label>
+              <Label htmlFor="username" className="text-sm font-medium">
+                用户名
+              </Label>
               <Input
                 id="username"
                 type="text"
@@ -569,7 +720,9 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">密码</Label>
+              <Label htmlFor="password" className="text-sm font-medium">
+                密码
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -596,7 +749,9 @@ export default function LoginPage() {
                 <Checkbox
                   id="remember"
                   checked={loginForm.rememberMe}
-                  onCheckedChange={(checked) => setLoginForm({ ...loginForm, rememberMe: checked as boolean })}
+                  onCheckedChange={(checked) =>
+                    setLoginForm({ ...loginForm, rememberMe: checked as boolean })
+                  }
                 />
                 <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
                   记住我
@@ -605,7 +760,10 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div data-testid="login-error" className="p-3 text-sm text-red-400 bg-red-950/20 border border-red-900/30 rounded-lg">
+              <div
+                data-testid="login-error"
+                className="p-3 text-sm text-red-400 bg-red-950/20 border border-red-900/30 rounded-lg"
+              >
                 {error}
               </div>
             )}
@@ -630,8 +788,18 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <Dialog open={showChangePwd} onOpenChange={(open) => { if (!open && !changePwdLoading) setShowChangePwd(false); }}>
-        <DialogContent className="max-w-md" resizable onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+      <Dialog
+        open={showChangePwd}
+        onOpenChange={(open) => {
+          if (!open && !changePwdLoading) setShowChangePwd(false);
+        }}
+      >
+        <DialogContent
+          className="max-w-md"
+          resizable
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <KeyRound className="h-5 w-5 text-orange-500" />
@@ -639,9 +807,39 @@ export default function LoginPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div><Label>原密码</Label><Input type="password" value={changePwdForm.oldPassword} onChange={e => setChangePwdForm({ ...changePwdForm, oldPassword: e.target.value })} placeholder="请输入原密码" /></div>
-            <div><Label>新密码</Label><Input type="password" value={changePwdForm.newPassword} onChange={e => setChangePwdForm({ ...changePwdForm, newPassword: e.target.value })} placeholder="至少6位，需包含字母和数字" /></div>
-            <div><Label>确认新密码</Label><Input type="password" value={changePwdForm.confirmPassword} onChange={e => setChangePwdForm({ ...changePwdForm, confirmPassword: e.target.value })} placeholder="再次输入新密码" /></div>
+            <div>
+              <Label>原密码</Label>
+              <Input
+                type="password"
+                value={changePwdForm.oldPassword}
+                onChange={(e) =>
+                  setChangePwdForm({ ...changePwdForm, oldPassword: e.target.value })
+                }
+                placeholder="请输入原密码"
+              />
+            </div>
+            <div>
+              <Label>新密码</Label>
+              <Input
+                type="password"
+                value={changePwdForm.newPassword}
+                onChange={(e) =>
+                  setChangePwdForm({ ...changePwdForm, newPassword: e.target.value })
+                }
+                placeholder="至少6位，需包含字母和数字"
+              />
+            </div>
+            <div>
+              <Label>确认新密码</Label>
+              <Input
+                type="password"
+                value={changePwdForm.confirmPassword}
+                onChange={(e) =>
+                  setChangePwdForm({ ...changePwdForm, confirmPassword: e.target.value })
+                }
+                placeholder="再次输入新密码"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" onClick={handleChangePwd} disabled={changePwdLoading}>

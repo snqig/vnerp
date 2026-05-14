@@ -1,11 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  commonErrors,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
 import { ProcessStandardItem, StandardCard } from '../route';
 
 // POST /api/standard-cards/check-deviation - 参数偏差检测（设计文档 6.5 节）

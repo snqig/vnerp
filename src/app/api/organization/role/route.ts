@@ -22,10 +22,10 @@ interface Role {
 }
 
 // 构建查询条件
-function buildQueryConditions(params: {
-  keyword: string;
-  status: string | null;
-}): { sql: string; values: any[] } {
+function buildQueryConditions(params: { keyword: string; status: string | null }): {
+  sql: string;
+  values: any[];
+} {
   let sql = `
     SELECT
       id, role_code, role_name, description, data_scope, status, permissions,
@@ -79,21 +79,46 @@ function formatRole(role: any): Role {
   };
 }
 
-// GET - 获取角色列表
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status');
+  const page = parseInt(searchParams.get('page') || '1');
+  const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   const { sql, values } = buildQueryConditions({
     keyword,
     status,
   });
 
-  const roles = await query<Role>(sql, values);
+  let countSql = `SELECT COUNT(*) as total FROM sys_role WHERE deleted = 0`;
+  const countValues: any[] = [];
+
+  if (keyword) {
+    countSql += ' AND (role_name LIKE ? OR role_code LIKE ?)';
+    countValues.push(`%${keyword}%`, `%${keyword}%`);
+  }
+
+  if (status !== undefined && status !== null && status !== '') {
+    countSql += ' AND status = ?';
+    countValues.push(parseInt(status));
+  }
+
+  const countResult = await query(countSql, countValues);
+  const total = (countResult as any[])[0]?.total || 0;
+
+  const paginatedSql = `${sql} LIMIT ? OFFSET ?`;
+  const paginatedValues = [...values, pageSize, (page - 1) * pageSize];
+
+  const roles = await query<Role>(paginatedSql, paginatedValues);
   const formattedRoles = (roles as any[]).map(formatRole);
 
-  return successResponse(formattedRoles);
+  return successResponse({
+    list: formattedRoles,
+    total,
+    page,
+    pageSize,
+  });
 }, '获取角色列表失败');
 
 // POST - 创建角色
@@ -104,11 +129,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['role_code', 'role_name']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查编码是否已存在
@@ -122,9 +143,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   const permissions =
-    typeof body.permissions === 'object'
-      ? JSON.stringify(body.permissions)
-      : body.permissions;
+    typeof body.permissions === 'object' ? JSON.stringify(body.permissions) : body.permissions;
 
   const result = await execute(
     `INSERT INTO sys_role (role_code, role_name, description, data_scope, status, permissions)
@@ -155,11 +174,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['role_name']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查角色是否存在
@@ -173,9 +188,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   const permissions =
-    typeof body.permissions === 'object'
-      ? JSON.stringify(body.permissions)
-      : body.permissions;
+    typeof body.permissions === 'object' ? JSON.stringify(body.permissions) : body.permissions;
 
   const result = await execute(
     `UPDATE sys_role SET

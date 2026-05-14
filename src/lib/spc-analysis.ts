@@ -16,7 +16,12 @@ export interface XbarRChart {
   data_points: SPCDataPoint[];
   x_bar_limits: ControlLimit;
   r_limits: ControlLimit;
-  out_of_control_points: { subgroup_id: number; type: 'x_bar' | 'range'; value: number; limit: number }[];
+  out_of_control_points: {
+    subgroup_id: number;
+    type: 'x_bar' | 'range';
+    value: number;
+    limit: number;
+  }[];
   process_capability: {
     cp: number;
     cpk: number;
@@ -46,23 +51,51 @@ export interface PChart {
 }
 
 const A2_TABLE: Record<number, number> = {
-  2: 1.880, 3: 1.023, 4: 0.729, 5: 0.577,
-  6: 0.483, 7: 0.419, 8: 0.373, 9: 0.337, 10: 0.308,
+  2: 1.88,
+  3: 1.023,
+  4: 0.729,
+  5: 0.577,
+  6: 0.483,
+  7: 0.419,
+  8: 0.373,
+  9: 0.337,
+  10: 0.308,
 };
 
 const D3_TABLE: Record<number, number> = {
-  2: 0, 3: 0, 4: 0, 5: 0, 6: 0,
-  7: 0.076, 8: 0.136, 9: 0.184, 10: 0.223,
+  2: 0,
+  3: 0,
+  4: 0,
+  5: 0,
+  6: 0,
+  7: 0.076,
+  8: 0.136,
+  9: 0.184,
+  10: 0.223,
 };
 
 const D4_TABLE: Record<number, number> = {
-  2: 3.267, 3: 2.574, 4: 2.282, 5: 2.114,
-  6: 2.004, 7: 1.924, 8: 1.864, 9: 1.816, 10: 1.777,
+  2: 3.267,
+  3: 2.574,
+  4: 2.282,
+  5: 2.114,
+  6: 2.004,
+  7: 1.924,
+  8: 1.864,
+  9: 1.816,
+  10: 1.777,
 };
 
 const D2_TABLE: Record<number, number> = {
-  2: 1.128, 3: 1.693, 4: 2.059, 5: 2.326,
-  6: 2.534, 7: 2.704, 8: 2.847, 9: 2.970, 10: 3.078,
+  2: 1.128,
+  3: 1.693,
+  4: 2.059,
+  5: 2.326,
+  6: 2.534,
+  7: 2.704,
+  8: 2.847,
+  9: 2.97,
+  10: 3.078,
 };
 
 export function calculateXbarRChart(
@@ -153,19 +186,17 @@ export function calculateXbarRChart(
   const LSL = xBarLimits.lcl;
 
   const cp = sigma > 0 ? (USL - LSL) / (6 * sigma) : 0;
-  const cpk = sigma > 0
-    ? Math.min(USL - xDoubleBar, xDoubleBar - LSL) / (3 * sigma)
-    : 0;
+  const cpk = sigma > 0 ? Math.min(USL - xDoubleBar, xDoubleBar - LSL) / (3 * sigma) : 0;
 
   const allValues = dataPoints.flatMap((dp) => dp.values);
   const overallMean = allValues.reduce((sum, v) => sum + v, 0) / allValues.length;
-  const overallVariance = allValues.reduce((sum, v) => sum + Math.pow(v - overallMean, 2), 0) / (allValues.length - 1);
+  const overallVariance =
+    allValues.reduce((sum, v) => sum + Math.pow(v - overallMean, 2), 0) / (allValues.length - 1);
   const overallSigma = Math.sqrt(overallVariance);
 
   const pp = overallSigma > 0 ? (USL - LSL) / (6 * overallSigma) : 0;
-  const ppk = overallSigma > 0
-    ? Math.min(USL - overallMean, overallMean - LSL) / (3 * overallSigma)
-    : 0;
+  const ppk =
+    overallSigma > 0 ? Math.min(USL - overallMean, overallMean - LSL) / (3 * overallSigma) : 0;
 
   return {
     data_points: dataPoints,
@@ -225,8 +256,12 @@ export function calculatePChart(
     defective_rate: d.inspected > 0 ? d.defective / d.inspected : 0,
   }));
 
-  const ucl = pBar + sigmaMultiplier * Math.sqrt((pBar * (1 - pBar)) / (totalInspected / data.length));
-  const lcl = Math.max(0, pBar - sigmaMultiplier * Math.sqrt((pBar * (1 - pBar)) / (totalInspected / data.length)));
+  const ucl =
+    pBar + sigmaMultiplier * Math.sqrt((pBar * (1 - pBar)) / (totalInspected / data.length));
+  const lcl = Math.max(
+    0,
+    pBar - sigmaMultiplier * Math.sqrt((pBar * (1 - pBar)) / (totalInspected / data.length))
+  );
 
   const limits: ControlLimit = { ucl, cl: pBar, lcl };
 
@@ -235,7 +270,10 @@ export function calculatePChart(
   for (const dp of dataPoints) {
     if (dp.inspected > 0) {
       const pointUcl = pBar + sigmaMultiplier * Math.sqrt((pBar * (1 - pBar)) / dp.inspected);
-      const pointLcl = Math.max(0, pBar - sigmaMultiplier * Math.sqrt((pBar * (1 - pBar)) / dp.inspected));
+      const pointLcl = Math.max(
+        0,
+        pBar - sigmaMultiplier * Math.sqrt((pBar * (1 - pBar)) / dp.inspected)
+      );
 
       if (dp.defective_rate > pointUcl) {
         outOfControlPoints.push({
@@ -279,10 +317,7 @@ export async function handleInspectionFailure(
 
   const inspection = inspectionRows[0];
 
-  await conn.execute(
-    `UPDATE qc_inspection SET inspection_result = 2 WHERE id = ?`,
-    [inspectionId]
-  );
+  await conn.execute(`UPDATE qc_inspection SET inspection_result = 2 WHERE id = ?`, [inspectionId]);
 
   if (inspection.batch_no) {
     const [batchRows]: any = await conn.query(
@@ -324,7 +359,11 @@ export async function handleInspectionFailure(
       inspection.material_id || null,
       inspection.batch_no || null,
       inspection.unqualified_qty || 0,
-      inspection.inspection_type === 1 ? '来料不合格' : inspection.inspection_type === 2 ? '过程不合格' : '成品不合格',
+      inspection.inspection_type === 1
+        ? '来料不合格'
+        : inspection.inspection_type === 2
+          ? '过程不合格'
+          : '成品不合格',
       inspection.remark || `检验单 ${inspection.inspection_no} 检验不合格，由 ${operatorName} 确认`,
     ]
   );

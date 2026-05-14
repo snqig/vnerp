@@ -3,7 +3,10 @@ import { execute, query } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ success: false, message: 'Not available in production' }, { status: 403 });
+    return NextResponse.json(
+      { success: false, message: 'Not available in production' },
+      { status: 403 }
+    );
   }
 
   try {
@@ -13,10 +16,10 @@ export async function POST(request: NextRequest) {
 
     let updated = 0;
     for (const user of users) {
-      await execute(
-        'UPDATE sys_user SET real_name = ? WHERE id = ?',
-        [user.employee_name, user.id]
-      );
+      await execute('UPDATE sys_user SET real_name = ? WHERE id = ?', [
+        user.employee_name,
+        user.id,
+      ]);
       updated++;
     }
 
@@ -27,8 +30,8 @@ export async function POST(request: NextRequest) {
         id: u.id,
         username: u.username,
         old_name: u.old_name,
-        new_name: u.employee_name
-      }))
+        new_name: u.employee_name,
+      })),
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

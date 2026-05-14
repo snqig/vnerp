@@ -1,12 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { jwtVerify } from 'jose';
-import {
-  successResponse,
-  errorResponse,
-  commonErrors,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
 import {
   getCachedPermissions,
   setCachedPermissions,
@@ -25,10 +20,7 @@ const SECRET_KEY = JWT_SECRET || 'dev-only-secret-key';
 
 async function verifyToken(token: string) {
   try {
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(SECRET_KEY)
-    );
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
     return payload;
   } catch {
     return null;
@@ -146,11 +138,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   const menuTree = buildMenuTree(menus as any[]);
 
-  const permissions = [...new Set(
-    (menus as any[])
-      .filter((m) => m.permission)
-      .map((m) => m.permission)
-  )];
+  const permissions = [
+    ...new Set((menus as any[]).filter((m) => m.permission).map((m) => m.permission)),
+  ];
 
   setCachedPermissions(userId, permissions, menuTree);
 

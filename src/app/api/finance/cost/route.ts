@@ -22,7 +22,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     params.push(costType);
   }
 
-  const totalRows: any = await query(`SELECT COUNT(*) as total FROM fin_cost_record ${where}`, params);
+  const totalRows: any = await query(
+    `SELECT COUNT(*) as total FROM fin_cost_record ${where}`,
+    params
+  );
   const total = totalRows[0]?.total || 0;
 
   const rows: any = await query(

@@ -2,13 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -172,9 +166,7 @@ export default function TracePage() {
               <QrCode className="h-5 w-5" />
               扫码追溯
             </CardTitle>
-            <CardDescription>
-              扫描流程卡二维码进行物料追溯查询
-            </CardDescription>
+            <CardDescription>扫描流程卡二维码进行物料追溯查询</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -229,9 +221,7 @@ export default function TracePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>追溯结果</CardTitle>
-                    <CardDescription>
-                      追溯单号: {traceResult.traceNo}
-                    </CardDescription>
+                    <CardDescription>追溯单号: {traceResult.traceNo}</CardDescription>
                   </div>
                   <Button onClick={handlePrint}>
                     <Printer className="h-4 w-4 mr-2" />
@@ -281,15 +271,21 @@ export default function TracePage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">物料代号</span>
-                          <span className="font-medium">{traceResult.mainMaterial.materialCode}</span>
+                          <span className="font-medium">
+                            {traceResult.mainMaterial.materialCode}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">物料名称</span>
-                          <span className="font-medium">{traceResult.mainMaterial.materialName}</span>
+                          <span className="font-medium">
+                            {traceResult.mainMaterial.materialName}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">规格</span>
-                          <span className="font-medium">{traceResult.mainMaterial.specification}</span>
+                          <span className="font-medium">
+                            {traceResult.mainMaterial.specification}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">批号</span>
@@ -297,11 +293,15 @@ export default function TracePage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">供应商</span>
-                          <span className="font-medium">{traceResult.mainMaterial.supplierName}</span>
+                          <span className="font-medium">
+                            {traceResult.mainMaterial.supplierName}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">进料日期</span>
-                          <span className="font-medium">{traceResult.mainMaterial.receiveDate}</span>
+                          <span className="font-medium">
+                            {traceResult.mainMaterial.receiveDate}
+                          </span>
                         </div>
                       </div>
                     </CardContent>
@@ -317,20 +317,21 @@ export default function TracePage() {
                         <div className="bg-muted p-3 rounded-lg">
                           <div className="text-sm text-muted-foreground">主材数量</div>
                           <div className="text-2xl font-bold text-green-600">
-                            {traceResult.materials.filter(m => m.materialType === 'main').length}
+                            {traceResult.materials.filter((m) => m.materialType === 'main').length}
                           </div>
                         </div>
                         <div className="bg-muted p-3 rounded-lg">
                           <div className="text-sm text-muted-foreground">辅料数量</div>
                           <div className="text-2xl font-bold text-blue-600">
-                            {traceResult.materials.filter(m => m.materialType === 'auxiliary').length}
+                            {
+                              traceResult.materials.filter((m) => m.materialType === 'auxiliary')
+                                .length
+                            }
                           </div>
                         </div>
                         <div className="bg-muted p-3 rounded-lg">
                           <div className="text-sm text-muted-foreground">物料总数</div>
-                          <div className="text-2xl font-bold">
-                            {traceResult.materials.length}
-                          </div>
+                          <div className="text-2xl font-bold">{traceResult.materials.length}</div>
                         </div>
                       </div>
                     </CardContent>

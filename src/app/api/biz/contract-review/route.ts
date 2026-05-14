@@ -54,7 +54,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
 
     const now = new Date();
-    const reviewNo = 'CR' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    const reviewNo =
+      'CR' +
+      now.getFullYear() +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      String(now.getDate()).padStart(2, '0') +
+      String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
     const [orderRows]: any = await conn.execute(
       'SELECT id, order_no, customer_id, customer_name, total_amount, delivery_date FROM sal_order WHERE id = ? AND deleted = 0',
@@ -126,8 +131,19 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
     if (updatedReview.length > 0) {
       const r = updatedReview[0];
-      const allReviewed = r.production_result && r.purchase_result && r.finance_result && r.quality_result && r.engineering_result;
-      const anyRejected = [r.production_result, r.purchase_result, r.finance_result, r.quality_result, r.engineering_result].some(v => v === 3);
+      const allReviewed =
+        r.production_result &&
+        r.purchase_result &&
+        r.finance_result &&
+        r.quality_result &&
+        r.engineering_result;
+      const anyRejected = [
+        r.production_result,
+        r.purchase_result,
+        r.finance_result,
+        r.quality_result,
+        r.engineering_result,
+      ].some((v) => v === 3);
 
       if (allReviewed) {
         if (anyRejected) {
@@ -136,7 +152,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
             [id]
           );
         } else {
-          const allApproved = [r.production_result, r.purchase_result, r.finance_result, r.quality_result, r.engineering_result].every(v => v === 1);
+          const allApproved = [
+            r.production_result,
+            r.purchase_result,
+            r.finance_result,
+            r.quality_result,
+            r.engineering_result,
+          ].every((v) => v === 1);
           await conn.execute(
             `UPDATE biz_contract_review SET final_result = ?, final_reviewer = ?, status = 3 WHERE id = ?`,
             [allApproved ? 1 : 2, reviewer || 'system', id]

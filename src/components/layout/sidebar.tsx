@@ -122,14 +122,9 @@ function SortableMenuItem({
   getIcon,
   renderChildren,
 }: SortableMenuItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: menu.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: menu.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -146,9 +141,7 @@ function SortableMenuItem({
           onClick={onToggle}
           className={cn(
             'w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group',
-            active
-              ? 'bg-primary/10 text-primary'
-              : 'text-foreground hover:bg-accent'
+            active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
           )}
           style={{ paddingLeft: collapsed ? '12px' : `${12 + level * 12}px` }}
         >
@@ -166,13 +159,12 @@ function SortableMenuItem({
             {getIcon(menu.icon)}
             {!collapsed && <span>{menu.name}</span>}
           </div>
-          {!collapsed && (
-            expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
-          )}
+          {!collapsed &&
+            (expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
         </button>
         {expanded && !collapsed && (
           <div className="mt-1 ml-4">
-            {menu.children!.map(child => renderChildren(child, level + 1))}
+            {menu.children!.map((child) => renderChildren(child, level + 1))}
           </div>
         )}
       </div>
@@ -185,9 +177,7 @@ function SortableMenuItem({
         href={menu.path || '#'}
         className={cn(
           'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
-          active
-            ? 'bg-primary/10 text-primary'
-            : 'text-foreground hover:bg-accent'
+          active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
         )}
         style={{ paddingLeft: collapsed ? '12px' : `${12 + level * 12}px` }}
         title={collapsed ? menu.name : undefined}
@@ -223,13 +213,11 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const { companyName } = useCompanyName();
   const { toast } = useToast();
 
-
-
   // 从 localStorage 加载排序
   useEffect(() => {
     // 确保 menus 是数组
     const safeMenus = Array.isArray(menus) ? menus : [];
-    
+
     const savedOrder = localStorage.getItem('menu_order');
     if (savedOrder) {
       try {
@@ -254,7 +242,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
 
   // 保存排序到 localStorage（立即）和数据库（防抖）
   const saveToLocalStorage = useCallback((newOrder: MenuItem[]) => {
-    const orderIds = newOrder.map(m => m.id);
+    const orderIds = newOrder.map((m) => m.id);
     localStorage.setItem('menu_order', JSON.stringify(orderIds));
   }, []);
 
@@ -268,33 +256,34 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
 
     const orderData = orders.map((m, index) => ({
       id: m.id,
-      sort_order: index + 1
+      sort_order: index + 1,
     }));
 
     fetch('/api/menu/sort-order', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ orders: orderData }),
-    })
-    .catch(() => {
-    });
+    }).catch(() => {});
   }, []);
 
   // 保存排序（先本地，再防抖保存到数据库）
-  const saveMenuOrder = useCallback((newOrder: MenuItem[]) => {
-    // 立即保存到 localStorage
-    saveToLocalStorage(newOrder);
+  const saveMenuOrder = useCallback(
+    (newOrder: MenuItem[]) => {
+      // 立即保存到 localStorage
+      saveToLocalStorage(newOrder);
 
-    // 延迟保存到数据库（防抖）
-    const timer = setTimeout(() => {
-      debouncedSaveToDatabase(newOrder);
-    }, 800);
+      // 延迟保存到数据库（防抖）
+      const timer = setTimeout(() => {
+        debouncedSaveToDatabase(newOrder);
+      }, 800);
 
-    return () => clearTimeout(timer);
-  }, [saveToLocalStorage, debouncedSaveToDatabase]);
+      return () => clearTimeout(timer);
+    },
+    [saveToLocalStorage, debouncedSaveToDatabase]
+  );
 
   // 配置拖拽传感器
   const sensors = useSensors(
@@ -309,27 +298,28 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   );
 
   // 处理拖拽结束
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
 
-    if (over && active.id !== over.id) {
-      setOrderedMenus((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        const newOrder = arrayMove(items, oldIndex, newIndex);
-        saveMenuOrder(newOrder);
-        toast({ title: '菜单顺序已保存' });
-        return newOrder;
-      });
-    }
-  }, [saveMenuOrder]);
+      if (over && active.id !== over.id) {
+        setOrderedMenus((items) => {
+          const oldIndex = items.findIndex((item) => item.id === active.id);
+          const newIndex = items.findIndex((item) => item.id === over.id);
+          const newOrder = arrayMove(items, oldIndex, newIndex);
+          saveMenuOrder(newOrder);
+          toast({ title: '菜单顺序已保存' });
+          return newOrder;
+        });
+      }
+    },
+    [saveMenuOrder]
+  );
 
   // 切换菜单展开状态
   const toggleMenu = (code: string) => {
-    setExpandedMenus(prev =>
-      prev.includes(code)
-        ? prev.filter(c => c !== code)
-        : [...prev, code]
+    setExpandedMenus((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
     );
   };
 
@@ -337,7 +327,11 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const getIcon = (iconName?: string) => {
     if (!iconName) return <LayoutDashboard className="w-5 h-5" />;
     const IconComponent = iconMap[iconName];
-    return IconComponent ? <IconComponent className="w-5 h-5" /> : <LayoutDashboard className="w-5 h-5" />;
+    return IconComponent ? (
+      <IconComponent className="w-5 h-5" />
+    ) : (
+      <LayoutDashboard className="w-5 h-5" />
+    );
   };
 
   // 检查菜单是否激活
@@ -367,9 +361,10 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   }, [pathname, orderedMenus, navigationMode]);
 
   // 获取混合模式下当前激活的子菜单
-  const mixedSubMenus = navigationMode === 'mixed' && activeParentCode
-    ? orderedMenus.find(m => m.code === activeParentCode)?.children || []
-    : [];
+  const mixedSubMenus =
+    navigationMode === 'mixed' && activeParentCode
+      ? orderedMenus.find((m) => m.code === activeParentCode)?.children || []
+      : [];
 
   // 渲染子菜单（非拖拽）
   const renderMenuItem = (menu: MenuItem, level: number = 0): React.ReactNode => {
@@ -384,9 +379,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
             onClick={() => toggleMenu(menu.code)}
             className={cn(
               'w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
-              active
-                ? 'bg-primary/10 text-primary'
-                : 'text-foreground hover:bg-accent'
+              active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
             )}
             style={{ paddingLeft: collapsed ? '12px' : `${12 + level * 12}px` }}
           >
@@ -394,13 +387,16 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
               {getIcon(menu.icon)}
               {!collapsed && <span>{menu.name}</span>}
             </div>
-            {!collapsed && (
-              isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />
-            )}
+            {!collapsed &&
+              (isExpanded ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              ))}
           </button>
           {isExpanded && !collapsed && (
             <div className="mt-1 ml-4">
-              {menu.children!.map(child => renderMenuItem(child, level + 1))}
+              {menu.children!.map((child) => renderMenuItem(child, level + 1))}
             </div>
           )}
         </div>
@@ -413,9 +409,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
         href={menu.path || '#'}
         className={cn(
           'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors mb-1',
-          active
-            ? 'bg-primary/10 text-primary'
-            : 'text-foreground hover:bg-accent'
+          active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
         )}
         style={{ paddingLeft: collapsed ? '12px' : `${12 + level * 12}px` }}
         title={collapsed ? menu.name : undefined}
@@ -448,8 +442,10 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
         data-sidebar="true"
         className={cn(
           'fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-300 lg:static',
-          navigationMode === 'mixed' ? 'w-52' : (collapsed ? 'w-16' : 'w-64'),
-          collapsed && navigationMode !== 'mixed' ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'
+          navigationMode === 'mixed' ? 'w-52' : collapsed ? 'w-16' : 'w-64',
+          collapsed && navigationMode !== 'mixed'
+            ? '-translate-x-full lg:translate-x-0'
+            : 'translate-x-0'
         )}
       >
         {/* Logo区域 - 混合模式下隐藏 */}
@@ -459,8 +455,14 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
               <img src="/loginlogo.png" alt="达昌" className="w-8 h-8 rounded-lg object-contain" />
             ) : (
               <div className="flex items-center gap-2">
-                <img src="/loginlogo.png" alt="达昌" className="w-8 h-8 rounded-lg object-contain" />
-                <span className="font-bold text-xs text-foreground whitespace-nowrap overflow-hidden text-ellipsis">{companyName}</span>
+                <img
+                  src="/loginlogo.png"
+                  alt="达昌"
+                  className="w-8 h-8 rounded-lg object-contain"
+                />
+                <span className="font-bold text-xs text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
+                  {companyName}
+                </span>
               </div>
             )}
           </div>
@@ -471,7 +473,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
           <div className="h-full flex flex-col">
             <div className="h-16 flex items-center px-4 border-b border-border">
               <span className="font-semibold text-sm text-foreground">
-                {orderedMenus.find(m => m.code === activeParentCode)?.name || '子菜单'}
+                {orderedMenus.find((m) => m.code === activeParentCode)?.name || '子菜单'}
               </span>
             </div>
             <ScrollArea className="flex-1">
@@ -481,10 +483,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                     <Link
                       key={child.id}
                       href={child.path || '#'}
-                      className={cn(
-                        'snow-mixed-submenu-item',
-                        isActive(child.path) && 'active'
-                      )}
+                      className={cn('snow-mixed-submenu-item', isActive(child.path) && 'active')}
                     >
                       {getIcon(child.icon)}
                       <span>{child.name}</span>
@@ -511,11 +510,9 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                   </div>
                 ) : !Array.isArray(orderedMenus) || orderedMenus.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground text-sm">
-                    暂无菜单权限
-                  </div>
+                  <div className="text-center py-8 text-muted-foreground text-sm">暂无菜单权限</div>
                 ) : collapsed ? (
-                  orderedMenus.map(menu => renderMenuItem(menu))
+                  orderedMenus.map((menu) => renderMenuItem(menu))
                 ) : (
                   <DndContext
                     sensors={sensors}
@@ -523,7 +520,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                     onDragEnd={handleDragEnd}
                   >
                     <SortableContext
-                      items={orderedMenus.map(m => m.id)}
+                      items={orderedMenus.map((m) => m.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       {orderedMenus.map((menu) => (
@@ -554,7 +551,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">
-                      {user ? (user.realName || user.username) : '未登录'}
+                      {user ? user.realName || user.username : '未登录'}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {user?.roles?.[0]?.role_name || '普通用户'}
@@ -581,7 +578,11 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
               className="absolute -right-3 top-20 hidden lg:flex w-6 h-6 rounded-full bg-background border border-border shadow-sm"
               onClick={() => setCollapsed(!collapsed)}
             >
-              {collapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3 rotate-90" />}
+              {collapsed ? (
+                <ChevronRight className="w-3 h-3" />
+              ) : (
+                <ChevronDown className="w-3 h-3 rotate-90" />
+              )}
             </Button>
           </>
         )}

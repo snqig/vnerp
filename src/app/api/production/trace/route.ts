@@ -42,7 +42,24 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { sn, parent_sn, material_batch, workorder_id, workorder_no, material_id, material_code, material_name, supplier_id, supplier_name, inbound_date, inbound_no, inspection_id, inspection_result, trace_level, trace_type } = body;
+  const {
+    sn,
+    parent_sn,
+    material_batch,
+    workorder_id,
+    workorder_no,
+    material_id,
+    material_code,
+    material_name,
+    supplier_id,
+    supplier_name,
+    inbound_date,
+    inbound_no,
+    inspection_id,
+    inspection_result,
+    trace_level,
+    trace_type,
+  } = body;
 
   if (!sn) {
     return errorResponse('缺少必填字段: sn', 400, 400);
@@ -64,12 +81,23 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           inspection_id = ?, inspection_result = ?,
           trace_level = ?, trace_type = ?
         WHERE id = ?`,
-        [parent_sn || null, workorder_id || null, workorder_no || null,
-         material_id || null, material_code || null, material_name || null,
-         supplier_id || null, supplier_name || null,
-         inbound_date || null, inbound_no || null,
-         inspection_id || null, inspection_result || null,
-         trace_level || 1, trace_type || 'product', existing[0].id]
+        [
+          parent_sn || null,
+          workorder_id || null,
+          workorder_no || null,
+          material_id || null,
+          material_code || null,
+          material_name || null,
+          supplier_id || null,
+          supplier_name || null,
+          inbound_date || null,
+          inbound_no || null,
+          inspection_id || null,
+          inspection_result || null,
+          trace_level || 1,
+          trace_type || 'product',
+          existing[0].id,
+        ]
       );
       return { id: existing[0].id, sn, updated: true };
     }
@@ -77,12 +105,24 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const [insertResult]: any = await conn.execute(
       `INSERT INTO prd_product_trace_link (sn, parent_sn, material_batch, workorder_id, workorder_no, material_id, material_code, material_name, supplier_id, supplier_name, inbound_date, inbound_no, inspection_id, inspection_result, trace_level, trace_type)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [sn, parent_sn || null, material_batch || null, workorder_id || null, workorder_no || null,
-       material_id || null, material_code || null, material_name || null,
-       supplier_id || null, supplier_name || null,
-       inbound_date || null, inbound_no || null,
-       inspection_id || null, inspection_result || null,
-       trace_level || 1, trace_type || 'product']
+      [
+        sn,
+        parent_sn || null,
+        material_batch || null,
+        workorder_id || null,
+        workorder_no || null,
+        material_id || null,
+        material_code || null,
+        material_name || null,
+        supplier_id || null,
+        supplier_name || null,
+        inbound_date || null,
+        inbound_no || null,
+        inspection_id || null,
+        inspection_result || null,
+        trace_level || 1,
+        trace_type || 'product',
+      ]
     );
 
     return { id: insertResult.insertId, sn, updated: false };

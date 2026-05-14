@@ -11,13 +11,24 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let where = 'WHERE a.deleted = 0';
   const params: any[] = [];
-  if (adjustNo) { where += ' AND a.adjust_no LIKE ?'; params.push('%' + adjustNo + '%'); }
-  if (adjustType) { where += ' AND a.adjust_type = ?'; params.push(Number(adjustType)); }
+  if (adjustNo) {
+    where += ' AND a.adjust_no LIKE ?';
+    params.push('%' + adjustNo + '%');
+  }
+  if (adjustType) {
+    where += ' AND a.adjust_type = ?';
+    params.push(Number(adjustType));
+  }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM inv_stock_adjust a ' + where, params);
+  const totalRows: any = await query(
+    'SELECT COUNT(*) as total FROM inv_stock_adjust a ' + where,
+    params
+  );
   const total = totalRows[0]?.total || 0;
   const rows: any = await query(
-    'SELECT a.*, w.warehouse_name FROM inv_stock_adjust a LEFT JOIN inv_warehouse w ON a.warehouse_id = w.id ' + where + ' ORDER BY a.create_time DESC LIMIT ? OFFSET ?',
+    'SELECT a.*, w.warehouse_name FROM inv_stock_adjust a LEFT JOIN inv_warehouse w ON a.warehouse_id = w.id ' +
+      where +
+      ' ORDER BY a.create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
   return successResponse({ list: rows, total, page, pageSize });
@@ -27,7 +38,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   const { warehouse_id, adjust_date, adjust_type, operator_name, remark, items } = body;
   const now = new Date();
-  const adjustNo = 'TZ' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  const adjustNo =
+    'TZ' +
+    now.getFullYear() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0') +
+    String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
   const result: any = await execute(
     'INSERT INTO inv_stock_adjust (adjust_no, warehouse_id, adjust_date, adjust_type, operator_name, remark) VALUES (?, ?, ?, ?, ?, ?)',
@@ -38,7 +54,17 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     for (const item of items) {
       await execute(
         'INSERT INTO inv_stock_adjust_item (adjust_id, material_id, material_code, material_name, before_qty, adjust_qty, after_qty, unit, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [result.insertId, item.material_id, item.material_code || null, item.material_name || null, item.before_qty || 0, item.adjust_qty || 0, item.after_qty || 0, item.unit || null, item.batch_no || null]
+        [
+          result.insertId,
+          item.material_id,
+          item.material_code || null,
+          item.material_name || null,
+          item.before_qty || 0,
+          item.adjust_qty || 0,
+          item.after_qty || 0,
+          item.unit || null,
+          item.batch_no || null,
+        ]
       );
     }
   }
@@ -48,8 +74,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 export const PUT = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   const { id, status, remark } = body;
-  if (status !== undefined) await execute('UPDATE inv_stock_adjust SET status = ? WHERE id = ? AND deleted = 0', [status, id]);
-  if (remark !== undefined) await execute('UPDATE inv_stock_adjust SET remark = ? WHERE id = ? AND deleted = 0', [remark, id]);
+  if (status !== undefined)
+    await execute('UPDATE inv_stock_adjust SET status = ? WHERE id = ? AND deleted = 0', [
+      status,
+      id,
+    ]);
+  if (remark !== undefined)
+    await execute('UPDATE inv_stock_adjust SET remark = ? WHERE id = ? AND deleted = 0', [
+      remark,
+      id,
+    ]);
   return successResponse(null, '更新成功');
 });
 

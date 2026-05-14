@@ -32,7 +32,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     params.push(endDate + ' 23:59:59');
   }
 
-  const workOrders: any = await query(`
+  const workOrders: any = await query(
+    `
     SELECT
       wo.id,
       wo.work_order_no,
@@ -47,17 +48,23 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     ${where}
     ORDER BY wo.create_time DESC
     LIMIT ? OFFSET ?
-  `, [...params, pageSize, (page - 1) * pageSize]);
+  `,
+    [...params, pageSize, (page - 1) * pageSize]
+  );
 
-  const countResult: any = await query(`
+  const countResult: any = await query(
+    `
     SELECT COUNT(*) as total FROM prod_work_order wo ${where}
-  `, params);
+  `,
+    params
+  );
   const total = countResult[0]?.total || 0;
 
   const varianceDetails: any[] = [];
 
   for (const wo of workOrders) {
-    const materialCostRows: any = await query(`
+    const materialCostRows: any = await query(
+      `
       SELECT
         COALESCE(SUM(wr.completed_qty * bom.unit_price), 0) as standard_material_cost,
         COALESCE(SUM(tr.quantity * tr.unit_price), 0) as actual_material_cost
@@ -68,15 +75,20 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       ) bom ON 1=1
       LEFT JOIN inv_inventory_transaction tr ON tr.source_no = wo.work_order_no AND tr.trans_type = 'out'
       WHERE wr.work_order_id = ? AND wr.deleted = 0
-    `, [wo.id, wo.id]);
+    `,
+      [wo.id, wo.id]
+    );
 
-    const laborCostRows: any = await query(`
+    const laborCostRows: any = await query(
+      `
       SELECT
         COALESCE(SUM(wr.work_hours), 0) as actual_work_hours,
         COALESCE(SUM(wr.qualified_qty), 0) as total_qualified
       FROM prd_work_report wr
       WHERE wr.work_order_id = ? AND wr.deleted = 0
-    `, [wo.id]);
+    `,
+      [wo.id]
+    );
 
     const standardLaborRate = 50;
     const standardMaterialUnitCost = Number(wo.sale_unit_price || 0) * 0.45;
@@ -100,13 +112,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const totalActualCost = Math.abs(actualMaterialCost) + actualLaborCost + actualOverheadCost;
     const totalVariance = totalStandardCost - totalActualCost;
 
-    const scrapRows: any = await query(`
+    const scrapRows: any = await query(
+      `
       SELECT
         COALESCE(SUM(scrap_qty), 0) as total_scrap,
         COALESCE(SUM(completed_qty), 0) as total_completed
       FROM prd_work_report
       WHERE work_order_id = ? AND deleted = 0
-    `, [wo.id]);
+    `,
+      [wo.id]
+    );
 
     const totalScrap = Number(scrapRows[0]?.total_scrap || 0);
     const totalCompleted = Number(scrapRows[0]?.total_completed || 0);
@@ -135,9 +150,14 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         labor: Math.round(laborVariance * 100) / 100,
         overhead: Math.round(overheadVariance * 100) / 100,
         total: Math.round(totalVariance * 100) / 100,
-        material_pct: standardMaterialCost > 0 ? Math.round((materialVariance / standardMaterialCost) * 10000) / 100 : 0,
-        labor_pct: standardLaborCost > 0 ? Math.round((laborVariance / standardLaborCost) * 10000) / 100 : 0,
-        total_pct: totalStandardCost > 0 ? Math.round((totalVariance / totalStandardCost) * 10000) / 100 : 0,
+        material_pct:
+          standardMaterialCost > 0
+            ? Math.round((materialVariance / standardMaterialCost) * 10000) / 100
+            : 0,
+        labor_pct:
+          standardLaborCost > 0 ? Math.round((laborVariance / standardLaborCost) * 10000) / 100 : 0,
+        total_pct:
+          totalStandardCost > 0 ? Math.round((totalVariance / totalStandardCost) * 10000) / 100 : 0,
       },
       scrap_analysis: {
         total_scrap: totalScrap,
@@ -148,11 +168,13 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       variance_reason: classifyVarianceReason(materialVariance, laborVariance, scrapRate),
     };
 
-    if (varianceType === 'all' ||
-        (varianceType === 'favorable' && totalVariance > 0) ||
-        (varianceType === 'unfavorable' && totalVariance < 0) ||
-        (varianceType === 'material' && Math.abs(materialVariance) > 0) ||
-        (varianceType === 'labor' && Math.abs(laborVariance) > 0)) {
+    if (
+      varianceType === 'all' ||
+      (varianceType === 'favorable' && totalVariance > 0) ||
+      (varianceType === 'unfavorable' && totalVariance < 0) ||
+      (varianceType === 'material' && Math.abs(materialVariance) > 0) ||
+      (varianceType === 'labor' && Math.abs(laborVariance) > 0)
+    ) {
       varianceDetails.push(detail);
     }
   }
@@ -172,9 +194,15 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     total_completed_qty: Number(summaryResult[0]?.total_completed_qty || 0),
     total_scrap_qty: Number(summaryResult[0]?.total_scrap_qty || 0),
     total_work_hours: Number(summaryResult[0]?.total_work_hours || 0),
-    overall_scrap_rate: Number(summaryResult[0]?.total_completed_qty || 0) > 0
-      ? Math.round((Number(summaryResult[0]?.total_scrap_qty || 0) / (Number(summaryResult[0]?.total_completed_qty || 0) + Number(summaryResult[0]?.total_scrap_qty || 0))) * 10000) / 100
-      : 0,
+    overall_scrap_rate:
+      Number(summaryResult[0]?.total_completed_qty || 0) > 0
+        ? Math.round(
+            (Number(summaryResult[0]?.total_scrap_qty || 0) /
+              (Number(summaryResult[0]?.total_completed_qty || 0) +
+                Number(summaryResult[0]?.total_scrap_qty || 0))) *
+              10000
+          ) / 100
+        : 0,
   };
 
   return successResponse({
@@ -186,7 +214,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   });
 });
 
-function classifyVarianceReason(materialVariance: number, laborVariance: number, scrapRate: number): string[] {
+function classifyVarianceReason(
+  materialVariance: number,
+  laborVariance: number,
+  scrapRate: number
+): string[] {
   const reasons: string[] = [];
   if (materialVariance < -100) reasons.push('材料超耗');
   if (materialVariance > 100) reasons.push('材料节约');

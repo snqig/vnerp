@@ -1,11 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction, queryOne } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-  logOperation,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler, logOperation } from '@/lib/api-response';
 
 interface FIFOAllocationItem {
   batch_id: number;
@@ -134,7 +129,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     0
   );
 
-  let allocationPlan: FIFOAllocationItem[] = [];
+  const allocationPlan: FIFOAllocationItem[] = [];
   let shortage = 0;
 
   if (requiredQty > 0) {
@@ -170,7 +165,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { warehouseId, warehouseCode, warehouseName, items, operatorId, operatorName, remark, outboundType } = body;
+  const {
+    warehouseId,
+    warehouseCode,
+    warehouseName,
+    items,
+    operatorId,
+    operatorName,
+    remark,
+    outboundType,
+  } = body;
 
   if (!warehouseId || !items || !Array.isArray(items) || items.length === 0) {
     return errorResponse('warehouseId 和 items 不能为空', 400, 400);
@@ -211,7 +215,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         const availableQty = parseFloat(batchData.available_qty);
 
         if (availableQty < requiredQty) {
-          throw new Error(`批次 ${batchData.batch_no} 库存不足: 可用 ${availableQty}, 需要 ${requiredQty}`);
+          throw new Error(
+            `批次 ${batchData.batch_no} 库存不足: 可用 ${availableQty}, 需要 ${requiredQty}`
+          );
         }
 
         allAllocations.push({
@@ -222,22 +228,26 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           total_available: availableQty,
           allocated_qty: requiredQty,
           shortage: 0,
-          allocations: [{
-            batch_id: batchData.id,
-            batch_no: batchData.batch_no,
-            material_id: batchData.material_id,
-            material_code: batchData.material_code,
-            material_name: batchData.material_name,
-            allocate_qty: requiredQty,
-            available_qty_before: availableQty,
-            unit_cost: parseFloat(batchData.unit_price) || 0,
-            inbound_date: batchData.inbound_date,
-          }],
+          allocations: [
+            {
+              batch_id: batchData.id,
+              batch_no: batchData.batch_no,
+              material_id: batchData.material_id,
+              material_code: batchData.material_code,
+              material_name: batchData.material_name,
+              allocate_qty: requiredQty,
+              available_qty_before: availableQty,
+              unit_cost: parseFloat(batchData.unit_price) || 0,
+              inbound_date: batchData.inbound_date,
+            },
+          ],
         });
       } else {
         const allocation = await allocateFIFO(conn, material_id, warehouseId, requiredQty);
         if (allocation.shortage > 0) {
-          throw new Error(`物料 ${material_name || material_code} 库存不足: 需要 ${requiredQty}, 可用 ${allocation.total_available}, 缺少 ${allocation.shortage}`);
+          throw new Error(
+            `物料 ${material_name || material_code} 库存不足: 需要 ${requiredQty}, 可用 ${allocation.total_available}, 缺少 ${allocation.shortage}`
+          );
         }
         allAllocations.push(allocation);
       }
@@ -306,7 +316,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       );
     }
 
-    const result = { orderId, orderNo, allocations: allAllocations, totalQty, totalAmount, outboundItemCount: allOutboundItems.length };
+    const result = {
+      orderId,
+      orderNo,
+      allocations: allAllocations,
+      totalQty,
+      totalAmount,
+      outboundItemCount: allOutboundItems.length,
+    };
 
     await logOperation({
       title: 'FIFO出库',
@@ -375,7 +392,9 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
 
         const availableQty = parseFloat(batch[0].available_qty);
         if (availableQty < requiredQty) {
-          throw new Error(`批次 ${item.batch_no} 库存不足: 可用 ${availableQty}, 需要 ${requiredQty}`);
+          throw new Error(
+            `批次 ${item.batch_no} 库存不足: 可用 ${availableQty}, 需要 ${requiredQty}`
+          );
         }
 
         const [batchUpdateResult]: any = await conn.execute(
@@ -400,10 +419,17 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
           unit_cost: parseFloat(batch[0].unit_price) || 0,
         });
       } else {
-        const allocation = await allocateFIFO(conn, item.material_id, order.warehouse_id, requiredQty);
+        const allocation = await allocateFIFO(
+          conn,
+          item.material_id,
+          order.warehouse_id,
+          requiredQty
+        );
 
         if (allocation.shortage > 0) {
-          throw new Error(`物料 ${item.material_name} 库存不足: 需要 ${requiredQty}, 可用 ${allocation.total_available}`);
+          throw new Error(
+            `物料 ${item.material_name} 库存不足: 需要 ${requiredQty}, 可用 ${allocation.total_available}`
+          );
         }
 
         for (const alloc of allocation.allocations) {
@@ -476,7 +502,13 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
       [operatorId, operatorName, remark || '', orderId, order.version]
     );
 
-    const result = { orderId, orderNo: order.order_no, status: 'completed', deductionDetails, totalDeductedBatches: deductionDetails.length };
+    const result = {
+      orderId,
+      orderNo: order.order_no,
+      status: 'completed',
+      deductionDetails,
+      totalDeductedBatches: deductionDetails.length,
+    };
 
     await logOperation({
       title: 'FIFO出库确认',

@@ -28,7 +28,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   if (category && CATEGORY_TYPE_MAP[category]) {
     const keywords = CATEGORY_TYPE_MAP[category];
-    const conditions = keywords.map(() => `(material_name LIKE ? OR material_code LIKE ? OR specification LIKE ?)`);
+    const conditions = keywords.map(
+      () => `(material_name LIKE ? OR material_code LIKE ? OR specification LIKE ?)`
+    );
     sql += ` AND (${conditions.join(' OR ')})`;
     for (const kw of keywords) {
       params.push(`%${kw}%`, `%${kw}%`, `%${kw}%`);

@@ -1,10 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 import fs from 'fs';
 import path from 'path';
 
@@ -67,9 +63,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           message: '表已存在，跳过',
         });
       } else {
-        errors.push(
-          `执行失败: ${statement.substring(0, 50)}... - ${error.message}`
-        );
+        errors.push(`执行失败: ${statement.substring(0, 50)}... - ${error.message}`);
       }
     }
   }

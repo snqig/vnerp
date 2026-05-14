@@ -1,7 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, ChevronRight, ChevronDown, Plus } from 'lucide-react';
@@ -32,12 +39,12 @@ function buildDepartmentTree(departments: Department[]): Department[] {
   const roots: Department[] = [];
 
   // 首先将所有部门放入map
-  departments.forEach(dept => {
+  departments.forEach((dept) => {
     deptMap.set(dept.id, { ...dept, children: [] });
   });
 
   // 构建树形结构
-  departments.forEach(dept => {
+  departments.forEach((dept) => {
     const node = deptMap.get(dept.id)!;
     if (dept.parent_id === 0) {
       roots.push(node);
@@ -53,7 +60,7 @@ function buildDepartmentTree(departments: Department[]): Department[] {
   // 按排序号排序
   const sortNodes = (nodes: Department[]) => {
     nodes.sort((a, b) => a.sort_order - b.sort_order);
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       if (node.children && node.children.length > 0) {
         sortNodes(node.children);
       }
@@ -66,22 +73,24 @@ function buildDepartmentTree(departments: Department[]): Department[] {
 
 // 状态标签
 function getStatusBadge(status: number) {
-  return status === 1 
-    ? <Badge className="bg-green-100 text-green-800 hover:bg-green-100">启用</Badge>
-    : <Badge className="bg-muted text-muted-foreground hover:bg-muted">停用</Badge>;
+  return status === 1 ? (
+    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">启用</Badge>
+  ) : (
+    <Badge className="bg-muted text-muted-foreground hover:bg-muted">停用</Badge>
+  );
 }
 
 // 渲染部门行
-function DepartmentRow({ 
-  dept, 
-  level, 
-  expandedRows, 
-  onToggleExpand, 
-  onEdit, 
-  onDelete, 
-  onAdd 
-}: { 
-  dept: Department; 
+function DepartmentRow({
+  dept,
+  level,
+  expandedRows,
+  onToggleExpand,
+  onEdit,
+  onDelete,
+  onAdd,
+}: {
+  dept: Department;
   level: number;
   expandedRows: Set<number>;
   onToggleExpand: (id: number) => void;
@@ -127,45 +136,31 @@ function DepartmentRow({
         <TableCell>{getStatusBadge(dept.status)}</TableCell>
         <TableCell className="text-right">
           <div className="flex items-center justify-end gap-1">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => onAdd(dept.id)}
-              title="添加子部门"
-            >
+            <Button variant="ghost" size="sm" onClick={() => onAdd(dept.id)} title="添加子部门">
               <Plus className="w-4 h-4 text-blue-500" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => onEdit(dept)}
-              title="编辑"
-            >
+            <Button variant="ghost" size="sm" onClick={() => onEdit(dept)} title="编辑">
               <Edit className="w-4 h-4" />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => onDelete(dept.id)}
-              title="删除"
-            >
+            <Button variant="ghost" size="sm" onClick={() => onDelete(dept.id)} title="删除">
               <Trash2 className="w-4 h-4 text-red-500" />
             </Button>
           </div>
         </TableCell>
       </TableRow>
-      {isExpanded && dept.children?.map(child => (
-        <DepartmentRow
-          key={child.id}
-          dept={child}
-          level={level + 1}
-          expandedRows={expandedRows}
-          onToggleExpand={onToggleExpand}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onAdd={onAdd}
-        />
-      ))}
+      {isExpanded &&
+        dept.children?.map((child) => (
+          <DepartmentRow
+            key={child.id}
+            dept={child}
+            level={level + 1}
+            expandedRows={expandedRows}
+            onToggleExpand={onToggleExpand}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onAdd={onAdd}
+          />
+        ))}
     </>
   );
 }
@@ -175,7 +170,7 @@ export function DepartmentTable({ departments, onEdit, onDelete, onAdd }: Depart
 
   // 默认展开所有一级部门
   const treeData = buildDepartmentTree(departments);
-  
+
   const toggleExpand = (id: number) => {
     const newExpanded = new Set(expandedRows);
     if (newExpanded.has(id)) {
@@ -190,7 +185,7 @@ export function DepartmentTable({ departments, onEdit, onDelete, onAdd }: Depart
   const expandAll = () => {
     const allIds = new Set<number>();
     const collectIds = (nodes: Department[]) => {
-      nodes.forEach(node => {
+      nodes.forEach((node) => {
         if (node.children && node.children.length > 0) {
           allIds.add(node.id);
           collectIds(node.children);
@@ -236,7 +231,7 @@ export function DepartmentTable({ departments, onEdit, onDelete, onAdd }: Depart
                 </TableCell>
               </TableRow>
             ) : (
-              treeData.map(dept => (
+              treeData.map((dept) => (
                 <DepartmentRow
                   key={dept.id}
                   dept={dept}

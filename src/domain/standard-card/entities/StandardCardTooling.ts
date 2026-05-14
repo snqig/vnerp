@@ -57,7 +57,7 @@ export class StandardCardTooling {
       screenPlateId: this.screenPlateId,
       screenPlateCode: this.screenPlateCode,
       screenPlateName: this.screenPlateName,
-      remark: this.remark
+      remark: this.remark,
     };
   }
 }

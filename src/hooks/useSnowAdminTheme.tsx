@@ -91,19 +91,19 @@ export function SnowAdminThemeProvider({ children }: { children: ReactNode }) {
   }, [state, mounted]);
 
   const setNavigationMode = useCallback((mode: NavigationMode) => {
-    setState(prev => ({ ...prev, navigationMode: mode }));
+    setState((prev) => ({ ...prev, navigationMode: mode }));
   }, []);
 
   const setSidebarDark = useCallback((dark: boolean) => {
-    setState(prev => ({ ...prev, sidebarDark: dark }));
+    setState((prev) => ({ ...prev, sidebarDark: dark }));
   }, []);
 
   const setColorWeak = useCallback((weak: boolean) => {
-    setState(prev => ({ ...prev, colorWeak: weak }));
+    setState((prev) => ({ ...prev, colorWeak: weak }));
   }, []);
 
   const setGrayMode = useCallback((gray: boolean) => {
-    setState(prev => ({ ...prev, grayMode: gray }));
+    setState((prev) => ({ ...prev, grayMode: gray }));
   }, []);
 
   const resetTheme = useCallback(() => {

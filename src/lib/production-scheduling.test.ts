@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { calculatePriorityScore, suggestScheduleDates, SchedulableWorkOrder, SchedulingResult } from './production-scheduling';
+import {
+  calculatePriorityScore,
+  suggestScheduleDates,
+  SchedulableWorkOrder,
+  SchedulingResult,
+} from './production-scheduling';
 
 function createWorkOrder(overrides: Partial<SchedulableWorkOrder> = {}): SchedulableWorkOrder {
   return {
@@ -30,7 +35,9 @@ describe('calculatePriorityScore', () => {
   });
 
   it('older work orders get higher age bonus', () => {
-    const oldOrder = createWorkOrder({ create_time: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() });
+    const oldOrder = createWorkOrder({
+      create_time: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    });
     const newOrder = createWorkOrder({ create_time: new Date().toISOString() });
     const scoreOld = calculatePriorityScore(oldOrder, true);
     const scoreNew = calculatePriorityScore(newOrder, true);

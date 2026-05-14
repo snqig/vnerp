@@ -1,13 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -34,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { SearchInput } from '@/components/ui/search-input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -53,6 +48,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Printer,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -151,16 +147,39 @@ export default function ProductsPage() {
   const [bomLoading, setBomLoading] = useState(false);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
 
   const handleSort = (field: string) => {
     if (sortField === field) {
       if (sortOrder === 'asc') setSortOrder('desc');
-      else if (sortOrder === 'desc') { setSortField(null); setSortOrder(null); }
-    } else { setSortField(field); setSortOrder('asc'); }
+      else if (sortOrder === 'desc') {
+        setSortField(null);
+        setSortOrder(null);
+      }
+    } else {
+      setSortField(field);
+      setSortOrder('asc');
+    }
   };
   const getSortIcon = (field: string) => {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
-    return sortOrder === 'asc' ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />;
+    return sortOrder === 'asc' ? (
+      <ArrowUp className="ml-1 h-3 w-3" />
+    ) : (
+      <ArrowDown className="ml-1 h-3 w-3" />
+    );
   };
   const sortedProducts = useMemo(() => {
     if (!sortField || !sortOrder) return products;
@@ -199,18 +218,21 @@ export default function ProductsPage() {
         pageSize: pagination.pageSize.toString(),
       });
       if (searchKeyword) params.append('keyword', searchKeyword);
-      if (selectedCategory && selectedCategory !== 'all') params.append('categoryId', selectedCategory);
+      if (selectedCategory && selectedCategory !== 'all')
+        params.append('categoryId', selectedCategory);
 
-      const response = await fetch(`/api/products?${params}`);
+      const response = await authFetch(`/api/products?${params}`);
       const result = await response.json();
       if (result.success || result.code === 200) {
         const list = result.data?.list || result.data || [];
         setProducts(Array.isArray(list) ? list : []);
         if (result.pagination) {
-          setPagination(prev => ({
+          setPagination((prev) => ({
             ...prev,
             total: result.pagination.total || 0,
-            totalPages: result.pagination.totalPages || Math.ceil((result.pagination.total || 0) / prev.pageSize),
+            totalPages:
+              result.pagination.totalPages ||
+              Math.ceil((result.pagination.total || 0) / prev.pageSize),
           }));
         }
       } else {
@@ -226,7 +248,7 @@ export default function ProductsPage() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await fetch('/api/products/categories');
+      const response = await authFetch('/api/products/categories');
       const result = await response.json();
       if (result.success || result.code === 200) {
         setCategories(result.data || []);
@@ -246,7 +268,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setPagination(prev => ({ ...prev, page: 1 }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     }, 300);
     return () => clearTimeout(timer);
   }, [searchKeyword, selectedCategory]);
@@ -256,12 +278,12 @@ export default function ProductsPage() {
     setBomLoading(true);
     setIsBomOpen(true);
     try {
-      const response = await fetch(`/api/orders/bom?productCode=${product.product_code}`);
+      const response = await authFetch(`/api/orders/bom?productCode=${product.product_code}`);
       const result = await response.json();
       const bomList = result.data?.list || (Array.isArray(result.data) ? result.data : []);
       if (result.success && bomList.length > 0) {
         const bomId = bomList[0].id;
-        const detailRes = await fetch(`/api/orders/bom/${bomId}`);
+        const detailRes = await authFetch(`/api/orders/bom/${bomId}`);
         const detailResult = await detailRes.json();
         if (detailResult.success) {
           setBomHeader(detailResult.data?.header || null);
@@ -291,12 +313,12 @@ export default function ProductsPage() {
     setBomLoading(true);
     setIsVersionOpen(true);
     try {
-      const response = await fetch(`/api/orders/bom?productCode=${product.product_code}`);
+      const response = await authFetch(`/api/orders/bom?productCode=${product.product_code}`);
       const result = await response.json();
       const bomList = result.data?.list || (Array.isArray(result.data) ? result.data : []);
       if (result.success && bomList.length > 0) {
         const bomId = bomList[0].id;
-        const detailRes = await fetch(`/api/orders/bom/${bomId}`);
+        const detailRes = await authFetch(`/api/orders/bom/${bomId}`);
         const detailResult = await detailRes.json();
         if (detailResult.success) {
           setBomHeader(detailResult.data?.header || null);
@@ -340,9 +362,8 @@ export default function ProductsPage() {
   const handleSaveEdit = async () => {
     if (!selectedProduct) return;
     try {
-      const response = await fetch('/api/products', {
+      const response = await authFetch('/api/products', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: selectedProduct.id,
           product_name: editForm.product_name,
@@ -373,7 +394,7 @@ export default function ProductsPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定要删除此产品吗？')) return;
     try {
-      const response = await fetch(`/api/products?id=${id}`, { method: 'DELETE' });
+      const response = await authFetch(`/api/products?id=${id}`, { method: 'DELETE' });
       const result = await response.json();
       if (result.success) {
         toast.success('产品已删除');
@@ -384,6 +405,93 @@ export default function ProductsPage() {
     } catch (error) {
       toast.error('删除失败');
     }
+  };
+
+  const handlePrint = () => {
+    const printContent = document.createElement('div');
+    printContent.style.padding = '20px';
+    
+    const title = document.createElement('h1');
+    title.textContent = '产品档案列表';
+    title.style.textAlign = 'center';
+    title.style.marginBottom = '20px';
+    printContent.appendChild(title);
+    
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    table.style.borderCollapse = 'collapse';
+    
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr style="background-color: #f3f4f6;">
+        <th style="border: 1px solid #d1d5db; padding: 8px;">编码</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">产品名称</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">规格型号</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">单位</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">分类</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">BOM版本</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">状态</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">成本价</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">销售价</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+    
+    const tbody = document.createElement('tbody');
+    sortedProducts.forEach((product) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.product_code}</td>
+        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.product_name}</td>
+        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.specification || '-'}</td>
+        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.unit}</td>
+        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.category_name || '-'}</td>
+        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.bom_version || '-'}</td>
+        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.status === 'active' ? '启用' : product.status === 'inactive' ? '停用' : '停产'}</td>
+        <td style="border: 1px solid #d1d5db; padding: 8px;">¥${Number(product.cost_price || 0).toFixed(2)}</td>
+        <td style="border: 1px solid #d1d5db; padding: 8px;">¥${Number(product.sale_price || 0).toFixed(2)}</td>
+      `;
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    printContent.appendChild(table);
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>产品档案打印</title>
+          <style>
+            body { font-family: Arial, sans-serif; }
+            @media print {
+              body { margin: 0; padding: 20px; }
+            }
+          </style>
+        </head>
+        <body>
+          ${printContent.innerHTML}
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProducts.length === sortedProducts.length) {
+      setSelectedProducts([]);
+    } else {
+      setSelectedProducts(sortedProducts.map((p) => p.id));
+    }
+  };
+
+  const toggleSelectProduct = (id: number) => {
+    setSelectedProducts((prev) =>
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+    );
   };
 
   return (
@@ -414,10 +522,16 @@ export default function ProductsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={() => setIsCreateOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                新建产品
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handlePrint}>
+                  <Printer className="h-4 w-4 mr-2" />
+                  打印
+                </Button>
+                <Button onClick={() => setIsCreateOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  新建产品
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -436,25 +550,65 @@ export default function ProductsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('product_code')}>
-                      <span className="inline-flex items-center">编码{getSortIcon('product_code')}</span>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={
+                          sortedProducts.length > 0 &&
+                          selectedProducts.length === sortedProducts.length
+                        }
+                        onCheckedChange={toggleSelectAll}
+                      />
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('product_name')}>
-                      <span className="inline-flex items-center">产品名称{getSortIcon('product_name')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('product_code')}
+                    >
+                      <span className="inline-flex items-center">
+                        编码{getSortIcon('product_code')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('specification')}>
-                      <span className="inline-flex items-center">规格型号{getSortIcon('specification')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('product_name')}
+                    >
+                      <span className="inline-flex items-center">
+                        产品名称{getSortIcon('product_name')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('unit')}>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('specification')}
+                    >
+                      <span className="inline-flex items-center">
+                        规格型号{getSortIcon('specification')}
+                      </span>
+                    </TableHead>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('unit')}
+                    >
                       <span className="inline-flex items-center">单位{getSortIcon('unit')}</span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('category_name')}>
-                      <span className="inline-flex items-center">分类{getSortIcon('category_name')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('category_name')}
+                    >
+                      <span className="inline-flex items-center">
+                        分类{getSortIcon('category_name')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('bom_version')}>
-                      <span className="inline-flex items-center">BOM版本{getSortIcon('bom_version')}</span>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('bom_version')}
+                    >
+                      <span className="inline-flex items-center">
+                        BOM版本{getSortIcon('bom_version')}
+                      </span>
                     </TableHead>
-                    <TableHead className="cursor-pointer select-none hover:bg-muted" onClick={() => handleSort('status')}>
+                    <TableHead
+                      className="cursor-pointer select-none hover:bg-muted"
+                      onClick={() => handleSort('status')}
+                    >
                       <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
                     </TableHead>
                     <TableHead className="text-right">操作</TableHead>
@@ -463,16 +617,24 @@ export default function ProductsPage() {
                 <TableBody>
                   {products.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                         暂无产品数据
                       </TableCell>
                     </TableRow>
                   ) : (
                     sortedProducts.map((product) => (
                       <TableRow key={product.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedProducts.includes(product.id)}
+                            onCheckedChange={() => toggleSelectProduct(product.id)}
+                          />
+                        </TableCell>
                         <TableCell className="font-mono">{product.product_code}</TableCell>
                         <TableCell className="font-medium">{product.product_name}</TableCell>
-                        <TableCell className="text-muted-foreground">{product.specification || '-'}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {product.specification || '-'}
+                        </TableCell>
                         <TableCell>{product.unit}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{product.category_name || '-'}</Badge>
@@ -612,39 +774,48 @@ export default function ProductsPage() {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>取消</Button>
-              <Button onClick={async () => {
-                const code = (document.getElementById('create_code') as HTMLInputElement)?.value;
-                const name = (document.getElementById('create_name') as HTMLInputElement)?.value;
-                if (!code || !name) {
-                  toast.error('产品编码和名称不能为空');
-                  return;
-                }
-                try {
-                  const response = await fetch('/api/products', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      product_code: code,
-                      product_name: name,
-                      specification: (document.getElementById('create_spec') as HTMLInputElement)?.value,
-                      cost_price: (document.getElementById('create_cost') as HTMLInputElement)?.value,
-                      sale_price: (document.getElementById('create_sale') as HTMLInputElement)?.value,
-                      description: (document.getElementById('create_desc') as HTMLInputElement)?.value,
-                    }),
-                  });
-                  const result = await response.json();
-                  if (result.success) {
-                    toast.success('产品创建成功');
-                    setIsCreateOpen(false);
-                    fetchProducts();
-                  } else {
-                    toast.error(result.message || '创建失败');
+              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+                取消
+              </Button>
+              <Button
+                onClick={async () => {
+                  const code = (document.getElementById('create_code') as HTMLInputElement)?.value;
+                  const name = (document.getElementById('create_name') as HTMLInputElement)?.value;
+                  if (!code || !name) {
+                    toast.error('产品编码和名称不能为空');
+                    return;
                   }
-                } catch (error) {
-                  toast.error('创建失败');
-                }
-              }}>保存</Button>
+                  try {
+                    const response = await authFetch('/api/products', {
+                      method: 'POST',
+                      body: JSON.stringify({
+                        product_code: code,
+                        product_name: name,
+                        specification: (document.getElementById('create_spec') as HTMLInputElement)
+                          ?.value,
+                        cost_price: (document.getElementById('create_cost') as HTMLInputElement)
+                          ?.value,
+                        sale_price: (document.getElementById('create_sale') as HTMLInputElement)
+                          ?.value,
+                        description: (document.getElementById('create_desc') as HTMLInputElement)
+                          ?.value,
+                      }),
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                      toast.success('产品创建成功');
+                      setIsCreateOpen(false);
+                      fetchProducts();
+                    } else {
+                      toast.error(result.message || '创建失败');
+                    }
+                  } catch (error) {
+                    toast.error('创建失败');
+                  }
+                }}
+              >
+                保存
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -663,7 +834,10 @@ export default function ProductsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>产品分类</Label>
-                  <Select value={editForm.category_id} onValueChange={(v) => setEditForm(prev => ({ ...prev, category_id: v }))}>
+                  <Select
+                    value={editForm.category_id}
+                    onValueChange={(v) => setEditForm((prev) => ({ ...prev, category_id: v }))}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="选择分类" />
                     </SelectTrigger>
@@ -679,16 +853,29 @@ export default function ProductsPage() {
               </div>
               <div className="space-y-2">
                 <Label>产品名称 *</Label>
-                <Input value={editForm.product_name} onChange={(e) => setEditForm(prev => ({ ...prev, product_name: e.target.value }))} />
+                <Input
+                  value={editForm.product_name}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, product_name: e.target.value }))
+                  }
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>规格型号</Label>
-                  <Input value={editForm.specification} onChange={(e) => setEditForm(prev => ({ ...prev, specification: e.target.value }))} />
+                  <Input
+                    value={editForm.specification}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, specification: e.target.value }))
+                    }
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>计量单位</Label>
-                  <Select value={editForm.unit} onValueChange={(v) => setEditForm(prev => ({ ...prev, unit: v }))}>
+                  <Select
+                    value={editForm.unit}
+                    onValueChange={(v) => setEditForm((prev) => ({ ...prev, unit: v }))}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="选择单位" />
                     </SelectTrigger>
@@ -705,17 +892,32 @@ export default function ProductsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>成本价</Label>
-                  <Input type="number" value={editForm.cost_price} onChange={(e) => setEditForm(prev => ({ ...prev, cost_price: e.target.value }))} />
+                  <Input
+                    type="number"
+                    value={editForm.cost_price}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, cost_price: e.target.value }))
+                    }
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>销售价</Label>
-                  <Input type="number" value={editForm.sale_price} onChange={(e) => setEditForm(prev => ({ ...prev, sale_price: e.target.value }))} />
+                  <Input
+                    type="number"
+                    value={editForm.sale_price}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, sale_price: e.target.value }))
+                    }
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>状态</Label>
-                  <Select value={editForm.status} onValueChange={(v) => setEditForm(prev => ({ ...prev, status: v }))}>
+                  <Select
+                    value={editForm.status}
+                    onValueChange={(v) => setEditForm((prev) => ({ ...prev, status: v }))}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -729,11 +931,18 @@ export default function ProductsPage() {
               </div>
               <div className="space-y-2">
                 <Label>备注</Label>
-                <Input value={editForm.description} onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))} />
+                <Input
+                  value={editForm.description}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, description: e.target.value }))
+                  }
+                />
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsEditOpen(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                取消
+              </Button>
               <Button onClick={handleSaveEdit}>保存</Button>
             </div>
           </DialogContent>
@@ -744,7 +953,9 @@ export default function ProductsPage() {
             <DialogHeader>
               <DialogTitle>BOM详情 - {selectedProduct?.product_name}</DialogTitle>
               <DialogDescription>
-                {bomHeader ? `BOM编号: ${bomHeader.bom_no || '-'} | 版本: ${bomHeader.version || '-'} | 状态: ${bomHeader.status_name || '-'}` : '暂无BOM数据'}
+                {bomHeader
+                  ? `BOM编号: ${bomHeader.bom_no || '-'} | 版本: ${bomHeader.version || '-'} | 状态: ${bomHeader.status_name || '-'}`
+                  : '暂无BOM数据'}
               </DialogDescription>
             </DialogHeader>
             {bomLoading ? (
@@ -754,10 +965,22 @@ export default function ProductsPage() {
             ) : bomHeader && bomLines.length > 0 ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-4 gap-4 text-sm">
-                  <div><span className="text-muted-foreground">产品：</span>{bomHeader.product_name}</div>
-                  <div><span className="text-muted-foreground">规格：</span>{bomHeader.product_spec || '-'}</div>
-                  <div><span className="text-muted-foreground">基数：</span>{bomHeader.base_qty} {bomHeader.unit}</div>
-                  <div><span className="text-muted-foreground">总成本：</span>¥{Number(bomHeader.total_cost || 0).toFixed(2)}</div>
+                  <div>
+                    <span className="text-muted-foreground">产品：</span>
+                    {bomHeader.product_name}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">规格：</span>
+                    {bomHeader.product_spec || '-'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">基数：</span>
+                    {bomHeader.base_qty} {bomHeader.unit}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">总成本：</span>¥
+                    {Number(bomHeader.total_cost || 0).toFixed(2)}
+                  </div>
                 </div>
                 <Table>
                   <TableHeader>
@@ -780,7 +1003,9 @@ export default function ProductsPage() {
                         <TableCell className="font-mono">{line.material_code}</TableCell>
                         <TableCell className="font-medium">{line.material_name}</TableCell>
                         <TableCell>{line.material_spec || '-'}</TableCell>
-                        <TableCell>{line.consumption_qty} {line.unit}</TableCell>
+                        <TableCell>
+                          {line.consumption_qty} {line.unit}
+                        </TableCell>
                         <TableCell>{line.loss_rate}%</TableCell>
                         <TableCell>{Number(line.actual_qty).toFixed(4)}</TableCell>
                         <TableCell>¥{Number(line.unit_cost || 0).toFixed(2)}</TableCell>
@@ -801,7 +1026,9 @@ export default function ProductsPage() {
             <DialogHeader>
               <DialogTitle>版本历史 - {selectedProduct?.product_name}</DialogTitle>
               <DialogDescription>
-                {bomHeader ? `当前版本: ${bomHeader.version || '-'} | BOM编号: ${bomHeader.bom_no || '-'}` : '暂无版本历史'}
+                {bomHeader
+                  ? `当前版本: ${bomHeader.version || '-'} | BOM编号: ${bomHeader.bom_no || '-'}`
+                  : '暂无版本历史'}
               </DialogDescription>
             </DialogHeader>
             {bomLoading ? (
@@ -823,19 +1050,32 @@ export default function ProductsPage() {
                 <TableBody>
                   {versionHistory.map((v, index) => (
                     <TableRow key={index}>
-                      <TableCell><Badge variant="outline">{v.version}</Badge></TableCell>
                       <TableCell>
-                        <Badge className={
-                          v.change_type === 'CREATE' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
-                          v.change_type === 'PUBLISH' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
-                          v.change_type === 'DISABLE' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
-                          'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
-                        }>
-                          {v.change_type === 'CREATE' ? '新建' :
-                           v.change_type === 'PUBLISH' ? '发布' :
-                           v.change_type === 'DISABLE' ? '停用' :
-                           v.change_type === 'UPDATE' ? '更新' :
-                           v.change_type === 'DELETE' ? '删除' : v.change_type}
+                        <Badge variant="outline">{v.version}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            v.change_type === 'CREATE'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                              : v.change_type === 'PUBLISH'
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                : v.change_type === 'DISABLE'
+                                  ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                  : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+                          }
+                        >
+                          {v.change_type === 'CREATE'
+                            ? '新建'
+                            : v.change_type === 'PUBLISH'
+                              ? '发布'
+                              : v.change_type === 'DISABLE'
+                                ? '停用'
+                                : v.change_type === 'UPDATE'
+                                  ? '更新'
+                                  : v.change_type === 'DELETE'
+                                    ? '删除'
+                                    : v.change_type}
                         </Badge>
                       </TableCell>
                       <TableCell>{v.change_content}</TableCell>

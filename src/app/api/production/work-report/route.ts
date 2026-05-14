@@ -1,6 +1,12 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler, validateRequestBody } from '@/lib/api-response';
+import {
+  successResponse,
+  errorResponse,
+  commonErrors,
+  withErrorHandler,
+  validateRequestBody,
+} from '@/lib/api-response';
 import { getWrPrefix, generateDocNo } from '@/lib/global-config';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
@@ -29,13 +35,19 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const list = await query(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM prd_work_report WHERE deleted = 0`;
-  const countResult = await queryOne(countSql) as any;
+  const countResult = (await queryOne(countSql)) as any;
 
-  const summaryStats = await query(
+  const summaryStats = (await query(
     `SELECT COALESCE(SUM(completed_qty), 0) as total_completed, COALESCE(SUM(qualified_qty), 0) as total_qualified, COALESCE(SUM(defective_qty), 0) as total_defective, COALESCE(SUM(scrap_qty), 0) as total_scrap FROM prd_work_report WHERE deleted = 0`
-  ) as any[];
+  )) as any[];
 
-  return successResponse({ list, total: countResult?.total || 0, page, pageSize, summaryStats: summaryStats[0] || {} });
+  return successResponse({
+    list,
+    total: countResult?.total || 0,
+    page,
+    pageSize,
+    summaryStats: summaryStats[0] || {},
+  });
 }, '获取报工记录失败');
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
@@ -56,11 +68,28 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     await conn.execute(
       `INSERT INTO prd_work_report (report_no, work_order_id, work_order_no, process_name, process_seq, equipment_id, operator_id, operator_name, plan_qty, completed_qty, qualified_qty, defective_qty, scrap_qty, start_time, end_time, work_hours, is_first_piece, first_piece_status, first_piece_inspector, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [reportNo, body.work_order_id, body.work_order_no || null, body.process_name, body.process_seq || null,
-       body.equipment_id || null, body.operator_id || null, body.operator_name || null,
-       body.plan_qty || 0, completedQty, qualifiedQty, defectiveQty, scrapQty,
-       body.start_time || null, body.end_time || null, body.work_hours || 0,
-       body.is_first_piece || 0, body.first_piece_status || null, body.first_piece_inspector || null, body.remark || null]
+      [
+        reportNo,
+        body.work_order_id,
+        body.work_order_no || null,
+        body.process_name,
+        body.process_seq || null,
+        body.equipment_id || null,
+        body.operator_id || null,
+        body.operator_name || null,
+        body.plan_qty || 0,
+        completedQty,
+        qualifiedQty,
+        defectiveQty,
+        scrapQty,
+        body.start_time || null,
+        body.end_time || null,
+        body.work_hours || 0,
+        body.is_first_piece || 0,
+        body.first_piece_status || null,
+        body.first_piece_inspector || null,
+        body.remark || null,
+      ]
     );
 
     const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
@@ -99,18 +128,33 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
                  ELSE 1
                END
            WHERE id = ?`,
-          [newCumulative, newCumulative, newCumulative, newDieStatus, newCumulative, newCumulative, body.die_template_id]
+          [
+            newCumulative,
+            newCumulative,
+            newCumulative,
+            newDieStatus,
+            newCumulative,
+            newCumulative,
+            body.die_template_id,
+          ]
         );
 
         await conn.execute(
           `INSERT INTO prd_die_usage_log (die_id, die_code, work_report_id, work_order_id, work_order_no, process_name, impressions, cumulative_after, operator_id, operator_name, equipment_id, usage_date, remark)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?)`,
           [
-            body.die_template_id, die.template_code,
-            reportId, body.work_order_id, body.work_order_no || null,
-            body.process_name, impressionsToAdd, newCumulative,
-            body.operator_id || null, body.operator_name || null,
-            body.equipment_id || null, null,
+            body.die_template_id,
+            die.template_code,
+            reportId,
+            body.work_order_id,
+            body.work_order_no || null,
+            body.process_name,
+            impressionsToAdd,
+            newCumulative,
+            body.operator_id || null,
+            body.operator_name || null,
+            body.equipment_id || null,
+            null,
           ]
         );
       }
@@ -126,12 +170,24 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   if (!body.id) return commonErrors.badRequest('报工ID不能为空');
 
-  const existing = await queryOne('SELECT id FROM prd_work_report WHERE id = ? AND deleted = 0', [body.id]);
+  const existing = await queryOne('SELECT id FROM prd_work_report WHERE id = ? AND deleted = 0', [
+    body.id,
+  ]);
   if (!existing) return commonErrors.notFound('报工记录不存在');
 
   const fields: string[] = [];
   const values: any[] = [];
-  const allowedFields = ['completed_qty', 'qualified_qty', 'defective_qty', 'scrap_qty', 'end_time', 'work_hours', 'first_piece_status', 'first_piece_inspector', 'remark'];
+  const allowedFields = [
+    'completed_qty',
+    'qualified_qty',
+    'defective_qty',
+    'scrap_qty',
+    'end_time',
+    'work_hours',
+    'first_piece_status',
+    'first_piece_inspector',
+    'remark',
+  ];
 
   for (const field of allowedFields) {
     if (body[field] !== undefined) {

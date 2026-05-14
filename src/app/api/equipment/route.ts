@@ -1,6 +1,12 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler, validateRequestBody } from '@/lib/api-response';
+import {
+  successResponse,
+  errorResponse,
+  commonErrors,
+  withErrorHandler,
+  validateRequestBody,
+} from '@/lib/api-response';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -33,11 +39,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const list = await query(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM eqp_equipment WHERE deleted = 0`;
-  const countResult = await queryOne(countSql) as any;
+  const countResult = (await queryOne(countSql)) as any;
 
-  const typeStats = await query(
+  const typeStats = (await query(
     `SELECT equipment_type, COUNT(*) as count, AVG(oee) as avg_oee FROM eqp_equipment WHERE deleted = 0 GROUP BY equipment_type`
-  ) as any[];
+  )) as any[];
 
   return successResponse({ list, total: countResult?.total || 0, page, pageSize, typeStats });
 }, '获取设备列表失败');
@@ -49,7 +55,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
-  const existing = await queryOne('SELECT id FROM eqp_equipment WHERE equipment_code = ? AND deleted = 0', [body.equipment_code]);
+  const existing = await queryOne(
+    'SELECT id FROM eqp_equipment WHERE equipment_code = ? AND deleted = 0',
+    [body.equipment_code]
+  );
   if (existing) {
     return errorResponse('设备编码已存在', 409, 409);
   }
@@ -57,7 +66,24 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const result = await execute(
     `INSERT INTO eqp_equipment (equipment_code, equipment_name, equipment_type, brand, model, serial_no, location, purchase_date, manufacturer, rated_capacity, oee, availability, performance, quality_rate, current_status, status, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-    [body.equipment_code, body.equipment_name, body.equipment_type || null, body.brand || null, body.model || null, body.serial_no || null, body.location || null, body.purchase_date || null, body.manufacturer || null, body.rated_capacity || null, body.oee || 0, body.availability || 0, body.performance || 0, body.quality_rate || 0, body.current_status || 1, body.remark || null]
+    [
+      body.equipment_code,
+      body.equipment_name,
+      body.equipment_type || null,
+      body.brand || null,
+      body.model || null,
+      body.serial_no || null,
+      body.location || null,
+      body.purchase_date || null,
+      body.manufacturer || null,
+      body.rated_capacity || null,
+      body.oee || 0,
+      body.availability || 0,
+      body.performance || 0,
+      body.quality_rate || 0,
+      body.current_status || 1,
+      body.remark || null,
+    ]
   );
 
   return successResponse({ id: result.insertId }, '设备创建成功');
@@ -69,14 +95,31 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     return commonErrors.badRequest('设备ID不能为空');
   }
 
-  const existing = await queryOne('SELECT id FROM eqp_equipment WHERE id = ? AND deleted = 0', [body.id]);
+  const existing = await queryOne('SELECT id FROM eqp_equipment WHERE id = ? AND deleted = 0', [
+    body.id,
+  ]);
   if (!existing) {
     return commonErrors.notFound('设备不存在');
   }
 
   await execute(
     `UPDATE eqp_equipment SET equipment_name = ?, equipment_type = ?, brand = ?, model = ?, location = ?, rated_capacity = ?, oee = ?, availability = ?, performance = ?, quality_rate = ?, current_status = ?, status = ?, remark = ? WHERE id = ?`,
-    [body.equipment_name, body.equipment_type, body.brand, body.model, body.location, body.rated_capacity, body.oee, body.availability, body.performance, body.quality_rate, body.current_status, body.status, body.remark, body.id]
+    [
+      body.equipment_name,
+      body.equipment_type,
+      body.brand,
+      body.model,
+      body.location,
+      body.rated_capacity,
+      body.oee,
+      body.availability,
+      body.performance,
+      body.quality_rate,
+      body.current_status,
+      body.status,
+      body.remark,
+      body.id,
+    ]
   );
 
   return successResponse(null, '设备更新成功');

@@ -5,10 +5,29 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, ArrowRightLeft, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -43,7 +62,10 @@ interface TransferRecord {
   create_time: string;
 }
 
-const statusMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const statusMap: Record<
+  number,
+  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+> = {
   1: { label: '草稿', variant: 'outline' },
   2: { label: '打样确认', variant: 'secondary' },
   3: { label: '工程确认', variant: 'secondary' },
@@ -62,7 +84,9 @@ export default function SampleToMassPage() {
   const [searchStatus, setSearchStatus] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<TransferRecord>>({});
-  const [customers, setCustomers] = useState<{ id: number; customer_name: string; customer_code: string }[]>([]);
+  const [customers, setCustomers] = useState<
+    { id: number; customer_name: string; customer_code: string }[]
+  >([]);
 
   const fetchCustomers = async () => {
     try {
@@ -71,14 +95,18 @@ export default function SampleToMassPage() {
       if (result.success) {
         setCustomers(result.data?.list || result.data || []);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchData = async () => {
     try {
       const params = new URLSearchParams({
-        page: String(page), pageSize: '20',
-        productName: searchProduct, status: searchStatus
+        page: String(page),
+        pageSize: '20',
+        productName: searchProduct,
+        status: searchStatus,
       });
       const res = await fetch('/api/engineering/sample-to-mass?' + params);
       const result = await res.json();
@@ -86,10 +114,15 @@ export default function SampleToMassPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  useEffect(() => { fetchData(); fetchCustomers(); }, [page]);
+  useEffect(() => {
+    fetchData();
+    fetchCustomers();
+  }, [page]);
 
   const handleSave = async () => {
     try {
@@ -97,7 +130,7 @@ export default function SampleToMassPage() {
       const res = await fetch('/api/engineering/sample-to-mass', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editItem)
+        body: JSON.stringify(editItem),
       });
       const result = await res.json();
       if (result.success) {
@@ -131,7 +164,7 @@ export default function SampleToMassPage() {
       const res = await fetch('/api/engineering/sample-to-mass', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: currentStatus + 1 })
+        body: JSON.stringify({ id, status: currentStatus + 1 }),
       });
       const result = await res.json();
       if (result.success) {
@@ -154,21 +187,38 @@ export default function SampleToMassPage() {
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="搜索产品名称" className="pl-8 w-60" value={searchProduct} onChange={e => setSearchProduct(e.target.value)} />
+                  <Input
+                    placeholder="搜索产品名称"
+                    className="pl-8 w-60"
+                    value={searchProduct}
+                    onChange={(e) => setSearchProduct(e.target.value)}
+                  />
                 </div>
                 <Select value={searchStatus} onValueChange={setSearchStatus}>
-                  <SelectTrigger className="w-40"><SelectValue placeholder="状态筛选" /></SelectTrigger>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="状态筛选" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部状态</SelectItem>
                     {Object.entries(statusMap).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                      <SelectItem key={k} value={k}>
+                        {v.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant="outline" onClick={fetchData}>查询</Button>
+                <Button variant="outline" onClick={fetchData}>
+                  查询
+                </Button>
               </div>
-              <Button onClick={() => { setEditItem({}); setShowDialog(true); }}>
-                <Plus className="h-4 w-4 mr-2" />新建转产记录
+              <Button
+                onClick={() => {
+                  setEditItem({});
+                  setShowDialog(true);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                新建转产记录
               </Button>
             </div>
 
@@ -187,7 +237,7 @@ export default function SampleToMassPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {list.map(item => (
+                {list.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-mono text-sm">{item.transfer_no}</TableCell>
                     <TableCell>{item.sample_order_no || '-'}</TableCell>
@@ -204,11 +254,23 @@ export default function SampleToMassPage() {
                     <TableCell>
                       <div className="flex gap-1">
                         {item.status < 6 && item.status !== 7 && (
-                          <Button size="sm" variant="outline" onClick={() => handleConfirm(item.id!, item.status)}>
-                            <ArrowRightLeft className="h-3 w-3 mr-1" />确认
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleConfirm(item.id!, item.status)}
+                          >
+                            <ArrowRightLeft className="h-3 w-3 mr-1" />
+                            确认
                           </Button>
                         )}
-                        <Button size="sm" variant="ghost" onClick={() => { setEditItem(item); setShowDialog(true); }}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditItem(item);
+                            setShowDialog(true);
+                          }}
+                        >
                           <Edit className="h-3 w-3" />
                         </Button>
                         <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id!)}>
@@ -220,7 +282,9 @@ export default function SampleToMassPage() {
                 ))}
                 {list.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">暂无数据</TableCell>
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                      暂无数据
+                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -229,8 +293,22 @@ export default function SampleToMassPage() {
             <div className="flex items-center justify-between mt-4">
               <span className="text-sm text-muted-foreground">共 {total} 条</span>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</Button>
-                <Button variant="outline" size="sm" disabled={page * 20 >= total} onClick={() => setPage(p => p + 1)}>下一页</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  上一页
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page * 20 >= total}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  下一页
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -242,32 +320,111 @@ export default function SampleToMassPage() {
               <DialogTitle>{editItem.id ? '编辑转产记录' : '新建转产记录'}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
-              <div><Label>样品单号</Label><Input value={editItem.sample_order_no || ''} onChange={e => setEditItem({ ...editItem, sample_order_no: e.target.value })} /></div>
-              <div><Label>产品编码</Label><Input value={editItem.product_code || ''} onChange={e => setEditItem({ ...editItem, product_code: e.target.value })} /></div>
-              <div><Label>产品名称 *</Label><Input value={editItem.product_name || ''} onChange={e => setEditItem({ ...editItem, product_name: e.target.value })} /></div>
-              <div><Label>客户名称</Label>
-                <Select value={editItem.customer_id ? String(editItem.customer_id) : ''} onValueChange={v => {
-                  const c = customers.find(c => c.id === Number(v));
-                  setEditItem({ ...editItem, customer_id: Number(v), customer_name: c?.customer_name || '' });
-                }}>
-                  <SelectTrigger><SelectValue placeholder="选择客户" /></SelectTrigger>
+              <div>
+                <Label>样品单号</Label>
+                <Input
+                  value={editItem.sample_order_no || ''}
+                  onChange={(e) => setEditItem({ ...editItem, sample_order_no: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>产品编码</Label>
+                <Input
+                  value={editItem.product_code || ''}
+                  onChange={(e) => setEditItem({ ...editItem, product_code: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>产品名称 *</Label>
+                <Input
+                  value={editItem.product_name || ''}
+                  onChange={(e) => setEditItem({ ...editItem, product_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>客户名称</Label>
+                <Select
+                  value={editItem.customer_id ? String(editItem.customer_id) : ''}
+                  onValueChange={(v) => {
+                    const c = customers.find((c) => c.id === Number(v));
+                    setEditItem({
+                      ...editItem,
+                      customer_id: Number(v),
+                      customer_name: c?.customer_name || '',
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择客户" />
+                  </SelectTrigger>
                   <SelectContent>
-                    {customers.map(c => (
-                      <SelectItem key={c.id} value={String(c.id)}>{c.customer_name}</SelectItem>
+                    {customers.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.customer_name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>BOM版本</Label><Input value={editItem.bom_version || ''} onChange={e => setEditItem({ ...editItem, bom_version: e.target.value })} /></div>
-              <div><Label>工艺路线</Label><Input value={editItem.process_route || ''} onChange={e => setEditItem({ ...editItem, process_route: e.target.value })} /></div>
-              <div className="col-span-2"><Label>打样参数(JSON)</Label><Textarea rows={3} value={editItem.sample_params || ''} onChange={e => setEditItem({ ...editItem, sample_params: e.target.value })} /></div>
-              <div className="col-span-2"><Label>量产参数(JSON)</Label><Textarea rows={3} value={editItem.mass_params || ''} onChange={e => setEditItem({ ...editItem, mass_params: e.target.value })} /></div>
-              <div className="col-span-2"><Label>检验标准</Label><Textarea rows={2} value={editItem.check_standard || ''} onChange={e => setEditItem({ ...editItem, check_standard: e.target.value })} /></div>
-              <div className="col-span-2"><Label>特别注意事项</Label><Textarea rows={2} value={editItem.special_note || ''} onChange={e => setEditItem({ ...editItem, special_note: e.target.value })} /></div>
-              <div className="col-span-2"><Label>备注</Label><Textarea rows={2} value={editItem.remark || ''} onChange={e => setEditItem({ ...editItem, remark: e.target.value })} /></div>
+              <div>
+                <Label>BOM版本</Label>
+                <Input
+                  value={editItem.bom_version || ''}
+                  onChange={(e) => setEditItem({ ...editItem, bom_version: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>工艺路线</Label>
+                <Input
+                  value={editItem.process_route || ''}
+                  onChange={(e) => setEditItem({ ...editItem, process_route: e.target.value })}
+                />
+              </div>
+              <div className="col-span-2">
+                <Label>打样参数(JSON)</Label>
+                <Textarea
+                  rows={3}
+                  value={editItem.sample_params || ''}
+                  onChange={(e) => setEditItem({ ...editItem, sample_params: e.target.value })}
+                />
+              </div>
+              <div className="col-span-2">
+                <Label>量产参数(JSON)</Label>
+                <Textarea
+                  rows={3}
+                  value={editItem.mass_params || ''}
+                  onChange={(e) => setEditItem({ ...editItem, mass_params: e.target.value })}
+                />
+              </div>
+              <div className="col-span-2">
+                <Label>检验标准</Label>
+                <Textarea
+                  rows={2}
+                  value={editItem.check_standard || ''}
+                  onChange={(e) => setEditItem({ ...editItem, check_standard: e.target.value })}
+                />
+              </div>
+              <div className="col-span-2">
+                <Label>特别注意事项</Label>
+                <Textarea
+                  rows={2}
+                  value={editItem.special_note || ''}
+                  onChange={(e) => setEditItem({ ...editItem, special_note: e.target.value })}
+                />
+              </div>
+              <div className="col-span-2">
+                <Label>备注</Label>
+                <Textarea
+                  rows={2}
+                  value={editItem.remark || ''}
+                  onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
+                />
+              </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDialog(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setShowDialog(false)}>
+                取消
+              </Button>
               <Button onClick={handleSave}>保存</Button>
             </DialogFooter>
           </DialogContent>

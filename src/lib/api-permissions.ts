@@ -45,22 +45,70 @@ export const API_PERMISSIONS = {
   SYSTEM_LOG: 'system:log',
 } as const;
 
-export const ROUTE_PERMISSIONS: Record<string, { GET?: string; POST?: string; PUT?: string; DELETE?: string; PATCH?: string }> = {
-  '/api/warehouse': { GET: API_PERMISSIONS.WAREHOUSE_VIEW, POST: API_PERMISSIONS.WAREHOUSE_CREATE, PUT: API_PERMISSIONS.WAREHOUSE_UPDATE, DELETE: API_PERMISSIONS.WAREHOUSE_DELETE },
-  '/api/warehouse/inbound': { GET: API_PERMISSIONS.INVENTORY_VIEW, POST: API_PERMISSIONS.INBOUND_CREATE, PUT: API_PERMISSIONS.INBOUND_APPROVE },
-  '/api/warehouse/outbound': { GET: API_PERMISSIONS.INVENTORY_VIEW, POST: API_PERMISSIONS.OUTBOUND_CREATE, PUT: API_PERMISSIONS.OUTBOUND_CREATE, DELETE: API_PERMISSIONS.OUTBOUND_CREATE },
-  '/api/warehouse/outbound/confirm': { POST: API_PERMISSIONS.OUTBOUND_CONFIRM, PUT: API_PERMISSIONS.OUTBOUND_CANCEL },
-  '/api/warehouse/outbound/fifo': { GET: API_PERMISSIONS.INVENTORY_VIEW, POST: API_PERMISSIONS.OUTBOUND_CREATE, PATCH: API_PERMISSIONS.OUTBOUND_CONFIRM },
+export const ROUTE_PERMISSIONS: Record<
+  string,
+  { GET?: string; POST?: string; PUT?: string; DELETE?: string; PATCH?: string }
+> = {
+  '/api/warehouse': {
+    GET: API_PERMISSIONS.WAREHOUSE_VIEW,
+    POST: API_PERMISSIONS.WAREHOUSE_CREATE,
+    PUT: API_PERMISSIONS.WAREHOUSE_UPDATE,
+    DELETE: API_PERMISSIONS.WAREHOUSE_DELETE,
+  },
+  '/api/warehouse/inbound': {
+    GET: API_PERMISSIONS.INVENTORY_VIEW,
+    POST: API_PERMISSIONS.INBOUND_CREATE,
+    PUT: API_PERMISSIONS.INBOUND_APPROVE,
+  },
+  '/api/warehouse/outbound': {
+    GET: API_PERMISSIONS.INVENTORY_VIEW,
+    POST: API_PERMISSIONS.OUTBOUND_CREATE,
+    PUT: API_PERMISSIONS.OUTBOUND_CREATE,
+    DELETE: API_PERMISSIONS.OUTBOUND_CREATE,
+  },
+  '/api/warehouse/outbound/confirm': {
+    POST: API_PERMISSIONS.OUTBOUND_CONFIRM,
+    PUT: API_PERMISSIONS.OUTBOUND_CANCEL,
+  },
+  '/api/warehouse/outbound/fifo': {
+    GET: API_PERMISSIONS.INVENTORY_VIEW,
+    POST: API_PERMISSIONS.OUTBOUND_CREATE,
+    PATCH: API_PERMISSIONS.OUTBOUND_CONFIRM,
+  },
   '/api/inventory': { GET: API_PERMISSIONS.INVENTORY_VIEW, POST: API_PERMISSIONS.OUTBOUND_CREATE },
-  '/api/workorders': { GET: API_PERMISSIONS.WORKORDER_VIEW, POST: API_PERMISSIONS.WORKORDER_CREATE, PUT: API_PERMISSIONS.WORKORDER_UPDATE, DELETE: API_PERMISSIONS.WORKORDER_DELETE },
+  '/api/workorders': {
+    GET: API_PERMISSIONS.WORKORDER_VIEW,
+    POST: API_PERMISSIONS.WORKORDER_CREATE,
+    PUT: API_PERMISSIONS.WORKORDER_UPDATE,
+    DELETE: API_PERMISSIONS.WORKORDER_DELETE,
+  },
   '/api/production/orders': { GET: API_PERMISSIONS.WORKORDER_VIEW },
-  '/api/quality/incoming': { GET: API_PERMISSIONS.QUALITY_VIEW, POST: API_PERMISSIONS.QUALITY_INSPECT },
-  '/api/quality/process': { GET: API_PERMISSIONS.QUALITY_VIEW, POST: API_PERMISSIONS.QUALITY_INSPECT },
-  '/api/quality/final': { GET: API_PERMISSIONS.QUALITY_VIEW, POST: API_PERMISSIONS.QUALITY_INSPECT },
+  '/api/quality/incoming': {
+    GET: API_PERMISSIONS.QUALITY_VIEW,
+    POST: API_PERMISSIONS.QUALITY_INSPECT,
+  },
+  '/api/quality/process': {
+    GET: API_PERMISSIONS.QUALITY_VIEW,
+    POST: API_PERMISSIONS.QUALITY_INSPECT,
+  },
+  '/api/quality/final': {
+    GET: API_PERMISSIONS.QUALITY_VIEW,
+    POST: API_PERMISSIONS.QUALITY_INSPECT,
+  },
   '/api/orders/sales': { GET: API_PERMISSIONS.ORDER_VIEW, POST: API_PERMISSIONS.ORDER_CREATE },
-  '/api/purchase/orders': { GET: API_PERMISSIONS.PURCHASE_VIEW, POST: API_PERMISSIONS.PURCHASE_CREATE },
-  '/api/purchase/request': { GET: API_PERMISSIONS.PURCHASE_VIEW, POST: API_PERMISSIONS.PURCHASE_CREATE },
-  '/api/system/user': { GET: API_PERMISSIONS.SYSTEM_USER, POST: API_PERMISSIONS.SYSTEM_USER, PUT: API_PERMISSIONS.SYSTEM_USER },
+  '/api/purchase/orders': {
+    GET: API_PERMISSIONS.PURCHASE_VIEW,
+    POST: API_PERMISSIONS.PURCHASE_CREATE,
+  },
+  '/api/purchase/request': {
+    GET: API_PERMISSIONS.PURCHASE_VIEW,
+    POST: API_PERMISSIONS.PURCHASE_CREATE,
+  },
+  '/api/system/user': {
+    GET: API_PERMISSIONS.SYSTEM_USER,
+    POST: API_PERMISSIONS.SYSTEM_USER,
+    PUT: API_PERMISSIONS.SYSTEM_USER,
+  },
   '/api/system/roles': { GET: API_PERMISSIONS.SYSTEM_ROLE },
   '/api/system/oper-log': { GET: API_PERMISSIONS.SYSTEM_LOG, DELETE: API_PERMISSIONS.SYSTEM_LOG },
   '/api/system/login-log': { GET: API_PERMISSIONS.SYSTEM_LOG },
@@ -84,7 +132,7 @@ export function getRequiredPermission(pathname: string, method: string): string 
   }
 
   const matchedPattern = Object.keys(ROUTE_PERMISSIONS)
-    .filter(pattern => pathname.startsWith(pattern))
+    .filter((pattern) => pathname.startsWith(pattern))
     .sort((a, b) => b.length - a.length)[0];
 
   if (!matchedPattern) return null;
@@ -107,9 +155,18 @@ export function withPermission(
       const method = request.method;
       const requiredPermission = getRequiredPermission(pathname, method);
 
-      if (requiredPermission && !userInfo.permissions.includes(requiredPermission) && !userInfo.roles.includes('admin')) {
+      if (
+        requiredPermission &&
+        !userInfo.permissions.includes(requiredPermission) &&
+        !userInfo.roles.includes('admin')
+      ) {
         return NextResponse.json(
-          { code: 403, success: false, message: `没有权限执行此操作，需要权限: ${requiredPermission}`, data: null },
+          {
+            code: 403,
+            success: false,
+            message: `没有权限执行此操作，需要权限: ${requiredPermission}`,
+            data: null,
+          },
           { status: 403 }
         );
       }

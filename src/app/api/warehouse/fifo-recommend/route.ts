@@ -53,7 +53,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('缺少必填参数: materialId, warehouseId', 400, 400);
   }
 
-  const batchRows: any = await query(`
+  const batchRows: any = await query(
+    `
     SELECT
       ib.id,
       ib.batch_no,
@@ -95,7 +96,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       ib.inbound_date ASC,
       ib.expire_date ASC,
       ib.id ASC
-  `, [materialId, warehouseId]);
+  `,
+    [materialId, warehouseId]
+  );
 
   const availableBatches = batchRows
     .filter((b: any) => b.fifo_status === 'AVAILABLE')
@@ -115,14 +118,15 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     .sort((a: any, b: any) => {
       if (a.is_urgent_expiry && !b.is_urgent_expiry) return -1;
       if (!a.is_urgent_expiry && b.is_urgent_expiry) return 1;
-      if (a.compatibility_score !== b.compatibility_score) return b.compatibility_score - a.compatibility_score;
+      if (a.compatibility_score !== b.compatibility_score)
+        return b.compatibility_score - a.compatibility_score;
       return new Date(a.inbound_date).getTime() - new Date(b.inbound_date).getTime();
     });
 
   const frozenBatches = batchRows.filter((b: any) => b.fifo_status === 'FROZEN');
   const expiredBatches = batchRows.filter((b: any) => b.fifo_status === 'EXPIRED');
 
-  let recommendedBatches: any[] = [];
+  const recommendedBatches: any[] = [];
   let totalAvailable = 0;
   let remainingQty = requiredQty;
 
@@ -131,8 +135,15 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     if (remainingQty > 0) {
       let allocQty = Math.min(remainingQty, Number(batch.available_qty));
 
-      if (minPackageQty > 0 && allocQty < minPackageQty && remainingQty <= Number(batch.available_qty)) {
-        allocQty = Math.min(Math.ceil(remainingQty / minPackageQty) * minPackageQty, Number(batch.available_qty));
+      if (
+        minPackageQty > 0 &&
+        allocQty < minPackageQty &&
+        remainingQty <= Number(batch.available_qty)
+      ) {
+        allocQty = Math.min(
+          Math.ceil(remainingQty / minPackageQty) * minPackageQty,
+          Number(batch.available_qty)
+        );
       }
 
       recommendedBatches.push({
@@ -161,22 +172,34 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       override_risk_score: b.override_risk_score,
     }));
 
-  const totalRecommendedQty = recommendedBatches.reduce((sum: number, b: any) => sum + Number(b.allocated_qty), 0);
-  const totalRecommendedCost = recommendedBatches.reduce((sum: number, b: any) => sum + Number(b.allocated_qty) * Number(b.unit_price), 0);
+  const totalRecommendedQty = recommendedBatches.reduce(
+    (sum: number, b: any) => sum + Number(b.allocated_qty),
+    0
+  );
+  const totalRecommendedCost = recommendedBatches.reduce(
+    (sum: number, b: any) => sum + Number(b.allocated_qty) * Number(b.unit_price),
+    0
+  );
   const avgCost = totalRecommendedQty > 0 ? totalRecommendedCost / totalRecommendedQty : 0;
 
   const firstBatch = availableBatches.length > 0 ? availableBatches[0] : null;
 
   const nearExpiryBatches = availableBatches.filter((b: any) => b.is_near_expiry);
-  const nearExpiryValue = nearExpiryBatches.reduce((sum: number, b: any) => sum + Number(b.available_qty) * Number(b.unit_price), 0);
+  const nearExpiryValue = nearExpiryBatches.reduce(
+    (sum: number, b: any) => sum + Number(b.available_qty) * Number(b.unit_price),
+    0
+  );
 
-  const overrideLogs: any = await query(`
+  const overrideLogs: any = await query(
+    `
     SELECT id, source_type, source_no, recommended_batch, actual_batch, reason, approval_status, create_time
     FROM inv_fifo_override_log
     WHERE material_id = ? AND deleted = 0
     ORDER BY create_time DESC
     LIMIT 5
-  `, [materialId]);
+  `,
+    [materialId]
+  );
 
   return successResponse({
     materialId: Number(materialId),
@@ -185,20 +208,22 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     totalAvailable,
     isSufficient: totalAvailable >= requiredQty,
     shortage: totalAvailable < requiredQty ? requiredQty - totalAvailable : 0,
-    fifoRecommendation: firstBatch ? {
-      batchNo: firstBatch.batch_no,
-      availableQty: Number(firstBatch.available_qty),
-      unitPrice: Number(firstBatch.unit_price),
-      inboundDate: firstBatch.inbound_date,
-      expireDate: firstBatch.expire_date,
-      compatibilityScore: firstBatch.compatibility_score,
-      overrideRiskScore: firstBatch.override_risk_score,
-      allocationReason: firstBatch.is_urgent_expiry
-        ? '即将过期优先出库'
-        : firstBatch.compatibility_score > 0
-          ? '兼容性匹配优先'
-          : 'FIFO标准先进先出',
-    } : null,
+    fifoRecommendation: firstBatch
+      ? {
+          batchNo: firstBatch.batch_no,
+          availableQty: Number(firstBatch.available_qty),
+          unitPrice: Number(firstBatch.unit_price),
+          inboundDate: firstBatch.inbound_date,
+          expireDate: firstBatch.expire_date,
+          compatibilityScore: firstBatch.compatibility_score,
+          overrideRiskScore: firstBatch.override_risk_score,
+          allocationReason: firstBatch.is_urgent_expiry
+            ? '即将过期优先出库'
+            : firstBatch.compatibility_score > 0
+              ? '兼容性匹配优先'
+              : 'FIFO标准先进先出',
+        }
+      : null,
     recommendedBatches,
     alternativeBatches,
     totalRecommendedQty,

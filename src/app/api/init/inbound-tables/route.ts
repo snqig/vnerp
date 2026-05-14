@@ -89,7 +89,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       AND TABLE_NAME IN ('inv_inbound_order', 'inv_inbound_item', 'inv_inventory_batch')
     `);
 
-    const existingTables = (tables as any[]).map(t => t.TABLE_NAME);
+    const existingTables = (tables as any[]).map((t) => t.TABLE_NAME);
     const results: string[] = [];
 
     // 创建入库订单主表
@@ -187,7 +187,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
 
     // 插入测试数据
-    const orderCount = await query('SELECT COUNT(*) as count FROM inv_inbound_order WHERE deleted = 0');
+    const orderCount = await query(
+      'SELECT COUNT(*) as count FROM inv_inbound_order WHERE deleted = 0'
+    );
     if ((orderCount as any[])[0].count === 0) {
       // 添加入库订单测试数据
       await query(`
@@ -223,7 +225,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     return successResponse({
       message: '入库管理表初始化完成',
-      details: results
+      details: results,
     });
   } catch (error: any) {
     console.error('创建表失败:', error);

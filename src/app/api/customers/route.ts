@@ -149,18 +149,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const body: Customer = await request.json();
 
   // 验证必填字段
-  const validation = validateRequestBody(body, [
-    'customer_code',
-    'customer_name',
-    'customer_type',
-  ]);
+  const validation = validateRequestBody(body, ['customer_code', 'customer_name', 'customer_type']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查客户编码是否已存在
@@ -209,10 +201,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     ]
   );
 
-  return successResponse(
-    { id: result.insertId },
-    '客户创建成功'
-  );
+  return successResponse({ id: result.insertId }, '客户创建成功');
 }, '创建客户失败');
 
 // PUT - 更新客户
@@ -316,10 +305,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
 
   // 使用事务软删除
   await transaction(async (connection) => {
-    await connection.execute(
-      'UPDATE crm_customer SET deleted = 1 WHERE id = ?',
-      [customerId]
-    );
+    await connection.execute('UPDATE crm_customer SET deleted = 1 WHERE id = ?', [customerId]);
   });
 
   return successResponse(null, '客户删除成功');

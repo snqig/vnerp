@@ -47,12 +47,7 @@ export class StandardCardSubmittedEvent implements DomainEvent {
     userId: number;
   };
 
-  constructor(props: {
-    standardCardId: number;
-    code: string;
-    version: string;
-    userId: number;
-  }) {
+  constructor(props: { standardCardId: number; code: string; version: string; userId: number }) {
     this.eventId = `sc_submitted_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     this.occurredAt = new Date();
     this.payload = props;
@@ -144,11 +139,7 @@ export class StandardCardLinkedToWorkOrderEvent implements DomainEvent {
     workOrderNo: string;
   };
 
-  constructor(props: {
-    standardCardId: number;
-    workOrderId: number;
-    workOrderNo: string;
-  }) {
+  constructor(props: { standardCardId: number; workOrderId: number; workOrderNo: string }) {
     this.eventId = `sc_linked_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     this.occurredAt = new Date();
     this.payload = props;

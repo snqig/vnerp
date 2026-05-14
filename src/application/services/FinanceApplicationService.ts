@@ -37,7 +37,10 @@ export class FinanceApplicationService {
     }
 
     sql += ' ORDER BY create_time DESC';
-    return queryPaginated(sql, countSql, queryParams, { page: params.page, pageSize: params.pageSize });
+    return queryPaginated(sql, countSql, queryParams, {
+      page: params.page,
+      pageSize: params.pageSize,
+    });
   }
 
   async getReceivableList(params: {
@@ -74,7 +77,10 @@ export class FinanceApplicationService {
     }
 
     sql += ' ORDER BY create_time DESC';
-    return queryPaginated(sql, countSql, queryParams, { page: params.page, pageSize: params.pageSize });
+    return queryPaginated(sql, countSql, queryParams, {
+      page: params.page,
+      pageSize: params.pageSize,
+    });
   }
 
   async recordPayment(params: {
@@ -107,7 +113,15 @@ export class FinanceApplicationService {
       await conn.execute(
         `INSERT INTO fin_payment (payment_no, payable_id, amount, payment_date, payment_method, remark, create_by, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [paymentNo, params.payableId, params.amount, params.paymentDate, params.paymentMethod, params.remark || null, params.createBy || null]
+        [
+          paymentNo,
+          params.payableId,
+          params.amount,
+          params.paymentDate,
+          params.paymentMethod,
+          params.remark || null,
+          params.createBy || null,
+        ]
       );
 
       const newPaidAmount = parseFloat(payable.paid_amount) + params.amount;
@@ -118,7 +132,11 @@ export class FinanceApplicationService {
         [newPaidAmount, newStatus, params.payableId]
       );
 
-      secureLog('info', 'Payment recorded', { paymentNo, payableId: params.payableId, amount: params.amount });
+      secureLog('info', 'Payment recorded', {
+        paymentNo,
+        payableId: params.payableId,
+        amount: params.amount,
+      });
       return { paymentNo };
     });
   }
@@ -153,7 +171,15 @@ export class FinanceApplicationService {
       await conn.execute(
         `INSERT INTO fin_receipt (receipt_no, receivable_id, amount, receipt_date, receipt_method, remark, create_by, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [receiptNo, params.receivableId, params.amount, params.receiptDate, params.receiptMethod, params.remark || null, params.createBy || null]
+        [
+          receiptNo,
+          params.receivableId,
+          params.amount,
+          params.receiptDate,
+          params.receiptMethod,
+          params.remark || null,
+          params.createBy || null,
+        ]
       );
 
       const newReceivedAmount = parseFloat(receivable.received_amount) + params.amount;
@@ -164,7 +190,11 @@ export class FinanceApplicationService {
         [newReceivedAmount, newStatus, params.receivableId]
       );
 
-      secureLog('info', 'Receipt recorded', { receiptNo, receivableId: params.receivableId, amount: params.amount });
+      secureLog('info', 'Receipt recorded', {
+        receiptNo,
+        receivableId: params.receivableId,
+        amount: params.amount,
+      });
       return { receiptNo };
     });
   }
@@ -290,6 +320,9 @@ export class FinanceApplicationService {
 
     sql += ' ORDER BY doc_date DESC';
 
-    return queryPaginated(sql, countSql, queryParams, { page: params.page, pageSize: params.pageSize });
+    return queryPaginated(sql, countSql, queryParams, {
+      page: params.page,
+      pageSize: params.pageSize,
+    });
   }
 }

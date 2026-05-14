@@ -29,22 +29,19 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     params.push(workorderNo);
   }
   if (startDate) {
-    where += ' AND u.usage_time >= ?';
+    where += ' AND u.usage_date >= ?';
     params.push(startDate);
   }
   if (endDate) {
-    where += ' AND u.usage_time <= ?';
+    where += ' AND u.usage_date <= ?';
     params.push(endDate);
   }
 
-  const totalRows: any = await query(
-    `SELECT COUNT(*) as total FROM ink_usage u ${where}`,
-    params
-  );
+  const totalRows: any = await query(`SELECT COUNT(*) as total FROM ink_usage u ${where}`, params);
   const total = totalRows[0]?.total || 0;
 
   const rows: any = await query(
-    `SELECT u.* FROM ink_usage u ${where} ORDER BY u.usage_time DESC LIMIT ? OFFSET ?`,
+    `SELECT u.* FROM ink_usage u ${where} ORDER BY u.usage_date DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
 
@@ -53,7 +50,25 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { usage_type, batch_no, qr_code, workorder_id, workorder_no, formula_id, formula_no, color_name, weight, unit, operator_id, operator_name, machine_id, machine_name, location_id, location_name, remark } = body;
+  const {
+    usage_type,
+    batch_no,
+    qr_code,
+    workorder_id,
+    workorder_no,
+    formula_id,
+    formula_no,
+    color_name,
+    weight,
+    unit,
+    operator_id,
+    operator_name,
+    machine_id,
+    machine_name,
+    location_id,
+    location_name,
+    remark,
+  } = body;
 
   if (!usage_type || !weight || Number(weight) <= 0) {
     return errorResponse('缺少必填字段: usage_type, weight', 400, 400);
@@ -66,7 +81,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   const result = await transaction(async (conn) => {
     const now = new Date();
-    const usageNo = 'IU' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    const usageNo =
+      'IU' +
+      now.getFullYear() +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      String(now.getDate()).padStart(2, '0') +
+      String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
     let actualBatchNo = batch_no;
     if (qr_code && !batch_no) {
@@ -102,9 +122,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       throw new Error(`油墨批次 ${actualBatchNo} 已过期，不能使用`);
     }
 
-    if (usage_type === 'requisition' || usage_type === 'machine_load' || usage_type === 'consumption') {
+    if (
+      usage_type === 'requisition' ||
+      usage_type === 'machine_load' ||
+      usage_type === 'consumption'
+    ) {
       if (Number(batch.available_qty) < Number(weight)) {
-        throw new Error(`油墨 ${batch.material_name} 批次 ${actualBatchNo} 库存不足: 可用 ${batch.available_qty}, 需用 ${weight}`);
+        throw new Error(
+          `油墨 ${batch.material_name} 批次 ${actualBatchNo} 库存不足: 可用 ${batch.available_qty}, 需用 ${weight}`
+        );
       }
 
       await conn.execute(
@@ -140,7 +166,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           );
 
           if (woFormulaRows.length > 0 && woFormulaRows[0].formula_id !== formulaRows[0].id) {
-            throw new Error(`配方不匹配: 工单 ${workorder_no} 要求配方ID ${woFormulaRows[0].formula_id}, 当前油墨配方ID ${formulaRows[0].id}`);
+            throw new Error(
+              `配方不匹配: 工单 ${workorder_no} 要求配方ID ${woFormulaRows[0].formula_id}, 当前油墨配方ID ${formulaRows[0].id}`
+            );
           }
         }
       }
@@ -149,10 +177,26 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const [insertResult]: any = await conn.execute(
       `INSERT INTO ink_usage (usage_no, usage_type, batch_no, qr_code, workorder_id, workorder_no, formula_id, formula_no, color_name, weight, unit, operator_id, operator_name, machine_id, machine_name, location_id, location_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-      [usageNo, usage_type, actualBatchNo, qr_code || null, workorder_id || null, workorder_no || null,
-       formula_id || null, formula_no || null, color_name || batch.material_name || null,
-       weight, unit || 'kg', operator_id || null, operator_name || null,
-       machine_id || null, machine_name || null, location_id || null, location_name || null, remark || null]
+      [
+        usageNo,
+        usage_type,
+        actualBatchNo,
+        qr_code || null,
+        workorder_id || null,
+        workorder_no || null,
+        formula_id || null,
+        formula_no || null,
+        color_name || batch.material_name || null,
+        weight,
+        unit || 'kg',
+        operator_id || null,
+        operator_name || null,
+        machine_id || null,
+        machine_name || null,
+        location_id || null,
+        location_name || null,
+        remark || null,
+      ]
     );
 
     try {
@@ -187,8 +231,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('记录ID不能为空', 400, 400);
   }
 
-  if (status !== undefined) await execute('UPDATE ink_usage SET status = ? WHERE id = ?', [status, id]);
-  if (remark !== undefined) await execute('UPDATE ink_usage SET remark = ? WHERE id = ?', [remark, id]);
+  if (status !== undefined)
+    await execute('UPDATE ink_usage SET status = ? WHERE id = ?', [status, id]);
+  if (remark !== undefined)
+    await execute('UPDATE ink_usage SET remark = ? WHERE id = ?', [remark, id]);
 
   return successResponse(null, '更新成功');
 });

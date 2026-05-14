@@ -32,8 +32,12 @@ export class PurchaseOrderStatus {
 
   static from(value: string): PurchaseOrderStatus {
     const validStatuses: PurchaseStatus[] = [
-      'draft', 'submitted', 'approved',
-      'partially_received', 'completed', 'closed',
+      'draft',
+      'submitted',
+      'approved',
+      'partially_received',
+      'completed',
+      'closed',
     ];
     if (!validStatuses.includes(value as PurchaseStatus)) {
       throw new DomainError(`无效的采购单状态: ${value}`);

@@ -64,7 +64,7 @@ export default function NewVehiclePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.vehicle_no) {
       toast.error('请输入车牌号');
       return;
@@ -94,7 +94,7 @@ export default function NewVehiclePage() {
   };
 
   const updateField = (field: keyof VehicleForm, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -128,7 +128,9 @@ export default function NewVehiclePage() {
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="vehicle_no">车牌号 <span className="text-red-500">*</span></Label>
+                <Label htmlFor="vehicle_no">
+                  车牌号 <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="vehicle_no"
                   value={formData.vehicle_no}
@@ -138,7 +140,10 @@ export default function NewVehiclePage() {
               </div>
               <div className="space-y-2">
                 <Label>车辆类型</Label>
-                <Select value={formData.vehicle_type} onValueChange={(v) => updateField('vehicle_type', v)}>
+                <Select
+                  value={formData.vehicle_type}
+                  onValueChange={(v) => updateField('vehicle_type', v)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择类型" />
                   </SelectTrigger>
@@ -153,7 +158,10 @@ export default function NewVehiclePage() {
               </div>
               <div className="space-y-2">
                 <Label>状态</Label>
-                <Select value={formData.status.toString()} onValueChange={(v) => updateField('status', parseInt(v))}>
+                <Select
+                  value={formData.status.toString()}
+                  onValueChange={(v) => updateField('status', parseInt(v))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择状态" />
                   </SelectTrigger>
@@ -230,7 +238,10 @@ export default function NewVehiclePage() {
               </div>
               <div className="space-y-2">
                 <Label>燃油类型</Label>
-                <Select value={formData.fuel_type} onValueChange={(v) => updateField('fuel_type', v)}>
+                <Select
+                  value={formData.fuel_type}
+                  onValueChange={(v) => updateField('fuel_type', v)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="选择燃油类型" />
                   </SelectTrigger>

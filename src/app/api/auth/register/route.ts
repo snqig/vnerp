@@ -49,22 +49,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['username', 'password']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   const { username, password, real_name, email, phone, department_id, role_id } = body;
 
   // 验证用户名格式
   if (!validateUsername(username)) {
-    return errorResponse(
-      '用户名只能包含字母、数字和下划线，长度4-20位',
-      400,
-      400
-    );
+    return errorResponse('用户名只能包含字母、数字和下划线，长度4-20位', 400, 400);
   }
 
   // 验证密码强度
@@ -131,7 +123,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const [result]: any = await connection.execute(
       `INSERT INTO sys_user (username, password, real_name, email, phone, department_id, status, first_login, create_time)
        VALUES (?, ?, ?, ?, ?, ?, 1, 1, NOW())`,
-      [username, hashedPassword, real_name || null, email || null, phone || null, department_id || null]
+      [
+        username,
+        hashedPassword,
+        real_name || null,
+        email || null,
+        phone || null,
+        department_id || null,
+      ]
     );
 
     const newUserId = result.insertId;
@@ -145,10 +144,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       );
 
       if (roleResult.length > 0) {
-        await connection.execute(
-          'INSERT INTO sys_user_role (user_id, role_id) VALUES (?, ?)',
-          [newUserId, role_id]
-        );
+        await connection.execute('INSERT INTO sys_user_role (user_id, role_id) VALUES (?, ?)', [
+          newUserId,
+          role_id,
+        ]);
         roleBound = true;
       }
     } else {
@@ -156,10 +155,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         "SELECT id FROM sys_role WHERE role_code = 'operator' AND deleted = 0 LIMIT 1"
       );
       if (defaultRole.length > 0) {
-        await connection.execute(
-          'INSERT INTO sys_user_role (user_id, role_id) VALUES (?, ?)',
-          [newUserId, defaultRole[0].id]
-        );
+        await connection.execute('INSERT INTO sys_user_role (user_id, role_id) VALUES (?, ?)', [
+          newUserId,
+          defaultRole[0].id,
+        ]);
         roleBound = true;
       }
     }
@@ -177,7 +176,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     oper_type: 'auth',
     oper_method: 'POST',
     oper_url: '/api/auth/register',
-    oper_param: JSON.stringify({ username, real_name: real_name || '', email: email || '', phone: phone || '' }),
+    oper_param: JSON.stringify({
+      username,
+      real_name: real_name || '',
+      email: email || '',
+      phone: phone || '',
+    }),
     oper_result: `用户 ${username} 注册成功`,
     status: 1,
   });

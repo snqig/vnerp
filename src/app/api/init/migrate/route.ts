@@ -10,49 +10,49 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       {
         table: 'inv_trace_record',
         column: 'deleted',
-        definition: 'TINYINT DEFAULT 0 COMMENT \'软删除: 0-否, 1-是\'',
+        definition: "TINYINT DEFAULT 0 COMMENT '软删除: 0-否, 1-是'",
         after: 'remark',
       },
       {
         table: 'inv_material_label',
         column: 'mix_remark',
-        definition: 'VARCHAR(500) COMMENT \'混料备注\'',
+        definition: "VARCHAR(500) COMMENT '混料备注'",
         after: 'color_code',
       },
       {
         table: 'inv_material_label',
         column: 'label_type',
-        definition: 'TINYINT DEFAULT 1 COMMENT \'标签类型: 1-原材料, 2-分切子批, 3-余料\'',
+        definition: "TINYINT DEFAULT 1 COMMENT '标签类型: 1-原材料, 2-分切子批, 3-余料'",
         after: 'is_cut',
       },
       {
         table: 'inv_material_label',
         column: 'remaining_width',
-        definition: 'DECIMAL(18,2) COMMENT \'剩余宽幅（余料）\'',
+        definition: "DECIMAL(18,2) COMMENT '剩余宽幅（余料）'",
         after: 'label_type',
       },
       {
         table: 'inv_material_label',
         column: 'remaining_length',
-        definition: 'DECIMAL(18,2) COMMENT \'剩余长度（余料）\'',
+        definition: "DECIMAL(18,2) COMMENT '剩余长度（余料）'",
         after: 'remaining_width',
       },
       {
         table: 'prd_process_card',
         column: 'lock_status',
-        definition: 'TINYINT DEFAULT 0 COMMENT \'锁住状态: 0-未锁, 1-已锁\'',
+        definition: "TINYINT DEFAULT 0 COMMENT '锁住状态: 0-未锁, 1-已锁'",
         after: 'burdening_status',
       },
       {
         table: 'sys_user',
         column: 'first_login',
-        definition: 'TINYINT DEFAULT 1 COMMENT \'首次登录: 0-否, 1-是\'',
+        definition: "TINYINT DEFAULT 1 COMMENT '首次登录: 0-否, 1-是'",
         after: 'status',
       },
       {
         table: 'sys_user',
         column: 'pwd_update_time',
-        definition: 'DATETIME COMMENT \'密码更新时间\'',
+        definition: "DATETIME COMMENT '密码更新时间'",
         after: 'first_login',
       },
     ];
@@ -104,7 +104,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         );
         results.push(`${idxMigration.table}.${idxMigration.indexName}: 索引添加成功`);
       } catch (err: any) {
-        results.push(`${idxMigration.table}.${idxMigration.indexName}: 索引添加失败 - ${err.message}`);
+        results.push(
+          `${idxMigration.table}.${idxMigration.indexName}: 索引添加失败 - ${err.message}`
+        );
       }
     }
 

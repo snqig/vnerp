@@ -1,10 +1,6 @@
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 
 // 仓库分类统计接口
 interface CategoryStats {
@@ -62,8 +58,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   `);
 
   // 计算额外统计信息
-  const categoryWithMostWarehouses = stats.reduce((max, curr) =>
-    curr.warehouse_count > max.warehouse_count ? curr : max,
+  const categoryWithMostWarehouses = stats.reduce(
+    (max, curr) => (curr.warehouse_count > max.warehouse_count ? curr : max),
     stats[0] || null
   );
 

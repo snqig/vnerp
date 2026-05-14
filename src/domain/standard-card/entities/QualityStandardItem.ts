@@ -2,14 +2,14 @@ export enum DefectLevel {
   FATAL = 'fatal',
   SERIOUS = 'serious',
   GENERAL = 'general',
-  SLIGHT = 'slight'
+  SLIGHT = 'slight',
 }
 
 export const defectLevelLabels: Record<DefectLevel, string> = {
   [DefectLevel.FATAL]: '致命',
   [DefectLevel.SERIOUS]: '严重',
   [DefectLevel.GENERAL]: '一般',
-  [DefectLevel.SLIGHT]: '轻微'
+  [DefectLevel.SLIGHT]: '轻微',
 };
 
 export interface QualityStandardItemProps {
@@ -68,7 +68,7 @@ export class QualityStandardItem {
       inspectionMethod: this.inspectionMethod,
       isKey: this.isKey,
       defectLevel: this.defectLevel,
-      remark: this.remark
+      remark: this.remark,
     };
   }
 }

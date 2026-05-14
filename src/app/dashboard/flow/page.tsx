@@ -7,17 +7,49 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  ArrowRight, Database, ChevronDown, ChevronRight, Link2, Layers,
-  ShoppingCart, Scissors, Factory, Cog, QrCode, Send, ClipboardCheck,
-  PackageCheck, ShieldCheck, Monitor, Server, HardDrive, Cpu,
-  Globe, Lock, Shield, CheckSquare, Workflow, Box, BarChart3,
-  Wrench, Users, Truck, FileText, Tag, Warehouse, FlaskConical,
-  CreditCard, UserCog, LayoutGrid,
+  ArrowRight,
+  Database,
+  ChevronDown,
+  ChevronRight,
+  Link2,
+  Layers,
+  ShoppingCart,
+  Scissors,
+  Factory,
+  Cog,
+  QrCode,
+  Send,
+  ClipboardCheck,
+  PackageCheck,
+  ShieldCheck,
+  Monitor,
+  Server,
+  HardDrive,
+  Cpu,
+  Globe,
+  Lock,
+  Shield,
+  CheckSquare,
+  Workflow,
+  Box,
+  BarChart3,
+  Wrench,
+  Users,
+  Truck,
+  FileText,
+  Tag,
+  Warehouse,
+  FlaskConical,
+  CreditCard,
+  UserCog,
+  LayoutGrid,
 } from 'lucide-react';
 
 const flowNodes = [
   {
-    step: 1, name: '采购入库', icon: ShoppingCart,
+    step: 1,
+    name: '采购入库',
+    icon: ShoppingCart,
     tables: ['pur_request', 'pur_order', 'pur_receipt'],
     fields: ['request_no', 'order_no', 'supplier_id', 'material_id'],
     color: 'from-blue-500 to-blue-600',
@@ -26,7 +58,9 @@ const flowNodes = [
     textColor: 'text-blue-400',
   },
   {
-    step: 2, name: '分切管理', icon: Scissors,
+    step: 2,
+    name: '分切管理',
+    icon: Scissors,
     tables: ['inv_cutting_record', 'inv_material_label'],
     fields: ['cutting_no', 'source_batch_no', 'material_id'],
     color: 'from-cyan-500 to-cyan-600',
@@ -35,7 +69,9 @@ const flowNodes = [
     textColor: 'text-cyan-400',
   },
   {
-    step: 3, name: '工单生产', icon: Factory,
+    step: 3,
+    name: '工单生产',
+    icon: Factory,
     tables: ['prd_work_order', 'prd_process_card'],
     fields: ['work_order_no', 'sales_order_id', 'material_id', 'plan_qty'],
     color: 'from-amber-500 to-amber-600',
@@ -44,7 +80,9 @@ const flowNodes = [
     textColor: 'text-amber-400',
   },
   {
-    step: 4, name: '工艺流程', icon: Cog,
+    step: 4,
+    name: '工艺流程',
+    icon: Cog,
     tables: ['prd_process_card', 'prd_standard_card'],
     fields: ['card_no', 'process_flow', 'sequences'],
     color: 'from-purple-500 to-purple-600',
@@ -53,7 +91,9 @@ const flowNodes = [
     textColor: 'text-purple-400',
   },
   {
-    step: 5, name: '扫码配料', icon: QrCode,
+    step: 5,
+    name: '扫码配料',
+    icon: QrCode,
     tables: ['inv_scan_log', 'prd_material_issue'],
     fields: ['label_no', 'qr_content', 'material_id'],
     color: 'from-emerald-500 to-emerald-600',
@@ -62,7 +102,9 @@ const flowNodes = [
     textColor: 'text-emerald-400',
   },
   {
-    step: 6, name: '扫码发料', icon: Send,
+    step: 6,
+    name: '扫码发料',
+    icon: Send,
     tables: ['prd_material_issue', 'inv_inventory_log'],
     fields: ['issue_no', 'material_id', 'quantity', 'warehouse_id'],
     color: 'from-teal-500 to-teal-600',
@@ -71,7 +113,9 @@ const flowNodes = [
     textColor: 'text-teal-400',
   },
   {
-    step: 7, name: '生产报工', icon: ClipboardCheck,
+    step: 7,
+    name: '生产报工',
+    icon: ClipboardCheck,
     tables: ['prd_work_report'],
     fields: ['report_no', 'work_order_no', 'completed_qty'],
     color: 'from-orange-500 to-orange-600',
@@ -80,7 +124,9 @@ const flowNodes = [
     textColor: 'text-orange-400',
   },
   {
-    step: 8, name: '成品入库', icon: PackageCheck,
+    step: 8,
+    name: '成品入库',
+    icon: PackageCheck,
     tables: ['inv_production_inbound', 'inv_inventory'],
     fields: ['inbound_no', 'product_id', 'quantity', 'batch_no'],
     color: 'from-green-500 to-green-600',
@@ -89,7 +135,9 @@ const flowNodes = [
     textColor: 'text-green-400',
   },
   {
-    step: 9, name: '质量追溯', icon: ShieldCheck,
+    step: 9,
+    name: '质量追溯',
+    icon: ShieldCheck,
     tables: ['inv_trace_record', 'qc_inspection'],
     fields: ['trace_no', 'batch_no', 'material_id'],
     color: 'from-rose-500 to-rose-600',
@@ -166,12 +214,19 @@ interface ModuleGroup {
 
 const moduleGroups: ModuleGroup[] = [
   {
-    name: '系统管理', icon: Shield, color: 'text-slate-400', bgColor: 'bg-slate-500/10',
+    name: '系统管理',
+    icon: Shield,
+    color: 'text-slate-400',
+    bgColor: 'bg-slate-500/10',
     tables: [
       { name: 'sys_user', comment: '用户表', fks: ['department_id → sys_department'] },
       { name: 'sys_department', comment: '部门表', fks: [] },
       { name: 'sys_role', comment: '角色表', fks: [] },
-      { name: 'sys_user_role', comment: '用户角色关联', fks: ['user_id → sys_user', 'role_id → sys_role'] },
+      {
+        name: 'sys_user_role',
+        comment: '用户角色关联',
+        fks: ['user_id → sys_user', 'role_id → sys_role'],
+      },
       { name: 'sys_menu', comment: '菜单表', fks: [] },
       { name: 'sys_role_menu', comment: '角色菜单关联', fks: [] },
       { name: 'sys_operation_log', comment: '操作日志', fks: [] },
@@ -182,7 +237,10 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '客户管理', icon: Users, color: 'text-pink-400', bgColor: 'bg-pink-500/10',
+    name: '客户管理',
+    icon: Users,
+    color: 'text-pink-400',
+    bgColor: 'bg-pink-500/10',
     tables: [
       { name: 'crm_customer', comment: '客户表', fks: [] },
       { name: 'crm_customer_contact', comment: '客户联系人', fks: ['customer_id → crm_customer'] },
@@ -190,53 +248,111 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '供应商管理', icon: Truck, color: 'text-indigo-400', bgColor: 'bg-indigo-500/10',
+    name: '供应商管理',
+    icon: Truck,
+    color: 'text-indigo-400',
+    bgColor: 'bg-indigo-500/10',
     tables: [
       { name: 'pur_supplier', comment: '供应商表', fks: [] },
-      { name: 'pur_supplier_material', comment: '供应商物料', fks: ['supplier_id → pur_supplier', 'material_id → inv_material'] },
+      {
+        name: 'pur_supplier_material',
+        comment: '供应商物料',
+        fks: ['supplier_id → pur_supplier', 'material_id → inv_material'],
+      },
     ],
   },
   {
-    name: '物料管理', icon: Tag, color: 'text-teal-400', bgColor: 'bg-teal-500/10',
+    name: '物料管理',
+    icon: Tag,
+    color: 'text-teal-400',
+    bgColor: 'bg-teal-500/10',
     tables: [
       { name: 'inv_material_category', comment: '物料分类', fks: [] },
       { name: 'inv_material', comment: '物料表', fks: ['category_id → inv_material_category'] },
       { name: 'inv_warehouse', comment: '仓库表', fks: [] },
-      { name: 'inv_inventory', comment: '库存表', fks: ['material_id → inv_material', 'warehouse_id → inv_warehouse'] },
-      { name: 'inv_inventory_log', comment: '库存日志', fks: ['material_id → inv_material', 'warehouse_id → inv_warehouse'] },
+      {
+        name: 'inv_inventory',
+        comment: '库存表',
+        fks: ['material_id → inv_material', 'warehouse_id → inv_warehouse'],
+      },
+      {
+        name: 'inv_inventory_log',
+        comment: '库存日志',
+        fks: ['material_id → inv_material', 'warehouse_id → inv_warehouse'],
+      },
     ],
   },
   {
-    name: '采购管理', icon: ShoppingCart, color: 'text-blue-400', bgColor: 'bg-blue-500/10',
+    name: '采购管理',
+    icon: ShoppingCart,
+    color: 'text-blue-400',
+    bgColor: 'bg-blue-500/10',
     tables: [
       { name: 'pur_request', comment: '采购申请', fks: [] },
-      { name: 'pur_request_detail', comment: '采购申请明细', fks: ['request_id → pur_request', 'material_id → inv_material'] },
+      {
+        name: 'pur_request_detail',
+        comment: '采购申请明细',
+        fks: ['request_id → pur_request', 'material_id → inv_material'],
+      },
       { name: 'pur_order', comment: '采购订单', fks: ['supplier_id → pur_supplier'] },
-      { name: 'pur_order_detail', comment: '采购订单明细', fks: ['order_id → pur_order', 'material_id → inv_material'] },
-      { name: 'pur_receipt', comment: '采购收货', fks: ['order_id → pur_order', 'supplier_id → pur_supplier', 'warehouse_id → inv_warehouse'] },
+      {
+        name: 'pur_order_detail',
+        comment: '采购订单明细',
+        fks: ['order_id → pur_order', 'material_id → inv_material'],
+      },
+      {
+        name: 'pur_receipt',
+        comment: '采购收货',
+        fks: ['order_id → pur_order', 'supplier_id → pur_supplier', 'warehouse_id → inv_warehouse'],
+      },
       { name: 'pur_receipt_detail', comment: '收货明细', fks: [] },
     ],
   },
   {
-    name: '销售管理', icon: FileText, color: 'text-amber-400', bgColor: 'bg-amber-500/10',
+    name: '销售管理',
+    icon: FileText,
+    color: 'text-amber-400',
+    bgColor: 'bg-amber-500/10',
     tables: [
       { name: 'sal_order', comment: '销售订单', fks: ['customer_id → crm_customer'] },
-      { name: 'sal_order_detail', comment: '销售订单明细', fks: ['order_id → sal_order', 'material_id → inv_material'] },
-      { name: 'sal_delivery', comment: '销售发货', fks: ['order_id → sal_order', 'customer_id → crm_customer', 'warehouse_id → inv_warehouse'] },
+      {
+        name: 'sal_order_detail',
+        comment: '销售订单明细',
+        fks: ['order_id → sal_order', 'material_id → inv_material'],
+      },
+      {
+        name: 'sal_delivery',
+        comment: '销售发货',
+        fks: ['order_id → sal_order', 'customer_id → crm_customer', 'warehouse_id → inv_warehouse'],
+      },
       { name: 'sal_delivery_detail', comment: '发货明细', fks: [] },
     ],
   },
   {
-    name: '生产管理', icon: Factory, color: 'text-orange-400', bgColor: 'bg-orange-500/10',
+    name: '生产管理',
+    icon: Factory,
+    color: 'text-orange-400',
+    bgColor: 'bg-orange-500/10',
     tables: [
       { name: 'prd_standard_card', comment: '标准工艺卡', fks: [] },
-      { name: 'prd_work_order', comment: '生产工单', fks: ['sales_order_id → sal_order', 'material_id → inv_material'] },
+      {
+        name: 'prd_work_order',
+        comment: '生产工单',
+        fks: ['sales_order_id → sal_order', 'material_id → inv_material'],
+      },
       { name: 'prd_bom', comment: 'BOM表', fks: ['material_id → inv_material'] },
-      { name: 'prd_bom_detail', comment: 'BOM明细', fks: ['bom_id → prd_bom', 'material_id → inv_material'] },
+      {
+        name: 'prd_bom_detail',
+        comment: 'BOM明细',
+        fks: ['bom_id → prd_bom', 'material_id → inv_material'],
+      },
     ],
   },
   {
-    name: '仓库管理', icon: Warehouse, color: 'text-cyan-400', bgColor: 'bg-cyan-500/10',
+    name: '仓库管理',
+    icon: Warehouse,
+    color: 'text-cyan-400',
+    bgColor: 'bg-cyan-500/10',
     tables: [
       { name: 'inv_inbound_order', comment: '入库单', fks: [] },
       { name: 'inv_outbound_order', comment: '出库单', fks: [] },
@@ -248,7 +364,10 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '质量管理', icon: FlaskConical, color: 'text-rose-400', bgColor: 'bg-rose-500/10',
+    name: '质量管理',
+    icon: FlaskConical,
+    color: 'text-rose-400',
+    bgColor: 'bg-rose-500/10',
     tables: [
       { name: 'qc_inspection', comment: '检验记录', fks: [] },
       { name: 'qc_unqualified', comment: '不合格记录', fks: [] },
@@ -256,15 +375,29 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '财务管理', icon: CreditCard, color: 'text-emerald-400', bgColor: 'bg-emerald-500/10',
+    name: '财务管理',
+    icon: CreditCard,
+    color: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/10',
     tables: [
-      { name: 'fin_receivable', comment: '应收款', fks: ['customer_id → crm_customer', 'source_id → sal_order'] },
-      { name: 'fin_payable', comment: '应付款', fks: ['supplier_id → pur_supplier', 'source_id → pur_order'] },
+      {
+        name: 'fin_receivable',
+        comment: '应收款',
+        fks: ['customer_id → crm_customer', 'source_id → sal_order'],
+      },
+      {
+        name: 'fin_payable',
+        comment: '应付款',
+        fks: ['supplier_id → pur_supplier', 'source_id → pur_order'],
+      },
       { name: 'fin_receipt_record', comment: '收款记录', fks: [] },
     ],
   },
   {
-    name: '人事管理', icon: UserCog, color: 'text-violet-400', bgColor: 'bg-violet-500/10',
+    name: '人事管理',
+    icon: UserCog,
+    color: 'text-violet-400',
+    bgColor: 'bg-violet-500/10',
     tables: [
       { name: 'hr_employee', comment: '员工表', fks: [] },
       { name: 'hr_attendance', comment: '考勤记录', fks: [] },
@@ -272,7 +405,10 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '设备管理', icon: Wrench, color: 'text-lime-400', bgColor: 'bg-lime-500/10',
+    name: '设备管理',
+    icon: Wrench,
+    color: 'text-lime-400',
+    bgColor: 'bg-lime-500/10',
     tables: [
       { name: 'eqp_equipment', comment: '设备表', fks: [] },
       { name: 'eqp_maintenance_record', comment: '保养记录', fks: [] },
@@ -380,16 +516,45 @@ const architectureLayers = [
 
 function Palette(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
     </svg>
   );
 }
 
 function Table(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M12 3v18" /><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" />
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M12 3v18" />
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <path d="M3 9h18" />
+      <path d="M3 15h18" />
     </svg>
   );
 }
@@ -398,17 +563,27 @@ function FlowArrow() {
   return (
     <div className="flex items-center justify-center w-8 shrink-0">
       <svg width="32" height="24" viewBox="0 0 32 24" className="text-muted-foreground/50">
-        <line x1="0" y1="12" x2="24" y2="12" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" />
+        <line
+          x1="0"
+          y1="12"
+          x2="24"
+          y2="12"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeDasharray="4 2"
+        />
         <polygon points="24,6 32,12 24,18" fill="currentColor" />
       </svg>
     </div>
   );
 }
 
-function FlowNodeCard({ node }: { node: typeof flowNodes[0] }) {
+function FlowNodeCard({ node }: { node: (typeof flowNodes)[0] }) {
   const Icon = node.icon;
   return (
-    <Card className={`relative overflow-hidden border ${node.borderColor} ${node.bgColor} backdrop-blur-sm w-44 shrink-0`}>
+    <Card
+      className={`relative overflow-hidden border ${node.borderColor} ${node.bgColor} backdrop-blur-sm w-44 shrink-0`}
+    >
       <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${node.color}`} />
       <CardContent className="p-3 space-y-2">
         <div className="flex items-center gap-2">
@@ -437,7 +612,10 @@ function FlowNodeCard({ node }: { node: typeof flowNodes[0] }) {
           <div className="text-[10px] text-muted-foreground">关键字段</div>
           <div className="flex flex-wrap gap-1">
             {node.fields.map((f) => (
-              <span key={f} className="text-[9px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground font-mono">
+              <span
+                key={f}
+                className="text-[9px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground font-mono"
+              >
                 {f}
               </span>
             ))}
@@ -448,14 +626,16 @@ function FlowNodeCard({ node }: { node: typeof flowNodes[0] }) {
   );
 }
 
-function FieldTrackingCard({ track }: { track: typeof fieldTracking[0] }) {
+function FieldTrackingCard({ track }: { track: (typeof fieldTracking)[0] }) {
   return (
     <Card className={`border ${track.borderColor} ${track.bgColor}`}>
       <CardHeader className="pb-2 pt-3 px-4">
         <CardTitle className="text-sm flex items-center gap-2">
           <Link2 className={`h-4 w-4 ${track.color}`} />
           <span className="font-mono">{track.field}</span>
-          <Badge variant="outline" className="text-[10px] h-4 ml-auto">{track.label}</Badge>
+          <Badge variant="outline" className="text-[10px] h-4 ml-auto">
+            {track.label}
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-3">
@@ -476,7 +656,13 @@ function FieldTrackingCard({ track }: { track: typeof fieldTracking[0] }) {
   );
 }
 
-function ModuleGroupSection({ group, defaultOpen = false }: { group: ModuleGroup; defaultOpen?: boolean }) {
+function ModuleGroupSection({
+  group,
+  defaultOpen = false,
+}: {
+  group: ModuleGroup;
+  defaultOpen?: boolean;
+}) {
   const [open, setOpen] = useState(defaultOpen);
   const Icon = group.icon;
   return (
@@ -489,24 +675,39 @@ function ModuleGroupSection({ group, defaultOpen = false }: { group: ModuleGroup
           <Icon className={`h-4 w-4 ${group.color}`} />
         </div>
         <span className="font-semibold text-sm">{group.name}</span>
-        <Badge variant="secondary" className="text-[10px] h-4">{group.tables.length} 表</Badge>
+        <Badge variant="secondary" className="text-[10px] h-4">
+          {group.tables.length} 表
+        </Badge>
         <div className="ml-auto">
-          {open ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+          {open ? (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          )}
         </div>
       </button>
       {open && (
         <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
           {group.tables.map((table) => (
-            <div key={table.name} className="border border-border rounded-md p-2.5 bg-card hover:bg-muted/30 transition-colors">
+            <div
+              key={table.name}
+              className="border border-border rounded-md p-2.5 bg-card hover:bg-muted/30 transition-colors"
+            >
               <div className="flex items-center gap-2 mb-1.5">
                 <Database className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="font-mono text-xs font-semibold text-foreground/90">{table.name}</span>
+                <span className="font-mono text-xs font-semibold text-foreground/90">
+                  {table.name}
+                </span>
               </div>
               <div className="text-[10px] text-muted-foreground mb-1.5">{table.comment}</div>
               {table.fks.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {table.fks.map((fk) => (
-                    <Badge key={fk} variant="outline" className="text-[8px] px-1 py-0 h-3.5 font-mono text-amber-500 border-amber-500/30">
+                    <Badge
+                      key={fk}
+                      variant="outline"
+                      className="text-[8px] px-1 py-0 h-3.5 font-mono text-amber-500 border-amber-500/30"
+                    >
                       FK: {fk}
                     </Badge>
                   ))}
@@ -520,7 +721,13 @@ function ModuleGroupSection({ group, defaultOpen = false }: { group: ModuleGroup
   );
 }
 
-function ArchitectureLayerCard({ layer, index }: { layer: typeof architectureLayers[0]; index: number }) {
+function ArchitectureLayerCard({
+  layer,
+  index,
+}: {
+  layer: (typeof architectureLayers)[0];
+  index: number;
+}) {
   const Icon = layer.icon;
   return (
     <div className="space-y-0">
@@ -534,7 +741,9 @@ function ArchitectureLayerCard({ layer, index }: { layer: typeof architectureLay
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold">{layer.name}</span>
-                <Badge variant="outline" className="text-[10px] h-4">{layer.subtitle}</Badge>
+                <Badge variant="outline" className="text-[10px] h-4">
+                  {layer.subtitle}
+                </Badge>
               </div>
               <span className="text-xs text-muted-foreground">Layer {index + 1}</span>
             </div>
@@ -543,7 +752,10 @@ function ArchitectureLayerCard({ layer, index }: { layer: typeof architectureLay
             {layer.items.map((item) => {
               const ItemIcon = item.icon;
               return (
-                <div key={item.name} className={`flex items-center gap-2 p-2 rounded-md border border-border bg-muted/20`}>
+                <div
+                  key={item.name}
+                  className={`flex items-center gap-2 p-2 rounded-md border border-border bg-muted/20`}
+                >
                   <ItemIcon className={`h-4 w-4 ${layer.textColor} shrink-0`} />
                   <div className="min-w-0">
                     <div className="text-xs font-medium truncate">{item.name}</div>
@@ -558,7 +770,15 @@ function ArchitectureLayerCard({ layer, index }: { layer: typeof architectureLay
       {index < architectureLayers.length - 1 && (
         <div className="flex justify-center py-1">
           <svg width="40" height="28" viewBox="0 0 40 28" className="text-muted-foreground/40">
-            <line x1="20" y1="0" x2="20" y2="20" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" />
+            <line
+              x1="20"
+              y1="0"
+              x2="20"
+              y2="20"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeDasharray="4 2"
+            />
             <polygon points="12,18 20,28 28,18" fill="currentColor" />
           </svg>
         </div>
@@ -573,7 +793,9 @@ export default function FlowPage() {
       <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">业务流转可视化</h2>
-          <p className="text-muted-foreground mt-1">丝网印刷ERP系统 — 业务链路、表间关联与系统架构全景视图</p>
+          <p className="text-muted-foreground mt-1">
+            丝网印刷ERP系统 — 业务链路、表间关联与系统架构全景视图
+          </p>
         </div>
 
         <Tabs defaultValue="flow" className="space-y-4">
@@ -635,12 +857,22 @@ export default function FlowPage() {
                 <CardTitle className="flex items-center gap-2">
                   <Database className="h-5 w-5 text-cyan-400" />
                   业务表模块分组
-                  <Badge variant="secondary" className="ml-2">48 张表 · 12 个模块</Badge>
+                  <Badge variant="secondary" className="ml-2">
+                    48 张表 · 12 个模块
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {moduleGroups.map((group) => (
-                  <ModuleGroupSection key={group.name} group={group} defaultOpen={group.name === '采购管理' || group.name === '销售管理' || group.name === '生产管理'} />
+                  <ModuleGroupSection
+                    key={group.name}
+                    group={group}
+                    defaultOpen={
+                      group.name === '采购管理' ||
+                      group.name === '销售管理' ||
+                      group.name === '生产管理'
+                    }
+                  />
                 ))}
               </CardContent>
             </Card>
@@ -650,13 +882,18 @@ export default function FlowPage() {
                 <CardTitle className="flex items-center gap-2">
                   <Link2 className="h-5 w-5 text-amber-400" />
                   外键关联清单
-                  <Badge variant="secondary" className="ml-2">{fkConnections.length} 条关联</Badge>
+                  <Badge variant="secondary" className="ml-2">
+                    {fkConnections.length} 条关联
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {fkConnections.map((fk, i) => (
-                    <div key={i} className="flex items-center gap-2 p-2 rounded-md border border-border bg-muted/20">
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 p-2 rounded-md border border-border bg-muted/20"
+                    >
                       <ArrowRight className="h-3 w-3 text-amber-500 shrink-0" />
                       <span className="text-xs font-mono text-foreground/80">{fk}</span>
                     </div>

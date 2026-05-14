@@ -1,7 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface UserItem {
   id: number;
@@ -18,7 +24,12 @@ interface UserSelectProps {
   className?: string;
 }
 
-export function UserSelect({ value, onChange, placeholder = '选择用户', className }: UserSelectProps) {
+export function UserSelect({
+  value,
+  onChange,
+  placeholder = '选择用户',
+  className,
+}: UserSelectProps) {
   const [users, setUsers] = useState<UserItem[]>([]);
 
   useEffect(() => {
@@ -45,7 +56,8 @@ export function UserSelect({ value, onChange, placeholder = '选择用户', clas
       <SelectContent>
         {users.map((u) => (
           <SelectItem key={u.id} value={u.real_name || u.username}>
-            {u.real_name || u.username}{u.dept_name ? ` (${u.dept_name})` : ''}
+            {u.real_name || u.username}
+            {u.dept_name ? ` (${u.dept_name})` : ''}
           </SelectItem>
         ))}
       </SelectContent>

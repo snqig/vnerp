@@ -11,14 +11,14 @@ async function queryPaginatedLocal(
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;
-  
-  const [countResult] = await query<{ total: number }>(countSql, values);
-  const total = countResult?.total || 0;
-  
+
+  const countResult = await query<{ total: number }>(countSql, values);
+  const total = countResult?.[0]?.total || 0;
+
   const paginatedSql = `${sql} LIMIT ? OFFSET ?`;
   const paginatedValues = [...values, pageSize, (page - 1) * pageSize];
   const data = await query(paginatedSql, paginatedValues);
-  
+
   return {
     data,
     pagination: {
@@ -55,7 +55,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       pc.create_user_name as createUserName,
       pc.create_time as createTime,
       pc.update_time as updateTime,
-      COALESCE(sc.customer_name, pc.customer_name) as customerName,
+      COALESCE(sc.customer_name, '') as customerName,
       COALESCE(sc.customer_code, '') as customerCode,
       COALESCE(sc.process_flow1, '') as processFlow1,
       COALESCE(sc.process_flow2, '') as processFlow2,
@@ -116,7 +116,18 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       final_no, card_id, card_no, final_result, qualified_qty, 
       defect_qty, defect_reason, inspector, pack_method, remark, created_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-    [finalNo, cardId, cardNo, finalResult, qualifiedQty, defectQty, defectReason, inspector, packMethod, remark]
+    [
+      finalNo,
+      cardId,
+      cardNo,
+      finalResult,
+      qualifiedQty,
+      defectQty,
+      defectReason,
+      inspector,
+      packMethod,
+      remark,
+    ]
   );
 
   // 更新流程卡状态

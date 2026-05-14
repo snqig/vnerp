@@ -17,7 +17,9 @@ export class SalesShippedHandler implements EventHandler<SalesOrderShippedEvent>
         if (existingInv.length > 0) {
           const currentQty = parseFloat(existingInv[0].quantity);
           if (currentQty < item.quantity) {
-            throw new Error(`物料${item.materialName}库存不足: 当前${currentQty}, 需要出库${item.quantity}`);
+            throw new Error(
+              `物料${item.materialName}库存不足: 当前${currentQty}, 需要出库${item.quantity}`
+            );
           }
           await conn.execute(
             'UPDATE inv_inventory SET quantity = quantity - ?, update_time = NOW() WHERE id = ?',
@@ -50,11 +52,24 @@ export class SalesShippedHandler implements EventHandler<SalesOrderShippedEvent>
         await conn.execute(
           `INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, create_time)
            VALUES (?, 'out', 'sales', ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-          [transNo, orderId, item.materialId, item.materialCode, item.batchNo, item.warehouseId, item.quantity, item.unitPrice, item.quantity * item.unitPrice]
+          [
+            transNo,
+            orderId,
+            item.materialId,
+            item.materialCode,
+            item.batchNo,
+            item.warehouseId,
+            item.quantity,
+            item.unitPrice,
+            item.quantity * item.unitPrice,
+          ]
         );
       }
     });
 
-    secureLog('info', 'Inventory deducted for sales shipment', { orderNo, itemCount: shippedItems.length });
+    secureLog('info', 'Inventory deducted for sales shipment', {
+      orderNo,
+      itemCount: shippedItems.length,
+    });
   }
 }

@@ -16,7 +16,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   if (qrCode && !batchNo) {
     const qrRows: any = await query(
-      "SELECT batch_no, qr_type, ref_id, ref_no, extra_data FROM qrcode_record WHERE qr_code = ? AND deleted = 0",
+      'SELECT batch_no, qr_type, ref_id, ref_no, extra_data FROM qrcode_record WHERE qr_code = ? AND deleted = 0',
       [qrCode]
     );
     if (qrRows.length === 0) {
@@ -150,10 +150,9 @@ async function queryProcessGuide(batchNo: string) {
   );
 
   if (dispatchRows.length > 0 && dispatchRows[0].workorder_id) {
-    const woRows: any = await query(
-      'SELECT * FROM prod_work_order WHERE id = ? AND deleted = 0',
-      [dispatchRows[0].workorder_id]
-    );
+    const woRows: any = await query('SELECT * FROM prod_work_order WHERE id = ? AND deleted = 0', [
+      dispatchRows[0].workorder_id,
+    ]);
 
     if (woRows.length > 0) {
       const wo = woRows[0];
@@ -302,12 +301,16 @@ async function queryInventoryExpiry(batchNo: string) {
       expire_date: batch.expire_date,
       is_expired: isExpired,
       days_until_expiry: daysUntilExpiry,
-      warning_level: daysUntilExpiry !== null
-        ? daysUntilExpiry <= 0 ? 'expired'
-          : daysUntilExpiry <= 7 ? 'critical'
-          : daysUntilExpiry <= 30 ? 'warning'
-          : 'normal'
-        : 'no_expiry',
+      warning_level:
+        daysUntilExpiry !== null
+          ? daysUntilExpiry <= 0
+            ? 'expired'
+            : daysUntilExpiry <= 7
+              ? 'critical'
+              : daysUntilExpiry <= 30
+                ? 'warning'
+                : 'normal'
+          : 'no_expiry',
     };
   }
 

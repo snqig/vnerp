@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       AND TABLE_NAME IN ('sal_sample_order', 'sal_sample_order_history')
     `);
 
-    const existingTables = (tables as any[]).map(t => t.TABLE_NAME);
+    const existingTables = (tables as any[]).map((t) => t.TABLE_NAME);
 
     // 1. 创建打样订单主表
     if (!existingTables.includes('sal_sample_order')) {
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
 
     return successResponse({
       message: '打样订单管理表初始化完成',
-      details: results
+      details: results,
     });
   } catch (error: any) {
     console.error('创建打样订单管理表失败:', error);

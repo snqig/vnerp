@@ -163,10 +163,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 查询打样订单
-  const orders = await query(
-    'SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  const orders = await query('SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0', [id]);
 
   if (!orders || (orders as any[]).length === 0) {
     return commonErrors.notFound('打样订单不存在');
@@ -220,20 +217,14 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 查询打样订单
-  const orders = await query(
-    'SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  const orders = await query('SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0', [id]);
 
   if (!orders || (orders as any[]).length === 0) {
     return commonErrors.notFound('打样订单不存在');
   }
 
   // 软删除
-  await query(
-    'UPDATE sal_sample_order SET deleted = 1, update_time = NOW() WHERE id = ?',
-    [id]
-  );
+  await query('UPDATE sal_sample_order SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
   return successResponse(null, '打样订单删除成功');
 }, '删除打样订单失败');

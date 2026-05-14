@@ -12,14 +12,28 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let where = 'WHERE s.deleted = 0';
   const params: any[] = [];
-  if (settlementNo) { where += ' AND s.settlement_no LIKE ?'; params.push('%' + settlementNo + '%'); }
-  if (outsourceOrderNo) { where += ' AND s.outsource_order_no LIKE ?'; params.push('%' + outsourceOrderNo + '%'); }
-  if (status) { where += ' AND s.status = ?'; params.push(Number(status)); }
+  if (settlementNo) {
+    where += ' AND s.settlement_no LIKE ?';
+    params.push('%' + settlementNo + '%');
+  }
+  if (outsourceOrderNo) {
+    where += ' AND s.outsource_order_no LIKE ?';
+    params.push('%' + outsourceOrderNo + '%');
+  }
+  if (status) {
+    where += ' AND s.status = ?';
+    params.push(Number(status));
+  }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM outsource_settlement s ' + where, params);
+  const totalRows: any = await query(
+    'SELECT COUNT(*) as total FROM outsource_settlement s ' + where,
+    params
+  );
   const total = totalRows[0]?.total || 0;
   const rows: any = await query(
-    'SELECT s.* FROM outsource_settlement s ' + where + ' ORDER BY s.create_time DESC LIMIT ? OFFSET ?',
+    'SELECT s.* FROM outsource_settlement s ' +
+      where +
+      ' ORDER BY s.create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
 
@@ -28,13 +42,28 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { outsource_order_id, outsource_order_no, supplier_id, supplier_name, settlement_date, settlement_qty, unit_price, deduct_amount, remark } = body;
+  const {
+    outsource_order_id,
+    outsource_order_no,
+    supplier_id,
+    supplier_name,
+    settlement_date,
+    settlement_qty,
+    unit_price,
+    deduct_amount,
+    remark,
+  } = body;
 
   if (!outsource_order_id) return errorResponse('委外订单不能为空', 400, 400);
   if (!supplier_id) return errorResponse('供应商不能为空', 400, 400);
 
   const now = new Date();
-  const settlementNo = 'ST' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  const settlementNo =
+    'ST' +
+    now.getFullYear() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0') +
+    String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
   const settlementAmount = (Number(settlement_qty) || 0) * (Number(unit_price) || 0);
   const deductAmt = Number(deduct_amount) || 0;
@@ -43,11 +72,26 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const result: any = await execute(
     `INSERT INTO outsource_settlement (settlement_no, outsource_order_id, outsource_order_no, supplier_id, supplier_name, settlement_date, settlement_qty, unit_price, settlement_amount, deduct_amount, actual_amount, payment_status, status, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?)`,
-    [settlementNo, outsource_order_id, outsource_order_no || null, supplier_id, supplier_name || null,
-     settlement_date || null, settlement_qty || 0, unit_price || 0, settlementAmount, deductAmt, actualAmount, remark || null]
+    [
+      settlementNo,
+      outsource_order_id,
+      outsource_order_no || null,
+      supplier_id,
+      supplier_name || null,
+      settlement_date || null,
+      settlement_qty || 0,
+      unit_price || 0,
+      settlementAmount,
+      deductAmt,
+      actualAmount,
+      remark || null,
+    ]
   );
 
-  return successResponse({ id: result.insertId, settlement_no: settlementNo }, '委外结算单创建成功');
+  return successResponse(
+    { id: result.insertId, settlement_no: settlementNo },
+    '委外结算单创建成功'
+  );
 });
 
 export const PUT = withErrorHandler(async (request: NextRequest) => {
@@ -91,20 +135,40 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
   const fields: string[] = [];
   const values: any[] = [];
-  if (status !== undefined) { fields.push('status = ?'); values.push(status); }
-  if (payment_status !== undefined) { fields.push('payment_status = ?'); values.push(payment_status); }
-  if (payment_date !== undefined) { fields.push('payment_date = ?'); values.push(payment_date); }
+  if (status !== undefined) {
+    fields.push('status = ?');
+    values.push(status);
+  }
+  if (payment_status !== undefined) {
+    fields.push('payment_status = ?');
+    values.push(payment_status);
+  }
+  if (payment_date !== undefined) {
+    fields.push('payment_date = ?');
+    values.push(payment_date);
+  }
   if (deduct_amount !== undefined) {
-    fields.push('ded_amount = ?'); values.push(deduct_amount);
-    const settlement: any = await query('SELECT settlement_amount FROM outsource_settlement WHERE id = ? AND deleted = 0', [id]);
+    fields.push('ded_amount = ?');
+    values.push(deduct_amount);
+    const settlement: any = await query(
+      'SELECT settlement_amount FROM outsource_settlement WHERE id = ? AND deleted = 0',
+      [id]
+    );
     if (settlement && settlement.length > 0) {
-      fields.push('actual_amount = ?'); values.push(Number(settlement[0].settlement_amount) - Number(deduct_amount));
+      fields.push('actual_amount = ?');
+      values.push(Number(settlement[0].settlement_amount) - Number(deduct_amount));
     }
   }
-  if (remark !== undefined) { fields.push('remark = ?'); values.push(remark); }
+  if (remark !== undefined) {
+    fields.push('remark = ?');
+    values.push(remark);
+  }
   if (fields.length > 0) {
     values.push(id);
-    await execute(`UPDATE outsource_settlement SET ${fields.join(', ')} WHERE id = ? AND deleted = 0`, values);
+    await execute(
+      `UPDATE outsource_settlement SET ${fields.join(', ')} WHERE id = ? AND deleted = 0`,
+      values
+    );
   }
 
   return successResponse(null, '结算单更新成功');

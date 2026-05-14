@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  withErrorHandler,
-  logOperation,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, withErrorHandler, logOperation } from '@/lib/api-response';
 import { WarehouseStateMachine, OutboundStatus } from '@/lib/warehouse-state-machine';
-import { allocateFIFO, executeFIFODeduction, executeSpecifiedBatchDeduction } from '@/lib/fifo-allocation';
+import {
+  allocateFIFO,
+  executeFIFODeductionWithRetry,
+  executeSpecifiedBatchDeduction,
+} from '@/lib/fifo-allocation';
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
@@ -33,7 +32,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const orderRow = orderRows[0];
 
     if (!WarehouseStateMachine.canConfirmOutbound(orderRow.status)) {
-      throw new Error(`BAD_REQUEST:当前状态【${WarehouseStateMachine.getOutboundStatusLabel(orderRow.status)}】不允许确认`);
+      throw new Error(
+        `BAD_REQUEST:当前状态【${WarehouseStateMachine.getOutboundStatusLabel(orderRow.status)}】不允许确认`
+      );
     }
 
     const [itemRows]: any = await connection.execute(
@@ -66,7 +67,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         });
         deductionDetails.push(deductionDetail);
       } else {
-        const allocation = await allocateFIFO(connection, item.material_id, orderRow.warehouse_id, requiredQty);
+        const allocation = await allocateFIFO(
+          connection,
+          item.material_id,
+          orderRow.warehouse_id,
+          requiredQty
+        );
 
         if (allocation.shortage > 0) {
           throw new Error(
@@ -74,22 +80,26 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           );
         }
 
-        const { deductionDetails: fifoDetails } = await executeFIFODeduction(connection, allocation, {
-          sourceType: 'outbound_order',
-          sourceId: id,
-          sourceNo: orderRow.order_no,
-          warehouseId: orderRow.warehouse_id,
-          warehouseCode: orderRow.warehouse_code,
-          operatorId: operatorId || null,
-          operatorName: operatorName || null,
-        });
+        const { deductionDetails: fifoDetails } = await executeFIFODeductionWithRetry(
+          connection,
+          allocation,
+          {
+            sourceType: 'outbound_order',
+            sourceId: id,
+            sourceNo: orderRow.order_no,
+            warehouseId: orderRow.warehouse_id,
+            warehouseCode: orderRow.warehouse_code,
+            operatorId: operatorId || null,
+            operatorName: operatorName || null,
+          }
+        );
 
         deductionDetails.push(...fifoDetails);
 
-        await connection.execute(
-          `UPDATE inv_outbound_item SET batch_no = ? WHERE id = ?`,
-          [allocation.allocations.map((a: any) => a.batch_no).join(','), item.id]
-        );
+        await connection.execute(`UPDATE inv_outbound_item SET batch_no = ? WHERE id = ?`, [
+          allocation.allocations.map((a: any) => a.batch_no).join(','),
+          item.id,
+        ]);
       }
 
       await connection.execute(
@@ -168,7 +178,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     orderNo = order.order_no;
 
     if (!WarehouseStateMachine.canTransitionOutbound(order.status, 'pending')) {
-      throw new Error(`BAD_REQUEST:${WarehouseStateMachine.getTransitionError('outbound', order.status, 'pending')}`);
+      throw new Error(
+        `BAD_REQUEST:${WarehouseStateMachine.getTransitionError('outbound', order.status, 'pending')}`
+      );
     }
 
     const [itemRows]: any = await connection.execute(
@@ -176,8 +188,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       [id]
     );
 
-    for (const item of (itemRows || [])) {
-      const batchNos = item.batch_no ? item.batch_no.split(',').map((b: string) => b.trim()).filter(Boolean) : [];
+    for (const item of itemRows || []) {
+      const batchNos = item.batch_no
+        ? item.batch_no
+            .split(',')
+            .map((b: string) => b.trim())
+            .filter(Boolean)
+        : [];
 
       if (batchNos.length <= 1) {
         const [updateResult]: any = await connection.execute(
@@ -210,7 +227,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
                 version = version + 1,
                 update_time = NOW()
               WHERE batch_no = ? AND material_id = ? AND warehouse_id = ?`,
-              [alloc.allocated_qty, alloc.allocated_qty, alloc.batch_no, item.material_id, order.warehouse_id]
+              [
+                alloc.allocated_qty,
+                alloc.allocated_qty,
+                alloc.batch_no,
+                item.material_id,
+                order.warehouse_id,
+              ]
             );
           }
         } else {
@@ -288,8 +311,5 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     status: 1,
   });
 
-  return successResponse(
-    { orderId: id, orderNo, status: 'pending' },
-    '出库单撤销成功，库存已恢复'
-  );
+  return successResponse({ orderId: id, orderNo, status: 'pending' }, '出库单撤销成功，库存已恢复');
 }, '撤销出库失败');

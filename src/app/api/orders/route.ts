@@ -46,18 +46,15 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       `SELECT so.*, c.customer_name FROM sal_order so LEFT JOIN crm_customer c ON so.customer_id = c.id WHERE so.order_no = ? AND so.deleted = 0`,
       [id]
     );
-    
+
     if (!orders || (orders as any[]).length === 0) {
       return commonErrors.notFound('订单不存在');
     }
 
     const order = (orders as any[])[0];
-    
+
     // 获取订单明细
-    let items = await query(
-      'SELECT * FROM sal_order_item WHERE order_id = ?',
-      [order.id]
-    );
+    let items = await query('SELECT * FROM sal_order_item WHERE order_id = ?', [order.id]);
 
     if (!items || (items as any[]).length === 0) {
       items = await query(
@@ -114,10 +111,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   const orderList = await Promise.all(
     (orders as any[]).map(async (order: any) => {
-      let items = await query(
-        'SELECT * FROM sal_order_item WHERE order_id = ?',
-        [order.id]
-      );
+      let items = await query('SELECT * FROM sal_order_item WHERE order_id = ?', [order.id]);
 
       if (!items || (items as any[]).length === 0) {
         items = await query(
@@ -165,11 +159,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   const { customer_id, customer_name, delivery_date, items, remark } = body;
 
-  let finalCustomerId = customer_id || null;
+  const finalCustomerId = customer_id || null;
   let finalCustomerName = customer_name || '';
 
   if (!finalCustomerName && finalCustomerId) {
-    const customer = await queryOne('SELECT customer_name FROM crm_customer WHERE id = ? AND deleted = 0', [finalCustomerId]);
+    const customer = await queryOne(
+      'SELECT customer_name FROM crm_customer WHERE id = ? AND deleted = 0',
+      [finalCustomerId]
+    );
     if (customer) {
       finalCustomerName = (customer as any).customer_name;
     }
@@ -214,14 +211,18 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     await query(
       `INSERT INTO sal_order_item (order_id, material_name, quantity, unit, unit_price, total_price, create_time) 
        VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-      [orderId, item.material_name, item.quantity, item.unit, item.unit_price, item.quantity * item.unit_price]
+      [
+        orderId,
+        item.material_name,
+        item.quantity,
+        item.unit,
+        item.unit_price,
+        item.quantity * item.unit_price,
+      ]
     );
   }
 
-  return successResponse(
-    { id: orderId, order_no: orderNo },
-    '订单创建成功'
-  );
+  return successResponse({ id: orderId, order_no: orderNo }, '订单创建成功');
 }, '创建订单失败');
 
 // PUT - 更新订单
@@ -233,10 +234,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('订单ID不能为空', 400, 400);
   }
 
-  const orders = await query(
-    'SELECT * FROM sal_order WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  const orders = await query('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
 
   if (!orders || (orders as any[]).length === 0) {
     return commonErrors.notFound('订单不存在');
@@ -287,10 +285,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 查询订单
-  const orders = await query(
-    'SELECT * FROM sal_order WHERE id = ? AND deleted = 0',
-    [id]
-  );
+  const orders = await query('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
 
   if (!orders || (orders as any[]).length === 0) {
     return commonErrors.notFound('订单不存在');
@@ -302,10 +297,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('已完成的订单不能删除', 400, 400);
   }
 
-  await query(
-    'UPDATE sal_order SET deleted = 1, update_time = NOW() WHERE id = ?',
-    [order.id]
-  );
+  await query('UPDATE sal_order SET deleted = 1, update_time = NOW() WHERE id = ?', [order.id]);
 
   return successResponse(null, '订单删除成功');
 }, '删除订单失败');

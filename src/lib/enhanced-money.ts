@@ -7,15 +7,17 @@ Decimal.set({
   toExpPos: 21,
 });
 
-export enum RoundingMode {
-  ROUND_HALF_UP = Decimal.ROUND_HALF_UP,
-  ROUND_HALF_DOWN = Decimal.ROUND_HALF_DOWN,
-  ROUND_HALF_EVEN = Decimal.ROUND_HALF_EVEN,
-  ROUND_UP = Decimal.ROUND_UP,
-  ROUND_DOWN = Decimal.ROUND_DOWN,
-  ROUND_CEIL = Decimal.ROUND_CEIL,
-  ROUND_FLOOR = Decimal.ROUND_FLOOR,
-}
+export const RoundingMode = {
+  ROUND_HALF_UP: Decimal.ROUND_HALF_UP,
+  ROUND_HALF_DOWN: Decimal.ROUND_HALF_DOWN,
+  ROUND_HALF_EVEN: Decimal.ROUND_HALF_EVEN,
+  ROUND_UP: Decimal.ROUND_UP,
+  ROUND_DOWN: Decimal.ROUND_DOWN,
+  ROUND_CEIL: Decimal.ROUND_CEIL,
+  ROUND_FLOOR: Decimal.ROUND_FLOOR,
+} as const;
+
+export type RoundingMode = (typeof RoundingMode)[keyof typeof RoundingMode];
 
 export interface MoneyProps {
   amount: number | string | Decimal;
@@ -101,7 +103,11 @@ export class Money {
     return this._amount.lessThan(other._amount);
   }
 
-  add(other: Money, rounding: RoundingMode = RoundingMode.ROUND_HALF_UP, decimals: number = 2): Money {
+  add(
+    other: Money,
+    rounding: RoundingMode = RoundingMode.ROUND_HALF_UP,
+    decimals: number = 2
+  ): Money {
     if (this.currency !== other.currency) {
       throw new Error(`Currency mismatch: ${this.currency} vs ${other.currency}`);
     }
@@ -109,7 +115,11 @@ export class Money {
     return new Money(result, this.currency);
   }
 
-  subtract(other: Money, rounding: RoundingMode = RoundingMode.ROUND_HALF_UP, decimals: number = 2): Money {
+  subtract(
+    other: Money,
+    rounding: RoundingMode = RoundingMode.ROUND_HALF_UP,
+    decimals: number = 2
+  ): Money {
     if (this.currency !== other.currency) {
       throw new Error(`Currency mismatch: ${this.currency} vs ${other.currency}`);
     }
@@ -155,7 +165,10 @@ export class Money {
     let remaining = remainder;
 
     for (let i = 0; i < ratios.length - 1; i++) {
-      const share = remainder.times(ratios[i]).dividedBy(total).toDecimalPlaces(2, RoundingMode.ROUND_HALF_UP);
+      const share = remainder
+        .times(ratios[i])
+        .dividedBy(total)
+        .toDecimalPlaces(2, RoundingMode.ROUND_HALF_UP);
       results.push(share);
       remaining = remaining.minus(share);
     }

@@ -7,7 +7,9 @@ export interface WorkOrderResult {
   materialReqCount: number;
 }
 
-export async function createWorkOrderFromSalesOrder(salesOrderId: number): Promise<WorkOrderResult> {
+export async function createWorkOrderFromSalesOrder(
+  salesOrderId: number
+): Promise<WorkOrderResult> {
   return await transaction(async (conn) => {
     const [salesRows]: any = await conn.execute(
       `SELECT id, order_no, customer_id, total_amount FROM sal_order WHERE id = ? AND deleted = 0`,
@@ -51,7 +53,14 @@ export async function createWorkOrderFromSalesOrder(salesOrderId: number): Promi
     const [woResult]: any = await conn.execute(
       `INSERT INTO prod_work_order (work_order_no, sales_order_id, product_id, product_name, bom_id, plan_qty, status, create_time)
        VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
-      [workOrderNo, salesOrderId, productId, orderItem.material_name || '', bom.id, orderItem.quantity]
+      [
+        workOrderNo,
+        salesOrderId,
+        productId,
+        orderItem.material_name || '',
+        bom.id,
+        orderItem.quantity,
+      ]
     );
 
     const workOrderId = woResult.insertId;
@@ -65,12 +74,20 @@ export async function createWorkOrderFromSalesOrder(salesOrderId: number): Promi
     let materialReqCount = 0;
     for (const line of bomLines) {
       const wasteMultiplier = 1 + Number(line.waste_rate || 0) / 100;
-      const requiredQty = Number(line.consumption_qty) * Number(orderItem.quantity) * wasteMultiplier;
+      const requiredQty =
+        Number(line.consumption_qty) * Number(orderItem.quantity) * wasteMultiplier;
 
       await conn.execute(
         `INSERT INTO prod_work_order_material_req (work_order_id, material_id, material_code, material_name, required_qty, unit)
          VALUES (?, ?, ?, ?, ?, (SELECT unit FROM inv_material_std WHERE id = ? LIMIT 1))`,
-        [workOrderId, line.material_id, line.material_code, line.material_name, requiredQty, line.material_id]
+        [
+          workOrderId,
+          line.material_id,
+          line.material_code,
+          line.material_name,
+          requiredQty,
+          line.material_id,
+        ]
       );
       materialReqCount++;
     }

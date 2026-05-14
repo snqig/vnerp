@@ -38,15 +38,18 @@ export interface ImportTemplate {
   sheetName: string;
   headers: string[];
   sampleData?: any[];
-  validationRules?: Record<string, {
-    required?: boolean;
-    type?: 'string' | 'number' | 'date' | 'boolean';
-    min?: number;
-    max?: number;
-    pattern?: string;
-    enum?: string[];
-    custom?: (value: any) => boolean | string;
-  }>;
+  validationRules?: Record<
+    string,
+    {
+      required?: boolean;
+      type?: 'string' | 'number' | 'date' | 'boolean';
+      min?: number;
+      max?: number;
+      pattern?: string;
+      enum?: string[];
+      custom?: (value: any) => boolean | string;
+    }
+  >;
 }
 
 export class ExcelExportService {
@@ -59,11 +62,11 @@ export class ExcelExportService {
       worksheetData.push([]);
     }
 
-    const headers = options.columns.map(col => col.header);
+    const headers = options.columns.map((col) => col.header);
     worksheetData.push(headers);
 
     for (const row of options.data) {
-      const rowData = options.columns.map(col => {
+      const rowData = options.columns.map((col) => {
         const value = row[col.key];
         if (col.formatter) {
           return col.formatter(value, row);
@@ -76,7 +79,7 @@ export class ExcelExportService {
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
 
     if (options.columns.length > 0) {
-      worksheet['!cols'] = options.columns.map(col => ({
+      worksheet['!cols'] = options.columns.map((col) => ({
         wch: col.width || 15,
       }));
     }
@@ -104,11 +107,11 @@ export class ExcelExportService {
       worksheetData.push([]);
     }
 
-    const headers = options.columns.map(col => col.header);
+    const headers = options.columns.map((col) => col.header);
     worksheetData.push(headers);
 
     for (const row of options.data) {
-      const rowData = options.columns.map(col => {
+      const rowData = options.columns.map((col) => {
         const value = row[col.key];
         if (col.formatter) {
           return col.formatter(value, row);
@@ -227,10 +230,7 @@ export class ExcelImportService {
     };
   }
 
-  static validateAgainstTemplate(
-    data: any[],
-    template: ImportTemplate
-  ): ImportValidationError[] {
+  static validateAgainstTemplate(data: any[], template: ImportTemplate): ImportValidationError[] {
     const errors: ImportValidationError[] = [];
 
     for (let i = 0; i < data.length; i++) {
@@ -356,28 +356,28 @@ export class ExcelImportService {
 export const materialImportSchema = z.object({
   '物料编码 *': z.string().min(1, '物料编码不能为空'),
   '物料名称 *': z.string().min(1, '物料名称不能为空'),
-  '规格型号': z.string().optional(),
-  '单位': z.string().optional(),
-  '分类': z.string().optional(),
-  '安全库存': z.coerce.number().min(0).optional(),
+  规格型号: z.string().optional(),
+  单位: z.string().optional(),
+  分类: z.string().optional(),
+  安全库存: z.coerce.number().min(0).optional(),
   '采购提前期(天)': z.coerce.number().min(0).optional(),
-  '备注': z.string().optional(),
+  备注: z.string().optional(),
 });
 
 export const customerImportSchema = z.object({
   '客户编码 *': z.string().min(1, '客户编码不能为空'),
   '客户名称 *': z.string().min(1, '客户名称不能为空'),
-  '联系人': z.string().optional(),
-  '联系电话': z.string().optional(),
-  '地址': z.string().optional(),
-  '备注': z.string().optional(),
+  联系人: z.string().optional(),
+  联系电话: z.string().optional(),
+  地址: z.string().optional(),
+  备注: z.string().optional(),
 });
 
 export const supplierImportSchema = z.object({
   '供应商编码 *': z.string().min(1, '供应商编码不能为空'),
   '供应商名称 *': z.string().min(1, '供应商名称不能为空'),
-  '联系人': z.string().optional(),
-  '联系电话': z.string().optional(),
-  '地址': z.string().optional(),
-  '备注': z.string().optional(),
+  联系人: z.string().optional(),
+  联系电话: z.string().optional(),
+  地址: z.string().optional(),
+  备注: z.string().optional(),
 });

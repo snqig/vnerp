@@ -6,10 +6,25 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Plus, Edit, Trash2, Warehouse, RefreshCw, Package } from 'lucide-react';
 import { toast } from 'sonner';
+import { authFetch } from '@/lib/auth-fetch';
 
 // 仓库分类接口
 interface WarehouseCategory {
@@ -42,14 +57,20 @@ export function WarehouseCategoryManager() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<Partial<WarehouseCategory>>({});
   const [editing, setEditing] = useState(false);
-  const [stats, setStats] = useState<CategoryStats>({ total: 0, active: 0, inactive: 0, totalWarehouses: 0, activeWarehouses: 0 });
+  const [stats, setStats] = useState<CategoryStats>({
+    total: 0,
+    active: 0,
+    inactive: 0,
+    totalWarehouses: 0,
+    activeWarehouses: 0,
+  });
   const [codeError, setCodeError] = useState('');
 
   // 生成唯一仓库分类编码
   const generateCategoryCode = () => {
     // 从现有分类中提取最大的序号
     let maxNum = 0;
-    categories.forEach(c => {
+    categories.forEach((c) => {
       if (c.code) {
         const match = c.code.match(/WH-CAT-(\d+)/);
         if (match) {
@@ -58,31 +79,31 @@ export function WarehouseCategoryManager() {
         }
       }
     });
-    
+
     // 生成新的编码，确保不重复
     let counter = maxNum + 1;
     let newCode = `WH-CAT-${String(counter).padStart(3, '0')}`;
-    
+
     // 再次检查是否已存在（防止数据库中有但前端未加载的数据）
-    const existingCodes = categories.map(c => c.code);
+    const existingCodes = categories.map((c) => c.code);
     while (existingCodes.includes(newCode)) {
       counter++;
       newCode = `WH-CAT-${String(counter).padStart(3, '0')}`;
     }
-    
+
     return newCode;
   };
 
   // 检查仓库分类编码是否重复
   const checkCodeDuplicate = (code: string, excludeId?: number) => {
-    return categories.some(c => c.code === code && c.id !== excludeId);
+    return categories.some((c) => c.code === code && c.id !== excludeId);
   };
 
   // 获取仓库分类列表（带统计）
   const fetchCategories = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/organization/warehouse-category/stats');
+      const response = await authFetch('/api/organization/warehouse-category/stats');
       const result = await response.json();
       if (result.success) {
         setCategories(result.data.categories);
@@ -91,7 +112,7 @@ export function WarehouseCategoryManager() {
           active: result.data.summary.active_categories,
           inactive: result.data.summary.total_categories - result.data.summary.active_categories,
           totalWarehouses: result.data.summary.total_warehouses,
-          activeWarehouses: result.data.summary.active_warehouses
+          activeWarehouses: result.data.summary.active_warehouses,
         });
       }
     } catch (error) {
@@ -112,14 +133,14 @@ export function WarehouseCategoryManager() {
       toast.error('请输入分类名称');
       return;
     }
-    
+
     // 检查编码重复
     if (checkCodeDuplicate(form.code, form.id)) {
       setCodeError('该分类编码已存在');
       toast.error('该分类编码已存在');
       return;
     }
-    
+
     try {
       const method = editing ? 'PUT' : 'POST';
       const requestBody = {
@@ -128,17 +149,16 @@ export function WarehouseCategoryManager() {
         name: form.name,
         description: form.description,
         sort_order: form.sort_order || 0,
-        status: form.status ?? 1
+        status: form.status ?? 1,
       };
-      
-      const response = await fetch('/api/organization/warehouse-category', {
+
+      const response = await authFetch('/api/organization/warehouse-category', {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         toast.success(editing ? '分类更新成功' : '分类创建成功');
         setDialogOpen(false);
@@ -161,8 +181,8 @@ export function WarehouseCategoryManager() {
   const deleteCategory = async (id: number) => {
     if (!confirm('确定要删除该仓库分类吗？')) return;
     try {
-      const response = await fetch(`/api/organization/warehouse-category?id=${id}`, {
-        method: 'DELETE'
+      const response = await authFetch(`/api/organization/warehouse-category?id=${id}`, {
+        method: 'DELETE',
       });
       const result = await response.json();
       if (result.success) {
@@ -185,9 +205,11 @@ export function WarehouseCategoryManager() {
 
   // 状态标签
   const getStatusBadge = (status: number) => {
-    return status === 1 
-      ? <Badge className="bg-green-100 text-green-800">启用</Badge>
-      : <Badge className="bg-secondary text-secondary-foreground">停用</Badge>;
+    return status === 1 ? (
+      <Badge className="bg-green-100 text-green-800">启用</Badge>
+    ) : (
+      <Badge className="bg-secondary text-secondary-foreground">停用</Badge>
+    );
   };
 
   // 使用率计算
@@ -218,7 +240,9 @@ export function WarehouseCategoryManager() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">启用分类</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {stats.active}
+                </p>
               </div>
               <div className="p-3 bg-green-500/10 rounded-full dark:bg-green-400/15">
                 <Package className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -231,7 +255,9 @@ export function WarehouseCategoryManager() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">仓库总数</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.totalWarehouses}</p>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  {stats.totalWarehouses}
+                </p>
               </div>
               <div className="p-3 bg-purple-500/10 rounded-full dark:bg-purple-400/15">
                 <Warehouse className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -244,7 +270,9 @@ export function WarehouseCategoryManager() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">可用仓库</p>
-                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.activeWarehouses}</p>
+                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  {stats.activeWarehouses}
+                </p>
               </div>
               <div className="p-3 bg-orange-500/10 rounded-full dark:bg-orange-400/15">
                 <Package className="w-6 h-6 text-orange-600 dark:text-orange-400" />
@@ -264,7 +292,7 @@ export function WarehouseCategoryManager() {
             </CardTitle>
             <CardDescription>管理仓库分类，用于资源配置和容量规划</CardDescription>
           </div>
-          <Button 
+          <Button
             onClick={async () => {
               // 如果数据未加载，先加载数据
               if (categories.length === 0 && !loading) {
@@ -312,73 +340,90 @@ export function WarehouseCategoryManager() {
                 ) : (
                   categories.map((category) => (
                     <TableRow key={category.id} className="hover:bg-muted">
-                        <TableCell className="font-medium">{category.code}</TableCell>
-                        <TableCell>
-                          <div>
-                            <span className="font-medium text-foreground">{category.name}</span>
-                            {category.description && (
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{category.description}</p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className={(category.warehouse_count || 0) > 0 ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 dark:bg-blue-400/15 dark:text-blue-400' : 'bg-gray-100 text-muted-foreground'}>
-                            {category.warehouse_count || 0} 个仓库
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground/80">
-                            {(category.total_capacity || 0) > 0 ? `${(category.total_capacity || 0).toLocaleString()} / ${(category.total_used_capacity || 0).toLocaleString()}` : '-'}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {(category.total_capacity || 0) > 0 ? (
-                              <>
-                                <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                                  <div 
-                                    className="h-full bg-blue-500 rounded-full"
-                                    style={{ width: `${getUsageRate(category.total_used_capacity || 0, category.total_capacity || 0)}%` }}
-                                  />
-                                </div>
-                                <span className="text-xs text-muted-foreground">
-                                  {getUsageRate(category.total_used_capacity || 0, category.total_capacity || 0)}%
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-xs text-muted-foreground/60">-</span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{category.sort_order}</TableCell>
-                        <TableCell>{getStatusBadge(category.status)}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setForm(category);
-                                setEditing(true);
-                                setDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteCategory(category.id);
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                      <TableCell className="font-medium">{category.code}</TableCell>
+                      <TableCell>
+                        <div>
+                          <span className="font-medium text-foreground">{category.name}</span>
+                          {category.description && (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                              {category.description}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="secondary"
+                          className={
+                            (category.warehouse_count || 0) > 0
+                              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 dark:bg-blue-400/15 dark:text-blue-400'
+                              : 'bg-gray-100 text-muted-foreground'
+                          }
+                        >
+                          {category.warehouse_count || 0} 个仓库
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground/80">
+                          {(category.total_capacity || 0) > 0
+                            ? `${(category.total_capacity || 0).toLocaleString()} / ${(category.total_used_capacity || 0).toLocaleString()}`
+                            : '-'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {(category.total_capacity || 0) > 0 ? (
+                            <>
+                              <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-blue-500 rounded-full"
+                                  style={{
+                                    width: `${getUsageRate(category.total_used_capacity || 0, category.total_capacity || 0)}%`,
+                                  }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {getUsageRate(
+                                  category.total_used_capacity || 0,
+                                  category.total_capacity || 0
+                                )}
+                                %
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-muted-foreground/60">-</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{category.sort_order}</TableCell>
+                      <TableCell>{getStatusBadge(category.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setForm(category);
+                              setEditing(true);
+                              setDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteCategory(category.id);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
               </TableBody>
@@ -399,14 +444,16 @@ export function WarehouseCategoryManager() {
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>分类编码 <span className="text-red-500">*</span></Label>
+                <Label>
+                  分类编码 <span className="text-red-500">*</span>
+                </Label>
                 <div className="flex gap-2">
-                  <Input 
-                    value={form.code || ''} 
+                  <Input
+                    value={form.code || ''}
                     onChange={(e) => {
                       const value = e.target.value;
-                      setForm({...form, code: value});
-                      
+                      setForm({ ...form, code: value });
+
                       // 实时检测重复
                       if (value && checkCodeDuplicate(value, form.id)) {
                         setCodeError('该分类编码已存在');
@@ -418,12 +465,12 @@ export function WarehouseCategoryManager() {
                     className={codeError ? 'border-red-500' : ''}
                   />
                   {!editing && (
-                    <Button 
+                    <Button
                       type="button"
-                      variant="outline" 
+                      variant="outline"
                       onClick={() => {
                         const newCode = generateCategoryCode();
-                        setForm({...form, code: newCode});
+                        setForm({ ...form, code: newCode });
                         setCodeError('');
                       }}
                     >
@@ -431,34 +478,34 @@ export function WarehouseCategoryManager() {
                     </Button>
                   )}
                 </div>
-                {codeError && (
-                  <p className="text-sm text-red-500">{codeError}</p>
-                )}
+                {codeError && <p className="text-sm text-red-500">{codeError}</p>}
               </div>
               <div className="space-y-2">
-                <Label>分类名称 <span className="text-red-500">*</span></Label>
-                <Input 
-                  value={form.name || ''} 
-                  onChange={(e) => setForm({...form, name: e.target.value})}
+                <Label>
+                  分类名称 <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  value={form.name || ''}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="请输入分类名称"
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label>排序号</Label>
-              <Input 
+              <Input
                 type="number"
-                value={form.sort_order || 0} 
-                onChange={(e) => setForm({...form, sort_order: parseInt(e.target.value) || 0})}
+                value={form.sort_order || 0}
+                onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
                 placeholder="数字越小越靠前"
               />
             </div>
             <div className="space-y-2">
               <Label>状态</Label>
-              <select 
+              <select
                 className="w-full h-9 px-3 rounded-md border border-input bg-transparent"
                 value={form.status ?? 1}
-                onChange={(e) => setForm({...form, status: parseInt(e.target.value)})}
+                onChange={(e) => setForm({ ...form, status: parseInt(e.target.value) })}
               >
                 <option value={1}>启用</option>
                 <option value={0}>停用</option>
@@ -466,22 +513,20 @@ export function WarehouseCategoryManager() {
             </div>
             <div className="space-y-2">
               <Label>分类描述</Label>
-              <textarea 
+              <textarea
                 className="w-full min-h-[80px] px-3 py-2 rounded-md border border-input bg-transparent"
-                value={form.description || ''} 
-                onChange={(e) => setForm({...form, description: e.target.value})}
+                value={form.description || ''}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
                 placeholder="请输入分类描述"
                 rows={3}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} type="button">取消</Button>
-            <Button 
-              onClick={saveCategory} 
-              className="bg-blue-600 hover:bg-blue-700"
-              type="button"
-            >
+            <Button variant="outline" onClick={() => setDialogOpen(false)} type="button">
+              取消
+            </Button>
+            <Button onClick={saveCategory} className="bg-blue-600 hover:bg-blue-700" type="button">
               保存
             </Button>
           </DialogFooter>

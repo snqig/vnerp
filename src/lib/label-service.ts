@@ -179,14 +179,7 @@ export async function generateWorkOrderLabels(params: {
         label_no, qr_code, material_name, unit, batch_no,
         quantity, status, create_time, update_time, deleted
       ) VALUES (?, ?, ?, ?, ?, ?, 'active', NOW(), NOW(), 0)`,
-      [
-        labelNo,
-        qrUuid,
-        params.productName,
-        params.unit,
-        params.workOrderNo,
-        params.quantity,
-      ]
+      [labelNo, qrUuid, params.productName, params.unit, params.workOrderNo, params.quantity]
     );
 
     const [labelRow]: any = await conn.query(
@@ -325,8 +318,8 @@ export function generateZPLLabel(params: {
   labelHeight?: number;
 }): string {
   const dpi = 203;
-  const widthDots = Math.round((params.labelWidth || 60) / 25.4 * dpi);
-  const heightDots = Math.round((params.labelHeight || 40) / 25.4 * dpi);
+  const widthDots = Math.round(((params.labelWidth || 60) / 25.4) * dpi);
+  const heightDots = Math.round(((params.labelHeight || 40) / 25.4) * dpi);
 
   const qrSize = 100;
   const qrX = 10;
@@ -371,18 +364,20 @@ export function generateZPLLabel(params: {
   return zpl;
 }
 
-export function generateZPLBatchLabels(labels: Array<{
-  labelNo: string;
-  qrCode: string;
-  materialCode: string;
-  materialName: string;
-  specification?: string;
-  batchNo: string;
-  quantity: number;
-  unit: string;
-  warehouseName?: string;
-  supplierName?: string;
-}>): string {
+export function generateZPLBatchLabels(
+  labels: Array<{
+    labelNo: string;
+    qrCode: string;
+    materialCode: string;
+    materialName: string;
+    specification?: string;
+    batchNo: string;
+    quantity: number;
+    unit: string;
+    warehouseName?: string;
+    supplierName?: string;
+  }>
+): string {
   return labels
     .map((label) =>
       generateZPLLabel({
@@ -505,10 +500,7 @@ export async function generateFIFOPriorityLabels(params: {
 }
 
 function escapeZPLText(text: string): string {
-  return text
-    .replace(/\\/g, '\\\\')
-    .replace(/\^/g, '\\^')
-    .replace(/~/g, '\\~');
+  return text.replace(/\\/g, '\\\\').replace(/\^/g, '\\^').replace(/~/g, '\\~');
 }
 
 function wrapText(text: string, maxCharsPerLine: number): string[] {

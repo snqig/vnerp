@@ -3,12 +3,7 @@ import { writeFile } from 'fs/promises';
 import { mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import {
-  successResponse,
-  errorResponse,
-  commonErrors,
-  withErrorHandler,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
 
 // 上传配置
 const UPLOAD_CONFIG = {
@@ -71,11 +66,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   // 验证文件大小
   if (!validateFileSize(file)) {
-    return errorResponse(
-      `文件大小不能超过 ${UPLOAD_CONFIG.maxSize / 1024 / 1024}MB`,
-      400,
-      400
-    );
+    return errorResponse(`文件大小不能超过 ${UPLOAD_CONFIG.maxSize / 1024 / 1024}MB`, 400, 400);
   }
 
   // 生成唯一文件名

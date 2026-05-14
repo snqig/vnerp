@@ -19,6 +19,18 @@ import {
 import { Save, ArrowLeft, FlaskConical } from 'lucide-react';
 import { toast } from 'sonner';
 
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 interface SampleOrder {
   id: number;
   sample_no: string;
@@ -56,7 +68,7 @@ export default function EditSampleOrderPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  
+
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -145,7 +157,7 @@ export default function EditSampleOrderPage() {
   };
 
   const handleChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
@@ -156,9 +168,8 @@ export default function EditSampleOrderPage() {
 
     try {
       setIsSaving(true);
-      const response = await fetch('/api/sample/orders', {
+      const response = await authFetch('/api/sample/orders', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: parseInt(id),
           ...formData,
@@ -209,9 +220,7 @@ export default function EditSampleOrderPage() {
                 <FlaskConical className="h-6 w-6 text-blue-500" />
                 编辑打样单
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                修改打样单信息
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">修改打样单信息</p>
             </div>
           </div>
           <Button onClick={handleSave} disabled={isSaving}>
@@ -257,7 +266,10 @@ export default function EditSampleOrderPage() {
 
               <div className="space-y-2">
                 <Label>种类</Label>
-                <Select value={formData.sample_type} onValueChange={(v) => handleChange('sample_type', v)}>
+                <Select
+                  value={formData.sample_type}
+                  onValueChange={(v) => handleChange('sample_type', v)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="请选择种类" />
                   </SelectTrigger>
@@ -342,7 +354,10 @@ export default function EditSampleOrderPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>印刷方式</Label>
-                <Select value={formData.print_method} onValueChange={(v) => handleChange('print_method', v)}>
+                <Select
+                  value={formData.print_method}
+                  onValueChange={(v) => handleChange('print_method', v)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -392,7 +407,10 @@ export default function EditSampleOrderPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>进展详情</Label>
-                <Select value={formData.progress_detail} onValueChange={(v) => handleChange('progress_detail', v)}>
+                <Select
+                  value={formData.progress_detail}
+                  onValueChange={(v) => handleChange('progress_detail', v)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="请选择进展" />
                   </SelectTrigger>
@@ -432,7 +450,10 @@ export default function EditSampleOrderPage() {
 
               <div className="space-y-2">
                 <Label>提供资料</Label>
-                <Select value={formData.provided_material} onValueChange={(v) => handleChange('provided_material', v)}>
+                <Select
+                  value={formData.provided_material}
+                  onValueChange={(v) => handleChange('provided_material', v)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -500,7 +521,9 @@ export default function EditSampleOrderPage() {
                     checked={formData.is_urgent}
                     onCheckedChange={(checked) => handleChange('is_urgent', checked)}
                   />
-                  <Label htmlFor="is_urgent" className="text-red-600">是否急件</Label>
+                  <Label htmlFor="is_urgent" className="text-red-600">
+                    是否急件
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox

@@ -4,7 +4,7 @@ import { MaterialLifecycleService } from '@/application/services/MaterialLifecyc
 
 const service = new MaterialLifecycleService();
 
-async function getHandler(request: NextRequest, { user }: { user: UserInfo }) {
+async function getHandler(request: NextRequest, user: UserInfo) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
 
@@ -33,24 +33,39 @@ async function getHandler(request: NextRequest, { user }: { user: UserInfo }) {
 
       case 'consume':
         const consumePage = searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1;
-        const consumePageSize = searchParams.get('pageSize') ? parseInt(searchParams.get('pageSize')!) : 20;
-        const consumeMaterialId = searchParams.get('materialId') ? parseInt(searchParams.get('materialId')!) : undefined;
-        const consumeWorkOrderId = searchParams.get('workOrderId') ? parseInt(searchParams.get('workOrderId')!) : undefined;
-        const consumeLog = await service.getConsumeLog(consumeMaterialId, consumeWorkOrderId, consumePage, consumePageSize);
+        const consumePageSize = searchParams.get('pageSize')
+          ? parseInt(searchParams.get('pageSize')!)
+          : 20;
+        const consumeMaterialId = searchParams.get('materialId')
+          ? parseInt(searchParams.get('materialId')!)
+          : undefined;
+        const consumeWorkOrderId = searchParams.get('workOrderId')
+          ? parseInt(searchParams.get('workOrderId')!)
+          : undefined;
+        const consumeLog = await service.getConsumeLog(
+          consumeMaterialId,
+          consumeWorkOrderId,
+          consumePage,
+          consumePageSize
+        );
         return NextResponse.json({
           code: 200,
           data: {
             list: consumeLog.list,
             total: consumeLog.total,
             page: consumePage,
-            pageSize: consumePageSize
-          }
+            pageSize: consumePageSize,
+          },
         });
 
       case 'adjustment':
         const adjPage = searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1;
-        const adjPageSize = searchParams.get('pageSize') ? parseInt(searchParams.get('pageSize')!) : 20;
-        const adjMaterialId = searchParams.get('materialId') ? parseInt(searchParams.get('materialId')!) : undefined;
+        const adjPageSize = searchParams.get('pageSize')
+          ? parseInt(searchParams.get('pageSize')!)
+          : 20;
+        const adjMaterialId = searchParams.get('materialId')
+          ? parseInt(searchParams.get('materialId')!)
+          : undefined;
         const adjustmentLog = await service.getAdjustmentLog(adjMaterialId, adjPage, adjPageSize);
         return NextResponse.json({
           code: 200,
@@ -58,8 +73,8 @@ async function getHandler(request: NextRequest, { user }: { user: UserInfo }) {
             list: adjustmentLog.list,
             total: adjustmentLog.total,
             page: adjPage,
-            pageSize: adjPageSize
-          }
+            pageSize: adjPageSize,
+          },
         });
 
       case 'expiry-check':
@@ -70,14 +85,17 @@ async function getHandler(request: NextRequest, { user }: { user: UserInfo }) {
         return NextResponse.json({ code: 400, message: '无效的操作' }, { status: 400 });
     }
   } catch (error: any) {
-    return NextResponse.json({
-      code: 500,
-      message: error.message || '查询失败'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        code: 500,
+        message: error.message || '查询失败',
+      },
+      { status: 500 }
+    );
   }
 }
 
-async function postHandler(request: NextRequest, { user }: { user: UserInfo }) {
+async function postHandler(request: NextRequest, user: UserInfo) {
   try {
     const body = await request.json();
     const { action } = body;
@@ -98,7 +116,7 @@ async function postHandler(request: NextRequest, { user }: { user: UserInfo }) {
           sourceId: body.sourceId,
           sourceNo: body.sourceNo,
           operatorId: user.userId,
-          remark: body.remark
+          remark: body.remark,
         });
         return NextResponse.json({ code: 200, message: '消耗记录成功', data: { id: consumeId } });
 
@@ -112,9 +130,13 @@ async function postHandler(request: NextRequest, { user }: { user: UserInfo }) {
           adjustmentType: body.adjustmentType,
           afterQty: body.afterQty,
           reason: body.reason,
-          operatorId: user.userId
+          operatorId: user.userId,
         });
-        return NextResponse.json({ code: 200, message: '调整单创建成功', data: { id: adjustmentId } });
+        return NextResponse.json({
+          code: 200,
+          message: '调整单创建成功',
+          data: { id: adjustmentId },
+        });
 
       case 'approve':
         if (!body.adjustmentId) {
@@ -127,10 +149,13 @@ async function postHandler(request: NextRequest, { user }: { user: UserInfo }) {
         return NextResponse.json({ code: 400, message: '无效的操作' }, { status: 400 });
     }
   } catch (error: any) {
-    return NextResponse.json({
-      code: 500,
-      message: error.message || '操作失败'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        code: 500,
+        message: error.message || '操作失败',
+      },
+      { status: 500 }
+    );
   }
 }
 

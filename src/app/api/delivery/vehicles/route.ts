@@ -35,10 +35,11 @@ interface Vehicle {
 }
 
 // 构建查询条件
-function buildQueryConditions(params: {
-  status: string | null;
-  keyword: string | null;
-}): { sql: string; countSql: string; values: any[] } {
+function buildQueryConditions(params: { status: string | null; keyword: string | null }): {
+  sql: string;
+  countSql: string;
+  values: any[];
+} {
   let sql = `SELECT * FROM delivery_vehicle WHERE deleted = 0`;
   let countSql = `SELECT COUNT(*) as total FROM delivery_vehicle WHERE deleted = 0`;
   const values: any[] = [];
@@ -109,11 +110,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['vehicle_no', 'vehicle_type']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   // 检查车牌号是否已存在
@@ -172,11 +169,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   const validation = validateRequestBody(body, ['vehicle_no', 'vehicle_type']);
 
   if (!validation.valid) {
-    return errorResponse(
-      `缺少必填字段: ${validation.missing.join(', ')}`,
-      400,
-      400
-    );
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
   }
 
   const vehicleId = parseInt(id);
@@ -260,10 +253,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 软删除
-  await execute(
-    'UPDATE delivery_vehicle SET deleted = 1 WHERE id = ?',
-    [vehicleId]
-  );
+  await execute('UPDATE delivery_vehicle SET deleted = 1 WHERE id = ?', [vehicleId]);
 
   return successResponse(null, '车辆删除成功');
 }, '删除车辆失败');

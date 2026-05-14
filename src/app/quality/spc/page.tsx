@@ -2,13 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -52,6 +46,18 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
 
 interface Material {
   id: number;
@@ -168,12 +174,14 @@ export default function SPCPage() {
       const data = await res.json();
       if (data.success || data.data) {
         const list = Array.isArray(data.data) ? data.data : [];
-        setMaterials(list.map((item: Record<string, unknown>) => ({
-          id: item.id as number,
-          material_code: (item.material_code || '') as string,
-          material_name: (item.material_name || '') as string,
-          unit: (item.unit || '') as string,
-        })));
+        setMaterials(
+          list.map((item: Record<string, unknown>) => ({
+            id: item.id as number,
+            material_code: (item.material_code || '') as string,
+            material_name: (item.material_name || '') as string,
+            unit: (item.unit || '') as string,
+          }))
+        );
       }
     } catch (e) {
       console.error('获取物料失败:', e);
@@ -188,7 +196,7 @@ export default function SPCPage() {
     if (!xbarMaterialId) return;
     setXbarLoading(true);
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `/api/quality/spc?action=xbar-r&materialId=${xbarMaterialId}&inspectionType=${inspectionType}&startDate=${xbarStartDate}&endDate=${xbarEndDate}&subgroupSize=${subgroupSize}`
       );
       const data = await res.json();
@@ -207,7 +215,7 @@ export default function SPCPage() {
     try {
       let url = `/api/quality/spc?action=pareto&startDate=${paretoStartDate}&endDate=${paretoEndDate}`;
       if (paretoMaterialId) url += `&materialId=${paretoMaterialId}`;
-      const res = await fetch(url);
+      const res = await authFetch(url);
       const data = await res.json();
       if (data.success || data.data) {
         setParetoResult(Array.isArray(data.data) ? data.data : []);
@@ -224,7 +232,7 @@ export default function SPCPage() {
     try {
       let url = `/api/quality/spc?action=p-chart&startDate=${pChartStartDate}&endDate=${pChartEndDate}`;
       if (pChartMaterialId) url += `&materialId=${pChartMaterialId}`;
-      const res = await fetch(url);
+      const res = await authFetch(url);
       const data = await res.json();
       if (data.success || data.data) {
         setPChartResult(data.data || data);
@@ -239,9 +247,11 @@ export default function SPCPage() {
   const buildXbarChartData = () => {
     if (!xbarResult) return [];
     const oocXbar = new Set(
-      xbarResult.out_of_control_points.filter((p: OutOfControlPoint) => p.type === 'x_bar').map((p: OutOfControlPoint) => p.subgroup_id)
+      xbarResult.out_of_control_points
+        .filter((p: OutOfControlPoint) => p.type === 'x_bar')
+        .map((p: OutOfControlPoint) => p.subgroup_id)
     );
-    return xbarResult.data_points.map(dp => ({
+    return xbarResult.data_points.map((dp) => ({
       subgroup: `#${dp.subgroup_id}`,
       x_bar: Math.round(dp.x_bar * 10000) / 10000,
       is_ooc: oocXbar.has(dp.subgroup_id),
@@ -251,9 +261,11 @@ export default function SPCPage() {
   const buildRChartData = () => {
     if (!xbarResult) return [];
     const oocRange = new Set(
-      xbarResult.out_of_control_points.filter((p: OutOfControlPoint) => p.type === 'range').map((p: OutOfControlPoint) => p.subgroup_id)
+      xbarResult.out_of_control_points
+        .filter((p: OutOfControlPoint) => p.type === 'range')
+        .map((p: OutOfControlPoint) => p.subgroup_id)
     );
-    return xbarResult.data_points.map(dp => ({
+    return xbarResult.data_points.map((dp) => ({
       subgroup: `#${dp.subgroup_id}`,
       range: Math.round(dp.range * 10000) / 10000,
       is_ooc: oocRange.has(dp.subgroup_id),
@@ -321,11 +333,23 @@ export default function SPCPage() {
                     </div>
                     <div className="space-y-2">
                       <Label>开始日期</Label>
-                      <Input type="date" value={xbarStartDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setXbarStartDate(e.target.value)} />
+                      <Input
+                        type="date"
+                        value={xbarStartDate}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setXbarStartDate(e.target.value)
+                        }
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>结束日期</Label>
-                      <Input type="date" value={xbarEndDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setXbarEndDate(e.target.value)} />
+                      <Input
+                        type="date"
+                        value={xbarEndDate}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setXbarEndDate(e.target.value)
+                        }
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>子组大小</Label>
@@ -334,8 +358,10 @@ export default function SPCPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
-                            <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                          {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                            <SelectItem key={n} value={String(n)}>
+                              {n}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -373,10 +399,14 @@ export default function SPCPage() {
                           <Target className="h-4 w-4 text-blue-600" />
                         </CardHeader>
                         <CardContent>
-                          <div className={`text-2xl font-bold ${capabilityColor(xbarResult.process_capability.cp)}`}>
+                          <div
+                            className={`text-2xl font-bold ${capabilityColor(xbarResult.process_capability.cp)}`}
+                          >
                             {xbarResult.process_capability.cp.toFixed(2)}
                           </div>
-                          <p className="text-xs text-muted-foreground">{capabilityLabel(xbarResult.process_capability.cp)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {capabilityLabel(xbarResult.process_capability.cp)}
+                          </p>
                         </CardContent>
                       </Card>
                       <Card>
@@ -385,10 +415,14 @@ export default function SPCPage() {
                           <Shield className="h-4 w-4 text-green-600" />
                         </CardHeader>
                         <CardContent>
-                          <div className={`text-2xl font-bold ${capabilityColor(xbarResult.process_capability.cpk)}`}>
+                          <div
+                            className={`text-2xl font-bold ${capabilityColor(xbarResult.process_capability.cpk)}`}
+                          >
                             {xbarResult.process_capability.cpk.toFixed(2)}
                           </div>
-                          <p className="text-xs text-muted-foreground">{capabilityLabel(xbarResult.process_capability.cpk)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {capabilityLabel(xbarResult.process_capability.cpk)}
+                          </p>
                         </CardContent>
                       </Card>
                       <Card>
@@ -397,10 +431,14 @@ export default function SPCPage() {
                           <TrendingUp className="h-4 w-4 text-orange-600" />
                         </CardHeader>
                         <CardContent>
-                          <div className={`text-2xl font-bold ${capabilityColor(xbarResult.process_capability.pp)}`}>
+                          <div
+                            className={`text-2xl font-bold ${capabilityColor(xbarResult.process_capability.pp)}`}
+                          >
                             {xbarResult.process_capability.pp.toFixed(2)}
                           </div>
-                          <p className="text-xs text-muted-foreground">{capabilityLabel(xbarResult.process_capability.pp)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {capabilityLabel(xbarResult.process_capability.pp)}
+                          </p>
                         </CardContent>
                       </Card>
                       <Card>
@@ -409,10 +447,14 @@ export default function SPCPage() {
                           <AlertTriangle className="h-4 w-4 text-red-600" />
                         </CardHeader>
                         <CardContent>
-                          <div className={`text-2xl font-bold ${capabilityColor(xbarResult.process_capability.ppk)}`}>
+                          <div
+                            className={`text-2xl font-bold ${capabilityColor(xbarResult.process_capability.ppk)}`}
+                          >
                             {xbarResult.process_capability.ppk.toFixed(2)}
                           </div>
-                          <p className="text-xs text-muted-foreground">{capabilityLabel(xbarResult.process_capability.ppk)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {capabilityLabel(xbarResult.process_capability.ppk)}
+                          </p>
                         </CardContent>
                       </Card>
                     </div>
@@ -430,11 +472,17 @@ export default function SPCPage() {
                         </CardHeader>
                         <CardContent>
                           <div className="flex flex-wrap gap-2">
-                            {xbarResult.out_of_control_points.map((p: OutOfControlPoint, idx: number) => (
-                              <Badge key={idx} className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                子组#{p.subgroup_id} {p.type === 'x_bar' ? 'X均值' : '极差'}={p.value.toFixed(4)}
-                              </Badge>
-                            ))}
+                            {xbarResult.out_of_control_points.map(
+                              (p: OutOfControlPoint, idx: number) => (
+                                <Badge
+                                  key={idx}
+                                  className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                >
+                                  子组#{p.subgroup_id} {p.type === 'x_bar' ? 'X均值' : '极差'}=
+                                  {p.value.toFixed(4)}
+                                </Badge>
+                              )
+                            )}
                           </div>
                         </CardContent>
                       </Card>
@@ -444,13 +492,18 @@ export default function SPCPage() {
                       <CardHeader>
                         <CardTitle>X-bar 均值控制图</CardTitle>
                         <CardDescription>
-                          UCL={xbarResult.x_bar_limits.ucl.toFixed(4)} | CL={xbarResult.x_bar_limits.cl.toFixed(4)} | LCL={xbarResult.x_bar_limits.lcl.toFixed(4)}
+                          UCL={xbarResult.x_bar_limits.ucl.toFixed(4)} | CL=
+                          {xbarResult.x_bar_limits.cl.toFixed(4)} | LCL=
+                          {xbarResult.x_bar_limits.lcl.toFixed(4)}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="h-[300px]">
                           <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={buildXbarChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                            <ComposedChart
+                              data={buildXbarChartData()}
+                              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                            >
                               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                               <XAxis dataKey="subgroup" tick={{ fontSize: 11 }} />
                               <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} />
@@ -461,9 +514,24 @@ export default function SPCPage() {
                                   borderRadius: '8px',
                                 }}
                               />
-                              <ReferenceLine y={xbarResult.x_bar_limits.ucl} stroke="hsl(0, 70%, 50%)" strokeDasharray="5 5" label={{ value: 'UCL', position: 'right', fontSize: 11 }} />
-                              <ReferenceLine y={xbarResult.x_bar_limits.cl} stroke="hsl(220, 70%, 50%)" strokeDasharray="3 3" label={{ value: 'CL', position: 'right', fontSize: 11 }} />
-                              <ReferenceLine y={xbarResult.x_bar_limits.lcl} stroke="hsl(0, 70%, 50%)" strokeDasharray="5 5" label={{ value: 'LCL', position: 'right', fontSize: 11 }} />
+                              <ReferenceLine
+                                y={xbarResult.x_bar_limits.ucl}
+                                stroke="hsl(0, 70%, 50%)"
+                                strokeDasharray="5 5"
+                                label={{ value: 'UCL', position: 'right', fontSize: 11 }}
+                              />
+                              <ReferenceLine
+                                y={xbarResult.x_bar_limits.cl}
+                                stroke="hsl(220, 70%, 50%)"
+                                strokeDasharray="3 3"
+                                label={{ value: 'CL', position: 'right', fontSize: 11 }}
+                              />
+                              <ReferenceLine
+                                y={xbarResult.x_bar_limits.lcl}
+                                stroke="hsl(0, 70%, 50%)"
+                                strokeDasharray="5 5"
+                                label={{ value: 'LCL', position: 'right', fontSize: 11 }}
+                              />
                               <Line
                                 type="monotone"
                                 dataKey="x_bar"
@@ -473,7 +541,10 @@ export default function SPCPage() {
                                 dot={(props: Record<string, unknown>) => {
                                   const cx = props.cx as number;
                                   const cy = props.cy as number;
-                                  const payload = props.payload as { is_ooc: boolean; subgroup: string };
+                                  const payload = props.payload as {
+                                    is_ooc: boolean;
+                                    subgroup: string;
+                                  };
                                   if (payload.is_ooc) {
                                     return (
                                       <circle
@@ -510,13 +581,18 @@ export default function SPCPage() {
                       <CardHeader>
                         <CardTitle>R 极差控制图</CardTitle>
                         <CardDescription>
-                          UCL={xbarResult.r_limits.ucl.toFixed(4)} | CL={xbarResult.r_limits.cl.toFixed(4)} | LCL={xbarResult.r_limits.lcl.toFixed(4)}
+                          UCL={xbarResult.r_limits.ucl.toFixed(4)} | CL=
+                          {xbarResult.r_limits.cl.toFixed(4)} | LCL=
+                          {xbarResult.r_limits.lcl.toFixed(4)}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="h-[300px]">
                           <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={buildRChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                            <ComposedChart
+                              data={buildRChartData()}
+                              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                            >
                               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                               <XAxis dataKey="subgroup" tick={{ fontSize: 11 }} />
                               <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11 }} />
@@ -527,9 +603,24 @@ export default function SPCPage() {
                                   borderRadius: '8px',
                                 }}
                               />
-                              <ReferenceLine y={xbarResult.r_limits.ucl} stroke="hsl(0, 70%, 50%)" strokeDasharray="5 5" label={{ value: 'UCL', position: 'right', fontSize: 11 }} />
-                              <ReferenceLine y={xbarResult.r_limits.cl} stroke="hsl(142, 70%, 40%)" strokeDasharray="3 3" label={{ value: 'CL', position: 'right', fontSize: 11 }} />
-                              <ReferenceLine y={xbarResult.r_limits.lcl} stroke="hsl(0, 70%, 50%)" strokeDasharray="5 5" label={{ value: 'LCL', position: 'right', fontSize: 11 }} />
+                              <ReferenceLine
+                                y={xbarResult.r_limits.ucl}
+                                stroke="hsl(0, 70%, 50%)"
+                                strokeDasharray="5 5"
+                                label={{ value: 'UCL', position: 'right', fontSize: 11 }}
+                              />
+                              <ReferenceLine
+                                y={xbarResult.r_limits.cl}
+                                stroke="hsl(142, 70%, 40%)"
+                                strokeDasharray="3 3"
+                                label={{ value: 'CL', position: 'right', fontSize: 11 }}
+                              />
+                              <ReferenceLine
+                                y={xbarResult.r_limits.lcl}
+                                stroke="hsl(0, 70%, 50%)"
+                                strokeDasharray="5 5"
+                                label={{ value: 'LCL', position: 'right', fontSize: 11 }}
+                              />
                               <Line
                                 type="monotone"
                                 dataKey="range"
@@ -539,7 +630,10 @@ export default function SPCPage() {
                                 dot={(props: Record<string, unknown>) => {
                                   const cx = props.cx as number;
                                   const cy = props.cy as number;
-                                  const payload = props.payload as { is_ooc: boolean; subgroup: string };
+                                  const payload = props.payload as {
+                                    is_ooc: boolean;
+                                    subgroup: string;
+                                  };
                                   if (payload.is_ooc) {
                                     return (
                                       <circle
@@ -591,17 +685,34 @@ export default function SPCPage() {
                             </TableHeader>
                             <TableBody>
                               {xbarResult.data_points.map((dp: SPCDataPoint, idx: number) => {
-                                const isOocXbar = xbarResult.out_of_control_points.some((p: OutOfControlPoint) => p.subgroup_id === dp.subgroup_id && p.type === 'x_bar');
-                                const isOocRange = xbarResult.out_of_control_points.some((p: OutOfControlPoint) => p.subgroup_id === dp.subgroup_id && p.type === 'range');
+                                const isOocXbar = xbarResult.out_of_control_points.some(
+                                  (p: OutOfControlPoint) =>
+                                    p.subgroup_id === dp.subgroup_id && p.type === 'x_bar'
+                                );
+                                const isOocRange = xbarResult.out_of_control_points.some(
+                                  (p: OutOfControlPoint) =>
+                                    p.subgroup_id === dp.subgroup_id && p.type === 'range'
+                                );
                                 return (
-                                  <TableRow key={idx} className={(isOocXbar || isOocRange) ? 'bg-red-50 dark:bg-red-950/20' : ''}>
+                                  <TableRow
+                                    key={idx}
+                                    className={
+                                      isOocXbar || isOocRange ? 'bg-red-50 dark:bg-red-950/20' : ''
+                                    }
+                                  >
                                     <TableCell className="font-medium">#{dp.subgroup_id}</TableCell>
-                                    <TableCell className="text-sm">{dp.timestamp?.substring(0, 19) || '-'}</TableCell>
+                                    <TableCell className="text-sm">
+                                      {dp.timestamp?.substring(0, 19) || '-'}
+                                    </TableCell>
                                     <TableCell className="text-sm font-mono">
                                       [{dp.values.map((v: number) => v.toFixed(2)).join(', ')}]
                                     </TableCell>
-                                    <TableCell className="text-right">{dp.x_bar.toFixed(4)}</TableCell>
-                                    <TableCell className="text-right">{dp.range.toFixed(4)}</TableCell>
+                                    <TableCell className="text-right">
+                                      {dp.x_bar.toFixed(4)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      {dp.range.toFixed(4)}
+                                    </TableCell>
                                     <TableCell>
                                       {isOocXbar && (
                                         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 mr-1">
@@ -614,7 +725,10 @@ export default function SPCPage() {
                                         </Badge>
                                       )}
                                       {!isOocXbar && !isOocRange && (
-                                        <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                        <Badge
+                                          variant="outline"
+                                          className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                        >
                                           正常
                                         </Badge>
                                       )}
@@ -647,11 +761,23 @@ export default function SPCPage() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div className="space-y-2">
                       <Label>开始日期</Label>
-                      <Input type="date" value={paretoStartDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setParetoStartDate(e.target.value)} />
+                      <Input
+                        type="date"
+                        value={paretoStartDate}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setParetoStartDate(e.target.value)
+                        }
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>结束日期</Label>
-                      <Input type="date" value={paretoEndDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setParetoEndDate(e.target.value)} />
+                      <Input
+                        type="date"
+                        value={paretoEndDate}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setParetoEndDate(e.target.value)
+                        }
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>物料（可选）</Label>
@@ -703,7 +829,10 @@ export default function SPCPage() {
                       <CardContent>
                         <div className="h-[400px]">
                           <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={paretoResult} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                            <ComposedChart
+                              data={paretoResult}
+                              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                            >
                               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                               <XAxis
                                 dataKey="defect_type"
@@ -715,14 +844,24 @@ export default function SPCPage() {
                               <YAxis
                                 yAxisId="left"
                                 tick={{ fontSize: 11 }}
-                                label={{ value: '数量', angle: -90, position: 'insideLeft', fontSize: 12 }}
+                                label={{
+                                  value: '数量',
+                                  angle: -90,
+                                  position: 'insideLeft',
+                                  fontSize: 12,
+                                }}
                               />
                               <YAxis
                                 yAxisId="right"
                                 orientation="right"
                                 domain={[0, 100]}
                                 tick={{ fontSize: 11 }}
-                                label={{ value: '累计%', angle: 90, position: 'insideRight', fontSize: 12 }}
+                                label={{
+                                  value: '累计%',
+                                  angle: 90,
+                                  position: 'insideRight',
+                                  fontSize: 12,
+                                }}
                               />
                               <Tooltip
                                 contentStyle={{
@@ -736,7 +875,18 @@ export default function SPCPage() {
                                 }}
                               />
                               <Legend />
-                              <ReferenceLine yAxisId="right" y={80} stroke="hsl(0, 70%, 50%)" strokeDasharray="8 4" label={{ value: '80%', position: 'right', fontSize: 11, fill: 'hsl(0, 70%, 50%)' }} />
+                              <ReferenceLine
+                                yAxisId="right"
+                                y={80}
+                                stroke="hsl(0, 70%, 50%)"
+                                strokeDasharray="8 4"
+                                label={{
+                                  value: '80%',
+                                  position: 'right',
+                                  fontSize: 11,
+                                  fill: 'hsl(0, 70%, 50%)',
+                                }}
+                              />
                               <Bar
                                 yAxisId="left"
                                 dataKey="count"
@@ -777,11 +927,22 @@ export default function SPCPage() {
                             </TableHeader>
                             <TableBody>
                               {paretoResult.map((item: ParetoItem, idx: number) => (
-                                <TableRow key={idx} className={item.cumulative_percentage <= 80 ? 'bg-red-50 dark:bg-red-950/20' : ''}>
+                                <TableRow
+                                  key={idx}
+                                  className={
+                                    item.cumulative_percentage <= 80
+                                      ? 'bg-red-50 dark:bg-red-950/20'
+                                      : ''
+                                  }
+                                >
                                   <TableCell className="font-medium">{item.defect_type}</TableCell>
                                   <TableCell className="text-right">{item.count}</TableCell>
-                                  <TableCell className="text-right">{item.percentage.toFixed(1)}%</TableCell>
-                                  <TableCell className="text-right">{item.cumulative_percentage.toFixed(1)}%</TableCell>
+                                  <TableCell className="text-right">
+                                    {item.percentage.toFixed(1)}%
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {item.cumulative_percentage.toFixed(1)}%
+                                  </TableCell>
                                   <TableCell>
                                     {item.cumulative_percentage <= 80 ? (
                                       <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
@@ -824,11 +985,23 @@ export default function SPCPage() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div className="space-y-2">
                       <Label>开始日期</Label>
-                      <Input type="date" value={pChartStartDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPChartStartDate(e.target.value)} />
+                      <Input
+                        type="date"
+                        value={pChartStartDate}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setPChartStartDate(e.target.value)
+                        }
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>结束日期</Label>
-                      <Input type="date" value={pChartEndDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPChartEndDate(e.target.value)} />
+                      <Input
+                        type="date"
+                        value={pChartEndDate}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setPChartEndDate(e.target.value)
+                        }
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label>物料（可选）</Label>
@@ -885,11 +1058,16 @@ export default function SPCPage() {
                         </CardHeader>
                         <CardContent>
                           <div className="flex flex-wrap gap-2">
-                            {pChartResult.out_of_control_points.map((p: { period: string; rate: number; limit: number }, idx: number) => (
-                              <Badge key={idx} className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                {p.period} 不良率={(p.rate * 100).toFixed(2)}%
-                              </Badge>
-                            ))}
+                            {pChartResult.out_of_control_points.map(
+                              (p: { period: string; rate: number; limit: number }, idx: number) => (
+                                <Badge
+                                  key={idx}
+                                  className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                >
+                                  {p.period} 不良率={(p.rate * 100).toFixed(2)}%
+                                </Badge>
+                              )
+                            )}
                           </div>
                         </CardContent>
                       </Card>
@@ -899,7 +1077,9 @@ export default function SPCPage() {
                       <CardHeader>
                         <CardTitle>P 不合格品率控制图</CardTitle>
                         <CardDescription>
-                          UCL={(pChartResult.limits.ucl * 100).toFixed(2)}% | CL={(pChartResult.limits.cl * 100).toFixed(2)}% | LCL={(pChartResult.limits.lcl * 100).toFixed(2)}%
+                          UCL={(pChartResult.limits.ucl * 100).toFixed(2)}% | CL=
+                          {(pChartResult.limits.cl * 100).toFixed(2)}% | LCL=
+                          {(pChartResult.limits.lcl * 100).toFixed(2)}%
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -909,7 +1089,10 @@ export default function SPCPage() {
                               data={pChartResult.data_points.map((dp: PChartDataPoint) => ({
                                 period: dp.period,
                                 defective_rate: Math.round(dp.defective_rate * 10000) / 100,
-                                is_ooc: pChartResult.out_of_control_points.some((ooc: { period: string; rate: number; limit: number }) => ooc.period === dp.period),
+                                is_ooc: pChartResult.out_of_control_points.some(
+                                  (ooc: { period: string; rate: number; limit: number }) =>
+                                    ooc.period === dp.period
+                                ),
                               }))}
                               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                             >
@@ -917,7 +1100,12 @@ export default function SPCPage() {
                               <XAxis dataKey="period" tick={{ fontSize: 11 }} />
                               <YAxis
                                 tick={{ fontSize: 11 }}
-                                label={{ value: '不良率(%)', angle: -90, position: 'insideLeft', fontSize: 12 }}
+                                label={{
+                                  value: '不良率(%)',
+                                  angle: -90,
+                                  position: 'insideLeft',
+                                  fontSize: 12,
+                                }}
                               />
                               <Tooltip
                                 contentStyle={{
@@ -927,9 +1115,24 @@ export default function SPCPage() {
                                 }}
                                 formatter={(value: number) => [`${value.toFixed(2)}%`, '不良率']}
                               />
-                              <ReferenceLine y={pChartResult.limits.ucl * 100} stroke="hsl(0, 70%, 50%)" strokeDasharray="5 5" label={{ value: 'UCL', position: 'right', fontSize: 11 }} />
-                              <ReferenceLine y={pChartResult.limits.cl * 100} stroke="hsl(220, 70%, 50%)" strokeDasharray="3 3" label={{ value: 'CL', position: 'right', fontSize: 11 }} />
-                              <ReferenceLine y={pChartResult.limits.lcl * 100} stroke="hsl(0, 70%, 50%)" strokeDasharray="5 5" label={{ value: 'LCL', position: 'right', fontSize: 11 }} />
+                              <ReferenceLine
+                                y={pChartResult.limits.ucl * 100}
+                                stroke="hsl(0, 70%, 50%)"
+                                strokeDasharray="5 5"
+                                label={{ value: 'UCL', position: 'right', fontSize: 11 }}
+                              />
+                              <ReferenceLine
+                                y={pChartResult.limits.cl * 100}
+                                stroke="hsl(220, 70%, 50%)"
+                                strokeDasharray="3 3"
+                                label={{ value: 'CL', position: 'right', fontSize: 11 }}
+                              />
+                              <ReferenceLine
+                                y={pChartResult.limits.lcl * 100}
+                                stroke="hsl(0, 70%, 50%)"
+                                strokeDasharray="5 5"
+                                label={{ value: 'LCL', position: 'right', fontSize: 11 }}
+                              />
                               <Line
                                 type="monotone"
                                 dataKey="defective_rate"
@@ -939,7 +1142,10 @@ export default function SPCPage() {
                                 dot={(props: Record<string, unknown>) => {
                                   const cx = props.cx as number;
                                   const cy = props.cy as number;
-                                  const payload = props.payload as { is_ooc: boolean; period: string };
+                                  const payload = props.payload as {
+                                    is_ooc: boolean;
+                                    period: string;
+                                  };
                                   if (payload.is_ooc) {
                                     return (
                                       <circle
@@ -990,12 +1196,22 @@ export default function SPCPage() {
                             </TableHeader>
                             <TableBody>
                               {pChartResult.data_points.map((dp: PChartDataPoint, idx: number) => {
-                                const isOoc = pChartResult.out_of_control_points.some((ooc: { period: string; rate: number; limit: number }) => ooc.period === dp.period);
+                                const isOoc = pChartResult.out_of_control_points.some(
+                                  (ooc: { period: string; rate: number; limit: number }) =>
+                                    ooc.period === dp.period
+                                );
                                 return (
-                                  <TableRow key={idx} className={isOoc ? 'bg-red-50 dark:bg-red-950/20' : ''}>
+                                  <TableRow
+                                    key={idx}
+                                    className={isOoc ? 'bg-red-50 dark:bg-red-950/20' : ''}
+                                  >
                                     <TableCell className="font-medium">{dp.period}</TableCell>
-                                    <TableCell className="text-right">{(dp.inspected ?? 0).toLocaleString()}</TableCell>
-                                    <TableCell className="text-right">{(dp.defective ?? 0).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right">
+                                      {(dp.inspected ?? 0).toLocaleString()}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      {(dp.defective ?? 0).toLocaleString()}
+                                    </TableCell>
                                     <TableCell className="text-right font-semibold">
                                       {(dp.defective_rate * 100).toFixed(2)}%
                                     </TableCell>
@@ -1006,7 +1222,10 @@ export default function SPCPage() {
                                           异常
                                         </Badge>
                                       ) : (
-                                        <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                        <Badge
+                                          variant="outline"
+                                          className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                        >
                                           正常
                                         </Badge>
                                       )}

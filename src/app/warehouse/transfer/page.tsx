@@ -6,12 +6,43 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Search, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown, QrCode, PackageOpen, PackageCheck, Eye } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  QrCode,
+  PackageOpen,
+  PackageCheck,
+  Eye,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 
@@ -57,20 +88,35 @@ interface Warehouse {
   name: string;
 }
 
-const STATUS_MAP: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const STATUS_MAP: Record<
+  number,
+  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+> = {
   0: { label: '草稿', variant: 'outline' },
   1: { label: '待审批', variant: 'secondary' },
   2: { label: '已出库', variant: 'default' },
   3: { label: '已入库', variant: 'default' },
-  4: { label: '已取消', variant: 'destructive' }
+  4: { label: '已取消', variant: 'destructive' },
 };
 
 const TYPE_MAP: Record<number, string> = {
   1: '库位调拨',
-  2: '仓库调拨'
+  2: '仓库调拨',
 };
 
 export default function TransferPage() {
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const { toast } = useToast();
   const [list, setList] = useState<TransferOrder[]>([]);
   const [total, setTotal] = useState(0);
@@ -79,7 +125,9 @@ export default function TransferPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState<Partial<TransferOrder>>({});
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [locations, setLocations] = useState<{ id: number; code: string; name: string; wh_id: number }[]>([]);
+  const [locations, setLocations] = useState<
+    { id: number; code: string; name: string; wh_id: number }[]
+  >([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sortField, setSortField] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -88,7 +136,9 @@ export default function TransferPage() {
   const [showInboundDialog, setShowInboundDialog] = useState(false);
   const [currentTransferId, setCurrentTransferId] = useState<number | null>(null);
   const [transferItems, setTransferItems] = useState<TransferItem[]>([]);
-  const [scanItems, setScanItems] = useState<{ material_id: number; qr_code: string; quantity: number }[]>([]);
+  const [scanItems, setScanItems] = useState<
+    { material_id: number; qr_code: string; quantity: number }[]
+  >([]);
 
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [detailItems, setDetailItems] = useState<TransferItem[]>([]);
@@ -96,8 +146,12 @@ export default function TransferPage() {
 
   const fetchData = async () => {
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: '20', transferNo: searchNo });
-      const res = await fetch('/api/warehouse/transfer?' + params);
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: '20',
+        transferNo: searchNo,
+      });
+      const res = await authFetch('/api/warehouse/transfer?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -110,7 +164,7 @@ export default function TransferPage() {
 
   const fetchWarehouses = async () => {
     try {
-      const res = await fetch('/api/warehouse?status=active');
+      const res = await authFetch('/api/warehouse?status=active');
       const result = await res.json();
       if (result.success) {
         setWarehouses(result.data?.map((w: any) => ({ id: w.id, name: w.name })) || []);
@@ -122,18 +176,23 @@ export default function TransferPage() {
 
   const fetchLocations = async (whId: number) => {
     try {
-      const res = await fetch(`/api/warehouse/locations?wh_id=${whId}`);
+      const res = await authFetch(`/api/warehouse/locations?wh_id=${whId}`);
       const result = await res.json();
       if (result.success) {
-        setLocations(result.data || []);
+        const locationsList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        setLocations(locationsList);
       }
     } catch (e) {
       console.error(e);
     }
   };
 
-  useEffect(() => { fetchData(); }, [page]);
-  useEffect(() => { fetchWarehouses(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, [page]);
+  useEffect(() => {
+    fetchWarehouses();
+  }, []);
 
   const handleSave = async () => {
     if (!editItem.from_warehouse_id) {
@@ -146,9 +205,8 @@ export default function TransferPage() {
     }
 
     try {
-      const res = await fetch('/api/warehouse/transfer', {
+      const res = await authFetch('/api/warehouse/transfer', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: editItem.type || 1,
           from_warehouse_id: editItem.from_warehouse_id,
@@ -156,8 +214,8 @@ export default function TransferPage() {
           from_location: editItem.from_location,
           to_location: editItem.to_location,
           applicant_id: editItem.applicant_id,
-          remark: editItem.remark
-        })
+          remark: editItem.remark,
+        }),
       });
       const result = await res.json();
 
@@ -178,10 +236,9 @@ export default function TransferPage() {
       const body: any = { id, action };
       if (extraData) Object.assign(body, extraData);
 
-      const res = await fetch('/api/warehouse/transfer', {
+      const res = await authFetch('/api/warehouse/transfer', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
       const result = await res.json();
 
@@ -199,7 +256,7 @@ export default function TransferPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
     try {
-      const res = await fetch(`/api/warehouse/transfer?id=${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/warehouse/transfer?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });
@@ -215,10 +272,11 @@ export default function TransferPage() {
   const openOutboundDialog = async (transfer: TransferOrder) => {
     setCurrentTransferId(transfer.id);
     try {
-      const res = await fetch(`/api/warehouse/transfer/${transfer.id}/items`);
+      const res = await authFetch(`/api/warehouse/transfer/${transfer.id}/items`);
       const result = await res.json();
       if (result.success) {
-        setTransferItems(result.data || []);
+        const transferitemsList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        setTransferItems(transferitemsList);
         setScanItems([]);
         setShowOutboundDialog(true);
       }
@@ -234,10 +292,9 @@ export default function TransferPage() {
     }
 
     try {
-      const res = await fetch(`/api/warehouse/transfer/${currentTransferId}/outbound`, {
+      const res = await authFetch(`/api/warehouse/transfer/${currentTransferId}/outbound`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: scanItems })
+        body: JSON.stringify({ items: scanItems }),
       });
       const result = await res.json();
 
@@ -256,10 +313,11 @@ export default function TransferPage() {
   const openInboundDialog = async (transfer: TransferOrder) => {
     setCurrentTransferId(transfer.id);
     try {
-      const res = await fetch(`/api/warehouse/transfer/${transfer.id}/items`);
+      const res = await authFetch(`/api/warehouse/transfer/${transfer.id}/items`);
       const result = await res.json();
       if (result.success) {
-        setTransferItems(result.data || []);
+        const transferitemsList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        setTransferItems(transferitemsList);
         setScanItems([]);
         setShowInboundDialog(true);
       }
@@ -271,10 +329,11 @@ export default function TransferPage() {
   const openDetailDialog = async (transfer: TransferOrder) => {
     setCurrentTransfer(transfer);
     try {
-      const res = await fetch(`/api/warehouse/transfer/${transfer.id}/items`);
+      const res = await authFetch(`/api/warehouse/transfer/${transfer.id}/items`);
       const result = await res.json();
       if (result.success) {
-        setDetailItems(result.data || []);
+        const detailitemsList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        setDetailItems(detailitemsList);
         setShowDetailDialog(true);
       }
     } catch (e) {
@@ -289,10 +348,9 @@ export default function TransferPage() {
     }
 
     try {
-      const res = await fetch(`/api/warehouse/transfer/${currentTransferId}/inbound`, {
+      const res = await authFetch(`/api/warehouse/transfer/${currentTransferId}/inbound`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: scanItems })
+        body: JSON.stringify({ items: scanItems }),
       });
       const result = await res.json();
 
@@ -312,7 +370,11 @@ export default function TransferPage() {
     setScanItems([...scanItems, { material_id: 0, qr_code: '', quantity: 0 }]);
   };
 
-  const updateScanItem = (index: number, field: 'material_id' | 'qr_code' | 'quantity', value: any) => {
+  const updateScanItem = (
+    index: number,
+    field: 'material_id' | 'qr_code' | 'quantity',
+    value: any
+  ) => {
     const updated = [...scanItems];
     updated[index] = { ...updated[index], [field]: value };
     setScanItems(updated);
@@ -324,7 +386,7 @@ export default function TransferPage() {
 
   const handleSort = (field: string) => {
     if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
       setSortDirection('asc');
@@ -339,7 +401,9 @@ export default function TransferPage() {
       if (aVal === null || aVal === undefined) return 1;
       if (bVal === null || bVal === undefined) return -1;
       if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return sortDirection === 'asc' ? aVal.localeCompare(bVal, 'zh-CN') : bVal.localeCompare(aVal, 'zh-CN');
+        return sortDirection === 'asc'
+          ? aVal.localeCompare(bVal, 'zh-CN')
+          : bVal.localeCompare(aVal, 'zh-CN');
       }
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
@@ -349,12 +413,15 @@ export default function TransferPage() {
   }, [list, sortField, sortDirection]);
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === list.length) { setSelectedIds([]); }
-    else { setSelectedIds(list.map(item => item.id)); }
+    if (selectedIds.length === list.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(list.map((item) => item.id));
+    }
   };
 
   const toggleSelect = (id: number) => {
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
 
   const SortableHeader = ({ field, children }: { field: string; children: React.ReactNode }) => (
@@ -365,7 +432,11 @@ export default function TransferPage() {
       <div className="flex items-center justify-center gap-1">
         {children}
         {sortField === field ? (
-          sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+          sortDirection === 'asc' ? (
+            <ArrowUp className="w-3 h-3" />
+          ) : (
+            <ArrowDown className="w-3 h-3" />
+          )
         ) : (
           <ArrowUpDown className="w-3 h-3 opacity-30" />
         )}
@@ -380,11 +451,25 @@ export default function TransferPage() {
           <h1 className="text-2xl font-bold">库存调拨</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
-              <Input placeholder="搜索单号" value={searchNo} onChange={e => setSearchNo(e.target.value)} className="w-36 h-8 text-sm" />
-              <Button size="sm" variant="outline" onClick={fetchData}><Search className="h-3 w-3" /></Button>
+              <Input
+                placeholder="搜索单号"
+                value={searchNo}
+                onChange={(e) => setSearchNo(e.target.value)}
+                className="w-36 h-8 text-sm"
+              />
+              <Button size="sm" variant="outline" onClick={fetchData}>
+                <Search className="h-3 w-3" />
+              </Button>
             </div>
-            <Button size="sm" onClick={() => { setEditItem({}); setShowDialog(true); }}>
-              <Plus className="h-3 w-3 mr-1" />新增调拨
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditItem({});
+                setShowDialog(true);
+              }}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              新增调拨
             </Button>
           </div>
         </div>
@@ -395,64 +480,126 @@ export default function TransferPage() {
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center w-12">
-                    <Checkbox checked={selectedIds.length === list.length && list.length > 0} onCheckedChange={toggleSelectAll} />
+                    <Checkbox
+                      checked={selectedIds.length === list.length && list.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
                   </TableHead>
                   <SortableHeader field="transfer_no">调拨单号</SortableHeader>
                   <SortableHeader field="type">类型</SortableHeader>
                   <SortableHeader field="from_warehouse_name">源仓库</SortableHeader>
                   <SortableHeader field="to_warehouse_name">目标仓库</SortableHeader>
-                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">状态</TableHead>
-                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">申请人</TableHead>
-                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">操作</TableHead>
+                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
+                    状态
+                  </TableHead>
+                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
+                    申请人
+                  </TableHead>
+                  <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
+                    操作
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedList().map(item => {
+                {sortedList().map((item) => {
                   const st = STATUS_MAP[item.status] || STATUS_MAP[0];
                   return (
                     <TableRow key={item.id} className="hover:bg-muted/30 even:bg-muted/20">
                       <TableCell className="border border-border text-center">
-                        <Checkbox checked={selectedIds.includes(item.id)} onCheckedChange={() => toggleSelect(item.id)} />
+                        <Checkbox
+                          checked={selectedIds.includes(item.id)}
+                          onCheckedChange={() => toggleSelect(item.id)}
+                        />
                       </TableCell>
-                      <TableCell className="border border-border text-center font-mono text-xs">{item.transfer_no}</TableCell>
-                      <TableCell className="border border-border text-center text-xs">{TYPE_MAP[item.type] || '-'}</TableCell>
+                      <TableCell className="border border-border text-center font-mono text-xs">
+                        {item.transfer_no}
+                      </TableCell>
+                      <TableCell className="border border-border text-center text-xs">
+                        {TYPE_MAP[item.type] || '-'}
+                      </TableCell>
                       <TableCell className="border border-border text-center text-xs">
                         <div>{item.from_warehouse_name || '-'}</div>
-                        {item.from_location && <div className="text-muted-foreground text-[10px]">{item.from_location}</div>}
+                        {item.from_location && (
+                          <div className="text-muted-foreground text-[10px]">
+                            {item.from_location}
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="border border-border text-center text-xs">
                         <div>{item.to_warehouse_name || '-'}</div>
-                        {item.to_location && <div className="text-muted-foreground text-[10px]">{item.to_location}</div>}
+                        {item.to_location && (
+                          <div className="text-muted-foreground text-[10px]">
+                            {item.to_location}
+                          </div>
+                        )}
                       </TableCell>
-                      <TableCell className="border border-border text-center"><Badge variant={st.variant} className="text-xs">{st.label}</Badge></TableCell>
-                      <TableCell className="border border-border text-center text-xs">{item.applicant_name || '-'}</TableCell>
+                      <TableCell className="border border-border text-center">
+                        <Badge variant={st.variant} className="text-xs">
+                          {st.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="border border-border text-center text-xs">
+                        {item.applicant_name || '-'}
+                      </TableCell>
                       <TableCell className="border border-border text-center">
                         <div className="flex gap-1 justify-center">
                           {[0, 1].includes(item.status) && (
-                            <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => handleAction(item.id, 'cancel')}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-xs px-2"
+                              onClick={() => handleAction(item.id, 'cancel')}
+                            >
                               取消
                             </Button>
                           )}
                           {item.status === 1 && (
-                            <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => handleAction(item.id, 'approve', { approver_id: 1 })}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-xs px-2"
+                              onClick={() => handleAction(item.id, 'approve', { approver_id: 1 })}
+                            >
                               审批通过
                             </Button>
                           )}
                           {item.status === 2 && (
-                            <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => openOutboundDialog(item)}>
-                              <PackageOpen className="h-3 w-3 mr-1" />扫码出库
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-xs px-2"
+                              onClick={() => openOutboundDialog(item)}
+                            >
+                              <PackageOpen className="h-3 w-3 mr-1" />
+                              扫码出库
                             </Button>
                           )}
                           {item.status === 2 && (
-                            <Button size="sm" variant="ghost" className="h-6 text-xs px-2" onClick={() => openInboundDialog(item)}>
-                              <PackageCheck className="h-3 w-3 mr-1" />扫码入库
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-xs px-2"
+                              onClick={() => openInboundDialog(item)}
+                            >
+                              <PackageCheck className="h-3 w-3 mr-1" />
+                              扫码入库
                             </Button>
                           )}
-                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openDetailDialog(item)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0"
+                            onClick={() => openDetailDialog(item)}
+                          >
                             <Eye className="h-3 w-3" />
                           </Button>
                           {[0, 4].includes(item.status) && (
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600" onClick={() => handleDelete(item.id)}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-red-600"
+                              onClick={() => handleDelete(item.id)}
+                            >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           )}
@@ -462,7 +609,14 @@ export default function TransferPage() {
                   );
                 })}
                 {list.length === 0 && (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8 border border-border">暂无调拨记录</TableCell></TableRow>
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="text-center text-muted-foreground py-8 border border-border"
+                    >
+                      暂无调拨记录
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
@@ -472,25 +626,48 @@ export default function TransferPage() {
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">共 {total} 条</span>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</Button>
-            <Button size="sm" variant="outline" disabled={page * 20 >= total} onClick={() => setPage(p => p + 1)}>下一页</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              上一页
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page * 20 >= total}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              下一页
+            </Button>
           </div>
         </div>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
-            <DialogHeader><DialogTitle>新增调拨单</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>新增调拨单</DialogTitle>
+            </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>调拨类型 <span className="text-red-500">*</span></Label>
-                <Select value={String(editItem.type || 1)} onValueChange={(v) => {
-                  const type = Number(v);
-                  setEditItem({ ...editItem, type });
-                  if (type === 1 && editItem.from_warehouse_id) {
-                    fetchLocations(editItem.from_warehouse_id);
-                  }
-                }}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label>
+                  调拨类型 <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={String(editItem.type || 1)}
+                  onValueChange={(v) => {
+                    const type = Number(v);
+                    setEditItem({ ...editItem, type });
+                    if (type === 1 && editItem.from_warehouse_id) {
+                      fetchLocations(editItem.from_warehouse_id);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">库位调拨</SelectItem>
                     <SelectItem value="2">仓库调拨</SelectItem>
@@ -498,54 +675,114 @@ export default function TransferPage() {
                 </Select>
               </div>
               <div>
-                <Label>源仓库 <span className="text-red-500">*</span></Label>
-                <Select value={String(editItem.from_warehouse_id || '')} onValueChange={v => {
-                  const whId = Number(v);
-                  setEditItem({ ...editItem, from_warehouse_id: whId });
-                  if (editItem.type === 1) {
-                    fetchLocations(whId);
-                  }
-                }}>
-                  <SelectTrigger><SelectValue placeholder="选择仓库" /></SelectTrigger>
-                  <SelectContent>{warehouses.map(w => <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>)}</SelectContent>
+                <Label>
+                  源仓库 <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={String(editItem.from_warehouse_id || '')}
+                  onValueChange={(v) => {
+                    const whId = Number(v);
+                    setEditItem({ ...editItem, from_warehouse_id: whId });
+                    if (editItem.type === 1) {
+                      fetchLocations(whId);
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择仓库" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses.map((w) => (
+                      <SelectItem key={w.id} value={String(w.id)}>
+                        {w.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
-              {(editItem.type === 1) && (
+              {editItem.type === 1 && (
                 <>
                   <div>
-                    <Label>调出库位 <span className="text-red-500">*</span></Label>
-                    <Select value={editItem.from_location || ''} onValueChange={v => setEditItem({ ...editItem, from_location: v })}>
-                      <SelectTrigger><SelectValue placeholder="选择库位" /></SelectTrigger>
-                      <SelectContent>{locations.map(l => <SelectItem key={l.id} value={l.code}>{l.name}</SelectItem>)}</SelectContent>
+                    <Label>
+                      调出库位 <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={editItem.from_location || ''}
+                      onValueChange={(v) => setEditItem({ ...editItem, from_location: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择库位" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locations.map((l) => (
+                          <SelectItem key={l.id} value={l.code}>
+                            {l.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>调入库位 <span className="text-red-500">*</span></Label>
-                    <Select value={editItem.to_location || ''} onValueChange={v => setEditItem({ ...editItem, to_location: v })}>
-                      <SelectTrigger><SelectValue placeholder="选择库位" /></SelectTrigger>
-                      <SelectContent>{locations.map(l => <SelectItem key={l.id} value={l.code}>{l.name}</SelectItem>)}</SelectContent>
+                    <Label>
+                      调入库位 <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={editItem.to_location || ''}
+                      onValueChange={(v) => setEditItem({ ...editItem, to_location: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择库位" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locations.map((l) => (
+                          <SelectItem key={l.id} value={l.code}>
+                            {l.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </div>
                 </>
               )}
               <div>
-                <Label>目标仓库 <span className="text-red-500">*</span></Label>
-                <Select value={String(editItem.to_warehouse_id || '')} onValueChange={v => setEditItem({ ...editItem, to_warehouse_id: Number(v) })}>
-                  <SelectTrigger><SelectValue placeholder="选择仓库" /></SelectTrigger>
-                  <SelectContent>{warehouses.map(w => <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>)}</SelectContent>
+                <Label>
+                  目标仓库 <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={String(editItem.to_warehouse_id || '')}
+                  onValueChange={(v) => setEditItem({ ...editItem, to_warehouse_id: Number(v) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择仓库" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {warehouses.map((w) => (
+                      <SelectItem key={w.id} value={String(w.id)}>
+                        {w.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>申请人</Label>
-                <UserSelect value={editItem.applicant_id ? String(editItem.applicant_id) : ''} onChange={v => setEditItem({ ...editItem, applicant_id: Number(v) })} />
+                <UserSelect
+                  value={editItem.applicant_id ? String(editItem.applicant_id) : ''}
+                  onChange={(v) => setEditItem({ ...editItem, applicant_id: Number(v) })}
+                />
               </div>
               <div className="col-span-2">
                 <Label>备注</Label>
-                <Input value={editItem.remark || ''} onChange={e => setEditItem({ ...editItem, remark: e.target.value })} />
+                <Input
+                  value={editItem.remark || ''}
+                  onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
+                />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDialog(false)}>取消</Button>
+              <Button variant="outline" onClick={() => setShowDialog(false)}>
+                取消
+              </Button>
               <Button onClick={handleSave}>保存</Button>
             </DialogFooter>
           </DialogContent>
@@ -553,15 +790,22 @@ export default function TransferPage() {
 
         <Dialog open={showOutboundDialog} onOpenChange={setShowOutboundDialog}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto" resizable>
-            <DialogHeader><DialogTitle>扫码出库</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>扫码出库</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4">
               <div className="border rounded p-3 space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">调拨明细</span>
-                  <Button size="sm" variant="outline" onClick={addScanItem}><QrCode className="h-3 w-3 mr-1" />添加扫码项</Button>
+                  <Button size="sm" variant="outline" onClick={addScanItem}>
+                    <QrCode className="h-3 w-3 mr-1" />
+                    添加扫码项
+                  </Button>
                 </div>
                 {scanItems.length === 0 ? (
-                  <p className="text-muted-foreground text-sm text-center py-4">点击上方按钮添加出库明细</p>
+                  <p className="text-muted-foreground text-sm text-center py-4">
+                    点击上方按钮添加出库明细
+                  </p>
                 ) : (
                   scanItems.map((item, index) => (
                     <div key={index} className="grid grid-cols-12 gap-2 items-end">
@@ -569,7 +813,7 @@ export default function TransferPage() {
                         <Label className="text-xs">二维码</Label>
                         <Input
                           value={item.qr_code}
-                          onChange={e => updateScanItem(index, 'qr_code', e.target.value)}
+                          onChange={(e) => updateScanItem(index, 'qr_code', e.target.value)}
                           placeholder="扫描或输入二维码"
                           className="font-mono text-xs"
                         />
@@ -579,7 +823,9 @@ export default function TransferPage() {
                         <Input
                           type="number"
                           value={item.quantity || ''}
-                          onChange={e => updateScanItem(index, 'quantity', Number(e.target.value))}
+                          onChange={(e) =>
+                            updateScanItem(index, 'quantity', Number(e.target.value))
+                          }
                           className="text-xs"
                         />
                       </div>
@@ -588,12 +834,19 @@ export default function TransferPage() {
                         <Input
                           type="number"
                           value={item.material_id || ''}
-                          onChange={e => updateScanItem(index, 'material_id', Number(e.target.value))}
+                          onChange={(e) =>
+                            updateScanItem(index, 'material_id', Number(e.target.value))
+                          }
                           className="text-xs"
                         />
                       </div>
                       <div className="col-span-1">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600" onClick={() => removeScanItem(index)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-red-600"
+                          onClick={() => removeScanItem(index)}
+                        >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
@@ -603,23 +856,35 @@ export default function TransferPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowOutboundDialog(false)}>关闭</Button>
-              <Button onClick={executeOutbound}><PackageOpen className="h-4 w-4 mr-1" />确认出库</Button>
+              <Button variant="outline" onClick={() => setShowOutboundDialog(false)}>
+                关闭
+              </Button>
+              <Button onClick={executeOutbound}>
+                <PackageOpen className="h-4 w-4 mr-1" />
+                确认出库
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         <Dialog open={showInboundDialog} onOpenChange={setShowInboundDialog}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto" resizable>
-            <DialogHeader><DialogTitle>扫码入库</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>扫码入库</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4">
               <div className="border rounded p-3 space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">入库明细</span>
-                  <Button size="sm" variant="outline" onClick={addScanItem}><QrCode className="h-3 w-3 mr-1" />添加扫码项</Button>
+                  <Button size="sm" variant="outline" onClick={addScanItem}>
+                    <QrCode className="h-3 w-3 mr-1" />
+                    添加扫码项
+                  </Button>
                 </div>
                 {scanItems.length === 0 ? (
-                  <p className="text-muted-foreground text-sm text-center py-4">点击上方按钮添加入库明细</p>
+                  <p className="text-muted-foreground text-sm text-center py-4">
+                    点击上方按钮添加入库明细
+                  </p>
                 ) : (
                   scanItems.map((item, index) => (
                     <div key={index} className="grid grid-cols-12 gap-2 items-end">
@@ -627,7 +892,7 @@ export default function TransferPage() {
                         <Label className="text-xs">二维码</Label>
                         <Input
                           value={item.qr_code}
-                          onChange={e => updateScanItem(index, 'qr_code', e.target.value)}
+                          onChange={(e) => updateScanItem(index, 'qr_code', e.target.value)}
                           placeholder="扫描或输入二维码"
                           className="font-mono text-xs"
                         />
@@ -637,7 +902,9 @@ export default function TransferPage() {
                         <Input
                           type="number"
                           value={item.quantity || ''}
-                          onChange={e => updateScanItem(index, 'quantity', Number(e.target.value))}
+                          onChange={(e) =>
+                            updateScanItem(index, 'quantity', Number(e.target.value))
+                          }
                           className="text-xs"
                         />
                       </div>
@@ -646,12 +913,19 @@ export default function TransferPage() {
                         <Input
                           type="number"
                           value={item.material_id || ''}
-                          onChange={e => updateScanItem(index, 'material_id', Number(e.target.value))}
+                          onChange={(e) =>
+                            updateScanItem(index, 'material_id', Number(e.target.value))
+                          }
                           className="text-xs"
                         />
                       </div>
                       <div className="col-span-1">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600" onClick={() => removeScanItem(index)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-red-600"
+                          onClick={() => removeScanItem(index)}
+                        >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
@@ -661,22 +935,43 @@ export default function TransferPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowInboundDialog(false)}>关闭</Button>
-              <Button onClick={executeInbound}><PackageCheck className="h-4 w-4 mr-1" />确认入库</Button>
+              <Button variant="outline" onClick={() => setShowInboundDialog(false)}>
+                关闭
+              </Button>
+              <Button onClick={executeInbound}>
+                <PackageCheck className="h-4 w-4 mr-1" />
+                确认入库
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto" resizable>
-            <DialogHeader><DialogTitle>调拨明细 - {currentTransfer?.transfer_no}</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>调拨明细 - {currentTransfer?.transfer_no}</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4">
               {currentTransfer && (
                 <div className="grid grid-cols-4 gap-4 p-3 border rounded bg-muted/30 text-sm">
-                  <div><span className="text-muted-foreground">类型：</span>{TYPE_MAP[currentTransfer.type]}</div>
-                  <div><span className="text-muted-foreground">源仓库：</span>{currentTransfer.from_warehouse_name || '-'}</div>
-                  <div><span className="text-muted-foreground">目标仓库：</span>{currentTransfer.to_warehouse_name || '-'}</div>
-                  <div><span className="text-muted-foreground">状态：</span><Badge variant={(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).variant}>{(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).label}</Badge></div>
+                  <div>
+                    <span className="text-muted-foreground">类型：</span>
+                    {TYPE_MAP[currentTransfer.type]}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">源仓库：</span>
+                    {currentTransfer.from_warehouse_name || '-'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">目标仓库：</span>
+                    {currentTransfer.to_warehouse_name || '-'}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">状态：</span>
+                    <Badge variant={(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).variant}>
+                      {(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).label}
+                    </Badge>
+                  </div>
                 </div>
               )}
               <Table>
@@ -693,9 +988,13 @@ export default function TransferPage() {
                 </TableHeader>
                 <TableBody>
                   {detailItems.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-4">暂无明细数据</TableCell></TableRow>
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-4">
+                        暂无明细数据
+                      </TableCell>
+                    </TableRow>
                   ) : (
-                    detailItems.map(item => (
+                    detailItems.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell>{item.material_name || '-'}</TableCell>
                         <TableCell className="font-mono text-xs">{item.qr_code || '-'}</TableCell>
@@ -711,7 +1010,9 @@ export default function TransferPage() {
               </Table>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDetailDialog(false)}>关闭</Button>
+              <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
+                关闭
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

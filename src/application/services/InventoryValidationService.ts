@@ -106,10 +106,21 @@ export class InventoryValidationService {
           batch_no, warehouse_id, quantity, unit_price, total_amount, operator_id, operator_name, remark, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
-          params.transNo, params.transType, params.sourceType, params.sourceId,
-          params.materialId, params.materialCode, params.materialName,
-          params.batchNo, params.warehouseId, params.quantity, params.unitPrice,
-          params.totalAmount, params.operatorId || null, params.operatorName || null, params.remark || null,
+          params.transNo,
+          params.transType,
+          params.sourceType,
+          params.sourceId,
+          params.materialId,
+          params.materialCode,
+          params.materialName,
+          params.batchNo,
+          params.warehouseId,
+          params.quantity,
+          params.unitPrice,
+          params.totalAmount,
+          params.operatorId || null,
+          params.operatorName || null,
+          params.remark || null,
         ]
       );
     });
@@ -122,10 +133,7 @@ export class InventoryValidationService {
     });
   }
 
-  static async reverseTransaction(
-    originalTransNo: string,
-    operatorId?: number
-  ): Promise<void> {
+  static async reverseTransaction(originalTransNo: string, operatorId?: number): Promise<void> {
     await transaction(async (conn) => {
       const [rows]: any = await conn.execute(
         'SELECT id, trans_no, trans_type, source_type, source_id, material_id, material_code, material_name, batch_no, warehouse_id, quantity, unit_price, total_amount FROM inv_inventory_transaction WHERE trans_no = ? AND is_reversed = 0',
@@ -146,11 +154,20 @@ export class InventoryValidationService {
           batch_no, warehouse_id, quantity, unit_price, total_amount, is_reversed, reversed_by, operator_id, remark, create_time)
          VALUES (?, ?, 'reversal', ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, NOW())`,
         [
-          reverseTransNo, reverseType, original.source_id,
-          original.material_id, original.material_code, original.material_name,
-          original.batch_no, original.warehouse_id, original.quantity,
-          original.unit_price, original.total_amount,
-          original.id, operatorId || null, `冲销流水 ${originalTransNo}`,
+          reverseTransNo,
+          reverseType,
+          original.source_id,
+          original.material_id,
+          original.material_code,
+          original.material_name,
+          original.batch_no,
+          original.warehouse_id,
+          original.quantity,
+          original.unit_price,
+          original.total_amount,
+          original.id,
+          operatorId || null,
+          `冲销流水 ${originalTransNo}`,
         ]
       );
 

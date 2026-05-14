@@ -41,10 +41,7 @@ export function extractToken(request: NextRequest): string | null {
 // 验证JWT Token
 export async function verifyToken(token: string): Promise<UserInfo | null> {
   try {
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(SECRET_KEY)
-    );
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
 
     const userId = payload.userId as number;
     const fullUserInfo = await getUserInfo(userId);
@@ -87,27 +84,30 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
     [userId]
   );
 
-  const roleCodes = (roles as any[]).map(r => r.role_code);
-  const dataScopes = (roles as any[]).map(r => r.data_scope).filter(Boolean);
+  const roleCodes = (roles as any[]).map((r) => r.role_code);
+  const dataScopes = (roles as any[]).map((r) => r.data_scope).filter(Boolean);
 
   // 确定数据权限范围（最小权限原则：取最严格的范围）
   let dataScope: DataScope = { type: 'self' };
   if (dataScopes.length > 0) {
     const scopePriority: Record<string, number> = {
-      'self': 1,
-      'dept': 2,
-      'dept_and_self': 3,
-      'all': 4,
+      self: 1,
+      dept: 2,
+      dept_and_self: 3,
+      all: 4,
     };
 
-    const minPriority = Math.min(...dataScopes.map(s => scopePriority[s] || 0));
-    const mostRestrictive = Object.entries(scopePriority)
-      .find(([_, p]) => p === minPriority)?.[0] || 'self';
+    const minPriority = Math.min(...dataScopes.map((s) => scopePriority[s] || 0));
+    const mostRestrictive =
+      Object.entries(scopePriority).find(([_, p]) => p === minPriority)?.[0] || 'self';
 
     if (mostRestrictive === 'all') {
       dataScope = { type: 'all' };
     } else if (mostRestrictive === 'dept_and_self') {
-      dataScope = { type: 'dept_and_self', deptIds: user.department_id ? [user.department_id] : [] };
+      dataScope = {
+        type: 'dept_and_self',
+        deptIds: user.department_id ? [user.department_id] : [],
+      };
     } else if (mostRestrictive === 'dept') {
       dataScope = { type: 'dept', deptIds: user.department_id ? [user.department_id] : [] };
     } else {
@@ -129,7 +129,7 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
     username: user.username,
     realName: user.real_name,
     roles: roleCodes,
-    permissions: (permissions as any[]).map(p => p.permission),
+    permissions: (permissions as any[]).map((p) => p.permission),
     departmentId: user.department_id,
     dataScope,
   };
@@ -137,7 +137,12 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
 
 // 检查用户是否有指定权限
 export function hasPermission(userInfo: UserInfo, permission: string): boolean {
-  return userInfo.permissions.includes(permission) || userInfo.roles.includes('admin');
+  return (
+    userInfo.permissions.includes(permission) ||
+    userInfo.permissions.includes('*') ||
+    userInfo.roles.includes('admin') ||
+    userInfo.roles.includes('super_admin')
+  );
 }
 
 // 检查用户是否有指定角色
@@ -239,7 +244,9 @@ export async function validateResourceAccess(
   }
 
   if (dataScope?.type === 'dept_and_self') {
-    return resource.department_id === userInfo.departmentId || resource.create_by === userInfo.userId;
+    return (
+      resource.department_id === userInfo.departmentId || resource.create_by === userInfo.userId
+    );
   }
 
   return false;

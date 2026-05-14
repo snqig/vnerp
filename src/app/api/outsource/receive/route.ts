@@ -12,14 +12,28 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let where = 'WHERE r.deleted = 0';
   const params: any[] = [];
-  if (receiveNo) { where += ' AND r.receive_no LIKE ?'; params.push('%' + receiveNo + '%'); }
-  if (outsourceOrderNo) { where += ' AND r.outsource_order_no LIKE ?'; params.push('%' + outsourceOrderNo + '%'); }
-  if (status) { where += ' AND r.status = ?'; params.push(Number(status)); }
+  if (receiveNo) {
+    where += ' AND r.receive_no LIKE ?';
+    params.push('%' + receiveNo + '%');
+  }
+  if (outsourceOrderNo) {
+    where += ' AND r.outsource_order_no LIKE ?';
+    params.push('%' + outsourceOrderNo + '%');
+  }
+  if (status) {
+    where += ' AND r.status = ?';
+    params.push(Number(status));
+  }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM outsource_receive r ' + where, params);
+  const totalRows: any = await query(
+    'SELECT COUNT(*) as total FROM outsource_receive r ' + where,
+    params
+  );
   const total = totalRows[0]?.total || 0;
   const rows: any = await query(
-    'SELECT r.*, w.warehouse_name FROM outsource_receive r LEFT JOIN inv_warehouse w ON r.warehouse_id = w.id ' + where + ' ORDER BY r.create_time DESC LIMIT ? OFFSET ?',
+    'SELECT r.*, w.warehouse_name FROM outsource_receive r LEFT JOIN inv_warehouse w ON r.warehouse_id = w.id ' +
+      where +
+      ' ORDER BY r.create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
 
@@ -28,19 +42,44 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { outsource_order_id, outsource_order_no, warehouse_id, receive_date, receive_qty, qualified_qty, defective_qty, operator_name, remark } = body;
+  const {
+    outsource_order_id,
+    outsource_order_no,
+    warehouse_id,
+    receive_date,
+    receive_qty,
+    qualified_qty,
+    defective_qty,
+    operator_name,
+    remark,
+  } = body;
 
   if (!outsource_order_id) return errorResponse('委外订单不能为空', 400, 400);
   if (!warehouse_id) return errorResponse('入库仓库不能为空', 400, 400);
 
   const now = new Date();
-  const receiveNo = 'OR' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  const receiveNo =
+    'OR' +
+    now.getFullYear() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0') +
+    String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
   const result: any = await execute(
     `INSERT INTO outsource_receive (receive_no, outsource_order_id, outsource_order_no, warehouse_id, receive_date, receive_qty, qualified_qty, defective_qty, qc_status, status, operator_name, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?)`,
-    [receiveNo, outsource_order_id, outsource_order_no || null, warehouse_id, receive_date || null,
-     receive_qty || 0, qualified_qty || 0, defective_qty || 0, operator_name || null, remark || null]
+    [
+      receiveNo,
+      outsource_order_id,
+      outsource_order_no || null,
+      warehouse_id,
+      receive_date || null,
+      receive_qty || 0,
+      qualified_qty || 0,
+      defective_qty || 0,
+      operator_name || null,
+      remark || null,
+    ]
   );
 
   return successResponse({ id: result.insertId, receive_no: receiveNo }, '委外收货单创建成功');
@@ -63,7 +102,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       if (receive.status >= 3) throw new Error('收货单已完成或已取消，不能重复过账');
       if (receive.qc_status === 3) throw new Error('质检不合格，不能入库');
 
-      const orderRows: any = await query('SELECT product_id, product_code, product_name FROM outsource_order WHERE id = ? AND deleted = 0', [receive.outsource_order_id]);
+      const orderRows: any = await query(
+        'SELECT product_id, product_code, product_name FROM outsource_order WHERE id = ? AND deleted = 0',
+        [receive.outsource_order_id]
+      );
       const order = orderRows && orderRows.length > 0 ? orderRows[0] : {};
 
       const [existing]: any = await conn.execute(
@@ -74,11 +116,21 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       const inQty = Number(receive.qualified_qty) || Number(receive.receive_qty) || 0;
 
       if (existing.length > 0) {
-        await conn.execute('UPDATE inv_inventory SET quantity = quantity + ?, update_time = NOW() WHERE id = ?', [inQty, existing[0].id]);
+        await conn.execute(
+          'UPDATE inv_inventory SET quantity = quantity + ?, update_time = NOW() WHERE id = ?',
+          [inQty, existing[0].id]
+        );
       } else {
         await conn.execute(
           'INSERT INTO inv_inventory (material_id, material_code, material_name, warehouse_id, quantity, unit) VALUES (?, ?, ?, ?, ?, ?)',
-          [order.product_id, order.product_code || '', order.product_name || '', receive.warehouse_id, inQty, '个']
+          [
+            order.product_id,
+            order.product_code || '',
+            order.product_name || '',
+            receive.warehouse_id,
+            inQty,
+            '个',
+          ]
         );
       }
 
@@ -98,7 +150,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         `UPDATE outsource_order SET received_qty = COALESCE(received_qty, 0) + ?, qualified_qty = COALESCE(qualified_qty, 0) + ?,
          status = CASE WHEN COALESCE(received_qty, 0) + ? >= plan_qty THEN 4 WHEN COALESCE(received_qty, 0) + ? > 0 THEN 3 ELSE status END
          WHERE id = ? AND deleted = 0`,
-        [Number(receive.receive_qty) || 0, inQty, Number(receive.receive_qty) || 0, Number(receive.receive_qty) || 0, receive.outsource_order_id]
+        [
+          Number(receive.receive_qty) || 0,
+          inQty,
+          Number(receive.receive_qty) || 0,
+          Number(receive.receive_qty) || 0,
+          receive.outsource_order_id,
+        ]
       );
 
       return { id, status: 3 };
@@ -117,14 +175,32 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
   const fields: string[] = [];
   const values: any[] = [];
-  if (status !== undefined) { fields.push('status = ?'); values.push(status); }
-  if (qc_status !== undefined) { fields.push('qc_status = ?'); values.push(qc_status); }
-  if (qualified_qty !== undefined) { fields.push('qualified_qty = ?'); values.push(qualified_qty); }
-  if (defective_qty !== undefined) { fields.push('defective_qty = ?'); values.push(defective_qty); }
-  if (remark !== undefined) { fields.push('remark = ?'); values.push(remark); }
+  if (status !== undefined) {
+    fields.push('status = ?');
+    values.push(status);
+  }
+  if (qc_status !== undefined) {
+    fields.push('qc_status = ?');
+    values.push(qc_status);
+  }
+  if (qualified_qty !== undefined) {
+    fields.push('qualified_qty = ?');
+    values.push(qualified_qty);
+  }
+  if (defective_qty !== undefined) {
+    fields.push('defective_qty = ?');
+    values.push(defective_qty);
+  }
+  if (remark !== undefined) {
+    fields.push('remark = ?');
+    values.push(remark);
+  }
   if (fields.length > 0) {
     values.push(id);
-    await execute(`UPDATE outsource_receive SET ${fields.join(', ')} WHERE id = ? AND deleted = 0`, values);
+    await execute(
+      `UPDATE outsource_receive SET ${fields.join(', ')} WHERE id = ? AND deleted = 0`,
+      values
+    );
   }
 
   return successResponse(null, '收货单更新成功');

@@ -159,13 +159,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       [`IQC${dateStr}%`]
     );
     const maxNo = (maxInspection as any[])[0]?.maxNo;
-    const seq = maxNo
-      ? String(parseInt(maxNo.slice(-3)) + 1).padStart(3, '0')
-      : '001';
+    const seq = maxNo ? String(parseInt(maxNo.slice(-3)) + 1).padStart(3, '0') : '001';
     const inspectionNo = `IQC${dateStr}${seq}`;
 
     // 插入检验单主表
-    const [insertResult] = await connection.execute(
+    const [insertResult] = (await connection.execute(
       `INSERT INTO qc_incoming_inspection (
         inspection_no, inspection_date, supplier_name,
         material_code, material_name, specification,
@@ -187,7 +185,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         inspectorName,
         remark,
       ]
-    ) as [any, any];
+    )) as [any, any];
 
     const inspectionId = (insertResult as any).insertId;
 
@@ -304,7 +302,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         [id, updateData.batchNo]
       );
     }).catch(() => {});
-  } else if (updateData.inspectionResult === 'unqualified' || updateData.inspectionResult === '不合格') {
+  } else if (
+    updateData.inspectionResult === 'unqualified' ||
+    updateData.inspectionResult === '不合格'
+  ) {
     await transaction(async (conn) => {
       await conn.execute(
         `UPDATE inv_inventory_batch SET status = 'frozen', freeze_reason = '进料检验不合格', inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
@@ -320,10 +321,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   // 更新检验单明细
   if (updateData.items && updateData.items.length > 0) {
     // 先删除原有的明细
-    await execute(
-      'UPDATE qc_incoming_inspection_item SET deleted = 1 WHERE inspection_id = ?',
-      [id]
-    );
+    await execute('UPDATE qc_incoming_inspection_item SET deleted = 1 WHERE inspection_id = ?', [
+      id,
+    ]);
 
     // 插入新的明细
     const itemValues = updateData.items.map((item: any) => [
@@ -369,10 +369,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
 
   // 使用事务同时更新主表和明细表
   await transaction(async (connection) => {
-    await connection.execute(
-      'UPDATE qc_incoming_inspection SET deleted = 1 WHERE id = ?',
-      [id]
-    );
+    await connection.execute('UPDATE qc_incoming_inspection SET deleted = 1 WHERE id = ?', [id]);
     await connection.execute(
       'UPDATE qc_incoming_inspection_item SET deleted = 1 WHERE inspection_id = ?',
       [id]

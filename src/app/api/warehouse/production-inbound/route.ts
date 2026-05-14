@@ -13,14 +13,28 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   let where = 'WHERE p.deleted = 0';
   const params: any[] = [];
-  if (inboundNo) { where += ' AND p.inbound_no LIKE ?'; params.push('%' + inboundNo + '%'); }
-  if (status) { where += ' AND p.status = ?'; params.push(Number(status)); }
-  if (workOrderNo) { where += ' AND p.work_order_no LIKE ?'; params.push('%' + workOrderNo + '%'); }
+  if (inboundNo) {
+    where += ' AND p.inbound_no LIKE ?';
+    params.push('%' + inboundNo + '%');
+  }
+  if (status) {
+    where += ' AND p.status = ?';
+    params.push(Number(status));
+  }
+  if (workOrderNo) {
+    where += ' AND p.work_order_no LIKE ?';
+    params.push('%' + workOrderNo + '%');
+  }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM inv_production_inbound p ' + where, params);
+  const totalRows: any = await query(
+    'SELECT COUNT(*) as total FROM inv_production_inbound p ' + where,
+    params
+  );
   const total = totalRows[0]?.total || 0;
   const rows: any = await query(
-    'SELECT p.*, w.warehouse_name FROM inv_production_inbound p LEFT JOIN inv_warehouse w ON p.warehouse_id = w.id ' + where + ' ORDER BY p.create_time DESC LIMIT ? OFFSET ?',
+    'SELECT p.*, w.warehouse_name FROM inv_production_inbound p LEFT JOIN inv_warehouse w ON p.warehouse_id = w.id ' +
+      where +
+      ' ORDER BY p.create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
 
@@ -37,7 +51,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { work_order_id, work_order_no, warehouse_id, inbound_date, operator_name, qc_status, remark, items } = body;
+  const {
+    work_order_id,
+    work_order_no,
+    warehouse_id,
+    inbound_date,
+    operator_name,
+    qc_status,
+    remark,
+    items,
+  } = body;
 
   if (!warehouse_id) {
     return errorResponse('仓库ID不能为空', 400, 400);
@@ -47,7 +70,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   const now = new Date();
-  const inboundNo = 'PI' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  const inboundNo =
+    'PI' +
+    now.getFullYear() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0') +
+    String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
   const result: any = await transaction(async (conn) => {
     if (work_order_id) {
@@ -69,14 +97,31 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     const [orderResult]: any = await conn.execute(
       'INSERT INTO inv_production_inbound (inbound_no, work_order_id, work_order_no, warehouse_id, inbound_date, operator_name, qc_status, status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)',
-      [inboundNo, work_order_id || null, work_order_no || null, warehouse_id, inbound_date, operator_name || null, qc_status || 'pending', remark || null]
+      [
+        inboundNo,
+        work_order_id || null,
+        work_order_no || null,
+        warehouse_id,
+        inbound_date,
+        operator_name || null,
+        qc_status || 'pending',
+        remark || null,
+      ]
     );
     const inboundId = orderResult.insertId;
 
     for (const item of items) {
       await conn.execute(
         'INSERT INTO inv_production_inbound_item (inbound_id, material_id, material_code, material_name, quantity, unit, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [inboundId, item.material_id, item.material_code || null, item.material_name || null, item.quantity, item.unit || null, item.batch_no || null]
+        [
+          inboundId,
+          item.material_id,
+          item.material_code || null,
+          item.material_name || null,
+          item.quantity,
+          item.unit || null,
+          item.batch_no || null,
+        ]
       );
     }
 
@@ -134,27 +179,55 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         } else {
           await conn.execute(
             'INSERT INTO inv_inventory (material_id, material_code, material_name, warehouse_id, quantity, unit, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [item.material_id, item.material_code, item.material_name, inbound.warehouse_id, item.quantity, item.unit, item.batch_no || null]
+            [
+              item.material_id,
+              item.material_code,
+              item.material_name,
+              inbound.warehouse_id,
+              item.quantity,
+              item.unit,
+              item.batch_no || null,
+            ]
           );
         }
 
         const transNo = 'TRX' + Date.now() + String(item.id).slice(-4);
-        const [matRows]: any = await conn.execute('SELECT material_code FROM mdm_material WHERE id = ?', [item.material_id]);
+        const [matRows]: any = await conn.execute(
+          'SELECT material_code FROM mdm_material WHERE id = ?',
+          [item.material_id]
+        );
         const matCode = matRows.length > 0 ? matRows[0].material_code : '';
 
         await conn.execute(
           'INSERT INTO inv_inventory_transaction (trans_no, trans_type, source_type, source_id, material_id, material_code, batch_no, warehouse_id, quantity, unit_price, total_amount, account_dr, account_cr, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
-          [transNo, 'in', 'production_inbound', id, item.material_id, matCode, item.batch_no || '', inbound.warehouse_id, item.quantity, 0, 0, '成品库存', '生产成本']
+          [
+            transNo,
+            'in',
+            'production_inbound',
+            id,
+            item.material_id,
+            matCode,
+            item.batch_no || '',
+            inbound.warehouse_id,
+            item.quantity,
+            0,
+            0,
+            '成品库存',
+            '生产成本',
+          ]
         );
       }
 
       await conn.execute(
-        'UPDATE inv_production_inbound SET status = 3, qc_status = COALESCE(qc_status, \'pass\'), update_time = NOW() WHERE id = ?',
+        "UPDATE inv_production_inbound SET status = 3, qc_status = COALESCE(qc_status, 'pass'), update_time = NOW() WHERE id = ?",
         [id]
       );
 
       if (inbound.work_order_id) {
-        const totalQty = itemRows.reduce((sum: number, item: any) => sum + Number(item.quantity || 0), 0);
+        const totalQty = itemRows.reduce(
+          (sum: number, item: any) => sum + Number(item.quantity || 0),
+          0
+        );
 
         await conn.execute(
           'UPDATE prod_work_order SET completed_qty = completed_qty + ? WHERE id = ? AND deleted = 0',
@@ -169,15 +242,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         if (woRows.length > 0) {
           const wo = woRows[0];
           if (Number(wo.completed_qty) >= Number(wo.plan_qty) && wo.status < 50) {
-            await conn.execute(
-              'UPDATE prod_work_order SET status = 50 WHERE id = ?',
-              [inbound.work_order_id]
-            );
+            await conn.execute('UPDATE prod_work_order SET status = 50 WHERE id = ?', [
+              inbound.work_order_id,
+            ]);
           } else if (Number(wo.completed_qty) > 0 && wo.status < 40) {
-            await conn.execute(
-              'UPDATE prod_work_order SET status = 40 WHERE id = ?',
-              [inbound.work_order_id]
-            );
+            await conn.execute('UPDATE prod_work_order SET status = 40 WHERE id = ?', [
+              inbound.work_order_id,
+            ]);
           }
         }
       }
@@ -197,19 +268,28 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         [id]
       );
 
-      for (const item of (prodItems as any[])) {
+      for (const item of prodItems as any[]) {
         const qrCode = 'PR-' + randomUUID().replace(/-/g, '').substring(0, 16);
         await execute(
           `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, material_id, material_code, material_name, quantity, unit, warehouse_id, work_order_id, work_order_no, production_date, status, extra_data)
            VALUES (?, 'product', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
           [
-            qrCode, id, inboundInfo.inbound_no,
-            item.material_id || null, item.material_code || null, item.material_name || '',
-            item.quantity || 0, item.unit || '',
+            qrCode,
+            id,
+            inboundInfo.inbound_no,
+            item.material_id || null,
+            item.material_code || null,
+            item.material_name || '',
+            item.quantity || 0,
+            item.unit || '',
             inboundInfo.warehouse_id || null,
-            inboundInfo.work_order_id || null, inboundInfo.work_order_no || null,
+            inboundInfo.work_order_id || null,
+            inboundInfo.work_order_no || null,
             new Date().toISOString().slice(0, 10),
-            JSON.stringify({ inbound_no: inboundInfo.inbound_no, qc_status: inboundInfo.qc_status }),
+            JSON.stringify({
+              inbound_no: inboundInfo.inbound_no,
+              qc_status: inboundInfo.qc_status,
+            }),
           ]
         );
       }
@@ -236,10 +316,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     const hasFail = qc_results.some((q: any) => q.result === 'fail');
     const newQcStatus = hasFail ? 'fail' : 'pass';
 
-    await execute(
-      'UPDATE inv_production_inbound SET qc_status = ? WHERE id = ? AND deleted = 0',
-      [newQcStatus, id]
-    );
+    await execute('UPDATE inv_production_inbound SET qc_status = ? WHERE id = ? AND deleted = 0', [
+      newQcStatus,
+      id,
+    ]);
 
     if (hasFail) {
       const [itemRows]: any = await query(
@@ -251,10 +331,23 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         const qcResult = qc_results.find((q: any) => q.item_id === item.id);
         if (qcResult && qcResult.result === 'fail') {
           const now = new Date();
-          const handleNo = 'QH' + now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0') + String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+          const handleNo =
+            'QH' +
+            now.getFullYear() +
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0') +
+            String(Math.floor(Math.random() * 10000)).padStart(4, '0');
           await execute(
             'INSERT INTO qc_unqualified_handle (handle_no, inspection_id, material_id, material_code, material_name, unqualified_qty, handle_type, handle_status, remark) VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?)',
-            [handleNo, id, item.material_id, item.material_code, item.material_name, item.quantity, '生产入库质检不合格，自动生成']
+            [
+              handleNo,
+              id,
+              item.material_id,
+              item.material_code,
+              item.material_name,
+              item.quantity,
+              '生产入库质检不合格，自动生成',
+            ]
           );
         }
       }
@@ -263,9 +356,21 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     return successResponse({ id, qc_status: newQcStatus }, '质检完成');
   }
 
-  if (status !== undefined) await execute('UPDATE inv_production_inbound SET status = ? WHERE id = ? AND deleted = 0', [status, id]);
-  if (qc_status !== undefined) await execute('UPDATE inv_production_inbound SET qc_status = ? WHERE id = ? AND deleted = 0', [qc_status, id]);
-  if (remark !== undefined) await execute('UPDATE inv_production_inbound SET remark = ? WHERE id = ? AND deleted = 0', [remark, id]);
+  if (status !== undefined)
+    await execute('UPDATE inv_production_inbound SET status = ? WHERE id = ? AND deleted = 0', [
+      status,
+      id,
+    ]);
+  if (qc_status !== undefined)
+    await execute('UPDATE inv_production_inbound SET qc_status = ? WHERE id = ? AND deleted = 0', [
+      qc_status,
+      id,
+    ]);
+  if (remark !== undefined)
+    await execute('UPDATE inv_production_inbound SET remark = ? WHERE id = ? AND deleted = 0', [
+      remark,
+      id,
+    ]);
   return successResponse(null, '更新成功');
 });
 
@@ -274,7 +379,10 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
 
-  const inbound: any = await query('SELECT status FROM inv_production_inbound WHERE id = ? AND deleted = 0', [Number(id)]);
+  const inbound: any = await query(
+    'SELECT status FROM inv_production_inbound WHERE id = ? AND deleted = 0',
+    [Number(id)]
+  );
   if (inbound.length === 0) {
     return errorResponse('入库单不存在', 404, 404);
   }
