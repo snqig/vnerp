@@ -33,6 +33,18 @@ import {
 import { Plus, Search, RefreshCw, Calculator, Eye, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 interface Reconciliation {
   id: number;
   reconciliation_no: string;
@@ -118,7 +130,7 @@ export default function ReconciliationPage() {
       const params = new URLSearchParams();
       if (keyword) params.append('keyword', keyword);
       if (statusFilter !== 'all') params.append('status', statusFilter);
-      const res = await fetch(`/api/sales/reconciliation?${params.toString()}`);
+      const res = await authFetch(`/api/sales/reconciliation?${params.toString()}`);
       const result = await res.json();
       if (result.success) {
         const data = result.data?.list || [];
@@ -153,7 +165,7 @@ export default function ReconciliationPage() {
 
   const fetchCustomers = useCallback(async () => {
     try {
-      const res = await fetch('/api/customers');
+      const res = await authFetch('/api/customers');
       const result = await res.json();
       if (result.success) {
         setCustomers(result.data?.list || result.data || []);
@@ -178,9 +190,8 @@ export default function ReconciliationPage() {
       return;
     }
     try {
-      const res = await fetch('/api/sales/reconciliation', {
+      const res = await authFetch('/api/sales/reconciliation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
       const result = await res.json();

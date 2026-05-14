@@ -234,9 +234,8 @@ export default function EquipmentMaintenancePage() {
 
   const handlePlanStatus = async (id: number, status: number) => {
     try {
-      const res = await fetch('/api/equipment/maintenance', {
+      const res = await authFetch('/api/equipment/maintenance', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'plan', id, status }),
       });
       const result = await res.json();
@@ -254,7 +253,7 @@ export default function EquipmentMaintenancePage() {
   const handleDelete = async (id: number, type: string) => {
     if (!confirm('确定删除？')) return;
     try {
-      const res = await fetch(`/api/equipment/maintenance?id=${id}&type=${type}`, {
+      const res = await authFetch(`/api/equipment/maintenance?id=${id}&type=${type}`, {
         method: 'DELETE',
       });
       const result = await res.json();

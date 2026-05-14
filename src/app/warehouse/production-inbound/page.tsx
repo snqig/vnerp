@@ -110,9 +110,8 @@ export default function ProductionInboundPage() {
   };
   const handleStatusChange = async (id: number, status: number) => {
     try {
-      const res = await fetch('/api/warehouse/production-inbound', {
+      const res = await authFetch('/api/warehouse/production-inbound', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
       });
       const result = await res.json();

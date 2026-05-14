@@ -66,7 +66,7 @@ export default function ConfigPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
     try {
-      const res = await fetch('/api/system/config?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/system/config?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });

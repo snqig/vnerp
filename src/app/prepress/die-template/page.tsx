@@ -270,7 +270,7 @@ export default function DieTemplatePage() {
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (dieStatusFilter !== 'all') params.set('die_status', dieStatusFilter);
       params.set('pageSize', '50');
-      const res = await fetch(`/api/prepress/die-template?${params}`);
+      const res = await authFetch(`/api/prepress/die-template?${params}`);
       const data = await res.json();
       if (data.success) {
         setList(data.data?.list || []);
@@ -298,7 +298,7 @@ export default function DieTemplatePage() {
 
   const fetchUsageLogs = useCallback(async () => {
     try {
-      const res = await fetch('/api/prepress/die-usage?pageSize=50');
+      const res = await authFetch('/api/prepress/die-usage?pageSize=50');
       const data = await res.json();
       if (data.success) {
         setUsageLogList(data.data?.list || []);
@@ -393,9 +393,8 @@ export default function DieTemplatePage() {
       return;
     }
     try {
-      const res = await fetch('/api/prepress/die-template', {
+      const res = await authFetch('/api/prepress/die-template', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           template_code: form.template_code,
           template_name: form.template_name,
@@ -435,9 +434,8 @@ export default function DieTemplatePage() {
   const handleUpdate = async () => {
     if (!selectedItem) return;
     try {
-      const res = await fetch('/api/prepress/die-template', {
+      const res = await authFetch('/api/prepress/die-template', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: selectedItem.id,
           template_name: form.template_name,
@@ -510,9 +508,8 @@ export default function DieTemplatePage() {
   const handleMaintenance = async () => {
     if (!selectedItem) return;
     try {
-      const res = await fetch('/api/prepress/die-maintenance', {
+      const res = await authFetch('/api/prepress/die-maintenance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           die_id: selectedItem.id,
           maintenance_type: maintenanceForm.maintenance_type,
@@ -567,9 +564,8 @@ export default function DieTemplatePage() {
     if (!confirm(`确定${action}此${TYPE_MAP[item.template_type]?.label || '模板'}？`)) return;
     try {
       const newStatus = item.status === 3 ? (item.current_usage >= item.warning_usage ? 2 : 1) : 3;
-      const res = await fetch('/api/prepress/die-template', {
+      const res = await authFetch('/api/prepress/die-template', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: item.id,
           template_name: item.template_name,
@@ -599,9 +595,8 @@ export default function DieTemplatePage() {
   const handleScrap = async (item: DieTemplate) => {
     if (!confirm('确定报废此模板？报废后不可恢复！')) return;
     try {
-      const res = await fetch('/api/prepress/die-template', {
+      const res = await authFetch('/api/prepress/die-template', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: item.id,
           template_name: item.template_name,
@@ -632,7 +627,7 @@ export default function DieTemplatePage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除此记录？')) return;
     try {
-      const res = await fetch(`/api/prepress/die-template?id=${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/prepress/die-template?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         toast({ title: '删除成功' });

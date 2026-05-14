@@ -162,9 +162,8 @@ export default function QRCodePage() {
 
   const handlePrint = async (id: number) => {
     try {
-      await fetch('/api/qrcode', {
+      await authFetch('/api/qrcode', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action: 'print' }),
       });
       toast({ title: '打印记录已更新' });

@@ -274,7 +274,7 @@ export default function StandardCardPage() {
     setCardToApprove(card);
     setLoadingApproval(true);
     try {
-      const response = await fetch(`/api/standard-cards/approve?id=${card.id}`);
+      const response = await authFetch(`/api/standard-cards/approve?id=${card.id}`);
       const result = await response.json();
       if (result.success) {
         setApprovalStatus(result.data);

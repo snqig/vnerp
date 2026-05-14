@@ -96,7 +96,7 @@ export default function SalesOutboundPage() {
   };
   const fetchWarehouses = async () => {
     try {
-      const res = await fetch('/api/warehouse?status=1');
+      const res = await authFetch('/api/warehouse?status=1');
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
     } catch (e) {
@@ -140,9 +140,8 @@ export default function SalesOutboundPage() {
   };
   const handleStatusChange = async (id: number, status: number) => {
     try {
-      const res = await fetch('/api/warehouse/sales-outbound', {
+      const res = await authFetch('/api/warehouse/sales-outbound', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
       });
       const result = await res.json();

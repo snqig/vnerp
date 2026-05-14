@@ -17,6 +17,18 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
 interface DashboardData {
   period: string;
   orderMetrics: {
@@ -66,7 +78,7 @@ export default function ReportsPage() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/reports/dashboard?period=${period}`);
+      const response = await authFetch(`/api/reports/dashboard?period=${period}`);
       const result = await response.json();
       if (result.success) {
         setDashboardData(result.data);
