@@ -1,4 +1,4 @@
-﻿'use client';
+﻿﻿'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';

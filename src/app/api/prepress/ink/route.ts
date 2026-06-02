@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { cachedApiRoute, invalidateCache } from '@/lib/api-cache';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = cachedApiRoute(withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -37,7 +38,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     [...params, pageSize, (page - 1) * pageSize]
   );
   return successResponse({ list: rows, total, page, pageSize });
-});
+}), { ttl: 300, keyPrefix: 'api:ink' });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();

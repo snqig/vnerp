@@ -60,6 +60,7 @@ CREATE TABLE `prd_standard_card` (
   `process_method` VARCHAR(20) COMMENT '工艺方式(模切/冲压)',
   `stamping_method` VARCHAR(50) COMMENT '冲压方法',
   `mold_code` VARCHAR(50) COMMENT '模具编号',
+  `back_mold_code` VARCHAR(50) COMMENT '模具编号(选择)',
   
   -- ========== 排版方向 ==========
   `layout_method` VARCHAR(50) COMMENT '排版方式',
@@ -77,6 +78,7 @@ CREATE TABLE `prd_standard_card` (
   `adhesive_manufacturer` VARCHAR(100) COMMENT '背胶厂商',
   `adhesive_code` VARCHAR(50) COMMENT '背胶编号',
   `adhesive_size` VARCHAR(50) COMMENT '背胶尺寸',
+  `adhesive_specs` VARCHAR(50) COMMENT '背胶规格',
   `dashed_knife` TINYINT DEFAULT 0 COMMENT '加虚线刀: 0-否, 1-是',
   
   -- ========== 切片方式 ==========
@@ -85,6 +87,7 @@ CREATE TABLE `prd_standard_card` (
   `slice_per_bundle` VARCHAR(20) COMMENT 'PCS/扎',
   `slice_per_bag` VARCHAR(20) COMMENT 'PCS/袋',
   `slice_per_box` VARCHAR(20) COMMENT 'PCS/箱',
+  `packing_qty` VARCHAR(20) COMMENT '包装数量(PCS/袋)',
   
   -- ========== 存放位置 ==========
   `back_knife_mold` VARCHAR(50) COMMENT '背胶刀模存放',
@@ -93,6 +96,7 @@ CREATE TABLE `prd_standard_card` (
   -- ========== 离型纸信息 ==========
   `release_paper_code` VARCHAR(50) COMMENT '离型纸编号',
   `release_paper_type` VARCHAR(50) COMMENT '离型纸种类',
+  `release_paper_category` VARCHAR(50) COMMENT '离型纸类别',
   `release_paper_specs` VARCHAR(50) COMMENT '离型纸规格',
   
   -- ========== 包装信息 ==========

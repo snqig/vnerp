@@ -8,6 +8,7 @@ import {
   withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { cachedApiRoute, invalidateCache } from '@/lib/api-cache';
 
 // 客户数据接口
 interface Customer {
@@ -96,7 +97,7 @@ function buildQueryConditions(params: {
 }
 
 // GET - 获取客户列表或单个客户
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = cachedApiRoute(withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -142,7 +143,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   });
 
   return paginatedResponse(result.data, result.pagination);
-}, '获取客户列表失败');
+}), { ttl: 300, keyPrefix: 'api:customers' });
 
 // POST - 创建新客户
 export const POST = withErrorHandler(async (request: NextRequest) => {
@@ -201,6 +202,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     ]
   );
 
+  await invalidateCache('api:customers');
   return successResponse({ id: result.insertId }, '客户创建成功');
 }, '创建客户失败');
 
@@ -279,6 +281,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     return commonErrors.notFound('客户不存在或已被删除');
   }
 
+  await invalidateCache('api:customers');
   return successResponse(null, '客户更新成功');
 }, '更新客户失败');
 
@@ -308,5 +311,6 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     await connection.execute('UPDATE crm_customer SET deleted = 1 WHERE id = ?', [customerId]);
   });
 
+  await invalidateCache('api:customers');
   return successResponse(null, '客户删除成功');
 }, '删除客户失败');

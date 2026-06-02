@@ -81,6 +81,7 @@ interface StandardCardListItem {
   process_method: string;
   glue_type: string;
   packing_type: string;
+  mold_type: string;
 
   create_time: string;
   update_time: string;
@@ -197,7 +198,7 @@ export default function StandardCardPage() {
         params.append('keyword', debouncedSearchTerm);
       }
 
-      const response = await authFetch(`/api/standard-cards?${params.toString()}`);
+      const response = await fetch(`/api/standard-cards?${params.toString()}`);
       const result = await response.json();
 
       if (result.success) {
@@ -254,10 +255,9 @@ export default function StandardCardPage() {
   };
 
   const handlePrint = (card: StandardCardListItem) => {
-    const printWindow = window.open(
+    window.open(
       `/sample/standard-card/print?id=${card.id}&autoPrint=true`,
-      '_blank',
-      'width=1200,height=800,scrollbars=yes'
+      '_blank'
     );
   };
 
@@ -274,7 +274,7 @@ export default function StandardCardPage() {
     setCardToApprove(card);
     setLoadingApproval(true);
     try {
-      const response = await authFetch(`/api/standard-cards/approve?id=${card.id}`);
+      const response = await fetch(`/api/standard-cards/approve?id=${card.id}`);
       const result = await response.json();
       if (result.success) {
         setApprovalStatus(result.data);
@@ -410,13 +410,13 @@ export default function StandardCardPage() {
             <Link href="/sample/standard-card/input">
               <Button variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
-                传统录入
+                新建标准卡
               </Button>
             </Link>
             <Link href="/sample/standard-card/input-v2">
               <Button>
                 <Sparkles className="h-4 w-4 mr-2" />
-                新建标准卡
+                传统录入
               </Button>
             </Link>
           </div>
@@ -587,6 +587,7 @@ export default function StandardCardPage() {
                     <TableHead className="w-[90px]">日期</TableHead>
                     <TableHead className="w-[100px]">成品尺寸</TableHead>
                     <TableHead className="w-[80px]">印刷类型</TableHead>
+                    <TableHead className="w-[80px]">模号</TableHead>
                     <TableHead className="w-[70px]">状态</TableHead>
                     <TableHead className="w-[70px] text-center">操作</TableHead>
                   </TableRow>
@@ -594,7 +595,7 @@ export default function StandardCardPage() {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={11} className="h-32 text-center text-muted-foreground">
+                      <TableCell colSpan={12} className="h-32 text-center text-muted-foreground">
                         <div className="flex items-center justify-center gap-2">
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                           加载中...
@@ -603,7 +604,7 @@ export default function StandardCardPage() {
                     </TableRow>
                   ) : filteredCards.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={11} className="h-32 text-center text-muted-foreground">
+                      <TableCell colSpan={12} className="h-32 text-center text-muted-foreground">
                         暂无数据
                       </TableCell>
                     </TableRow>
@@ -666,6 +667,9 @@ export default function StandardCardPage() {
                         </TableCell>
                         <TableCell>
                           <span className="text-sm">{card.print_type || '-'}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{card.mold_type || '-'}</span>
                         </TableCell>
                         <TableCell>{getStatusBadge(card.status)}</TableCell>
                         <TableCell>

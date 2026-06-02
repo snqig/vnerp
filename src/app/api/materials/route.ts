@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { successResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { cachedApiRoute } from '@/lib/api-cache';
 
-export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
+export const GET = cachedApiRoute(withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const pageSize = parseInt(searchParams.get('pageSize') || '100');
   const page = parseInt(searchParams.get('page') || '1');
@@ -44,4 +44,4 @@ export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo
     page,
     pageSize,
   });
-});
+}), { ttl: 300, keyPrefix: 'api:materials' });

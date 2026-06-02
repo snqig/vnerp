@@ -126,7 +126,6 @@ interface FormData {
   processMethod: string;
   stampingMethod: string;
   moldCode: string;
-  backMoldCode: string;
   layoutMethod: string;
   layoutWay: string;
   jumpDistance2: string;
@@ -138,19 +137,16 @@ interface FormData {
   adhesiveManufacturer: string;
   adhesiveCode: string;
   adhesiveSize: string;
-  adhesiveSpecs: string;
   dashedKnife: boolean;
   slicePerRow: string;
   slicePerRoll: string;
   slicePerBundle: string;
   slicePerBag: string;
   slicePerBox: string;
-  packingQty: string;
   backKnifeMold: string;
   backMylarMold: string;
   releasePaperCode: string;
   releasePaperType: string;
-  releasePaperCategory: string;
   releasePaperSpecs: string;
   paddingMaterial: string;
   packingMaterial: string;
@@ -225,6 +221,10 @@ const FileUploadCell = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState(value);
+
+  useEffect(() => {
+    setFileName(value);
+  }, [value]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -340,7 +340,6 @@ function StandardCardInputContent() {
     processMethod: '模切',
     stampingMethod: '',
     moldCode: '',
-    backMoldCode: '',
     layoutMethod: '',
     layoutWay: '',
     jumpDistance2: '',
@@ -352,19 +351,16 @@ function StandardCardInputContent() {
     adhesiveManufacturer: '',
     adhesiveCode: '',
     adhesiveSize: '',
-    adhesiveSpecs: '',
     dashedKnife: false,
     slicePerRow: '',
     slicePerRoll: '',
     slicePerBundle: '',
     slicePerBag: '',
     slicePerBox: '',
-    packingQty: '',
     backKnifeMold: '',
     backMylarMold: '',
     releasePaperCode: '',
     releasePaperType: '',
-    releasePaperCategory: '',
     releasePaperSpecs: '',
     paddingMaterial: '',
     packingMaterial: '',
@@ -482,7 +478,13 @@ function StandardCardInputContent() {
     fetchEmployees();
   }, []);
 
-  const fetchCardData = useCallback(async (id: number) => {
+  useEffect(() => {
+    if (isEditMode && editId) {
+      fetchCardData(parseInt(editId));
+    }
+  }, [isEditMode, editId]);
+
+  const fetchCardData = async (id: number) => {
     try {
       const response = await fetch(`/api/standard-cards?id=${id}`);
       const result = await response.json();
@@ -522,7 +524,6 @@ function StandardCardInputContent() {
           processMethod: card.process_method || '模切',
           stampingMethod: card.stamping_method || '',
           moldCode: card.mold_code || '',
-          backMoldCode: card.back_mold_code || '',
           layoutMethod: card.layout_method || '',
           layoutWay: card.layout_way || '',
           jumpDistance2: card.jump_distance2 || '',
@@ -534,19 +535,16 @@ function StandardCardInputContent() {
           adhesiveManufacturer: card.adhesive_manufacturer || '',
           adhesiveCode: card.adhesive_code || '',
           adhesiveSize: card.adhesive_size || '',
-          adhesiveSpecs: card.adhesive_specs || '',
           dashedKnife: card.dashed_knife === 1,
           slicePerRow: card.slice_per_row || '',
           slicePerRoll: card.slice_per_roll || '',
           slicePerBundle: card.slice_per_bundle || '',
           slicePerBag: card.slice_per_bag || '',
           slicePerBox: card.slice_per_box || '',
-          packingQty: card.packing_qty || '',
           backKnifeMold: card.back_knife_mold || '',
           backMylarMold: card.back_mylar_mold || '',
           releasePaperCode: card.release_paper_code || '',
           releasePaperType: card.release_paper_type || '',
-          releasePaperCategory: card.release_paper_category || '',
           releasePaperSpecs: card.release_paper_specs || '',
           paddingMaterial: card.padding_material || '',
           packingMaterial: card.packing_material || '',
@@ -575,13 +573,7 @@ function StandardCardInputContent() {
       console.error('加载标准卡数据失败:', error);
       toast({ title: '加载数据失败', variant: 'destructive' });
     }
-  }, [toast]);
-
-  useEffect(() => {
-    if (isEditMode && editId) {
-      fetchCardData(parseInt(editId));
-    }
-  }, [isEditMode, editId, fetchCardData]);
+  };
 
   const buildSaveData = useCallback(() => ({
     card_no: formData.cardNo || `SC${Date.now()}`,
@@ -617,7 +609,6 @@ function StandardCardInputContent() {
     process_method: formData.processMethod,
     stamping_method: formData.stampingMethod,
     mold_code: formData.moldCode,
-    back_mold_code: formData.backMoldCode,
     layout_method: formData.layoutMethod,
     layout_way: formData.layoutWay,
     jump_distance2: formData.jumpDistance2,
@@ -629,19 +620,16 @@ function StandardCardInputContent() {
     adhesive_manufacturer: formData.adhesiveManufacturer,
     adhesive_code: formData.adhesiveCode,
     adhesive_size: formData.adhesiveSize,
-    adhesive_specs: formData.adhesiveSpecs,
     dashed_knife: formData.dashedKnife ? 1 : 0,
     slice_per_row: formData.slicePerRow,
     slice_per_roll: formData.slicePerRoll,
     slice_per_bundle: formData.slicePerBundle,
     slice_per_bag: formData.slicePerBag,
     slice_per_box: formData.slicePerBox,
-    packing_qty: formData.packingQty,
     back_knife_mold: formData.backKnifeMold,
     back_mylar_mold: formData.backMylarMold,
     release_paper_code: formData.releasePaperCode,
     release_paper_type: formData.releasePaperType,
-    release_paper_category: formData.releasePaperCategory,
     release_paper_specs: formData.releasePaperSpecs,
     padding_material: formData.paddingMaterial,
     packing_material: formData.packingMaterial,
@@ -669,10 +657,6 @@ function StandardCardInputContent() {
     try {
       setIsSaving(true);
       const saveData = buildSaveData();
-      
-      if (isEditMode && editId) {
-        (saveData as any).id = parseInt(editId);
-      }
       
       const url = isEditMode && editId ? `/api/standard-cards?id=${editId}` : '/api/standard-cards';
       const method = isEditMode ? 'PUT' : 'POST';
@@ -724,14 +708,11 @@ function StandardCardInputContent() {
     }
   };
 
-  const handlePreview = async () => {
+  const handlePreview = () => {
     if (savedCardId || editId) {
       window.open(`/sample/standard-card/print?id=${savedCardId || editId}`, '_blank');
     } else {
-      const cardId = await saveToDatabase();
-      if (cardId) {
-        window.open(`/sample/standard-card/print?id=${cardId}`, '_blank');
-      }
+      toast({ title: '请先保存数据', variant: 'destructive' });
     }
   };
 
@@ -768,7 +749,6 @@ function StandardCardInputContent() {
         processMethod: '模切',
         stampingMethod: '',
         moldCode: '',
-        backMoldCode: '',
         layoutMethod: '',
         layoutWay: '',
         jumpDistance2: '',
@@ -780,19 +760,16 @@ function StandardCardInputContent() {
         adhesiveManufacturer: '',
         adhesiveCode: '',
         adhesiveSize: '',
-        adhesiveSpecs: '',
         dashedKnife: false,
         slicePerRow: '',
         slicePerRoll: '',
         slicePerBundle: '',
         slicePerBag: '',
         slicePerBox: '',
-        packingQty: '',
         backKnifeMold: '',
         backMylarMold: '',
         releasePaperCode: '',
         releasePaperType: '',
-        releasePaperCategory: '',
         releasePaperSpecs: '',
         paddingMaterial: '',
         packingMaterial: '',
@@ -885,7 +862,7 @@ function StandardCardInputContent() {
         >
           <style dangerouslySetInnerHTML={{ __html: `
             table { height: 100%; width: 100%; border-collapse: collapse; font-size: 12px; font-family: Arial, sans-serif; }
-            table td { padding: 2px 4px !important; vertical-align: middle; text-align: center; border: 1px solid #333 !important; font-size: 12px !important; font-weight: normal !important; line-height: 1.4 !important; }
+            table td { padding: 2px 4px !important; vertical-align: middle; text-align: center; border: 1px solid #333; font-size: 12px; font-weight: normal; line-height: 1.4; }
             table td input[type="text"],
             table td input[type="number"],
             table td input[type="date"],
@@ -909,7 +886,7 @@ function StandardCardInputContent() {
               box-shadow: none;
               outline: none;
             }
-            .dark table td { border-color: rgba(255,255,255,0.2) !important; color: #e2e8f0 !important; }
+            .dark table td { border-color: rgba(255,255,255,0.2); color: #e2e8f0; }
             .dark table td input:focus { background: rgba(59,130,246,0.15); }
             .border-none { border: none !important; }
             .border-bottom { border: none !important; border-bottom: 1px solid #000 !important; }
@@ -1308,7 +1285,7 @@ function StandardCardInputContent() {
               </tr>
 
               {formData.sequences.map((seq, index) => (
-                <tr key={seq.id} style={{ height: '28px' }}>
+                <tr key={seq.id}>
                   <td className="border text-center font-bold">{seq.id}</td>
                   <td className="border">
                     <InputCell 
@@ -1443,8 +1420,8 @@ function StandardCardInputContent() {
                       <td className="border">规格</td>
                       <td colSpan={2} className="border">
                         <InputCell 
-                          value={formData.mylarSpecs}
-                          onChange={(v) => setFormData(p => ({ ...p, mylarSpecs: v }))}
+                          value={formData.stampingMethod}
+                          onChange={(v) => setFormData(p => ({ ...p, stampingMethod: v }))}
                         />
                       </td>
                       <td className="border">MM</td>
@@ -1492,14 +1469,14 @@ function StandardCardInputContent() {
                       </td>
                       <td colSpan={2} className="border">模具编号</td>
                       <td colSpan={2} className="border">
-                        <Popover open={diePickerField === 'backMoldCode'} onOpenChange={(open) => setDiePickerField(open ? 'backMoldCode' : null)}>
+                        <Popover open={diePickerField === 'backKnifeMold'} onOpenChange={(open) => setDiePickerField(open ? 'backKnifeMold' : null)}>
                           <PopoverTrigger asChild>
                             <button
                               type="button"
                               className="w-full text-xs text-center bg-transparent border-none outline-none cursor-pointer py-1"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              {formData.backMoldCode || ''}
+                              {formData.backKnifeMold || ''}
                             </button>
                           </PopoverTrigger>
                           <PopoverContent className="w-[280px] p-0" align="start">
@@ -1513,7 +1490,7 @@ function StandardCardInputContent() {
                                       key={die.id}
                                       value={`${die.die_code} ${die.die_name || ''}`}
                                       onSelect={() => {
-                                        setFormData(p => ({ ...p, backMoldCode: die.die_code }));
+                                        setFormData(p => ({ ...p, backKnifeMold: die.die_code }));
                                         setDiePickerField(null);
                                       }}
                                     >
@@ -1546,7 +1523,7 @@ function StandardCardInputContent() {
                           onChange={(v) => setFormData(p => ({ ...p, adhesiveSize: v }))}
                         />
                       </td>
-                      <td colSpan={2} className="border">排模方法</td>
+                      <td colSpan={2} className="border">存放位置</td>
                       <td colSpan={2} className="border">
                         <Popover open={diePickerField === 'backMylarMold'} onOpenChange={(open) => setDiePickerField(open ? 'backMylarMold' : null)}>
                           <PopoverTrigger asChild>
@@ -1678,8 +1655,8 @@ function StandardCardInputContent() {
                       <td className="border">规格</td>
                       <td className="border">
                         <InputCell 
-                          value={formData.adhesiveSpecs}
-                          onChange={(v) => setFormData(p => ({ ...p, adhesiveSpecs: v }))}
+                          value={formData.mylarSpecs}
+                          onChange={(v) => setFormData(p => ({ ...p, mylarSpecs: v }))}
                         />
                       </td>
                       <td className="border">
@@ -1689,7 +1666,7 @@ function StandardCardInputContent() {
                         />
                       </td>
                       <td className="border">PCS/箱</td>
-                      <td colSpan={2} className="border"><InputCell value={formData.packingQty} onChange={(v) => setFormData(p => ({ ...p, packingQty: v }))} /></td>
+                      <td colSpan={2} className="border"><InputCell value="" /></td>
                       <td colSpan={2} className="border">PCS/袋</td>
                     </>
                   )}
@@ -1771,7 +1748,7 @@ function StandardCardInputContent() {
                           />
                         </td>
                       )}
-                      {rowNum === 8 ? null : <td className="border"><InputCell value={rowNum === 9 ? formData.releasePaperType : formData.releasePaperSpecs} onChange={(v) => setFormData(p => ({ ...p, [rowNum === 9 ? 'releasePaperType' : 'releasePaperSpecs']: v }))} /></td>}
+                      {rowNum === 8 ? null : <td className="border"><InputCell value={rowNum === 9 ? formData.storageLocation : formData.storageLocation} onChange={(v) => setFormData(p => ({ ...p, storageLocation: v }))} /></td>}
                       <td colSpan={2} className="border">
                         {rowNum === 8 ? (
                           <div className="text-center">背刀刀模</div>
@@ -1793,8 +1770,8 @@ function StandardCardInputContent() {
                       <td colSpan={2} className="border">
                         {rowNum === 8 ? (
                           <InputCell 
-                            value={formData.releasePaperCategory}
-                            onChange={(v) => setFormData(p => ({ ...p, releasePaperCategory: v }))}
+                            value={formData.releasePaperType}
+                            onChange={(v) => setFormData(p => ({ ...p, releasePaperType: v }))}
                           />
                         ) : rowNum === 9 ? (
                           "垫纸材料"
