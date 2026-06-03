@@ -132,12 +132,12 @@ const STATUS_MAP: Record<number, { labelKey: string; className: string }> = {
   5: { labelKey: 'statusCancelled', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
 };
 
-const getStatusBadge = (status: number) => {
+const getStatusBadge = (status: number, t: (key: string) => string) => {
   const config = STATUS_MAP[status] || {
-    label: `未知(${status})`,
+    labelKey: 'unknown',
     className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
   };
-  return <Badge className={config.className}>{config.label}</Badge>;
+  return <Badge className={config.className}>{t(config.labelKey)}</Badge>;
 };
 
 const formatDate = (dateStr: string | null | undefined) => {
@@ -155,6 +155,8 @@ const formatDate = (dateStr: string | null | undefined) => {
 };
 
 export default function SalesOrdersPage() {
+  const t = useTranslations('Orders');
+  const tc = useTranslations('Common');
   const { companyName } = useCompanyName();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
@@ -196,7 +198,7 @@ export default function SalesOrdersPage() {
         setCustomers(result.data?.list || result.data || []);
       }
     } catch (error) {
-      console.error('获取客户列表失败:', error);
+      console.error(t('fetchCustomersFailed'), error);
     }
   };
 
@@ -208,7 +210,7 @@ export default function SalesOrdersPage() {
         setMaterials(result.data?.list || result.data || []);
       }
     } catch (error) {
-      console.error('获取物料列表失败:', error);
+      console.error(t('fetchMaterialsFailed'), error);
     }
   };
 
@@ -226,16 +228,16 @@ export default function SalesOrdersPage() {
           const orderList = result.data?.list || [];
           setOrders(orderList);
         } else {
-          toast.error(result.message || '获取订单列表失败');
+          toast.error(result.message || t('fetchOrdersFailed'));
         }
       } catch (error) {
-        console.error('获取订单列表失败:', error);
-        toast.error('获取订单列表失败');
+        console.error(t('fetchOrdersFailed'), error);
+        toast.error(t('fetchOrdersFailed'));
       } finally {
         setLoading(false);
       }
     },
-    [statusFilter]
+    [statusFilter, t]
   );
 
   useEffect(() => {
@@ -339,18 +341,18 @@ export default function SalesOrdersPage() {
   };
 
   const handleDeleteOrder = async (orderId: number) => {
-    if (confirm('确定要删除该订单吗？')) {
+    if (confirm(t('confirmDelete'))) {
       try {
         const response = await authFetch(`/api/orders?id=${orderId}`, { method: 'DELETE' });
         const result = await response.json();
         if (result.success) {
-          toast.success('订单删除成功');
+          toast.success(t('deleteSuccess'));
           fetchOrders();
         } else {
-          toast.error(result.message || '删除失败');
+          toast.error(result.message || t('deleteFailed'));
         }
       } catch (error) {
-        toast.error('删除失败');
+        toast.error(t('deleteFailed'));
       }
     }
   };
@@ -363,29 +365,29 @@ export default function SalesOrdersPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success('订单已确认');
+        toast.success(t('confirmSuccess'));
         fetchOrders();
       } else {
-        toast.error(result.message || '确认失败');
+        toast.error(result.message || t('confirmFailed'));
       }
     } catch (error) {
-      toast.error('确认失败');
+      toast.error(t('confirmFailed'));
     }
   };
 
   const handleBatchConfirm = async () => {
     if (!selectedOrders.length) {
-      toast.warning('请先选择订单');
+      toast.warning(t('selectOrderFirst'));
       return;
     }
     const pendingOrders = filteredOrders.filter(
       (o) => selectedOrders.includes(o.id) && o.status === 1
     );
     if (pendingOrders.length === 0) {
-      toast.warning('选中的订单中没有待确认状态的订单');
+      toast.warning(t('noPendingOrder'));
       return;
     }
-    if (!confirm(`确定要确认选中的 ${pendingOrders.length} 个订单吗？`)) return;
+    if (!confirm(t('confirmSelected', { count: pendingOrders.length }))) return;
 
     try {
       let successCount = 0;
@@ -398,19 +400,19 @@ export default function SalesOrdersPage() {
         if (data.success) successCount++;
       }
       if (successCount > 0) {
-        toast.success(`成功确认 ${successCount} 个订单`);
+        toast.success(t('confirmSuccessCount', { count: successCount }));
         fetchOrders();
       } else {
-        toast.error('确认失败');
+        toast.error(t('confirmFailed'));
       }
     } catch (error) {
-      toast.error('确认失败');
+      toast.error(t('confirmFailed'));
     }
   };
 
   const handleBatchDelete = async () => {
     if (!selectedOrders.length) return;
-    if (!confirm(`确定要删除选中的 ${selectedOrders.length} 个订单吗？`)) return;
+    if (!confirm(t('confirmDeleteSelected', { count: selectedOrders.length }))) return;
 
     try {
       setLoading(true);
@@ -421,13 +423,13 @@ export default function SalesOrdersPage() {
         if (data.success) successCount++;
       }
       if (successCount > 0) {
-        toast.success(`成功删除 ${successCount} 个订单`);
+        toast.success(t('deleteSuccessCount', { count: successCount }));
         fetchOrders();
       } else {
-        toast.error('删除失败');
+        toast.error(t('deleteFailed'));
       }
     } catch (error) {
-      toast.error('删除失败');
+      toast.error(t('deleteFailed'));
     } finally {
       setLoading(false);
     }
@@ -435,18 +437,18 @@ export default function SalesOrdersPage() {
 
   const handleGenerateWorkOrder = async (order: Order) => {
     if (String(order.status) === '5') {
-      toast.error('已取消的订单不能生成工单');
+      toast.error(t('cancelledCannotGenerate'));
       return;
     }
     if (String(order.status) === '4') {
-      toast.error('已完成的订单不能生成工单');
+      toast.error(t('completedCannotGenerate'));
       return;
     }
     if (!order.items || order.items.length === 0) {
-      toast.error('订单没有明细，无法生成工单');
+      toast.error(t('noItemsCannotGenerate'));
       return;
     }
-    if (!confirm(`确认为订单 ${order.order_no} 生成工单？`)) return;
+    if (!confirm(t('confirmGenerateWorkOrder', { orderNo: order.order_no }))) return;
 
     try {
       const response = await authFetch('/api/workorders', {
@@ -465,13 +467,13 @@ export default function SalesOrdersPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success(result.message || `已为订单 ${order.order_no} 生成工单`);
+        toast.success(result.message || t('generateWorkOrderSuccess', { orderNo: order.order_no }));
         fetchOrders();
       } else {
-        toast.error(result.message || '生成工单失败');
+        toast.error(result.message || t('generateWorkOrderFailed'));
       }
     } catch (error) {
-      toast.error('生成工单失败，请检查网络连接');
+      toast.error(t('networkError'));
     }
   };
 
@@ -482,20 +484,20 @@ export default function SalesOrdersPage() {
         : filteredOrders;
 
     if (dataToExport.length === 0) {
-      toast.warning('没有可导出的订单');
+      toast.warning(t('noExportData'));
       return;
     }
 
     const statusLabels: Record<number, string> = {
-      1: '待确认',
-      2: '已确认',
-      3: '部分发货',
-      4: '已完成',
-      5: '已取消',
+      1: t('statusPending'),
+      2: t('statusConfirmed'),
+      3: t('statusPartialShip'),
+      4: t('statusCompleted'),
+      5: t('statusCancelled'),
     };
 
     if (format === 'excel') {
-      const headers = ['订单号', '客户', '订单日期', '交货日期', '金额', '状态', '产品明细'];
+      const headers = [t('orderNo'), t('customer'), t('orderDate'), t('deliveryDate'), t('amount'), tc('status'), t('productDetail')];
       const rows = dataToExport.map((o) => {
         const itemsStr =
           o.items?.map((i) => `${i.material_name} x${i.quantity}${i.unit}`).join('; ') || '';
@@ -505,7 +507,7 @@ export default function SalesOrdersPage() {
           formatDate(o.order_date),
           formatDate(o.delivery_date),
           Number(o.total_amount || 0).toFixed(2),
-          statusLabels[o.status] || `未知(${o.status})`,
+          statusLabels[o.status] || `${t('unknown')}(${o.status})`,
           itemsStr,
         ];
       });
@@ -515,14 +517,14 @@ export default function SalesOrdersPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `销售订单_${new Date().toISOString().slice(0, 10)}.xls`;
+      a.download = `${t('salesOrderTitle')}_${new Date().toISOString().slice(0, 10)}.xls`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('已导出为 Excel 文件');
+      toast.success(t('exportSuccess'));
     } else if (format === 'pdf') {
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
-        toast.error('无法打开打印窗口');
+        toast.error(t('cannotOpenPrintWindow'));
         return;
       }
       const tableRows = dataToExport
@@ -535,12 +537,12 @@ export default function SalesOrdersPage() {
           <td>${formatDate(o.order_date)}</td>
           <td>${formatDate(o.delivery_date)}</td>
           <td style="text-align:right">¥${Number(o.total_amount || 0).toLocaleString()}</td>
-          <td>${statusLabels[o.status] || '未知'}</td>
+          <td>${statusLabels[o.status] || t('unknown')}</td>
           <td>${itemsStr}</td>
         </tr>`;
         })
         .join('');
-      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>销售订单列表</title>
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${t('orderList')}</title>
         <style>
           @page { size: A4 landscape; margin: 10mm; }
           body { font-family: "Microsoft YaHei", Arial, sans-serif; padding: 20px; color: #333; }
@@ -553,10 +555,10 @@ export default function SalesOrdersPage() {
           @media print { body { padding: 0; } }
         </style></head>
         <body>
-          <h1>销售订单列表</h1>
-          <div class="info">导出时间：${new Date().toLocaleString('zh-CN')} | 共 ${dataToExport.length} 条记录</div>
+          <h1>${t('orderList')}</h1>
+          <div class="info">${t('exportTime')}：${new Date().toLocaleString('zh-CN')} | ${tc('total', { count: dataToExport.length })}</div>
           <table>
-            <thead><tr><th>订单号</th><th>客户</th><th>订单日期</th><th>交货日期</th><th>金额</th><th>状态</th><th>产品明细</th></tr></thead>
+            <thead><tr><th>${t('orderNo')}</th><th>${t('customer')}</th><th>${t('orderDate')}</th><th>${t('deliveryDate')}</th><th>${t('amount')}</th><th>${tc('status')}</th><th>${t('productDetail')}</th></tr></thead>
             <tbody>${tableRows}</tbody>
           </table>
           <div class="footer">${companyName}</div>
@@ -564,7 +566,7 @@ export default function SalesOrdersPage() {
         </body></html>`;
       printWindow.document.write(html);
       printWindow.document.close();
-      toast.success('已导出为 PDF（打印保存）');
+      toast.success(t('exportPdfSuccess'));
     } else if (format === 'word') {
       const tableRows = dataToExport
         .map((o) => {
@@ -576,19 +578,19 @@ export default function SalesOrdersPage() {
           <td style="border:1px solid #333;padding:6px">${formatDate(o.order_date)}</td>
           <td style="border:1px solid #333;padding:6px">${formatDate(o.delivery_date)}</td>
           <td style="border:1px solid #333;padding:6px;text-align:right">¥${Number(o.total_amount || 0).toLocaleString()}</td>
-          <td style="border:1px solid #333;padding:6px">${statusLabels[o.status] || '未知'}</td>
+          <td style="border:1px solid #333;padding:6px">${statusLabels[o.status] || t('unknown')}</td>
           <td style="border:1px solid #333;padding:6px">${itemsStr}</td>
         </tr>`;
         })
         .join('');
-      const thCells = ['订单号', '客户', '订单日期', '交货日期', '金额', '状态', '产品明细']
+      const thCells = [t('orderNo'), t('customer'), t('orderDate'), t('deliveryDate'), t('amount'), tc('status'), t('productDetail')]
         .map((h) => `<th style="border:1px solid #333;padding:6px;background:#f0f0f0">${h}</th>`)
         .join('');
       const htmlContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-        <head><meta charset="utf-8"><title>销售订单</title></head>
+        <head><meta charset="utf-8"><title>${t('salesOrderTitle')}</title></head>
         <body style="font-family:'Microsoft YaHei',sans-serif;padding:20px">
-          <h1 style="text-align:center">销售订单列表</h1>
-          <p style="text-align:center;color:#666;font-size:12px">导出时间：${new Date().toLocaleString()}</p>
+          <h1 style="text-align:center">${t('orderList')}</h1>
+          <p style="text-align:center;color:#666;font-size:12px">${t('exportTime')}：${new Date().toLocaleString()}</p>
           <table style="width:100%;border-collapse:collapse;font-size:12px">
             <thead><tr>${thCells}</tr></thead>
             <tbody>${tableRows}</tbody>
@@ -598,10 +600,10 @@ export default function SalesOrdersPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `销售订单_${new Date().toISOString().slice(0, 10)}.doc`;
+      a.download = `${t('salesOrderTitle')}_${new Date().toISOString().slice(0, 10)}.doc`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('已导出为 Word 文件');
+      toast.success(t('exportWordSuccess'));
     }
   };
 
@@ -612,21 +614,21 @@ export default function SalesOrdersPage() {
         : filteredOrders;
 
     if (dataToPrint.length === 0) {
-      toast.warning('没有数据可打印');
+      toast.warning(t('noPrintData'));
       return;
     }
 
     const statusLabels: Record<number, string> = {
-      1: '待确认',
-      2: '已确认',
-      3: '部分发货',
-      4: '已完成',
-      5: '已取消',
+      1: t('statusPending'),
+      2: t('statusConfirmed'),
+      3: t('statusPartialShip'),
+      4: t('statusCompleted'),
+      5: t('statusCancelled'),
     };
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast.error('无法打开打印窗口，请检查浏览器弹窗设置');
+      toast.error(t('checkPopupSettings'));
       return;
     }
 
@@ -640,13 +642,13 @@ export default function SalesOrdersPage() {
         <td>${formatDate(o.order_date)}</td>
         <td>${formatDate(o.delivery_date)}</td>
         <td>¥${Number(o.total_amount || 0).toLocaleString()}</td>
-        <td>${statusLabels[o.status] || '未知'}</td>
+        <td>${statusLabels[o.status] || t('unknown')}</td>
         <td>${o.remark || ''}</td>
       </tr>`
       )
       .join('');
 
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>销售订单打印</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${t('salesOrderTitle')}${tc('print')}</title>
       <style>
         @page { size: A4 landscape; margin: 10mm; }
         body { font-family: "Microsoft YaHei", Arial, sans-serif; padding: 20px; color: #333; }
@@ -659,10 +661,10 @@ export default function SalesOrdersPage() {
         @media print { body { padding: 0; } }
       </style></head>
       <body>
-        <h1>销售订单列表</h1>
-        <div class="info">打印时间：${new Date().toLocaleString('zh-CN')} | 共 ${dataToPrint.length} 条记录</div>
+        <h1>${t('orderList')}</h1>
+        <div class="info">${t('printTime')}：${new Date().toLocaleString('zh-CN')} | ${tc('total', { count: dataToPrint.length })}</div>
         <table>
-          <thead><tr><th>序号</th><th>订单号</th><th>客户</th><th>订单日期</th><th>交货日期</th><th>金额</th><th>状态</th><th>备注</th></tr></thead>
+          <thead><tr><th>${t('sequence')}</th><th>${t('orderNo')}</th><th>${t('customer')}</th><th>${t('orderDate')}</th><th>${t('deliveryDate')}</th><th>${t('amount')}</th><th>${tc('status')}</th><th>${t('remarkCol')}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
         <div class="footer">${companyName}</div>
@@ -670,18 +672,18 @@ export default function SalesOrdersPage() {
       </body></html>`;
     printWindow.document.write(html);
     printWindow.document.close();
-    toast.success(`正在打印 ${dataToPrint.length} 条销售订单`);
+    toast.success(t('printSuccess', { count: dataToPrint.length }));
   };
 
   const handleSubmitOrder = async () => {
     if (!selectedCustomer) {
-      toast.warning('请选择客户');
+      toast.warning(t('selectCustomerWarning'));
       return;
     }
 
     const deliveryDate = (document.getElementById('deliveryDate') as HTMLInputElement)?.value;
     if (!deliveryDate) {
-      toast.warning('请选择交货日期');
+      toast.warning(t('selectDeliveryDateWarning'));
       return;
     }
 
@@ -689,18 +691,18 @@ export default function SalesOrdersPage() {
       (item) => item.material_name && item.quantity && item.unit_price
     );
     if (validItems.length === 0) {
-      toast.warning('请至少添加一个有效的订单明细');
+      toast.warning(t('addValidItemWarning'));
       return;
     }
 
     for (let i = 0; i < validItems.length; i++) {
       const item = validItems[i];
       if (parseFloat(item.quantity) <= 0) {
-        toast.warning(`第${i + 1}行订单数量必须大于0`);
+        toast.warning(t('quantityMustBePositive', { row: i + 1 }));
         return;
       }
       if (parseFloat(item.unit_price) < 0) {
-        toast.warning(`第${i + 1}行单价不能为负数`);
+        toast.warning(t('priceCannotBeNegative', { row: i + 1 }));
         return;
       }
     }
@@ -723,17 +725,17 @@ export default function SalesOrdersPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success('订单提交成功');
+        toast.success(t('submitSuccess'));
         setIsCreateOpen(false);
         fetchOrders();
         setOrderItems([{ material_name: '', quantity: '', unit: '', unit_price: '' }]);
         setSelectedCustomer('');
       } else {
-        toast.error(result.message || '提交失败');
+        toast.error(result.message || t('submitFailed'));
       }
     } catch (error) {
-      console.error('提交订单失败:', error);
-      toast.error('提交失败，请检查网络连接');
+      console.error(t('submitFailed'), error);
+      toast.error(t('submitNetworkError'));
     } finally {
       setSubmitting(false);
     }
@@ -757,14 +759,14 @@ export default function SalesOrdersPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success('草稿保存成功');
+        toast.success(t('draftSaveSuccess'));
         setIsCreateOpen(false);
         fetchOrders();
       } else {
-        toast.error(result.message || '保存失败');
+        toast.error(result.message || t('saveFailed'));
       }
     } catch (error) {
-      toast.error('保存失败');
+      toast.error(t('saveFailed'));
     }
   };
 
@@ -781,26 +783,26 @@ export default function SalesOrdersPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success('订单更新成功');
+        toast.success(t('updateSuccess'));
         setIsEditOpen(false);
         fetchOrders();
       } else {
-        toast.error(result.message || '更新失败');
+        toast.error(result.message || t('updateFailed'));
       }
     } catch (error) {
-      toast.error('更新失败');
+      toast.error(t('updateFailed'));
     }
   };
 
   return (
-    <MainLayout title="销售订单">
+    <MainLayout title={t('salesOrderTitle')}>
       <div className="space-y-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex flex-1 gap-4 items-center w-full md:w-auto">
                 <SearchInput
-                  placeholder="搜索订单号、客户..."
+                  placeholder={t('searchPlaceholder')}
                   value={searchKeyword}
                   onChange={setSearchKeyword}
                   onSearch={(kw) => fetchOrders(kw)}
@@ -808,15 +810,15 @@ export default function SalesOrdersPage() {
                 />
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="订单状态" />
+                    <SelectValue placeholder={t('orderStatus')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
-                    <SelectItem value="1">待确认</SelectItem>
-                    <SelectItem value="2">已确认</SelectItem>
-                    <SelectItem value="3">部分发货</SelectItem>
-                    <SelectItem value="4">已完成</SelectItem>
-                    <SelectItem value="5">已取消</SelectItem>
+                    <SelectItem value="all">{t('allStatus')}</SelectItem>
+                    <SelectItem value="1">{t('statusPending')}</SelectItem>
+                    <SelectItem value="2">{t('statusConfirmed')}</SelectItem>
+                    <SelectItem value="3">{t('statusPartialShip')}</SelectItem>
+                    <SelectItem value="4">{t('statusCompleted')}</SelectItem>
+                    <SelectItem value="5">{t('statusCancelled')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
@@ -837,7 +839,7 @@ export default function SalesOrdersPage() {
                 {selectedOrders.length > 0 && (
                   <Button variant="default" onClick={handleBatchConfirm}>
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    确认(
+                    {tc('confirm')}(
                     {
                       filteredOrders.filter((o) => selectedOrders.includes(o.id) && o.status === 1)
                         .length
@@ -847,34 +849,34 @@ export default function SalesOrdersPage() {
                 )}
                 <Button variant="outline" onClick={handlePrintList}>
                   <Printer className="h-4 w-4 mr-2" />
-                  打印{selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
+                  {tc('print')}{selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
                 </Button>
                 {selectedOrders.length > 0 && (
                   <Button variant="destructive" onClick={handleBatchDelete}>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    删除({selectedOrders.length})
+                    {tc('delete')}({selectedOrders.length})
                   </Button>
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline">
                       <Download className="h-4 w-4 mr-2" />
-                      导出
+                      {tc('export')}
                       <ChevronDown className="h-3 w-3 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => handleExport('pdf')}>
                       <FileDown className="h-4 w-4 mr-2" />
-                      导出为 PDF
+                      {t('exportPdf')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleExport('excel')}>
                       <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      导出为 Excel
+                      {t('exportExcel')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleExport('word')}>
                       <FileText className="h-4 w-4 mr-2" />
-                      导出为 Word
+                      {t('exportWord')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -882,21 +884,21 @@ export default function SalesOrdersPage() {
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
-                      新建订单
+                      {t('newOrder')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" resizable>
                     <DialogHeader>
-                      <DialogTitle>新建销售订单</DialogTitle>
-                      <DialogDescription>填写订单信息，带 * 为必填项</DialogDescription>
+                      <DialogTitle>{t('newSalesOrder')}</DialogTitle>
+                      <DialogDescription>{t('fillOrderInfo')}</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="customer">客户 *</Label>
+                          <Label htmlFor="customer">{t('customer')} *</Label>
                           <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
                             <SelectTrigger>
-                              <SelectValue placeholder="选择客户" />
+                              <SelectValue placeholder={t('selectCustomer')} />
                             </SelectTrigger>
                             <SelectContent>
                               {customers.map((c) => (
@@ -908,28 +910,28 @@ export default function SalesOrdersPage() {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="deliveryDate">交货日期 *</Label>
+                          <Label htmlFor="deliveryDate">{t('deliveryDate')} *</Label>
                           <Input type="date" id="deliveryDate" />
                         </div>
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <Label>订单明细</Label>
+                          <Label>{t('orderItems')}</Label>
                           <Button type="button" variant="outline" size="sm" onClick={addOrderItem}>
                             <Plus className="h-4 w-4 mr-1" />
-                            添加明细
+                            {t('addDetail')}
                           </Button>
                         </div>
                         <div className="border rounded-lg">
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>产品</TableHead>
-                                <TableHead className="w-[120px]">数量</TableHead>
-                                <TableHead className="w-[80px]">单位</TableHead>
-                                <TableHead className="w-[120px]">单价</TableHead>
-                                <TableHead className="w-[120px]">金额</TableHead>
+                                <TableHead>{t('product')}</TableHead>
+                                <TableHead className="w-[120px]">{t('quantity')}</TableHead>
+                                <TableHead className="w-[80px]">{t('unit')}</TableHead>
+                                <TableHead className="w-[120px]">{t('unitPrice')}</TableHead>
+                                <TableHead className="w-[120px]">{t('amount')}</TableHead>
                                 <TableHead className="w-[60px]"></TableHead>
                               </TableRow>
                             </TableHeader>
@@ -952,7 +954,7 @@ export default function SalesOrdersPage() {
                                       }}
                                     >
                                       <SelectTrigger>
-                                        <SelectValue placeholder="选择产品" />
+                                        <SelectValue placeholder={t('selectProduct')} />
                                       </SelectTrigger>
                                       <SelectContent>
                                         {materials
@@ -979,7 +981,7 @@ export default function SalesOrdersPage() {
                                   </TableCell>
                                   <TableCell>
                                     <Input
-                                      placeholder="单位"
+                                      placeholder={t('unit')}
                                       value={item.unit}
                                       onChange={(e) => {
                                         const newItems = [...orderItems];
@@ -1027,19 +1029,19 @@ export default function SalesOrdersPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="remark">备注</Label>
-                        <Input id="remark" placeholder="订单备注信息..." />
+                        <Label htmlFor="remark">{tc('remark')}</Label>
+                        <Input id="remark" placeholder={t('orderRemark')} />
                       </div>
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                        取消
+                        {tc('cancel')}
                       </Button>
                       <Button variant="outline" onClick={handleSaveDraft}>
-                        保存草稿
+                        {t('saveDraft')}
                       </Button>
                       <Button onClick={handleSubmitOrder} disabled={submitting}>
-                        {submitting ? '提交中...' : '提交订单'}
+                        {submitting ? t('submitting') : t('submitOrder')}
                       </Button>
                     </div>
                   </DialogContent>
@@ -1051,18 +1053,18 @@ export default function SalesOrdersPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>订单列表</CardTitle>
+            <CardTitle>{t('orderList')}</CardTitle>
             <CardDescription>
-              共 {filteredOrders.length} 条订单记录{statusFilter !== 'all' && ' (已筛选)'}
+              {tc('total', { count: filteredOrders.length })}{statusFilter !== 'all' ? ` (${t('filtered')})` : ''}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loading && orders.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">加载中...</div>
+              <div className="text-center py-8 text-muted-foreground">{t('loading')}</div>
             ) : filteredOrders.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>{orders.length === 0 ? '暂无订单数据' : '没有符合条件的订单'}</p>
+                <p>{orders.length === 0 ? t('noOrderData') : t('noMatchingOrder')}</p>
               </div>
             ) : (
               <Table>
@@ -1083,7 +1085,7 @@ export default function SalesOrdersPage() {
                       onClick={() => handleSort('order_no')}
                     >
                       <span className="inline-flex items-center">
-                        订单号{getSortIcon('order_no')}
+                        {t('orderNo')}{getSortIcon('order_no')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1091,7 +1093,7 @@ export default function SalesOrdersPage() {
                       onClick={() => handleSort('customer_name')}
                     >
                       <span className="inline-flex items-center">
-                        客户{getSortIcon('customer_name')}
+                        {t('customer')}{getSortIcon('customer_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1099,7 +1101,7 @@ export default function SalesOrdersPage() {
                       onClick={() => handleSort('order_date')}
                     >
                       <span className="inline-flex items-center">
-                        订单日期{getSortIcon('order_date')}
+                        {t('orderDate')}{getSortIcon('order_date')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1107,7 +1109,7 @@ export default function SalesOrdersPage() {
                       onClick={() => handleSort('delivery_date')}
                     >
                       <span className="inline-flex items-center">
-                        交货日期{getSortIcon('delivery_date')}
+                        {t('deliveryDate')}{getSortIcon('delivery_date')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1115,16 +1117,16 @@ export default function SalesOrdersPage() {
                       onClick={() => handleSort('total_amount')}
                     >
                       <span className="inline-flex items-center justify-end">
-                        金额{getSortIcon('total_amount')}
+                        {t('amount')}{getSortIcon('total_amount')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted/50"
                       onClick={() => handleSort('status')}
                     >
-                      <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
+                      <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
                     </TableHead>
-                    <TableHead className="text-right">操作</TableHead>
+                    <TableHead className="text-right">{tc('operation')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1161,7 +1163,7 @@ export default function SalesOrdersPage() {
                           <TableCell className="text-right font-medium">
                             ¥{Number(order.total_amount || 0).toLocaleString()}
                           </TableCell>
-                          <TableCell>{getStatusBadge(order.status)}</TableCell>
+                          <TableCell>{getStatusBadge(order.status, t)}</TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -1172,28 +1174,28 @@ export default function SalesOrdersPage() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleViewOrder(order)}>
                                   <Eye className="h-4 w-4 mr-2" />
-                                  查看详情
+                                  {t('viewDetail')}
                                 </DropdownMenuItem>
                                 {order.status === 1 && (
                                   <DropdownMenuItem onClick={() => handleConfirmOrder(order.id)}>
                                     <CheckCircle className="h-4 w-4 mr-2" />
-                                    确认订单
+                                    {t('confirmOrder')}
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem onClick={() => handleEditOrder(order)}>
                                   <Edit className="h-4 w-4 mr-2" />
-                                  编辑
+                                  {tc('edit')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleGenerateWorkOrder(order)}>
                                   <FileText className="h-4 w-4 mr-2" />
-                                  生成工单
+                                  {t('generateWorkOrder')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive"
                                   onClick={() => handleDeleteOrder(order.id)}
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
-                                  删除
+                                  {tc('delete')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -1207,19 +1209,19 @@ export default function SalesOrdersPage() {
                                   <TableHeader>
                                     <TableRow className="bg-slate-100/50 hover:bg-slate-100/50 dark:bg-gray-700/30 dark:hover:bg-gray-700/50">
                                       <TableHead className="pl-8 text-xs font-normal text-muted-foreground">
-                                        产品名称
+                                        {t('productNameCol')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                        数量
+                                        {t('quantity')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground">
-                                        单位
+                                        {t('unit')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                        单价
+                                        {t('unitPrice')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                        金额
+                                        {t('amount')}
                                       </TableHead>
                                     </TableRow>
                                   </TableHeader>
@@ -1256,7 +1258,7 @@ export default function SalesOrdersPage() {
                                           colSpan={5}
                                           className="text-center py-3 text-muted-foreground text-sm"
                                         >
-                                          暂无明细数据
+                                          {t('noDetailData')}
                                         </TableCell>
                                       </TableRow>
                                     )}
@@ -1278,44 +1280,44 @@ export default function SalesOrdersPage() {
         <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
-              <DialogTitle>订单详情</DialogTitle>
-              <DialogDescription>订单号: {selectedOrder?.order_no}</DialogDescription>
+              <DialogTitle>{t('orderDetail')}</DialogTitle>
+              <DialogDescription>{t('orderNo')}: {selectedOrder?.order_no}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-muted-foreground">客户</Label>
+                  <Label className="text-muted-foreground">{t('customer')}</Label>
                   <p className="font-medium">{selectedOrder?.customer_name}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">状态</Label>
-                  <p>{selectedOrder && getStatusBadge(selectedOrder.status)}</p>
+                  <Label className="text-muted-foreground">{tc('status')}</Label>
+                  <p>{selectedOrder && getStatusBadge(selectedOrder.status, t)}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">订单日期</Label>
+                  <Label className="text-muted-foreground">{t('orderDate')}</Label>
                   <p className="font-medium">{formatDate(selectedOrder?.order_date)}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">交货日期</Label>
+                  <Label className="text-muted-foreground">{t('deliveryDate')}</Label>
                   <p className="font-medium">{formatDate(selectedOrder?.delivery_date)}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">订单金额</Label>
+                  <Label className="text-muted-foreground">{t('orderAmount')}</Label>
                   <p className="font-medium text-lg">
                     ¥{Number(selectedOrder?.total_amount || 0).toLocaleString()}
                   </p>
                 </div>
               </div>
               <div>
-                <Label className="text-muted-foreground">订单明细</Label>
+                <Label className="text-muted-foreground">{t('orderItems')}</Label>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>产品</TableHead>
-                      <TableHead>数量</TableHead>
-                      <TableHead>单位</TableHead>
-                      <TableHead>单价</TableHead>
-                      <TableHead>金额</TableHead>
+                      <TableHead>{t('product')}</TableHead>
+                      <TableHead>{t('quantity')}</TableHead>
+                      <TableHead>{t('unit')}</TableHead>
+                      <TableHead>{t('unitPrice')}</TableHead>
+                      <TableHead>{t('amount')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1333,13 +1335,13 @@ export default function SalesOrdersPage() {
               </div>
               {selectedOrder?.remark && (
                 <div>
-                  <Label className="text-muted-foreground">备注</Label>
+                  <Label className="text-muted-foreground">{tc('remark')}</Label>
                   <p className="text-sm">{selectedOrder.remark}</p>
                 </div>
               )}
             </div>
             <div className="flex justify-end">
-              <Button onClick={() => setIsViewOpen(false)}>关闭</Button>
+              <Button onClick={() => setIsViewOpen(false)}>{tc('close')}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -1347,17 +1349,17 @@ export default function SalesOrdersPage() {
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
-              <DialogTitle>编辑订单</DialogTitle>
-              <DialogDescription>订单号: {selectedOrder?.order_no}</DialogDescription>
+              <DialogTitle>{t('editOrder')}</DialogTitle>
+              <DialogDescription>{t('orderNo')}: {selectedOrder?.order_no}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>客户</Label>
+                  <Label>{t('customer')}</Label>
                   <Input value={selectedOrder?.customer_name || ''} disabled />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="editDeliveryDate">交货日期</Label>
+                  <Label htmlFor="editDeliveryDate">{t('deliveryDate')}</Label>
                   <Input
                     type="date"
                     id="editDeliveryDate"
@@ -1370,15 +1372,15 @@ export default function SalesOrdersPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>订单明细</Label>
+                <Label>{t('orderItems')}</Label>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>产品</TableHead>
-                      <TableHead>数量</TableHead>
-                      <TableHead>单位</TableHead>
-                      <TableHead>单价</TableHead>
-                      <TableHead>金额</TableHead>
+                      <TableHead>{t('product')}</TableHead>
+                      <TableHead>{t('quantity')}</TableHead>
+                      <TableHead>{t('unit')}</TableHead>
+                      <TableHead>{t('unitPrice')}</TableHead>
+                      <TableHead>{t('amount')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1395,15 +1397,15 @@ export default function SalesOrdersPage() {
                 </Table>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="editRemark">备注</Label>
+                <Label htmlFor="editRemark">{tc('remark')}</Label>
                 <Input id="editRemark" defaultValue={selectedOrder?.remark || ''} />
               </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSaveEdit}>保存</Button>
+              <Button onClick={handleSaveEdit}>{tc('save')}</Button>
             </div>
           </DialogContent>
         </Dialog>

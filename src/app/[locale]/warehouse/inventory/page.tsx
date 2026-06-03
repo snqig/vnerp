@@ -257,41 +257,51 @@ export default function InventoryPage() {
         )}
 
         {alerts.length > 0 && (
-          <Card className="border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/30">
+          <Card className="border-orange-200 dark:border-orange-800 bg-orange-50/80 dark:bg-orange-950/40">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+              <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
                 <AlertTriangle className="h-5 w-5" />
                 {t('inventoryWarning')}
               </CardTitle>
-              <CardDescription className="text-orange-600 dark:text-orange-400/80">
+              <CardDescription className="text-orange-600 dark:text-orange-400">
                 {t('lowStockWarning')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                 {alerts.map((alert, index) => (
-                  <div key={index} className="bg-white dark:bg-card rounded-lg p-3 border border-orange-200 dark:border-orange-800">
-                    <div className="flex items-center gap-2 mb-2">
+                  <div
+                    key={index}
+                    className="bg-card rounded-lg p-4 border border-orange-200 dark:border-orange-800 hover:border-orange-300 dark:hover:border-orange-700 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
                       <TrendingDown
-                        className={`h-4 w-4 ${alert.type === 'out' ? 'text-red-500 dark:text-red-400' : 'text-orange-500 dark:text-orange-400'}`}
-                      />
-                      <span className="font-medium text-sm">{alert.material}</span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {t('current')}:{' '}
-                      <span
-                        className={
+                        className={`h-4 w-4 ${
                           alert.type === 'out'
-                            ? 'text-red-500 dark:text-red-400 font-medium'
-                            : 'text-orange-500 dark:text-orange-400 font-medium'
-                        }
-                      >
-                        {alert.current}
-                      </span>{' '}
-                      {alert.unit}
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-orange-600 dark:text-orange-400'
+                        }`}
+                      />
+                      <span className="font-medium text-sm text-foreground">{alert.material}</span>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {t('safetyStock')}: {alert.safety} {alert.unit}
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{t('current')}</span>
+                        <span className={`font-medium ${
+                          alert.type === 'out'
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-orange-600 dark:text-orange-400'
+                        }`}>
+                          {alert.current} {alert.unit}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{t('safetyStock')}</span>
+                        <span className="font-medium text-foreground">
+                          {alert.safety} {alert.unit}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}

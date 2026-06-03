@@ -116,6 +116,22 @@ export default function PurchaseRequestPage() {
     },
     3: { label: tc('critical'), color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' },
   };
+
+  // 打印/导出专用中文映射（输出内容保持中文）
+  const statusMapCN: Record<number, string> = {
+    0: '草稿',
+    1: '待审批',
+    2: '已审批',
+    3: '已转采购',
+    9: '已关闭',
+  };
+
+  const priorityMapCN: Record<number, string> = {
+    0: '低',
+    1: '中',
+    2: '高',
+    3: '紧急',
+  };
   const router = useRouter();
   const [requests, setRequests] = useState<PurchaseRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -280,7 +296,7 @@ export default function PurchaseRequestPage() {
         <div class="order-block">
           <div class="order-header">
             <span class="order-no">${r.request_no}</span>
-            <span class="order-info">申请部门：${r.request_dept || '-'} | 申请人：${r.requester_name || '-'} | 申请日期：${formatDate(r.request_date)} | 优先级：${priorityMap[r.priority]?.label || '中'} | 状态：${statusMap[r.status]?.label || '未知'}</span>
+            <span class="order-info">申请部门：${r.request_dept || '-'} | 申请人：${r.requester_name || '-'} | 申请日期：${formatDate(r.request_date)} | 优先级：${priorityMapCN[r.priority] || '中'} | 状态：${statusMapCN[r.status] || '未知'}</span>
           </div>
           <table>
             <thead><tr><th>序号</th><th>物料编码</th><th>物料名称</th><th>规格型号</th><th>单位</th><th>数量</th><th>单价</th><th>金额</th></tr></thead>
@@ -352,9 +368,9 @@ export default function PurchaseRequestPage() {
       r.request_dept || '',
       r.requester_name || '',
       r.request_type || '',
-      priorityMap[r.priority]?.label || '中',
+      priorityMapCN[r.priority] || '中',
       String(r.total_amount),
-      statusMap[r.status]?.label || '未知',
+      statusMapCN[r.status] || '未知',
     ]);
     const BOM = '\uFEFF';
     const csvContent =
@@ -388,9 +404,9 @@ export default function PurchaseRequestPage() {
       <td>${r.request_dept || '-'}</td>
       <td>${r.requester_name || '-'}</td>
       <td>${r.request_type || '-'}</td>
-      <td>${priorityMap[r.priority]?.label || '中'}</td>
+      <td>${priorityMapCN[r.priority] || '中'}</td>
       <td>${formatAmount(r.total_amount, r.currency)}</td>
-      <td>${statusMap[r.status]?.label || '未知'}</td>
+      <td>${statusMapCN[r.status] || '未知'}</td>
     </tr>`
       )
       .join('');
@@ -547,13 +563,13 @@ export default function PurchaseRequestPage() {
                     onCheckedChange={toggleSelectAll}
                   />
                 </TableHead>
-                <TableHead>申请单号</TableHead>
+                <TableHead>{t('requestNo')}</TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-muted"
                   onClick={() => handleSort('request_date')}
                 >
                   <span className="inline-flex items-center">
-                    申请日期{getSortIcon('request_date')}
+                    {t('requestDate')}{getSortIcon('request_date')}
                   </span>
                 </TableHead>
                 <TableHead
@@ -561,7 +577,7 @@ export default function PurchaseRequestPage() {
                   onClick={() => handleSort('request_dept')}
                 >
                   <span className="inline-flex items-center">
-                    申请部门{getSortIcon('request_dept')}
+                    {t('requestDept')}{getSortIcon('request_dept')}
                   </span>
                 </TableHead>
                 <TableHead
@@ -569,7 +585,7 @@ export default function PurchaseRequestPage() {
                   onClick={() => handleSort('requester_name')}
                 >
                   <span className="inline-flex items-center">
-                    申请人{getSortIcon('requester_name')}
+                    {t('requester')}{getSortIcon('requester_name')}
                   </span>
                 </TableHead>
                 <TableHead
@@ -577,43 +593,43 @@ export default function PurchaseRequestPage() {
                   onClick={() => handleSort('request_type')}
                 >
                   <span className="inline-flex items-center">
-                    类型{getSortIcon('request_type')}
+                    {tc('type')}{getSortIcon('request_type')}
                   </span>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-muted"
                   onClick={() => handleSort('priority')}
                 >
-                  <span className="inline-flex items-center">优先级{getSortIcon('priority')}</span>
+                  <span className="inline-flex items-center">{tc('priority')}{getSortIcon('priority')}</span>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-muted"
                   onClick={() => handleSort('total_amount')}
                 >
                   <span className="inline-flex items-center">
-                    金额{getSortIcon('total_amount')}
+                    {tc('amount')}{getSortIcon('total_amount')}
                   </span>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-muted"
                   onClick={() => handleSort('status')}
                 >
-                  <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
+                  <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
                 </TableHead>
-                <TableHead className="w-[100px]">操作</TableHead>
+                <TableHead className="w-[100px]">{tc('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center py-8">
-                    加载中...
+                    {tc('loading')}
                   </TableCell>
                 </TableRow>
               ) : requests.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                    暂无采购申请数据
+                    {t('noData')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -652,7 +668,7 @@ export default function PurchaseRequestPage() {
                           <span
                             className={`px-2 py-1 rounded text-xs ${priorityMap[request.priority]?.color || ''}`}
                           >
-                            {priorityMap[request.priority]?.label || '中'}
+                            {priorityMap[request.priority]?.label || tc('medium')}
                           </span>
                         </TableCell>
                         <TableCell className="font-medium">
@@ -660,7 +676,7 @@ export default function PurchaseRequestPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant={statusMap[request.status]?.variant || 'default'}>
-                            {statusMap[request.status]?.label || '未知'}
+                            {statusMap[request.status]?.label || tc('unknown')}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -675,7 +691,7 @@ export default function PurchaseRequestPage() {
                                 onClick={() => router.push(`/purchase/request/${request.id}`)}
                               >
                                 <Eye className="h-4 w-4 mr-2" />
-                                查看
+                                {tc('view')}
                               </DropdownMenuItem>
                               {request.status <= 1 && (
                                 <DropdownMenuItem
@@ -684,18 +700,18 @@ export default function PurchaseRequestPage() {
                                   }
                                 >
                                   <Edit className="h-4 w-4 mr-2" />
-                                  编辑
+                                  {tc('edit')}
                                 </DropdownMenuItem>
                               )}
                               {request.status === 1 && (
                                 <>
-                                  <DropdownMenuItem onClick={() => toast.info('审批功能开发中')}>
+                                  <DropdownMenuItem onClick={() => toast.info(t('approvalInProgress'))}>
                                     <CheckCircle className="h-4 w-4 mr-2" />
-                                    批准
+                                    {tc('approve')}
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => toast.info('审批功能开发中')}>
+                                  <DropdownMenuItem onClick={() => toast.info(t('approvalInProgress'))}>
                                     <XCircle className="h-4 w-4 mr-2" />
-                                    拒绝
+                                    {tc('reject')}
                                   </DropdownMenuItem>
                                 </>
                               )}
@@ -705,7 +721,7 @@ export default function PurchaseRequestPage() {
                                   className="text-red-600"
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
-                                  删除
+                                  {tc('delete')}
                                 </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>
@@ -720,25 +736,25 @@ export default function PurchaseRequestPage() {
                                 <TableHeader>
                                   <TableRow className="bg-slate-100/50 dark:bg-slate-700/50 hover:bg-slate-100/50 dark:hover:bg-slate-700/50">
                                     <TableHead className="pl-8 text-xs font-normal text-muted-foreground">
-                                      物料编码
+                                      {t('materialCode')}
                                     </TableHead>
                                     <TableHead className="text-xs font-normal text-muted-foreground">
-                                      物料名称
+                                      {t('materialName')}
                                     </TableHead>
                                     <TableHead className="text-xs font-normal text-muted-foreground">
-                                      规格型号
+                                      {t('materialSpec')}
                                     </TableHead>
                                     <TableHead className="text-xs font-normal text-muted-foreground">
-                                      单位
+                                      {tc('unit')}
                                     </TableHead>
                                     <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                      数量
+                                      {tc('quantity')}
                                     </TableHead>
                                     <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                      单价
+                                      {t('unitPrice')}
                                     </TableHead>
                                     <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                      金额
+                                      {tc('amount')}
                                     </TableHead>
                                   </TableRow>
                                 </TableHeader>
@@ -778,7 +794,7 @@ export default function PurchaseRequestPage() {
                                         colSpan={7}
                                         className="text-center py-3 text-muted-foreground text-sm"
                                       >
-                                        暂无明细数据
+                                        {t('noDetailData')}
                                       </TableCell>
                                     </TableRow>
                                   )}
@@ -800,7 +816,7 @@ export default function PurchaseRequestPage() {
         {total > pageSize && (
           <div className="flex items-center justify-between mt-4">
             <div className="text-sm text-muted-foreground">
-              共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)} 页
+              {tc('totalRecords', { count: total })}，{tc('pageInfo', { current: page, total: Math.ceil(total / pageSize) })}
             </div>
             <div className="flex gap-2">
               <Button
@@ -809,7 +825,7 @@ export default function PurchaseRequestPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
               >
-                上一页
+                {tc('prevPage')}
               </Button>
               <Button
                 variant="outline"
@@ -817,7 +833,7 @@ export default function PurchaseRequestPage() {
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= Math.ceil(total / pageSize)}
               >
-                下一页
+                {tc('nextPage')}
               </Button>
             </div>
           </div>

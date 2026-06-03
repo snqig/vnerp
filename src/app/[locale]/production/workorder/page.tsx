@@ -289,7 +289,7 @@ export default function WorkOrderPage() {
         setSalesOrders(data.data?.list || (Array.isArray(data.data) ? data.data : []));
       }
     } catch (error) {
-      console.error('获取销售订单失败:', error);
+      console.error('Failed to fetch sales orders:', error);
     }
   }, []);
 
@@ -301,7 +301,7 @@ export default function WorkOrderPage() {
         setBomList(data.data?.list || (Array.isArray(data.data) ? data.data : []));
       }
     } catch (error) {
-      console.error('获取BOM列表失败:', error);
+      console.error('Failed to fetch BOM list:', error);
     }
   }, []);
 
@@ -398,18 +398,18 @@ export default function WorkOrderPage() {
   };
 
   const handleDelete = async (order: WorkOrder) => {
-    if (!confirm(`确定要删除工单 ${order.work_order_no} 吗？`)) return;
+    if (!confirm(t('confirmDelete', { orderNo: order.work_order_no }))) return;
     try {
       const res = await authFetch(`/api/workorders?id=${order.id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '成功', description: '工单已删除' });
+        toast({ title: tc('success'), description: t('deleteSuccess') });
         fetchWorkOrders();
       } else {
-        toast({ title: '错误', description: data.message || '删除失败', variant: 'destructive' });
+        toast({ title: tc('error'), description: data.message || t('deleteFailed'), variant: 'destructive' });
       }
     } catch (error) {
-      toast({ title: '错误', description: '删除失败', variant: 'destructive' });
+      toast({ title: tc('error'), description: t('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -423,55 +423,55 @@ export default function WorkOrderPage() {
   };
 
   return (
-    <MainLayout title="生产工单">
+    <MainLayout title={t('workOrder')}>
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">总工单数</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('totalOrders')}</CardTitle>
               <Factory className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
               <p className="text-xs text-muted-foreground">
-                生产中: {stats.producing} | 已完成: {stats.completed}
+                {t('producing')}: {stats.producing} | {t('status.completed')}: {stats.completed}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">计划产量</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('plannedQuantity')}</CardTitle>
               <Package className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalQty.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                涉及 {workOrders.filter((o) => o.product_name).length} 种产品
+                {t('involvingProducts', { count: workOrders.filter((o) => o.product_name).length })}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">生产中</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('producing')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.producing}</div>
-              <p className="text-xs text-muted-foreground">正在生产</p>
+              <p className="text-xs text-muted-foreground">{t('inProduction')}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">待排产</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pendingSchedule')}</CardTitle>
               <Clock className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.pending + stats.confirmed}</div>
               <p className="text-xs text-muted-foreground">
-                待确认: {stats.pending} | 已确认: {stats.confirmed}
+                {t('status.pending')}: {stats.pending} | {t('status.confirmed')}: {stats.confirmed}
               </p>
             </CardContent>
           </Card>
@@ -482,7 +482,7 @@ export default function WorkOrderPage() {
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex flex-1 gap-4 items-center w-full md:w-auto">
                 <SearchInput
-                  placeholder="搜索工单号..."
+                  placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={setSearchQuery}
                   onSearch={() => fetchWorkOrders()}
@@ -492,53 +492,53 @@ export default function WorkOrderPage() {
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => fetchWorkOrders()}>
                   <Filter className="h-4 w-4 mr-2" />
-                  刷新
+                  {tc('refresh')}
                 </Button>
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
-                      新建工单
+                      {t('newWorkOrder')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl" resizable>
                     <DialogHeader>
-                      <DialogTitle>新建生产工单</DialogTitle>
-                      <DialogDescription>创建新的生产工单</DialogDescription>
+                      <DialogTitle>{t('newWorkOrder')}</DialogTitle>
+                      <DialogDescription>{t('createWorkOrderDesc')}</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>关联销售订单</Label>
+                          <Label>{t('relatedSalesOrder')}</Label>
                           <Select
                             value={newOrder.order_no}
                             onValueChange={(v) => setNewOrder({ ...newOrder, order_no: v })}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="选择销售订单" />
+                              <SelectValue placeholder={t('selectSalesOrder')} />
                             </SelectTrigger>
                             <SelectContent>
                               {salesOrders.map((so) => (
                                 <SelectItem key={so.id} value={so.order_no}>
-                                  {so.order_no} - {so.customer_name || '未知客户'}
+                                  {so.order_no} - {so.customer_name || t('unknownCustomer')}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>关联BOM</Label>
+                          <Label>{t('relatedBOM')}</Label>
                           <Select
                             value={newOrder.bom_id}
                             onValueChange={(v) => setNewOrder({ ...newOrder, bom_id: v })}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="选择BOM" />
+                              <SelectValue placeholder={t('selectBOM')} />
                             </SelectTrigger>
                             <SelectContent>
                               {bomList.map((b) => (
                                 <SelectItem key={b.id} value={String(b.id)}>
-                                  {b.bom_no} - {b.product_name || '未知产品'}
+                                  {b.bom_no} - {b.product_name || t('unknownProduct')}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -547,54 +547,54 @@ export default function WorkOrderPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>计划数量</Label>
+                          <Label>{t('plannedQuantity')}</Label>
                           <Input
                             type="number"
-                            placeholder="生产数量"
+                            placeholder={t('productionQuantity')}
                             value={newOrder.quantity}
                             onChange={(e) => setNewOrder({ ...newOrder, quantity: e.target.value })}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>单位</Label>
+                          <Label>{t('unit')}</Label>
                           <Select
                             value={newOrder.unit}
                             onValueChange={(v) => setNewOrder({ ...newOrder, unit: v })}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="选择单位" />
+                              <SelectValue placeholder={t('selectUnit')} />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="㎡">㎡</SelectItem>
-                              <SelectItem value="张">张</SelectItem>
-                              <SelectItem value="卷">卷</SelectItem>
-                              <SelectItem value="个">个</SelectItem>
+                              <SelectItem value="张">{t('units.sheet')}</SelectItem>
+                              <SelectItem value="卷">{t('units.roll')}</SelectItem>
+                              <SelectItem value="个">{t('units.piece')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>优先级</Label>
+                          <Label>{t('priority.label')}</Label>
                           <Select
                             value={newOrder.priority}
                             onValueChange={(v) => setNewOrder({ ...newOrder, priority: v })}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="选择优先级" />
+                              <SelectValue placeholder={t('selectPriority')} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="urgent">紧急</SelectItem>
-                              <SelectItem value="high">高</SelectItem>
-                              <SelectItem value="normal">中</SelectItem>
-                              <SelectItem value="low">低</SelectItem>
+                              <SelectItem value="urgent">{t('priority.urgent')}</SelectItem>
+                              <SelectItem value="high">{t('priority.high')}</SelectItem>
+                              <SelectItem value="normal">{t('priority.normal')}</SelectItem>
+                              <SelectItem value="low">{t('priority.low')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>备注</Label>
+                          <Label>{t('remark')}</Label>
                           <Input
-                            placeholder="输入备注信息"
+                            placeholder={t('enterRemark')}
                             value={newOrder.remark}
                             onChange={(e) => setNewOrder({ ...newOrder, remark: e.target.value })}
                           />
@@ -602,7 +602,7 @@ export default function WorkOrderPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>计划开始日期</Label>
+                          <Label>{t('planStartDate')}</Label>
                           <Input
                             type="date"
                             value={newOrder.plan_start_date}
@@ -612,7 +612,7 @@ export default function WorkOrderPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>计划结束日期</Label>
+                          <Label>{t('planEndDate')}</Label>
                           <Input
                             type="date"
                             value={newOrder.plan_end_date}
@@ -625,9 +625,9 @@ export default function WorkOrderPage() {
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                        取消
+                        {tc('cancel')}
                       </Button>
-                      <Button onClick={handleCreateOrder}>创建工单</Button>
+                      <Button onClick={handleCreateOrder}>{t('createWorkOrder')}</Button>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -638,11 +638,11 @@ export default function WorkOrderPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="all">全部 ({stats.total})</TabsTrigger>
-            <TabsTrigger value="producing">生产中 ({stats.producing})</TabsTrigger>
-            <TabsTrigger value="confirmed">已确认 ({stats.confirmed})</TabsTrigger>
-            <TabsTrigger value="pending">待确认 ({stats.pending})</TabsTrigger>
-            <TabsTrigger value="completed">已完成 ({stats.completed})</TabsTrigger>
+            <TabsTrigger value="all">{t('all')} ({stats.total})</TabsTrigger>
+            <TabsTrigger value="producing">{t('producing')} ({stats.producing})</TabsTrigger>
+            <TabsTrigger value="confirmed">{t('status.confirmed')} ({stats.confirmed})</TabsTrigger>
+            <TabsTrigger value="pending">{t('status.pending')} ({stats.pending})</TabsTrigger>
+            <TabsTrigger value="completed">{t('status.completed')} ({stats.completed})</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-4">
@@ -650,11 +650,11 @@ export default function WorkOrderPage() {
               <CardContent className="p-0">
                 {loading ? (
                   <div className="flex items-center justify-center py-12 text-muted-foreground">
-                    加载中...
+                    {tc('loading')}
                   </div>
                 ) : workOrders.length === 0 ? (
                   <div className="flex items-center justify-center py-12 text-muted-foreground">
-                    暂无工单数据
+                    {t('noWorkOrderData')}
                   </div>
                 ) : (
                   <Table>
@@ -665,7 +665,7 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('work_order_no')}
                         >
                           <span className="inline-flex items-center">
-                            工单号{getSortIcon('work_order_no')}
+                            {t('workOrderNo')}{getSortIcon('work_order_no')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -673,7 +673,7 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('product_name')}
                         >
                           <span className="inline-flex items-center">
-                            产品信息{getSortIcon('product_name')}
+                            {t('productInfo')}{getSortIcon('product_name')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -681,7 +681,7 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('customer_name')}
                         >
                           <span className="inline-flex items-center">
-                            客户{getSortIcon('customer_name')}
+                            {t('customer')}{getSortIcon('customer_name')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -689,7 +689,7 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('quantity')}
                         >
                           <span className="inline-flex items-center">
-                            数量{getSortIcon('quantity')}
+                            {t('quantity')}{getSortIcon('quantity')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -697,7 +697,7 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('status')}
                         >
                           <span className="inline-flex items-center">
-                            状态{getSortIcon('status')}
+                            {t('status.label')}{getSortIcon('status')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -705,7 +705,7 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('priority')}
                         >
                           <span className="inline-flex items-center">
-                            优先级{getSortIcon('priority')}
+                            {t('priority.label')}{getSortIcon('priority')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -713,10 +713,10 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('planned_start_date')}
                         >
                           <span className="inline-flex items-center">
-                            计划日期{getSortIcon('planned_start_date')}
+                            {t('plannedDate')}{getSortIcon('planned_start_date')}
                           </span>
                         </TableHead>
-                        <TableHead>操作</TableHead>
+                        <TableHead>{t('operation')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -727,7 +727,7 @@ export default function WorkOrderPage() {
                               <span>{order.work_order_no}</span>
                               {order.order_no && (
                                 <span className="text-xs text-muted-foreground">
-                                  关联: {order.order_no}
+                                  {t('related')}: {order.order_no}
                                 </span>
                               )}
                             </div>
@@ -750,7 +750,7 @@ export default function WorkOrderPage() {
                           <TableCell>
                             <div className="flex flex-col text-xs">
                               <span>{formatDate(order.plan_start_date) || '-'}</span>
-                              <span className="text-muted-foreground">至</span>
+                              <span className="text-muted-foreground">{t('to')}</span>
                               <span>{formatDate(order.plan_end_date) || '-'}</span>
                             </div>
                           </TableCell>
@@ -772,14 +772,14 @@ export default function WorkOrderPage() {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => handleViewDetail(order)}>
                                     <Eye className="h-4 w-4 mr-2" />
-                                    查看详情
+                                    {t('viewDetail')}
                                   </DropdownMenuItem>
                                   {order.status === 0 && (
                                     <DropdownMenuItem
                                       onClick={() => handleStatusChange(order, 'confirmed')}
                                     >
                                       <CheckCircle className="h-4 w-4 mr-2" />
-                                      确认工单
+                                      {t('confirmWorkOrder')}
                                     </DropdownMenuItem>
                                   )}
                                   {order.status === 1 && (
@@ -787,7 +787,7 @@ export default function WorkOrderPage() {
                                       onClick={() => handleStatusChange(order, 'producing')}
                                     >
                                       <Play className="h-4 w-4 mr-2" />
-                                      开始生产
+                                      {t('startProduction')}
                                     </DropdownMenuItem>
                                   )}
                                   {order.status === 2 && (
@@ -795,19 +795,19 @@ export default function WorkOrderPage() {
                                       onClick={() => handleStatusChange(order, 'completed')}
                                     >
                                       <CheckCircle className="h-4 w-4 mr-2" />
-                                      完成工单
+                                      {t('completeWorkOrder')}
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuItem>
                                     <Printer className="h-4 w-4 mr-2" />
-                                    打印工单
+                                    {t('printWorkOrder')}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     className="text-red-600"
                                     onClick={() => handleDelete(order)}
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
-                                    删除
+                                    {tc('delete')}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -829,37 +829,37 @@ export default function WorkOrderPage() {
               <>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
-                    工单详情: {selectedOrder.work_order_no}
+                    {t('workOrderDetail')}: {selectedOrder.work_order_no}
                     {getStatusBadge(selectedOrder.status)}
                   </DialogTitle>
-                  <DialogDescription>查看工单详细信息和生产进度</DialogDescription>
+                  <DialogDescription>{t('viewWorkOrderDetailDesc')}</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">产品信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('productInfo')}</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">产品名称:</span>
+                        <span className="text-muted-foreground">{t('productName')}:</span>
                         <span>{selectedOrder.product_name || '-'}</span>
-                        <span className="text-muted-foreground">计划数量:</span>
+                        <span className="text-muted-foreground">{t('plannedQuantity')}:</span>
                         <span>
                           {parseFloat(String(selectedOrder.quantity)).toLocaleString()}{' '}
                           {selectedOrder.unit}
                         </span>
-                        <span className="text-muted-foreground">优先级:</span>
+                        <span className="text-muted-foreground">{t('priority.label')}:</span>
                         <span>{getPriorityBadge(selectedOrder.priority)}</span>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">客户信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('customerInfo')}</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">客户名称:</span>
+                        <span className="text-muted-foreground">{t('customerName')}:</span>
                         <span>{selectedOrder.customer_name || '-'}</span>
-                        <span className="text-muted-foreground">关联订单:</span>
+                        <span className="text-muted-foreground">{t('relatedOrder')}:</span>
                         <span>{selectedOrder.order_no || '-'}</span>
-                        <span className="text-muted-foreground">状态:</span>
+                        <span className="text-muted-foreground">{t('status.label')}:</span>
                         <span>{getStatusBadge(selectedOrder.status)}</span>
                       </div>
                     </div>
@@ -867,16 +867,16 @@ export default function WorkOrderPage() {
 
                   {selectedOrder.items && selectedOrder.items.length > 0 && (
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">工单物料</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('workOrderMaterials')}</h4>
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>行号</TableHead>
-                            <TableHead>物料编码</TableHead>
-                            <TableHead>物料名称</TableHead>
-                            <TableHead>需求数量</TableHead>
-                            <TableHead>单位</TableHead>
-                            <TableHead>状态</TableHead>
+                            <TableHead>{t('lineNo')}</TableHead>
+                            <TableHead>{t('materialCode')}</TableHead>
+                            <TableHead>{t('materialName')}</TableHead>
+                            <TableHead>{t('requiredQty')}</TableHead>
+                            <TableHead>{t('unit')}</TableHead>
+                            <TableHead>{t('status.label')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -899,24 +899,24 @@ export default function WorkOrderPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">计划时间</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('plannedTime')}</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">开始日期:</span>
+                        <span className="text-muted-foreground">{t('startDate')}:</span>
                         <span>{formatDate(selectedOrder.plan_start_date) || '-'}</span>
-                        <span className="text-muted-foreground">结束日期:</span>
+                        <span className="text-muted-foreground">{t('endDate')}:</span>
                         <span>{formatDate(selectedOrder.plan_end_date) || '-'}</span>
                       </div>
                     </div>
 
                     {selectedOrder.actual_start_date && (
                       <div className="space-y-3">
-                        <h4 className="font-semibold text-sm text-muted-foreground">实际时间</h4>
+                        <h4 className="font-semibold text-sm text-muted-foreground">{t('actualTime')}</h4>
                         <div className="grid grid-cols-2 gap-2 text-sm">
-                          <span className="text-muted-foreground">开始日期:</span>
+                          <span className="text-muted-foreground">{t('startDate')}:</span>
                           <span>{selectedOrder.actual_start_date}</span>
                           {selectedOrder.actual_end_date && (
                             <>
-                              <span className="text-muted-foreground">结束日期:</span>
+                              <span className="text-muted-foreground">{t('endDate')}:</span>
                               <span>{selectedOrder.actual_end_date}</span>
                             </>
                           )}
@@ -927,14 +927,14 @@ export default function WorkOrderPage() {
 
                   {selectedOrder.remark && (
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">备注</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('remark')}</h4>
                       <p className="text-sm bg-gray-50 p-3 rounded">{selectedOrder.remark}</p>
                     </div>
                   )}
 
                   <div className="flex justify-end gap-2 pt-4 border-t">
                     <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
-                      关闭
+                      {tc('close')}
                     </Button>
                     {selectedOrder.status === 1 && (
                       <Button
@@ -944,7 +944,7 @@ export default function WorkOrderPage() {
                         }}
                       >
                         <Play className="h-4 w-4 mr-2" />
-                        开始生产
+                        {t('startProduction')}
                       </Button>
                     )}
                     {selectedOrder.status === 2 && (
@@ -955,7 +955,7 @@ export default function WorkOrderPage() {
                         }}
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
-                        完成工单
+                        {t('completeWorkOrder')}
                       </Button>
                     )}
                   </div>
