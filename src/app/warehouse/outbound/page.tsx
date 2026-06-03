@@ -458,7 +458,7 @@ export default function OutboundManagementPage() {
   // 获取仓库列表
   const fetchWarehouses = useCallback(async () => {
     try {
-      const response = await authFetch('/api/warehouse');
+      const response = await authFetch('/api/warehouse?all=true');
       const result = await response.json();
       if (result.success) {
         setWarehouses(result.data);

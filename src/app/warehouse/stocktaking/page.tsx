@@ -187,7 +187,7 @@ export default function StocktakingPage() {
 
   const fetchWarehouses = async () => {
     try {
-      const res = await authFetch('/api/warehouse?status=active');
+      const res = await authFetch('/api/warehouse?status=active&all=true');
       const result = await res.json();
       if (result.success) {
         setWarehouses(result.data?.map((w: any) => ({ id: w.id, name: w.name })) || []);

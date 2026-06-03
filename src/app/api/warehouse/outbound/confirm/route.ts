@@ -125,6 +125,77 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       WHERE id = ? AND version = ?`,
       [operatorId, operatorName, remark || '', id, orderRow.version]
     );
+
+    // 自动生成应收单（如果出库单关联了客户）
+    const [orderInfo]: any = await connection.execute(
+      `SELECT customer_id, customer_name, total_amount, sales_order_no FROM inv_outbound_order WHERE id = ?`,
+      [id]
+    );
+
+    if (orderInfo && orderInfo.length > 0 && orderInfo[0].customer_id) {
+      const customer = orderInfo[0];
+      const receivableNo = 'AR' + Date.now();
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 30); // 默认30天账期
+
+      await connection.execute(
+        `INSERT INTO fin_receivable (
+          receivable_no, customer_id, customer_name, amount, received_amount,
+          status, source_type, source_no, source_id,
+          due_date, remark, create_time, update_time, deleted
+        ) VALUES (?, ?, ?, ?, 0, 1, 'outbound_order', ?, ?, ?, ?, NOW(), NOW(), 0)`,
+        [
+          receivableNo,
+          customer.customer_id,
+          customer.customer_name,
+          customer.total_amount || 0,
+          orderRow.order_no,
+          id,
+          dueDate.toISOString().split('T')[0],
+          `销售出库自动生成 - ${orderRow.order_no}`,
+        ]
+      );
+    }
+
+    // 更新销售订单累计出库数量（如果关联了销售订单）
+    if (orderInfo && orderInfo.length > 0 && orderInfo[0].sales_order_no) {
+      const salesOrderNo = orderInfo[0].sales_order_no;
+
+      const totalOutQty = itemRows.reduce(
+        (sum: number, item: any) => sum + parseFloat(String(item.qty)),
+        0
+      );
+
+      await connection.execute(
+        `UPDATE sales_order SET
+          total_out_quantity = COALESCE(total_out_quantity, 0) + ?,
+          update_time = NOW()
+        WHERE order_no = ?`,
+        [totalOutQty, salesOrderNo]
+      );
+
+      // 检查是否全部出库完成
+      const [soItems]: any = await connection.execute(
+        `SELECT SUM(quantity) as total_qty FROM sales_order_item WHERE sales_order_id = (SELECT id FROM sales_order WHERE order_no = ?)`,
+        [salesOrderNo]
+      );
+      const [soOutbound]: any = await connection.execute(
+        `SELECT COALESCE(total_out_quantity, 0) as total_out FROM sales_order WHERE order_no = ?`,
+        [salesOrderNo]
+      );
+
+      if (soItems[0]?.total_qty && soOutbound[0]?.total_out >= soItems[0].total_qty) {
+        await connection.execute(
+          `UPDATE sales_order SET status = 3, update_time = NOW() WHERE order_no = ? AND status != 9`,
+          [salesOrderNo]
+        );
+      } else if (soOutbound[0]?.total_out > 0) {
+        await connection.execute(
+          `UPDATE sales_order SET status = 2, update_time = NOW() WHERE order_no = ? AND status = 1`,
+          [salesOrderNo]
+        );
+      }
+    }
   }).catch((error) => {
     const msg = error instanceof Error ? error.message : String(error);
     if (msg.startsWith('NOT_FOUND:')) return errorResponse(msg.slice(10), 404);

@@ -3,6 +3,7 @@ import { query, execute } from '@/lib/db';
 import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { storeRefreshToken } from '@/lib/token-blacklist';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -251,11 +252,17 @@ export async function POST(request: NextRequest) {
 
     await logLogin(username, request, true, '登录成功');
 
+    // 生成 refresh token
+    const refreshToken = crypto.randomUUID();
+    const refreshExpiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7天
+    storeRefreshToken(refreshToken, user.id, refreshExpiresAt);
+
     return NextResponse.json({
       success: true,
       message: '登录成功',
       data: {
         token,
+        refreshToken,
         user: userInfo,
       },
     });

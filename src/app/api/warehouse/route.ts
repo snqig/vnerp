@@ -153,6 +153,14 @@ export const GET = withAuthAndErrorHandler(
     const warehouses = await query(paginatedSql, paginatedValues);
     const formattedWarehouses = (warehouses as any[]).map(formatWarehouse);
 
+    // 支持 all=true 参数，直接返回数组（用于下拉选择等场景）
+    const fetchAll = searchParams.get('all') === 'true';
+    if (fetchAll) {
+      const allWarehouses = await query(sql, values);
+      const formattedAll = (allWarehouses as any[]).map(formatWarehouse);
+      return successResponse(formattedAll);
+    }
+
     return successResponse({
       list: formattedWarehouses,
       total,

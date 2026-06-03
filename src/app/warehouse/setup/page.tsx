@@ -131,7 +131,7 @@ export default function WarehouseSetupPage() {
       const result = await response.json();
 
       if (result.success) {
-        setWarehouses(result.data);
+        setWarehouses(result.data?.list || result.data || []);
       } else {
         toast.error(result.message || '获取仓库列表失败');
       }

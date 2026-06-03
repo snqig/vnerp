@@ -142,7 +142,7 @@ export default function InventoryPage() {
 
   const fetchWarehouses = async () => {
     try {
-      const response = await authFetch('/api/warehouse');
+      const response = await authFetch('/api/warehouse?all=true');
       const result = await response.json();
       if (result.success && result.data) {
         const list = Array.isArray(result.data) ? result.data : result.data.list || [];

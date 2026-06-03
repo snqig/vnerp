@@ -179,6 +179,78 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         ]
       );
     }
+
+    // 4. 自动生成应付单（如果入库单关联了供应商）
+    const [orderDetail]: any = await connection.execute(
+      `SELECT supplier_id, supplier_name, total_amount FROM inv_inbound_order WHERE id = ?`,
+      [id]
+    );
+
+    if (orderDetail && orderDetail.length > 0 && orderDetail[0].supplier_id) {
+      const supplier = orderDetail[0];
+      const payableNo = 'AP' + Date.now();
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 30); // 默认30天账期
+
+      await connection.execute(
+        `INSERT INTO fin_payable (
+          payable_no, supplier_id, supplier_name, amount, paid_amount,
+          status, source_type, source_no, source_id,
+          due_date, remark, create_time, update_time, deleted
+        ) VALUES (?, ?, ?, ?, 0, 1, 'inbound_order', ?, ?, ?, ?, NOW(), NOW(), 0)`,
+        [
+          payableNo,
+          supplier.supplier_id,
+          supplier.supplier_name,
+          supplier.total_amount || 0,
+          order.order_no,
+          id,
+          dueDate.toISOString().split('T')[0],
+          `采购入库自动生成 - ${order.order_no}`,
+        ]
+      );
+    }
+
+    // 5. 更新采购订单累计入库数量（如果关联了采购订单）
+    const [poLink]: any = await connection.execute(
+      `SELECT purchase_order_id FROM inv_inbound_order WHERE id = ? AND purchase_order_id IS NOT NULL`,
+      [id]
+    );
+
+    if (poLink && poLink.length > 0) {
+      const purchaseOrderId = poLink[0].purchase_order_id;
+
+      // 累加采购订单的入库数量
+      await connection.execute(
+        `UPDATE purchase_order SET
+          total_in_quantity = COALESCE(total_in_quantity, 0) + ?,
+          update_time = NOW()
+        WHERE id = ?`,
+        [items.reduce((sum: number, item: any) => sum + parseFloat(String(item.qty)), 0), purchaseOrderId]
+      );
+
+      // 检查是否全部入库完成
+      const [poItems]: any = await connection.execute(
+        `SELECT SUM(quantity) as total_qty FROM purchase_order_item WHERE purchase_order_id = ?`,
+        [purchaseOrderId]
+      );
+      const [poInbound]: any = await connection.execute(
+        `SELECT COALESCE(total_in_quantity, 0) as total_in FROM purchase_order WHERE id = ?`,
+        [purchaseOrderId]
+      );
+
+      if (poItems[0]?.total_qty && poInbound[0]?.total_in >= poItems[0].total_qty) {
+        await connection.execute(
+          `UPDATE purchase_order SET status = 3, update_time = NOW() WHERE id = ? AND status != 9`,
+          [purchaseOrderId]
+        );
+      } else if (poInbound[0]?.total_in > 0) {
+        await connection.execute(
+          `UPDATE purchase_order SET status = 2, update_time = NOW() WHERE id = ? AND status = 1`,
+          [purchaseOrderId]
+        );
+      }
+    }
   });
 
   return successResponse(

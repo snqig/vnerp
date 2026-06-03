@@ -8,6 +8,7 @@ import {
   UserInfo,
 } from './auth';
 import { errorResponse } from './api-response';
+import { isTokenRevoked } from './token-blacklist';
 
 export type { UserInfo } from './auth';
 
@@ -31,6 +32,12 @@ export function withAuth(
     const tokenPayload = await verifyToken(token);
     if (!tokenPayload) {
       return errorResponse('认证令牌无效或已过期', 401);
+    }
+
+    // 2.5 检查Token是否已被撤销（黑名单）
+    const tokenKey = `token:${tokenPayload.userId}:${token.slice(-20)}`;
+    if (isTokenRevoked(tokenKey)) {
+      return errorResponse('认证令牌已失效，请重新登录', 401);
     }
 
     // 3. 获取用户完整信息
@@ -84,6 +91,12 @@ export function withAuthAndErrorHandler(
       const tokenPayload = await verifyToken(token);
       if (!tokenPayload) {
         return errorResponse('认证令牌无效或已过期', 401);
+      }
+
+      // 2.5 检查Token是否已被撤销（黑名单）
+      const tokenKey = `token:${tokenPayload.userId}:${token.slice(-20)}`;
+      if (isTokenRevoked(tokenKey)) {
+        return errorResponse('认证令牌已失效，请重新登录', 401);
       }
 
       // 3. 获取用户完整信息
