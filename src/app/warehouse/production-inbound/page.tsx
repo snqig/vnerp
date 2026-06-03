@@ -58,9 +58,9 @@ const qcMap = {
 export default function ProductionInboundPage() {
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -81,7 +81,7 @@ export default function ProductionInboundPage() {
     try {
       const res = await authFetch('/api/warehouse?status=1');
       const result = await res.json();
-      if (result.success) setWarehouses(result.data || []);
+      if (result.success) setWarehouses(result.data?.list || []);
     } catch (e) {
       console.error(e);
     }

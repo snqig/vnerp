@@ -70,8 +70,8 @@ async function handler(req: NextRequest) {
         data: {
           health: overview,
           summary: {
-            totalApiCalls: Array.from(apiMetrics.getMetrics().entries()).reduce(
-              (sum, [, m]) => sum + m.count, 0
+            totalApiCalls: Object.values(apiMetrics.getMetrics()).reduce(
+              (sum, m) => sum + m.count, 0
             ),
             slowQueries: queryAnalyzer.getSlowQueries().length,
             activeAlerts: alertManager.getActiveAlerts().length,

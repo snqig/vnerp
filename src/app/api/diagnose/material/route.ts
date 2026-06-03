@@ -4,7 +4,7 @@ import { query } from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const tables = await query('SHOW TABLES LIKE "%material%"');
-    let material = { exists: false };
+    let material: Record<string, any> = { exists: false };
     
     if (tables.length > 0) {
       const tableName = tables[0][Object.keys(tables[0])[0]];

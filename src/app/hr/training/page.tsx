@@ -33,10 +33,13 @@ import { useToast } from '@/hooks/use-toast';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
   };
+  if (options.headers) {
+    const h = options.headers as Record<string, string>;
+    Object.keys(h).forEach((k) => { headers[k] = h[k]; });
+  }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -65,10 +68,10 @@ const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '计划中', variant: 'outline' },
-  2: { label: '进行中', variant: 'default' },
-  3: { label: '已完成', variant: 'secondary' },
-  4: { label: '已取消', variant: 'destructive' },
+  0: { label: '待开始', variant: 'outline' },
+  1: { label: '进行中', variant: 'default' },
+  2: { label: '已完成', variant: 'secondary' },
+  3: { label: '已取消', variant: 'destructive' },
 };
 
 const formatDate = (dateStr: string) => {

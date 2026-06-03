@@ -33,6 +33,7 @@ import {
 import { ThemeSettings } from '@/components/theme-settings';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermission } from '@/hooks/usePermission';
 import ApiClient from '@/lib/api-client';
 
 interface ConfigItem {
@@ -71,6 +72,7 @@ interface SystemConfigResponse {
 
 export default function BasicsSettingsPage() {
   const { hasRole, isAuthenticated } = useAuth();
+  const { hasPermission } = usePermission();
   const [activeTab, setActiveTab] = useState<string>('theme');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -249,10 +251,12 @@ export default function BasicsSettingsPage() {
           </div>
         </CardContent>
         <div className="px-6 pb-6 flex justify-end">
-          <Button onClick={() => handleSave(group.category)} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? '保存中...' : '保存设置'}
-          </Button>
+          {hasPermission('settings:basics:edit') && (
+            <Button onClick={() => handleSave(group.category)} disabled={saving}>
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? '保存中...' : '保存设置'}
+            </Button>
+          )}
         </div>
       </Card>
     );

@@ -66,9 +66,9 @@ import {
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   };
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -986,10 +986,10 @@ export default function DieTemplatePage() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0 shrink-0">
                 <CardTitle>刀模/网版管理</CardTitle>
-                <CardDescription>管理刀模和丝网版的使用寿命、预警、保养和生命周期</CardDescription>
+                <CardDescription className="mt-1">管理刀模和丝网版的使用寿命、预警、保养和生命周期</CardDescription>
               </div>
               <div className="flex gap-2">
                 <div className="relative w-64">

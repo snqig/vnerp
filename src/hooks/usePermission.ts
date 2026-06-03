@@ -32,39 +32,7 @@ const permissionModules = [
       { id: 'order:create', name: '创建订单' },
       { id: 'order:edit', name: '编辑订单' },
       { id: 'order:delete', name: '删除订单' },
-      { id: 'order:export', name: '导出订单' },
-    ],
-  },
-  {
-    id: 'sample',
-    name: '打样中心',
-    permissions: [
-      { id: 'sample:view', name: '查看打样' },
-      { id: 'sample:create', name: '创建打样' },
-      { id: 'sample:edit', name: '编辑打样' },
-      { id: 'sample:delete', name: '删除打样' },
-      { id: 'sample:approve', name: '审批打样' },
-    ],
-  },
-  {
-    id: 'purchase',
-    name: '采购管理',
-    permissions: [
-      { id: 'purchase:view', name: '查看采购' },
-      { id: 'purchase:create', name: '创建采购' },
-      { id: 'purchase:edit', name: '编辑采购' },
-      { id: 'purchase:delete', name: '删除采购' },
-      { id: 'purchase:approve', name: '审批采购' },
-    ],
-  },
-  {
-    id: 'warehouse',
-    name: '仓库管理',
-    permissions: [
-      { id: 'warehouse:view', name: '查看仓库' },
-      { id: 'warehouse:inbound', name: '入库操作' },
-      { id: 'warehouse:outbound', name: '出库操作' },
-      { id: 'warehouse:transfer', name: '库存调拨' },
+      { id: 'order:approve', name: '审核订单' },
     ],
   },
   {
@@ -72,70 +40,64 @@ const permissionModules = [
     name: '生产管理',
     permissions: [
       { id: 'production:view', name: '查看生产' },
-      { id: 'production:create', name: '创建工单' },
-      { id: 'production:edit', name: '编辑工单' },
-      { id: 'production:schedule', name: '生产排程' },
+      { id: 'production:create', name: '创建生产单' },
+      { id: 'production:edit', name: '编辑生产单' },
+      { id: 'production:delete', name: '删除生产单' },
+      { id: 'production:approve', name: '审核生产单' },
+    ],
+  },
+  {
+    id: 'warehouse',
+    name: '仓库管理',
+    permissions: [
+      { id: 'warehouse:view', name: '查看仓库' },
+      { id: 'warehouse:in', name: '入库操作' },
+      { id: 'warehouse:out', name: '出库操作' },
+      { id: 'warehouse:transfer', name: '调拨操作' },
     ],
   },
   {
     id: 'quality',
-    name: '品质管理',
+    name: '质量管理',
     permissions: [
-      { id: 'quality:view', name: '查看品质' },
-      { id: 'quality:inspect', name: '品质检验' },
-      { id: 'quality:report', name: '品质报告' },
+      { id: 'quality:view', name: '查看质量' },
+      { id: 'quality:inspect', name: '检验操作' },
+      { id: 'quality:approve', name: '审核检验' },
     ],
   },
   {
-    id: 'hr',
-    name: '人事管理',
+    id: 'standard-card',
+    name: '标准卡管理',
     permissions: [
-      { id: 'hr:view', name: '查看员工' },
-      { id: 'hr:create', name: '新增员工' },
-      { id: 'hr:edit', name: '编辑员工' },
-      { id: 'hr:delete', name: '删除员工' },
-      { id: 'hr:print', name: '打印上岗证' },
-      { id: 'hr:export', name: '导出员工' },
+      { id: 'standard-card:view', name: '查看标准卡' },
+      { id: 'standard-card:create', name: '创建标准卡' },
+      { id: 'standard-card:edit', name: '编辑标准卡' },
+      { id: 'standard-card:delete', name: '删除标准卡' },
+      { id: 'standard-card:approve', name: '审核标准卡' },
     ],
   },
   {
-    id: 'finance',
-    name: '财务管理',
+    id: 'system',
+    name: '系统管理',
     permissions: [
-      { id: 'finance:view', name: '查看财务' },
-      { id: 'finance:receivable', name: '应收管理' },
-      { id: 'finance:payable', name: '应付管理' },
-      { id: 'finance:report', name: '财务报表' },
-    ],
-  },
-  {
-    id: 'settings',
-    name: '系统设置',
-    permissions: [
-      { id: 'settings:view', name: '查看设置' },
-      { id: 'settings:company', name: '企业设置' },
-      { id: 'settings:department', name: '部门管理' },
-      { id: 'settings:role', name: '角色管理' },
-      { id: 'settings:permission', name: '权限管理' },
-      { id: 'settings:user', name: '用户管理' },
-      { id: 'settings:menu', name: '菜单管理' },
+      { id: 'system:user', name: '用户管理' },
+      { id: 'system:role', name: '角色管理' },
+      { id: 'system:menu', name: '菜单管理' },
+      { id: 'system:config', name: '系统配置' },
     ],
   },
 ];
 
-// 获取所有权限列表
-export const getAllPermissions = (): Permission[] => {
-  const permissions: Permission[] = [];
-  permissionModules.forEach((module) => {
-    module.permissions.forEach((perm) => {
-      permissions.push({
-        ...perm,
-        module: module.name,
-      });
-    });
-  });
-  return permissions;
-};
+// 安全获取 localStorage
+function safeGetUser(): any | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  } catch {
+    return null;
+  }
+}
 
 // 获取权限模块列表
 export const getPermissionModules = () => permissionModules;
@@ -151,12 +113,8 @@ export function usePermission() {
   // 加载用户权限
   const loadPermissions = useCallback(async () => {
     try {
-      // 从localStorage获取用户信息
-      const userStr = localStorage.getItem('user');
-      if (!userStr) return;
-
-      const user = JSON.parse(userStr);
-      if (!user.role_id) return;
+      const user = safeGetUser();
+      if (!user || !user.role_id) return;
 
       // 获取角色权限
       const response = await fetch(`/api/role-permissions?roleId=${user.role_id}`);
@@ -189,12 +147,8 @@ export function usePermission() {
   // 检查是否有权限
   const hasPermission = useCallback(
     (permissionId: string): boolean => {
-      // 超级管理员拥有所有权限
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
-      }
+      const user = safeGetUser();
+      if (user?.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
 
       return userPermissions.buttons.includes(permissionId);
     },
@@ -204,11 +158,8 @@ export function usePermission() {
   // 检查是否有菜单权限
   const hasMenuPermission = useCallback(
     (menuId: number): boolean => {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
-      }
+      const user = safeGetUser();
+      if (user?.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
 
       return userPermissions.menus.includes(menuId);
     },
@@ -218,11 +169,8 @@ export function usePermission() {
   // 检查是否有任意一个权限
   const hasAnyPermission = useCallback(
     (permissionIds: string[]): boolean => {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
-      }
+      const user = safeGetUser();
+      if (user?.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
 
       return permissionIds.some((id) => userPermissions.buttons.includes(id));
     },
@@ -232,11 +180,8 @@ export function usePermission() {
   // 检查是否拥有所有权限
   const hasAllPermissions = useCallback(
     (permissionIds: string[]): boolean => {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        if (user.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
-      }
+      const user = safeGetUser();
+      if (user?.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
 
       return permissionIds.every((id) => userPermissions.buttons.includes(id));
     },

@@ -18,6 +18,7 @@ export interface StandardCard {
   card_no: string;
   version?: string;
   status?: number;
+  type?: StandardCardType;
   customer_id?: number;
   customer_name?: string;
   customer_code?: string;
@@ -99,6 +100,44 @@ export interface StandardCard {
   reviewer_id?: number;
   create_time?: string;
   update_time?: string;
+}
+
+// 工艺参数标准项接口
+export interface ProcessStandardItem {
+  id?: number;
+  standard_card_id?: number;
+  parameter_name: string;
+  standard_value: string;
+  tolerance?: string;
+  unit?: string;
+  category?: string;
+  sort_order?: number;
+}
+
+// 颜色标准项接口
+export interface ColorStandardItem {
+  id?: number;
+  standard_card_id?: number;
+  color_name: string;
+  color_code?: string;
+  cmyk_values?: string;
+  lab_values?: string;
+  density?: string;
+  dot_gain?: string;
+  overprint?: string;
+  sort_order?: number;
+}
+
+// 质量标准项接口
+export interface QualityStandardItem {
+  id?: number;
+  standard_card_id?: number;
+  inspection_item: string;
+  standard_value: string;
+  tolerance?: string;
+  unit?: string;
+  inspection_method?: string;
+  sort_order?: number;
 }
 
 // 列表查询字段（基础字段）

@@ -4,9 +4,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   
   experimental: {
-    turbo: {
-      resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-    },
     optimizePackageImports: [
       'lucide-react',
       '@radix-ui/react-dialog',

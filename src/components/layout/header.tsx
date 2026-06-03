@@ -146,9 +146,9 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
 
   const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -189,17 +189,21 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
 
   const fetchUserInfo = useCallback(async () => {
     try {
-      const res = await fetch('/api/system/user?page=1&pageSize=1');
-      const result = await res.json();
-      if (result.success && result.data?.list?.length > 0) {
-        const user = result.data.list[0];
+      // 从本地存储读取用户信息
+      const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+      console.log('[Header] fetchUserInfo - storedUser:', storedUser ? '存在' : '不存在');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        console.log('[Header] fetchUserInfo - 解析用户:', { username: user.username, real_name: user.real_name, email: user.email });
         setUserInfo({
           username: user.username || user.real_name || '管理员',
           email: user.email || 'admin@dachang.com',
         });
+      } else {
+        console.warn('[Header] fetchUserInfo - 本地无用户信息缓存，使用默认值');
       }
     } catch (e) {
-      // keep defaults
+      console.error('[Header] fetchUserInfo - 失败:', e);
     }
   }, []);
 

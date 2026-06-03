@@ -18,13 +18,13 @@ const dbConfig = {
   database: process.env.DB_NAME || 'vnerpdacahng',
   charset: 'utf8mb4',
   waitForConnections: true,
-  connectionLimit: 10,
-  maxIdle: 5,
-  idleTimeout: 60000,
-  queueLimit: 50,
+  connectionLimit: 20,
+  maxIdle: 10,
+  idleTimeout: 30000,
+  queueLimit: 100,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 30000,
-  connectTimeout: 10000,
+  keepAliveInitialDelay: 10000,
+  connectTimeout: 8000,
 };
 
 // 创建连接池 - 使用全局单例模式防止热重载时重复创建

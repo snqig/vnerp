@@ -83,9 +83,9 @@ const getAlertBadge = (alertLevel: string) => {
 export default function InventoryPage() {
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;

@@ -3,7 +3,7 @@ import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 
 // 审核类型
-type ApproveType = 'review' | 'factory' | 'quality' | 'sales' | 'approve';
+type ApproveType = 'review' | 'factory' | 'quality' | 'sales' | 'approve' | 'reject';
 
 // 审核字段映射
 const APPROVE_FIELD_MAP: Record<ApproveType, string> = {
@@ -12,15 +12,17 @@ const APPROVE_FIELD_MAP: Record<ApproveType, string> = {
   quality: 'quality_manager',
   sales: 'sales',
   approve: 'approver',
+  reject: 'approver',
 };
 
 // 审核状态流转
 const STATUS_FLOW: Record<ApproveType, { from: number; to: number }> = {
-  review: { from: 1, to: 2 }, // 草稿 -> 待审核
-  factory: { from: 2, to: 2 }, // 待审核 -> 待审核（厂务审核）
-  quality: { from: 2, to: 2 }, // 待审核 -> 待审核（品管审核）
-  sales: { from: 2, to: 2 }, // 待审核 -> 待审核（业务审核）
-  approve: { from: 2, to: 3 }, // 待审核 -> 已启用
+  review: { from: 1, to: 2 },
+  factory: { from: 2, to: 2 },
+  quality: { from: 2, to: 2 },
+  sales: { from: 2, to: 2 },
+  approve: { from: 2, to: 3 },
+  reject: { from: 2, to: 1 },
 };
 
 // 审核标准卡
@@ -85,9 +87,25 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     ]);
   }
 
+  // 如果是驳回，清除所有审核人并回退到草稿
+  if (approveType === 'reject') {
+    await execute(
+      `UPDATE prd_standard_card SET
+        status = 1,
+        reviewer = NULL,
+        factory_manager = NULL,
+        quality_manager = NULL,
+        sales = NULL,
+        approver = NULL,
+        update_time = NOW()
+      WHERE id = ?`,
+      [id]
+    );
+  }
+
   return successResponse(
-    { id, type, userName, status: approveType === 'approve' ? 3 : 2 },
-    `${getApproveTypeName(approveType)}成功`
+    { id, type, userName, status: approveType === 'approve' ? 3 : approveType === 'reject' ? 1 : 2 },
+    approveType === 'reject' ? '驳回成功，已回退到草稿' : `${getApproveTypeName(approveType)}成功`
   );
 }, '审核失败');
 
@@ -234,6 +252,7 @@ function getApproveTypeName(type: ApproveType): string {
     quality: '品管审核',
     sales: '业务审核',
     approve: '核准',
+    reject: '驳回',
   };
   return names[type];
 }

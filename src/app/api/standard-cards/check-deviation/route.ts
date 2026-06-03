@@ -94,8 +94,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     warning_level: warningLevel,
     standard_card: {
       card_no: card.card_no,
-      name: card.name,
-      type: card.type,
+      product_name: card.product_name,
       version: card.version,
     },
   });

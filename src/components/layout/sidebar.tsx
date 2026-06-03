@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -110,6 +110,7 @@ interface SortableMenuItemProps {
   onToggle: () => void;
   getIcon: (iconName?: string) => React.ReactNode;
   renderChildren: (menu: MenuItem, level: number) => React.ReactNode;
+  onMenuClick?: (menuPath?: string) => void;
 }
 
 function SortableMenuItem({
@@ -121,6 +122,7 @@ function SortableMenuItem({
   onToggle,
   getIcon,
   renderChildren,
+  onMenuClick,
 }: SortableMenuItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: menu.id,
@@ -175,6 +177,7 @@ function SortableMenuItem({
     <div ref={setNodeRef} style={style} className="mb-1 group">
       <Link
         href={menu.path || '#'}
+        onClick={() => onMenuClick?.(menu.path)}
         className={cn(
           'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
           active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
@@ -214,9 +217,17 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const { toast } = useToast();
 
   // 从 localStorage 加载排序
+  // 用ref缓存menus的序列化值，避免引用变化但内容不变时触发重排序
+  const menusSnapshotRef = useRef<string>('');
+
   useEffect(() => {
     // 确保 menus 是数组
     const safeMenus = Array.isArray(menus) ? menus : [];
+
+    // 深度比较：内容没变就跳过
+    const snapshot = JSON.stringify(safeMenus.map((m: MenuItem) => ({ id: m.id, name: m.name, code: m.code, path: m.path, sort_order: m.sort_order, childrenCount: m.children?.length })));
+    if (snapshot === menusSnapshotRef.current) return;
+    menusSnapshotRef.current = snapshot;
 
     const savedOrder = localStorage.getItem('menu_order');
     if (savedOrder) {
@@ -285,6 +296,32 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
     [saveToLocalStorage, debouncedSaveToDatabase]
   );
 
+  useEffect(() => {
+    const expandActiveParent = () => {
+      setExpandedMenus((prev) => {
+        const codesToExpand: string[] = [...prev];
+        let changed = false;
+        for (const menu of orderedMenus) {
+          if (menu.children && menu.children.length > 0) {
+            for (const child of menu.children) {
+              if (isActive(child.path)) {
+                if (!codesToExpand.includes(menu.code)) {
+                  codesToExpand.push(menu.code);
+                  changed = true;
+                }
+                break;
+              }
+            }
+          }
+        }
+        // 只有变化时才更新，避免不必要的重渲染
+        if (!changed) return prev;
+        return codesToExpand;
+      });
+    };
+    expandActiveParent();
+  }, [pathname, orderedMenus]);
+
   // 配置拖拽传感器
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -322,6 +359,32 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
       prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
     );
   };
+
+  // 点击菜单项：确保父菜单展开 + 移动端关闭侧边栏
+  const handleMenuClick = useCallback((menuPath?: string) => {
+    // 确保父菜单保持展开
+    if (menuPath) {
+      setExpandedMenus((prev) => {
+        for (const menu of orderedMenus) {
+          if (menu.children) {
+            for (const child of menu.children) {
+              if (child.path === menuPath) {
+                if (!prev.includes(menu.code)) {
+                  return [...prev, menu.code];
+                }
+                return prev; // 无变化，不触发重渲染
+              }
+            }
+          }
+        }
+        return prev;
+      });
+    }
+    // 移动端延迟关闭侧边栏
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => setCollapsed(true), 300);
+    }
+  }, [orderedMenus]);
 
   // 获取图标组件
   const getIcon = (iconName?: string) => {
@@ -407,6 +470,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
       <Link
         key={menu.id}
         href={menu.path || '#'}
+        onClick={() => handleMenuClick(menu.path)}
         className={cn(
           'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors mb-1',
           active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
@@ -483,6 +547,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                     <Link
                       key={child.id}
                       href={child.path || '#'}
+                      onClick={() => handleMenuClick(child.path)}
                       className={cn('snow-mixed-submenu-item', isActive(child.path) && 'active')}
                     >
                       {getIcon(child.icon)}
@@ -511,8 +576,6 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                   </div>
                 ) : !Array.isArray(orderedMenus) || orderedMenus.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground text-sm">暂无菜单权限</div>
-                ) : collapsed ? (
-                  orderedMenus.map((menu) => renderMenuItem(menu))
                 ) : (
                   <DndContext
                     sensors={sensors}
@@ -534,6 +597,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                           onToggle={() => toggleMenu(menu.code)}
                           getIcon={getIcon}
                           renderChildren={renderMenuItem}
+                          onMenuClick={handleMenuClick}
                         />
                       ))}
                     </SortableContext>

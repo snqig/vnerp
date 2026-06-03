@@ -8,6 +8,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const pageSize = Number(searchParams.get('pageSize') || 20);
   const status = searchParams.get('status') || '';
   const keyword = searchParams.get('keyword') || '';
+  const ink_type = searchParams.get('ink_type') || '';
 
   let where = 'WHERE io.deleted = 0';
   const params: any[] = [];
@@ -17,9 +18,13 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     params.push(Number(status));
   }
   if (keyword) {
-    where += ' AND (io.opening_no LIKE ? OR io.material_name LIKE ? OR io.batch_no LIKE ?)';
+    where += ' AND (io.record_no LIKE ? OR io.material_name LIKE ? OR io.material_code LIKE ? OR io.batch_no LIKE ?)';
     const like = `%${keyword}%`;
-    params.push(like, like, like);
+    params.push(like, like, like, like);
+  }
+  if (ink_type) {
+    where += ' AND io.ink_type = ?';
+    params.push(ink_type);
   }
 
   const totalRows: any = await query(
@@ -29,7 +34,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const total = totalRows[0]?.total || 0;
 
   const rows: any = await query(
-    `SELECT io.* FROM ink_opening_record io ${where} ORDER BY io.opening_date DESC LIMIT ? OFFSET ?`,
+    `SELECT io.* FROM ink_opening_record io ${where} ORDER BY io.open_time DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
 
@@ -39,13 +44,13 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   const {
-    label_no,
     material_id,
+    material_code,
     material_name,
     batch_no,
-    original_expire_date,
-    opening_date,
-    shelf_life_after_opening,
+    ink_type,
+    open_time,
+    expire_hours,
     remaining_qty,
     unit,
     operator_id,
@@ -53,48 +58,31 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     remark,
   } = body;
 
-  if (!label_no || !material_name || !opening_date) {
-    return errorResponse('缺少必填字段: label_no, material_name, opening_date', 400, 400);
+  if (!material_id || !open_time || !expire_hours) {
+    return errorResponse('缺少必填字段: material_id, open_time, expire_hours', 400, 400);
   }
 
   const result = await transaction(async (conn) => {
-    const now = new Date();
-    const openingNo =
-      'IO' +
-      now.getFullYear() +
-      String(now.getMonth() + 1).padStart(2, '0') +
-      String(now.getDate()).padStart(2, '0') +
-      String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+    const recordNo = 'INK' + Date.now();
 
-    const shelfLife = shelf_life_after_opening || 7;
-    const openingDate = new Date(opening_date);
-    const newExpireFromOpening = new Date(openingDate);
-    newExpireFromOpening.setDate(newExpireFromOpening.getDate() + shelfLife);
-
-    let newExpireDate: string | null = null;
-    if (original_expire_date) {
-      const origExpire = new Date(original_expire_date);
-      newExpireDate =
-        newExpireFromOpening < origExpire
-          ? newExpireFromOpening.toISOString().slice(0, 10)
-          : origExpire.toISOString().slice(0, 10);
-    } else {
-      newExpireDate = newExpireFromOpening.toISOString().slice(0, 10);
-    }
+    const expireTime = new Date(new Date(open_time).getTime() + expire_hours * 3600000)
+      .toISOString()
+      .slice(0, 19)
+      .replace('T', ' ');
 
     const [insertResult]: any = await conn.execute(
-      `INSERT INTO ink_opening_record (opening_no, label_no, material_id, material_name, batch_no, original_expire_date, opening_date, shelf_life_after_opening, new_expire_date, remaining_qty, unit, operator_id, operator_name, status, remark)
+      `INSERT INTO ink_opening_record (record_no, material_id, material_code, material_name, batch_no, ink_type, open_time, expire_hours, expire_time, remaining_qty, unit, operator_id, operator_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
       [
-        openingNo,
-        label_no,
-        material_id || null,
-        material_name,
+        recordNo,
+        material_id,
+        material_code || null,
+        material_name || null,
         batch_no || null,
-        original_expire_date || null,
-        opening_date,
-        shelfLife,
-        newExpireDate,
+        ink_type || null,
+        open_time,
+        expire_hours,
+        expireTime,
         remaining_qty || null,
         unit || 'kg',
         operator_id || null,
@@ -105,12 +93,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     if (batch_no) {
       await conn.execute(
-        `UPDATE inv_inventory_batch SET expire_date = ?, status = CASE WHEN ? < CURDATE() THEN 'expired' ELSE status END WHERE batch_no = ? AND deleted = 0`,
-        [newExpireDate, newExpireDate, batch_no]
+        `UPDATE inv_inventory_batch SET expire_date = ?, status = CASE WHEN ? < NOW() THEN 'expired' ELSE status END WHERE batch_no = ? AND deleted = 0`,
+        [expireTime, expireTime, batch_no]
       );
     }
 
-    return { id: insertResult.insertId, opening_no: openingNo, new_expire_date: newExpireDate };
+    return { id: insertResult.insertId, record_no: recordNo, expire_time: expireTime };
   });
 
   return successResponse(result, '油墨开罐记录创建成功');

@@ -12,7 +12,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   let where = 'WHERE 1=1';
   const params: any[] = [];
   if (userName) {
-    where += ' AND user_name LIKE ?';
+    where += ' AND username LIKE ?';
     params.push('%' + userName + '%');
   }
   if (status !== '') {
@@ -24,9 +24,12 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const totalRows: any = await query(countSql, params);
   const total = totalRows[0]?.total || 0;
 
-  const dataSql =
-    'SELECT * FROM sys_login_log ' + where + ' ORDER BY login_time DESC LIMIT ? OFFSET ?';
-  const rows: any = await query(dataSql, [...params, pageSize, (page - 1) * pageSize]);
+  const rows: any = await query(
+    'SELECT id, username as user_name, create_time as login_time, ip as ipaddr, location as login_location, user_agent as browser, login_type, status, error_msg as msg FROM sys_login_log ' +
+      where +
+      ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
+    [...params, pageSize, (page - 1) * pageSize]
+  );
 
   return successResponse({ list: rows, total, page, pageSize });
 });

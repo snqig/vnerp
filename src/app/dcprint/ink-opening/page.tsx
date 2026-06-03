@@ -67,9 +67,9 @@ interface InkOpeningRecord {
 }
 
 const INK_TYPE_MAP: Record<string, { label: string; color: string }> = {
-  solvent: { label: '溶剂型', color: 'bg-orange-100 text-orange-800' },
-  uv: { label: 'UV型', color: 'bg-purple-100 text-purple-800' },
-  water: { label: '水性', color: 'bg-blue-100 text-blue-800' },
+  solvent: { label: '溶剂型', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
+  uv: { label: 'UV型', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' },
+  water: { label: '水性', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
 };
 
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
@@ -273,30 +273,30 @@ export default function InkOpeningPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">使用中</CardTitle>
-              <Droplets className="h-4 w-4 text-green-600" />
+              <Droplets className="h-4 w-4 text-green-600 dark:text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{summary.using_count}</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{summary.using_count}</div>
               <p className="text-xs text-muted-foreground mt-1">当前正在使用的油墨</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">已过期</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{summary.expired_count}</div>
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">{summary.expired_count}</div>
               <p className="text-xs text-muted-foreground mt-1">已过期的油墨记录</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">即将过期</CardTitle>
-              <Clock className="h-4 w-4 text-yellow-600" />
+              <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
+              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {summary.overdue_using_count}
               </div>
               <p className="text-xs text-muted-foreground mt-1">使用中但已超时</p>
@@ -305,23 +305,23 @@ export default function InkOpeningPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">已报废</CardTitle>
-              <Trash2 className="h-4 w-4 text-gray-600" />
+              <Trash2 className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-600">{summary.scrapped_count}</div>
+              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{summary.scrapped_count}</div>
               <p className="text-xs text-muted-foreground mt-1">已报废处理的油墨</p>
             </CardContent>
           </Card>
         </div>
 
         {overdueList.length > 0 && (
-          <Card className="border-red-200 bg-red-50">
+          <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-700">
+              <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
                 <AlertTriangle className="h-5 w-5" />
                 过期预警
               </CardTitle>
-              <CardDescription className="text-red-600">
+              <CardDescription className="text-red-600 dark:text-red-400">
                 以下油墨已超过有效使用时间，请及时处理！
               </CardDescription>
             </CardHeader>
@@ -348,7 +348,7 @@ export default function InkOpeningPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>{r.open_time}</TableCell>
-                      <TableCell className="text-red-600 font-medium">{r.expire_time}</TableCell>
+                      <TableCell className="text-red-600 font-medium dark:text-red-400">{r.expire_time}</TableCell>
                       <TableCell>
                         <Button
                           size="sm"
@@ -457,9 +457,9 @@ export default function InkOpeningPage() {
                         key={r.id}
                         className={
                           timeRemaining?.isOverdue
-                            ? 'bg-red-50'
+                            ? 'bg-red-50 dark:bg-red-950/30'
                             : timeRemaining?.isWarning
-                              ? 'bg-yellow-50'
+                              ? 'bg-yellow-50 dark:bg-yellow-950/30'
                               : ''
                         }
                       >

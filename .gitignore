@@ -1,150 +1,45 @@
-.next
+# 排除 . 开头的文件和目录
+.*
 
-# Dependencies
+# 但保留以下文件（取消注释以启用）
+# !.gitignore
+# !.env.example
+# !.eslintrc.js
+# !.prettierrc.js
+
+# 依赖目录
 node_modules/
-.pnp
-.pnp.js
+__pycache__/
+.pytest_cache/
 
-# Production build
-dist/
-build/
-out/
+# 构建输出
 .next/
-.rsbuild/
+out/
+build/
+dist/
 
-# Testing
-coverage/
-*.lcov
-.nyc_output
-playwright-report/
-test-results/
-
-# Environment variables
+# 环境变量
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
 
-# Logs
-logs/
+# 日志
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Diagnostic reports
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
-# Cache
-.cache/
-.parcel-cache/
-.eslintcache
-.stylelintcache
-.npm
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+# 编辑器
+.vscode/
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
 *.swp
 *.swo
-*~
 
-# OS files
+# 操作系统
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-Desktop.ini
 
-# Temporary files
+# 临时文件
 *.tmp
 *.temp
-.tmp/
-.temp/
-
-# Optional files
-*.tgz
-*.gz
-*.zip
-*.tar
-
-# TypeScript
-*.tsbuildinfo
-
-# Misc
-.vercel
-.turbo
-
-# AI tools and assistants
-.agentic-tools-mcp/
-.augment/
-.claude/
-.codebuddy/
-.continue/
-.iflow/
-.junie/
-.kiro/
-.opencode/
-.qoder/
-.qwen/
-.roo/
-.windsurf/
-.workbuddy/
-.coze/
-.coze-logs
-.agents/
-.obsidian/
-.trae/
-agency-agents/
-
-# AI generated debug/temp files
-deepseek_*.md
-test-screenshots/
-test-*.py
-test-*.json
-
-# Backup directories
-backups/
-
-# Legacy/mirror project
-vnerp/
-
-# Temporary scripts and debug files
-temp_check.js
-api-response.json
-test-login-flow.js
-test_import_vnpython.py
-vnpython.py
-vnpython.pyw
-skills-lock.json
-temp_*.json
-temp_*.txt
-test-results.json
-
-# Database package files (should not be in repo)
-database/package.json
-database/package-lock.json
-database/pnpm-lock.yaml
+.cache/

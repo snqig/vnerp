@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { usePermission } from '@/hooks/usePermission';
 
 interface Item {
   id: number;
@@ -56,6 +57,7 @@ const typeMap: Record<number, string> = {
 
 export default function MaterialCategoryPage() {
   const { toast } = useToast();
+  const { hasPermission } = usePermission();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -135,16 +137,18 @@ export default function MaterialCategoryPage() {
                 <Search className="h-3 w-3" />
               </Button>
             </div>
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditItem({});
-                setShowDialog(true);
-              }}
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              新增分类
-            </Button>
+            {hasPermission('base-data:material-category:create') && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditItem({});
+                  setShowDialog(true);
+                }}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                新增分类
+              </Button>
+            )}
           </div>
         </div>
         <Card>

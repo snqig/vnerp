@@ -1,8 +1,9 @@
 import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { cachedApiRoute, invalidateCache } from '@/lib/api-cache';
 import type { NextRequest } from 'next/server';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = cachedApiRoute(withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const plateCode = searchParams.get('plateCode');
@@ -84,7 +85,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     },
     '网版列表'
   );
-});
+}), { ttl: 300, keyPrefix: 'api:screen-plates' });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();

@@ -13,7 +13,7 @@ export class ApiClient {
   }
 
   static getDefaultHeaders(): HeadersInit {
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 

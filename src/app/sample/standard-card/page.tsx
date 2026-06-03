@@ -53,6 +53,9 @@ import {
   Ruler,
   Palette,
   Settings,
+  CheckCircle,
+  XCircle,
+  Send,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -180,6 +183,7 @@ export default function StandardCardPage() {
   const [cardToApprove, setCardToApprove] = useState<StandardCardListItem | null>(null);
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus | null>(null);
   const [loadingApproval, setLoadingApproval] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
@@ -198,18 +202,21 @@ export default function StandardCardPage() {
         params.append('keyword', debouncedSearchTerm);
       }
 
+      console.log('[StandardCard] loadCards - 请求参数:', { page: currentPage, status: statusFilter, keyword: debouncedSearchTerm });
       const response = await fetch(`/api/standard-cards?${params.toString()}`);
       const result = await response.json();
+      console.log('[StandardCard] loadCards - 响应:', { success: result.success, total: result.pagination?.total || result.data?.total, listLength: Array.isArray(result.data) ? result.data.length : result.data?.list?.length });
 
       if (result.success) {
         const cardList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        console.log('[StandardCard] loadCards - 卡片状态分布:', cardList.reduce((acc: Record<number, number>, c: any) => { acc[c.status] = (acc[c.status] || 0) + 1; return acc; }, {}));
         setCards(cardList);
         setTotalCount(result.pagination?.total || result.data?.total || 0);
       } else {
-        console.error('加载数据失败:', result.message);
+        console.error('[StandardCard] loadCards - 失败:', result.message);
       }
     } catch (error) {
-      console.error('加载数据失败:', error);
+      console.error('[StandardCard] loadCards - 异常:', error);
     } finally {
       setLoading(false);
     }
@@ -271,19 +278,22 @@ export default function StandardCardPage() {
   };
 
   const handleApprove = async (card: StandardCardListItem) => {
+    console.log('[StandardCard] handleApprove - 卡片:', { id: card.id, card_no: card.card_no, 当前状态: card.status });
     setCardToApprove(card);
     setLoadingApproval(true);
     try {
       const response = await fetch(`/api/standard-cards/approve?id=${card.id}`);
       const result = await response.json();
+      console.log('[StandardCard] handleApprove - 审核状态响应:', { success: result.success, status: result.data?.status, steps: result.data?.steps?.map((s: any) => ({ name: s.name, status: s.status })) });
       if (result.success) {
         setApprovalStatus(result.data);
         setApproveDialogOpen(true);
       } else {
+        console.error('[StandardCard] handleApprove - 获取审核状态失败:', result.message);
         alert('获取审核状态失败: ' + result.message);
       }
     } catch (error) {
-      console.error('获取审核状态失败:', error);
+      console.error('[StandardCard] handleApprove - 异常:', error);
       alert('获取审核状态失败');
     } finally {
       setLoadingApproval(false);
@@ -292,6 +302,7 @@ export default function StandardCardPage() {
 
   const handleApproveAction = async (type: string, userName: string) => {
     if (!cardToApprove) return;
+    console.log('[StandardCard] handleApproveAction - 操作:', { id: cardToApprove.id, type, userName });
 
     try {
       const response = await fetch('/api/standard-cards/approve', {
@@ -306,15 +317,17 @@ export default function StandardCardPage() {
       });
 
       const result = await response.json();
+      console.log('[StandardCard] handleApproveAction - 响应:', { success: result.success, message: result.message, newStatus: result.data?.status });
       if (result.success) {
         alert(result.message);
         setApproveDialogOpen(false);
         loadCards();
       } else {
+        console.error('[StandardCard] handleApproveAction - 失败:', result.message);
         alert('操作失败: ' + result.message);
       }
     } catch (error) {
-      console.error('审核失败:', error);
+      console.error('[StandardCard] handleApproveAction - 异常:', error);
       alert('审核失败');
     }
   };
@@ -390,6 +403,61 @@ export default function StandardCardPage() {
         {label}
       </span>
     );
+  };
+
+  const handleSubmitForReview = async (card: StandardCardListItem) => {
+    console.log('[StandardCard] handleSubmitForReview - 卡片:', { id: card.id, card_no: card.card_no, 当前状态: card.status });
+    try {
+      const response = await fetch('/api/standard-cards/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: card.id,
+          type: 'review',
+          userId: 1,
+          userName: '当前用户',
+        }),
+      });
+      const result = await response.json();
+      console.log('[StandardCard] handleSubmitForReview - 响应:', { success: result.success, message: result.message, newStatus: result.data?.status });
+      if (result.success) {
+        alert('提交审核成功');
+        loadCards();
+      } else {
+        alert('提交审核失败: ' + result.message);
+      }
+    } catch (error) {
+      console.error('[StandardCard] handleSubmitForReview - 异常:', error);
+      alert('提交审核失败');
+    }
+  };
+
+  const handleReject = async (card: StandardCardListItem) => {
+    if (!confirm('确定要驳回此标准卡吗？驳回后将回退到草稿状态。')) return;
+    console.log('[StandardCard] handleReject - 卡片:', { id: card.id, card_no: card.card_no, 当前状态: card.status });
+    try {
+      const response = await fetch('/api/standard-cards/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: card.id,
+          type: 'reject',
+          userId: 1,
+          userName: '当前用户',
+        }),
+      });
+      const result = await response.json();
+      console.log('[StandardCard] handleReject - 响应:', { success: result.success, message: result.message, newStatus: result.data?.status });
+      if (result.success) {
+        alert('驳回成功，已回退到草稿');
+        loadCards();
+      } else {
+        alert('驳回失败: ' + result.message);
+      }
+    } catch (error) {
+      console.error('[StandardCard] handleReject - 异常:', error);
+      alert('驳回失败');
+    }
   };
 
   return (
@@ -578,16 +646,27 @@ export default function StandardCardPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="w-[120px]">标准卡编号</TableHead>
-                    <TableHead className="w-[120px]">标准卡名称</TableHead>
-                    <TableHead className="w-[80px]">类型</TableHead>
-                    <TableHead className="w-[100px]">客户</TableHead>
-                    <TableHead className="w-[110px]">产品</TableHead>
-                    <TableHead className="w-[60px]">版本</TableHead>
+                    <TableHead className="w-[40px]">
+                      <input
+                        type="checkbox"
+                        checked={filteredCards.length > 0 && filteredCards.every(c => selectedIds.has(c.id))}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(new Set(filteredCards.map(c => c.id)));
+                          } else {
+                            setSelectedIds(new Set());
+                          }
+                        }}
+                        className="w-4 h-4"
+                      />
+                    </TableHead>
+                    <TableHead className="w-[50px]">序号</TableHead>
+                    <TableHead className="w-[130px]">标准卡编号</TableHead>
+                    <TableHead className="w-[120px]">客户</TableHead>
+                    <TableHead className="w-[60px]">版次</TableHead>
                     <TableHead className="w-[90px]">日期</TableHead>
-                    <TableHead className="w-[100px]">成品尺寸</TableHead>
-                    <TableHead className="w-[80px]">印刷类型</TableHead>
-                    <TableHead className="w-[80px]">模号</TableHead>
+                    <TableHead className="w-[120px]">品名</TableHead>
+                    <TableHead className="w-[110px]">客户料号</TableHead>
                     <TableHead className="w-[70px]">状态</TableHead>
                     <TableHead className="w-[70px] text-center">操作</TableHead>
                   </TableRow>
@@ -595,7 +674,7 @@ export default function StandardCardPage() {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={12} className="h-32 text-center text-muted-foreground">
+                      <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
                         <div className="flex items-center justify-center gap-2">
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                           加载中...
@@ -604,48 +683,38 @@ export default function StandardCardPage() {
                     </TableRow>
                   ) : filteredCards.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={12} className="h-32 text-center text-muted-foreground">
+                      <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
                         暂无数据
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredCards.map((card) => (
+                    filteredCards.map((card, idx) => (
                       <TableRow key={card.id} className="group hover:bg-muted/30">
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(card.id)}
+                            onChange={(e) => {
+                              const next = new Set(selectedIds);
+                              if (e.target.checked) {
+                                next.add(card.id);
+                              } else {
+                                next.delete(card.id);
+                              }
+                              setSelectedIds(next);
+                            }}
+                            className="w-4 h-4"
+                          />
+                        </TableCell>
+                        <TableCell className="text-center text-muted-foreground">
+                          {(currentPage - 1) * pageSize + idx + 1}
+                        </TableCell>
                         <TableCell className="font-mono text-sm font-medium">
                           {card.card_no}
                         </TableCell>
                         <TableCell>
-                          <span
-                            className="font-medium truncate max-w-[120px] block"
-                            title={card.name}
-                          >
-                            {card.name}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={`text-xs ${typeMap[card.type as StandardCardType]?.color || 'bg-gray-100'}`}
-                          >
-                            {typeMap[card.type as StandardCardType]?.label || card.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span
-                              className="font-medium truncate max-w-[100px]"
-                              title={card.customer_name}
-                            >
-                              {card.customer_name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {card.customer_code}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="truncate max-w-[110px] block" title={card.product_name}>
-                            {card.product_name}
+                          <span className="font-medium truncate max-w-[120px] block" title={card.customer_name}>
+                            {card.customer_name}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -654,22 +723,17 @@ export default function StandardCardPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
+                          <span className="text-sm text-muted-foreground">
                             {card.create_time?.split(' ')[0] || '-'}
-                          </div>
+                          </span>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1 text-sm">
-                            <Ruler className="h-3 w-3 text-muted-foreground" />
-                            {card.finished_size || '-'}
-                          </div>
+                          <span className="truncate max-w-[120px] block" title={card.product_name}>
+                            {card.product_name}
+                          </span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm">{card.print_type || '-'}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm">{card.mold_type || '-'}</span>
+                          <span className="text-sm">{card.customer_code || '-'}</span>
                         </TableCell>
                         <TableCell>{getStatusBadge(card.status)}</TableCell>
                         <TableCell>
@@ -710,6 +774,24 @@ export default function StandardCardPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                {card.status === 1 && (
+                                  <DropdownMenuItem onClick={() => handleSubmitForReview(card)}>
+                                    <Send className="h-4 w-4 mr-2" />
+                                    提交审核
+                                  </DropdownMenuItem>
+                                )}
+                                {card.status === 2 && (
+                                  <>
+                                    <DropdownMenuItem onClick={() => handleApprove(card)}>
+                                      <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                                      审核
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleReject(card)} className="text-orange-600">
+                                      <XCircle className="h-4 w-4 mr-2" />
+                                      驳回
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                                 <DropdownMenuItem onClick={() => handleEdit(card)}>
                                   <Edit className="h-4 w-4 mr-2" />
                                   编辑

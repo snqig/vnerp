@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/card';
 import { useToastContext } from '@/components/ui/toast';
 import { MainLayout } from '@/components/layout/main-layout';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface BOMLine {
   id?: number;
