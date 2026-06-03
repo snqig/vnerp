@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
 import {
   LayoutDashboard,
   FileText,
@@ -41,6 +40,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { NavigationMode } from '@/hooks/useSnowAdminTheme';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { useTranslations } from 'next-intl';
 
 // 拖拽相关导入
 import {
@@ -214,6 +214,8 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const [activeParentCode, setActiveParentCode] = useState<string | null>(null);
   const { menus, isLoading, user, isAuthenticated, logout } = useAuth();
   const { companyName } = useCompanyName();
+  const t = useTranslations('Auth');
+  const tc = useTranslations('Common');
   const { toast } = useToast();
 
   // 从 localStorage 加载排序
@@ -615,10 +617,10 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">
-                      {user ? user.realName || user.username : '未登录'}
+                      {user ? user.realName || user.username : t('login')}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {user?.roles?.[0]?.role_name || '普通用户'}
+                      {user?.roles?.[0]?.role_name || tc('status')}
                     </p>
                   </div>
                 )}
@@ -629,7 +631,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                     onClick={logout}
                     className="text-muted-foreground hover:text-red-600"
                   >
-                    退出
+                    {t('logout')}
                   </Button>
                 )}
               </div>

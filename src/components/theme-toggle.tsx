@@ -9,10 +9,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Moon, Sun, Monitor } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type Theme = 'light' | 'dark' | 'system';
 
 export function ThemeToggle() {
+  const t = useTranslations('Theme');
   const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
 
@@ -84,23 +86,23 @@ export function ThemeToggle() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="w-9 h-9">
           {getIcon()}
-          <span className="sr-only">切换主题</span>
+          <span className="sr-only">{t('toggle')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => handleThemeChange('light')}>
           <Sun className="h-4 w-4 mr-2" />
-          浅色模式
+          {t('light')}
           {theme === 'light' && <span className="ml-auto text-primary">✓</span>}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleThemeChange('dark')}>
           <Moon className="h-4 w-4 mr-2" />
-          深色模式
+          {t('dark')}
           {theme === 'dark' && <span className="ml-auto text-primary">✓</span>}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleThemeChange('system')}>
           <Monitor className="h-4 w-4 mr-2" />
-          跟随系统
+          {t('system')}
           {theme === 'system' && <span className="ml-auto text-primary">✓</span>}
         </DropdownMenuItem>
       </DropdownMenuContent>

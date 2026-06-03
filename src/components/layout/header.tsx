@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
 import {
   Bell,
   User,
@@ -44,11 +43,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useRouter } from 'next/navigation';
 import { NavigationMode } from '@/hooks/useSnowAdminTheme';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { useTranslations } from 'next-intl';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Home,
@@ -106,6 +107,10 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
   const pathname = usePathname();
   const { menus: authMenus } = useAuth();
   const { companyName } = useCompanyName();
+  const t = useTranslations('Nav');
+  const ta = useTranslations('Auth');
+  const tc = useTranslations('Common');
+  const ts = useTranslations('System');
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userInfo, setUserInfo] = useState({ username: '管理员', email: 'admin@dachang.com' });
@@ -166,7 +171,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
           title: n.notice_title,
           content: n.notice_content || '',
           time: n.create_time ? new Date(n.create_time).toLocaleString('zh-CN') : '',
-          type: n.notice_type === 1 ? '通知' : n.notice_type === 2 ? '公告' : '其他',
+          type: n.notice_type === 1 ? ts('notice') : n.notice_type === 2 ? '公告' : tc('all'),
           read: false,
         }));
         setNotifications(items);
@@ -176,7 +181,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
       setNotifications([
         {
           id: 1,
-          title: '系统通知',
+          title: ts('notice'),
           content: '欢迎使用ERP系统',
           time: new Date().toLocaleString('zh-CN'),
           type: '系统',
@@ -302,6 +307,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
       </div>
 
       <div className="flex items-center gap-2">
+        <LanguageSwitcher />
         <ThemeToggle />
 
         <DropdownMenu>
@@ -317,7 +323,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <div className="flex items-center justify-between px-2">
-              <DropdownMenuLabel className="p-0">通知中心</DropdownMenuLabel>
+              <DropdownMenuLabel className="p-0">{ts('notice')}</DropdownMenuLabel>
               {unreadCount > 0 && (
                 <Button
                   variant="ghost"
@@ -331,7 +337,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
             </div>
             <DropdownMenuSeparator />
             {notifications.length === 0 ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">暂无通知</div>
+              <div className="py-6 text-center text-sm text-muted-foreground">{tc('noData')}</div>
             ) : (
               notifications.slice(0, 5).map((n) => (
                 <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-1 py-3">
@@ -352,7 +358,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
               className="text-center text-primary justify-center"
               onClick={handleViewAllNotifications}
             >
-              查看全部通知
+              {tc('view')}{ts('notice')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -373,7 +379,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handlePersonalSettings}>
               <Settings className="mr-2 h-4 w-4" />
-              个人设置
+              {ts('config')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleSwitchWarehouse}>
               <Warehouse className="mr-2 h-4 w-4" />
@@ -382,7 +388,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
-              退出登录
+              {ta('logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
