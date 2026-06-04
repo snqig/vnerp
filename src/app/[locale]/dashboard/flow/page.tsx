@@ -49,7 +49,7 @@ import {
 const flowNodes = [
   {
     step: 1,
-    name: '采购入库',
+    nameKey: 'procurementInbound',
     icon: ShoppingCart,
     tables: ['pur_request', 'pur_order', 'pur_receipt'],
     fields: ['request_no', 'order_no', 'supplier_id', 'material_id'],
@@ -60,7 +60,7 @@ const flowNodes = [
   },
   {
     step: 2,
-    name: '分切管理',
+    nameKey: 'cuttingManagement',
     icon: Scissors,
     tables: ['inv_cutting_record', 'inv_material_label'],
     fields: ['cutting_no', 'source_batch_no', 'material_id'],
@@ -71,7 +71,7 @@ const flowNodes = [
   },
   {
     step: 3,
-    name: '工单生产',
+    nameKey: 'workOrderProduction',
     icon: Factory,
     tables: ['prd_work_order', 'prd_process_card'],
     fields: ['work_order_no', 'sales_order_id', 'material_id', 'plan_qty'],
@@ -82,7 +82,7 @@ const flowNodes = [
   },
   {
     step: 4,
-    name: '工艺流程',
+    nameKey: 'processFlow',
     icon: Cog,
     tables: ['prd_process_card', 'prd_standard_card'],
     fields: ['card_no', 'process_flow', 'sequences'],
@@ -93,7 +93,7 @@ const flowNodes = [
   },
   {
     step: 5,
-    name: '扫码配料',
+    nameKey: 'scanBatching',
     icon: QrCode,
     tables: ['inv_scan_log', 'prd_material_issue'],
     fields: ['label_no', 'qr_content', 'material_id'],
@@ -104,7 +104,7 @@ const flowNodes = [
   },
   {
     step: 6,
-    name: '扫码发料',
+    nameKey: 'scanIssuing',
     icon: Send,
     tables: ['prd_material_issue', 'inv_inventory_log'],
     fields: ['issue_no', 'material_id', 'quantity', 'warehouse_id'],
@@ -115,7 +115,7 @@ const flowNodes = [
   },
   {
     step: 7,
-    name: '生产报工',
+    nameKey: 'productionReporting',
     icon: ClipboardCheck,
     tables: ['prd_work_report'],
     fields: ['report_no', 'work_order_no', 'completed_qty'],
@@ -126,7 +126,7 @@ const flowNodes = [
   },
   {
     step: 8,
-    name: '成品入库',
+    nameKey: 'finishedGoodsInbound',
     icon: PackageCheck,
     tables: ['inv_production_inbound', 'inv_inventory'],
     fields: ['inbound_no', 'product_id', 'quantity', 'batch_no'],
@@ -137,7 +137,7 @@ const flowNodes = [
   },
   {
     step: 9,
-    name: '质量追溯',
+    nameKey: 'qualityTraceability',
     icon: ShieldCheck,
     tables: ['inv_trace_record', 'qc_inspection'],
     fields: ['trace_no', 'batch_no', 'material_id'],
@@ -151,7 +151,7 @@ const flowNodes = [
 const fieldTracking = [
   {
     field: 'material_id',
-    label: '物料标识',
+    labelKey: 'materialLabel',
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-500/30',
@@ -166,7 +166,7 @@ const fieldTracking = [
   },
   {
     field: 'order_id',
-    label: '订单标识',
+    labelKey: 'orderLabel',
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/10',
     borderColor: 'border-amber-500/30',
@@ -179,7 +179,7 @@ const fieldTracking = [
   },
   {
     field: 'batch_no',
-    label: '批次标识',
+    labelKey: 'batchLabel',
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-500/10',
     borderColor: 'border-emerald-500/30',
@@ -192,7 +192,7 @@ const fieldTracking = [
   },
   {
     field: 'warehouse_id',
-    label: '仓库标识',
+    labelKey: 'warehouseLabel',
     color: 'text-purple-400',
     bgColor: 'bg-purple-500/10',
     borderColor: 'border-purple-500/30',
@@ -206,7 +206,7 @@ const fieldTracking = [
 ];
 
 interface ModuleGroup {
-  name: string;
+  nameKey: string;
   icon: React.ComponentType<{ className?: string }>;
   color: string;
   bgColor: string;
@@ -215,7 +215,7 @@ interface ModuleGroup {
 
 const moduleGroups: ModuleGroup[] = [
   {
-    name: '系统管理',
+    nameKey: 'systemManagement',
     icon: Shield,
     color: 'text-slate-400',
     bgColor: 'bg-slate-500/10',
@@ -238,7 +238,7 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '客户管理',
+    nameKey: 'customerManagement',
     icon: Users,
     color: 'text-pink-400',
     bgColor: 'bg-pink-500/10',
@@ -249,7 +249,7 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '供应商管理',
+    nameKey: 'supplierManagement',
     icon: Truck,
     color: 'text-indigo-400',
     bgColor: 'bg-indigo-500/10',
@@ -263,7 +263,7 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '物料管理',
+    nameKey: 'materialManagement',
     icon: Tag,
     color: 'text-teal-400',
     bgColor: 'bg-teal-500/10',
@@ -284,7 +284,7 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '采购管理',
+    nameKey: 'procurementManagement',
     icon: ShoppingCart,
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/10',
@@ -310,7 +310,7 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '销售管理',
+    nameKey: 'salesManagement',
     icon: FileText,
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/10',
@@ -330,7 +330,7 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '生产管理',
+    nameKey: 'productionManagement',
     icon: Factory,
     color: 'text-orange-400',
     bgColor: 'bg-orange-500/10',
@@ -350,7 +350,7 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '仓库管理',
+    nameKey: 'warehouseManagement',
     icon: Warehouse,
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/10',
@@ -365,7 +365,7 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '质量管理',
+    nameKey: 'qualityManagement',
     icon: FlaskConical,
     color: 'text-rose-400',
     bgColor: 'bg-rose-500/10',
@@ -376,7 +376,7 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '财务管理',
+    nameKey: 'financeManagement',
     icon: CreditCard,
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-500/10',
@@ -395,7 +395,7 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '人事管理',
+    nameKey: 'hrManagement',
     icon: UserCog,
     color: 'text-violet-400',
     bgColor: 'bg-violet-500/10',
@@ -406,7 +406,7 @@ const moduleGroups: ModuleGroup[] = [
     ],
   },
   {
-    name: '设备管理',
+    nameKey: 'equipmentManagement',
     icon: Wrench,
     color: 'text-lime-400',
     bgColor: 'bg-lime-500/10',
@@ -442,7 +442,7 @@ const fkConnections = [
 
 const architectureLayers = [
   {
-    name: '表现层',
+    nameKey: 'presentationLayer',
     subtitle: 'Presentation Layer',
     icon: Monitor,
     color: 'from-blue-600 to-blue-700',
@@ -456,7 +456,7 @@ const architectureLayers = [
     ],
   },
   {
-    name: 'API层',
+    nameKey: 'apiLayer',
     subtitle: 'API Layer',
     icon: Globe,
     color: 'from-cyan-600 to-cyan-700',
@@ -471,7 +471,7 @@ const architectureLayers = [
     ],
   },
   {
-    name: '业务逻辑层',
+    nameKey: 'businessLogicLayer',
     subtitle: 'Business Logic Layer',
     icon: Cpu,
     color: 'from-purple-600 to-purple-700',
@@ -486,7 +486,7 @@ const architectureLayers = [
     ],
   },
   {
-    name: '数据访问层',
+    nameKey: 'dataAccessLayer',
     subtitle: 'Data Access Layer',
     icon: HardDrive,
     color: 'from-emerald-600 to-emerald-700',
@@ -500,7 +500,7 @@ const architectureLayers = [
     ],
   },
   {
-    name: '数据库层',
+    nameKey: 'databaseLayer',
     subtitle: 'Database Layer',
     icon: Database,
     color: 'from-rose-600 to-rose-700',
@@ -580,6 +580,7 @@ function FlowArrow() {
 }
 
 function FlowNodeCard({ node }: { node: (typeof flowNodes)[0] }) {
+  const t = useTranslations('Dashboard');
   const Icon = node.icon;
   return (
     <Card
@@ -593,13 +594,13 @@ function FlowNodeCard({ node }: { node: (typeof flowNodes)[0] }) {
           </div>
           <div>
             <div className="text-[10px] text-muted-foreground">Step {node.step}</div>
-            <div className={`text-sm font-semibold ${node.textColor}`}>{node.name}</div>
+            <div className={`text-sm font-semibold ${node.textColor}`}>{t(node.nameKey)}</div>
           </div>
         </div>
         <div className="space-y-1">
           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
             <Database className="h-2.5 w-2.5" />
-            <span>关联表</span>
+            <span>{t('relatedTables')}</span>
           </div>
           <div className="flex flex-wrap gap-1">
             {node.tables.map((t) => (
@@ -610,7 +611,7 @@ function FlowNodeCard({ node }: { node: (typeof flowNodes)[0] }) {
           </div>
         </div>
         <div className="space-y-1">
-          <div className="text-[10px] text-muted-foreground">关键字段</div>
+          <div className="text-[10px] text-muted-foreground">{t('keyFields')}</div>
           <div className="flex flex-wrap gap-1">
             {node.fields.map((f) => (
               <span
@@ -628,6 +629,7 @@ function FlowNodeCard({ node }: { node: (typeof flowNodes)[0] }) {
 }
 
 function FieldTrackingCard({ track }: { track: (typeof fieldTracking)[0] }) {
+  const t = useTranslations('Dashboard');
   return (
     <Card className={`border ${track.borderColor} ${track.bgColor}`}>
       <CardHeader className="pb-2 pt-3 px-4">
@@ -635,7 +637,7 @@ function FieldTrackingCard({ track }: { track: (typeof fieldTracking)[0] }) {
           <Link2 className={`h-4 w-4 ${track.color}`} />
           <span className="font-mono">{track.field}</span>
           <Badge variant="outline" className="text-[10px] h-4 ml-auto">
-            {track.label}
+            {t(track.labelKey)}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -675,7 +677,7 @@ function ModuleGroupSection({
         <div className={`p-1.5 rounded-md ${group.bgColor}`}>
           <Icon className={`h-4 w-4 ${group.color}`} />
         </div>
-        <span className="font-semibold text-sm">{group.name}</span>
+        <span className="font-semibold text-sm">{t(group.nameKey)}</span>
         <Badge variant="secondary" className="text-[10px] h-4">
           {group.tables.length} 表
         </Badge>
@@ -729,6 +731,7 @@ function ArchitectureLayerCard({
   layer: (typeof architectureLayers)[0];
   index: number;
 }) {
+  const t = useTranslations('Dashboard');
   const Icon = layer.icon;
   return (
     <div className="space-y-0">
@@ -741,7 +744,7 @@ function ArchitectureLayerCard({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold">{layer.name}</span>
+                <span className="text-lg font-bold">{t(layer.nameKey)}</span>
                 <Badge variant="outline" className="text-[10px] h-4">
                   {layer.subtitle}
                 </Badge>
@@ -790,14 +793,14 @@ function ArchitectureLayerCard({
 
 export default function FlowPage() {
   // 翻译钩子
-  const t = useTranslations('Common');
+  const t = useTranslations('Dashboard');
   const tc = useTranslations('Common');
 
   return (
     <MainLayout title="业务流转可视化">
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">业务流转可视化</h2>
+          <h2 className="text-3xl font-bold tracking-tight">{t('flowVisualization')}</h2>
           <p className="text-muted-foreground mt-1">
             丝网印刷ERP系统 — 业务链路、表间关联与系统架构全景视图
           </p>
@@ -870,12 +873,11 @@ export default function FlowPage() {
               <CardContent className="space-y-3">
                 {moduleGroups.map((group) => (
                   <ModuleGroupSection
-                    key={group.name}
-                    group={group}
-                    defaultOpen={
-                      group.name === '采购管理' ||
-                      group.name === '销售管理' ||
-                      group.name === '生产管理'
+                    key={group.nameKey}
+
+                      group.nameKey === 'procurementManagement' ||
+                      group.nameKey === 'salesManagement' ||
+                      group.nameKey === 'productionManagement'
                     }
                   />
                 ))}
@@ -919,7 +921,7 @@ export default function FlowPage() {
               <CardContent>
                 <div className="space-y-0">
                   {architectureLayers.map((layer, i) => (
-                    <ArchitectureLayerCard key={layer.name} layer={layer} index={i} />
+                    <ArchitectureLayerCard key={layer.nameKey} layer={layer} index={i} />
                   ))}
                 </div>
               </CardContent>

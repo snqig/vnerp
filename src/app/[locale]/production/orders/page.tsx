@@ -155,41 +155,32 @@ export default function WorkOrdersPage() {
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
 
+  const ORDER_STATUS_CLASSES: Record<string, string> = {
+    created: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    scheduled: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    producing: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+    completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    closed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  };
+
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; className: string }> = {
-      created: {
-        label: '已创建',
-        className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-      },
-      scheduled: {
-        label: '已排产',
-        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-      },
-      producing: {
-        label: '生产中',
-        className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-      },
-      completed: {
-        label: '已完成',
-        className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-      },
-      closed: {
-        label: tc('closed'),
-        className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-      },
+    const statusLabels: Record<string, string> = {
+      created: t('orderCreated'),
+      scheduled: t('orderScheduled'),
+      producing: t('orderProducing'),
+      completed: t('orderCompleted'),
+      closed: tc('closed'),
     };
-    const config = statusMap[status] || {
-      label: status,
-      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-    };
-    return <Badge className={config.className}>{config.label}</Badge>;
+    const label = statusLabels[status] || status;
+    const className = ORDER_STATUS_CLASSES[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200';
+    return <Badge className={className}>{label}</Badge>;
   };
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<(typeof workOrders)[0] | null>(null);
 
   return (
-    <MainLayout title="生产工单">
+    <MainLayout title={t('workOrders')}>
       <div className="space-y-6">
         {/* 工具栏 */}
         <Card>
@@ -198,18 +189,18 @@ export default function WorkOrdersPage() {
               <div className="flex flex-1 gap-4 items-center w-full md:w-auto">
                 <div className="relative flex-1 max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="搜索工单号、产品..." className="pl-10" />
+                  <Input placeholder={t('searchOrderPlaceholder')} className="pl-10" />
                 </div>
                 <Select defaultValue="all">
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="工单状态" />
+                    <SelectValue placeholder={t('orderStatusFilter')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
-                    <SelectItem value="created">已创建</SelectItem>
-                    <SelectItem value="scheduled">已排产</SelectItem>
-                    <SelectItem value="producing">生产中</SelectItem>
-                    <SelectItem value="completed">已完成</SelectItem>
+                    <SelectItem value="all">{t('allStatus')}</SelectItem>
+                    <SelectItem value="created">{t('orderCreated')}</SelectItem>
+                    <SelectItem value="scheduled">{t('orderScheduled')}</SelectItem>
+                    <SelectItem value="producing">{t('orderProducing')}</SelectItem>
+                    <SelectItem value="completed">{t('orderCompleted')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -217,21 +208,21 @@ export default function WorkOrdersPage() {
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
-                    新建工单
+                    {t('newWorkOrder')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl" resizable>
                   <DialogHeader>
-                    <DialogTitle>新建生产工单</DialogTitle>
-                    <DialogDescription>从销售订单生成工单</DialogDescription>
+                    <DialogTitle>{t('newWorkOrder')}</DialogTitle>
+                    <DialogDescription>{t('createWorkOrderDesc')}</DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>销售订单</Label>
+                          <Label>{t('salesOrder')}</Label>
                         <Select>
                           <SelectTrigger>
-                            <SelectValue placeholder="选择销售订单" />
+                              <SelectValue placeholder={t('selectSalesOrder')} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="SO001">SO20240115001 - 深圳伟业</SelectItem>
@@ -240,36 +231,36 @@ export default function WorkOrdersPage() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>产品</Label>
+                        <Label>{t('product')}</Label>
                         <Input disabled value="包装膜-透明" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>计划数量</Label>
-                        <Input type="number" placeholder="生产数量" />
+                        <Label>{t('plannedQuantity')}</Label>
+                          <Input type="number" placeholder={t('productionQtyPlaceholder')} />
                       </div>
                       <div className="space-y-2">
-                        <Label>优先级 (1-10)</Label>
+                        <Label>{t('priorityRange')}</Label>
                         <Input type="number" min="1" max="10" defaultValue="5" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>计划开始日期</Label>
+                        <Label>{t('plannedStartDate')}</Label>
                         <Input type="date" />
                       </div>
                       <div className="space-y-2">
-                        <Label>计划结束日期</Label>
+                        <Label>{t('plannedEndDate')}</Label>
                         <Input type="date" />
                       </div>
                     </div>
                   </div>
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                      取消
+                      {tc('cancel')}
                     </Button>
-                    <Button onClick={() => setIsCreateOpen(false)}>创建工单</Button>
+                    <Button onClick={() => setIsCreateOpen(false)}>{t('createWorkOrder')}</Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -297,14 +288,14 @@ export default function WorkOrdersPage() {
                         {order.efficiency < 80 && order.status === 'producing' && (
                           <Badge className="bg-red-100 text-red-700">
                             <AlertTriangle className="h-3 w-3 mr-1" />
-                            效率预警
+                            {t('efficiencyWarning')}
                           </Badge>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm">
                           <QrCode className="h-4 w-4 mr-1" />
-                          二维码
+                          {t('qrCode')}
                         </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -315,19 +306,19 @@ export default function WorkOrdersPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>
                               <Eye className="h-4 w-4 mr-2" />
-                              查看详情
+                              {t('viewDetail')}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Edit className="h-4 w-4 mr-2" />
-                              编辑
+                              {tc('edit')}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Play className="h-4 w-4 mr-2" />
-                              开始生产
+                              {t('startProduction')}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Pause className="h-4 w-4 mr-2" />
-                              暂停
+                              {t('pause')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -336,19 +327,19 @@ export default function WorkOrdersPage() {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">产品：</span>
+                        <span className="text-muted-foreground">{t('productName')}：</span>
                         <span className="font-medium">{order.product}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">客户：</span>
+                        <span className="text-muted-foreground">{t('customerLabel')}：</span>
                         <span>{order.customer}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">当前工序：</span>
+                        <span className="text-muted-foreground">{t('currentProcessLabel')}：</span>
                         <span className="font-medium">{order.currentProcess}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">优先级：</span>
+                        <span className="text-muted-foreground">{t('priorityLabel')}：</span>
                         <span className={order.priority >= 8 ? 'text-red-600 font-bold' : ''}>
                           {order.priority}
                         </span>
@@ -358,12 +349,12 @@ export default function WorkOrdersPage() {
                     {/* 进度 */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">生产进度</span>
+                        <span className="text-muted-foreground">{t('productionProgress')}</span>
                         <span>
                           {order.completedQty.toLocaleString()} / {order.quantity.toLocaleString()}{' '}
                           {order.unit}
                           {order.scrapQty > 0 && (
-                            <span className="text-red-500 ml-2">(报废: {order.scrapQty})</span>
+                            <span className="text-red-500 ml-2">({t('scrapLabel')}: {order.scrapQty})</span>
                           )}
                         </span>
                       </div>
@@ -376,7 +367,7 @@ export default function WorkOrdersPage() {
                     {/* 效率 */}
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">效率：</span>
+                        <span className="text-muted-foreground">{t('efficiencyLabel')}：</span>
                         <span
                           className={
                             order.efficiency < 80
@@ -398,7 +389,7 @@ export default function WorkOrdersPage() {
 
                   {/* 工序进度 */}
                   <div className="lg:w-64 flex-shrink-0">
-                    <div className="text-sm font-medium mb-2">工序进度</div>
+                    <div className="text-sm font-medium mb-2">{t('processProgress')}</div>
                     <div className="space-y-1">
                       {processes.map((process, idx) => (
                         <div

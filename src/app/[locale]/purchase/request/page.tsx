@@ -117,20 +117,19 @@ export default function PurchaseRequestPage() {
     3: { label: tc('critical'), color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' },
   };
 
-  // 打印/导出专用中文映射（输出内容保持中文）
   const statusMapCN: Record<number, string> = {
-    0: '草稿',
-    1: '待审批',
-    2: '已审批',
-    3: '已转采购',
-    9: '已关闭',
+    0: tc('draft'),
+    1: t('statusPendingApproval'),
+    2: t('statusApproved'),
+    3: t('statusTransferred'),
+    9: tc('closed'),
   };
 
   const priorityMapCN: Record<number, string> = {
-    0: '低',
-    1: '中',
-    2: '高',
-    3: '紧急',
+    0: tc('low'),
+    1: tc('medium'),
+    2: tc('high'),
+    3: tc('critical'),
   };
   const router = useRouter();
   const [requests, setRequests] = useState<PurchaseRequest[]>([]);

@@ -63,6 +63,7 @@ function DonutChart({
   color: string;
   size?: number;
 }) {
+  const tc = useTranslations('Common');
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage / 100) * circumference;
@@ -94,7 +95,7 @@ function DonutChart({
         {percentage.toFixed(1)}%
       </text>
       <text x="60" y="75" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="10">
-        合格率
+        {tc('qualityPassRate')}
       </text>
     </svg>
   );
@@ -110,6 +111,7 @@ function LineChart({
   width?: number;
   height?: number;
 }) {
+  const tc = useTranslations('Common');
   if (data.length === 0) return null;
 
   const padding = { top: 20, right: 20, bottom: 30, left: 40 };
@@ -192,12 +194,12 @@ function LineChart({
       <g transform={`translate(${width - 150}, 10)`}>
         <line x1="0" y1="0" x2="20" y2="0" stroke="#06b6d4" strokeWidth="2" />
         <text x="25" y="4" fill="rgba(255,255,255,0.7)" fontSize="10">
-          检验总数
-        </text>
-        <line x1="0" y1="15" x2="20" y2="15" stroke="#ef4444" strokeWidth="2" />
-        <text x="25" y="19" fill="rgba(255,255,255,0.7)" fontSize="10">
-          不良数
-        </text>
+           {tc('totalInspections')}
+          </text>
+          <line x1="0" y1="15" x2="20" y2="15" stroke="#ef4444" strokeWidth="2" />
+          <text x="25" y="19" fill="rgba(255,255,255,0.7)" fontSize="10">
+           {tc('defectsCount')}
+          </text>
       </g>
     </svg>
   );
@@ -354,7 +356,7 @@ export default function QualityDashboard() {
                 <h1 className="text-2xl font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
                   {companyName}
                 </h1>
-                <p className="text-xs text-white/50 mt-0.5">品质检验与不良分析监控</p>
+                <p className="text-xs text-white/50 mt-0.5">{t('qualityMonitor')}</p>
               </div>
               <div className="tech-title-line-right" />
             </div>
@@ -370,7 +372,7 @@ export default function QualityDashboard() {
             <button
               onClick={toggleFullscreen}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-              title={isFullscreen ? '退出全屏' : '全屏显示'}
+              title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
             >
               {isFullscreen ? (
                 <Minimize className="h-4 w-4 text-cyan-400" />
@@ -379,7 +381,7 @@ export default function QualityDashboard() {
               )}
             </button>
             <div className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-xs text-cyan-300">
-              {loading ? tc('loading') : '● 实时'}
+              {loading ? tc('loading') : '● ' + t('realtime')}
             </div>
           </div>
         </div>
@@ -387,25 +389,25 @@ export default function QualityDashboard() {
         <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[
             {
-              title: '总检验次数',
+              title: t('totalInspections'),
               value: data.overview.totalInspections,
-              icon: Shield,
+              icon: ClipboardCheck,
               color: 'from-cyan-500 to-blue-500',
             },
             {
-              title: '总合格率',
+              title: t('overallPassRate'),
               value: `${data.overview.passRate}%`,
               icon: CheckCircle,
               color: 'from-green-500 to-emerald-500',
             },
             {
-              title: '今日检验',
+              title: t('todayInspections'),
               value: data.overview.todayInspections,
-              icon: Activity,
-              color: 'from-purple-500 to-pink-500',
+              icon: Calendar,
+              color: 'from-amber-500 to-orange-500',
             },
             {
-              title: '不良率',
+              title: t('defectRate'),
               value: `${data.overview.defectRate}%`,
               icon: AlertTriangle,
               color: 'from-red-500 to-orange-500',
@@ -432,7 +434,7 @@ export default function QualityDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <Target className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">质量合格率</span>
+              <span className="text-sm font-medium text-white/80">{t('qualityPassRate')}</span>
             </div>
             <div className="p-4">
               <div className="flex justify-center">
@@ -440,13 +442,13 @@ export default function QualityDashboard() {
               </div>
               <div className="mt-4 grid grid-cols-2 gap-4 text-center">
                 <div>
-                  <p className="text-xs text-white/50">合格</p>
+                  <p className="text-xs text-white/50">{tc('qualified')}</p>
                   <p className="text-lg font-bold text-green-400">
                     {data.overview.passedInspections || '-'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-white/50">不合格</p>
+                  <p className="text-xs text-white/50">{tc('unqualified')}</p>
                   <p className="text-lg font-bold text-red-400">
                     {data.overview.failedInspections || '-'}
                   </p>
@@ -459,12 +461,12 @@ export default function QualityDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <TrendingDown className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">不良趋势（近30天）</span>
+              <span className="text-sm font-medium text-white/80">{t('defectTrend')}</span>
             </div>
             <div className="p-4">
               {data.defectTrend.length === 0 ? (
-                <p className="text-white/40 text-center py-8">暂无数据</p>
-              ) : (
+                  <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+                ) : (
                 <LineChart data={data.defectTrend} width={600} height={200} />
               )}
             </div>
@@ -477,7 +479,7 @@ export default function QualityDashboard() {
               <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
                 <div className="w-1 h-4 rounded-full bg-gradient-to-b from-green-400 to-emerald-600" />
                 <CheckCircle className="h-4 w-4 text-green-400" />
-                <span className="text-sm font-medium text-white/80">合格率仪表</span>
+                <span className="text-sm font-medium text-white/80">{t('passRateGauge')}</span>
               </div>
               <div className="p-3 flex flex-col items-center relative">
                 <div
@@ -489,7 +491,7 @@ export default function QualityDashboard() {
                 />
                 <GlassGauge
                   value={data.overview.passRate}
-                  label="总合格率"
+                  label={t('overallPassRate')}
                   unit="%"
                   colorArc="#15ffbb"
                   colorDanger="#ff5555"
@@ -507,7 +509,7 @@ export default function QualityDashboard() {
               <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
                 <div className="w-1 h-4 rounded-full bg-gradient-to-b from-red-400 to-orange-500" />
                 <AlertTriangle className="h-4 w-4 text-red-400" />
-                <span className="text-sm font-medium text-white/80">不良率仪表</span>
+                <span className="text-sm font-medium text-white/80">{t('defectRateGauge')}</span>
               </div>
               <div className="p-3 flex flex-col items-center relative">
                 <div
@@ -519,7 +521,7 @@ export default function QualityDashboard() {
                 />
                 <GlassGauge
                   value={data.overview.defectRate}
-                  label="不良率"
+                  label={t('defectRate')}
                   unit="%"
                   colorArc="#ef4444"
                   colorDanger="#ef4444"
@@ -537,7 +539,7 @@ export default function QualityDashboard() {
               <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
                 <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
                 <Activity className="h-4 w-4 text-cyan-400" />
-                <span className="text-sm font-medium text-white/80">今日合格率仪表</span>
+                <span className="text-sm font-medium text-white/80">{t('todayPassRateGauge')}</span>
               </div>
               <div className="p-3 flex flex-col items-center relative">
                 <div
@@ -549,7 +551,7 @@ export default function QualityDashboard() {
                 />
                 <GlassGauge
                   value={data.overview.todayPassRate}
-                  label="今日合格率"
+                  label={t('todayPassRate')}
                   unit="%"
                   colorArc="#1fcfff"
                   colorDanger="#ff5555"
@@ -565,7 +567,7 @@ export default function QualityDashboard() {
               <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
                 <div className="w-1 h-4 rounded-full bg-gradient-to-b from-purple-400 to-pink-500" />
                 <Shield className="h-4 w-4 text-purple-400" />
-                <span className="text-sm font-medium text-white/80">检验标准调节</span>
+                <span className="text-sm font-medium text-white/80">{t('inspectionStandard')}</span>
               </div>
               <div className="p-3 flex flex-col items-center relative">
                 <div
@@ -579,13 +581,13 @@ export default function QualityDashboard() {
                   value={data.overview.passRate}
                   accent="#a855f7"
                   size={100}
-                  label="合格阈值"
+                  label={t('passThreshold')}
                 />
                 <div className="mt-3 text-purple-300 font-extrabold text-xl">
                   {Math.round(data.overview.passRate)}
                   <span className="text-white/40 text-sm ml-1">%</span>
                 </div>
-                <div className="text-white/30 text-xs mt-1">合格基准线</div>
+                <div className="text-white/30 text-xs mt-1">{t('passBaseline')}</div>
               </div>
             </div>
           </div>
@@ -596,11 +598,11 @@ export default function QualityDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-red-400 to-orange-500" />
               <AlertCircle className="h-4 w-4 text-red-400" />
-              <span className="text-sm font-medium text-white/80">不良类型TOP5</span>
+              <span className="text-sm font-medium text-white/80">{t('defectTypeTop5')}</span>
             </div>
             <div className="p-4">
               {data.topDefects.length === 0 ? (
-                <p className="text-white/40 text-center py-8">暂无数据</p>
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
               ) : (
                 <HorizontalBarChart data={data.topDefects.slice(0, 5)} />
               )}
@@ -611,115 +613,28 @@ export default function QualityDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <BarChart3 className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">检验类型分布</span>
+              <span className="text-sm font-medium text-white/80">{t('inspectionTypeDistribution')}</span>
             </div>
             <div className="p-4">
               {data.byType.length === 0 ? (
-                <p className="text-white/40 text-center py-8">暂无数据</p>
-              ) : (
-                <div className="space-y-4">
-                  {data.byType.map((t, i) => {
-                    const rate = t.total > 0 ? Math.round((t.passed / t.total) * 100) : 0;
-                    return (
-                      <div key={i}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-white/80">{t.inspect_type || '未分类'}</span>
-                          <span className="text-white/50">
-                            {t.passed}/{t.total} ({rate}%)
-                          </span>
-                        </div>
-                        <div className="bg-white/10 rounded-full h-3 relative overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{
-                              width: `${rate}%`,
-                              background: `linear-gradient(90deg, #06b6d4, #3b82f6)`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+                ) : (
+                  <div className="space-y-2">
 
-        <div className="relative z-10 tech-card tech-glow p-0 mb-6">
-          <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
-            <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
-            <Clock className="h-4 w-4 text-cyan-400" />
-            <span className="text-sm font-medium text-white/80">最近检验记录</span>
-          </div>
-          <div className="p-4">
-            {data.recentInspections.length === 0 ? (
-              <p className="text-white/40 text-center py-8">暂无记录</p>
+            {/* 检验类型分布 */}
+            <div className="p-4">
+              {data.inspectionTypeDistribution.length === 0 ? (
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">检验单号</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">类型</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">结果</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">检验员</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">时间</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.recentInspections.slice(0, 10).map((r, i) => (
-                      <tr
-                        key={i}
-                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                      >
-                        <td className="py-2 px-3 font-mono text-cyan-300">{r.inspect_no}</td>
-                        <td className="py-2 px-3 text-white/80">{r.inspect_type}</td>
-                        <td className="py-2 px-3">
-                          <span
-                            className={`px-2 py-0.5 rounded text-xs ${
-                              r.inspect_result === 'pass' || r.inspect_result === '1'
-                                ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                            }`}
-                          >
-                            {r.inspect_result === 'pass' || r.inspect_result === '1'
-                              ? '合格'
-                              : '不合格'}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-white/60">{r.inspector || '-'}</td>
-                        <td className="py-2 px-3 text-white/50">
-                          {r.inspect_time?.substring(5, 16)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="relative z-10 tech-card tech-glow p-0">
-          <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
-            <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
-            <Zap className="h-4 w-4 text-cyan-400" />
-            <span className="text-sm font-medium text-white/80">生产过程品质</span>
-          </div>
-          <div className="p-4">
-            {data.processQuality.length === 0 ? (
-              <p className="text-white/40 text-center py-8">暂无数据</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">产品名称</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">检验次数</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">合格次数</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">合格率</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">状态</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('productName')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('inspectionCount')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('passCount')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('passRate')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('status')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -763,7 +678,7 @@ export default function QualityDashboard() {
                                     : 'bg-red-500/20 text-red-400 border border-red-500/30'
                               }`}
                             >
-                              {rate >= 95 ? '优秀' : rate >= 80 ? '良好' : '需改进'}
+                              {rate >= 95 ? tc('excellent') : rate >= 80 ? tc('good') : tc('needImprovement')}
                             </span>
                           </td>
                         </tr>

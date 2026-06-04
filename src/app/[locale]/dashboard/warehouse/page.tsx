@@ -344,7 +344,7 @@ export default function WarehouseDashboard() {
                 <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
                   {companyName}
                 </h1>
-                <p className="text-[10px] text-white/50">实时仓库库存与出入库监控</p>
+                <p className="text-[10px] text-white/50">{t('warehouseBoard')}</p>
               </div>
               <div className="tech-title-line-right" />
             </div>
@@ -357,7 +357,7 @@ export default function WarehouseDashboard() {
             <button
               onClick={toggleFullscreen}
               className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-              title={isFullscreen ? '退出全屏' : '全屏显示'}
+              title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
             >
               {isFullscreen ? (
                 <Minimize className="h-3.5 w-3.5 text-cyan-400" />
@@ -366,7 +366,7 @@ export default function WarehouseDashboard() {
               )}
             </button>
             <div className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300">
-              {loading ? tc('loading') : '● 实时'}
+              {loading ? tc('loading') : '● ' + t('realtime')}
             </div>
           </div>
         </div>
@@ -374,37 +374,37 @@ export default function WarehouseDashboard() {
         <div className="relative z-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           {[
             {
-              title: '物料种类',
+              title: t('materialTypes'),
               value: data.overview.totalItems,
               icon: Package,
               color: 'from-cyan-500 to-blue-500',
             },
             {
-              title: '库存总值',
+              title: t('totalStockValue'),
               value: formatMoney(data.overview.totalValue),
               icon: TrendingUp,
               color: 'from-green-500 to-emerald-500',
             },
             {
-              title: '库存预警',
+              title: t('stockWarning'),
               value: data.overview.lowStock,
               icon: AlertTriangle,
               color: 'from-red-500 to-orange-500',
             },
             {
-              title: '今日入库',
+              title: t('todayInbound'),
               value: data.overview.todayInbound,
               icon: ArrowDown,
               color: 'from-emerald-500 to-teal-500',
             },
             {
-              title: '今日出库',
+              title: t('todayOutbound'),
               value: data.overview.todayOutbound,
               icon: ArrowUp,
               color: 'from-orange-500 to-amber-500',
             },
             {
-              title: '仓库数量',
+              title: t('warehouseCount'),
               value: data.warehouseOccupancy.length,
               icon: Warehouse,
               color: 'from-purple-500 to-pink-500',
@@ -431,11 +431,11 @@ export default function WarehouseDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <Warehouse className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">3D 仓库位置占用</span>
+              <span className="text-sm font-medium text-white/80">{t('warehouseUtilization')}</span>
             </div>
             <div className="p-4">
-              {warehouses3D.length === 0 ? (
-                <p className="text-white/40 text-center py-8">暂无数据</p>
+              {data.warehouseOccupancy.length === 0 ? (
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
               ) : (
                 <div className="h-[300px]">
                   <Canvas camera={{ position: [0, 3, 8], fov: 50 }}>
@@ -458,7 +458,7 @@ export default function WarehouseDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <BarChart3 className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">平均仓库利用率</span>
+              <span className="text-sm font-medium text-white/80">{t('warehouseUtilization')}</span>
             </div>
             <div className="p-4 flex flex-col items-center">
               <div className="relative">
@@ -471,7 +471,7 @@ export default function WarehouseDashboard() {
                 />
                 <GlassGauge
                   value={Math.round(avgOccupancy)}
-                  label="利用率"
+                  label={t('utilizationRate')}
                   unit="%"
                   colorArc="#06b6d4"
                   colorDanger="#ff5555"
@@ -509,15 +509,15 @@ export default function WarehouseDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <PieChartIcon className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">物料分类分布图表</span>
+              <span className="text-sm font-medium text-white/80">{t('materialCategoryDistribution')}</span>
             </div>
             <div className="p-4 h-[300px]">
               {data.categoryDistribution.length === 0 ? (
-                <ChartPlaceholder title="物料分类" type="empty" />
+                <ChartPlaceholder title={t('materialTypes')} type="empty" />
               ) : (
                 <ChartImage
                   url={categoryChartUrl}
-                  title="物料分类分布"
+                  title={t('materialCategoryDistribution')}
                   loading={loading}
                 />
               )}
@@ -528,15 +528,15 @@ export default function WarehouseDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-green-400 to-emerald-600" />
               <TrendingDown className="h-4 w-4 text-green-400" />
-              <span className="text-sm font-medium text-white/80">出入库趋势图表</span>
+              <span className="text-sm font-medium text-white/80">{t('inoutTrend')}</span>
             </div>
             <div className="p-4 h-[300px]">
               {data.recentTransactions.length === 0 ? (
-                <ChartPlaceholder title="出入库趋势" type="empty" />
+                <ChartPlaceholder title={t('inoutTrend')} type="empty" />
               ) : (
                 <ChartImage
                   url={trendChartUrl}
-                  title="出入库趋势"
+                  title={t('inoutTrend')}
                   loading={loading}
                 />
               )}
@@ -549,24 +549,23 @@ export default function WarehouseDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <BarChart3 className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">物料分类分布</span>
+              <span className="text-sm font-medium text-white/80">{t('materialCategoryDistribution')}</span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
                 {data.categoryDistribution.length === 0 ? (
-                  <p className="text-white/40 text-center py-8">暂无数据</p>
-                ) : (
-                  <div className="space-y-3">
-                    {data.categoryDistribution.map((c, i) => {
-                      const maxCount = Math.max(
-                        ...data.categoryDistribution.map((x) => x.count),
-                        1
-                      );
-                      return (
-                        <div key={i} className="flex items-center gap-3">
-                          <span className="text-xs w-20 text-right text-cyan-300 truncate">
-                            {c.material_type || '未分类'}
-                          </span>
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+              ) : (
+                <div className="space-y-2">
+                  {data.categoryDistribution.map((c, i) => {
+                    const total = data.categoryDistribution.reduce((a, b) => a + b.count, 0);
+                    const pct = total > 0 ? Math.round((c.count / total) * 100) : 0;
+                    return (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                        <span className="text-sm flex-1 text-white/70">
+                          {c.material_type || tc('unclassified')}
+                        </span>
                           <div className="flex-1 bg-white/10 rounded-full h-5 relative overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all duration-500"
@@ -592,12 +591,12 @@ export default function WarehouseDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-red-400 to-orange-500" />
               <AlertTriangle className="h-4 w-4 text-red-400" />
-              <span className="text-sm font-medium text-white/80">库存预警</span>
+              <span className="text-sm font-medium text-white/80">{t('stockWarning')}</span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
                 {data.lowStockItems.length === 0 ? (
-                  <p className="text-white/40 text-center py-8">暂无预警</p>
+                  <p className="text-white/40 text-center py-8">{t('noAlerts')}</p>
                 ) : (
                   <div className="space-y-2">
                     {data.lowStockItems.map((item, i) => (
@@ -616,7 +615,7 @@ export default function WarehouseDashboard() {
                             {Number(item.stock_qty).toLocaleString()} {item.unit}
                           </p>
                           <p className="text-[10px] text-white/30">
-                            最低 {Number(item.min_stock).toLocaleString()}
+                            {tc('lowest')} {Number(item.min_stock).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -632,22 +631,22 @@ export default function WarehouseDashboard() {
           <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
             <Clock className="h-4 w-4 text-cyan-400" />
-            <span className="text-sm font-medium text-white/80">最近出入库记录</span>
+            <span className="text-sm font-medium text-white/80">{t('recentInoutRecords')}</span>
           </div>
           <div className="p-4">
             {data.recentTransactions.length === 0 ? (
-              <p className="text-white/40 text-center py-8">暂无记录</p>
+              <p className="text-white/40 text-center py-8">{tc('noRecords')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">类型</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">物料编码</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">物料名称</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">数量</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">时间</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">备注</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('inspectionType')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('materialCode')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('materialName')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('planQty')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('time')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('remark')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -665,9 +664,9 @@ export default function WarehouseDashboard() {
                             }`}
                           >
                             {t.transaction_type === 'inbound'
-                              ? '入库'
+                              ? tc('inbound')
                               : t.transaction_type === 'outbound'
-                                ? '出库'
+                                ? tc('outbound')
                                 : t.transaction_type}
                           </span>
                         </td>

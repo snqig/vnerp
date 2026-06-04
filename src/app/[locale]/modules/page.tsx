@@ -187,7 +187,7 @@ export default function ModulesPage() {
 
   const { companyName } = useCompanyName();
   return (
-    <MainLayout title="系统模块">
+    <MainLayout title={t('systemModules')}>
       <div className="space-y-6">
         {/* 系统概述 */}
         <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
@@ -197,28 +197,26 @@ export default function ModulesPage() {
                 <QrCode className="h-8 w-8 text-blue-600" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-bold mb-2">{companyName} ERP系统</h2>
-                <p className="text-muted-foreground mb-4">
-                  专为解决丝网印刷企业"订单杂、批次多、交期短、工序长"的特性而设计。
-                  以二维码为唯一数据载体，通过工业PDA+手机+PDF三端协同，
-                  打通从业务接单到车辆派送的全链路闭环。
-                </p>
+                  <h2 className="text-xl font-bold mb-2">{companyName} ERP系统</h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {t('erpSystemDescription')}
+                  </p>
                 <div className="flex flex-wrap gap-4">
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">四仓分离管理</span>
+                    <span className="text-sm">{t('fourWarehouseSeparation')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">先进先出锁定</span>
+                    <span className="text-sm">{t('fifoLocking')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">效率预警</span>
+                    <span className="text-sm">{t('efficiencyAlert')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">全流程追溯</span>
+                    <span className="text-sm">{t('fullTraceability')}</span>
                   </div>
                 </div>
               </div>
@@ -231,9 +229,9 @@ export default function ModulesPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-orange-500" />
-              三端协同场景
+              {t('triTerminalCollaboration')}
             </CardTitle>
-            <CardDescription>工业PDA、手机、PDF二维码三端无缝协同</CardDescription>
+            <CardDescription>{t('triTerminalDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">

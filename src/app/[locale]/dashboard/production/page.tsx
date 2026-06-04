@@ -244,7 +244,7 @@ export default function ProductionDashboard() {
                     {
                       id: 'die-warn',
                       type: 'equipment',
-                      message: `${d.dieStatus.warning}个刀模/网版使用率超过80%`,
+                      message: t('dieUsageAlert', { count: d.dieStatus.warning }),
                       severity: 'medium',
                       timestamp: '',
                     },

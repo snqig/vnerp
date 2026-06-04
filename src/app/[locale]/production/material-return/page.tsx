@@ -144,20 +144,20 @@ export default function MaterialReturnPage() {
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/production/material-return?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 

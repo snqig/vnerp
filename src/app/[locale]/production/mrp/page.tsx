@@ -352,21 +352,21 @@ export default function MRPPage() {
   };
 
   return (
-    <MainLayout title="MRP 物料需求计划">
+    <MainLayout title={t('mrpTitle')}>
       <div className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="mrp-run">
               <Play className="h-4 w-4 mr-1" />
-              MRP运算
+              {t('mrpRun')}
             </TabsTrigger>
             <TabsTrigger value="bom-explode">
               <TreePine className="h-4 w-4 mr-1" />
-              BOM展开
+              {t('bomExplode')}
             </TabsTrigger>
             <TabsTrigger value="time-bucket">
               <BarChart3 className="h-4 w-4 mr-1" />
-              时间分桶
+              {t('timeBucket')}
             </TabsTrigger>
           </TabsList>
 
@@ -376,18 +376,18 @@ export default function MRPPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PackageSearch className="h-5 w-5" />
-                    MRP运算参数
+                    {t('mrpParams')}
                   </CardTitle>
-                  <CardDescription>选择工单和仓库，运行MRP物料需求计划</CardDescription>
+                  <CardDescription>{t('mrpParamsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2 md:col-span-1">
-                      <Label>选择工单</Label>
+                      <Label>{t('selectWorkOrder')}</Label>
                       <div className="border rounded-lg max-h-48 overflow-y-auto p-2 space-y-1 bg-muted/30">
                         {workOrders.length === 0 ? (
                           <div className="text-sm text-muted-foreground text-center py-4">
-                            暂无工单数据
+                            {t('noWorkOrderData')}
                           </div>
                         ) : (
                           workOrders.map((wo) => (
@@ -414,17 +414,17 @@ export default function MRPPage() {
                       </div>
                       {selectedWorkOrderIds.length > 0 && (
                         <div className="text-xs text-muted-foreground">
-                          已选择 {selectedWorkOrderIds.length} 个工单
+                          {t('selectedWorkOrdersCount', { count: selectedWorkOrderIds.length })}
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label>仓库</Label>
+                        <Label>{t('warehouse')}</Label>
                         <Select value={selectedWarehouseId} onValueChange={setSelectedWarehouseId}>
                           <SelectTrigger>
-                            <SelectValue placeholder="选择仓库" />
+                            <SelectValue placeholder={t('selectWarehouse')} />
                           </SelectTrigger>
                           <SelectContent>
                             {warehouses.map((wh) => (
@@ -439,9 +439,9 @@ export default function MRPPage() {
                       <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
                         <Switch checked={autoGeneratePR} onCheckedChange={setAutoGeneratePR} />
                         <div>
-                          <Label className="cursor-pointer">自动生成采购申请</Label>
+                          <Label className="cursor-pointer">{t('autoGeneratePR')}</Label>
                           <p className="text-xs text-muted-foreground">
-                            MRP运算后自动创建采购申请单
+                            {t('autoGeneratePRDesc')}
                           </p>
                         </div>
                       </div>
@@ -461,7 +461,7 @@ export default function MRPPage() {
                         ) : (
                           <Play className="h-4 w-4 mr-2" />
                         )}
-                        运行MRP
+                        {t('runMRP')}
                       </Button>
                     </div>
                   </div>
@@ -479,7 +479,7 @@ export default function MRPPage() {
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">涉及物料</CardTitle>
+                          <CardTitle className="text-sm font-medium">{t('involvedMaterials')}</CardTitle>
                           <Layers className="h-4 w-4 text-blue-600" />
                         </CardHeader>
                         <CardContent>
@@ -490,7 +490,7 @@ export default function MRPPage() {
                       </Card>
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">缺料项</CardTitle>
+                          <CardTitle className="text-sm font-medium">{t('shortageItems')}</CardTitle>
                           <AlertTriangle className="h-4 w-4 text-red-600" />
                         </CardHeader>
                         <CardContent>
@@ -501,7 +501,7 @@ export default function MRPPage() {
                       </Card>
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">计划数量</CardTitle>
+                          <CardTitle className="text-sm font-medium">{t('plannedQty')}</CardTitle>
                           <ShoppingCart className="h-4 w-4 text-orange-600" />
                         </CardHeader>
                         <CardContent>
@@ -512,7 +512,7 @@ export default function MRPPage() {
                       </Card>
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">计划金额</CardTitle>
+                          <CardTitle className="text-sm font-medium">{t('plannedAmount')}</CardTitle>
                           <FileSpreadsheet className="h-4 w-4 text-green-600" />
                         </CardHeader>
                         <CardContent>
@@ -528,7 +528,7 @@ export default function MRPPage() {
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2">
                             <ShoppingCart className="h-5 w-5" />
-                            已生成采购申请
+                            {t('generatedPR')}
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -545,25 +545,25 @@ export default function MRPPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>净需求明细</CardTitle>
-                        <CardDescription>MRP运算后的物料净需求分析</CardDescription>
+                        <CardTitle>{t('netRequirementDetail')}</CardTitle>
+                        <CardDescription>{t('netRequirementDesc')}</CardDescription>
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>物料编码</TableHead>
-                                <TableHead>物料名称</TableHead>
-                                <TableHead className="text-right">毛需求</TableHead>
-                                <TableHead className="text-right">在库</TableHead>
-                                <TableHead className="text-right">已分配</TableHead>
-                                <TableHead className="text-right">在途</TableHead>
-                                <TableHead className="text-right">安全库存</TableHead>
-                                <TableHead className="text-right">净需求</TableHead>
-                                <TableHead className="text-right">提前期(天)</TableHead>
-                                <TableHead>建议下单日期</TableHead>
-                                <TableHead>缺料预警</TableHead>
+                                <TableHead>{t('materialCode')}</TableHead>
+                                <TableHead>{t('materialName')}</TableHead>
+                                <TableHead className="text-right">{t('grossRequirement')}</TableHead>
+                                <TableHead className="text-right">{t('onHand')}</TableHead>
+                                <TableHead className="text-right">{t('allocated')}</TableHead>
+                                <TableHead className="text-right">{t('inTransit')}</TableHead>
+                                <TableHead className="text-right">{t('safetyStock')}</TableHead>
+                                <TableHead className="text-right">{t('netRequirement')}</TableHead>
+                                <TableHead className="text-right">{t('leadTimeDays')}</TableHead>
+                                <TableHead>{t('suggestedOrderDate')}</TableHead>
+                                <TableHead>{t('shortageWarning')}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -602,14 +602,14 @@ export default function MRPPage() {
                                     {req.shortage_warning ? (
                                       <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
                                         <AlertTriangle className="h-3 w-3 mr-1" />
-                                        缺料
+                                        {t('shortage')}
                                       </Badge>
                                     ) : (
                                       <Badge
                                         variant="outline"
                                         className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                       >
-                                        充足
+                                        {t('sufficient')}
                                       </Badge>
                                     )}
                                   </TableCell>
@@ -621,7 +621,7 @@ export default function MRPPage() {
                                     colSpan={11}
                                     className="text-center text-muted-foreground py-8"
                                   >
-                                    暂无净需求数据
+                                    {t('noNetRequirementData')}
                                   </TableCell>
                                 </TableRow>
                               )}
@@ -633,20 +633,20 @@ export default function MRPPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>计划订单</CardTitle>
-                        <CardDescription>MRP建议的采购计划订单</CardDescription>
+                        <CardTitle>{t('plannedOrders')}</CardTitle>
+                        <CardDescription>{t('plannedOrdersDesc')}</CardDescription>
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>物料编码</TableHead>
-                                <TableHead>物料名称</TableHead>
-                                <TableHead className="text-right">数量</TableHead>
-                                <TableHead>需求日期</TableHead>
-                                <TableHead>下单日期</TableHead>
-                                <TableHead>优先级</TableHead>
+                                <TableHead>{t('materialCode')}</TableHead>
+                                <TableHead>{t('materialName')}</TableHead>
+                                <TableHead className="text-right">{tc('quantity')}</TableHead>
+                                <TableHead>{t('requiredDate')}</TableHead>
+                                <TableHead>{t('orderDate')}</TableHead>
+                                <TableHead>{t('priorityLabel')}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -674,7 +674,7 @@ export default function MRPPage() {
                                     colSpan={6}
                                     className="text-center text-muted-foreground py-8"
                                   >
-                                    暂无计划订单
+                                    {t('noPlannedOrders')}
                                   </TableCell>
                                 </TableRow>
                               )}
@@ -695,17 +695,17 @@ export default function MRPPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TreePine className="h-5 w-5" />
-                    BOM展开
+                    {t('bomExplode')}
                   </CardTitle>
-                  <CardDescription>选择产品并展开BOM物料清单</CardDescription>
+                  <CardDescription>{t('bomExplodeDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div className="space-y-2">
-                      <Label>选择产品</Label>
+                      <Label>{t('selectProduct')}</Label>
                       <Select value={bomProductId} onValueChange={setBomProductId}>
                         <SelectTrigger>
-                          <SelectValue placeholder="选择产品" />
+                          <SelectValue placeholder={t('selectProduct')} />
                         </SelectTrigger>
                         <SelectContent>
                           {materials.map((m) => (
@@ -717,7 +717,7 @@ export default function MRPPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>数量</Label>
+                      <Label>{tc('quantity')}</Label>
                       <Input
                         type="number"
                         min={1}
@@ -736,7 +736,7 @@ export default function MRPPage() {
                         ) : (
                           <TreePine className="h-4 w-4 mr-2" />
                         )}
-                        展开BOM
+                        {t('explodeBOM')}
                       </Button>
                     </div>
                   </div>
@@ -752,7 +752,7 @@ export default function MRPPage() {
                   >
                     <Card>
                       <CardHeader>
-                        <CardTitle>BOM展开结果</CardTitle>
+                        <CardTitle>{t('bomExplodeResult')}</CardTitle>
                         <CardDescription>
                           {bomTree.material_name} × {bomQuantity} {bomTree.unit}
                         </CardDescription>
@@ -762,14 +762,14 @@ export default function MRPPage() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead className="w-16">层级</TableHead>
-                                <TableHead>物料编码</TableHead>
-                                <TableHead>物料名称</TableHead>
-                                <TableHead className="text-right">数量</TableHead>
-                                <TableHead>单位</TableHead>
-                                <TableHead className="text-right">损耗率</TableHead>
-                                <TableHead className="text-right">提前期(天)</TableHead>
-                                <TableHead>类型</TableHead>
+                                <TableHead className="w-16">{t('level')}</TableHead>
+                                <TableHead>{t('materialCode')}</TableHead>
+                                <TableHead>{t('materialName')}</TableHead>
+                                <TableHead className="text-right">{tc('quantity')}</TableHead>
+                                <TableHead>{t('unit')}</TableHead>
+                                <TableHead className="text-right">{t('scrapRate')}</TableHead>
+                                <TableHead className="text-right">{t('leadTimeDays')}</TableHead>
+                                <TableHead>{t('type')}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -817,14 +817,14 @@ export default function MRPPage() {
                                   </TableCell>
                                   <TableCell>
                                     {node.level === 0 ? (
-                                      <Badge variant="outline">成品</Badge>
+                                      <Badge variant="outline">{t('finishedProduct')}</Badge>
                                     ) : node.is_leaf ? (
                                       <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                        原材料
+                                        {t('rawMaterial')}
                                       </Badge>
                                     ) : (
                                       <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                                        半成品
+                                        {t('semiFinished')}
                                       </Badge>
                                     )}
                                   </TableCell>
@@ -847,17 +847,17 @@ export default function MRPPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="h-5 w-5" />
-                    时间分桶分析
+                    {t('timeBucketAnalysis')}
                   </CardTitle>
-                  <CardDescription>按时间段分析物料的需求、库存和净需求</CardDescription>
+                  <CardDescription>{t('timeBucketDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
                     <div className="space-y-2">
-                      <Label>物料</Label>
+                      <Label>{t('material')}</Label>
                       <Select value={bucketMaterialId} onValueChange={setBucketMaterialId}>
                         <SelectTrigger>
-                          <SelectValue placeholder="选择物料" />
+                          <SelectValue placeholder={t('selectMaterial')} />
                         </SelectTrigger>
                         <SelectContent>
                           {materials.map((m) => (
@@ -884,7 +884,7 @@ export default function MRPPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>开始日期</Label>
+                      <Label>{t('startDate')}</Label>
                       <Input
                         type="date"
                         value={bucketStartDate}
@@ -892,7 +892,7 @@ export default function MRPPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>结束日期</Label>
+                      <Label>{t('endDate')}</Label>
                       <Input
                         type="date"
                         value={bucketEndDate}
@@ -900,15 +900,15 @@ export default function MRPPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>分桶粒度</Label>
+                      <Label>{t('bucketSize')}</Label>
                       <Select value={bucketSize} onValueChange={setBucketSize}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="day">按天</SelectItem>
-                          <SelectItem value="week">按周</SelectItem>
-                          <SelectItem value="month">按月</SelectItem>
+                          <SelectItem value="day">{t('byDay')}</SelectItem>
+                          <SelectItem value="week">{t('byWeek')}</SelectItem>
+                          <SelectItem value="month">{t('byMonth')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -923,7 +923,7 @@ export default function MRPPage() {
                         ) : (
                           <BarChart3 className="h-4 w-4 mr-2" />
                         )}
-                        计算
+                        {t('calculate')}
                       </Button>
                     </div>
                   </div>
@@ -940,7 +940,7 @@ export default function MRPPage() {
                   >
                     <Card>
                       <CardHeader>
-                        <CardTitle>时间分桶图表</CardTitle>
+                        <CardTitle>{t('timeBucketChart')}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="h-[400px]">
@@ -977,21 +977,21 @@ export default function MRPPage() {
                               <Bar
                                 yAxisId="left"
                                 dataKey="gross_requirement"
-                                name="毛需求"
+                                name={t('grossRequirement')}
                                 fill="hsl(220, 70%, 55%)"
                                 radius={[2, 2, 0, 0]}
                               />
                               <Bar
                                 yAxisId="left"
                                 dataKey="scheduled_receipt"
-                                name="计划接收"
+                                name={t('scheduledReceipt')}
                                 fill="hsl(142, 70%, 45%)"
                                 radius={[2, 2, 0, 0]}
                               />
                               <Bar
                                 yAxisId="left"
                                 dataKey="net_requirement"
-                                name="净需求"
+                                name={t('netRequirement')}
                                 fill="hsl(0, 70%, 55%)"
                                 radius={[2, 2, 0, 0]}
                               />
@@ -999,7 +999,7 @@ export default function MRPPage() {
                                 yAxisId="right"
                                 type="monotone"
                                 dataKey="on_hand"
-                                name="库存量"
+                                name={t('onHand')}
                                 stroke="hsl(38, 90%, 50%)"
                                 strokeWidth={2}
                                 dot={{ r: 3 }}
@@ -1012,20 +1012,20 @@ export default function MRPPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>时间分桶明细</CardTitle>
+                        <CardTitle>{t('timeBucketDetail')}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>日期</TableHead>
-                                <TableHead className="text-right">毛需求</TableHead>
-                                <TableHead className="text-right">计划接收</TableHead>
-                                <TableHead className="text-right">库存量</TableHead>
-                                <TableHead className="text-right">净需求</TableHead>
-                                <TableHead className="text-right">计划下达</TableHead>
-                                <TableHead className="text-right">计划接收(新)</TableHead>
+                                <TableHead>{t('date')}</TableHead>
+                                <TableHead className="text-right">{t('grossRequirement')}</TableHead>
+                                <TableHead className="text-right">{t('scheduledReceipt')}</TableHead>
+                                <TableHead className="text-right">{t('onHand')}</TableHead>
+                                <TableHead className="text-right">{t('netRequirement')}</TableHead>
+                                <TableHead className="text-right">{t('plannedOrderRelease')}</TableHead>
+                                <TableHead className="text-right">{t('plannedOrderReceipt')}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>

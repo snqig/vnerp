@@ -158,12 +158,12 @@ function HorizontalBarChart({
   );
 }
 
-const STATUS_MAP: Record<number, { label: string; className: string }> = {
-  0: { label: tc('draft'), className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30' },
-  1: { label: '已确认', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
-  2: { label: '生产中', className: 'bg-orange-500/20 text-orange-300 border border-orange-500/30' },
-  3: { label: '已完成', className: 'bg-green-500/20 text-green-300 border border-green-500/30' },
-  4: { label: '已取消', className: 'bg-red-500/20 text-red-300 border border-red-500/30' },
+const STATUS_MAP: Record<number, { labelKey: string; className: string }> = {
+  0: { labelKey: 'draft', className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30' },
+  1: { labelKey: 'confirmed', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
+  2: { labelKey: 'inProduction', className: 'bg-orange-500/20 text-orange-300 border border-orange-500/30' },
+  3: { labelKey: 'completed', className: 'bg-green-500/20 text-green-300 border border-green-500/30' },
+  4: { labelKey: 'cancelled', className: 'bg-red-500/20 text-red-300 border border-red-500/30' },
 };
 
 export default function SalesDashboard() {
@@ -277,7 +277,7 @@ export default function SalesDashboard() {
                 <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
                   {companyName}
                 </h1>
-                <p className="text-[10px] text-white/50">销售订单与营收数据监控</p>
+                <p className="text-[10px] text-white/50">{t('salesBoard')}</p>
               </div>
               <div className="tech-title-line-right" />
             </div>
@@ -290,7 +290,7 @@ export default function SalesDashboard() {
             <button
               onClick={toggleFullscreen}
               className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-              title={isFullscreen ? '退出全屏' : '全屏显示'}
+              title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
             >
               {isFullscreen ? (
                 <Minimize className="h-3.5 w-3.5 text-cyan-400" />
@@ -299,7 +299,7 @@ export default function SalesDashboard() {
               )}
             </button>
             <div className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300">
-              {loading ? tc('loading') : '● 实时'}
+              {loading ? tc('loading') : '● ' + t('realtime')}
             </div>
           </div>
         </div>
@@ -307,31 +307,31 @@ export default function SalesDashboard() {
         <div className="relative z-10 grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           {[
             {
-              title: '总订单数',
+              title: t('totalOrders'),
               value: data.overview.totalOrders,
               icon: FileText,
               color: 'from-cyan-500 to-blue-500',
             },
             {
-              title: '今日订单',
+              title: t('todayOrders'),
               value: data.overview.todayOrders,
               icon: ShoppingCart,
               color: 'from-green-500 to-emerald-500',
             },
             {
-              title: '月度营收',
+              title: t('monthlyRevenue'),
               value: formatMoney(data.overview.monthRevenue),
               icon: DollarSign,
               color: 'from-emerald-500 to-teal-500',
             },
             {
-              title: '待交付',
+              title: t('pendingDelivery'),
               value: data.overview.pendingDelivery,
               icon: Package,
               color: 'from-orange-500 to-amber-500',
             },
             {
-              title: '已完成',
+              title: tc('completed'),
               value: data.overview.completedOrders,
               icon: TrendingUp,
               color: 'from-purple-500 to-pink-500',
@@ -357,36 +357,36 @@ export default function SalesDashboard() {
           <div className="tech-card tech-glow p-5">
             <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
-              订单趋势（近30天）
+               {t('orderTrend')}
             </h3>
             {data.orderTrend.length === 0 ? (
-              <p className="text-white/40 text-center py-8">暂无数据</p>
+              <p className="text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <LineChart data={data.orderTrend} width={600} height={200} />
             )}
           </div>
 
           <div className="tech-card tech-glow p-5">
-            <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              订单状态分布
-            </h3>
-            {data.statusDistribution.length === 0 ? (
-              <p className="text-white/40 text-center py-8">暂无数据</p>
+              <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+                <PieChart className="h-4 w-4" />
+                {t('orderStatusDistribution')}
+              </h3>
+              {data.statusDistribution.length === 0 ? (
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <div className="space-y-4">
                 {data.statusDistribution.map((s, i) => {
                   const total = data.statusDistribution.reduce((a, b) => a + b.count, 0);
                   const pct = total > 0 ? Math.round((s.count / total) * 100) : 0;
                   const cfg = STATUS_MAP[s.status] || {
-                    label: tc('unknown'),
+                    labelKey: 'unknown',
                     className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
                   };
                   return (
                     <div key={i}>
                       <div className="flex justify-between text-sm mb-1">
                         <span className={`px-2 py-0.5 rounded text-xs ${cfg.className}`}>
-                          {cfg.label}
+                          {tc(cfg.labelKey)}
                         </span>
                         <span className="text-white/50">
                           {s.count} 单 ({pct}%)
@@ -411,21 +411,21 @@ export default function SalesDashboard() {
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="tech-card tech-glow p-5">
-            <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              客户TOP5
-            </h3>
-            {data.topCustomers.length === 0 ? (
-              <p className="text-white/40 text-center py-8">暂无数据</p>
+              <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                {t('customerTop5')}
+              </h3>
+              {data.topCustomers.length === 0 ? (
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">排名</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">客户名称</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">订单数</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">总金额</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('rank')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('customerName')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('orderCount')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('totalAmount')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -451,10 +451,10 @@ export default function SalesDashboard() {
           <div className="tech-card tech-glow p-5">
             <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
               <Package className="h-4 w-4" />
-              产品TOP5
-            </h3>
-            {data.topProducts.length === 0 ? (
-              <p className="text-white/40 text-center py-8">暂无数据</p>
+              {t('productTop5')}
+              </h3>
+              {data.topProducts.length === 0 ? (
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <HorizontalBarChart
                 data={data.topProducts}
@@ -466,29 +466,29 @@ export default function SalesDashboard() {
         </div>
 
         <div className="relative z-10 tech-card tech-glow p-5">
-          <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            最近订单
-          </h3>
-          {data.recentOrders.length === 0 ? (
-            <p className="text-white/40 text-center py-8">暂无订单</p>
+              <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+               {t('recentOrders')}
+              </h3>
+              {data.recentOrders.length === 0 ? (
+                <p className="text-white/40 text-center py-8">{tc('noRecords')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">订单号</th>
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">客户</th>
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">金额</th>
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">状态</th>
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">交货日期</th>
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">创建时间</th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('orderNo')}</th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('customerName')}</th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('amount')}</th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('status')}</th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('deliveryDate')}</th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('createdAt')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.recentOrders.map((o, i) => {
                     const cfg = STATUS_MAP[o.status] || {
-                      label: tc('unknown'),
+                      labelKey: 'unknown',
                       className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
                     };
                     return (
@@ -503,7 +503,7 @@ export default function SalesDashboard() {
                         </td>
                         <td className="py-2 px-3">
                           <span className={`px-2 py-0.5 rounded text-xs ${cfg.className}`}>
-                            {cfg.label}
+                            {tc(cfg.labelKey)}
                           </span>
                         </td>
                         <td className="py-2 px-3 text-white/50 text-xs">

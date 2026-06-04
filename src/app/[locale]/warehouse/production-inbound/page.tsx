@@ -45,14 +45,14 @@ interface Item {
   remark?: string;
 }
 const statusMap = {
-  1: { label: '待入库', variant: 'outline' as const },
-  2: { label: '已入库', variant: 'default' as const },
-  3: { label: '已取消', variant: 'destructive' as const },
+  1: { label: tc('pendingInbound'), variant: 'outline' as const },
+  2: { label: tc('received'), variant: 'default' as const },
+  3: { label: tc('cancelled'), variant: 'destructive' as const },
 };
 const qcMap = {
-  0: { label: '未检', variant: 'secondary' as const },
-  1: { label: '合格', variant: 'default' as const },
-  2: { label: '不合格', variant: 'destructive' as const },
+  0: { label: tc('qcUnchecked'), variant: 'secondary' as const },
+  1: { label: tc('qcQualified'), variant: 'default' as const },
+  2: { label: tc('qcUnqualified'), variant: 'destructive' as const },
 };
 
 export default function ProductionInboundPage() {

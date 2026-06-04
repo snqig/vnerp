@@ -55,13 +55,13 @@ interface Item {
   create_time?: string;
 }
 
-const statusMap: Record<
+const LABEL_STATUS_CONFIG: Record<
   number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  { variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '待打印', variant: 'outline' },
-  2: { label: '已打印', variant: 'default' },
-  3: { label: '已贴标', variant: 'secondary' },
+  1: { variant: 'outline' },
+  2: { variant: 'default' },
+  3: { variant: 'secondary' },
 };
 
 
@@ -72,13 +72,13 @@ export default function ProductLabelPage() {
   const tc = useTranslations('Common');
 
   const exportColumns = [
-    { key: 'label_no', header: '标签编号' },
-    { key: 'work_order_no', header: '工单号' },
-    { key: 'material_code', header: '物料编码' },
-    { key: 'material_name', header: '物料名称' },
+    { key: 'label_no', header: t('labelNo') },
+    { key: 'work_order_no', header: t('workOrderNo') },
+    { key: 'material_code', header: t('materialCode') },
+    { key: 'material_name', header: t('materialName') },
     { key: 'quantity', header: tc('quantity') },
-    { key: 'batch_no', header: '批次号' },
-    { key: 'qc_result', header: '质检结果' },
+    { key: 'batch_no', header: t('batchNo') },
+    { key: 'qc_result', header: t('qcResult') },
     { key: 'status_label', header: tc('status') },
   ];
 
@@ -267,10 +267,14 @@ export default function ProductLabelPage() {
     }, 500);
   };
 
+  const getExportLabel = (status: number) => {
+    const labels: Record<number, string> = {1: t('labelPendingPrint'), 2: t('labelPrinted'), 3: t('labelLabeled')};
+    return labels[status] || tc('unknown');
+  };
   const getExportData = () =>
     list.map((item) => ({
       ...item,
-      status_label: statusMap[item.status]?.label || tc('unknown'),
+      status_label: getExportLabel(item.status),
     }));
 
   const handlePrint = () => printTable(getExportData(), exportColumns, '成品标签');
@@ -284,13 +288,13 @@ export default function ProductLabelPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">成品标签</h1>
+          <h1 className="text-2xl font-bold">{t('productLabelTitle')}</h1>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="搜索单号"
+                  placeholder={t('searchByNo')}
                   className="pl-8 w-36 h-8 text-sm"
                   value={searchNo}
                   onChange={(e) => setSearchNo(e.target.value)}
@@ -299,7 +303,7 @@ export default function ProductLabelPage() {
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="搜索物料"
+                  placeholder={t('searchMaterial')}
                   className="pl-8 w-36 h-8 text-sm"
                   value={searchMaterial}
                   onChange={(e) => setSearchMaterial(e.target.value)}
@@ -307,19 +311,19 @@ export default function ProductLabelPage() {
               </div>
               <Select value={searchStatus} onValueChange={setSearchStatus}>
                 <SelectTrigger className="w-28 h-8 text-sm">
-                  <SelectValue placeholder="状态筛选" />
+                  <SelectValue placeholder={t('statusFilter')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部状态</SelectItem>
-                  {Object.entries(statusMap).map(([k, v]) => (
+                  <SelectItem value="all">{t('allStatus')}</SelectItem>
+                  {Object.entries(LABEL_STATUS_CONFIG).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
-                      {v.label}
+                      {t(k === '1' ? 'labelPendingPrint' : k === '2' ? 'labelPrinted' : 'labelLabeled')}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Button size="sm" variant="outline" onClick={fetchData}>
-                查询
+                {t('query')}
               </Button>
             </div>
             <TableExportToolbar
@@ -339,7 +343,7 @@ export default function ProductLabelPage() {
               disabled={selectedIds.size === 0}
             >
               <QrCode className="h-3 w-3 mr-1" />
-              打印标签({selectedIds.size})
+              {t('printLabelCount', { count: selectedIds.size })}
             </Button>
             <Button
               size="sm"
@@ -349,7 +353,7 @@ export default function ProductLabelPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增标签
+              {t('newLabel')}
             </Button>
           </div>
         </div>
@@ -365,20 +369,21 @@ export default function ProductLabelPage() {
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
-                  <TableHead className="text-xs">标签编号</TableHead>
-                  <TableHead className="text-xs">工单号</TableHead>
-                  <TableHead className="text-xs">物料编码</TableHead>
-                  <TableHead className="text-xs">物料名称</TableHead>
-                  <TableHead className="text-xs">数量</TableHead>
-                  <TableHead className="text-xs">批次号</TableHead>
-                  <TableHead className="text-xs">质检结果</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{t('labelNo')}</TableHead>
+                  <TableHead className="text-xs">{t('workOrderNo')}</TableHead>
+                  <TableHead className="text-xs">{t('materialCode')}</TableHead>
+                  <TableHead className="text-xs">{t('materialName')}</TableHead>
+                  <TableHead className="text-xs">{tc('quantity')}</TableHead>
+                  <TableHead className="text-xs">{t('batchNo')}</TableHead>
+                  <TableHead className="text-xs">{t('qcResult')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {list.map((item) => {
-                  const st = statusMap[item.status] || statusMap[1];
+                  const st = LABEL_STATUS_CONFIG[item.status] || LABEL_STATUS_CONFIG[1];
+                  const labelStatusLabels: Record<number, string> = {1: t('labelPendingPrint'), 2: t('labelPrinted'), 3: t('labelLabeled')};
                   return (
                     <TableRow
                       key={item.id}
@@ -402,7 +407,7 @@ export default function ProductLabelPage() {
                       <TableCell className="text-xs">{item.qc_result || '-'}</TableCell>
                       <TableCell>
                         <Badge variant={st.variant} className="text-xs">
-                          {st.label}
+                          {labelStatusLabels[item.status] || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -412,7 +417,7 @@ export default function ProductLabelPage() {
                             variant="ghost"
                             className="h-6 text-xs px-2"
                             onClick={() => handleSinglePrint(item)}
-                            title="打印标签"
+                            title={t('printLabel')}
                           >
                             <Printer className="h-3 w-3" />
                           </Button>
@@ -423,7 +428,7 @@ export default function ProductLabelPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 3)}
                             >
-                              已贴标
+                              {t('labelLabeled')}
                             </Button>
                           )}
                           <Button
@@ -453,7 +458,7 @@ export default function ProductLabelPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                      暂无记录
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -464,7 +469,7 @@ export default function ProductLabelPage() {
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">
-            共 {total} 条{selectedIds.size > 0 && `，已选 ${selectedIds.size} 条`}
+            {tc('total', { count: total })} {selectedIds.size > 0 && t('selectedCount', { count: selectedIds.size })}
           </span>
           <div className="flex gap-2">
             <Button
@@ -473,7 +478,7 @@ export default function ProductLabelPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -481,7 +486,7 @@ export default function ProductLabelPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
@@ -489,32 +494,32 @@ export default function ProductLabelPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增成品标签</DialogTitle>
+              <DialogTitle>{editItem?.id ? t('editLabel') : t('newLabel')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>工单号</Label>
+                <Label>{t('workOrderNo')}</Label>
                 <Input
                   value={editItem.work_order_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, work_order_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>物料编码</Label>
+                <Label>{t('materialCode')}</Label>
                 <Input
                   value={editItem.material_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, material_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>物料名称</Label>
+                <Label>{t('materialName')}</Label>
                 <Input
                   value={editItem.material_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, material_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>数量</Label>
+                <Label>{tc('quantity')}</Label>
                 <Input
                   type="number"
                   value={editItem.quantity || ''}
@@ -522,21 +527,21 @@ export default function ProductLabelPage() {
                 />
               </div>
               <div>
-                <Label>单位</Label>
+                <Label>{t('unit')}</Label>
                 <Input
                   value={editItem.unit || '张'}
                   onChange={(e) => setEditItem({ ...editItem, unit: e.target.value })}
                 />
               </div>
               <div>
-                <Label>批次号</Label>
+                <Label>{t('batchNo')}</Label>
                 <Input
                   value={editItem.batch_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, batch_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>质检结果</Label>
+                <Label>{t('qcResult')}</Label>
                 <Input
                   value={editItem.qc_result || ''}
                   onChange={(e) => setEditItem({ ...editItem, qc_result: e.target.value })}
@@ -545,9 +550,9 @@ export default function ProductLabelPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -555,7 +560,7 @@ export default function ProductLabelPage() {
         <Dialog open={showPrintDialog} onOpenChange={setShowPrintDialog}>
           <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>打印成品标签</DialogTitle>
+              <DialogTitle>{t('printLabel')}</DialogTitle>
             </DialogHeader>
             <div ref={printRef} className="label-page flex flex-wrap gap-3">
               {printItems.map((item) => (
@@ -566,14 +571,14 @@ export default function ProductLabelPage() {
                 >
                   <div className="flex-1 text-xs leading-relaxed">
                     <div className="text-sm font-bold mb-1">{item.material_name}</div>
-                    <div>编号: {item.label_no}</div>
-                    <div>工单: {item.work_order_no || '-'}</div>
-                    <div>编码: {item.material_code || '-'}</div>
+                    <div>{t('labelNo')}: {item.label_no}</div>
+                    <div>{t('workOrderNo')}: {item.work_order_no || '-'}</div>
+                    <div>{t('materialCode')}: {item.material_code || '-'}</div>
                     <div>
-                      数量: {item.quantity} {item.unit}
+                      {tc('quantity')}: {item.quantity} {item.unit}
                     </div>
-                    <div>批次: {item.batch_no || '-'}</div>
-                    <div>质检: {item.qc_result || '-'}</div>
+                    <div>{t('batchNo')}: {item.batch_no || '-'}</div>
+                    <div>{t('qcResult')}: {item.qc_result || '-'}</div>
                   </div>
                   <div className="flex items-center">
                     {qrDataUrls[item.id] && (
@@ -585,11 +590,11 @@ export default function ProductLabelPage() {
             </div>
             <DialogFooter className="mt-4">
               <Button variant="outline" onClick={() => setShowPrintDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
               <Button onClick={doPrint}>
                 <Printer className="h-4 w-4 mr-2" />
-                打印
+                {t('print')}
               </Button>
             </DialogFooter>
           </DialogContent>
