@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -107,27 +108,6 @@ interface OrderItem {
   unit_price: number;
 }
 
-const STATUS_MAP: Record<number, { label: string; className: string }> = {
-  10: { label: '草稿', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  20: {
-    label: '待审批',
-    className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200',
-  },
-  30: {
-    label: '已审批',
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
-  },
-  40: {
-    label: '部分到货',
-    className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200',
-  },
-  50: {
-    label: '已完成',
-    className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
-  },
-  90: { label: '已关闭', className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' },
-};
-
 const PO_STATUS = {
   DRAFT: 10,
   PENDING_APPROVAL: 20,
@@ -136,14 +116,6 @@ const PO_STATUS = {
   COMPLETED: 50,
   CLOSED: 90,
 } as const;
-
-const getStatusBadge = (status: number) => {
-  const config = STATUS_MAP[status] || {
-    label: `未知(${status})`,
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  };
-  return <Badge className={config.className}>{config.label}</Badge>;
-};
 
 const formatDate = (dateStr: string | null | undefined) => {
   if (!dateStr) return '-';
@@ -160,6 +132,39 @@ const formatDate = (dateStr: string | null | undefined) => {
 };
 
 export default function PurchaseOrdersPage() {
+  // 翻译钩子
+  const t = useTranslations('Purchase');
+  const tc = useTranslations('Common');
+
+  const STATUS_MAP: Record<number, { label: string; className: string }> = {
+  10: { label: tc('draft'), className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+  20: {
+    label: tc('pending'),
+    className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200',
+  },
+  30: {
+    label: tc('approved'),
+    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
+  },
+  40: {
+    label: '部分到货',
+    className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200',
+  },
+  50: {
+    label: '已完成',
+    className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
+  },
+  90: { label: tc('closed'), className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' },
+};
+
+  const getStatusBadge = (status: number) => {
+  const config = STATUS_MAP[status] || {
+    label: `未知(${status})`,
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  };
+  return <Badge className={config.className}>{config.label}</Badge>;
+};
+
   const { companyName } = useCompanyName();
   const { addToast: toast } = useToastContext();
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
@@ -392,12 +397,12 @@ export default function PurchaseOrdersPage() {
 
   const handleExport = (format: string) => {
     const statusMap: Record<number, string> = {
-      10: '草稿',
-      20: '待审批',
-      30: '已审批',
+      10: tc('draft'),
+      20: tc('pending'),
+      30: tc('approved'),
       40: '部分到货',
       50: '已完成',
-      90: '已关闭',
+      90: tc('closed'),
     };
     const data = orders.map((o) => ({
       采购单号: o.po_no,
@@ -559,12 +564,12 @@ export default function PurchaseOrdersPage() {
     }
 
     const statusLabels: Record<number, string> = {
-      10: '草稿',
-      20: '待审批',
-      30: '已审批',
+      10: tc('draft'),
+      20: tc('pending'),
+      30: tc('approved'),
       40: '部分到货',
       50: '已完成',
-      90: '已关闭',
+      90: tc('closed'),
     };
 
     const printWindow = window.open('', '_blank');
@@ -604,7 +609,7 @@ export default function PurchaseOrdersPage() {
         <div class="order-block">
           <div class="order-header">
             <span class="order-no">${o.po_no}</span>
-            <span class="order-info">供应商：${o.supplier_name} | 下单日期：${formatDate(o.order_date)} | 期望到货：${formatDate(o.delivery_date)} | 状态：${statusLabels[o.status] || '未知'}</span>
+            <span class="order-info">供应商：${o.supplier_name} | 下单日期：${formatDate(o.order_date)} | 期望到货：${formatDate(o.delivery_date)} | 状态：${statusLabels[o.status] || tc('unknown')}</span>
           </div>
           <table>
             <thead><tr><th>序号</th><th>物料编码</th><th>物料名称</th><th>规格型号</th><th>数量</th><th>单位</th><th>单价</th><th>金额</th><th>已收数量</th></tr></thead>
@@ -653,7 +658,7 @@ export default function PurchaseOrdersPage() {
       </body></html>`;
     printWindow.document.write(html);
     printWindow.document.close();
-    toast({ title: '打印', description: `正在打印 ${dataToPrint.length} 条采购订单` });
+    toast({ title: tc('print'), description: `正在打印 ${dataToPrint.length} 条采购订单` });
   };
 
   const addItem = () => {

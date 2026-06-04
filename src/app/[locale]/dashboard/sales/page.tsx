@@ -18,6 +18,7 @@ import {
   Activity,
   Target,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface SalesData {
   overview: {
@@ -137,7 +138,7 @@ function HorizontalBarChart({
       {data.slice(0, 5).map((d, i) => (
         <div key={i} className="flex items-center gap-3">
           <span className="text-xs w-24 text-right text-cyan-300 truncate">
-            {d[labelKey] || '未知'}
+            {d[labelKey] || tc('unknown')}
           </span>
           <div className="flex-1 bg-white/10 rounded-full h-5 relative overflow-hidden">
             <div
@@ -158,7 +159,7 @@ function HorizontalBarChart({
 }
 
 const STATUS_MAP: Record<number, { label: string; className: string }> = {
-  0: { label: '草稿', className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30' },
+  0: { label: tc('draft'), className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30' },
   1: { label: '已确认', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
   2: { label: '生产中', className: 'bg-orange-500/20 text-orange-300 border border-orange-500/30' },
   3: { label: '已完成', className: 'bg-green-500/20 text-green-300 border border-green-500/30' },
@@ -166,6 +167,10 @@ const STATUS_MAP: Record<number, { label: string; className: string }> = {
 };
 
 export default function SalesDashboard() {
+  // 翻译钩子
+  const t = useTranslations('Dashboard');
+  const tc = useTranslations('Common');
+
   const { companyName } = useCompanyName();
   const [data, setData] = useState<SalesData>({
     overview: {
@@ -294,7 +299,7 @@ export default function SalesDashboard() {
               )}
             </button>
             <div className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300">
-              {loading ? '加载中...' : '● 实时'}
+              {loading ? tc('loading') : '● 实时'}
             </div>
           </div>
         </div>
@@ -374,7 +379,7 @@ export default function SalesDashboard() {
                   const total = data.statusDistribution.reduce((a, b) => a + b.count, 0);
                   const pct = total > 0 ? Math.round((s.count / total) * 100) : 0;
                   const cfg = STATUS_MAP[s.status] || {
-                    label: '未知',
+                    label: tc('unknown'),
                     className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
                   };
                   return (
@@ -483,7 +488,7 @@ export default function SalesDashboard() {
                 <tbody>
                   {data.recentOrders.map((o, i) => {
                     const cfg = STATUS_MAP[o.status] || {
-                      label: '未知',
+                      label: tc('unknown'),
                       className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
                     };
                     return (

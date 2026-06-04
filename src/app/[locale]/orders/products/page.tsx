@@ -51,6 +51,7 @@ import {
   Printer,
 } from 'lucide-react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 interface Product {
@@ -106,17 +107,10 @@ interface BomVersion {
   operate_time: string;
 }
 
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case 'active':
-      return <Badge className="bg-green-100 text-green-700">启用</Badge>;
-    case 'inactive':
-      return <Badge className="bg-yellow-100 text-yellow-700">停用</Badge>;
-    case 'discontinued':
-      return <Badge className="bg-red-100 text-red-700">停产</Badge>;
-    default:
-      return <Badge variant="secondary">{status}</Badge>;
-  }
+const PRODUCT_STATUS_KEYS: Record<string, string> = {
+  active: 'enabled',
+  inactive: 'disabled',
+  discontinued: 'discontinued',
 };
 
 const formatDate = (dateStr: string | null | undefined) => {
@@ -130,7 +124,16 @@ const formatDate = (dateStr: string | null | undefined) => {
   }
 };
 
+const productStatusColors: Record<string, string> = {
+  active: 'bg-green-100 text-green-700',
+  inactive: 'bg-yellow-100 text-yellow-700',
+  discontinued: 'bg-red-100 text-red-700',
+};
+
 export default function ProductsPage() {
+  const t = useTranslations('Orders');
+  const tc = useTranslations('Common');
+
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isBomOpen, setIsBomOpen] = useState(false);
@@ -236,11 +239,11 @@ export default function ProductsPage() {
           }));
         }
       } else {
-        toast.error(result.message || '获取产品列表失败');
+        toast.error(result.message || t('fetchProductListFailed'));
       }
     } catch (error) {
-      console.error('获取产品列表失败:', error);
-      toast.error('获取产品列表失败');
+      console.error(t('fetchProductListFailed'), error);
+      toast.error(t('fetchProductListFailed'));
     } finally {
       setLoading(false);
     }
@@ -291,16 +294,16 @@ export default function ProductsPage() {
         } else {
           setBomHeader(null);
           setBomLines([]);
-          toast.info('该产品暂无BOM数据');
+          toast.info(t('noBomDataForProduct'));
         }
       } else {
         setBomHeader(null);
         setBomLines([]);
-        toast.info('该产品暂无BOM数据');
+        toast.info(t('noBomDataForProduct'));
       }
     } catch (error) {
-      console.error('获取BOM失败:', error);
-      toast.error('获取BOM数据失败');
+      console.error(t('fetchBomFailed'), error);
+      toast.error(t('fetchBomFailed'));
       setBomHeader(null);
       setBomLines([]);
     } finally {
@@ -326,16 +329,16 @@ export default function ProductsPage() {
         } else {
           setBomHeader(null);
           setVersionHistory([]);
-          toast.info('该产品暂无版本历史');
+          toast.info(t('noVersionHistory'));
         }
       } else {
         setBomHeader(null);
         setVersionHistory([]);
-        toast.info('该产品暂无版本历史');
+        toast.info(t('noVersionHistory'));
       }
     } catch (error) {
-      console.error('获取版本历史失败:', error);
-      toast.error('获取版本历史失败');
+      console.error(t('fetchVersionHistoryFailed'), error);
+      toast.error(t('fetchVersionHistoryFailed'));
       setBomHeader(null);
       setVersionHistory([]);
     } finally {
@@ -379,31 +382,31 @@ export default function ProductsPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success('产品更新成功');
+        toast.success(t('productUpdateSuccess'));
         setIsEditOpen(false);
         fetchProducts();
       } else {
-        toast.error(result.message || '更新失败');
+        toast.error(result.message || t('updateFailed'));
       }
     } catch (error) {
-      console.error('更新产品失败:', error);
-      toast.error('更新产品失败');
+      console.error(t('productUpdateFailed'), error);
+      toast.error(t('productUpdateFailed'));
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除此产品吗？')) return;
+    if (!confirm(t('confirmDeleteProduct'))) return;
     try {
       const response = await authFetch(`/api/products?id=${id}`, { method: 'DELETE' });
       const result = await response.json();
       if (result.success) {
-        toast.success('产品已删除');
+        toast.success(t('productDeleteSuccess'));
         fetchProducts();
       } else {
-        toast.error(result.message || '删除失败');
+        toast.error(result.message || tc('deleteFailed'));
       }
     } catch (error) {
-      toast.error('删除失败');
+      toast.error(tc('deleteFailed'));
     }
   };
 
@@ -411,8 +414,7 @@ export default function ProductsPage() {
     const printContent = document.createElement('div');
     printContent.style.padding = '20px';
     
-    const title = document.createElement('h1');
-    title.textContent = '产品档案列表';
+    title.textContent = t('productArchiveList');
     title.style.textAlign = 'center';
     title.style.marginBottom = '20px';
     printContent.appendChild(title);
@@ -424,15 +426,15 @@ export default function ProductsPage() {
     const thead = document.createElement('thead');
     thead.innerHTML = `
       <tr style="background-color: #f3f4f6;">
-        <th style="border: 1px solid #d1d5db; padding: 8px;">编码</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">产品名称</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">规格型号</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">单位</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">分类</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">BOM版本</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">状态</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">成本价</th>
-        <th style="border: 1px solid #d1d5db; padding: 8px;">销售价</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('productCode')}</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('productName')}</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('specification')}</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('unit')}</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('category')}</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('bomVersion')}</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">${tc('status')}</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('costPrice')}</th>
+        <th style="border: 1px solid #d1d5db; padding: 8px;">${t('salePrice')}</th>
       </tr>
     `;
     table.appendChild(thead);
@@ -447,7 +449,7 @@ export default function ProductsPage() {
         <td style="border: 1px solid #d1d5db; padding: 8px;">${product.unit}</td>
         <td style="border: 1px solid #d1d5db; padding: 8px;">${product.category_name || '-'}</td>
         <td style="border: 1px solid #d1d5db; padding: 8px;">${product.bom_version || '-'}</td>
-        <td style="border: 1px solid #d1d5db; padding: 8px;">${product.status === 'active' ? '启用' : product.status === 'inactive' ? '停用' : '停产'}</td>
+        <td style="border: 1px solid #d1d5db; padding: 8px;">${tc(PRODUCT_STATUS_KEYS[product.status] || 'unknown')}</td>
         <td style="border: 1px solid #d1d5db; padding: 8px;">¥${Number(product.cost_price || 0).toFixed(2)}</td>
         <td style="border: 1px solid #d1d5db; padding: 8px;">¥${Number(product.sale_price || 0).toFixed(2)}</td>
       `;
@@ -462,7 +464,7 @@ export default function ProductsPage() {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>产品档案打印</title>
+          <title>{t('productArchivePrint')}</title>
           <style>
             body { font-family: Arial, sans-serif; }
             @media print {
@@ -495,14 +497,14 @@ export default function ProductsPage() {
   };
 
   return (
-    <MainLayout title="产品档案">
+    <MainLayout title={t('productArchive')}>
       <div className="space-y-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex flex-1 gap-4 items-center w-full md:w-auto">
                 <SearchInput
-                  placeholder="搜索产品编码、名称..."
+                  placeholder={t('searchProductPlaceholder')}
                   value={searchKeyword}
                   onChange={setSearchKeyword}
                   onSearch={() => fetchProducts()}
@@ -510,10 +512,10 @@ export default function ProductsPage() {
                 />
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="产品分类" />
+                    <SelectValue placeholder={t('productCategory')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部分类</SelectItem>
+                    <SelectItem value="all">{t('allCategories')}</SelectItem>
                     {categories.map((c) => (
                       <SelectItem key={c.id} value={c.id.toString()}>
                         {c.category_name || c.categoryName}
@@ -525,11 +527,11 @@ export default function ProductsPage() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handlePrint}>
                   <Printer className="h-4 w-4 mr-2" />
-                  打印
+                  {tc('print')}
                 </Button>
                 <Button onClick={() => setIsCreateOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  新建产品
+                  {t('newProduct')}
                 </Button>
               </div>
             </div>
@@ -538,8 +540,8 @@ export default function ProductsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>产品列表</CardTitle>
-            <CardDescription>共 {pagination.total} 个产品</CardDescription>
+            <CardTitle>{t('productList')}</CardTitle>
+            <CardDescription>{tc('total', { count: pagination.total })}</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -564,7 +566,7 @@ export default function ProductsPage() {
                       onClick={() => handleSort('product_code')}
                     >
                       <span className="inline-flex items-center">
-                        编码{getSortIcon('product_code')}
+                        {t('productCode')}{getSortIcon('product_code')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -572,7 +574,7 @@ export default function ProductsPage() {
                       onClick={() => handleSort('product_name')}
                     >
                       <span className="inline-flex items-center">
-                        产品名称{getSortIcon('product_name')}
+                        {t('productName')}{getSortIcon('product_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -580,21 +582,21 @@ export default function ProductsPage() {
                       onClick={() => handleSort('specification')}
                     >
                       <span className="inline-flex items-center">
-                        规格型号{getSortIcon('specification')}
+                        {t('specification')}{getSortIcon('specification')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('unit')}
                     >
-                      <span className="inline-flex items-center">单位{getSortIcon('unit')}</span>
+                      <span className="inline-flex items-center">{t('unit')}{getSortIcon('unit')}</span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('category_name')}
                     >
                       <span className="inline-flex items-center">
-                        分类{getSortIcon('category_name')}
+                        {t('category')}{getSortIcon('category_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -602,24 +604,24 @@ export default function ProductsPage() {
                       onClick={() => handleSort('bom_version')}
                     >
                       <span className="inline-flex items-center">
-                        BOM版本{getSortIcon('bom_version')}
+                        {t('bomVersion')}{getSortIcon('bom_version')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('status')}
                     >
-                      <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
+                      <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
                     </TableHead>
-                    <TableHead className="text-right">操作</TableHead>
+                    <TableHead className="text-right">{tc('operation')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {products.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                        暂无产品数据
-                      </TableCell>
+                      {t('noProductData')}
+                    </TableCell>
                     </TableRow>
                   ) : (
                     sortedProducts.map((product) => (
@@ -642,7 +644,11 @@ export default function ProductsPage() {
                         <TableCell>
                           <Badge variant="secondary">{product.bom_version || '-'}</Badge>
                         </TableCell>
-                        <TableCell>{getStatusBadge(product.status)}</TableCell>
+                        <TableCell>
+          <Badge className={productStatusColors[product.status] || ''}>
+            {tc(PRODUCT_STATUS_KEYS[product.status] || 'unknown')}
+          </Badge>
+        </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -653,22 +659,22 @@ export default function ProductsPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onSelect={() => handleViewBom(product)}>
                                 <Package className="h-4 w-4 mr-2" />
-                                查看BOM
+                                {t('viewBom')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onSelect={() => handleViewVersion(product)}>
                                 <History className="h-4 w-4 mr-2" />
-                                版本历史
+                                {t('versionHistory')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onSelect={() => handleEdit(product)}>
                                 <Edit className="h-4 w-4 mr-2" />
-                                编辑
+                                {tc('edit')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 variant="destructive"
                                 onSelect={() => handleDelete(product.id)}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                删除
+                                {tc('delete')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -687,10 +693,10 @@ export default function ProductsPage() {
                   disabled={pagination.page === 1}
                   onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
                 >
-                  上一页
+                  {tc('prevPage')}
                 </Button>
                 <span className="flex items-center px-4 text-sm text-muted-foreground">
-                  第 {pagination.page} / {pagination.totalPages} 页
+                  {t('pageInfo', { page: pagination.page, total: pagination.totalPages })}
                 </span>
                 <Button
                   variant="outline"
@@ -698,7 +704,7 @@ export default function ProductsPage() {
                   disabled={pagination.page === pagination.totalPages}
                   onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                 >
-                  下一页
+                  {tc('nextPage')}
                 </Button>
               </div>
             )}
@@ -708,20 +714,20 @@ export default function ProductsPage() {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
-              <DialogTitle>新建产品</DialogTitle>
-              <DialogDescription>填写产品基本信息</DialogDescription>
+              <DialogTitle>{t('newProduct')}</DialogTitle>
+              <DialogDescription>{t('fillProductBasicInfo')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>产品编码 *</Label>
-                  <Input id="create_code" placeholder="如：P001" />
+                  <Label>{t('productCode')} *</Label>
+                  <Input id="create_code" placeholder={t('productCodeExample')} />
                 </div>
                 <div className="space-y-2">
-                  <Label>产品分类 *</Label>
+                  <Label>{t('productCategory')} *</Label>
                   <Select>
                     <SelectTrigger>
-                      <SelectValue placeholder="选择分类" />
+                      <SelectValue placeholder={t('selectCategory')} />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((c) => (
@@ -734,55 +740,55 @@ export default function ProductsPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>产品名称 *</Label>
-                <Input id="create_name" placeholder="产品名称" />
+                <Label>{t('productName')} *</Label>
+                <Input id="create_name" placeholder={t('productName')} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>规格型号</Label>
-                  <Input id="create_spec" placeholder="规格描述" />
+                  <Label>{t('specification')}</Label>
+                  <Input id="create_spec" placeholder={t('specDescription')} />
                 </div>
                 <div className="space-y-2">
-                  <Label>计量单位</Label>
+                  <Label>{t('measurementUnit')}</Label>
                   <Select>
                     <SelectTrigger>
-                      <SelectValue placeholder="选择单位" />
+                      <SelectValue placeholder={t('selectUnit')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="㎡">㎡</SelectItem>
-                      <SelectItem value="张">张</SelectItem>
+                      <SelectItem value="张">{t('unitSheet')}</SelectItem>
                       <SelectItem value="kg">kg</SelectItem>
-                      <SelectItem value="卷">卷</SelectItem>
-                      <SelectItem value="件">件</SelectItem>
+                      <SelectItem value="卷">{t('unitRoll')}</SelectItem>
+                      <SelectItem value="件">{t('unitPiece')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>成本价</Label>
+                  <Label>{t('costPrice')}</Label>
                   <Input id="create_cost" type="number" placeholder="0.00" />
                 </div>
                 <div className="space-y-2">
-                  <Label>销售价</Label>
+                  <Label>{t('salePrice')}</Label>
                   <Input id="create_sale" type="number" placeholder="0.00" />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>备注</Label>
-                <Input id="create_desc" placeholder="产品描述..." />
+                <Label>{tc('remark')}</Label>
+                <Input id="create_desc" placeholder={t('productDescription')} />
               </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
               <Button
                 onClick={async () => {
                   const code = (document.getElementById('create_code') as HTMLInputElement)?.value;
                   const name = (document.getElementById('create_name') as HTMLInputElement)?.value;
                   if (!code || !name) {
-                    toast.error('产品编码和名称不能为空');
+                    toast.error(t('productCodeNameRequired2'));
                     return;
                   }
                   try {
@@ -803,18 +809,18 @@ export default function ProductsPage() {
                     });
                     const result = await response.json();
                     if (result.success) {
-                      toast.success('产品创建成功');
+                      toast.success(t('productCreateSuccess'));
                       setIsCreateOpen(false);
                       fetchProducts();
                     } else {
-                      toast.error(result.message || '创建失败');
+                      toast.error(result.message || t('createFailed'));
                     }
                   } catch (error) {
-                    toast.error('创建失败');
+                    toast.error(t('createFailed'));
                   }
                 }}
               >
-                保存
+                {tc('save')}
               </Button>
             </div>
           </DialogContent>
@@ -823,23 +829,23 @@ export default function ProductsPage() {
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
-              <DialogTitle>编辑产品</DialogTitle>
-              <DialogDescription>修改产品信息</DialogDescription>
+              <DialogTitle>{t('editProduct')}</DialogTitle>
+              <DialogDescription>{t('modifyProductInfo')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>产品编码</Label>
+                  <Label>{t('productCode')}</Label>
                   <Input value={selectedProduct?.product_code || ''} disabled />
                 </div>
                 <div className="space-y-2">
-                  <Label>产品分类</Label>
+                  <Label>{t('productCategory')}</Label>
                   <Select
                     value={editForm.category_id}
                     onValueChange={(v) => setEditForm((prev) => ({ ...prev, category_id: v }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择分类" />
+                      <SelectValue placeholder={t('selectCategory')} />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((c) => (
@@ -852,7 +858,7 @@ export default function ProductsPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>产品名称 *</Label>
+                <Label>{t('productName')} *</Label>
                 <Input
                   value={editForm.product_name}
                   onChange={(e) =>
@@ -862,7 +868,7 @@ export default function ProductsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>规格型号</Label>
+                  <Label>{t('specification')}</Label>
                   <Input
                     value={editForm.specification}
                     onChange={(e) =>
@@ -871,27 +877,27 @@ export default function ProductsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>计量单位</Label>
+                  <Label>{t('measurementUnit')}</Label>
                   <Select
                     value={editForm.unit}
                     onValueChange={(v) => setEditForm((prev) => ({ ...prev, unit: v }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择单位" />
+                      <SelectValue placeholder={t('selectUnit')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="㎡">㎡</SelectItem>
-                      <SelectItem value="张">张</SelectItem>
+                      <SelectItem value="张">{t('unitSheet')}</SelectItem>
                       <SelectItem value="kg">kg</SelectItem>
-                      <SelectItem value="卷">卷</SelectItem>
-                      <SelectItem value="件">件</SelectItem>
+                      <SelectItem value="卷">{t('unitRoll')}</SelectItem>
+                      <SelectItem value="件">{t('unitPiece')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>成本价</Label>
+                  <Label>{t('costPrice')}</Label>
                   <Input
                     type="number"
                     value={editForm.cost_price}
@@ -901,7 +907,7 @@ export default function ProductsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>销售价</Label>
+                  <Label>{t('salePrice')}</Label>
                   <Input
                     type="number"
                     value={editForm.sale_price}
@@ -913,7 +919,7 @@ export default function ProductsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>状态</Label>
+                  <Label>{tc('status')}</Label>
                   <Select
                     value={editForm.status}
                     onValueChange={(v) => setEditForm((prev) => ({ ...prev, status: v }))}
@@ -922,15 +928,15 @@ export default function ProductsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">启用</SelectItem>
-                      <SelectItem value="inactive">停用</SelectItem>
-                      <SelectItem value="discontinued">停产</SelectItem>
+                      <SelectItem value="active">{tc('enabled')}</SelectItem>
+                      <SelectItem value="inactive">{tc('disabled')}</SelectItem>
+                      <SelectItem value="discontinued">{t('discontinued')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>备注</Label>
+                <Label>{tc('remark')}</Label>
                 <Input
                   value={editForm.description}
                   onChange={(e) =>
@@ -941,9 +947,9 @@ export default function ProductsPage() {
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSaveEdit}>保存</Button>
+              <Button onClick={handleSaveEdit}>{tc('save')}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -951,11 +957,11 @@ export default function ProductsPage() {
         <Dialog open={isBomOpen} onOpenChange={setIsBomOpen}>
           <DialogContent className="max-w-4xl" resizable>
             <DialogHeader>
-              <DialogTitle>BOM详情 - {selectedProduct?.product_name}</DialogTitle>
+              <DialogTitle>{t('bomDetail')} - {selectedProduct?.product_name}</DialogTitle>
               <DialogDescription>
                 {bomHeader
-                  ? `BOM编号: ${bomHeader.bom_no || '-'} | 版本: ${bomHeader.version || '-'} | 状态: ${bomHeader.status_name || '-'}`
-                  : '暂无BOM数据'}
+                  ? `${t('bomNo')}: ${bomHeader.bom_no || '-'} | ${t('version')}: ${bomHeader.version || '-'} | ${tc('status')}: ${bomHeader.status_name || '-'}`
+                  : t('noBomDataForProduct')}
               </DialogDescription>
             </DialogHeader>
             {bomLoading ? (
@@ -966,34 +972,34 @@ export default function ProductsPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-4 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">产品：</span>
+                    <span className="text-muted-foreground">{t('product')}：</span>
                     {bomHeader.product_name}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">规格：</span>
+                    <span className="text-muted-foreground">{t('specification')}：</span>
                     {bomHeader.product_spec || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">基数：</span>
+                    <span className="text-muted-foreground">{t('baseQty')}：</span>
                     {bomHeader.base_qty} {bomHeader.unit}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">总成本：</span>¥
+                    <span className="text-muted-foreground">{t('totalCost')}：</span>¥
                     {Number(bomHeader.total_cost || 0).toFixed(2)}
                   </div>
                 </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>行号</TableHead>
-                      <TableHead>物料编码</TableHead>
-                      <TableHead>物料名称</TableHead>
-                      <TableHead>规格</TableHead>
-                      <TableHead>用量</TableHead>
-                      <TableHead>损耗率</TableHead>
-                      <TableHead>实际用量</TableHead>
-                      <TableHead>单价</TableHead>
-                      <TableHead>成本</TableHead>
+                      <TableHead>{t('lineNo')}</TableHead>
+                      <TableHead>{t('materialCode')}</TableHead>
+                      <TableHead>{t('materialName')}</TableHead>
+                      <TableHead>{t('spec')}</TableHead>
+                      <TableHead>{t('consumption')}</TableHead>
+                      <TableHead>{t('lossRate')}</TableHead>
+                      <TableHead>{t('actualUsage')}</TableHead>
+                      <TableHead>{t('unitPrice')}</TableHead>
+                      <TableHead>{t('cost')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1016,7 +1022,7 @@ export default function ProductsPage() {
                 </Table>
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">该产品暂无BOM数据</div>
+              <div className="text-center py-8 text-muted-foreground">{t('noBomDataForProduct')}</div>
             )}
           </DialogContent>
         </Dialog>
@@ -1024,11 +1030,11 @@ export default function ProductsPage() {
         <Dialog open={isVersionOpen} onOpenChange={setIsVersionOpen}>
           <DialogContent className="max-w-3xl" resizable>
             <DialogHeader>
-              <DialogTitle>版本历史 - {selectedProduct?.product_name}</DialogTitle>
+              <DialogTitle>{t('versionHistory')} - {selectedProduct?.product_name}</DialogTitle>
               <DialogDescription>
                 {bomHeader
-                  ? `当前版本: ${bomHeader.version || '-'} | BOM编号: ${bomHeader.bom_no || '-'}`
-                  : '暂无版本历史'}
+                  ? `${t('currentVersion')}: ${bomHeader.version || '-'} | ${t('bomNo')}: ${bomHeader.bom_no || '-'}`
+                  : t('noVersionHistory')}
               </DialogDescription>
             </DialogHeader>
             {bomLoading ? (
@@ -1039,12 +1045,12 @@ export default function ProductsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>版本</TableHead>
-                    <TableHead>变更类型</TableHead>
-                    <TableHead>变更内容</TableHead>
-                    <TableHead>变更原因</TableHead>
-                    <TableHead>操作人</TableHead>
-                    <TableHead>操作时间</TableHead>
+                    <TableHead>{t('version')}</TableHead>
+                    <TableHead>{t('changeType')}</TableHead>
+                    <TableHead>{t('changeContent')}</TableHead>
+                    <TableHead>{t('changeReason')}</TableHead>
+                    <TableHead>{t('operator')}</TableHead>
+                    <TableHead>{t('operateTime')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1066,15 +1072,15 @@ export default function ProductsPage() {
                           }
                         >
                           {v.change_type === 'CREATE'
-                            ? '新建'
+                            ? t('changeTypeCreate')
                             : v.change_type === 'PUBLISH'
-                              ? '发布'
+                              ? t('changeTypePublish')
                               : v.change_type === 'DISABLE'
-                                ? '停用'
+                                ? t('changeTypeDisable')
                                 : v.change_type === 'UPDATE'
-                                  ? '更新'
+                                  ? t('changeTypeUpdate')
                                   : v.change_type === 'DELETE'
-                                    ? '删除'
+                                    ? tc('delete')
                                     : v.change_type}
                         </Badge>
                       </TableCell>
@@ -1087,7 +1093,7 @@ export default function ProductsPage() {
                 </TableBody>
               </Table>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">该产品暂无版本历史</div>
+              <div className="text-center py-8 text-muted-foreground">{t('noVersionHistory')}</div>
             )}
           </DialogContent>
         </Dialog>

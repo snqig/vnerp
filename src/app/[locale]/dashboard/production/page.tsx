@@ -25,6 +25,7 @@ import {
   Minimize,
   Target,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface ProductionData {
   overview: {
@@ -62,23 +63,23 @@ interface ProductionData {
   staffStatus: { total: number; onDuty: number; onLeave: number; attendance: number };
 }
 
-const STATUS_MAP: Record<string, { label: string; className: string }> = {
+const STATUS_MAP: Record<string, { labelKey: string; className: string }> = {
   running: {
-    label: '运行中',
+    labelKey: 'running',
     className: 'bg-green-500/20 text-green-300 border border-green-500/30',
   },
-  idle: { label: '待机', className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
+  idle: { labelKey: 'standby', className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
   maintenance: {
-    label: '保养中',
+    labelKey: 'underMaintenance',
     className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
   },
-  error: { label: '故障', className: 'bg-red-500/20 text-red-300 border border-red-500/30' },
+  error: { labelKey: 'fault', className: 'bg-red-500/20 text-red-300 border border-red-500/30' },
 };
 
-const PRIORITY_MAP: Record<string, { label: string; className: string }> = {
-  high: { label: '高', className: 'bg-red-500/20 text-red-300 border border-red-500/30' },
-  medium: { label: '中', className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
-  low: { label: '低', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
+const PRIORITY_MAP: Record<string, { labelKey: string; className: string }> = {
+  high: { labelKey: 'high', className: 'bg-red-500/20 text-red-300 border border-red-500/30' },
+  medium: { labelKey: 'medium', className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
+  low: { labelKey: 'low', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
 };
 
 function AutoScroll({
@@ -138,6 +139,10 @@ function AutoScroll({
 }
 
 export default function ProductionDashboard() {
+  // 翻译钩子
+  const t = useTranslations('Dashboard');
+  const tc = useTranslations('Common');
+
   const { companyName } = useCompanyName();
   const [data, setData] = useState<ProductionData>({
     overview: {
@@ -228,7 +233,7 @@ export default function ProductionDashboard() {
                     {
                       id: 'ink-exp',
                       type: 'material',
-                      message: `${d.inkStatus.expiringSoon}罐油墨即将过期`,
+                      message: t('inkExpiringAlert', { count: d.inkStatus.expiringSoon }),
                       severity: 'medium',
                       timestamp: '',
                     },
@@ -314,7 +319,7 @@ export default function ProductionDashboard() {
                 <h1 className="text-lg font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
                   {companyName}
                 </h1>
-                <p className="text-[10px] text-white/50">实时监控生产状态 · 设备效率 · 工单进度</p>
+                <p className="text-[10px] text-white/50">{t('productionSubtitle')}</p>
               </div>
               <div className="tech-title-line-right" />
             </div>
@@ -327,7 +332,7 @@ export default function ProductionDashboard() {
             <button
               onClick={toggleFullscreen}
               className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-              title={isFullscreen ? '退出全屏' : '全屏显示'}
+              title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
             >
               {isFullscreen ? (
                 <Minimize className="h-3.5 w-3.5 text-cyan-400" />
@@ -336,7 +341,7 @@ export default function ProductionDashboard() {
               )}
             </button>
             <div className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300">
-              {loading ? '加载中...' : '● 实时'}
+              {loading ? tc('loading') : '● ' + t('realtime')}
             </div>
           </div>
         </div>
@@ -344,25 +349,25 @@ export default function ProductionDashboard() {
         <div className="relative z-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           {[
             {
-              title: '今日工单',
+              title: t('todayWorkOrders'),
               value: data.overview.totalOrders,
               icon: Package,
               color: 'from-cyan-500 to-blue-500',
             },
             {
-              title: '进行中',
+              title: tc('inProgress'),
               value: data.overview.activeOrders,
               icon: PlayCircle,
               color: 'from-amber-500 to-orange-500',
             },
             {
-              title: '已完成',
+              title: tc('completed'),
               value: data.overview.completedToday,
               icon: CheckCircle,
               color: 'from-green-500 to-emerald-500',
             },
             {
-              title: '生产效率',
+              title: t('productionEfficiency'),
               value: `${data.overview.efficiency}%`,
               icon: TrendingUp,
               color: 'from-blue-500 to-indigo-500',
@@ -374,7 +379,7 @@ export default function ProductionDashboard() {
               color: 'from-purple-500 to-pink-500',
             },
             {
-              title: '良品率',
+              title: t('qualityYieldRate'),
               value: `${data.overview.qualityRate}%`,
               icon: Activity,
               color: 'from-emerald-500 to-teal-500',
@@ -401,7 +406,7 @@ export default function ProductionDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <Target className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">核心指标</span>
+              <span className="text-sm font-medium text-white/80">{tc('coreMetrics')}</span>
             </div>
             <div className="p-4">
               <div className="grid grid-cols-3 gap-2">
@@ -415,7 +420,7 @@ export default function ProductionDashboard() {
                   />
                   <GlassGauge
                     value={data.overview.efficiency}
-                    label="生产效率"
+                    label={t('productionEfficiency')}
                     unit="%"
                     colorArc="#06b6d4"
                     colorDanger="#ff5555"
@@ -457,7 +462,7 @@ export default function ProductionDashboard() {
                   />
                   <GlassGauge
                     value={data.overview.qualityRate}
-                    label="良品率"
+                    label={t('qualityYieldRate')}
                     unit="%"
                     colorArc="#10b981"
                     colorDanger="#ff5555"
@@ -473,7 +478,7 @@ export default function ProductionDashboard() {
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <Users className="h-3 w-3 text-cyan-400" />
-                    <p className="text-xs text-white/40">在岗人数</p>
+                    <p className="text-xs text-white/40">{t('attendance')}</p>
                   </div>
                   <p className="text-lg font-bold text-cyan-300">
                     {data.staffStatus.onDuty}
@@ -483,7 +488,7 @@ export default function ProductionDashboard() {
                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <Activity className="h-3 w-3 text-green-400" />
-                    <p className="text-xs text-white/40">出勤率</p>
+                    <p className="text-xs text-white/40">{t('attendanceRate')}</p>
                   </div>
                   <p className="text-lg font-bold text-green-300">
                     {data.staffStatus.attendance}
@@ -500,12 +505,12 @@ export default function ProductionDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <Settings className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">设备状态监控</span>
+              <span className="text-sm font-medium text-white/80">{t('equipmentMonitor')}</span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
                 {data.equipmentStatus.length === 0 ? (
-                  <p className="text-white/40 text-center py-8">暂无数据</p>
+                  <p className="text-white/40 text-center py-8">{tc('noData')}</p>
                 ) : (
                   <div className="space-y-3">
                     {data.equipmentStatus.map((eq) => {
@@ -519,16 +524,16 @@ export default function ProductionDashboard() {
                             <div>
                               <h4 className="text-xs font-medium text-white/80">{eq.name}</h4>
                               <p className="text-[10px] text-white/40 mt-0.5">
-                                当前工单: {eq.currentOrder}
+                                {t('currentWorkOrder')}: {eq.currentOrder}
                               </p>
                             </div>
                             <span className={`px-2 py-0.5 rounded text-[10px] ${cfg.className}`}>
-                              {cfg.label}
-                            </span>
+                               {tc(cfg.labelKey)}
+                             </span>
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-white/40">效率</span>
+                              <span className="text-white/40">{t('productionEfficiency')}</span>
                               <span className="font-medium">{eq.efficiency}%</span>
                             </div>
                             <div className="bg-white/10 rounded-full h-1.5 overflow-hidden">
@@ -538,9 +543,9 @@ export default function ProductionDashboard() {
                               />
                             </div>
                             <div className="flex items-center justify-between text-[10px] text-white/30">
-                              <span>操作员: {eq.operator}</span>
+                              <span>{t('operator')}: {eq.operator}</span>
                               <span>
-                                运行: {Math.floor(eq.runtime / 60)}h{eq.runtime % 60}m
+                                {t('runtime')}: {Math.floor(eq.runtime / 60)}h{eq.runtime % 60}m
                               </span>
                             </div>
                           </div>
@@ -557,12 +562,12 @@ export default function ProductionDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <Package className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">工单生产进度</span>
+              <span className="text-sm font-medium text-white/80">{t('workOrderProductionProgress')}</span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
                 {data.productionProgress.length === 0 ? (
-                  <p className="text-white/40 text-center py-8">暂无数据</p>
+                  <p className="text-white/40 text-center py-8">{tc('noData')}</p>
                 ) : (
                   <div className="space-y-3">
                     {data.productionProgress.map((order) => {
@@ -578,35 +583,35 @@ export default function ProductionDashboard() {
                                 {order.orderNo}
                               </span>
                               <span
-                                className={`px-1.5 py-0.5 rounded text-[10px] ${priCfg.className}`}
-                              >
-                                {priCfg.label}
+                                                              className={`px-1.5 py-0.5 rounded text-[10px] ${priCfg.className}`}
+                                                              >
+                                                                {tc(priCfg.labelKey)}
                               </span>
                               {order.status === 'completed' && (
                                 <span className="px-1.5 py-0.5 rounded text-[10px] bg-green-500/20 text-green-300 border border-green-500/30">
-                                  已完成
+                                  {tc('completed')}
                                 </span>
                               )}
                             </div>
                             <span className="text-[10px] text-white/40">
-                              预计: {order.estimatedComplete || '-'}
-                            </span>
+                               {tc('estimated')}: {order.estimatedComplete || '-'}
+                             </span>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                             <div>
-                              <span className="text-white/40">客户: </span>
+                              <span className="text-white/40">{tc('customer')}: </span>
                               <span className="text-white/70">{order.customer}</span>
                             </div>
                             <div>
-                              <span className="text-white/40">产品: </span>
+                              <span className="text-white/40">{tc('product')}: </span>
                               <span className="text-white/70">{order.productName}</span>
                             </div>
                             <div>
-                              <span className="text-white/40">工序: </span>
+                              <span className="text-white/40">{tc('process')}: </span>
                               <span className="text-white/70">{order.process || '-'}</span>
                             </div>
                             <div>
-                              <span className="text-white/40">数量: </span>
+                              <span className="text-white/40">{tc('planQty')}: </span>
                               <span className="text-white/70">
                                 {(order.completedQty ?? 0).toLocaleString()} /{' '}
                                 {(order.planQty ?? 0).toLocaleString()}
@@ -615,7 +620,7 @@ export default function ProductionDashboard() {
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-white/40">进度</span>
+                              <span className="text-white/40">{tc('progress')}</span>
                               <span className="font-medium">{order.progress}%</span>
                             </div>
                             <div className="bg-white/10 rounded-full h-2 overflow-hidden">
@@ -638,12 +643,12 @@ export default function ProductionDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-red-400 to-orange-500" />
               <AlertTriangle className="h-4 w-4 text-red-400" />
-              <span className="text-sm font-medium text-white/80">预警通知</span>
+              <span className="text-sm font-medium text-white/80">{t('alertNotifications')}</span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
                 {data.alerts.length === 0 ? (
-                  <p className="text-white/40 text-center py-8">暂无预警</p>
+                  <p className="text-white/40 text-center py-8">{t('noAlerts')}</p>
                 ) : (
                   <div className="space-y-3">
                     {data.alerts.map((alert) => {

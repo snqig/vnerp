@@ -30,6 +30,7 @@ import {
   TrendingDown,
   DollarSign,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface ReportItem {
   id: number;
@@ -43,6 +44,10 @@ interface ReportItem {
 }
 
 export default function FinanceReportPage() {
+  // 翻译钩子
+  const t = useTranslations('Finance');
+  const tc = useTranslations('Common');
+
   const [list, setList] = useState<ReportItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);

@@ -205,31 +205,31 @@ interface ScanResult {
 // 状态配置
 const statusConfig: Record<string, { label: string; color: string; icon: LucideIcon }> = {
   draft: {
-    label: '草稿',
+    label: tc('draft'),
     color:
       'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-800',
     icon: Clock,
   },
   pending: {
-    label: '待审核',
+    label: tc('pending'),
     color:
       'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800',
     icon: AlertCircle,
   },
   approved: {
-    label: '已审核',
+    label: tc('approved'),
     color:
       'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800',
     icon: CheckCircle2,
   },
   rejected: {
-    label: '已拒绝',
+    label: tc('rejected'),
     color:
       'bg-red-100 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-800',
     icon: X,
   },
   completed: {
-    label: '已完成',
+    label: tc('completed'),
     color:
       'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900 dark:text-purple-200 dark:border-purple-800',
     icon: CheckCircle2,
@@ -263,6 +263,10 @@ function calcCutSpec(originalSpec: string, cutWidth: number): string {
 }
 
 export default function InboundManagementPage() {
+  // 翻译钩子
+  const t = useTranslations('Warehouse');
+  const tc = useTranslations('Common');
+
   const router = useRouter();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('records');
@@ -383,7 +387,7 @@ export default function InboundManagementPage() {
     setIsLoading(true);
     await fetchInboundRecords();
     setIsLoading(false);
-    toast.success('数据已刷新');
+    toast.success(t('dataRefreshed'));
   }, [fetchInboundRecords]);
 
   // 获取仓库列表
@@ -525,34 +529,33 @@ export default function InboundManagementPage() {
       setIsQRCodeDialogOpen(true);
     } catch (error) {
       console.error('生成二维码失败:', error);
-      toast.error('生成二维码失败');
+      toast.error(t('qrCodeGenerateFailed'));
     }
-  }, []);
+  };
 
-  // 处理分切
-  const handleCutting = async () => {
-    try {
-      if (!currentLabel) {
-        toast.error('请选择要分切的标签');
-        return;
-      }
+  const handleCutting = useCallback(async () => {
+    if (!currentLabel) {
+      toast.error(t('selectCutLabel'));
+      return;
+    }
+    if (!isCuttableMaterial(currentLabel.materialName || '')) {
+      toast.error(t('materialNotCuttable'));
+      return;
+    }
+    if (!cuttingForm.cutWidths.trim()) {
+      toast.error(t('inputCutWidth'));
+      return;
+    }
 
-      const materialName = currentLabel.materialName || '';
-      if (!isCuttableMaterial(materialName)) {
-        toast.error('仅PET/PC/PVC等薄膜材料支持分切');
-        return;
-      }
+    const widths = cuttingForm.cutWidths.split('+').map(Number);
+    const hasInvalid = widths.some((w) => isNaN(w) || w <= 0);
 
-      if (!cuttingForm.cutWidths) {
-        toast.error('请输入分切宽幅');
-        return;
-      }
-
-      const specWidth = parseSpecWidth(
-        currentLabel.material_spec || currentLabel.specification || ''
-      );
-      if (!specWidth) {
-        toast.error('无法从规格中解析宽幅，请检查规格格式（如：1000×1200mm）');
+    const spec = currentLabel.specification || currentLabel.materialSpec || '';
+    const parsedWidth = parseSpecWidth(spec);
+    if (parsedWidth !== null) {
+      const totalCutWidth = widths.reduce((sum, w) => sum + w, 0);
+      if (totalCutWidth > parsedWidth) {
+        toast.error(t('specParseFailed'));
         return;
       }
 
@@ -562,7 +565,7 @@ export default function InboundManagementPage() {
         .filter((w) => !isNaN(w) && w > 0);
       const totalWidth = widths.reduce((s, w) => s + w, 0);
       if (totalWidth > specWidth) {
-        toast.error(`分切宽幅总和(${totalWidth}mm)不能超过原始宽幅(${specWidth}mm)`);
+        toast.error(t('cutWidthExceeds', { total: totalWidth, spec: specWidth }));
         return;
       }
 
@@ -597,7 +600,7 @@ export default function InboundManagementPage() {
 
       const result = await response.json();
       if (result.success) {
-        toast.success(`分切成功！生成 ${result.data?.newLabels?.length || 0} 个新标签`);
+        toast.success(t('cutSuccess', { count: result.data?.newLabels?.length || 0 }));
         setIsCuttingDialogOpen(false);
         setCuttingForm((prev) => ({ ...prev, cutWidths: '', remark: '' }));
         await fetchInboundRecords();
@@ -634,30 +637,32 @@ export default function InboundManagementPage() {
           setIsCuttingResultOpen(true);
         }
       } else {
-        toast.error(result.message || '分切失败');
+        toast.error(result.message || t('cutFailed'));
       }
     } catch (error) {
       console.error('分切失败:', error);
-      toast.error('分切失败');
+      toast.error(t('cutFailed'));
     }
   };
 
-  // 处理扫码查询
-  const handleQRScan = useCallback(async (qrCode: string) => {
+  const handleQRCodeView = useCallback(async (label: PrintLabel) => {
+    if (!label.id) {
+      toast.error(t('scanQueryFailed'));
+      return;
+    }
     try {
-      const response = await authFetch(
-        `/api/warehouse/inbound/scan?qrCode=${encodeURIComponent(qrCode)}`
-      );
+      const response = await authFetch(`/api/warehouse/inbound/labels/${label.id}/qrcode`);
       const result = await response.json();
       if (result.success) {
-        setScanResult(result.data);
-        setIsQRScanDialogOpen(true);
+        setQrCodeDataUrl(result.data?.qrCode || '');
+        setQrCodeLabelId(label.id);
+        setIsQRCodeDialogOpen(true);
       } else {
-        toast.error('扫码查询失败');
+        toast.error(t('scanQueryFailed'));
       }
     } catch (error) {
       console.error('扫码查询失败:', error);
-      toast.error('扫码查询失败');
+      toast.error(t('scanQueryFailed'));
     }
   }, []);
 
@@ -667,7 +672,7 @@ export default function InboundManagementPage() {
       // 创建打印窗口
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
-        toast.error('无法打开打印窗口，请检查浏览器设置');
+        toast.error(t('printWindowBlocked'));
         return;
       }
 
@@ -676,7 +681,7 @@ export default function InboundManagementPage() {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>标签打印</title>
+          <title>{t('printPreview')}</title>
           <style>
             @page {
               size: A4 landscape;
@@ -787,7 +792,7 @@ export default function InboundManagementPage() {
       };
     } catch (error) {
       console.error('打印失败:', error);
-      toast.error('打印失败');
+      toast.error(t('printFailed'));
     }
   };
 
@@ -821,9 +826,9 @@ export default function InboundManagementPage() {
   // 状态选项
   const statusOptions = [
     { value: 'all', label: '全部状态' },
-    { value: 'draft', label: '草稿' },
-    { value: 'pending', label: '待审核' },
-    { value: 'approved', label: '已审核' },
+    { value: 'draft', label: tc('draft') },
+    { value: 'pending', label: tc('pending') },
+    { value: 'approved', label: tc('approved') },
     { value: 'rejected', label: '已拒绝' },
   ];
 
@@ -843,7 +848,7 @@ export default function InboundManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border dark:border-slate-700"
+          className="flex flex-wrap items-center gap-3 bg-card p-4 rounded-xl shadow-sm border"
         >
           <Button
             onClick={() => setIsAddDialogOpen(true)}
@@ -875,7 +880,7 @@ export default function InboundManagementPage() {
                 (r) => r.status === 'approved' || r.status === 'completed'
               );
               if (approvedRecords.length === 0) {
-                toast.error('没有已审核的入库记录可打印');
+                toast.error(t('noApprovedForPrint'));
                 return;
               }
               const labels = approvedRecords.flatMap((record) =>
@@ -1049,7 +1054,7 @@ export default function InboundManagementPage() {
                             (r.status === 'approved' || r.status === 'completed')
                         );
                         if (selectedApproved.length === 0) {
-                          toast.error('请选择已审核的入库记录');
+                          toast.error(t('selectApprovedForPrint'));
                           return;
                         }
                         const labels = selectedApproved.flatMap((record) =>
@@ -1243,13 +1248,16 @@ export default function InboundManagementPage() {
                                 );
                                 const result = await response.json();
                                 if (result.success) {
-                                  toast.success('删除成功');
-                                  fetchInboundRecords();
+                                  toast.success(t('deleteSuccess'));
+                                  if (confirmDelete
+                                  ) {
+                                    confirmDelete.resolve();
+                                  }
                                 } else {
-                                  toast.error(result.message || '删除失败');
+                                  toast.error(result.message || t('deleteFailed'));
                                 }
-                              } catch (error) {
-                                toast.error('删除失败');
+                              } catch (err) {
+                                toast.error(t('deleteFailed'));
                               }
                             }}
                           >
@@ -1637,7 +1645,7 @@ export default function InboundManagementPage() {
                                 return (
                                   <div
                                     key={i}
-                                    className="flex items-center justify-between text-sm bg-white dark:bg-slate-700 rounded px-3 py-2 dark:text-white"
+                                    className="flex items-center justify-between text-sm bg-card rounded px-3 py-2"
                                   >
                                     <span>
                                       分切{i + 1}：{w}mm
@@ -1803,7 +1811,7 @@ export default function InboundManagementPage() {
                 onClick={async () => {
                   const previewWindow = window.open('', '_blank', 'width=900,height=700');
                   if (!previewWindow) {
-                    toast.error('无法打开预览窗口，请检查浏览器设置');
+                    toast.error(t('printWindowBlocked'));
                     return;
                   }
 
@@ -1885,7 +1893,7 @@ export default function InboundManagementPage() {
                 onClick={async () => {
                   const printWindow = window.open('', '_blank');
                   if (!printWindow) {
-                    toast.error('无法打开打印窗口，请检查浏览器设置');
+                    toast.error(t('printWindowBlocked'));
                     return;
                   }
 
@@ -1976,7 +1984,7 @@ export default function InboundManagementPage() {
             </DialogHeader>
             <div className="py-4 flex flex-col items-center">
               {qrCodeDataUrl && (
-                <div className="mb-4 p-2 bg-white dark:bg-slate-800 border rounded dark:border-slate-700">
+                <div className="mb-4 p-2 bg-card border rounded">
                   <img src={qrCodeDataUrl} alt="QR Code" />
                 </div>
               )}
@@ -2064,7 +2072,7 @@ export default function InboundManagementPage() {
                 onClick={async () => {
                   const printWindow = window.open('', '_blank');
                   if (!printWindow) {
-                    toast.error('无法打开打印窗口，请检查浏览器设置');
+                    toast.error(t('printWindowBlocked'));
                     return;
                   }
 
@@ -2390,7 +2398,7 @@ export default function InboundManagementPage() {
                       </div>
                     )}
                     {poDropdownVisible && poSearchResults.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border rounded-md shadow-lg max-h-60 overflow-y-auto dark:border-slate-700">
+                      <div className="absolute z-50 w-full mt-1 bg-card border rounded-md shadow-lg max-h-60 overflow-y-auto">
                         {poSearchResults.map((po: any) => (
                           <div
                             key={po.id}
@@ -2483,7 +2491,7 @@ export default function InboundManagementPage() {
               <Button
                 onClick={async () => {
                   if (!formData.materialName || !formData.quantity) {
-                    toast.error('物料名称和数量不能为空');
+                    toast.error(t('materialNameRequired'));
                     return;
                   }
                   try {
@@ -2509,7 +2517,7 @@ export default function InboundManagementPage() {
                     });
                     const result = await response.json();
                     if (result.success) {
-                      toast.success('入库单创建成功');
+                      toast.success(t('inboundOrderCreated'));
                       setIsAddDialogOpen(false);
                       setFormData({
                         materialCode: '',
@@ -2531,11 +2539,10 @@ export default function InboundManagementPage() {
                       });
                       fetchInboundRecords();
                     } else {
-                      toast.error(result.message || '创建失败');
+                      toast.error(result.message || t('createInboundFailed'));
                     }
-                  } catch (error) {
-                    console.error('创建入库单失败:', error);
-                    toast.error('创建入库单失败');
+                  } catch (err) {
+                    toast.error(t('createInboundFailed'));
                   }
                 }}
               >
@@ -2709,7 +2716,7 @@ export default function InboundManagementPage() {
               <Button
                 onClick={async () => {
                   if (!formData.materialName || !formData.quantity) {
-                    toast.error('物料名称和数量不能为空');
+                    toast.error(t('materialNameRequired'));
                     return;
                   }
                   try {
@@ -2740,7 +2747,7 @@ export default function InboundManagementPage() {
                     });
                     const result = await response.json();
                     if (result.success) {
-                      toast.success('混合料入库单创建成功');
+                      toast.success(t('mixedInboundCreated'));
                       setIsMixedAddDialogOpen(false);
                       setFormData({
                         materialCode: '',
@@ -2762,11 +2769,10 @@ export default function InboundManagementPage() {
                       });
                       fetchInboundRecords();
                     } else {
-                      toast.error(result.message || '创建失败');
+                      toast.error(result.message || t('createMixedInboundFailed'));
                     }
-                  } catch (error) {
-                    console.error('创建混合料入库单失败:', error);
-                    toast.error('创建混合料入库单失败');
+                  } catch (err) {
+                    toast.error(t('createMixedInboundFailed'));
                   }
                 }}
               >
@@ -2820,14 +2826,14 @@ export default function InboundManagementPage() {
                     });
                     const result = await response.json();
                     if (result.success) {
-                      toast.success('已拒绝');
+                      toast.success(t('auditRejected'));
                       setIsAuditDialogOpen(false);
                       fetchInboundRecords();
                     } else {
-                      toast.error(result.message || '操作失败');
+                      toast.error(result.message || tc('error'));
                     }
                   } catch (error) {
-                    toast.error('操作失败');
+                    toast.error(tc('error'));
                   }
                 }}
               >
@@ -2843,14 +2849,14 @@ export default function InboundManagementPage() {
                     });
                     const result = await response.json();
                     if (result.success) {
-                      toast.success('审核通过');
+                      toast.success(t('auditApproved'));
                       setIsAuditDialogOpen(false);
                       fetchInboundRecords();
                     } else {
-                      toast.error(result.message || '操作失败');
+                      toast.error(result.message || tc('error'));
                     }
                   } catch (error) {
-                    toast.error('操作失败');
+                    toast.error(tc('error'));
                   }
                 }}
               >
@@ -2977,14 +2983,14 @@ export default function InboundManagementPage() {
                     });
                     const result = await response.json();
                     if (result.success) {
-                      toast.success('更新成功');
+                      toast.success(t('updateSuccess'));
                       setIsEditDialogOpen(false);
                       fetchInboundRecords();
                     } else {
-                      toast.error(result.message || '更新失败');
+                      toast.error(result.message || t('updateFailed'));
                     }
-                  } catch (error) {
-                    toast.error('更新失败');
+                  } catch (err) {
+                    toast.error(t('updateFailed'));
                   }
                 }}
               >

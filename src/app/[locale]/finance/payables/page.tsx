@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -40,6 +41,10 @@ interface Payable {
 }
 
 export default function PayablesPage() {
+  // 翻译钩子
+  const t = useTranslations('Finance');
+  const tc = useTranslations('Common');
+
   const [payables, setPayables] = useState<Payable[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -78,7 +83,7 @@ export default function PayablesPage() {
       2: { label: '部分付款', variant: 'warning' },
       3: { label: '已结清', variant: 'success' },
     };
-    const s = map[status] || { label: '未知', variant: 'default' };
+    const s = map[status] || { label: tc('unknown'), variant: 'default' };
     return <Badge variant={s.variant}>{s.label}</Badge>;
   };
 

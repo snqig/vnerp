@@ -32,6 +32,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { useTranslations } from 'next-intl';
 
 interface EcoRecord {
   id?: number;
@@ -54,26 +55,29 @@ interface EcoRecord {
   create_time: string;
 }
 
-const ecoTypeMap: Record<string, string> = {
-  bom: 'BOM变更',
-  process: '工艺变更',
-  material: '物料变更',
-  design: '设计变更',
-};
-
-const ecoStatusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '草稿', variant: 'outline' },
-  2: { label: '审核中', variant: 'secondary' },
-  3: { label: '已批准', variant: 'default' },
-  4: { label: '已执行', variant: 'default' },
-  5: { label: '已关闭', variant: 'secondary' },
-  6: { label: '已拒绝', variant: 'destructive' },
-};
-
 export default function EcoPage() {
+  const t = useTranslations('Engineering');
+  const tc = useTranslations('Common');
+
+  const ecoTypeMap: Record<string, string> = {
+    bom: t('bomChange'),
+    process: t('processChange'),
+    material: t('materialChange'),
+    design: t('designChange'),
+  };
+
+  const ecoStatusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: tc('draft'), variant: 'outline' },
+    2: { label: t('pendingReview'), variant: 'secondary' },
+    3: { label: t('approved'), variant: 'default' },
+    4: { label: t('executed'), variant: 'default' },
+    5: { label: tc('closed'), variant: 'secondary' },
+    6: { label: t('rejected'), variant: 'destructive' },
+  };
+
   const { toast } = useToast();
   const [records, setRecords] = useState<EcoRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -111,7 +115,7 @@ export default function EcoPage() {
         setTotal(data.data.total || 0);
       }
     } catch {
-      toast({ title: '获取数据失败', variant: 'destructive' });
+      toast({ title: tc('fetchFailed'), variant: 'destructive' });
     }
     setLoading(false);
   };
@@ -122,7 +126,7 @@ export default function EcoPage() {
 
   const handleSave = async () => {
     if (!form.eco_type) {
-      toast({ title: '请选择变更类型', variant: 'destructive' });
+      toast({ title: t('selectChangeType'), variant: 'destructive' });
       return;
     }
     try {
@@ -135,28 +139,28 @@ export default function EcoPage() {
       });
       const data = await res.json();
       if (data.code === 200) {
-        toast({ title: editRecord ? '更新成功' : '创建成功' });
+        toast({ title: editRecord ? tc('updateSuccess') : tc('createSuccess') });
         setDialogOpen(false);
         fetchData();
       } else {
-        toast({ title: data.message || '操作失败', variant: 'destructive' });
+        toast({ title: data.message || tc('error'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确认删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await fetch('/api/plm/eco?id=' + id, { method: 'DELETE' });
       const data = await res.json();
       if (data.code === 200) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -188,11 +192,11 @@ export default function EcoPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <FileText className="h-6 w-6" />
-            工程变更单(ECO)
+            {t('ecoTitle')}
           </h1>
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4 mr-1" />
-            新建变更单
+            {t('newEco')}
           </Button>
         </div>
 
@@ -200,7 +204,7 @@ export default function EcoPage() {
           <CardContent className="p-4">
             <div className="flex gap-3 mb-4">
               <Input
-                placeholder="搜索变更单号"
+                placeholder={t('searchEcoNo')}
                 value={searchEcoNo}
                 onChange={(e) => setSearchEcoNo(e.target.value)}
                 className="w-48"
@@ -208,7 +212,7 @@ export default function EcoPage() {
               />
               <Select value={searchType} onValueChange={(v) => setSearchType(v)}>
                 <SelectTrigger className="w-32">
-                  <SelectValue placeholder="变更类型" />
+                  <SelectValue placeholder={t('changeType')} />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(ecoTypeMap).map(([k, v]) => (
@@ -220,7 +224,7 @@ export default function EcoPage() {
               </Select>
               <Select value={searchStatus} onValueChange={(v) => setSearchStatus(v)}>
                 <SelectTrigger className="w-32">
-                  <SelectValue placeholder="状态" />
+                  <SelectValue placeholder={tc('status')} />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(ecoStatusMap).map(([k, v]) => (
@@ -232,22 +236,22 @@ export default function EcoPage() {
               </Select>
               <Button variant="outline" onClick={fetchData}>
                 <Search className="h-4 w-4 mr-1" />
-                搜索
+                {tc('search')}
               </Button>
             </div>
 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>变更单号</TableHead>
-                  <TableHead>变更类型</TableHead>
-                  <TableHead>产品名称</TableHead>
-                  <TableHead>原版本</TableHead>
-                  <TableHead>新版本</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>申请人</TableHead>
-                  <TableHead>申请时间</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{t('ecoNo')}</TableHead>
+                  <TableHead>{t('changeType')}</TableHead>
+                  <TableHead>{t('productName')}</TableHead>
+                  <TableHead>{t('oldVersion')}</TableHead>
+                  <TableHead>{t('newVersion')}</TableHead>
+                  <TableHead>{tc('status')}</TableHead>
+                  <TableHead>{t('applicant')}</TableHead>
+                  <TableHead>{t('applyTime')}</TableHead>
+                  <TableHead>{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -284,14 +288,14 @@ export default function EcoPage() {
                 {records.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
             <div className="flex justify-between items-center mt-4 text-sm">
-              <span>共 {total} 条</span>
+              <span>{tc('total', { count: total })}</span>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -299,7 +303,7 @@ export default function EcoPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  上一页
+                  {tc('prevPage')}
                 </Button>
                 <Button
                   size="sm"
@@ -307,7 +311,7 @@ export default function EcoPage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  下一页
+                  {tc('nextPage')}
                 </Button>
               </div>
             </div>
@@ -317,12 +321,12 @@ export default function EcoPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editRecord ? '编辑变更单' : '新建变更单'}</DialogTitle>
+              <DialogTitle>{editRecord ? t('editEco') : t('newEco')}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-3 py-2">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>变更类型 *</Label>
+                  <Label>{t('changeType')} *</Label>
                   <Select
                     value={form.eco_type || 'bom'}
                     onValueChange={(v) => setForm({ ...form, eco_type: v })}
@@ -340,7 +344,7 @@ export default function EcoPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>产品名称</Label>
+                  <Label>{t('productName')}</Label>
                   <Input
                     value={form.product_name || ''}
                     onChange={(e) => setForm({ ...form, product_name: e.target.value })}
@@ -349,14 +353,14 @@ export default function EcoPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>产品编码</Label>
+                  <Label>{t('productCode')}</Label>
                   <Input
                     value={form.product_code || ''}
                     onChange={(e) => setForm({ ...form, product_code: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>申请人</Label>
+                  <Label>{t('applicant')}</Label>
                   <UserSelect
                     value={form.applicant || ''}
                     onChange={(v) => setForm({ ...form, applicant: v })}
@@ -365,7 +369,7 @@ export default function EcoPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>原版本</Label>
+                  <Label>{t('oldVersion')}</Label>
                   <Input
                     value={form.old_version || ''}
                     onChange={(e) => setForm({ ...form, old_version: e.target.value })}
@@ -373,7 +377,7 @@ export default function EcoPage() {
                   />
                 </div>
                 <div>
-                  <Label>新版本</Label>
+                  <Label>{t('newVersion')}</Label>
                   <Input
                     value={form.new_version || ''}
                     onChange={(e) => setForm({ ...form, new_version: e.target.value })}
@@ -383,7 +387,7 @@ export default function EcoPage() {
               </div>
               {editRecord && (
                 <div>
-                  <Label>状态</Label>
+                  <Label>{tc('status')}</Label>
                   <Select
                     value={String(form.status || 1)}
                     onValueChange={(v) => setForm({ ...form, status: Number(v) })}
@@ -402,7 +406,7 @@ export default function EcoPage() {
                 </div>
               )}
               <div>
-                <Label>变更原因</Label>
+                <Label>{t('changeReason')}</Label>
                 <Textarea
                   value={form.change_reason || ''}
                   onChange={(e) => setForm({ ...form, change_reason: e.target.value })}
@@ -410,7 +414,7 @@ export default function EcoPage() {
                 />
               </div>
               <div>
-                <Label>变更内容</Label>
+                <Label>{t('changeContent')}</Label>
                 <Textarea
                   value={form.change_content || ''}
                   onChange={(e) => setForm({ ...form, change_content: e.target.value })}
@@ -418,7 +422,7 @@ export default function EcoPage() {
                 />
               </div>
               <div>
-                <Label>影响分析</Label>
+                <Label>{t('impactAnalysis')}</Label>
                 <Textarea
                   value={form.impact_analysis || ''}
                   onChange={(e) => setForm({ ...form, impact_analysis: e.target.value })}
@@ -426,7 +430,7 @@ export default function EcoPage() {
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -436,9 +440,9 @@ export default function EcoPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

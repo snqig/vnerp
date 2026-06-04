@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { formatDate } from '@/lib/date-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -145,52 +146,12 @@ interface AutoScheduleResult {
 // 辅助函数
 // ============================================================
 
-const getStatusBadge = (status: number) => {
-  const statusMap: Record<number, { label: string; className: string }> = {
-    1: {
-      label: '待排产',
-      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-    },
-    2: {
-      label: '已排产',
-      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    },
-    3: {
-      label: '生产中',
-      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-    },
-    4: {
-      label: '已完成',
-      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    },
-    5: {
-      label: '已取消',
-      className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-    },
-  };
-  const config = statusMap[status] || { label: '未知', className: 'bg-gray-100 text-gray-700' };
-  return <Badge className={config.className}>{config.label}</Badge>;
-};
-
-const getPriorityBadge = (priority: number) => {
-  const priorityMap: Record<number, { label: string; className: string }> = {
-    1: { label: '紧急', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
-    2: {
-      label: '正常',
-      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    },
-    3: { label: '低', className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  };
-  const config = priorityMap[priority] || { label: '正常', className: 'bg-blue-100 text-blue-700' };
-  return <Badge className={config.className}>{config.label}</Badge>;
-};
-
 const getWorkshopBadge = (workshop: string) => {
   const workshopMap: Record<string, { label: string; className: string }> = {
-    die_cut: { label: '模切', className: 'bg-purple-100 text-purple-700' },
-    trademark: { label: '商标', className: 'bg-indigo-100 text-indigo-700' },
-    printing: { label: '印刷', className: 'bg-pink-100 text-pink-700' },
-    packaging: { label: '包装', className: 'bg-teal-100 text-teal-700' },
+    die_cut: { label: t('workshopDieCutShort'), className: 'bg-purple-100 text-purple-700' },
+    trademark: { label: t('workshopTrademarkShort'), className: 'bg-indigo-100 text-indigo-700' },
+    printing: { label: t('workshopPrintingShort'), className: 'bg-pink-100 text-pink-700' },
+    packaging: { label: t('workshopPackagingShort'), className: 'bg-teal-100 text-teal-700' },
   };
   const config = workshopMap[workshop] || {
     label: workshop,
@@ -204,6 +165,50 @@ const getWorkshopBadge = (workshop: string) => {
 // ============================================================
 
 export default function ProductionSchedulePage() {
+  // 翻译钩子
+  const t = useTranslations('Production');
+  const tc = useTranslations('Common');
+
+  const getStatusBadge = (status: number) => {
+    const statusMap: Record<number, { label: string; className: string }> = {
+      1: {
+        label: t('statusPending'),
+        className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+      },
+      2: {
+        label: t('statusScheduled'),
+        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+      },
+      3: {
+        label: t('statusProducing'),
+        className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+      },
+      4: {
+        label: t('statusCompleted'),
+        className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+      },
+      5: {
+        label: t('statusCancelled'),
+        className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+      },
+    };
+    const config = statusMap[status] || { label: tc('unknown'), className: 'bg-gray-100 text-gray-700' };
+    return <Badge className={config.className}>{config.label}</Badge>;
+  };
+
+  const getPriorityBadge = (priority: number) => {
+    const priorityMap: Record<number, { label: string; className: string }> = {
+      1: { label: tc('critical'), className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+      2: {
+        label: tc('normal'),
+        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+      },
+      3: { label: tc('low'), className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+    };
+    const config = priorityMap[priority] || { label: tc('normal'), className: 'bg-blue-100 text-blue-700' };
+    return <Badge className={config.className}>{config.label}</Badge>;
+  };
+
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [stats, setStats] = useState<ScheduleStats>({
     total: 0,
@@ -437,10 +442,10 @@ export default function ProductionSchedulePage() {
   }, [filteredSchedules]);
 
   const ganttWorkshopLabels: Record<string, string> = {
-    die_cut: '模切车间',
-    trademark: '商标车间',
-    printing: '印刷车间',
-    packaging: '包装车间',
+    die_cut: t('workshopDieCut'),
+    trademark: t('workshopTrademark'),
+    printing: t('workshopPrinting'),
+    packaging: t('workshopPackaging'),
   };
 
   const ganttStatusBarColors: Record<number, string> = {
@@ -531,16 +536,14 @@ export default function ProductionSchedulePage() {
         body: JSON.stringify({ id: selectedSchedule.id, ...editForm }),
       });
       const result = await response.json();
-      if (result.success) {
-        fetchSchedules();
-        setIsEditOpen(false);
-      } else alert(result.message || '更新失败');
-    } catch (error) {
-      console.error('更新排程失败:', error);
-      alert('更新失败');
-    } finally {
-      setLoading(false);
-    }
+        if (result.success) {
+          fetchSchedules();
+          setIsEditOpen(false);
+        } else alert(result.message || tc('updateFailed'));
+      } catch (error) {
+        console.error('更新排程失败:', error);
+        alert(tc('updateFailed'));
+      }
   };
 
   const handleStatusChange = async (schedule: Schedule, newStatus: number) => {
@@ -553,10 +556,10 @@ export default function ProductionSchedulePage() {
       const result = await response.json();
       if (result.success) {
         fetchSchedules();
-      } else alert(result.message || '操作失败');
+      } else alert(result.message || tc('error'));
     } catch (error) {
       console.error('状态更新失败:', error);
-      alert('操作失败');
+      alert(tc('error'));
     } finally {
       setLoading(false);
     }
@@ -565,7 +568,7 @@ export default function ProductionSchedulePage() {
   // 自动排程
   const handleAutoSchedule = async () => {
     if (selectedWorkOrders.length === 0) {
-      alert('请选择要排程的工单');
+      alert(t('selectWorkOrdersFirst'));
       return;
     }
     setAutoScheduleLoading(true);
@@ -583,14 +586,14 @@ export default function ProductionSchedulePage() {
         setAutoScheduleResults(result.data?.results || []);
         fetchSchedules();
         alert(
-          `自动排程完成！成功: ${result.data?.summary?.scheduled || 0}, 冲突: ${result.data?.summary?.with_conflicts || 0}`
+          `${t('autoScheduleComplete')} ${t('successCount')}: ${result.data?.summary?.scheduled || 0}, ${t('conflictCount')}: ${result.data?.summary?.with_conflicts || 0}`
         );
       } else {
-        alert(result.message || '自动排程失败');
+        alert(result.message || t('autoScheduleFailed'));
       }
     } catch (error) {
       console.error('自动排程失败:', error);
-      alert('自动排程失败');
+        alert(t('autoScheduleFailed'));
     } finally {
       setAutoScheduleLoading(false);
     }
@@ -617,13 +620,13 @@ export default function ProductionSchedulePage() {
   // ============================================================
 
   return (
-    <MainLayout title="生产排程">
+    <MainLayout title={t('schedule')}>
       <div className="space-y-6">
         {/* 统计卡片 */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">总排程数</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('totalSchedules')}</CardTitle>
               <Factory className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
@@ -632,7 +635,7 @@ export default function ProductionSchedulePage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">待排产</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('statusPending')}</CardTitle>
               <AlertCircle className="h-4 w-4 text-gray-600" />
             </CardHeader>
             <CardContent>
@@ -641,17 +644,17 @@ export default function ProductionSchedulePage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">生产中</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('statusProducing')}</CardTitle>
               <Play className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.producing}</div>
-              <p className="text-xs text-muted-foreground">产能利用率 {stats.capacityRate}%</p>
+              <p className="text-xs text-muted-foreground">{t('capacityRate', { rate: stats.capacityRate })}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">已完成</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('statusCompleted')}</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -660,7 +663,7 @@ export default function ProductionSchedulePage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">冲突检测</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('conflictDetection')}</CardTitle>
               <AlertTriangle className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
@@ -669,7 +672,7 @@ export default function ProductionSchedulePage() {
               >
                 {stats.conflictCount}
               </div>
-              {stats.conflictCount > 0 && <p className="text-xs text-red-500">发现时间冲突</p>}
+              {stats.conflictCount > 0 && <p className="text-xs text-red-500">{t('timeConflictFound')}</p>}
             </CardContent>
           </Card>
         </div>
@@ -682,7 +685,7 @@ export default function ProductionSchedulePage() {
                 <div className="relative flex-1 max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索排程号、工单号、产品..."
+                    placeholder={t('searchSchedulePlaceholder')}
                     className="pl-10"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -695,7 +698,7 @@ export default function ProductionSchedulePage() {
                       className="w-[240px] justify-start text-left font-normal"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, 'yyyy-MM-dd') : '选择日期'}
+                      {date ? format(date, 'yyyy-MM-dd') : t('selectDate')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -709,14 +712,14 @@ export default function ProductionSchedulePage() {
                   size="sm"
                   onClick={() => setViewMode('list')}
                 >
-                  列表视图
+                  {t('listView')}
                 </Button>
                 <Button
                   variant={viewMode === 'calendar' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setViewMode('calendar')}
                 >
-                  日历视图
+                  {t('calendarView')}
                 </Button>
                 <Button
                   variant={viewMode === 'gantt' ? 'default' : 'outline'}
@@ -724,88 +727,88 @@ export default function ProductionSchedulePage() {
                   onClick={() => setViewMode('gantt')}
                 >
                   <GanttChart className="h-4 w-4 mr-1" />
-                  甘特图
+                  {t('ganttChart')}
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setIsCapacityOpen(true)}>
                   <BarChart3 className="h-4 w-4 mr-1" />
-                  产能分析
+                  {t('capacityAnalysis')}
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setIsAutoScheduleOpen(true)}>
                   <Zap className="h-4 w-4 mr-1" />
-                  自动排程
+                  {t('autoSchedule')}
                 </Button>
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
-                      新建排程
+                      {t('newSchedule')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                      <DialogTitle>新建生产排程</DialogTitle>
-                      <DialogDescription>创建新的生产排程卡片</DialogDescription>
+                      <DialogTitle>{t('newScheduleTitle')}</DialogTitle>
+                      <DialogDescription>{t('newScheduleDesc')}</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>产品名称</Label>
-                          <Input placeholder="输入产品名称" />
+                          <Label>{t('productName')}</Label>
+                          <Input placeholder={t('inputProductName')} />
                         </div>
                         <div className="space-y-2">
-                          <Label>车间</Label>
+                          <Label>{t('workshopLabel')}</Label>
                           <Select>
                             <SelectTrigger>
-                              <SelectValue placeholder="选择车间" />
+                              <SelectValue placeholder={t('selectWorkshop')} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="die_cut">模切车间</SelectItem>
-                              <SelectItem value="trademark">商标车间</SelectItem>
-                              <SelectItem value="printing">印刷车间</SelectItem>
-                              <SelectItem value="packaging">包装车间</SelectItem>
+                              <SelectItem value="die_cut">{t('workshopDieCut')}</SelectItem>
+                              <SelectItem value="trademark">{t('workshopTrademark')}</SelectItem>
+                              <SelectItem value="printing">{t('workshopPrinting')}</SelectItem>
+                              <SelectItem value="packaging">{t('workshopPackaging')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>计划数量</Label>
-                          <Input type="number" placeholder="生产数量" />
+                          <Label>{t('plannedQuantity')}</Label>
+                          <Input type="number" placeholder={t('productionQuantity')} />
                         </div>
                         <div className="space-y-2">
-                          <Label>优先级</Label>
+                          <Label>{t('priorityLabel')}</Label>
                           <Select defaultValue="2">
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="1">紧急</SelectItem>
-                              <SelectItem value="2">正常</SelectItem>
-                              <SelectItem value="3">低</SelectItem>
+                              <SelectItem value="1">{t('urgent')}</SelectItem>
+                              <SelectItem value="2">{t('normal')}</SelectItem>
+                              <SelectItem value="3">{t('low')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>计划开始</Label>
+                          <Label>{t('plannedStart')}</Label>
                           <Input type="datetime-local" />
                         </div>
                         <div className="space-y-2">
-                          <Label>计划结束</Label>
+                          <Label>{t('plannedEnd')}</Label>
                           <Input type="datetime-local" />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label>备注</Label>
-                        <Input placeholder="输入备注" />
+                        <Label>{t('remarkLabel')}</Label>
+                        <Input placeholder={t('inputRemark')} />
                       </div>
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                        取消
+                        {tc('cancel')}
                       </Button>
-                      <Button onClick={() => setIsCreateOpen(false)}>创建排程</Button>
+                      <Button onClick={() => setIsCreateOpen(false)}>{t('createSchedule')}</Button>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -818,11 +821,11 @@ export default function ProductionSchedulePage() {
         {viewMode === 'list' && (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
-              <TabsTrigger value="all">全部 ({stats.total})</TabsTrigger>
-              <TabsTrigger value="pending">待排产 ({stats.pending})</TabsTrigger>
-              <TabsTrigger value="scheduled">已排产 ({stats.scheduled})</TabsTrigger>
-              <TabsTrigger value="producing">生产中 ({stats.producing})</TabsTrigger>
-              <TabsTrigger value="completed">已完成 ({stats.completed})</TabsTrigger>
+              <TabsTrigger value="all">{tc('all')} ({stats.total})</TabsTrigger>
+              <TabsTrigger value="pending">{t('statusPending')} ({stats.pending})</TabsTrigger>
+              <TabsTrigger value="scheduled">{t('statusScheduled')} ({stats.scheduled})</TabsTrigger>
+              <TabsTrigger value="producing">{t('statusProducing')} ({stats.producing})</TabsTrigger>
+              <TabsTrigger value="completed">{t('statusCompleted')} ({stats.completed})</TabsTrigger>
             </TabsList>
             <TabsContent value={activeTab} className="mt-4">
               <Card>
@@ -830,15 +833,15 @@ export default function ProductionSchedulePage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>排产单号</TableHead>
-                        <TableHead>订单号</TableHead>
-                        <TableHead>产品名称</TableHead>
-                        <TableHead>车间</TableHead>
-                        <TableHead>计划数量</TableHead>
-                        <TableHead>计划开始</TableHead>
-                        <TableHead>优先级</TableHead>
-                        <TableHead>状态</TableHead>
-                        <TableHead>操作</TableHead>
+                        <TableHead>{t('scheduleNo')}</TableHead>
+                        <TableHead>{t('orderNo')}</TableHead>
+                        <TableHead>{t('productName')}</TableHead>
+                        <TableHead>{t('workshopLabel')}</TableHead>
+                        <TableHead>{t('plannedQuantity')}</TableHead>
+                        <TableHead>{t('plannedStart')}</TableHead>
+                        <TableHead>{t('priorityLabel')}</TableHead>
+                        <TableHead>{tc('status')}</TableHead>
+                        <TableHead>{tc('actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -870,18 +873,18 @@ export default function ProductionSchedulePage() {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => handleViewDetail(schedule)}>
                                     <Eye className="h-4 w-4 mr-2" />
-                                    查看详情
+                                    {tc('detail')}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleEdit(schedule)}>
                                     <Edit className="h-4 w-4 mr-2" />
-                                    编辑
+                                    {tc('edit')}
                                   </DropdownMenuItem>
                                   {schedule.status === 1 && (
                                     <DropdownMenuItem
                                       onClick={() => handleStatusChange(schedule, 2)}
                                     >
                                       <CalendarIcon className="h-4 w-4 mr-2" />
-                                      确认排产
+                                      {t('confirmSchedule')}
                                     </DropdownMenuItem>
                                   )}
                                   {schedule.status === 2 && (
@@ -889,7 +892,7 @@ export default function ProductionSchedulePage() {
                                       onClick={() => handleStatusChange(schedule, 3)}
                                     >
                                       <Play className="h-4 w-4 mr-2" />
-                                      开始生产
+                                      {t('startProduction')}
                                     </DropdownMenuItem>
                                   )}
                                   {schedule.status === 3 && (
@@ -897,7 +900,7 @@ export default function ProductionSchedulePage() {
                                       onClick={() => handleStatusChange(schedule, 4)}
                                     >
                                       <CheckCircle className="h-4 w-4 mr-2" />
-                                      完成排程
+                                      {t('completeSchedule')}
                                     </DropdownMenuItem>
                                   )}
                                 </DropdownMenuContent>
@@ -918,8 +921,8 @@ export default function ProductionSchedulePage() {
         {viewMode === 'calendar' && (
           <Card>
             <CardHeader>
-              <CardTitle>未来7天排程</CardTitle>
-              <CardDescription>按日期查看生产排程安排</CardDescription>
+              <CardTitle>{t('next7DaysSchedule')}</CardTitle>
+              <CardDescription>{t('calendarViewDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-7 gap-4">
@@ -936,7 +939,7 @@ export default function ProductionSchedulePage() {
                       <div className="space-y-2">
                         {daySchedules.length === 0 ? (
                           <div className="text-xs text-muted-foreground text-center py-4">
-                            无排程
+                            {t('noSchedule')}
                           </div>
                         ) : (
                           daySchedules.map((s) => (
@@ -968,9 +971,9 @@ export default function ProductionSchedulePage() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2">
                 <GanttChart className="h-5 w-5" />
-                甘特图排程视图
+                {t('ganttScheduleView')}
               </CardTitle>
-              <CardDescription>按车间分组查看生产排程时间线</CardDescription>
+              <CardDescription>{t('ganttDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <div className="flex">
@@ -982,7 +985,7 @@ export default function ProductionSchedulePage() {
                     className="flex items-center px-3 text-xs font-medium text-muted-foreground border-b border-border bg-muted/50"
                     style={{ height: GANTT_ROW_HEIGHT }}
                   >
-                    排程信息
+                    {t('scheduleInfo')}
                   </div>
                   {Object.entries(ganttGrouped).map(([workshop, items]) => (
                     <div key={workshop}>
@@ -1116,27 +1119,27 @@ export default function ProductionSchedulePage() {
                                           <div className="font-semibold">
                                             {schedule.schedule_no}
                                           </div>
-                                          <div>产品: {schedule.product_name}</div>
+                                          <div>{t('tooltipProduct')}: {schedule.product_name}</div>
                                           <div>
-                                            车间:{' '}
+                                            {t('tooltipWorkshop')}:{' '}
                                             {ganttWorkshopLabels[schedule.workshop] ||
                                               schedule.workshop}
                                           </div>
                                           <div>
-                                            计划: {formatDate(schedule.planned_start)} ~{' '}
+                                            {t('tooltipPlan')}: {formatDate(schedule.planned_start)} ~{' '}
                                             {formatDate(schedule.planned_end)}
                                           </div>
                                           <div>
-                                            数量: {schedule.completed_qty || 0}/
+                                            {t('tooltipQuantity')}: {schedule.completed_qty || 0}/
                                             {schedule.planned_qty}
                                           </div>
                                           <div className="flex items-center gap-1">
-                                            状态: {getStatusBadge(schedule.status)}
+                                            {t('tooltipStatus')}: {getStatusBadge(schedule.status)}
                                           </div>
                                           {hasConflict && (
                                             <div className="text-red-500 font-medium flex items-center gap-1">
                                               <AlertTriangle className="h-3 w-3" />
-                                              时间冲突
+                                              {t('timeConflict')}
                                             </div>
                                           )}
                                         </div>
@@ -1164,36 +1167,36 @@ export default function ProductionSchedulePage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-500" />
-                智能自动排程
+                {t('autoScheduleTitle')}
               </DialogTitle>
-              <DialogDescription>选择待排产工单，系统自动计算最优排程方案</DialogDescription>
+              <DialogDescription>{t('autoScheduleDesc')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
-                  已选择 {selectedWorkOrders.length} 个工单
+                  {t('selectedCount', { count: selectedWorkOrders.length })}
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => setSelectedWorkOrders([])}>
-                    清空选择
+                    {t('clearSelection')}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedWorkOrders(workOrders.map((wo) => wo.id))}
                   >
-                    全选
+                    {t('selectAll')}
                   </Button>
                 </div>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">选择</TableHead>
-                    <TableHead>工单号</TableHead>
-                    <TableHead>产品名称</TableHead>
-                    <TableHead>计划数量</TableHead>
-                    <TableHead>状态</TableHead>
+                    <TableHead className="w-12">{t('select')}</TableHead>
+                    <TableHead>{t('workOrderNo')}</TableHead>
+                    <TableHead>{t('productName')}</TableHead>
+                    <TableHead>{t('planQty')}</TableHead>
+                    <TableHead>{tc('status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1230,7 +1233,7 @@ export default function ProductionSchedulePage() {
               </Table>
               {autoScheduleResults.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">排程结果</h4>
+                  <h4 className="font-semibold text-sm">{t('scheduleResult')}</h4>
                   {autoScheduleResults.map((result) => (
                     <Card
                       key={result.work_order_id}
@@ -1242,13 +1245,13 @@ export default function ProductionSchedulePage() {
                         <div className="flex items-center justify-between">
                           <div className="text-sm font-medium">{result.work_order_no}</div>
                           {result.conflicts.length > 0 ? (
-                            <Badge variant="destructive">有冲突</Badge>
+                            <Badge variant="destructive">{t('hasConflict')}</Badge>
                           ) : (
-                            <Badge className="bg-green-100 text-green-700">已排程</Badge>
+                            <Badge className="bg-green-100 text-green-700">{t('statusScheduled')}</Badge>
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
-                          开始: {formatDate(result.overall_start)} ~ 结束:{' '}
+                          {t('startLabel')}: {formatDate(result.overall_start)} ~ {t('endLabel')}:{' '}
                           {formatDate(result.overall_end)}
                         </div>
                         {result.conflicts.length > 0 && (
@@ -1264,7 +1267,7 @@ export default function ProductionSchedulePage() {
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsAutoScheduleOpen(false)}>
-                关闭
+                {tc('close')}
               </Button>
               <Button
                 onClick={handleAutoSchedule}
@@ -1275,7 +1278,7 @@ export default function ProductionSchedulePage() {
                 ) : (
                   <Zap className="h-4 w-4 mr-2" />
                 )}
-                {autoScheduleLoading ? '排程中...' : '开始自动排程'}
+                {autoScheduleLoading ? t('schedulingInProgress') : t('startAutoSchedule')}
               </Button>
             </div>
           </DialogContent>
@@ -1287,9 +1290,9 @@ export default function ProductionSchedulePage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-blue-500" />
-                产能利用率分析
+                {t('capacityAnalysisTitle')}
               </DialogTitle>
-              <DialogDescription>各车间设备产能与利用率统计</DialogDescription>
+              <DialogDescription>{t('capacityDesc')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               {capacityData.map((cap) => (
@@ -1307,8 +1310,8 @@ export default function ProductionSchedulePage() {
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>设备数: {cap.equipmentCount}</span>
-                        <span>总产能: {cap.totalCapacity}</span>
+                        <span>{t('equipmentCount')}: {cap.equipmentCount}</span>
+                        <span>{t('totalCapacity')}: {cap.totalCapacity}</span>
                       </div>
                       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
@@ -1323,8 +1326,8 @@ export default function ProductionSchedulePage() {
                         />
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span>已用: {cap.usedCapacity}</span>
-                        <span>可用: {cap.availableCapacity}</span>
+                        <span>{t('usedCapacity')}: {cap.usedCapacity}</span>
+                        <span>{t('availableCapacity')}: {cap.availableCapacity}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -1333,7 +1336,7 @@ export default function ProductionSchedulePage() {
             </div>
             <div className="flex justify-end">
               <Button variant="outline" onClick={() => setIsCapacityOpen(false)}>
-                关闭
+                {tc('close')}
               </Button>
             </div>
           </DialogContent>
@@ -1346,55 +1349,55 @@ export default function ProductionSchedulePage() {
               <>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
-                    排程详情: {selectedSchedule.schedule_no}
+                    {t('scheduleDetail')}: {selectedSchedule.schedule_no}
                     {getStatusBadge(selectedSchedule.status)}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-6 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">排程信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('scheduleInfo')}</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">排产单号:</span>
+                        <span className="text-muted-foreground">{t('scheduleNo')}:</span>
                         <span>{selectedSchedule.schedule_no}</span>
-                        <span className="text-muted-foreground">订单号:</span>
+                        <span className="text-muted-foreground">{t('orderNo')}:</span>
                         <span>{selectedSchedule.order_no || '-'}</span>
-                        <span className="text-muted-foreground">排产人:</span>
+                        <span className="text-muted-foreground">{t('scheduler')}:</span>
                         <span>{selectedSchedule.scheduler || '-'}</span>
-                        <span className="text-muted-foreground">优先级:</span>
+                        <span className="text-muted-foreground">{t('priorityLabel')}:</span>
                         <span>{getPriorityBadge(selectedSchedule.priority)}</span>
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">产品信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('productInfo')}</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">产品名称:</span>
+                        <span className="text-muted-foreground">{t('productName')}:</span>
                         <span>{selectedSchedule.product_name}</span>
-                        <span className="text-muted-foreground">产品编码:</span>
+                        <span className="text-muted-foreground">{t('productCode')}:</span>
                         <span>{selectedSchedule.product_code || '-'}</span>
-                        <span className="text-muted-foreground">车间:</span>
+                        <span className="text-muted-foreground">{t('workshopLabel')}:</span>
                         <span>{getWorkshopBadge(selectedSchedule.workshop)}</span>
-                        <span className="text-muted-foreground">计划数量:</span>
+                        <span className="text-muted-foreground">{t('plannedQuantity')}:</span>
                         <span>{Number(selectedSchedule.planned_qty).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">计划时间</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">{t('planTime')}</h4>
                     <div className="grid grid-cols-4 gap-2 text-sm">
-                      <span className="text-muted-foreground">计划开始:</span>
+                      <span className="text-muted-foreground">{t('plannedStart')}:</span>
                       <span>{formatDate(selectedSchedule.planned_start) || '-'}</span>
-                      <span className="text-muted-foreground">计划结束:</span>
+                      <span className="text-muted-foreground">{t('plannedEnd')}:</span>
                       <span>{formatDate(selectedSchedule.planned_end) || '-'}</span>
-                      <span className="text-muted-foreground">实际开始:</span>
+                      <span className="text-muted-foreground">{t('actualStart')}:</span>
                       <span>{formatDate(selectedSchedule.actual_start) || '-'}</span>
-                      <span className="text-muted-foreground">实际结束:</span>
+                      <span className="text-muted-foreground">{t('actualEnd')}:</span>
                       <span>{formatDate(selectedSchedule.actual_end) || '-'}</span>
                     </div>
                   </div>
                   {selectedSchedule.remark && (
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">备注</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('remarkLabel')}</h4>
                       <div className="text-sm p-3 bg-gray-50 rounded">
                         {selectedSchedule.remark}
                       </div>
@@ -1402,7 +1405,7 @@ export default function ProductionSchedulePage() {
                   )}
                   <div className="flex justify-end gap-2 pt-4 border-t">
                     <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
-                      关闭
+                      {tc('close')}
                     </Button>
                     {selectedSchedule.status === 1 && (
                       <Button
@@ -1412,7 +1415,7 @@ export default function ProductionSchedulePage() {
                         }}
                       >
                         <CalendarIcon className="h-4 w-4 mr-2" />
-                        确认排产
+                        {t('confirmSchedule')}
                       </Button>
                     )}
                     {selectedSchedule.status === 2 && (
@@ -1423,7 +1426,7 @@ export default function ProductionSchedulePage() {
                         }}
                       >
                         <Play className="h-4 w-4 mr-2" />
-                        开始生产
+                        {t('startProduction')}
                       </Button>
                     )}
                     {selectedSchedule.status === 3 && (
@@ -1434,7 +1437,7 @@ export default function ProductionSchedulePage() {
                         }}
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
-                        完成排程
+                        {t('completeSchedule')}
                       </Button>
                     )}
                   </div>
@@ -1452,20 +1455,20 @@ export default function ProductionSchedulePage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Edit className="h-5 w-5" />
-                    编辑排程: {selectedSchedule.schedule_no}
+                    {t('editSchedule')}: {selectedSchedule.schedule_no}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>产品名称</Label>
+                      <Label>{t('productName')}</Label>
                       <Input
                         value={editForm.product_name}
                         onChange={(e) => setEditForm({ ...editForm, product_name: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>车间</Label>
+                      <Label>{t('workshopLabel')}</Label>
                       <Select
                         value={editForm.workshop}
                         onValueChange={(v) => setEditForm({ ...editForm, workshop: v })}
@@ -1474,17 +1477,17 @@ export default function ProductionSchedulePage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="die_cut">模切车间</SelectItem>
-                          <SelectItem value="trademark">商标车间</SelectItem>
-                          <SelectItem value="printing">印刷车间</SelectItem>
-                          <SelectItem value="packaging">包装车间</SelectItem>
+                          <SelectItem value="die_cut">{t('workshopDieCut')}</SelectItem>
+                          <SelectItem value="trademark">{t('workshopTrademark')}</SelectItem>
+                          <SelectItem value="printing">{t('workshopPrinting')}</SelectItem>
+                          <SelectItem value="packaging">{t('workshopPackaging')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>计划数量</Label>
+                      <Label>{t('plannedQuantity')}</Label>
                       <Input
                         type="number"
                         value={editForm.planned_qty}
@@ -1494,7 +1497,7 @@ export default function ProductionSchedulePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>优先级</Label>
+                      <Label>{t('priorityLabel')}</Label>
                       <Select
                         value={String(editForm.priority)}
                         onValueChange={(v) => setEditForm({ ...editForm, priority: parseInt(v) })}
@@ -1503,16 +1506,16 @@ export default function ProductionSchedulePage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">紧急</SelectItem>
-                          <SelectItem value="2">正常</SelectItem>
-                          <SelectItem value="3">低</SelectItem>
+                          <SelectItem value="1">{t('urgent')}</SelectItem>
+                          <SelectItem value="2">{t('normal')}</SelectItem>
+                          <SelectItem value="3">{t('low')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>计划开始</Label>
+                      <Label>{t('plannedStart')}</Label>
                       <Input
                         type="datetime-local"
                         value={editForm.planned_start}
@@ -1522,7 +1525,7 @@ export default function ProductionSchedulePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>计划结束</Label>
+                      <Label>{t('plannedEnd')}</Label>
                       <Input
                         type="datetime-local"
                         value={editForm.planned_end}
@@ -1531,14 +1534,14 @@ export default function ProductionSchedulePage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>排产人</Label>
+                    <Label>{t('scheduler')}</Label>
                     <Input
                       value={editForm.scheduler}
                       onChange={(e) => setEditForm({ ...editForm, scheduler: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>备注</Label>
+                    <Label>{t('remarkLabel')}</Label>
                     <Input
                       value={editForm.remark}
                       onChange={(e) => setEditForm({ ...editForm, remark: e.target.value })}
@@ -1547,10 +1550,10 @@ export default function ProductionSchedulePage() {
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-                    取消
+                    {tc('cancel')}
                   </Button>
                   <Button onClick={handleSaveEdit} disabled={loading}>
-                    {loading ? '保存中...' : '保存'}
+                    {loading ? t('saving') : tc('save')}
                   </Button>
                 </div>
               </>

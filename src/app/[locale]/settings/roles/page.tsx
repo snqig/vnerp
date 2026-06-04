@@ -47,6 +47,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getPermissionModules, Permission } from '@/hooks/usePermission';
+import { useTranslations } from 'next-intl';
 
 // 角色接口
 interface Role {
@@ -83,6 +84,10 @@ const dataScopeOptions = [
 const permissionModules = getPermissionModules();
 
 export default function RolesPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [roles, setRoles] = useState<Role[]>([]);
   const [menus, setMenus] = useState<Menu[]>([]);

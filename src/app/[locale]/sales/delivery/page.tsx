@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -141,10 +142,22 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
 };
 
 // 发货状态映射（符合设计文档 4.1 节：6种状态）
-const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: '草稿', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+const SIGN_STATUS_MAP: Record<number, { label: string; color: string }> = {
+  0: { label: '未签收', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  1: { label: '部分签收', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
+  2: { label: '全部签收', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  3: { label: '拒收', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+};
+
+export default function DeliveryPage() {
+  // 翻译钩子
+  const t = useTranslations('Sales');
+  const tc = useTranslations('Common');
+
+  const STATUS_MAP: Record<number, { label: string; color: string }> = {
+  1: { label: tc('draft'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
   2: {
-    label: '待审批',
+    label: tc('pending'),
     color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
   },
   3: { label: '待发货', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
@@ -159,14 +172,6 @@ const STATUS_MAP: Record<number, { label: string; color: string }> = {
   6: { label: '已取消', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
 };
 
-const SIGN_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: '未签收', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-  1: { label: '部分签收', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
-  2: { label: '全部签收', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
-  3: { label: '拒收', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
-};
-
-export default function DeliveryPage() {
   const [list, setList] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
@@ -572,7 +577,7 @@ export default function DeliveryPage() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="状态" />
+                  <SelectValue placeholder=tc("status") />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
@@ -651,12 +656,12 @@ export default function DeliveryPage() {
                       <TableCell>¥{parseFloat(String(d.total_amount || 0)).toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge className={SIGN_STATUS_MAP[d.sign_status ?? 0]?.color || 'bg-gray-100'}>
-                          {SIGN_STATUS_MAP[d.sign_status ?? 0]?.label || '未知'}
+                          {SIGN_STATUS_MAP[d.sign_status ?? 0]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={STATUS_MAP[d.status]?.color || 'bg-gray-100'}>
-                          {STATUS_MAP[d.status]?.label || '未知'}
+                          {STATUS_MAP[d.status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -809,7 +814,7 @@ export default function DeliveryPage() {
                 <Input
                   value={form.remark || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, remark: e.target.value }))}
-                  placeholder="备注"
+                  placeholder=tc("remark")
                 />
               </div>
             </div>

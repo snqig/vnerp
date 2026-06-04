@@ -32,6 +32,7 @@ import {
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { useTranslations } from 'next-intl';
 
 interface InkMixedRecord {
   id: number;
@@ -66,6 +67,10 @@ const statusMap: Record<
 };
 
 export default function InkMixedPage() {
+  // 翻译钩子
+  const t = useTranslations('Dcprint');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<InkMixedRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -112,10 +117,10 @@ export default function InkMixedPage() {
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '操作失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 

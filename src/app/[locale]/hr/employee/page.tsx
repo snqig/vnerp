@@ -60,6 +60,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -117,6 +118,10 @@ interface Role {
 }
 
 export default function EmployeePage() {
+  // 翻译钩子
+  const t = useTranslations('Hr');
+  const tc = useTranslations('Common');
+
   const { companyName } = useCompanyName();
   const { hasPermission } = usePermission();
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -338,7 +343,7 @@ export default function EmployeePage() {
         setDialogOpen(false);
         fetchEmployees();
       } else {
-        toast.error(result.message || '操作失败');
+        toast.error(result.message || tc('error'));
       }
     } catch (error) {
       console.error('保存员工失败:', error);
@@ -416,7 +421,7 @@ export default function EmployeePage() {
         <td>${emp.education || '-'}</td>
         <td>${emp.native_place || '-'}</td>
         <td>${emp.phone}</td>
-        <td>${statusLabels[emp.status] || '未知'}</td>
+        <td>${statusLabels[emp.status] || tc('unknown')}</td>
       </tr>`
       )
       .join('');
@@ -482,7 +487,7 @@ export default function EmployeePage() {
       '入职日期',
       '籍贯',
       '联系方式',
-      '状态',
+      tc('status'),
     ];
     const rows = dataToExport.map((emp) => [
       emp.employee_no,
@@ -1011,7 +1016,7 @@ export default function EmployeePage() {
       2: '试用期',
       3: '离职',
     };
-    return <Badge className={styles[status] || styles[1]}>{labels[status] || '未知'}</Badge>;
+    return <Badge className={styles[status] || styles[1]}>{labels[status] || tc('unknown')}</Badge>;
   };
 
   return (

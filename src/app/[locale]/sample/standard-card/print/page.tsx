@@ -6,6 +6,7 @@ import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Printer } from 'lucide-react';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { useTranslations } from 'next-intl';
 
 interface PrintSequence {
   id: number;
@@ -953,6 +954,10 @@ function Loading() {
 }
 
 export default function PrintPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   return (
     <Suspense fallback={<Loading />}>
       <PrintPageContent />

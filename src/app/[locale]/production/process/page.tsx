@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -83,34 +84,30 @@ interface ProcessCard {
   mold_code?: string;
 }
 
-const STATUS_MAP: Record<number, { label: string; className: string }> = {
-  0: {
-    label: '待排产',
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  },
-  1: {
-    label: '已排产',
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  },
-  2: {
-    label: '生产中',
-    className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-  },
-  3: {
-    label: '已完成',
-    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  },
-};
-
-const getStatusBadge = (status: number) => {
-  const config = STATUS_MAP[status] || {
-    label: '未知',
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  };
-  return <Badge className={config.className}>{config.label}</Badge>;
+const STATUS_CLASSES: Record<number, string> = {
+  0: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+  1: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  2: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  3: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
 };
 
 export default function ProductionProcessPage() {
+  // 翻译钩子
+  const t = useTranslations('Production');
+  const tc = useTranslations('Common');
+
+  const getStatusBadge = (status: number) => {
+    const statusLabels: Record<number, string> = {
+      0: t('pendingSchedule'),
+      1: t('statusScheduled'),
+      2: t('statusProducing'),
+      3: t('statusCompleted'),
+    };
+    const label = statusLabels[status] || tc('unknown');
+    const className = STATUS_CLASSES[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200';
+    return <Badge className={className}>{label}</Badge>;
+  };
+
   const { toast } = useToast();
   const [processes, setProcesses] = useState<ProcessCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,13 +153,13 @@ export default function ProductionProcessPage() {
         setProcesses(processList);
       } else {
         toast({
-          title: '错误',
-          description: data.message || '获取流程列表失败',
+          title: t('error'),
+          description: data.message || t('fetchProcessListFailed'),
           variant: 'destructive',
         });
       }
     } catch (error) {
-      toast({ title: '错误', description: '获取流程列表失败', variant: 'destructive' });
+      toast({ title: t('error'), description: t('fetchProcessListFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -220,16 +217,17 @@ export default function ProductionProcessPage() {
       });
       const data = await res.json();
       if (data.success) {
+        const statusLabels: Record<number, string> = {0: t('pendingSchedule'), 1: t('statusScheduled'), 2: t('statusProducing'), 3: t('statusCompleted')};
         toast({
-          title: '成功',
-          description: `状态已更新为${STATUS_MAP[newStatus]?.label || newStatus}`,
+          title: t('success'),
+          description: t('statusUpdated', { status: statusLabels[newStatus] || newStatus }),
         });
         fetchProcesses();
       } else {
-        toast({ title: '错误', description: data.message || '更新失败', variant: 'destructive' });
+        toast({ title: t('error'), description: data.message || tc('updateFailed'), variant: 'destructive' });
       }
     } catch (error) {
-      toast({ title: '错误', description: '更新失败', variant: 'destructive' });
+      toast({ title: t('error'), description: tc('updateFailed'), variant: 'destructive' });
     }
   };
 
@@ -241,12 +239,12 @@ export default function ProductionProcessPage() {
   };
 
   return (
-    <MainLayout title="生产流程">
+    <MainLayout title={t('processManagement')}>
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">已排产</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('statusScheduled')}</CardTitle>
               <Calendar className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
@@ -256,7 +254,7 @@ export default function ProductionProcessPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">生产中</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('statusProducing')}</CardTitle>
               <Factory className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
@@ -266,7 +264,7 @@ export default function ProductionProcessPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">已完成</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('statusCompleted')}</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -276,7 +274,7 @@ export default function ProductionProcessPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">计划总产量</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('totalPlanQty')}</CardTitle>
               <Package className="h-4 w-4 text-indigo-600" />
             </CardHeader>
             <CardContent>
@@ -291,7 +289,7 @@ export default function ProductionProcessPage() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="搜索流程卡号..."
+                  placeholder={t('searchCardNo')}
                   className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -299,7 +297,7 @@ export default function ProductionProcessPage() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => fetchProcesses()}>
-                  刷新
+                  {tc('refresh')}
                 </Button>
               </div>
             </div>
@@ -308,10 +306,10 @@ export default function ProductionProcessPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="all">全部 ({processes.length})</TabsTrigger>
-            <TabsTrigger value="scheduled">已排产 ({stats.scheduled})</TabsTrigger>
-            <TabsTrigger value="producing">生产中 ({stats.producing})</TabsTrigger>
-            <TabsTrigger value="completed">已完成 ({stats.completed})</TabsTrigger>
+            <TabsTrigger value="all">{tc('all')} ({processes.length})</TabsTrigger>
+            <TabsTrigger value="scheduled">{t('statusScheduled')} ({stats.scheduled})</TabsTrigger>
+            <TabsTrigger value="producing">{t('statusProducing')} ({stats.producing})</TabsTrigger>
+            <TabsTrigger value="completed">{t('statusCompleted')} ({stats.completed})</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-4">
@@ -319,24 +317,24 @@ export default function ProductionProcessPage() {
               <CardContent className="p-0">
                 {loading ? (
                   <div className="flex items-center justify-center py-12 text-muted-foreground">
-                    加载中...
+                    {tc('loading')}
                   </div>
                 ) : processes.length === 0 ? (
                   <div className="flex items-center justify-center py-12 text-muted-foreground">
-                    暂无流程数据
+                    {t('noProcessData')}
                   </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>流程卡号</TableHead>
-                        <TableHead>产品信息</TableHead>
-                        <TableHead>客户</TableHead>
-                        <TableHead>数量</TableHead>
-                        <TableHead>工艺流程</TableHead>
-                        <TableHead>进度</TableHead>
-                        <TableHead>状态</TableHead>
-                        <TableHead>操作</TableHead>
+                        <TableHead>{t('processCardNo')}</TableHead>
+                        <TableHead>{t('productInfo')}</TableHead>
+                        <TableHead>{t('customer')}</TableHead>
+                        <TableHead>{tc('quantity')}</TableHead>
+                        <TableHead>{t('processFlow')}</TableHead>
+                        <TableHead>{t('progress')}</TableHead>
+                        <TableHead>{tc('status')}</TableHead>
+                        <TableHead>{tc('actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -402,7 +400,7 @@ export default function ProductionProcessPage() {
                               {process.burdening_status === 1 && (
                                 <Button size="sm" onClick={() => handleStartProcess(process)}>
                                   <Play className="h-4 w-4 mr-1" />
-                                  开工
+                                  {t('startWork')}
                                 </Button>
                               )}
                               {process.burdening_status === 2 && (
@@ -412,7 +410,7 @@ export default function ProductionProcessPage() {
                                   onClick={() => handleStartProcess(process)}
                                 >
                                   <Clock className="h-4 w-4 mr-1" />
-                                  报工
+                                  {t('reportWork')}
                                 </Button>
                               )}
                               <DropdownMenu>
@@ -424,14 +422,14 @@ export default function ProductionProcessPage() {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => handleViewDetail(process)}>
                                     <Eye className="h-4 w-4 mr-2" />
-                                    查看详情
+                                    {tc('detail')}
                                   </DropdownMenuItem>
                                   {process.burdening_status === 2 && (
                                     <DropdownMenuItem
                                       onClick={() => handleStatusUpdate(process, 3)}
                                     >
                                       <CheckCircle className="h-4 w-4 mr-2" />
-                                      完成生产
+                                      {t('completeProduction')}
                                     </DropdownMenuItem>
                                   )}
                                   {process.burdening_status === 3 && (
@@ -439,7 +437,7 @@ export default function ProductionProcessPage() {
                                       onClick={() => handleStatusUpdate(process, 2)}
                                     >
                                       <RotateCcw className="h-4 w-4 mr-2" />
-                                      重新生产
+                                      {t('redoProduction')}
                                     </DropdownMenuItem>
                                   )}
                                 </DropdownMenuContent>
@@ -462,38 +460,38 @@ export default function ProductionProcessPage() {
               <>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
-                    生产流程详情: {selectedProcess.card_no}
+                    {t('processDetail')}: {selectedProcess.card_no}
                     {getStatusBadge(selectedProcess.burdening_status)}
                   </DialogTitle>
-                  <DialogDescription>查看生产流程详细信息</DialogDescription>
+                  <DialogDescription>{t('processDetailDesc')}</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">流程信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('processInfo')}</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">流程卡号:</span>
+                        <span className="text-muted-foreground">{t('processCardNo')}:</span>
                         <span>{selectedProcess.card_no}</span>
-                        <span className="text-muted-foreground">工单号:</span>
+                        <span className="text-muted-foreground">{t('workOrderNo')}:</span>
                         <span>{selectedProcess.work_order_no}</span>
-                        <span className="text-muted-foreground">主标编号:</span>
+                        <span className="text-muted-foreground">{t('mainLabelNo')}:</span>
                         <span>{selectedProcess.main_label_no || '-'}</span>
-                        <span className="text-muted-foreground">排产日期:</span>
+                        <span className="text-muted-foreground">{t('scheduleDate')}:</span>
                         <span>{selectedProcess.work_order_date}</span>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">产品信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('productInfo')}</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">产品名称:</span>
+                        <span className="text-muted-foreground">{t('productName')}:</span>
                         <span>{selectedProcess.product_name}</span>
-                        <span className="text-muted-foreground">物料规格:</span>
+                        <span className="text-muted-foreground">{t('materialSpec')}:</span>
                         <span>{selectedProcess.material_spec || '-'}</span>
-                        <span className="text-muted-foreground">印刷方式:</span>
+                        <span className="text-muted-foreground">{t('printType')}:</span>
                         <span>{selectedProcess.print_type || '-'}</span>
-                        <span className="text-muted-foreground">计划数量:</span>
+                        <span className="text-muted-foreground">{t('planQty')}:</span>
                         <span>{parseFloat(String(selectedProcess.plan_qty)).toLocaleString()}</span>
                       </div>
                     </div>
@@ -501,18 +499,18 @@ export default function ProductionProcessPage() {
 
                   {(selectedProcess.film_manufacturer || selectedProcess.mold_code) && (
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">工艺信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('processInfo2')}</h4>
                       <div className="grid grid-cols-3 gap-2 text-sm">
                         <div>
-                          <span className="text-muted-foreground">底纸厂商:</span>
+                          <span className="text-muted-foreground">{t('filmManufacturer')}:</span>
                           <span className="ml-2">{selectedProcess.film_manufacturer || '-'}</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">底纸编号:</span>
+                          <span className="text-muted-foreground">{t('filmCode')}:</span>
                           <span className="ml-2">{selectedProcess.film_code || '-'}</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">模具编号:</span>
+                          <span className="text-muted-foreground">{t('moldCode')}:</span>
                           <span className="ml-2">{selectedProcess.mold_code || '-'}</span>
                         </div>
                       </div>
@@ -520,7 +518,7 @@ export default function ProductionProcessPage() {
                   )}
 
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">工艺流程</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">{t('processFlow')}</h4>
                     <div className="flex items-center gap-2 flex-wrap">
                       {getProcessFlow(selectedProcess).map((step, index, arr) => (
                         <div key={index} className="flex items-center">
@@ -546,7 +544,7 @@ export default function ProductionProcessPage() {
 
                   <div className="flex justify-end gap-2 pt-4 border-t">
                     <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
-                      关闭
+                      {tc('close')}
                     </Button>
                     {selectedProcess.burdening_status === 1 && (
                       <Button
@@ -556,7 +554,7 @@ export default function ProductionProcessPage() {
                         }}
                       >
                         <Play className="h-4 w-4 mr-2" />
-                        开始生产
+                        {t('startProduction')}
                       </Button>
                     )}
                     {selectedProcess.burdening_status === 2 && (
@@ -567,7 +565,7 @@ export default function ProductionProcessPage() {
                         }}
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
-                        完成生产
+                        {t('completeProduction')}
                       </Button>
                     )}
                   </div>
@@ -584,30 +582,30 @@ export default function ProductionProcessPage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Factory className="h-5 w-5" />
-                    工序报工: {selectedProcess.card_no}
+                    {t('processReport')}: {selectedProcess.card_no}
                   </DialogTitle>
-                  <DialogDescription>记录生产工序完成情况</DialogDescription>
+                  <DialogDescription>{t('processReportDesc')}</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">产品:</span>
+                        <span className="text-muted-foreground">{t('product')}:</span>
                         <span className="ml-2 font-medium">{selectedProcess.product_name}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">客户:</span>
+                        <span className="text-muted-foreground">{t('customer')}:</span>
                         <span className="ml-2">{selectedProcess.customer_name || '-'}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">计划数量:</span>
+                        <span className="text-muted-foreground">{t('planQty')}:</span>
                         <span className="ml-2">
                           {parseFloat(String(selectedProcess.plan_qty)).toLocaleString()}
                         </span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">当前状态:</span>
+                        <span className="text-muted-foreground">{t('currentStatus')}:</span>
                         <span className="ml-2">
                           {getStatusBadge(selectedProcess.burdening_status)}
                         </span>
@@ -616,13 +614,13 @@ export default function ProductionProcessPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <Label>当前工序</Label>
+                    <Label>{t('currentProcess')}</Label>
                     <Select
                       value={String(currentStep)}
                       onValueChange={(v) => setCurrentStep(parseInt(v))}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="选择当前工序" />
+                        <SelectValue placeholder={t('selectCurrentProcess')} />
                       </SelectTrigger>
                       <SelectContent>
                         {getProcessFlow(selectedProcess).map((step, index) => (
@@ -635,7 +633,7 @@ export default function ProductionProcessPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <Label>工序进度</Label>
+                    <Label>{t('processProgress')}</Label>
                     <div className="flex items-center gap-2 flex-wrap">
                       {getProcessFlow(selectedProcess).map((step, index, arr) => (
                         <div key={index} className="flex items-center">
@@ -660,9 +658,9 @@ export default function ProductionProcessPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <Label>报工备注</Label>
+                    <Label>{t('reportRemark')}</Label>
                     <Textarea
-                      placeholder="输入报工备注信息..."
+                      placeholder={t('reportRemarkPlaceholder')}
                       value={processRemark}
                       onChange={(e) => setProcessRemark(e.target.value)}
                       rows={3}
@@ -671,11 +669,11 @@ export default function ProductionProcessPage() {
 
                   <div className="flex justify-end gap-2 pt-4 border-t">
                     <Button variant="outline" onClick={() => setIsProcessOpen(false)}>
-                      取消
+                      {tc('cancel')}
                     </Button>
                     <Button onClick={handleReportWork}>
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      确认报工
+                      {t('confirmReport')}
                     </Button>
                   </div>
                 </div>

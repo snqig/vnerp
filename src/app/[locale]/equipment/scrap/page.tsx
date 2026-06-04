@@ -23,6 +23,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface Item {
   id: number;
@@ -36,16 +37,20 @@ interface Item {
   approval_person: string;
   status: number;
 }
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '待审批', variant: 'outline' },
-  2: { label: '已审批', variant: 'default' },
-  3: { label: '已报废', variant: 'destructive' },
-};
-
 export default function EquipmentScrapPage() {
+  // 翻译钩子
+  const t = useTranslations('Equipment');
+  const tc = useTranslations('Common');
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: tc('pending'), variant: 'outline' },
+    2: { label: tc('approved'), variant: 'default' },
+    3: { label: '已报废', variant: 'destructive' },
+  };
+
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);

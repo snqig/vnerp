@@ -58,6 +58,7 @@ import {
   Send,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 // 标准卡列表项接口（符合设计文档 5.1 节 standard_cards 表结构）
 interface StandardCardListItem {
@@ -135,48 +136,54 @@ interface ApprovalStatus {
   }>;
 }
 
-// 状态映射（符合设计文档 5.1 节：草稿、待审核、已生效、已失效）
-const statusMap: Record<number, { label: string; color: string }> = {
-  1: {
-    label: '草稿',
-    color:
-      'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
-  },
-  2: {
-    label: '待审核',
-    color:
-      'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
-  },
-  3: {
-    label: '已生效',
-    color:
-      'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
-  },
-  4: {
-    label: '已失效',
-    color:
-      'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
-  },
-};
 
-// 印刷类型选项
-const printTypes = ['全部', '胶印', '卷料丝印', '片料丝印', '轮转印'];
-
-// 加工方式选项
-const processMethods = ['全部', '模切', '冲压'];
-
-// 材料类型选项
-const materialTypes = ['全部', '硬胶', '软胶'];
 
 export default function StandardCardPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
+  // 状态映射（符合设计文档 5.1 节：草稿、待审核、已生效、已失效）
+  const statusMap: Record<number, { label: string; color: string }> = {
+    1: {
+      label: tc('draft'),
+      color:
+        'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
+    },
+    2: {
+      label: tc('pending'),
+      color:
+        'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
+    },
+    3: {
+      label: '已生效',
+      color:
+        'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
+    },
+    4: {
+      label: '已失效',
+      color:
+        'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
+    },
+  };
+
+  // 印刷类型选项
+  const printTypes = [tc('all'), '胶印', '卷料丝印', '片料丝印', '轮转印'];
+
+  // 加工方式选项
+  const processMethods = [tc('all'), '模切', '冲压'];
+
+  // 材料类型选项
+  const materialTypes = [tc('all'), '硬胶', '软胶'];
+
   const router = useRouter();
   const [cards, setCards] = useState<StandardCardListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [printTypeFilter, setPrintTypeFilter] = useState<string>('全部');
-  const [processMethodFilter, setProcessMethodFilter] = useState<string>('全部');
-  const [materialTypeFilter, setMaterialTypeFilter] = useState<string>('全部');
+  const [printTypeFilter, setPrintTypeFilter] = useState<string>(tc('all'));
+  const [processMethodFilter, setProcessMethodFilter] = useState<string>(tc('all'));
+  const [materialTypeFilter, setMaterialTypeFilter] = useState<string>(tc('all'));
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [cardToDelete, setCardToDelete] = useState<StandardCardListItem | null>(null);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
@@ -247,9 +254,9 @@ export default function StandardCardPage() {
 
   // 客户端筛选
   const filteredCards = cards.filter((card) => {
-    if (printTypeFilter !== '全部' && card.print_type !== printTypeFilter) return false;
-    if (processMethodFilter !== '全部' && card.process_method !== processMethodFilter) return false;
-    if (materialTypeFilter !== '全部' && card.material_type !== materialTypeFilter) return false;
+    if (printTypeFilter !== tc('all') && card.print_type !== printTypeFilter) return false;
+    if (processMethodFilter !== tc('all') && card.process_method !== processMethodFilter) return false;
+    if (materialTypeFilter !== tc('all') && card.material_type !== materialTypeFilter) return false;
     return true;
   });
 
@@ -569,7 +576,7 @@ export default function StandardCardPage() {
                 {/* 状态筛选 */}
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="状态" />
+                    <SelectValue placeholder=tc("status") />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部状态</SelectItem>
@@ -754,7 +761,7 @@ export default function StandardCardPage() {
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => handleView(card)}
-                              title="查看"
+                              title=tc("view")
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -763,7 +770,7 @@ export default function StandardCardPage() {
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => handlePrint(card)}
-                              title="打印"
+                              title=tc("print")
                             >
                               <Printer className="h-4 w-4" />
                             </Button>

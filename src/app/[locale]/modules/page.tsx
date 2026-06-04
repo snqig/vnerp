@@ -1,6 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layout';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -180,6 +181,10 @@ const terminalScenarios = [
 ];
 
 export default function ModulesPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const { companyName } = useCompanyName();
   return (
     <MainLayout title="系统模块">

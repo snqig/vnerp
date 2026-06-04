@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -134,6 +135,10 @@ interface WorkReportForm {
 }
 
 export default function ProductionReportPage() {
+  // 翻译钩子
+  const t = useTranslations('Production');
+  const tc = useTranslations('Common');
+
   const [list, setList] = useState<WorkReport[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -190,7 +195,7 @@ export default function ProductionReportPage() {
       }
     } catch (e) {
       console.error(e);
-      toast.error('获取报工记录失败');
+      toast.error(t('fetchReportFailed'));
     } finally {
       setLoading(false);
     }
@@ -248,11 +253,11 @@ export default function ProductionReportPage() {
 
   const handleSave = async () => {
     if (!form.work_order_id) {
-      toast.error('请选择工单');
+      toast.error(t('selectWorkOrderFirst'));
       return;
     }
     if (!form.process_name) {
-      toast.error('请填写工序名称');
+      toast.error(t('fillProcessName'));
       return;
     }
     try {
@@ -262,7 +267,7 @@ export default function ProductionReportPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast.success('报工成功');
+        toast.success(t('reportSuccess'));
         setDialogOpen(false);
         setForm({
           report_date: new Date().toISOString().split('T')[0],
@@ -275,11 +280,11 @@ export default function ProductionReportPage() {
         });
         fetchData();
       } else {
-        toast.error(result.message || '报工失败');
+        toast.error(result.message || t('reportFailed'));
       }
     } catch (e) {
       console.error(e);
-      toast.error('报工失败');
+      toast.error(t('reportFailed'));
     }
   };
 
@@ -331,18 +336,18 @@ export default function ProductionReportPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除该报工记录？')) return;
+    if (!confirm(t('confirmDeleteReport'))) return;
     try {
       const res = await authFetch(`/api/production/work-report?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast.success('删除成功');
+        toast.success(tc('deleteSuccess'));
         fetchData();
       } else {
-        toast.error(result.message || '删除失败');
+        toast.error(result.message || tc('deleteFailed'));
       }
     } catch (e) {
-      toast.error('删除失败');
+      toast.error(tc('deleteFailed'));
     }
   };
 
@@ -352,7 +357,7 @@ export default function ProductionReportPage() {
   };
 
   return (
-    <MainLayout title="生产报工">
+    <MainLayout title={t('workReport')}>
       <div className="space-y-6">
         <Card className="border-border bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20">
           <CardContent className="p-6">
@@ -362,34 +367,34 @@ export default function ProductionReportPage() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-lg">上工三扫码</h3>
+                  <h3 className="font-bold text-lg">{t('scanToStart')}</h3>
                   {isWorking && workStartTime && (
                     <Badge variant="secondary" className="text-green-700 dark:text-green-400">
                       <Clock className="h-3 w-3 mr-1" />
-                      工作中 - {workStartTime.toLocaleTimeString()}
+                      {t('workingLabel')} - {workStartTime.toLocaleTimeString()}
                     </Badge>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
-                  按顺序扫描工牌、机台码、工单码完成上工登记
+                  {t('scanInstructions')}
                 </p>
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   {[
                     {
                       key: 'employee',
-                      label: '1. 扫工牌',
+                      label: t('scanEmployeeCard'),
                       icon: User,
                       value: scannedCodes.employee,
                     },
                     {
                       key: 'equipment',
-                      label: '2. 扫机台码',
+                      label: t('scanEquipmentCode'),
                       icon: Factory,
                       value: scannedCodes.equipment,
                     },
                     {
                       key: 'workorder',
-                      label: '3. 扫工单码',
+                      label: t('scanWorkOrderCode'),
                       icon: QrCode,
                       value: scannedCodes.workorder,
                     },
@@ -414,7 +419,7 @@ export default function ProductionReportPage() {
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-sm">{step.label}</div>
                         <div className="text-xs text-muted-foreground truncate">
-                          {step.value || '待扫描'}
+                          {step.value || t('pendingScan')}
                         </div>
                       </div>
                       {step.value && (
@@ -433,17 +438,17 @@ export default function ProductionReportPage() {
                       className="bg-blue-600 hover:bg-blue-700"
                     >
                       <Scan className="h-4 w-4 mr-2" />
-                      开始上工扫码
+                      {t('startScan')}
                     </Button>
                   ) : (
                     <>
                       <Button variant="outline" onClick={handleReset}>
                         <RotateCcw className="h-4 w-4 mr-2" />
-                        重新扫码
+                        {t('reScan')}
                       </Button>
                       <Button variant="destructive" onClick={handleFinishWork}>
                         <LogOut className="h-4 w-4 mr-2" />
-                        下工报工
+                        {t('finishWorkReport')}
                       </Button>
                     </>
                   )}
@@ -456,7 +461,7 @@ export default function ProductionReportPage() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">总完成量</div>
+              <div className="text-sm text-muted-foreground">{t('totalCompleted')}</div>
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {Number(summaryStats.total_completed || 0).toLocaleString()}
               </div>
@@ -464,7 +469,7 @@ export default function ProductionReportPage() {
           </Card>
           <Card>
             <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">合格量</div>
+              <div className="text-sm text-muted-foreground">{t('qualifiedQty')}</div>
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {Number(summaryStats.total_qualified || 0).toLocaleString()}
               </div>
@@ -472,7 +477,7 @@ export default function ProductionReportPage() {
           </Card>
           <Card>
             <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">不良品</div>
+              <div className="text-sm text-muted-foreground">{t('defectiveQty')}</div>
               <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {Number(summaryStats.total_defective || 0).toLocaleString()}
               </div>
@@ -480,7 +485,7 @@ export default function ProductionReportPage() {
           </Card>
           <Card>
             <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">报废量</div>
+              <div className="text-sm text-muted-foreground">{t('scrapQty')}</div>
               <div className="text-2xl font-bold text-red-600 dark:text-red-400">
                 {Number(summaryStats.total_scrap || 0).toLocaleString()}
               </div>
@@ -491,14 +496,14 @@ export default function ProductionReportPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>报工记录</CardTitle>
-              <CardDescription>生产报工数据，效率低于80%自动预警</CardDescription>
+              <CardTitle>{t('reportRecords')}</CardTitle>
+              <CardDescription>{t('reportRecordsDesc')}</CardDescription>
             </div>
             <div className="flex gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="搜索工单/报工号/操作员"
+                  placeholder={t('searchReportPlaceholder')}
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   className="pl-9 w-56"
@@ -514,7 +519,7 @@ export default function ProductionReportPage() {
                 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                手工报工
+                {t('manualReport')}
               </Button>
             </div>
           </CardHeader>
@@ -527,18 +532,18 @@ export default function ProductionReportPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>报工单号</TableHead>
-                    <TableHead>工单号</TableHead>
-                    <TableHead>工序</TableHead>
-                    <TableHead>操作员</TableHead>
-                    <TableHead>设备</TableHead>
-                    <TableHead className="text-right">计划量</TableHead>
-                    <TableHead className="text-right">完成量</TableHead>
-                    <TableHead className="text-right">合格量</TableHead>
-                    <TableHead className="text-right">报废量</TableHead>
-                    <TableHead className="text-right">效率</TableHead>
-                    <TableHead>工时</TableHead>
-                    <TableHead className="text-right">操作</TableHead>
+                    <TableHead>{t('reportNo')}</TableHead>
+                    <TableHead>{t('workOrderNo')}</TableHead>
+                    <TableHead>{t('processName')}</TableHead>
+                    <TableHead>{t('operator')}</TableHead>
+                    <TableHead>{t('equipment')}</TableHead>
+                    <TableHead className="text-right">{t('planQty')}</TableHead>
+                    <TableHead className="text-right">{t('completedQty')}</TableHead>
+                    <TableHead className="text-right">{t('qualifiedQty')}</TableHead>
+                    <TableHead className="text-right">{t('scrapQty')}</TableHead>
+                    <TableHead className="text-right">{t('efficiency')}</TableHead>
+                    <TableHead>{t('workHours')}</TableHead>
+                    <TableHead className="text-right">{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -591,7 +596,7 @@ export default function ProductionReportPage() {
                   {list.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
-                        暂无报工记录
+                        {t('noReportRecords')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -599,7 +604,7 @@ export default function ProductionReportPage() {
               </Table>
             )}
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">共 {total} 条</span>
+              <span className="text-sm text-muted-foreground">{tc('total', { count: total })}</span>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -607,7 +612,7 @@ export default function ProductionReportPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  上一页
+                  {tc('prevPage')}
                 </Button>
                 <Button
                   size="sm"
@@ -615,7 +620,7 @@ export default function ProductionReportPage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  下一页
+                  {tc('nextPage')}
                 </Button>
               </div>
             </div>
@@ -627,12 +632,12 @@ export default function ProductionReportPage() {
             <DialogHeader>
               <DialogTitle>
                 {scanStep === 'employee'
-                  ? '扫工牌'
+                  ? t('scanEmployeeCard')
                   : scanStep === 'equipment'
-                    ? '扫机台码'
-                    : '扫工单码'}
+                    ? t('scanEquipmentCode')
+                    : t('scanWorkOrderCode')}
               </DialogTitle>
-              <DialogDescription>使用PDA扫描或手动输入编码，按回车确认</DialogDescription>
+              <DialogDescription>{t('scanDialogDesc')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="flex gap-2 mb-4">
@@ -649,14 +654,14 @@ export default function ProductionReportPage() {
               <div className="space-y-2">
                 <Label>
                   {scanStep === 'employee'
-                    ? '工牌编码'
+                    ? t('employeeCode')
                     : scanStep === 'equipment'
-                      ? '机台编码'
-                      : '工单编码'}
+                      ? t('equipmentCode')
+                      : t('workOrderCode')}
                 </Label>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="扫描或输入编码..."
+                    placeholder={t('scanInputPlaceholder')}
                     value={inputCode}
                     onChange={(e) => setInputCode(e.target.value)}
                     onKeyDown={(e) => {
@@ -675,7 +680,7 @@ export default function ProductionReportPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-muted-foreground">快速选择</Label>
+                <Label className="text-muted-foreground">{t('quickSelect')}</Label>
                 <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                   {scanStep === 'employee' &&
                     ['张三', '李四', '王五', '赵六'].map((name) => (
@@ -721,7 +726,7 @@ export default function ProductionReportPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsScanOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -730,14 +735,14 @@ export default function ProductionReportPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>手工报工</DialogTitle>
-              <DialogDescription>填写报工信息提交</DialogDescription>
+              <DialogTitle>{t('manualReport')}</DialogTitle>
+              <DialogDescription>{t('manualReportDesc')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>
-                    工单 <span className="text-red-500">*</span>
+                    {t('workOrderLabel')} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={String(form.work_order_id || '')}
@@ -752,7 +757,7 @@ export default function ProductionReportPage() {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择工单" />
+                      <SelectValue placeholder={t('selectWorkOrder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {workOrders.map((wo) => (
@@ -765,29 +770,29 @@ export default function ProductionReportPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>
-                    工序 <span className="text-red-500">*</span>
+                    {t('processName')} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={form.process_name || ''}
                     onValueChange={(v) => setForm({ ...form, process_name: v })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择工序" />
+                      <SelectValue placeholder={t('selectProcess')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="印刷">印刷</SelectItem>
-                      <SelectItem value="覆膜">覆膜</SelectItem>
-                      <SelectItem value="模切">模切</SelectItem>
-                      <SelectItem value="分切">分切</SelectItem>
-                      <SelectItem value="检验">检验</SelectItem>
-                      <SelectItem value="包装">包装</SelectItem>
+                      <SelectItem value="印刷">{t('processPrinting')}</SelectItem>
+                      <SelectItem value="覆膜">{t('processLaminating')}</SelectItem>
+                      <SelectItem value="模切">{t('processDieCut')}</SelectItem>
+                      <SelectItem value="分切">{t('processSlitting')}</SelectItem>
+                      <SelectItem value="检验">{t('processInspection')}</SelectItem>
+                      <SelectItem value="包装">{t('processPackaging')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>设备</Label>
+                  <Label>{t('equipment')}</Label>
                   <Select
                     value={String(form.equipment_id || '')}
                     onValueChange={(v) => {
@@ -800,7 +805,7 @@ export default function ProductionReportPage() {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择设备" />
+                      <SelectValue placeholder={t('selectEquipment')} />
                     </SelectTrigger>
                     <SelectContent>
                       {equipmentList.map((eq) => (
@@ -812,26 +817,26 @@ export default function ProductionReportPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>操作员</Label>
+                  <Label>{t('operator')}</Label>
                   <Input
                     value={form.operator_name || ''}
                     onChange={(e) => setForm({ ...form, operator_name: e.target.value })}
-                    placeholder="操作员姓名"
+                    placeholder={t('operatorName')}
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>关联刀模/网版</Label>
-                <Select
-                  value={String(form.die_template_id || '')}
-                  onValueChange={(v) => {
-                    const die = dieTemplateList.find((d) => d.id === Number(v));
-                    setForm({ ...form, die_template_id: Number(v) });
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择刀模/网版(可选)" />
-                  </SelectTrigger>
+                <div className="space-y-2">
+                  <Label>{t('dieScreenLabel')}</Label>
+                  <Select
+                    value={String(form.die_template_id || '')}
+                    onValueChange={(v) => {
+                      const die = dieTemplateList.find((d) => d.id === Number(v));
+                      setForm({ ...form, die_template_id: Number(v) });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('selectDieScreen')} />
+                    </SelectTrigger>
                   <SelectContent>
                     {dieTemplateList.map((die) => {
                       const usagePct =
@@ -857,7 +862,7 @@ export default function ProductionReportPage() {
                         : 0;
                     return (
                       <div className="text-xs text-gray-500 flex items-center gap-2">
-                        <span>使用率: {usagePct}%</span>
+                        <span>{t('usageRate')}: {usagePct}%</span>
                         <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                           <div
                             className={`h-full ${usagePct >= 80 ? 'bg-red-500' : usagePct >= 60 ? 'bg-yellow-500' : 'bg-green-500'}`}
@@ -873,7 +878,7 @@ export default function ProductionReportPage() {
               </div>
               <div className="grid grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label>计划量</Label>
+                  <Label>{t('planQty')}</Label>
                   <Input
                     type="number"
                     value={form.plan_qty || ''}
@@ -883,7 +888,7 @@ export default function ProductionReportPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>完成量</Label>
+                  <Label>{t('completedQty')}</Label>
                   <Input
                     type="number"
                     value={form.completed_qty || ''}
@@ -893,7 +898,7 @@ export default function ProductionReportPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>合格量</Label>
+                  <Label>{t('qualifiedQty')}</Label>
                   <Input
                     type="number"
                     value={form.qualified_qty || ''}
@@ -903,7 +908,7 @@ export default function ProductionReportPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>报废量</Label>
+                  <Label>{t('scrapQty')}</Label>
                   <Input
                     type="number"
                     value={form.scrap_qty || ''}
@@ -915,7 +920,7 @@ export default function ProductionReportPage() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>开始时间</Label>
+                  <Label>{t('startTime')}</Label>
                   <Input
                     type="datetime-local"
                     value={form.start_time || ''}
@@ -923,7 +928,7 @@ export default function ProductionReportPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>结束时间</Label>
+                  <Label>{t('endTime')}</Label>
                   <Input
                     type="datetime-local"
                     value={form.end_time || ''}
@@ -931,7 +936,7 @@ export default function ProductionReportPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>工时(h)</Label>
+                  <Label>{t('workHoursLabel')}</Label>
                   <Input
                     type="number"
                     step="0.5"
@@ -943,21 +948,21 @@ export default function ProductionReportPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>备注</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                  placeholder="备注信息"
+                  placeholder={tc('remark')}
                   rows={2}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
               <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-                提交报工
+                {t('submitReport')}
               </Button>
             </DialogFooter>
           </DialogContent>

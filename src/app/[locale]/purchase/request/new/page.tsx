@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { MainLayout } from '@/components/layout';
@@ -84,6 +85,10 @@ const initialForm: RequestForm = {
 };
 
 export default function NewPurchaseRequestPage() {
+  // 翻译钩子
+  const t = useTranslations('Purchase');
+  const tc = useTranslations('Common');
+
   const router = useRouter();
   const [formData, setFormData] = useState<RequestForm>(initialForm);
   const [saving, setSaving] = useState(false);
@@ -346,7 +351,7 @@ export default function NewPurchaseRequestPage() {
                       <Input
                         value={item.material_code}
                         onChange={(e) => updateItem(index, 'material_code', e.target.value)}
-                        placeholder="编码"
+                        placeholder=tc("code")
                       />
                     </div>
                     <div className="col-span-2">
@@ -356,7 +361,7 @@ export default function NewPurchaseRequestPage() {
                       <Input
                         value={item.material_name}
                         onChange={(e) => updateItem(index, 'material_name', e.target.value)}
-                        placeholder="名称"
+                        placeholder=tc("name")
                       />
                     </div>
                     <div className="col-span-2">
@@ -441,7 +446,7 @@ export default function NewPurchaseRequestPage() {
             </CardHeader>
             <CardContent>
               <textarea
-                className="w-full min-h-[100px] p-3 border rounded-md bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                className="w-full min-h-[100px] p-3 border rounded-md bg-card text-foreground"
                 value={formData.remark}
                 onChange={(e) => setFormData((prev) => ({ ...prev, remark: e.target.value }))}
                 placeholder="其他备注信息..."

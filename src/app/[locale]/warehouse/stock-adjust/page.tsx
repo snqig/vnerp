@@ -55,14 +55,18 @@ const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '待审核', variant: 'outline' },
-  2: { label: '已审核', variant: 'default' },
+  1: { label: tc('pending'), variant: 'outline' },
+  2: { label: tc('approved'), variant: 'default' },
   3: { label: '已完成', variant: 'secondary' },
   4: { label: '已取消', variant: 'destructive' },
 };
 const typeMap: Record<number, string> = { 1: '盘盈', 2: '盘亏', 3: '其他调整' };
 
 export default function StockAdjustPage() {
+  // 翻译钩子
+  const t = useTranslations('Warehouse');
+  const tc = useTranslations('Common');
+
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const headers: Record<string, string> = {
@@ -91,7 +95,7 @@ export default function StockAdjustPage() {
     { key: '调整日期', header: '调整日期' },
     { key: '调整类型', header: '调整类型' },
     { key: '操作人', header: '操作人' },
-    { key: '状态', header: '状态' },
+    { key: tc('status'), header: tc('status') },
   ];
   const getExportData = () =>
     list.map((item) => ({

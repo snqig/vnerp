@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { useTranslations } from 'next-intl';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
@@ -101,107 +102,120 @@ interface EvalRecord {
   items?: EvalItem[];
 }
 
-const periodMap: Record<string, string> = { month: '月度', quarter: '季度', year: '年度' };
-const levelMap: Record<
-  string,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  A: { label: '优秀', variant: 'default' },
-  B: { label: '良好', variant: 'secondary' },
-  C: { label: '合格', variant: 'outline' },
-  D: { label: '待改进', variant: 'destructive' },
-};
-const evalStatusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '待评估', variant: 'outline' },
-  2: { label: '已评估', variant: 'default' },
-  3: { label: '已审核', variant: 'secondary' },
-};
-const categoryMap: Record<string, string> = {
-  quality: '质量',
-  delivery: '交付',
-  price: '价格',
-  service: '服务',
-};
-
-const defaultItems: EvalItem[] = [
-  {
-    category: 'quality',
-    item_name: '来料合格率',
-    weight: 25,
-    score: 0,
-    actual_value: '',
-    target_value: '≥98%',
-    remark: '',
-  },
-  {
-    category: 'quality',
-    item_name: '不良品处理响应',
-    weight: 10,
-    score: 0,
-    actual_value: '',
-    target_value: '24h内',
-    remark: '',
-  },
-  {
-    category: 'delivery',
-    item_name: '准时交付率',
-    weight: 20,
-    score: 0,
-    actual_value: '',
-    target_value: '≥95%',
-    remark: '',
-  },
-  {
-    category: 'delivery',
-    item_name: '交货周期',
-    weight: 10,
-    score: 0,
-    actual_value: '',
-    target_value: '≤7天',
-    remark: '',
-  },
-  {
-    category: 'price',
-    item_name: '价格竞争力',
-    weight: 15,
-    score: 0,
-    actual_value: '',
-    target_value: '市场中等偏下',
-    remark: '',
-  },
-  {
-    category: 'price',
-    item_name: '价格稳定性',
-    weight: 5,
-    score: 0,
-    actual_value: '',
-    target_value: '年度波动≤5%',
-    remark: '',
-  },
-  {
-    category: 'service',
-    item_name: '服务响应速度',
-    weight: 10,
-    score: 0,
-    actual_value: '',
-    target_value: '4h内响应',
-    remark: '',
-  },
-  {
-    category: 'service',
-    item_name: '技术支持能力',
-    weight: 5,
-    score: 0,
-    actual_value: '',
-    target_value: '能提供技术方案',
-    remark: '',
-  },
-];
-
 export default function SupplierEvalPage() {
+  const t = useTranslations('Srm');
+  const tc = useTranslations('Common');
+
+  const periodMap: Record<string, string> = { month: t('monthly'), quarter: t('quarterly'), year: t('yearly') };
+  const levelMap: Record<
+    string,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    A: { label: t('levelA'), variant: 'default' },
+    B: { label: t('levelB'), variant: 'secondary' },
+    C: { label: t('levelC'), variant: 'outline' },
+    D: { label: t('levelD'), variant: 'destructive' },
+  };
+  const evalStatusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: t('pendingEval'), variant: 'outline' },
+    2: { label: t('evaluated'), variant: 'default' },
+    3: { label: tc('approved'), variant: 'secondary' },
+  };
+  const categoryMap: Record<string, string> = {
+    quality: t('quality'),
+    delivery: t('delivery'),
+    price: t('price'),
+    service: t('service'),
+  };
+
+  const defaultItems: EvalItem[] = [
+    {
+      category: 'quality',
+      item_name: t('incomingQualityRate'),
+      weight: 25,
+      score: 0,
+      actual_value: '',
+      target_value: '≥98%',
+      remark: '',
+    },
+    {
+      category: 'delivery',
+      item_name: t('deliveryTimelyRate'),
+      weight: 15,
+      score: 0,
+      actual_value: '',
+      target_value: '≥95%',
+      remark: '',
+    },
+    {
+      category: 'delivery',
+      item_name: t('deliveryAccuracyRate'),
+      weight: 10,
+      score: 0,
+      actual_value: '',
+      target_value: '≥90%',
+      remark: '',
+    },
+    {
+      category: 'quality',
+      item_name: t('returnRate'),
+      weight: 10,
+      score: 0,
+      actual_value: '',
+      target_value: '≤2%',
+      remark: '',
+    },
+    {
+      category: 'quality',
+      item_name: t('qualityComplaintCount'),
+      weight: 10,
+      score: 0,
+      actual_value: '',
+      target_value: '0',
+      remark: '',
+    },
+    {
+      category: 'price',
+      item_name: t('priceCompetitiveness'),
+      weight: 15,
+      score: 0,
+      actual_value: '',
+      target_value: t('belowMarketAvg'),
+      remark: '',
+    },
+    {
+      category: 'price',
+      item_name: t('priceStability'),
+      weight: 5,
+      score: 0,
+      actual_value: '',
+      target_value: t('annualFluctuation'),
+      remark: '',
+    },
+    {
+      category: 'service',
+      item_name: t('serviceResponseSpeed'),
+      weight: 10,
+      score: 0,
+      actual_value: '',
+      target_value: t('responseWithin4h'),
+      remark: '',
+    },
+    {
+      category: 'service',
+      item_name: t('techSupportAbility'),
+      weight: 5,
+      score: 0,
+      actual_value: '',
+      target_value: t('canProvideTechSolution'),
+      remark: '',
+    },
+  ];
+  const tc = useTranslations('Common');
+
   const { companyName } = useCompanyName();
   const { toast } = useToast();
   const [records, setRecords] = useState<EvalRecord[]>([]);
@@ -302,10 +316,10 @@ export default function SupplierEvalPage() {
         setDialogOpen(false);
         fetchData();
       } else {
-        toast({ title: data.message || '操作失败', variant: 'destructive' });
+        toast({ title: data.message || tc('error'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -443,7 +457,7 @@ export default function SupplierEvalPage() {
       '服务分',
       '综合分',
       '等级',
-      '状态',
+      tc('status'),
     ];
     const rows = recordsToExport.map((r) => [
       r.eval_no,

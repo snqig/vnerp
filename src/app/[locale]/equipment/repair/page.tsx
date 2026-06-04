@@ -31,6 +31,7 @@ import {
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { useTranslations } from 'next-intl';
 
 interface Item {
   id: number;
@@ -43,18 +44,23 @@ interface Item {
   repair_person: string;
   status: number;
 }
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '待维修', variant: 'outline' },
-  2: { label: '维修中', variant: 'default' },
-  3: { label: '已完成', variant: 'secondary' },
-  4: { label: '已关闭', variant: 'destructive' },
-};
 const typeMap: Record<number, string> = { 1: '预防性维修', 2: '故障维修', 3: '紧急维修' };
 
 export default function EquipmentRepairPage() {
+  // 翻译钩子
+  const t = useTranslations('Equipment');
+  const tc = useTranslations('Common');
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: '待维修', variant: 'outline' },
+    2: { label: '维修中', variant: 'default' },
+    3: { label: '已完成', variant: 'secondary' },
+    4: { label: tc('closed'), variant: 'destructive' },
+  };
+
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);

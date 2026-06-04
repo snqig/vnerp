@@ -31,6 +31,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface Role {
   id: number;
@@ -72,6 +73,10 @@ interface UserFormData {
 }
 
 export default function UserManagementPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<UserItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -622,7 +627,7 @@ export default function UserManagementPage() {
                         variant={item.status === 1 ? 'default' : 'destructive'}
                         className="text-xs"
                       >
-                        {item.status === 1 ? '启用' : '禁用'}
+                        {item.status === 1 ? tc('enabled') : tc('disabled')}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -630,7 +635,7 @@ export default function UserManagementPage() {
                         variant={item.first_login === 1 ? 'outline' : 'secondary'}
                         className="text-xs"
                       >
-                        {item.first_login === 1 ? '是' : '否'}
+                        {item.first_login === 1 ? tc('yes') : tc('no')}
                       </Badge>
                     </TableCell>
                     <TableCell>

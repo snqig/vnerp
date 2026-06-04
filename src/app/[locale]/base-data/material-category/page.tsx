@@ -31,6 +31,7 @@ import {
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePermission } from '@/hooks/usePermission';
+import { useTranslations } from 'next-intl';
 
 interface Item {
   id: number;
@@ -42,20 +43,25 @@ interface Item {
   status: number;
   remark: string;
 }
-const typeMap: Record<number, string> = {
-  1: '原材料',
-  2: '半成品',
-  3: '成品',
-  4: '辅料',
-  5: '包材',
-  6: '油墨',
-  7: '溶剂/洗网水',
-  8: '网版/丝网',
-  9: '刀具/刀模',
-  10: '设备配件',
-};
 
 export default function MaterialCategoryPage() {
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
+  const typeMap: Record<number, string> = {
+    1: t('rawMaterial'),
+    2: t('semiFinished'),
+    3: t('finished'),
+    4: t('auxiliary'),
+    5: t('packaging'),
+    6: t('ink'),
+    7: t('solvent'),
+    8: t('screen'),
+    9: t('blade'),
+    10: t('equipmentParts'),
+  };
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const { hasPermission } = usePermission();
   const [list, setList] = useState<Item[]>([]);
@@ -177,7 +183,7 @@ export default function MaterialCategoryPage() {
                         variant={item.status === 1 ? 'default' : 'destructive'}
                         className="text-xs"
                       >
-                        {item.status === 1 ? '启用' : '禁用'}
+                        {item.status === 1 ? tc('enabled') : tc('disabled')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs max-w-32 truncate">

@@ -1,6 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layout';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +70,10 @@ const stats = [
 ];
 
 export default function DCPrintPage() {
+  // 翻译钩子
+  const t = useTranslations('Dcprint');
+  const tc = useTranslations('Common');
+
   return (
     <MainLayout title="全程二维码追溯系统">
       <div className="space-y-6">

@@ -39,6 +39,7 @@ import {
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -206,6 +207,10 @@ function getDefaultItems(certType: string): CertItem[] {
 }
 
 export default function SGSManagementPage() {
+  // 翻译钩子
+  const t = useTranslations('Quality');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<Cert[]>([]);
   const [total, setTotal] = useState(0);
@@ -402,7 +407,7 @@ export default function SGSManagementPage() {
                 onValueChange={(v) => setSearchStatus(v === 'all' ? '' : v)}
               >
                 <SelectTrigger className="w-24 h-8 text-sm">
-                  <SelectValue placeholder="状态" />
+                  <SelectValue placeholder=tc("status") />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部</SelectItem>
@@ -610,7 +615,7 @@ export default function SGSManagementPage() {
                         variant={statusMap[item.status]?.variant || 'outline'}
                         className="text-xs"
                       >
-                        {statusMap[item.status]?.label || '未知'}
+                        {statusMap[item.status]?.label || tc('unknown')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs">{item.item_count ?? 0}项</TableCell>
@@ -985,7 +990,7 @@ export default function SGSManagementPage() {
                       variant={statusMap[detailItem.status]?.variant || 'outline'}
                       className="text-xs"
                     >
-                      {statusMap[detailItem.status]?.label || '未知'}
+                      {statusMap[detailItem.status]?.label || tc('unknown')}
                     </Badge>
                   </div>
                 </div>

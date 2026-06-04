@@ -24,6 +24,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 // 追溯结果类型
 interface TraceResult {
@@ -70,6 +71,10 @@ interface TraceRecord {
 }
 
 export default function TracePage() {
+  // 翻译钩子
+  const t = useTranslations('Dcprint');
+  const tc = useTranslations('Common');
+
   const [qrCode, setQrCode] = useState('');
   const [traceResult, setTraceResult] = useState<TraceResult | null>(null);
   const [records, setRecords] = useState<TraceRecord[]>([]);

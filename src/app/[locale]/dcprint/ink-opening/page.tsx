@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { useTranslations } from 'next-intl';
 
 interface InkOpeningRecord {
   id: number;
@@ -93,6 +94,10 @@ const EXPIRE_HOURS_OPTIONS = [
 ];
 
 export default function InkOpeningPage() {
+  // 翻译钩子
+  const t = useTranslations('Dcprint');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [records, setRecords] = useState<InkOpeningRecord[]>([]);
   const [overdueList, setOverdueList] = useState<InkOpeningRecord[]>([]);
@@ -394,7 +399,7 @@ export default function InkOpeningPage() {
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-28">
-                    <SelectValue placeholder="状态" />
+                    <SelectValue placeholder=tc("status") />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部状态</SelectItem>

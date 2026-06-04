@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,9 +41,13 @@ interface Item {
   status: number;
   create_time: string;
 }
-const typeMap: Record<number, string> = { 1: '通知', 2: '公告', 3: '预警' };
+const typeMap: Record<number, string> = { 1: '通知', 2: '公告', 3: tc('warning') };
 
 export default function NoticePage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
@@ -159,7 +164,7 @@ export default function NoticePage() {
                         variant={item.status === 1 ? 'default' : 'secondary'}
                         className="text-xs"
                       >
-                        {item.status === 1 ? '已发布' : '草稿'}
+                        {item.status === 1 ? '已发布' : tc('draft')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs">{item.create_time || '-'}</TableCell>

@@ -5,8 +5,13 @@ import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
+import { useTranslations } from 'next-intl';
+ 
 export default function DebugInboundPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const [logs, setLogs] = useState<string[]>([]);
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);

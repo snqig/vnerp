@@ -31,6 +31,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, BarChart3, TrendingUp, Users, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface AnalysisRecord {
   id?: number;
@@ -60,18 +61,21 @@ interface Summary {
   avg_on_time_rate: number;
 }
 
-const periodMap: Record<string, string> = { month: '月度', quarter: '季度', year: '年度' };
-const levelMap: Record<
-  string,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  A: { label: '战略客户', variant: 'default' },
-  B: { label: '重要客户', variant: 'secondary' },
-  C: { label: '一般客户', variant: 'outline' },
-  D: { label: '潜在客户', variant: 'outline' },
-};
-
 export default function CustomerAnalysisPage() {
+  const t = useTranslations('Crm');
+  const tc = useTranslations('Common');
+
+  const periodMap: Record<string, string> = { month: t('monthly'), quarter: t('quarterly'), year: t('yearly') };
+  const levelMap: Record<
+    string,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    A: { label: t('levelA'), variant: 'default' },
+    B: { label: t('levelB'), variant: 'secondary' },
+    C: { label: t('levelC'), variant: 'outline' },
+    D: { label: t('levelD'), variant: 'outline' },
+  };
+
   const { toast } = useToast();
   const [records, setRecords] = useState<AnalysisRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -134,7 +138,7 @@ export default function CustomerAnalysisPage() {
         });
       }
     } catch {
-      toast({ title: '获取数据失败', variant: 'destructive' });
+      toast({ title: t('fetchDataFail'), variant: 'destructive' });
     }
   };
 
@@ -144,7 +148,7 @@ export default function CustomerAnalysisPage() {
 
   const handleSave = async () => {
     if (!form.customer_name) {
-      toast({ title: '请输入客户名称', variant: 'destructive' });
+      toast({ title: t('enterCustomerName'), variant: 'destructive' });
       return;
     }
     try {
@@ -157,28 +161,28 @@ export default function CustomerAnalysisPage() {
       });
       const data = await res.json();
       if (data.code === 200) {
-        toast({ title: editRecord ? '更新成功' : '创建成功' });
+        toast({ title: editRecord ? tc('updateSuccess') : tc('createSuccess') });
         setDialogOpen(false);
         fetchData();
       } else {
-        toast({ title: data.message || '操作失败', variant: 'destructive' });
+        toast({ title: data.message || tc('error'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确认删除？')) return;
+    if (!confirm(t('confirmDelete'))) return;
     try {
       const res = await fetch('/api/crm/analysis?id=' + id, { method: 'DELETE' });
       const data = await res.json();
       if (data.code === 200) {
-        toast({ title: '删除成功' });
+        toast({ title: t('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: t('deleteFail'), variant: 'destructive' });
     }
   };
 
@@ -215,11 +219,11 @@ export default function CustomerAnalysisPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <BarChart3 className="h-6 w-6" />
-            客户分析统计
+            {t('customerAnalysisStats')}
           </h1>
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4 mr-1" />
-            新建分析
+            {t('newAnalysis')}
           </Button>
         </div>
 
@@ -228,7 +232,7 @@ export default function CustomerAnalysisPage() {
             <CardContent className="p-4 flex items-center gap-3">
               <Users className="h-8 w-8 text-blue-500" />
               <div>
-                <p className="text-sm text-muted-foreground">客户总数</p>
+                <p className="text-sm text-muted-foreground">{t('totalCustomers')}</p>
                 <p className="text-2xl font-bold">{summary.total_customers || 0}</p>
               </div>
             </CardContent>
@@ -237,7 +241,7 @@ export default function CustomerAnalysisPage() {
             <CardContent className="p-4 flex items-center gap-3">
               <DollarSign className="h-8 w-8 text-green-500" />
               <div>
-                <p className="text-sm text-muted-foreground">订单总额</p>
+                <p className="text-sm text-muted-foreground">{t('totalOrderAmount')}</p>
                 <p className="text-2xl font-bold">
                   ¥{(summary.total_amount || 0).toLocaleString()}
                 </p>
@@ -248,7 +252,7 @@ export default function CustomerAnalysisPage() {
             <CardContent className="p-4 flex items-center gap-3">
               <TrendingUp className="h-8 w-8 text-orange-500" />
               <div>
-                <p className="text-sm text-muted-foreground">平均满意度</p>
+                <p className="text-sm text-muted-foreground">{t('avgSatisfaction')}</p>
                 <p className="text-2xl font-bold">{(summary.avg_satisfaction || 0).toFixed(1)}</p>
               </div>
             </CardContent>
@@ -257,7 +261,7 @@ export default function CustomerAnalysisPage() {
             <CardContent className="p-4 flex items-center gap-3">
               <BarChart3 className="h-8 w-8 text-purple-500" />
               <div>
-                <p className="text-sm text-muted-foreground">准时交付率</p>
+                <p className="text-sm text-muted-foreground">{t('avgOnTimeRate')}</p>
                 <p className="text-2xl font-bold">{(summary.avg_on_time_rate || 0).toFixed(1)}%</p>
               </div>
             </CardContent>
@@ -268,7 +272,7 @@ export default function CustomerAnalysisPage() {
           <CardContent className="p-4">
             <div className="flex gap-3 mb-4">
               <Input
-                placeholder="搜索客户名称"
+                placeholder={t('searchCustomerName')}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="w-48"
@@ -276,7 +280,7 @@ export default function CustomerAnalysisPage() {
               />
               <Select value={searchLevel} onValueChange={(v) => setSearchLevel(v)}>
                 <SelectTrigger className="w-32">
-                  <SelectValue placeholder="客户等级" />
+                  <SelectValue placeholder={t('customerLevel')} />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(levelMap).map(([k, v]) => (
@@ -288,24 +292,24 @@ export default function CustomerAnalysisPage() {
               </Select>
               <Button variant="outline" onClick={fetchData}>
                 <Search className="h-4 w-4 mr-1" />
-                搜索
+                {t('search')}
               </Button>
             </div>
 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>客户名称</TableHead>
-                  <TableHead>等级</TableHead>
-                  <TableHead>周期</TableHead>
-                  <TableHead>订单数</TableHead>
-                  <TableHead>订单金额</TableHead>
-                  <TableHead>退货次数</TableHead>
-                  <TableHead>投诉次数</TableHead>
-                  <TableHead>准时率</TableHead>
-                  <TableHead>满意度</TableHead>
-                  <TableHead>增长率</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{t('customerName')}</TableHead>
+                  <TableHead>{t('level')}</TableHead>
+                  <TableHead>{t('period')}</TableHead>
+                  <TableHead>{t('orderCount')}</TableHead>
+                  <TableHead>{t('orderAmount')}</TableHead>
+                  <TableHead>{t('returnCount')}</TableHead>
+                  <TableHead>{t('complaintCount')}</TableHead>
+                  <TableHead>{t('onTimeRateShort')}</TableHead>
+                  <TableHead>{t('satisfaction')}</TableHead>
+                  <TableHead>{t('growthRate')}</TableHead>
+                  <TableHead>{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -348,14 +352,14 @@ export default function CustomerAnalysisPage() {
                 {records.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
             <div className="flex justify-between items-center mt-4 text-sm">
-              <span>共 {total} 条</span>
+              <span>{t('totalRecords', { total })}</span>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -363,7 +367,7 @@ export default function CustomerAnalysisPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  上一页
+                  {tc('prevPage')}
                 </Button>
                 <Button
                   size="sm"
@@ -371,7 +375,7 @@ export default function CustomerAnalysisPage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  下一页
+                  {tc('nextPage')}
                 </Button>
               </div>
             </div>
@@ -381,19 +385,19 @@ export default function CustomerAnalysisPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
-              <DialogTitle>{editRecord ? '编辑客户分析' : '新建客户分析'}</DialogTitle>
+              <DialogTitle>{editRecord ? t('editAnalysis') : t('newAnalysis')}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-3 py-2">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <Label>客户名称 *</Label>
+                  <Label>{t('customerName')} *</Label>
                   <Input
                     value={form.customer_name || ''}
                     onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>分析周期</Label>
+                  <Label>{t('analysisPeriod')}</Label>
                   <Select
                     value={form.analysis_period || 'month'}
                     onValueChange={(v) => setForm({ ...form, analysis_period: v })}
@@ -411,7 +415,7 @@ export default function CustomerAnalysisPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>客户等级</Label>
+                  <Label>{t('customerLevel')}</Label>
                   <Select
                     value={form.customer_level || 'C'}
                     onValueChange={(v) => setForm({ ...form, customer_level: v })}
@@ -431,7 +435,7 @@ export default function CustomerAnalysisPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>周期开始</Label>
+                  <Label>{t('periodStart')}</Label>
                   <Input
                     type="date"
                     value={form.period_start || ''}
@@ -439,7 +443,7 @@ export default function CustomerAnalysisPage() {
                   />
                 </div>
                 <div>
-                  <Label>周期结束</Label>
+                  <Label>{t('periodEnd')}</Label>
                   <Input
                     type="date"
                     value={form.period_end || ''}
@@ -449,7 +453,7 @@ export default function CustomerAnalysisPage() {
               </div>
               <div className="grid grid-cols-4 gap-3">
                 <div>
-                  <Label>订单数量</Label>
+                  <Label>{t('orderCount')}</Label>
                   <Input
                     type="number"
                     value={form.order_count || 0}
@@ -457,7 +461,7 @@ export default function CustomerAnalysisPage() {
                   />
                 </div>
                 <div>
-                  <Label>订单金额</Label>
+                  <Label>{t('orderAmount')}</Label>
                   <Input
                     type="number"
                     value={form.order_amount || 0}
@@ -465,7 +469,7 @@ export default function CustomerAnalysisPage() {
                   />
                 </div>
                 <div>
-                  <Label>发货次数</Label>
+                  <Label>{t('deliveryCount')}</Label>
                   <Input
                     type="number"
                     value={form.delivery_count || 0}
@@ -473,7 +477,7 @@ export default function CustomerAnalysisPage() {
                   />
                 </div>
                 <div>
-                  <Label>退货次数</Label>
+                  <Label>{t('returnCount')}</Label>
                   <Input
                     type="number"
                     value={form.return_count || 0}
@@ -483,7 +487,7 @@ export default function CustomerAnalysisPage() {
               </div>
               <div className="grid grid-cols-4 gap-3">
                 <div>
-                  <Label>投诉次数</Label>
+                  <Label>{t('complaintCount')}</Label>
                   <Input
                     type="number"
                     value={form.complaint_count || 0}
@@ -491,7 +495,7 @@ export default function CustomerAnalysisPage() {
                   />
                 </div>
                 <div>
-                  <Label>准时交付率%</Label>
+                  <Label>{t('onTimeRatePct')}</Label>
                   <Input
                     type="number"
                     value={form.on_time_rate || 0}
@@ -499,7 +503,7 @@ export default function CustomerAnalysisPage() {
                   />
                 </div>
                 <div>
-                  <Label>满意度评分</Label>
+                  <Label>{t('satisfactionScore')}</Label>
                   <Input
                     type="number"
                     step="0.1"
@@ -510,7 +514,7 @@ export default function CustomerAnalysisPage() {
                   />
                 </div>
                 <div>
-                  <Label>增长率%</Label>
+                  <Label>{t('growthRatePct')}</Label>
                   <Input
                     type="number"
                     value={form.growth_rate || 0}
@@ -519,7 +523,7 @@ export default function CustomerAnalysisPage() {
                 </div>
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -529,9 +533,9 @@ export default function CustomerAnalysisPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{t('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

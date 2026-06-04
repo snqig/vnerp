@@ -53,6 +53,10 @@ const statusMap: Record<
 };
 
 export default function SalesOutboundPage() {
+  // 翻译钩子
+  const t = useTranslations('Warehouse');
+  const tc = useTranslations('Common');
+
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const headers: Record<string, string> = {

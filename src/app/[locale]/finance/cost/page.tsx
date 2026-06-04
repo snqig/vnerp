@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, RefreshCw, DollarSign, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface CostItem {
   id: number;
@@ -45,6 +46,10 @@ const costTypeMap: Record<string, string> = {
 };
 
 export default function CostPage() {
+  // 翻译钩子
+  const t = useTranslations('Finance');
+  const tc = useTranslations('Common');
+
   const [list, setList] = useState<CostItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);

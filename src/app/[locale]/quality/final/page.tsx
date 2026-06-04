@@ -69,6 +69,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -133,34 +134,40 @@ const finalInspectItems = [
   { id: 'label', name: '标签核对', required: true },
 ];
 
-// 获取状态标签
-const getStatusBadge = (status: number) => {
-  const statusMap: Record<number, { label: string; className: string }> = {
-    0: {
-      label: '待排产',
-      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-    },
-    1: {
-      label: '已排产',
-      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    },
-    2: {
-      label: '待终检',
-      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-    },
-    3: {
-      label: '已终检',
-      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    },
-  };
-  const config = statusMap[status] || {
-    label: '未知',
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  };
-  return <Badge className={config.className}>{config.label}</Badge>;
-};
+
 
 export default function QualityFinalPage() {
+  // 翻译钩子
+  const t = useTranslations('Quality');
+  const tc = useTranslations('Common');
+
+  // 获取状态标签
+  const getStatusBadge = (status: number) => {
+    const statusMap: Record<number, { label: string; className: string }> = {
+      0: {
+        label: '待排产',
+        className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+      },
+      1: {
+        label: '已排产',
+        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+      },
+      2: {
+        label: '待终检',
+        className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+      },
+      3: {
+        label: '已终检',
+        className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+      },
+    };
+    const config = statusMap[status] || {
+      label: tc('unknown'),
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    };
+    return <Badge className={config.className}>{config.label}</Badge>;
+  };
+
   const [finals, setFinals] = useState<FinalInspect[]>([]);
   const [stats, setStats] = useState<FinalStats>({
     pending: 0,
@@ -500,8 +507,8 @@ export default function QualityFinalPage() {
                         { key: 'product_name', header: '产品名称' },
                         { key: 'product_code', header: '产品编码' },
                         { key: 'material_spec', header: '规格' },
-                        { key: 'quantity', header: '数量' },
-                        { key: 'status', header: '状态' },
+                        { key: 'quantity', header: tc('quantity') },
+                        { key: 'status', header: tc('status') },
                       ],
                       '成品检验报告'
                     )
@@ -512,8 +519,8 @@ export default function QualityFinalPage() {
                       { key: 'product_name', header: '产品名称' },
                       { key: 'product_code', header: '产品编码' },
                       { key: 'material_spec', header: '规格' },
-                      { key: 'quantity', header: '数量' },
-                      { key: 'status', header: '状态' },
+                      { key: 'quantity', header: tc('quantity') },
+                      { key: 'status', header: tc('status') },
                     ])
                   }
                   onExportWORD={() =>
@@ -525,8 +532,8 @@ export default function QualityFinalPage() {
                         { key: 'product_name', header: '产品名称' },
                         { key: 'product_code', header: '产品编码' },
                         { key: 'material_spec', header: '规格' },
-                        { key: 'quantity', header: '数量' },
-                        { key: 'status', header: '状态' },
+                        { key: 'quantity', header: tc('quantity') },
+                        { key: 'status', header: tc('status') },
                       ],
                       '成品检验报告'
                     )

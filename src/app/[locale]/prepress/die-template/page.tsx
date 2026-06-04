@@ -63,6 +63,7 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -163,46 +164,49 @@ interface UsageLog {
   create_time: string;
 }
 
-const TYPE_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: '刀模', color: 'bg-blue-100 text-blue-800' },
-  2: { label: '丝网版', color: 'bg-purple-100 text-purple-800' },
-};
-
-const ASSET_TYPE_MAP: Record<string, { label: string; color: string }> = {
-  die: { label: '刀模', color: 'bg-blue-100 text-blue-800' },
-  flexo_plate: { label: '柔印版', color: 'bg-cyan-100 text-cyan-800' },
-  screen_mesh: { label: '丝网版', color: 'bg-purple-100 text-purple-800' },
-};
-
-const DIE_STATUS_MAP: Record<string, { label: string; color: string }> = {
-  available: { label: '可用', color: 'bg-green-100 text-green-800' },
-  in_use: { label: '使用中', color: 'bg-blue-100 text-blue-800' },
-  maintenance_needed: { label: '需保养', color: 'bg-yellow-100 text-yellow-800' },
-  re_rule_needed: { label: '需重做', color: 'bg-orange-100 text-orange-800' },
-  scrap: { label: '已报废', color: 'bg-secondary text-secondary-foreground' },
-};
-
-const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: '正常', color: 'bg-green-100 text-green-800' },
-  2: { label: '预警', color: 'bg-yellow-100 text-yellow-800' },
-  3: { label: '已锁定', color: 'bg-red-100 text-red-800' },
-  4: { label: '报废', color: 'bg-secondary text-secondary-foreground' },
-};
-
-const MAINTENANCE_TYPE_MAP: Record<string, { label: string; color: string }> = {
-  routine: { label: '常规保养', color: 'bg-green-100 text-green-800' },
-  grinding: { label: '磨刃/修版', color: 'bg-blue-100 text-blue-800' },
-  re_rule: { label: '重做/翻新', color: 'bg-orange-100 text-orange-800' },
-  replace: { label: '更换', color: 'bg-red-100 text-red-800' },
-};
-
-const MAINTENANCE_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: '待保养', color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: '保养中', color: 'bg-blue-100 text-blue-800' },
-  3: { label: '已完成', color: 'bg-green-100 text-green-800' },
-};
-
 export default function DieTemplatePage() {
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
+  const TYPE_MAP: Record<number, { label: string; color: string }> = {
+    1: { label: t('dieMold'), color: 'bg-blue-100 text-blue-800' },
+    2: { label: t('screenPlate'), color: 'bg-purple-100 text-purple-800' },
+  };
+
+  const ASSET_TYPE_MAP: Record<string, { label: string; color: string }> = {
+    die: { label: t('dieMold'), color: 'bg-blue-100 text-blue-800' },
+    flexo_plate: { label: t('flexoPlate'), color: 'bg-cyan-100 text-cyan-800' },
+    screen_mesh: { label: t('screenPlate'), color: 'bg-purple-100 text-purple-800' },
+  };
+
+  const DIE_STATUS_MAP: Record<string, { label: string; color: string }> = {
+    available: { label: t('available'), color: 'bg-green-100 text-green-800' },
+    in_use: { label: t('inUse'), color: 'bg-blue-100 text-blue-800' },
+    maintenance_needed: { label: t('maintenanceNeeded'), color: 'bg-yellow-100 text-yellow-800' },
+    re_rule_needed: { label: t('reRuleNeeded'), color: 'bg-orange-100 text-orange-800' },
+    scrap: { label: t('scrapped'), color: 'bg-secondary text-secondary-foreground' },
+  };
+
+  const STATUS_MAP: Record<number, { label: string; color: string }> = {
+    1: { label: t('normal'), color: 'bg-green-100 text-green-800' },
+    2: { label: t('warning'), color: 'bg-yellow-100 text-yellow-800' },
+    3: { label: t('locked'), color: 'bg-red-100 text-red-800' },
+    4: { label: t('scrap'), color: 'bg-secondary text-secondary-foreground' },
+  };
+
+  const MAINTENANCE_TYPE_MAP: Record<string, { label: string; color: string }> = {
+    routine: { label: t('routineMaintenance'), color: 'bg-green-100 text-green-800' },
+    grinding: { label: t('grinding'), color: 'bg-blue-100 text-blue-800' },
+    re_rule: { label: t('reRule'), color: 'bg-orange-100 text-orange-800' },
+    replace: { label: t('replace'), color: 'bg-red-100 text-red-800' },
+  };
+
+  const MAINTENANCE_STATUS_MAP: Record<number, { label: string; color: string }> = {
+    1: { label: t('pendingMaintenance'), color: 'bg-yellow-100 text-yellow-800' },
+    2: { label: t('maintaining'), color: 'bg-blue-100 text-blue-800' },
+    3: { label: t('completed'), color: 'bg-green-100 text-green-800' },
+  };
+
   const { toast } = useToast();
   const [list, setList] = useState<DieTemplate[]>([]);
   const [warningList, setWarningList] = useState<DieTemplate[]>([]);
@@ -365,7 +369,7 @@ export default function DieTemplatePage() {
 
   const exportColumns = [
     { key: 'template_code', header: '编号' },
-    { key: 'template_name', header: '名称' },
+    { key: 'template_name', header: tc('name') },
     { key: 'asset_type_label', header: '资产类型' },
     { key: 'specification', header: '规格' },
     { key: 'usage_info', header: '累计/最大' },
@@ -552,10 +556,10 @@ export default function DieTemplatePage() {
         fetchMaintenanceList();
         fetchList();
       } else {
-        toast({ title: data.message || '操作失败', variant: 'destructive' });
+        toast({ title: data.message || tc('error'), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -1004,7 +1008,7 @@ export default function DieTemplatePage() {
                 </div>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="w-28">
-                    <SelectValue placeholder="类型" />
+                    <SelectValue placeholder=tc("type") />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部类型</SelectItem>
@@ -1624,7 +1628,7 @@ export default function DieTemplatePage() {
                 onClick={editing ? handleUpdate : handleCreate}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {editing ? '保存' : '创建'}
+                {editing ? tc('save') : '创建'}
               </Button>
             </DialogFooter>
           </DialogContent>

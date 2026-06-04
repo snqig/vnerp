@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -80,6 +81,10 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function TrainingPage() {
+  // 翻译钩子
+  const t = useTranslations('Hr');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);

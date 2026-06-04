@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,18 +64,24 @@ const statusMap: Record<
   3: { label: '已贴标', variant: 'secondary' },
 };
 
-const exportColumns = [
-  { key: 'label_no', header: '标签编号' },
-  { key: 'work_order_no', header: '工单号' },
-  { key: 'material_code', header: '物料编码' },
-  { key: 'material_name', header: '物料名称' },
-  { key: 'quantity', header: '数量' },
-  { key: 'batch_no', header: '批次号' },
-  { key: 'qc_result', header: '质检结果' },
-  { key: 'status_label', header: '状态' },
-];
+
 
 export default function ProductLabelPage() {
+  // 翻译钩子
+  const t = useTranslations('Production');
+  const tc = useTranslations('Common');
+
+  const exportColumns = [
+    { key: 'label_no', header: '标签编号' },
+    { key: 'work_order_no', header: '工单号' },
+    { key: 'material_code', header: '物料编码' },
+    { key: 'material_name', header: '物料名称' },
+    { key: 'quantity', header: tc('quantity') },
+    { key: 'batch_no', header: '批次号' },
+    { key: 'qc_result', header: '质检结果' },
+    { key: 'status_label', header: tc('status') },
+  ];
+
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
@@ -263,7 +270,7 @@ export default function ProductLabelPage() {
   const getExportData = () =>
     list.map((item) => ({
       ...item,
-      status_label: statusMap[item.status]?.label || '未知',
+      status_label: statusMap[item.status]?.label || tc('unknown'),
     }));
 
   const handlePrint = () => printTable(getExportData(), exportColumns, '成品标签');

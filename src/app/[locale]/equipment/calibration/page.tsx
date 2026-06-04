@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface Item {
   id: number;
@@ -54,6 +55,10 @@ const statusMap: Record<
 };
 
 export default function EquipmentCalibrationPage() {
+  // 翻译钩子
+  const t = useTranslations('Equipment');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);

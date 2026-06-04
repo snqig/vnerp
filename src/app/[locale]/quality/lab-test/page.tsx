@@ -39,6 +39,7 @@ import {
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -100,6 +101,10 @@ const statusMap: Record<
 };
 
 export default function LabTestPage() {
+  // 翻译钩子
+  const t = useTranslations('Quality');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<LabTestRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -227,7 +232,7 @@ export default function LabTestPage() {
                       { key: 'batch_no', header: '批次号' },
                       { key: 'test_type', header: '测试类型' },
                       { key: 'conclusion', header: '结论' },
-                      { key: 'status', header: '状态' },
+                      { key: 'status', header: tc('status') },
                     ],
                     '实验室测试报告'
                   )
@@ -239,7 +244,7 @@ export default function LabTestPage() {
                     { key: 'batch_no', header: '批次号' },
                     { key: 'test_type', header: '测试类型' },
                     { key: 'conclusion', header: '结论' },
-                    { key: 'status', header: '状态' },
+                    { key: 'status', header: tc('status') },
                   ])
                 }
                 onExportWORD={() =>
@@ -252,7 +257,7 @@ export default function LabTestPage() {
                       { key: 'batch_no', header: '批次号' },
                       { key: 'test_type', header: '测试类型' },
                       { key: 'conclusion', header: '结论' },
-                      { key: 'status', header: '状态' },
+                      { key: 'status', header: tc('status') },
                     ],
                     '实验室测试报告'
                   )
@@ -349,7 +354,7 @@ export default function LabTestPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusMap[item.status]?.variant || 'outline'}>
-                        {statusMap[item.status]?.label || '未知'}
+                        {statusMap[item.status]?.label || tc('unknown')}
                       </Badge>
                     </TableCell>
                     <TableCell>

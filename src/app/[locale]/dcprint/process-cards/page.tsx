@@ -34,6 +34,7 @@ import {
   Trash2,
   RefreshCw,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 // 流程卡类型
 interface ProcessCard {
@@ -76,6 +77,10 @@ interface MaterialLabel {
 }
 
 export default function ProcessCardsPage() {
+  // 翻译钩子
+  const t = useTranslations('Dcprint');
+  const tc = useTranslations('Common');
+
   const [qrCode, setQrCode] = useState('');
   const [scanState, setScanState] = useState<'workOrder' | 'mainMaterial' | 'auxiliary'>(
     'workOrder'

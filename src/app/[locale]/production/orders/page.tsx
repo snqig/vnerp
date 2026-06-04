@@ -1,6 +1,7 @@
 'use client';
 
 import { MainLayout } from '@/components/layout';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -147,37 +148,43 @@ const processes = [
   { code: 'P07', name: '包装', status: 'pending' },
 ];
 
-const getStatusBadge = (status: string) => {
-  const statusMap: Record<string, { label: string; className: string }> = {
-    created: {
-      label: '已创建',
-      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-    },
-    scheduled: {
-      label: '已排产',
-      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    },
-    producing: {
-      label: '生产中',
-      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-    },
-    completed: {
-      label: '已完成',
-      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    },
-    closed: {
-      label: '已关闭',
-      className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-    },
-  };
-  const config = statusMap[status] || {
-    label: status,
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  };
-  return <Badge className={config.className}>{config.label}</Badge>;
-};
+
 
 export default function WorkOrdersPage() {
+  // 翻译钩子
+  const t = useTranslations('Production');
+  const tc = useTranslations('Common');
+
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; className: string }> = {
+      created: {
+        label: '已创建',
+        className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+      },
+      scheduled: {
+        label: '已排产',
+        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+      },
+      producing: {
+        label: '生产中',
+        className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+      },
+      completed: {
+        label: '已完成',
+        className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+      },
+      closed: {
+        label: tc('closed'),
+        className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+      },
+    };
+    const config = statusMap[status] || {
+      label: status,
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    };
+    return <Badge className={config.className}>{config.label}</Badge>;
+  };
+
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<(typeof workOrders)[0] | null>(null);
 

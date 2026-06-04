@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,10 @@ interface DictType {
 }
 
 export default function DictTypePage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<DictType[]>([]);
   const [total, setTotal] = useState(0);
@@ -146,7 +151,7 @@ export default function DictTypePage() {
                         variant={item.status === 1 ? 'default' : 'destructive'}
                         className="text-xs"
                       >
-                        {item.status === 1 ? '启用' : '禁用'}
+                        {item.status === 1 ? tc('enabled') : tc('disabled')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs max-w-48 truncate">

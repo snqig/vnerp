@@ -22,6 +22,7 @@ import {
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Text, OrbitControls, Box } from '@react-three/drei';
 import * as THREE from 'three';
+import { useTranslations } from 'next-intl';
 
 interface WarehouseData {
   overview: {
@@ -186,6 +187,10 @@ function AutoScroll({
 }
 
 export default function WarehouseDashboard() {
+  // 翻译钩子
+  const t = useTranslations('Dashboard');
+  const tc = useTranslations('Common');
+
   const { companyName } = useCompanyName();
   const [data, setData] = useState<WarehouseData>({
     overview: {
@@ -361,7 +366,7 @@ export default function WarehouseDashboard() {
               )}
             </button>
             <div className="px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-[10px] text-cyan-300">
-              {loading ? '加载中...' : '● 实时'}
+              {loading ? tc('loading') : '● 实时'}
             </div>
           </div>
         </div>

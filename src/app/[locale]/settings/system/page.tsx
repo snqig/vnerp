@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,6 +72,10 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function SystemConfigPage() {
+  // 翻译钩子
+  const t = useTranslations('System');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [data, setData] = useState<CategoryData | null>(null);
   const [loading, setLoading] = useState(true);

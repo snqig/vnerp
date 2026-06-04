@@ -53,6 +53,7 @@ import {
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -120,6 +121,10 @@ const TRACE_TYPE_MAP: Record<number, { label: string; color: string }> = {
 };
 
 export default function TracePage() {
+  // 翻译钩子
+  const t = useTranslations('Quality');
+  const tc = useTranslations('Common');
+
   const [isScanOpen, setIsScanOpen] = useState(false);
   const [scannedCode, setScannedCode] = useState('');
   const [traceResult, setTraceResult] = useState<TraceDetail | null>(null);
@@ -530,7 +535,7 @@ export default function TracePage() {
                         { key: 'card_no', header: '流程卡号' },
                         { key: 'work_order_no', header: '工单号' },
                         { key: 'product_code', header: '成品料号' },
-                        { key: 'trace_type', header: '类型' },
+                        { key: 'trace_type', header: tc('type') },
                         { key: 'operator_name', header: '操作员' },
                         { key: 'trace_time', header: '追溯时间' },
                       ],
@@ -543,7 +548,7 @@ export default function TracePage() {
                       { key: 'card_no', header: '流程卡号' },
                       { key: 'work_order_no', header: '工单号' },
                       { key: 'product_code', header: '成品料号' },
-                      { key: 'trace_type', header: '类型' },
+                      { key: 'trace_type', header: tc('type') },
                       { key: 'operator_name', header: '操作员' },
                       { key: 'trace_time', header: '追溯时间' },
                     ])
@@ -557,7 +562,7 @@ export default function TracePage() {
                         { key: 'card_no', header: '流程卡号' },
                         { key: 'work_order_no', header: '工单号' },
                         { key: 'product_code', header: '成品料号' },
-                        { key: 'trace_type', header: '类型' },
+                        { key: 'trace_type', header: tc('type') },
                         { key: 'operator_name', header: '操作员' },
                         { key: 'trace_time', header: '追溯时间' },
                       ],

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -247,6 +248,10 @@ const roles = [
 ];
 
 export default function PermissionsSettingsPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const [activeTab, setActiveTab] = useState('roles');
   const [selectedRole, setSelectedRole] = useState(roles[0]);
   const [rolePermissions, setRolePermissions] = useState<Record<string, boolean>>({});

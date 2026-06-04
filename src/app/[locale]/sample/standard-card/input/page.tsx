@@ -47,6 +47,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTranslations } from 'next-intl';
 
 // 接口定义（与原代码保持一致）
 interface PrintSequence {
@@ -633,6 +634,7 @@ const EmployeeSelector = ({
 
 // 主页面内容
 function StandardCardInputContent() {
+  const tc = useTranslations('Common');
   const { companyName } = useCompanyName();
   const { toast } = useToast();
   const router = useRouter();
@@ -1201,7 +1203,7 @@ function StandardCardInputContent() {
 
   // 渲染
   return (
-    <MainLayout title={`${isEditMode ? '编辑' : '新建'}标准卡`}>
+    <MainLayout title={`${isEditMode ? tc('edit') : '新建'}标准卡`}>
       <style dangerouslySetInnerHTML={{ __html: `
         table td, table th { border-color: #333 !important; }
         .dark table td, .dark table th { border-color: rgba(255,255,255,0.2) !important; color: #e2e8f0 !important; }
@@ -1228,7 +1230,7 @@ function StandardCardInputContent() {
             </Button>
             <Button type="button" variant="outline" onClick={handleSave} disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? '保存中...' : '保存'}
+              {isSaving ? '保存中...' : tc('save')}
             </Button>
             <Button type="button" variant="secondary" onClick={handleSaveAndPreview} disabled={isSaving}>
               <Eye className="h-4 w-4 mr-2" />
@@ -1944,7 +1946,7 @@ function StandardCardInputContent() {
                       <CardTitle className="text-base">离型纸信息</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <FormField label="类型">
+                      <FormField label=tc("type")>
                         <Input 
                           value={formData.releasePaperType}
                           onChange={(e) => setFormData(p => ({ ...p, releasePaperType: e.target.value }))}
@@ -2080,7 +2082,7 @@ function StandardCardInputContent() {
                   />
                 </FormField>
 
-                <FormField label="备注">
+                <FormField label=tc("remark")>
                   <textarea 
                     value={formData.notes}
                     onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}
@@ -2105,7 +2107,7 @@ function StandardCardInputContent() {
           </Button>
           <Button type="button" variant="outline" onClick={handleSave} disabled={isSaving}>
             <Save className="h-4 w-4 mr-2" />
-            {isSaving ? '保存中...' : '保存'}
+            {isSaving ? '保存中...' : tc('save')}
           </Button>
           <Button type="button" variant="secondary" onClick={handleSaveAndPreview} disabled={isSaving}>
             <Eye className="h-4 w-4 mr-2" />
@@ -2122,8 +2124,9 @@ function StandardCardInputContent() {
 }
 
 function Loading() {
+  const tc = useTranslations('Common');
   return (
-    <MainLayout title="加载中...">
+    <MainLayout title=tc("loading")>
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
       </div>

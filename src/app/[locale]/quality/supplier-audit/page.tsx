@@ -39,6 +39,7 @@ import {
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -99,6 +100,10 @@ const statusMap: Record<
 };
 
 export default function SupplierAuditPage() {
+  // 翻译钩子
+  const t = useTranslations('Quality');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<SupplierAuditRecord[]>([]);
   const [total, setTotal] = useState(0);

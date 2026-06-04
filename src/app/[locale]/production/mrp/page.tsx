@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -140,17 +141,7 @@ interface MRPRunResult {
   purchase_requests?: { request_no: string; item_count: number }[];
 }
 
-const priorityConfig: Record<string, { label: string; className: string }> = {
-  urgent: {
-    label: '紧急',
-    className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  },
-  normal: {
-    label: '正常',
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  },
-  low: { label: '低', className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' },
-};
+
 
 function flattenBOMTree(
   node: BOMNode,
@@ -167,6 +158,22 @@ function flattenBOMTree(
 }
 
 export default function MRPPage() {
+  // 翻译钩子
+  const t = useTranslations('Production');
+  const tc = useTranslations('Common');
+
+  const priorityConfig: Record<string, { label: string; className: string }> = {
+    urgent: {
+      label: tc('critical'),
+      className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    },
+    normal: {
+      label: tc('normal'),
+      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    },
+    low: { label: tc('low'), className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' },
+  };
+
   const [activeTab, setActiveTab] = useState('mrp-run');
 
   const authFetch = async (url: string, options: RequestInit = {}) => {

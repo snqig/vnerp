@@ -1,4 +1,4 @@
-﻿﻿'use client';
+﻿'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,6 +31,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, GitBranch, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface LifecycleRecord {
   id?: number;
@@ -50,37 +51,41 @@ interface LifecycleRecord {
   create_time: string;
 }
 
-const stageMap: Record<
-  string,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  concept: { label: '概念', variant: 'outline' },
-  design: { label: '设计', variant: 'secondary' },
-  prototype: { label: '打样', variant: 'default' },
-  pilot: { label: '试产', variant: 'default' },
-  mass: { label: '量产', variant: 'default' },
-  eol: { label: '退市', variant: 'destructive' },
-};
 const stageOrder = ['concept', 'design', 'prototype', 'pilot', 'mass', 'eol'];
 
-const stageStatusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '进行中', variant: 'default' },
-  2: { label: '已完成', variant: 'secondary' },
-  3: { label: '暂停', variant: 'outline' },
-  4: { label: '取消', variant: 'destructive' },
-};
-
-const changeTypeMap: Record<string, string> = {
-  new: '新建',
-  revision: '修订',
-  upgrade: '升级',
-  downgrade: '降级',
-};
-
 export default function ProductLifecyclePage() {
+  const t = useTranslations('Engineering');
+  const tc = useTranslations('Common');
+
+  const stageMap: Record<
+    string,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    concept: { label: t('stageConcept'), variant: 'outline' },
+    design: { label: t('stageDesign'), variant: 'secondary' },
+    prototype: { label: t('stagePrototype'), variant: 'default' },
+    pilot: { label: t('stagePilot'), variant: 'default' },
+    mass: { label: t('stageMass'), variant: 'default' },
+    eol: { label: t('stageEol'), variant: 'destructive' },
+  };
+
+  const stageStatusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: t('inProgress'), variant: 'default' },
+    2: { label: t('completed'), variant: 'secondary' },
+    3: { label: t('paused'), variant: 'outline' },
+    4: { label: tc('cancel'), variant: 'destructive' },
+  };
+
+  const changeTypeMap: Record<string, string> = {
+    new: t('changeNew'),
+    revision: t('changeRevision'),
+    upgrade: t('changeUpgrade'),
+    downgrade: t('changeDowngrade'),
+  };
+
   const { toast } = useToast();
   const [records, setRecords] = useState<LifecycleRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -117,7 +122,7 @@ export default function ProductLifecyclePage() {
         setTotal(data.data.total || 0);
       }
     } catch {
-      toast({ title: '获取数据失败', variant: 'destructive' });
+      toast({ title: tc('fetchFailed'), variant: 'destructive' });
     }
     setLoading(false);
   };
@@ -128,7 +133,7 @@ export default function ProductLifecyclePage() {
 
   const handleSave = async () => {
     if (!form.product_name) {
-      toast({ title: '请输入产品名称', variant: 'destructive' });
+      toast({ title: t('inputProductName'), variant: 'destructive' });
       return;
     }
     try {
@@ -142,28 +147,28 @@ export default function ProductLifecyclePage() {
       });
       const data = await res.json();
       if (data.code === 200) {
-        toast({ title: editRecord ? '更新成功' : '创建成功' });
+        toast({ title: editRecord ? tc('updateSuccess') : tc('createSuccess') });
         setDialogOpen(false);
         fetchData();
       } else {
-        toast({ title: data.message || '操作失败', variant: 'destructive' });
+        toast({ title: data.message || tc('error'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确认删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await fetch('/api/plm/lifecycle?id=' + id, { method: 'DELETE' });
       const data = await res.json();
       if (data.code === 200) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -197,11 +202,11 @@ export default function ProductLifecyclePage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <GitBranch className="h-6 w-6" />
-            产品生命周期管理
+            {t('lifecycleTitle')}
           </h1>
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4 mr-1" />
-            新建记录
+            {t('newLifecycleRecord')}
           </Button>
         </div>
 
@@ -209,7 +214,7 @@ export default function ProductLifecyclePage() {
           <CardContent className="p-4">
             <div className="flex gap-3 mb-4">
               <Input
-                placeholder="搜索产品名称"
+                placeholder={t('searchProductPlaceholder')}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="w-48"
@@ -222,7 +227,7 @@ export default function ProductLifecyclePage() {
                 }}
               >
                 <SelectTrigger className="w-36">
-                  <SelectValue placeholder="生命周期阶段" />
+                  <SelectValue placeholder={t('lifecycleStage')} />
                 </SelectTrigger>
                 <SelectContent>
                   {stageOrder.map((s) => (
@@ -234,7 +239,7 @@ export default function ProductLifecyclePage() {
               </Select>
               <Button variant="outline" onClick={fetchData}>
                 <Search className="h-4 w-4 mr-1" />
-                搜索
+                {tc('search')}
               </Button>
             </div>
 
@@ -250,15 +255,15 @@ export default function ProductLifecyclePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>产品编码</TableHead>
-                  <TableHead>产品名称</TableHead>
-                  <TableHead>生命周期阶段</TableHead>
-                  <TableHead>阶段状态</TableHead>
-                  <TableHead>版本</TableHead>
-                  <TableHead>变更类型</TableHead>
-                  <TableHead>生效日期</TableHead>
-                  <TableHead>创建时间</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{t('productCode')}</TableHead>
+                  <TableHead>{t('productName')}</TableHead>
+                  <TableHead>{t('lifecycleStage')}</TableHead>
+                  <TableHead>{t('stageStatus')}</TableHead>
+                  <TableHead>{t('version')}</TableHead>
+                  <TableHead>{t('changeType')}</TableHead>
+                  <TableHead>{t('effectiveDate')}</TableHead>
+                  <TableHead>{tc('createTime')}</TableHead>
+                  <TableHead>{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -297,14 +302,14 @@ export default function ProductLifecyclePage() {
                 {records.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
             <div className="flex justify-between items-center mt-4 text-sm">
-              <span>共 {total} 条</span>
+              <span>{tc('total', { count: total })}</span>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -312,7 +317,7 @@ export default function ProductLifecyclePage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  上一页
+                  {tc('prevPage')}
                 </Button>
                 <Button
                   size="sm"
@@ -320,7 +325,7 @@ export default function ProductLifecyclePage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  下一页
+                  {tc('nextPage')}
                 </Button>
               </div>
             </div>
@@ -330,19 +335,19 @@ export default function ProductLifecyclePage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editRecord ? '编辑生命周期记录' : '新建生命周期记录'}</DialogTitle>
+              <DialogTitle>{editRecord ? t('editLifecycleRecord') : t('newLifecycleRecord')}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-3 py-2">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>产品编码</Label>
+                  <Label>{t('productCode')}</Label>
                   <Input
                     value={form.product_code || ''}
                     onChange={(e) => setForm({ ...form, product_code: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>产品名称 *</Label>
+                  <Label>{t('productName')} *</Label>
                   <Input
                     value={form.product_name || ''}
                     onChange={(e) => setForm({ ...form, product_name: e.target.value })}
@@ -351,7 +356,7 @@ export default function ProductLifecyclePage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>生命周期阶段</Label>
+                  <Label>{t('lifecycleStage')}</Label>
                   <Select
                     value={form.lifecycle_stage || 'concept'}
                     onValueChange={(v) => setForm({ ...form, lifecycle_stage: v })}
@@ -369,7 +374,7 @@ export default function ProductLifecyclePage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>阶段状态</Label>
+                  <Label>{t('stageStatus')}</Label>
                   <Select
                     value={String(form.stage_status || 1)}
                     onValueChange={(v) => setForm({ ...form, stage_status: Number(v) })}
@@ -378,17 +383,17 @@ export default function ProductLifecyclePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">进行中</SelectItem>
-                      <SelectItem value="2">已完成</SelectItem>
-                      <SelectItem value="3">暂停</SelectItem>
-                      <SelectItem value="4">取消</SelectItem>
+                      <SelectItem value="1">{t('inProgress')}</SelectItem>
+                      <SelectItem value="2">{t('completed')}</SelectItem>
+                      <SelectItem value="3">{t('paused')}</SelectItem>
+                      <SelectItem value="4">{tc('cancel')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>版本号</Label>
+                  <Label>{t('versionNumber')}</Label>
                   <Input
                     value={form.version || ''}
                     onChange={(e) => setForm({ ...form, version: e.target.value })}
@@ -396,7 +401,7 @@ export default function ProductLifecyclePage() {
                   />
                 </div>
                 <div>
-                  <Label>变更类型</Label>
+                  <Label>{t('changeType')}</Label>
                   <Select
                     value={form.change_type || 'new'}
                     onValueChange={(v) => setForm({ ...form, change_type: v })}
@@ -405,16 +410,16 @@ export default function ProductLifecyclePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="new">新建</SelectItem>
-                      <SelectItem value="revision">修订</SelectItem>
-                      <SelectItem value="upgrade">升级</SelectItem>
-                      <SelectItem value="downgrade">降级</SelectItem>
+                      <SelectItem value="new">{t('changeNew')}</SelectItem>
+                      <SelectItem value="revision">{t('changeRevision')}</SelectItem>
+                      <SelectItem value="upgrade">{t('changeUpgrade')}</SelectItem>
+                      <SelectItem value="downgrade">{t('changeDowngrade')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div>
-                <Label>生效日期</Label>
+                <Label>{t('effectiveDate')}</Label>
                 <Input
                   type="date"
                   value={form.effective_date || ''}
@@ -422,7 +427,7 @@ export default function ProductLifecyclePage() {
                 />
               </div>
               <div>
-                <Label>变更原因</Label>
+                <Label>{t('changeReason')}</Label>
                 <Textarea
                   value={form.change_reason || ''}
                   onChange={(e) => setForm({ ...form, change_reason: e.target.value })}
@@ -430,7 +435,7 @@ export default function ProductLifecyclePage() {
                 />
               </div>
               <div>
-                <Label>变更描述</Label>
+                <Label>{t('changeDesc')}</Label>
                 <Textarea
                   value={form.change_desc || ''}
                   onChange={(e) => setForm({ ...form, change_desc: e.target.value })}
@@ -438,7 +443,7 @@ export default function ProductLifecyclePage() {
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -448,9 +453,9 @@ export default function ProductLifecyclePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,16 +45,20 @@ interface Item {
   operator_name: string;
   remark?: string;
 }
-const statusMap: Record<
+const RETURN_STATUS_CONFIG: Record<
   number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  { variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '待退料', variant: 'outline' },
-  2: { label: '已退料', variant: 'default' },
-  3: { label: '已取消', variant: 'destructive' },
+  1: { variant: 'outline' },
+  2: { variant: 'default' },
+  3: { variant: 'destructive' },
 };
 
 export default function MaterialReturnPage() {
+  // 翻译钩子
+  const t = useTranslations('Production');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
@@ -117,14 +122,14 @@ export default function MaterialReturnPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
   const handleStatusChange = async (id: number, status: number) => {
@@ -135,7 +140,7 @@ export default function MaterialReturnPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '更新成功' });
+        toast({ title: tc('updateSuccess') });
         fetchData();
       }
     } catch (e) {
@@ -160,11 +165,11 @@ export default function MaterialReturnPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">生产退料</h1>
+          <h1 className="text-2xl font-bold">{t('materialReturnTitle')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={t('searchByNo')}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -181,7 +186,7 @@ export default function MaterialReturnPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增退料
+              {t('newReturn')}
             </Button>
           </div>
         </div>
@@ -190,18 +195,19 @@ export default function MaterialReturnPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">退料单号</TableHead>
-                  <TableHead className="text-xs">工单号</TableHead>
-                  <TableHead className="text-xs">仓库</TableHead>
-                  <TableHead className="text-xs">退料日期</TableHead>
-                  <TableHead className="text-xs">操作人</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{t('returnNo')}</TableHead>
+                  <TableHead className="text-xs">{t('workOrderNo')}</TableHead>
+                  <TableHead className="text-xs">{t('warehouse')}</TableHead>
+                  <TableHead className="text-xs">{t('returnDate')}</TableHead>
+                  <TableHead className="text-xs">{t('operator')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {list.map((item) => {
-                  const st = statusMap[item.status] || statusMap[1];
+                  const st = RETURN_STATUS_CONFIG[item.status] || RETURN_STATUS_CONFIG[1];
+                  const returnStatusLabels: Record<number, string> = {1: t('pendingReturnStatus'), 2: t('returnedStatus'), 3: t('cancelledStatus')};
                   return (
                     <TableRow key={item.id}>
                       <TableCell className="text-xs font-mono">{item.return_no}</TableCell>
@@ -213,7 +219,7 @@ export default function MaterialReturnPage() {
                       <TableCell className="text-xs">{item.operator_name || '-'}</TableCell>
                       <TableCell>
                         <Badge variant={st.variant} className="text-xs">
-                          {st.label}
+                          {returnStatusLabels[item.status] || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -225,7 +231,7 @@ export default function MaterialReturnPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              确认退料
+                              {t('confirmReturn')}
                             </Button>
                           )}
                           <Button
@@ -255,7 +261,7 @@ export default function MaterialReturnPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-gray-400 py-8">
-                      暂无记录
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -264,7 +270,7 @@ export default function MaterialReturnPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -272,7 +278,7 @@ export default function MaterialReturnPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -280,24 +286,24 @@ export default function MaterialReturnPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增退料单</DialogTitle>
+              <DialogTitle>{t('newReturnOrder')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>仓库</Label>
+                <Label>{t('warehouse')}</Label>
                 <Select
                   value={String(editItem.warehouse_id || '')}
                   onValueChange={(v) => setEditItem({ ...editItem, warehouse_id: Number(v) })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择仓库" />
+                    <SelectValue placeholder={t('selectWarehouse')} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w) => (
@@ -309,7 +315,7 @@ export default function MaterialReturnPage() {
                 </Select>
               </div>
               <div>
-                <Label>退料日期</Label>
+                <Label>{t('returnDate')}</Label>
                 <Input
                   type="date"
                   value={editItem.return_date || ''}
@@ -317,14 +323,14 @@ export default function MaterialReturnPage() {
                 />
               </div>
               <div>
-                <Label>工单号</Label>
+                <Label>{t('workOrderNo')}</Label>
                 <Input
                   value={editItem.work_order_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, work_order_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>操作人</Label>
+                <Label>{t('operator')}</Label>
                 <UserSelect
                   value={editItem.operator_name || ''}
                   onChange={(v) => setEditItem({ ...editItem, operator_name: v })}
@@ -333,9 +339,9 @@ export default function MaterialReturnPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

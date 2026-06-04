@@ -44,6 +44,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 interface Receivable {
   id: number;
@@ -125,6 +126,10 @@ const PAYMENT_METHODS: Record<string, string> = {
 };
 
 export default function FinancePage() {
+  // 翻译钩子
+  const t = useTranslations('Finance');
+  const tc = useTranslations('Common');
+
   const [activeTab, setActiveTab] = useState('receivable');
   const [receivables, setReceivables] = useState<Receivable[]>([]);
   const [payables, setPayables] = useState<Payable[]>([]);

@@ -17,6 +17,10 @@ interface InboundRecord {
 }
 
 export default function SimpleInboundPage() {
+  // 翻译钩子
+  const t = useTranslations('Warehouse');
+  const tc = useTranslations('Common');
+
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const headers: Record<string, string> = {
@@ -59,11 +63,11 @@ export default function SimpleInboundPage() {
   }, []);
 
   const statusLabels: Record<string, string> = {
-    draft: '草稿',
-    pending: '待审核',
-    approved: '已审核',
-    completed: '已完成',
-    cancelled: '已取消'
+    draft: tc('draft'),
+    pending: tc('pending'),
+    approved: tc('approved'),
+    completed: tc('completed'),
+    cancelled: tc('cancelled')
   };
 
   const statusColors: Record<string, string> = {
@@ -75,22 +79,22 @@ export default function SimpleInboundPage() {
   };
 
   return (
-    <MainLayout title="入库管理（简化版）">
+    <MainLayout title={t('inboundSimpleTitle')}>
       <div className="container mx-auto py-6 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>入库记录列表</CardTitle>
+            <CardTitle>{t('inboundSimpleRecords')}</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading && <p>加载中...</p>}
-            {error && <p className="text-red-600">错误: {error}</p>}
+            {loading && <p>{t('loading')}</p>}
+            {error && <p className="text-red-600">{tc('error')}: {error}</p>}
 
             {!loading && !error && (
               <>
-                <p className="mb-4">共 {records.length} 条记录</p>
+                <p className="mb-4">{t('inboundRecordsCount', { count: records.length })}</p>
                 <div className="space-y-4">
                   {records.length === 0 ? (
-                    <p className="text-gray-500">暂无数据</p>
+                    <p className="text-gray-500">{t('noData')}</p>
                   ) : (
                     records.map((record) => (
                       <div

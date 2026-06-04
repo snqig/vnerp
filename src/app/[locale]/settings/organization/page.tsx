@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -94,6 +95,10 @@ interface Role {
 }
 
 export default function OrganizationPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const [activeTab, setActiveTab] = useState('company');
 
   // 企业信息状态
@@ -279,7 +284,7 @@ export default function OrganizationPage() {
         setDeptDialogOpen(false);
         fetchDepartments();
       } else {
-        toast.error(result.message || '操作失败');
+        toast.error(result.message || tc('error'));
       }
     } catch (error) {
       console.error('保存部门失败:', error);
@@ -396,7 +401,7 @@ export default function OrganizationPage() {
         setCodeError('');
         fetchRoles();
       } else {
-        toast.error(result.message || '操作失败');
+        toast.error(result.message || tc('error'));
       }
     } catch (error) {
       console.error('保存角色失败:', error);
@@ -440,14 +445,14 @@ export default function OrganizationPage() {
       3: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
     };
     const labels = {
-      1: '启用',
+      1: tc('enabled'),
       0: '停用',
       2: '试用期',
       3: '离职',
     };
     return (
       <Badge className={styles[status as keyof typeof styles] || styles[1]}>
-        {labels[status as keyof typeof labels] || '未知'}
+        {labels[status as keyof typeof labels] || tc('unknown')}
       </Badge>
     );
   };

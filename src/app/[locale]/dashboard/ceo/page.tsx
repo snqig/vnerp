@@ -21,6 +21,7 @@ import {
   Maximize,
   Minimize,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface CEOData {
   overview: {
@@ -93,6 +94,9 @@ interface DefectItem {
 }
 
 export default function CEODashboard() {
+  const t = useTranslations('Dashboard');
+  const tc = useTranslations('Common');
+
   const { companyName } = useCompanyName();
   const [data, setData] = useState<CEOData>({
     overview: {
@@ -288,7 +292,7 @@ export default function CEODashboard() {
   }) => {
     if (data.length < 2)
       return (
-        <div className="h-32 flex items-center justify-center text-white/30 text-xs">暂无数据</div>
+        <div className="h-32 flex items-center justify-center text-white/30 text-xs">{tc('noData')}</div>
       );
     const max = Math.max(...data, 1);
     const min = Math.min(...data, 0);
@@ -339,7 +343,7 @@ export default function CEODashboard() {
     const allData = [...data1, ...data2];
     if (data1.length < 2 || data2.length < 2)
       return (
-        <div className="h-32 flex items-center justify-center text-white/30 text-xs">暂无数据</div>
+        <div className="h-32 flex items-center justify-center text-white/30 text-xs">{tc('noData')}</div>
       );
     const max = Math.max(...allData, 1);
     const min = Math.min(...allData, 0);
@@ -526,7 +530,7 @@ export default function CEODashboard() {
                   <h1 className="text-xl font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
                     {companyName}
                   </h1>
-                  <p className="text-xs text-white/50 mt-0.5">印刷智慧工厂生产看板</p>
+                  <p className="text-xs text-white/50 mt-0.5">{t('factoryDashboard')}</p>
                 </div>
                 <div className="tech-title-line-right" />
               </div>
@@ -536,21 +540,21 @@ export default function CEODashboard() {
               <div className="flex items-center gap-4 text-xs">
                 <div className="flex items-center gap-1.5">
                   <Package className="h-3.5 w-3.5 text-cyan-400" />
-                  <span className="text-white/50">今日订单</span>
+                  <span className="text-white/50">{t('todayOrders')}</span>
                   <span className="text-cyan-300 font-bold text-sm">
                     {data.overview.todayOrders}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Factory className="h-3.5 w-3.5 text-green-400" />
-                  <span className="text-white/50">今日生产</span>
+                  <span className="text-white/50">{t('todayProduction')}</span>
                   <span className="text-green-300 font-bold text-sm">
                     {formatQty(data.overview.todayProduction)}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Truck className="h-3.5 w-3.5 text-blue-400" />
-                  <span className="text-white/50">今日出货</span>
+                  <span className="text-white/50">{t('todayShipment')}</span>
                   <span className="text-blue-300 font-bold text-sm">
                     {data.overview.todayDelivery}
                   </span>
@@ -558,12 +562,12 @@ export default function CEODashboard() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-green-400 text-xs">实时</span>
+                <span className="text-green-400 text-xs">{t('realtime')}</span>
               </div>
               <button
                 onClick={toggleFullscreen}
                 className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-                title={isFullscreen ? '退出全屏' : '全屏显示'}
+                title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
               >
                 {isFullscreen ? (
                   <Minimize className="h-4 w-4 text-cyan-400" />
@@ -591,7 +595,7 @@ export default function CEODashboard() {
             {/* Left Column */}
             <div className="col-span-4 space-y-3">
               {/* 车间日产量 */}
-              <Panel title="车间日产量" icon={Factory}>
+              <Panel title={t('workshopDailyProduction')} icon={Factory}>
                 <div className="space-y-1.5">
                   {workshopDaily.length > 0 ? (
                     workshopDaily.slice(0, 8).map((item, i) => (
@@ -619,13 +623,13 @@ export default function CEODashboard() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-4 text-white/30 text-xs">暂无数据</div>
+                    <div className="text-center py-4 text-white/30 text-xs">{tc('noData')}</div>
                   )}
                 </div>
               </Panel>
 
               {/* 原材料采购&日消耗 */}
-              <Panel title="原材料采购&日消耗" icon={ShoppingCart}>
+              <Panel title={t('materialPurchaseConsumption')} icon={ShoppingCart}>
                 <div className="space-y-3">
                   {materialConsumption.length > 0 ? (
                     materialConsumption.map((item, i) => (
@@ -639,21 +643,21 @@ export default function CEODashboard() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-4 text-white/30 text-xs">暂无数据</div>
+                    <div className="text-center py-4 text-white/30 text-xs">{tc('noData')}</div>
                   )}
                 </div>
                 <div className="flex justify-center gap-6 mt-4 pt-3 border-t border-white/10">
-                  <RingChart percent={data.production.efficiency} label="设备效率" color="cyan" />
+                  <RingChart percent={data.production.efficiency} label={t('equipmentEfficiency')} color="cyan" />
                   <RingChart
                     percent={data.inventory.warehouseUtilization}
-                    label="仓库利用率"
+                    label={t('warehouseUtilization')}
                     color="blue"
                   />
                 </div>
               </Panel>
 
               {/* 原材料当月消耗 */}
-              <Panel title="原材料当月消耗" icon={BarChart3}>
+              <Panel title={t('monthlyMaterialConsumption')} icon={BarChart3}>
                 <div className="space-y-2">
                   {monthlyMaterialConsumption.length > 0 ? (
                     monthlyMaterialConsumption.map((item, i) => {
@@ -679,13 +683,13 @@ export default function CEODashboard() {
                       );
                     })
                   ) : (
-                    <div className="text-center py-4 text-white/30 text-xs">暂无数据</div>
+                    <div className="text-center py-4 text-white/30 text-xs">{tc('noData')}</div>
                   )}
                 </div>
               </Panel>
 
               {/* 车间历史产量 */}
-              <Panel title="车间历史产量" icon={TrendingUp}>
+              <Panel title={t('workshopHistory')} icon={TrendingUp}>
                 <div className="space-y-2">
                   {workshopHistory.length > 0 ? (
                     workshopHistory.map((item, i) => (
@@ -701,7 +705,7 @@ export default function CEODashboard() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-4 text-white/30 text-xs">暂无数据</div>
+                    <div className="text-center py-4 text-white/30 text-xs">{tc('noData')}</div>
                   )}
                 </div>
               </Panel>
@@ -710,11 +714,11 @@ export default function CEODashboard() {
             {/* Center Column */}
             <div className="col-span-4 space-y-3">
               {/* 三班生产情况 */}
-              <Panel title="三班生产情况" icon={Factory}>
+              <Panel title={t('shiftProduction')} icon={Factory}>
                 <div className="grid grid-cols-3 gap-3">
                   {/* 设备运转率 */}
                   <div className="space-y-2">
-                    <p className="text-xs text-white/50 text-center mb-2">三班车间设备运转率</p>
+                    <p className="text-xs text-white/50 text-center mb-2">{t('equipmentOperatingRate')}</p>
                     {data.production.equipmentStatus.length > 0 ? (
                       data.production.equipmentStatus.slice(0, 6).map((eq, i) => (
                         <div
@@ -738,30 +742,29 @@ export default function CEODashboard() {
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-4 text-white/30 text-xs">暂无数据</div>
+                    <div className="text-center py-4 text-white/30 text-xs">{tc('noData')}</div>
                     )}
                   </div>
 
-                  {/* 白班 */}
-                  <div className="space-y-2">
-                    <p className="text-xs text-cyan-300 text-center font-medium">
-                      白班 (Day shift)
-                    </p>
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="p-2 rounded bg-white/5">
-                        <p className="text-xs text-white/40">计划产量</p>
+                   <div className="space-y-2">
+                     <p className="text-xs text-cyan-300 text-center font-medium">
+                       {tc('shiftDay')}
+                     </p>
+                     <div className="grid grid-cols-3 gap-2 text-center">
+                       <div className="p-2 rounded bg-white/5">
+                         <p className="text-xs text-white/40">{tc('planQty')}</p>
                         <p className="text-sm font-bold text-cyan-300">
                           {formatQty(shiftData.dayShift.plan)}
                         </p>
                       </div>
                       <div className="p-2 rounded bg-white/5">
-                        <p className="text-xs text-white/40">实际产量</p>
+                        <p className="text-xs text-white/40">{tc('actualQty')}</p>
                         <p className="text-sm font-bold text-green-300">
                           {formatQty(shiftData.dayShift.actual)}
                         </p>
                       </div>
                       <div className="p-2 rounded bg-white/5">
-                        <p className="text-xs text-white/40">达成率</p>
+                        <p className="text-xs text-white/40">{tc('achieveRate')}</p>
                         <p className="text-sm font-bold text-blue-300">
                           {shiftData.dayShift.rate}%
                         </p>
@@ -772,23 +775,23 @@ export default function CEODashboard() {
                   {/* 中班 */}
                   <div className="space-y-2">
                     <p className="text-xs text-blue-300 text-center font-medium">
-                      中班 (Middle shift)
+                       {tc('shiftMiddle')}
                     </p>
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 rounded bg-white/5">
-                        <p className="text-xs text-white/40">计划产量</p>
+                        <p className="text-xs text-white/40">{tc('planQty')}</p>
                         <p className="text-sm font-bold text-cyan-300">
                           {formatQty(shiftData.middleShift.plan)}
                         </p>
                       </div>
                       <div className="p-2 rounded bg-white/5">
-                        <p className="text-xs text-white/40">实际产量</p>
+                        <p className="text-xs text-white/40">{tc('actualQty')}</p>
                         <p className="text-sm font-bold text-green-300">
                           {formatQty(shiftData.middleShift.actual)}
                         </p>
                       </div>
                       <div className="p-2 rounded bg-white/5">
-                        <p className="text-xs text-white/40">达成率</p>
+                        <p className="text-xs text-white/40">{tc('achieveRate')}</p>
                         <p className="text-sm font-bold text-blue-300">
                           {shiftData.middleShift.rate}%
                         </p>
@@ -801,24 +804,24 @@ export default function CEODashboard() {
                 <div className="mt-3 pt-3 border-t border-white/10">
                   <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-2">
-                      <p className="text-xs text-purple-300 text-center font-medium">
-                        夜班 (Night shift)
-                      </p>
+                       <p className="text-xs text-purple-300 text-center font-medium">
+                         {tc('shiftNight')}
+                       </p>
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="p-2 rounded bg-white/5">
-                          <p className="text-xs text-white/40">计划产量</p>
+                          <p className="text-xs text-white/40">{tc('planQty')}</p>
                           <p className="text-sm font-bold text-cyan-300">
                             {formatQty(shiftData.nightShift.plan)}
                           </p>
                         </div>
                         <div className="p-2 rounded bg-white/5">
-                          <p className="text-xs text-white/40">实际产量</p>
+                          <p className="text-xs text-white/40">{tc('actualQty')}</p>
                           <p className="text-sm font-bold text-green-300">
                             {formatQty(shiftData.nightShift.actual)}
                           </p>
                         </div>
                         <div className="p-2 rounded bg-white/5">
-                          <p className="text-xs text-white/40">达成率</p>
+                          <p className="text-xs text-white/40">{tc('achieveRate')}</p>
                           <p className="text-sm font-bold text-blue-300">
                             {shiftData.nightShift.rate}%
                           </p>
@@ -826,9 +829,9 @@ export default function CEODashboard() {
                       </div>
                     </div>
                     <div className="col-span-3">
-                      <p className="text-xs text-white/50 mb-2">三班比率</p>
+                       <p className="text-xs text-white/50 mb-2">{tc('shiftRatio')}</p>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-white/40 w-8">白班</span>
+                         <span className="text-xs text-white/40 w-8">{tc('shiftDay')}</span>
                         <div className="flex-1 bg-white/10 rounded-full h-3 overflow-hidden">
                           <div
                             className="bg-gradient-to-r from-cyan-400 to-cyan-500 h-full rounded-full"
@@ -840,7 +843,7 @@ export default function CEODashboard() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-xs text-white/40 w-8">中班</span>
+                         <span className="text-xs text-white/40 w-8">{tc('shiftMiddle')}</span>
                         <div className="flex-1 bg-white/10 rounded-full h-3 overflow-hidden">
                           <div
                             className="bg-gradient-to-r from-blue-400 to-blue-500 h-full rounded-full"
@@ -852,7 +855,7 @@ export default function CEODashboard() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1.5">
-                        <span className="text-xs text-white/40 w-8">夜班</span>
+                         <span className="text-xs text-white/40 w-8">{tc('shiftNight')}</span>
                         <div className="flex-1 bg-white/10 rounded-full h-3 overflow-hidden">
                           <div
                             className="bg-gradient-to-r from-purple-400 to-purple-500 h-full rounded-full"
@@ -869,7 +872,7 @@ export default function CEODashboard() {
               </Panel>
 
               {/* 订单趋势 */}
-              <Panel title="订单趋势" icon={TrendingUp}>
+              <Panel title={t('orderTrend')} icon={TrendingUp}>
                 <div className="h-40">
                   <LineChart
                     data={data.orderTrend.length > 0 ? data.orderTrend.map((d) => d.count) : []}
@@ -885,13 +888,13 @@ export default function CEODashboard() {
                       </span>
                     ))
                   ) : (
-                    <span className="text-[10px] text-white/30">暂无数据</span>
+                    <span className="text-[10px] text-white/30">{tc('noData')}</span>
                   )}
                 </div>
               </Panel>
 
               {/* 生产单位电耗 */}
-              <Panel title="生产单位电耗&耗材" icon={Zap}>
+              <Panel title={t('powerConsumptionMaterial')} icon={Zap}>
                 <div className="h-32">
                   <DualLineChart
                     data1={
@@ -910,11 +913,11 @@ export default function CEODashboard() {
                 <div className="flex items-center justify-center gap-4 mt-2">
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-cyan-400" />
-                    <span className="text-xs text-white/50">电耗 (kwh)</span>
+                    <span className="text-xs text-white/50">{t('powerConsumptionKwh')}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-amber-400" />
-                    <span className="text-xs text-white/50">耗材 (kg)</span>
+                    <span className="text-xs text-white/50">{t('consumableKg')}</span>
                   </div>
                 </div>
               </Panel>
@@ -923,7 +926,7 @@ export default function CEODashboard() {
             {/* Right Column */}
             <div className="col-span-4 space-y-3">
               {/* 各产品与车间生产工序关系 */}
-              <Panel title="各产品与车间生产工序关系" icon={Factory}>
+              <Panel title={t('productProcessRelation')} icon={Factory}>
                 <div className="flex justify-center py-4">
                   <div className="relative w-48 h-48">
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -954,7 +957,7 @@ export default function CEODashboard() {
                       })
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs text-white/30">暂无数据</span>
+                        <span className="text-xs text-white/30">{tc('noData')}</span>
                       </div>
                     )}
                     {data.processRelations.length > 0 && (
@@ -984,22 +987,22 @@ export default function CEODashboard() {
               </Panel>
 
               {/* 生产状态 */}
-              <Panel title="生产状态" icon={Factory}>
+              <Panel title={t('productionStatus')} icon={Factory}>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/50">进行中工单</span>
+                     <span className="text-white/50">{t('inProgressOrders')}</span>
                     <span className="text-green-400 font-bold text-base">
                       {data.production.activeOrders}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/50">今日完成</span>
+                     <span className="text-white/50">{t('todayCompleted')}</span>
                     <span className="text-green-400 font-bold text-base">
                       {data.production.completedToday}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/50">预警工单</span>
+                     <span className="text-white/50">{t('warningOrders')}</span>
                     <span className="text-yellow-400 font-bold text-base">
                       {data.production.warningCount}
                     </span>
@@ -1026,12 +1029,12 @@ export default function CEODashboard() {
                             className={`text-xs ${wo.priority === 'urgent' ? 'text-red-400' : wo.priority === 'high' ? 'text-yellow-400' : 'text-white/40'}`}
                           >
                             {wo.priority === 'urgent'
-                              ? '紧急'
+                              ? tc('critical')
                               : wo.priority === 'high'
-                                ? '高'
+                                ? tc('high')
                                 : wo.priority === 'normal'
-                                  ? '普通'
-                                  : '低'}
+                                   ? tc('medium')
+                                  : tc('low')}
                           </span>
                         </div>
                       ))}
@@ -1041,7 +1044,7 @@ export default function CEODashboard() {
               </Panel>
 
               {/* 设备状态 */}
-              <Panel title="设备状态" icon={Zap}>
+              <Panel title={t('equipmentStatusTitle')} icon={Zap}>
                 <AutoScroll maxHeight={160}>
                   <div className="grid grid-cols-2 gap-1.5">
                     {data.production.equipmentStatus.length > 0 ? (
@@ -1058,18 +1061,18 @@ export default function CEODashboard() {
                             className={`text-xs ${eq.status === 'running' ? 'text-green-400' : eq.status === 'idle' ? 'text-blue-400' : eq.status === 'maintenance' ? 'text-yellow-400' : 'text-red-400'}`}
                           >
                             {eq.status === 'running'
-                              ? '运行'
+                              ? tc('running')
                               : eq.status === 'idle'
-                                ? '空闲'
+                                ? tc('idle')
                                 : eq.status === 'maintenance'
-                                  ? '保养'
-                                  : '故障'}
+                                  ? tc('underMaintenance')
+                                  : tc('fault')}
                           </span>
                         </div>
                       ))
                     ) : (
                       <div className="col-span-2 text-center py-4 text-white/30 text-xs">
-                        暂无数据
+                        {tc('noData')}
                       </div>
                     )}
                   </div>
@@ -1077,28 +1080,28 @@ export default function CEODashboard() {
               </Panel>
 
               {/* 财务概览 */}
-              <Panel title="财务概览" icon={DollarSign}>
+              <Panel title={t('financeOverview')} icon={DollarSign}>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-white/50">应收总额</span>
-                    <span className="text-sm text-green-300 font-mono">
-                      {formatMoney(data.finance.totalReceivable)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-white/50">应付总额</span>
-                    <span className="text-sm text-red-300 font-mono">
-                      {formatMoney(data.finance.totalPayable)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-white/50">本月收入</span>
-                    <span className="text-sm text-cyan-300 font-mono">
-                      {formatMoney(data.finance.monthRevenue)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-white/50">本月支出</span>
+                     <span className="text-xs text-white/50">{t('totalReceivable')}</span>
+                     <span className="text-sm text-green-300 font-mono">
+                       {formatMoney(data.finance.totalReceivable)}
+                     </span>
+                   </div>
+                   <div className="flex items-center justify-between">
+                     <span className="text-xs text-white/50">{t('totalPayable')}</span>
+                     <span className="text-sm text-red-300 font-mono">
+                       {formatMoney(data.finance.totalPayable)}
+                     </span>
+                   </div>
+                   <div className="flex items-center justify-between">
+                     <span className="text-xs text-white/50">{t('monthlyIncome')}</span>
+                     <span className="text-sm text-cyan-300 font-mono">
+                       {formatMoney(data.finance.monthRevenue)}
+                     </span>
+                   </div>
+                   <div className="flex items-center justify-between">
+                     <span className="text-xs text-white/50">{t('monthlyExpense')}</span>
                     <span className="text-sm text-amber-300 font-mono">
                       {formatMoney(data.finance.monthExpense)}
                     </span>
@@ -1111,7 +1114,7 @@ export default function CEODashboard() {
           {/* 仪表盘控制区 */}
           <div className="grid grid-cols-12 gap-3 mt-3">
             <div className="col-span-3">
-              <Panel title="产能功率调节" icon={Zap}>
+              <Panel title={t('powerCapacityAdjust')} icon={Zap}>
                 <div className="flex flex-col items-center py-3 relative">
                   <div
                     className="absolute inset-0 pointer-events-none"
@@ -1125,18 +1128,18 @@ export default function CEODashboard() {
                     onChange={setKnobSpeed}
                     accent="#22d3ee"
                     size={100}
-                    label="功率"
+                    label={t('powerLabel')}
                   />
                   <div className="mt-3 text-cyan-300 font-extrabold text-xl">
                     {knobSpeed}
                     <span className="text-white/40 text-sm ml-1">%</span>
                   </div>
-                  <div className="text-white/30 text-xs mt-1">设定范围：0～100%</div>
+                  <div className="text-white/30 text-xs mt-1">{t('powerRange')}</div>
                 </div>
               </Panel>
             </div>
             <div className="col-span-3">
-              <Panel title="设备效率仪表" icon={Factory}>
+              <Panel title={t('efficiencyGauge')} icon={Factory}>
                 <div className="flex flex-col items-center py-2 relative">
                   <div
                     className="absolute inset-0 pointer-events-none"
@@ -1147,7 +1150,7 @@ export default function CEODashboard() {
                   />
                   <GlassGauge
                     value={data.production.efficiency}
-                    label="设备效率"
+                    label={t('equipmentEfficiency')}
                     unit="%"
                     colorArc="#15ffbb"
                     colorDanger="#ff5555"
@@ -1161,7 +1164,7 @@ export default function CEODashboard() {
               </Panel>
             </div>
             <div className="col-span-3">
-              <Panel title="品质合格率仪表" icon={AlertTriangle}>
+              <Panel title={t('qualityRateGauge')} icon={AlertTriangle}>
                 <div className="flex flex-col items-center py-2 relative">
                   <div
                     className="absolute inset-0 pointer-events-none"
@@ -1172,7 +1175,7 @@ export default function CEODashboard() {
                   />
                   <GlassGauge
                     value={data.quality.passRate}
-                    label="合格率"
+                    label={t('qualityRate')}
                     unit="%"
                     colorArc="#1fcfff"
                     colorDanger="#ff5555"
@@ -1186,7 +1189,7 @@ export default function CEODashboard() {
               </Panel>
             </div>
             <div className="col-span-3">
-              <Panel title="仓库利用率调节" icon={Package}>
+              <Panel title={t('warehouseUtilizationAdjust')} icon={Package}>
                 <div className="flex flex-col items-center py-3 relative">
                   <div
                     className="absolute inset-0 pointer-events-none"
@@ -1199,13 +1202,13 @@ export default function CEODashboard() {
                     value={data.inventory.warehouseUtilization}
                     accent="#3b82f6"
                     size={100}
-                    label="利用率"
+                    label={t('utilizationRate')}
                   />
                   <div className="mt-3 text-blue-300 font-extrabold text-xl">
                     {data.inventory.warehouseUtilization}
                     <span className="text-white/40 text-sm ml-1">%</span>
                   </div>
-                  <div className="text-white/30 text-xs mt-1">仓库空间使用率</div>
+                  <div className="text-white/30 text-xs mt-1">{t('warehouseSpaceUsage')}</div>
                 </div>
               </Panel>
             </div>

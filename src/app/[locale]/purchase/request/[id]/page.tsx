@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
@@ -64,10 +65,15 @@ interface RequestItem {
   remark: string;
 }
 
-const statusMap: Record<number, { label: string; color: string }> = {
-  0: { label: '草稿', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+export default function PurchaseRequestDetailPage() {
+  // 翻译钩子
+  const t = useTranslations('Purchase');
+  const tc = useTranslations('Common');
+
+  const statusMap: Record<number, { label: string; color: string }> = {
+  0: { label: tc('draft'), color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
   1: {
-    label: '待审批',
+    label: tc('pending'),
     color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
   },
   2: {
@@ -76,7 +82,7 @@ const statusMap: Record<number, { label: string; color: string }> = {
   },
   3: { label: '已拒绝', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
   4: {
-    label: '已转采购',
+    label: tc('convertedToPurchase'),
     color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
   },
   5: {
@@ -85,17 +91,16 @@ const statusMap: Record<number, { label: string; color: string }> = {
   },
 };
 
-const priorityMap: Record<number, { label: string; color: string }> = {
-  0: { label: '低', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  1: { label: '中', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  const priorityMap: Record<number, { label: string; color: string }> = {
+  0: { label: tc('low'), color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+  1: { label: tc('medium'), color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
   2: {
-    label: '高',
+    label: tc('high'),
     color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
   },
-  3: { label: '紧急', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+  3: { label: tc('critical'), color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
 };
 
-export default function PurchaseRequestDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -210,12 +215,12 @@ export default function PurchaseRequestDetailPage() {
           <span
             className={`px-3 py-1 rounded text-sm font-medium ${statusMap[request.status]?.color}`}
           >
-            {statusMap[request.status]?.label || '未知'}
+            {statusMap[request.status]?.label || tc('unknown')}
           </span>
           <span
             className={`px-3 py-1 rounded text-sm font-medium ${priorityMap[request.priority]?.color}`}
           >
-            优先级：{priorityMap[request.priority]?.label || '中'}
+            优先级：{priorityMap[request.priority]?.label || tc('medium')}
           </span>
         </div>
 

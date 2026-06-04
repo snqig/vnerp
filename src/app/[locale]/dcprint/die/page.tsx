@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface Item {
   id: number;
@@ -55,6 +56,10 @@ const statusMap: Record<
 };
 
 export default function DieManagementPage() {
+  // 翻译钩子
+  const t = useTranslations('Dcprint');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
@@ -128,13 +133,13 @@ export default function DieManagementPage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="编码"
+                placeholder=tc("code")
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
                 className="w-28 h-8 text-sm"
               />
               <Input
-                placeholder="名称"
+                placeholder=tc("name")
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="w-28 h-8 text-sm"

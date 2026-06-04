@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Save, ArrowLeft, FlaskConical } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -32,6 +33,10 @@ const authFetch = async (url: string, options: RequestInit = {}) => {
 };
 
 export default function NewSampleOrderPage() {
+  // 翻译钩子
+  const t = useTranslations('Orders');
+  const tc = useTranslations('Common');
+
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -123,7 +128,7 @@ export default function NewSampleOrderPage() {
           </div>
           <Button onClick={handleSave} disabled={isSaving}>
             <Save className="h-4 w-4 mr-2" />
-            {isSaving ? '保存中...' : '保存'}
+            {isSaving ? '保存中...' : tc('save')}
           </Button>
         </div>
 

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -49,6 +50,9 @@ interface Requisition {
 }
 
 export default function MaterialRequisitionsPage() {
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
@@ -88,7 +92,7 @@ export default function MaterialRequisitionsPage() {
         setTotal(result.data.total || 0);
       }
     } catch (error) {
-      toast.error('加载领料单失败');
+      toast.error(t('loadFail'));
     } finally {
       setLoading(false);
     }
@@ -100,27 +104,27 @@ export default function MaterialRequisitionsPage() {
 
   const getStatusBadge = (status: number) => {
     const map: Record<number, { label: string; variant: any }> = {
-      0: { label: '待审批', variant: 'secondary' },
-      1: { label: '待出库', variant: 'warning' },
-      2: { label: '已出库', variant: 'success' },
-      3: { label: '已取消', variant: 'destructive' },
+      0: { label: tc('pending'), variant: 'secondary' },
+      1: { label: t('pendingIssue'), variant: 'warning' },
+      2: { label: t('issued'), variant: 'success' },
+      3: { label: t('cancelled'), variant: 'destructive' },
     };
-    const s = map[status] || { label: '未知', variant: 'default' };
+    const s = map[status] || { label: tc('unknown'), variant: 'default' };
     return <Badge variant={s.variant}>{s.label}</Badge>;
   };
 
   const getTypeLabel = (type: string) => {
     const map: Record<string, string> = {
-      normal: '正常领料',
-      over: '超领',
-      supplementary: '补料',
+      normal: t('normalIssue'),
+      over: t('overIssue'),
+      supplementary: t('supplementary'),
     };
     return map[type] || type;
   };
 
   const handleAutoGenerate = async () => {
     if (!workOrderId) {
-      toast.error('请输入工单ID');
+      toast.error(t('enterWorkOrderId'));
       return;
     }
     try {
@@ -137,13 +141,13 @@ export default function MaterialRequisitionsPage() {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error('生成失败');
+      toast.error(t('generateFail'));
     }
   };
 
   const handleOverIssue = async () => {
     if (!workOrderId || !overMaterialId || !overQuantity || !overReason) {
-      toast.error('请填写完整信息');
+      toast.error(t('fillAllInfo'));
       return;
     }
     try {
@@ -162,13 +166,13 @@ export default function MaterialRequisitionsPage() {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error('提交失败');
+      toast.error(t('submitFail'));
     }
   };
 
   const handleSupplementary = async () => {
     if (!supReqId || !supMaterialId || !supQuantity || !supReason) {
-      toast.error('请填写完整信息');
+      toast.error(t('fillAllInfo'));
       return;
     }
     try {
@@ -187,13 +191,13 @@ export default function MaterialRequisitionsPage() {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error('提交失败');
+      toast.error(t('submitFail'));
     }
   };
 
   const handleIssue = async () => {
     if (!selectedReq || !issueItems) {
-      toast.error('请填写出库信息');
+      toast.error(t('fillIssueInfo'));
       return;
     }
     try {
@@ -211,7 +215,7 @@ export default function MaterialRequisitionsPage() {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error('出库失败，请检查JSON格式');
+      toast.error(t('issueFail'));
     }
   };
 
@@ -222,59 +226,59 @@ export default function MaterialRequisitionsPage() {
         status: approved ? 1 : 3,
       });
       if (result.success) {
-        toast.success(approved ? '审批通过' : '已驳回');
+        toast.success(approved ? t('approveSuccess') : t('rejectSuccess'));
         loadRequisitions();
       }
     } catch (error) {
-      toast.error('审批失败');
+      toast.error(t('approveFail'));
     }
   };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">物料领用管理</h1>
+        <h1 className="text-2xl font-bold">{t('materialRequisitionManagement')}</h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowAutoGen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> 自动生成
+            <Plus className="w-4 h-4 mr-2" /> {t('autoGenerate')}
           </Button>
           <Button variant="outline" onClick={() => setShowOverIssue(true)}>
-            <RotateCcw className="w-4 h-4 mr-2" /> 超领申请
+            <RotateCcw className="w-4 h-4 mr-2" /> {t('overIssueRequest')}
           </Button>
           <Button variant="outline" onClick={() => setShowSupplementary(true)}>
-            <FileCheck className="w-4 h-4 mr-2" /> 补料申请
+            <FileCheck className="w-4 h-4 mr-2" /> {t('supplementaryRequest')}
           </Button>
           <Button onClick={loadRequisitions} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> 刷新
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> {t('refresh')}
           </Button>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="all">全部</TabsTrigger>
-          <TabsTrigger value="normal">正常领料</TabsTrigger>
-          <TabsTrigger value="over">超领</TabsTrigger>
-          <TabsTrigger value="supplementary">补料</TabsTrigger>
+          <TabsTrigger value="all">{t('all')}</TabsTrigger>
+          <TabsTrigger value="normal">{t('normalIssue')}</TabsTrigger>
+          <TabsTrigger value="over">{t('overIssue')}</TabsTrigger>
+          <TabsTrigger value="supplementary">{t('supplementary')}</TabsTrigger>
         </TabsList>
       </Tabs>
 
       <Card>
         <CardHeader>
-          <CardTitle>领料单列表</CardTitle>
+          <CardTitle>{t('requisitionList')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>领料单号</TableHead>
-                <TableHead>工单号</TableHead>
-                <TableHead>类型</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>数量</TableHead>
-                <TableHead>申请人</TableHead>
-                <TableHead>申请时间</TableHead>
-                <TableHead>操作</TableHead>
+                <TableHead>{t('requisitionNo')}</TableHead>
+                <TableHead>{t('workOrderNo')}</TableHead>
+                <TableHead>{t('type')}</TableHead>
+                <TableHead>{t('status')}</TableHead>
+                <TableHead>{t('quantity')}</TableHead>
+                <TableHead>{t('applicant')}</TableHead>
+                <TableHead>{t('applyTime')}</TableHead>
+                <TableHead>{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -296,14 +300,14 @@ export default function MaterialRequisitionsPage() {
                             variant="outline"
                             onClick={() => handleApprove(req.id, true)}
                           >
-                            通过
+                            {t('approve')}
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
                             onClick={() => handleApprove(req.id, false)}
                           >
-                            驳回
+                            {t('reject')}
                           </Button>
                         </>
                       )}
@@ -316,7 +320,7 @@ export default function MaterialRequisitionsPage() {
                             setShowIssue(true);
                           }}
                         >
-                          <ScanLine className="w-3 h-3 mr-1" /> 出库
+                          <ScanLine className="w-3 h-3 mr-1" /> {t('issue')}
                         </Button>
                       )}
                     </div>
@@ -326,7 +330,7 @@ export default function MaterialRequisitionsPage() {
               {requisitions.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                    暂无数据
+                    {t('noData')}
                   </TableCell>
                 </TableRow>
               )}
@@ -335,48 +339,46 @@ export default function MaterialRequisitionsPage() {
         </CardContent>
       </Card>
 
-      {/* 自动生成弹窗 */}
       <Dialog open={showAutoGen} onOpenChange={setShowAutoGen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>自动生成领料单</DialogTitle>
+            <DialogTitle>{t('autoGenerateRequisition')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>工单ID</Label>
+              <Label>{t('workOrderId')}</Label>
               <Input
                 value={workOrderId}
                 onChange={(e) => setWorkOrderId(e.target.value)}
-                placeholder="输入工单ID"
+                placeholder={t('enterWorkOrderId')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAutoGen(false)}>
-              取消
+              {t('cancel')}
             </Button>
-            <Button onClick={handleAutoGenerate}>生成</Button>
+            <Button onClick={handleAutoGenerate}>{t('generate')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* 超领弹窗 */}
       <Dialog open={showOverIssue} onOpenChange={setShowOverIssue}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>超领申请</DialogTitle>
+            <DialogTitle>{t('overIssueRequest')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>工单ID</Label>
+              <Label>{t('workOrderId')}</Label>
               <Input value={workOrderId} onChange={(e) => setWorkOrderId(e.target.value)} />
             </div>
             <div>
-              <Label>物料ID</Label>
+              <Label>{t('materialId')}</Label>
               <Input value={overMaterialId} onChange={(e) => setOverMaterialId(e.target.value)} />
             </div>
             <div>
-              <Label>超领数量</Label>
+              <Label>{t('overIssueQty')}</Label>
               <Input
                 type="number"
                 value={overQuantity}
@@ -384,36 +386,35 @@ export default function MaterialRequisitionsPage() {
               />
             </div>
             <div>
-              <Label>超领原因</Label>
+              <Label>{t('overIssueReason')}</Label>
               <Textarea value={overReason} onChange={(e) => setOverReason(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowOverIssue(false)}>
-              取消
+              {t('cancel')}
             </Button>
-            <Button onClick={handleOverIssue}>提交</Button>
+            <Button onClick={handleOverIssue}>{t('submit')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* 补料弹窗 */}
       <Dialog open={showSupplementary} onOpenChange={setShowSupplementary}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>补料申请</DialogTitle>
+            <DialogTitle>{t('supplementaryRequest')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>原领料单ID</Label>
+              <Label>{t('originalRequisitionId')}</Label>
               <Input value={supReqId} onChange={(e) => setSupReqId(e.target.value)} />
             </div>
             <div>
-              <Label>物料ID</Label>
+              <Label>{t('materialId')}</Label>
               <Input value={supMaterialId} onChange={(e) => setSupMaterialId(e.target.value)} />
             </div>
             <div>
-              <Label>补料数量</Label>
+              <Label>{t('supplementaryQty')}</Label>
               <Input
                 type="number"
                 value={supQuantity}
@@ -421,28 +422,27 @@ export default function MaterialRequisitionsPage() {
               />
             </div>
             <div>
-              <Label>补料原因</Label>
+              <Label>{t('supplementaryReason')}</Label>
               <Textarea value={supReason} onChange={(e) => setSupReason(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSupplementary(false)}>
-              取消
+              {t('cancel')}
             </Button>
-            <Button onClick={handleSupplementary}>提交</Button>
+            <Button onClick={handleSupplementary}>{t('submit')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* 出库弹窗 */}
       <Dialog open={showIssue} onOpenChange={setShowIssue}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>扫码出库 - {selectedReq?.requisition_no}</DialogTitle>
+            <DialogTitle>{t('scanIssue')} - {selectedReq?.requisition_no}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>出库物料JSON</Label>
+              <Label>{t('issueItemsJson')}</Label>
               <Textarea
                 value={issueItems}
                 onChange={(e) => setIssueItems(e.target.value)}
@@ -453,10 +453,10 @@ export default function MaterialRequisitionsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowIssue(false)}>
-              取消
+              {t('cancel')}
             </Button>
             <Button onClick={handleIssue}>
-              <ScanLine className="w-4 h-4 mr-2" /> 确认出库
+              <ScanLine className="w-4 h-4 mr-2" /> {t('confirmIssue')}
             </Button>
           </DialogFooter>
         </DialogContent>

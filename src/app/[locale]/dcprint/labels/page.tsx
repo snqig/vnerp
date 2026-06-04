@@ -35,6 +35,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { LabelPrintTrigger, LabelData } from '@/components/printing/LabelPrintPreview';
 import { PrinterManagement } from '@/components/printing/PrinterManagement';
+import { useTranslations } from 'next-intl';
 
 // 物料标签类型
 interface MaterialLabel {
@@ -61,34 +62,8 @@ interface MaterialLabel {
   createTime?: string;
 }
 
-// 状态徽章
-const getStatusBadge = (status: string) => {
-  const statusMap: Record<string, { label: string; className: string }> = {
-    active: {
-      label: '正常',
-      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    },
-    frozen: {
-      label: '冻结',
-      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-    },
-    cut: {
-      label: '已分切',
-      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    },
-    disabled: {
-      label: '禁用',
-      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-    },
-  };
-  const config = statusMap[status] || {
-    label: status,
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  };
-  return <Badge className={config.className}>{config.label}</Badge>;
-};
-
 // 是否徽章
+
 const getYesNoBadge = (value: number) => {
   return value === 1 ? (
     <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
@@ -100,6 +75,37 @@ const getYesNoBadge = (value: number) => {
 };
 
 export default function MaterialLabelsPage() {
+  // 翻译钩子
+  const t = useTranslations('Dcprint');
+  const tc = useTranslations('Common');
+
+  // 状态徽章
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; className: string }> = {
+      active: {
+        label: tc('normal'),
+        className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+      },
+      frozen: {
+        label: tc('frozen'),
+        className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+      },
+      cut: {
+        label: '已分切',
+        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+      },
+      disabled: {
+        label: tc('disabled'),
+        className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+      },
+    };
+    const config = statusMap[status] || {
+      label: status,
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    };
+    return <Badge className={config.className}>{config.label}</Badge>;
+  };
+
   const { user } = useAuth();
   const [labels, setLabels] = useState<MaterialLabel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -272,7 +278,7 @@ export default function MaterialLabelsPage() {
                 <label className="text-sm font-medium mb-2 block">母材</label>
                 <Select value={isMainMaterial} onValueChange={setIsMainMaterial}>
                   <SelectTrigger>
-                    <SelectValue placeholder="全部" />
+                    <SelectValue placeholder=tc("all") />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部</SelectItem>
@@ -285,7 +291,7 @@ export default function MaterialLabelsPage() {
                 <label className="text-sm font-medium mb-2 block">已分切</label>
                 <Select value={isCut} onValueChange={setIsCut}>
                   <SelectTrigger>
-                    <SelectValue placeholder="全部" />
+                    <SelectValue placeholder=tc("all") />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部</SelectItem>

@@ -20,8 +20,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ArrowLeft, Save, Building2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function NewCustomerPage() {
+  const t = useTranslations('Orders');
+  const tc = useTranslations('Common');
+
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -70,7 +74,7 @@ export default function NewCustomerPage() {
     e.preventDefault();
 
     if (!formData.customer_code || !formData.customer_name) {
-      alert('请填写客户编码和客户名称');
+      alert(t('fillCustomerCodeName'));
       return;
     }
 
@@ -89,326 +93,319 @@ export default function NewCustomerPage() {
       const result = await response.json();
 
       if (result.success) {
-        alert('客户创建成功');
+        alert(tc('createSuccess'));
         router.push('/orders/customers');
       } else {
-        alert('创建失败: ' + result.message);
+        alert(t('createCustomerFailed') + ': ' + result.message);
       }
     } catch (error) {
-      console.error('创建失败:', error);
-      alert('创建失败，请检查网络连接');
+      console.error(t('createCustomerFailed'), error);
+      alert(t('createCustomerNetworkError'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <MainLayout title="新建客户">
+    <MainLayout title={t('newCustomer')}>
       <div className="space-y-4">
-        {/* 工具栏 */}
         <div className="flex justify-between items-center">
           <Button variant="outline" onClick={() => router.push('/orders/customers')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            返回列表
+            {tc('back')}
           </Button>
           <Button onClick={handleSubmit} disabled={loading}>
             <Save className="h-4 w-4 mr-2" />
-            {loading ? '保存中...' : '保存'}
+            {loading ? tc('loading') : tc('save')}
           </Button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 基本信息 */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                基本信息
+                {t('basicInfo')}
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="customer_code">
-                  客户编码 <span className="text-red-500">*</span>
+                  {t('customerCode')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="customer_code"
                   value={formData.customer_code}
                   onChange={(e) => handleChange('customer_code', e.target.value)}
-                  placeholder="请输入客户编码"
+                  placeholder={t('customerCodePlaceholder')}
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customer_name">
-                  客户名称 <span className="text-red-500">*</span>
+                  {t('customerName')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="customer_name"
                   value={formData.customer_name}
                   onChange={(e) => handleChange('customer_name', e.target.value)}
-                  placeholder="请输入客户名称"
+                  placeholder={t('customerNamePlaceholder')}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="short_name">客户简称</Label>
+                <Label htmlFor="short_name">{t('shortName')}</Label>
                 <Input
                   id="short_name"
                   value={formData.short_name}
                   onChange={(e) => handleChange('short_name', e.target.value)}
-                  placeholder="请输入客户简称"
+                  placeholder={t('shortNamePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="customer_type">客户类型</Label>
+                <Label htmlFor="customer_type">{t('customerType')}</Label>
                 <Select
                   value={formData.customer_type}
                   onValueChange={(value) => handleChange('customer_type', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择客户类型" />
+                    <SelectValue placeholder={t('selectCustomerType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">企业</SelectItem>
-                    <SelectItem value="2">个人</SelectItem>
+                    <SelectItem value="1">{t('typeEnterprise')}</SelectItem>
+                    <SelectItem value="2">{t('typeIndividual')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="industry">所属行业</Label>
+                <Label htmlFor="industry">{t('industry')}</Label>
                 <Input
                   id="industry"
                   value={formData.industry}
                   onChange={(e) => handleChange('industry', e.target.value)}
-                  placeholder="请输入所属行业"
+                  placeholder={t('industryPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="scale">企业规模</Label>
+                <Label htmlFor="scale">{t('scale')}</Label>
                 <Input
                   id="scale"
                   value={formData.scale}
                   onChange={(e) => handleChange('scale', e.target.value)}
-                  placeholder="请输入企业规模"
+                  placeholder={t('scalePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="credit_level">信用等级</Label>
+                <Label htmlFor="credit_level">{t('creditLevel')}</Label>
                 <Input
                   id="credit_level"
                   value={formData.credit_level}
                   onChange={(e) => handleChange('credit_level', e.target.value)}
-                  placeholder="请输入信用等级"
+                  placeholder={t('creditLevelPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="follow_up_status">跟进状态</Label>
+                <Label htmlFor="follow_up_status">{t('followUpStatus')}</Label>
                 <Select
                   value={formData.follow_up_status}
                   onValueChange={(value) => handleChange('follow_up_status', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择跟进状态" />
+                    <SelectValue placeholder={t('selectFollowUpStatus')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">潜在客户</SelectItem>
-                    <SelectItem value="2">意向客户</SelectItem>
-                    <SelectItem value="3">成交客户</SelectItem>
-                    <SelectItem value="4">流失客户</SelectItem>
+                    <SelectItem value="1">{t('statusPotential')}</SelectItem>
+                    <SelectItem value="2">{t('statusIntention')}</SelectItem>
+                    <SelectItem value="3">{t('statusCompleted')}</SelectItem>
+                    <SelectItem value="4">{t('statusLost')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="status">状态</Label>
+                <Label htmlFor="status">{tc('status')}</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(value) => handleChange('status', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择状态" />
+                    <SelectValue placeholder={tc('select')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">启用</SelectItem>
-                    <SelectItem value="0">禁用</SelectItem>
+                    <SelectItem value="1">{tc('enabled')}</SelectItem>
+                    <SelectItem value="0">{tc('disabled')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </CardContent>
           </Card>
 
-          {/* 联系信息 */}
           <Card>
             <CardHeader>
-              <CardTitle>联系信息</CardTitle>
+              <CardTitle>{t('contactInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="contact_name">联系人姓名</Label>
+                <Label htmlFor="contact_name">{t('contactPerson')}</Label>
                 <Input
                   id="contact_name"
                   value={formData.contact_name}
                   onChange={(e) => handleChange('contact_name', e.target.value)}
-                  placeholder="请输入联系人姓名"
+                  placeholder={t('contactPersonPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contact_phone">联系人电话</Label>
+                <Label htmlFor="contact_phone">{t('contactPhone')}</Label>
                 <Input
                   id="contact_phone"
                   value={formData.contact_phone}
                   onChange={(e) => handleChange('contact_phone', e.target.value)}
-                  placeholder="请输入联系人电话"
+                  placeholder={t('contactPhonePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contact_email">联系人邮箱</Label>
+                <Label htmlFor="contact_email">{t('email')}</Label>
                 <Input
                   id="contact_email"
                   type="email"
                   value={formData.contact_email}
                   onChange={(e) => handleChange('contact_email', e.target.value)}
-                  placeholder="请输入联系人邮箱"
+                  placeholder={t('emailPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="fax">传真</Label>
+                <Label htmlFor="fax">{t('fax')}</Label>
                 <Input
                   id="fax"
                   value={formData.fax}
                   onChange={(e) => handleChange('fax', e.target.value)}
-                  placeholder="请输入传真"
+                  placeholder={t('faxPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="website">网站</Label>
+                <Label htmlFor="website">{t('website')}</Label>
                 <Input
                   id="website"
                   value={formData.website}
                   onChange={(e) => handleChange('website', e.target.value)}
-                  placeholder="请输入网站"
+                  placeholder={t('websitePlaceholder')}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* 地址信息 */}
           <Card>
             <CardHeader>
-              <CardTitle>地址信息</CardTitle>
+              <CardTitle>{t('addressInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="province">省份</Label>
+                <Label htmlFor="province">{t('province')}</Label>
                 <Input
                   id="province"
                   value={formData.province}
                   onChange={(e) => handleChange('province', e.target.value)}
-                  placeholder="请输入省份"
+                  placeholder={t('provincePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="city">城市</Label>
+                <Label htmlFor="city">{t('city')}</Label>
                 <Input
                   id="city"
                   value={formData.city}
                   onChange={(e) => handleChange('city', e.target.value)}
-                  placeholder="请输入城市"
+                  placeholder={t('cityPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="district">区县</Label>
+                <Label htmlFor="district">{t('district')}</Label>
                 <Input
                   id="district"
                   value={formData.district}
                   onChange={(e) => handleChange('district', e.target.value)}
-                  placeholder="请输入区县"
+                  placeholder={t('districtPlaceholder')}
                 />
               </div>
               <div className="space-y-2 md:col-span-4">
-                <Label htmlFor="address">详细地址</Label>
+                <Label htmlFor="address">{t('detailAddress')}</Label>
                 <Input
                   id="address"
                   value={formData.address}
                   onChange={(e) => handleChange('address', e.target.value)}
-                  placeholder="请输入详细地址"
+                  placeholder={t('detailAddressPlaceholder')}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* 财务信息 */}
           <Card>
             <CardHeader>
-              <CardTitle>财务信息</CardTitle>
+              <CardTitle>{t('financeInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="business_license">营业执照号</Label>
+                <Label htmlFor="business_license">{t('businessLicense')}</Label>
                 <Input
                   id="business_license"
                   value={formData.business_license}
                   onChange={(e) => handleChange('business_license', e.target.value)}
-                  placeholder="请输入营业执照号"
+                  placeholder={t('businessLicensePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="tax_number">税号</Label>
+                <Label htmlFor="tax_number">{t('taxNumber')}</Label>
                 <Input
                   id="tax_number"
                   value={formData.tax_number}
                   onChange={(e) => handleChange('tax_number', e.target.value)}
-                  placeholder="请输入税号"
+                  placeholder={t('taxNumberPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bank_name">开户银行</Label>
+                <Label htmlFor="bank_name">{t('bankName')}</Label>
                 <Input
                   id="bank_name"
                   value={formData.bank_name}
                   onChange={(e) => handleChange('bank_name', e.target.value)}
-                  placeholder="请输入开户银行"
+                  placeholder={t('bankNamePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bank_account">银行账号</Label>
+                <Label htmlFor="bank_account">{t('bankAccount')}</Label>
                 <Input
                   id="bank_account"
                   value={formData.bank_account}
                   onChange={(e) => handleChange('bank_account', e.target.value)}
-                  placeholder="请输入银行账号"
+                  placeholder={t('bankAccountPlaceholder')}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* 备注 */}
           <Card>
             <CardHeader>
-              <CardTitle>备注</CardTitle>
+              <CardTitle>{tc('remark')}</CardTitle>
             </CardHeader>
             <CardContent>
               <textarea
                 className="w-full min-h-[100px] p-3 border rounded-md resize-y"
                 value={formData.remark}
                 onChange={(e) => handleChange('remark', e.target.value)}
-                placeholder="请输入备注信息"
+                placeholder={t('remarkPlaceholder')}
               />
             </CardContent>
           </Card>
 
-          {/* 底部按钮 */}
           <div className="flex justify-end gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => router.push('/orders/customers')}
             >
-              取消
+              {tc('cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
               <Save className="h-4 w-4 mr-2" />
-              {loading ? '保存中...' : '保存'}
+              {loading ? tc('loading') : tc('save')}
             </Button>
           </div>
         </form>

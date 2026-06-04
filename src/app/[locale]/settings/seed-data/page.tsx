@@ -7,12 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Database, RefreshCw, CheckCircle, XCircle, AlertTriangle, Package, Users, ClipboardList } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface SeedStats {
   [key: string]: number;
 }
 
 export default function SeedDataPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const [systemLoading, setSystemLoading] = useState(false);
   const [businessLoading, setBusinessLoading] = useState(false);
   const [systemStats, setSystemStats] = useState<SeedStats | null>(null);

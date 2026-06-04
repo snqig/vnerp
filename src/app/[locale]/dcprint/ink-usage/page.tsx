@@ -32,6 +32,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Trash2, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { useTranslations } from 'next-intl';
 
 interface InkUsage {
   id: number;
@@ -57,6 +58,10 @@ interface Ink {
 }
 
 export default function InkUsagePage() {
+  // 翻译钩子
+  const t = useTranslations('Dcprint');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<InkUsage[]>([]);
   const [total, setTotal] = useState(0);

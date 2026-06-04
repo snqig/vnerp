@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
+import { useTranslations } from 'next-intl';
 import {
   FileCheck,
   Search,
@@ -63,7 +64,7 @@ import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-tabl
 import { toast } from 'sonner';
 
 const statusOptions = [
-  { value: 'all', label: '全部' },
+  { value: 'all', label: tc('all') },
   { value: 'pass', label: '合格' },
   { value: 'reject', label: '不合格' },
   { value: 'pending', label: '待检验' },
@@ -236,6 +237,10 @@ const statusConfig: Record<
 };
 
 export default function IncomingInspectionPage() {
+  // 翻译钩子
+  const t = useTranslations('Quality');
+  const tc = useTranslations('Common');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
@@ -482,12 +487,12 @@ export default function IncomingInspectionPage() {
 
   const exportColumns = [
     { key: 'id', header: '检验单号' },
-    { key: 'date', header: '日期' },
+    { key: 'date', header: tc('date') },
     { key: 'supplier', header: '供应商' },
     { key: 'materialName', header: '物料名称' },
     { key: 'specification', header: '规格' },
     { key: 'batchNo', header: '批次号' },
-    { key: 'quantity', header: '数量' },
+    { key: 'quantity', header: tc('quantity') },
     { key: 'inspectionType', header: '检验类型' },
     { key: 'result', header: '结果' },
     { key: 'inspector', header: '检验员' },

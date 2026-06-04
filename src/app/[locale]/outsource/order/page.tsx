@@ -32,6 +32,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface OutsourceOrder {
   id: number;
@@ -58,19 +59,22 @@ interface OutsourceOrder {
   remark: string;
 }
 
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '待发料', variant: 'outline' },
-  2: { label: '已发料', variant: 'default' },
-  3: { label: '部分收货', variant: 'secondary' },
-  4: { label: '已完工', variant: 'default' },
-  5: { label: '已结算', variant: 'secondary' },
-  9: { label: '已取消', variant: 'destructive' },
-};
-
 export default function OutsourceOrderPage() {
+  const t = useTranslations('Outsource');
+  const tc = useTranslations('Common');
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: t('pendingIssue'), variant: 'outline' },
+    2: { label: t('issued'), variant: 'default' },
+    3: { label: t('partiallyReceived'), variant: 'secondary' },
+    4: { label: t('completed'), variant: 'default' },
+    5: { label: t('settled'), variant: 'secondary' },
+    9: { label: t('cancelled'), variant: 'destructive' },
+  };
+
   const { toast } = useToast();
   const [list, setList] = useState<OutsourceOrder[]>([]);
   const [total, setTotal] = useState(0);
@@ -126,20 +130,20 @@ export default function OutsourceOrderPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         setEditItem({});
         fetchData();
       } else {
-        toast({ title: '操作失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   const handleCancel = async (id: number) => {
-    if (!confirm('确定取消该委外订单？')) return;
+    if (!confirm(t('confirmCancelOrder'))) return;
     try {
       const res = await fetch('/api/outsource/order', {
         method: 'PUT',
@@ -148,25 +152,25 @@ export default function OutsourceOrderPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '已取消' });
+        toast({ title: t('cancelled') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await fetch('/api/outsource/order?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -178,11 +182,11 @@ export default function OutsourceOrderPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">委外订单</h1>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={t('searchOrderNo')}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -195,15 +199,15 @@ export default function OutsourceOrderPage() {
                 }}
               >
                 <SelectTrigger className="w-28 h-8 text-sm">
-                  <SelectValue placeholder="状态筛选" />
+                  <SelectValue placeholder={t('statusFilter')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部</SelectItem>
-                  <SelectItem value="1">待发料</SelectItem>
-                  <SelectItem value="2">已发料</SelectItem>
-                  <SelectItem value="3">部分收货</SelectItem>
-                  <SelectItem value="4">已完工</SelectItem>
-                  <SelectItem value="5">已结算</SelectItem>
+                  <SelectItem value="all">{tc('all')}</SelectItem>
+                  <SelectItem value="1">{t('pendingIssue')}</SelectItem>
+                  <SelectItem value="2">{t('issued')}</SelectItem>
+                  <SelectItem value="3">{t('partiallyReceived')}</SelectItem>
+                  <SelectItem value="4">{t('completed')}</SelectItem>
+                  <SelectItem value="5">{t('settled')}</SelectItem>
                 </SelectContent>
               </Select>
               <Button size="sm" variant="outline" onClick={fetchData}>
@@ -218,7 +222,7 @@ export default function OutsourceOrderPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增委外
+              {t('addOrder')}
             </Button>
           </div>
         </div>
@@ -228,18 +232,18 @@ export default function OutsourceOrderPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">委外单号</TableHead>
-                  <TableHead className="text-xs">供应商</TableHead>
-                  <TableHead className="text-xs">产品</TableHead>
-                  <TableHead className="text-xs">委外类型</TableHead>
-                  <TableHead className="text-xs">工序</TableHead>
-                  <TableHead className="text-xs text-right">委外数量</TableHead>
-                  <TableHead className="text-xs text-right">已发料</TableHead>
-                  <TableHead className="text-xs text-right">已收货</TableHead>
-                  <TableHead className="text-xs text-right">合格量</TableHead>
-                  <TableHead className="text-xs">交货日期</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{t('orderNo')}</TableHead>
+                  <TableHead className="text-xs">{t('supplierName')}</TableHead>
+                  <TableHead className="text-xs">{t('product')}</TableHead>
+                  <TableHead className="text-xs">{t('outsourceType')}</TableHead>
+                  <TableHead className="text-xs">{t('process')}</TableHead>
+                  <TableHead className="text-xs text-right">{t('planQty')}</TableHead>
+                  <TableHead className="text-xs text-right">{t('issuedQty')}</TableHead>
+                  <TableHead className="text-xs text-right">{t('receivedQty')}</TableHead>
+                  <TableHead className="text-xs text-right">{t('qualifiedQty')}</TableHead>
+                  <TableHead className="text-xs">{t('deliveryDate')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -251,7 +255,7 @@ export default function OutsourceOrderPage() {
                       <TableCell className="text-xs">{item.supplier_name || '-'}</TableCell>
                       <TableCell className="text-xs">{item.product_name || '-'}</TableCell>
                       <TableCell className="text-xs">
-                        {item.outsource_type === 1 ? '工序委外' : '成品委外'}
+                        {item.outsource_type === 1 ? t('processOutsource') : t('finishedOutsource')}
                       </TableCell>
                       <TableCell className="text-xs">{item.process_name || '-'}</TableCell>
                       <TableCell className="text-xs text-right">{item.plan_qty || 0}</TableCell>
@@ -279,7 +283,7 @@ export default function OutsourceOrderPage() {
                               className="h-6 text-xs px-2 text-red-600"
                               onClick={() => handleCancel(item.id)}
                             >
-                              取消
+                              {tc('cancel')}
                             </Button>
                           )}
                           <Button
@@ -298,7 +302,7 @@ export default function OutsourceOrderPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={12} className="text-center text-gray-400 py-8">
-                      暂无委外订单
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -308,7 +312,7 @@ export default function OutsourceOrderPage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -316,7 +320,7 @@ export default function OutsourceOrderPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -324,7 +328,7 @@ export default function OutsourceOrderPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
@@ -332,12 +336,12 @@ export default function OutsourceOrderPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增委外订单</DialogTitle>
+              <DialogTitle>{t('addOrder')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  供应商 <span className="text-red-500">*</span>
+                  {t('supplierName')} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={String(editItem.supplier_id || '')}
@@ -351,7 +355,7 @@ export default function OutsourceOrderPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择供应商" />
+                    <SelectValue placeholder={t('selectSupplier')} />
                   </SelectTrigger>
                   <SelectContent>
                     {suppliers.map((s) => (
@@ -363,7 +367,7 @@ export default function OutsourceOrderPage() {
                 </Select>
               </div>
               <div>
-                <Label>委外类型</Label>
+                <Label>{t('outsourceType')}</Label>
                 <Select
                   value={String(editItem.outsource_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, outsource_type: Number(v) })}
@@ -372,35 +376,35 @@ export default function OutsourceOrderPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">工序委外</SelectItem>
-                    <SelectItem value="2">成品委外</SelectItem>
+                    <SelectItem value="1">{t('processOutsource')}</SelectItem>
+                    <SelectItem value="2">{t('finishedOutsource')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>产品名称</Label>
+                <Label>{t('productName')}</Label>
                 <Input
                   value={editItem.product_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, product_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>产品编码</Label>
+                <Label>{t('productCode')}</Label>
                 <Input
                   value={editItem.product_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, product_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>委外工序</Label>
+                <Label>{t('outsourceProcess')}</Label>
                 <Input
                   value={editItem.process_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, process_name: e.target.value })}
-                  placeholder="如：丝印、模切"
+                  placeholder={t('processPlaceholder')}
                 />
               </div>
               <div>
-                <Label>关联工单号</Label>
+                <Label>{t('workOrderNo')}</Label>
                 <Input
                   value={editItem.work_order_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, work_order_no: e.target.value })}
@@ -408,7 +412,7 @@ export default function OutsourceOrderPage() {
               </div>
               <div>
                 <Label>
-                  委外数量 <span className="text-red-500">*</span>
+                  {t('planQty')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   type="number"
@@ -417,15 +421,15 @@ export default function OutsourceOrderPage() {
                 />
               </div>
               <div>
-                <Label>单位</Label>
+                <Label>{t('unit')}</Label>
                 <Input
                   value={editItem.unit || ''}
                   onChange={(e) => setEditItem({ ...editItem, unit: e.target.value })}
-                  placeholder="个/张/件"
+                  placeholder={t('unitPlaceholder')}
                 />
               </div>
               <div>
-                <Label>单价(元)</Label>
+                <Label>{t('unitPrice')}</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -439,7 +443,7 @@ export default function OutsourceOrderPage() {
                 />
               </div>
               <div>
-                <Label>交货日期</Label>
+                <Label>{t('deliveryDate')}</Label>
                 <Input
                   type="date"
                   value={editItem.delivery_date || ''}
@@ -447,7 +451,7 @@ export default function OutsourceOrderPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -457,9 +461,9 @@ export default function OutsourceOrderPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

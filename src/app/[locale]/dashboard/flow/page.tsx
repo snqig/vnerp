@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -788,6 +789,10 @@ function ArchitectureLayerCard({
 }
 
 export default function FlowPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   return (
     <MainLayout title="业务流转可视化">
       <div className="space-y-6">

@@ -35,6 +35,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToastContext } from '@/components/ui/toast';
 import { MainLayout } from '@/components/layout/main-layout';
+import { useTranslations } from 'next-intl';
 
 interface BOMItem {
   id: number;
@@ -55,17 +56,27 @@ interface BOMItem {
   update_time: string;
 }
 
-const statusMap: Record<number, { label: string; color: string }> = {
-  10: { label: '草稿', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-  20: { label: '已审核', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+const statusMap: Record<number, { labelKey: string; color: string }> = {
+  10: { labelKey: 'draft', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  20: { labelKey: 'approved', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
   30: {
-    label: '已发布',
+    labelKey: 'published',
     color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
   },
-  90: { label: '已停用', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
+  90: { labelKey: 'disabled', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' },
+};
+
+const getStatusLabel = (status: number, t: (k: string) => string, tc: (k: string) => string) => {
+  const key = statusMap[status]?.labelKey;
+  if (!key) return tc('unknown');
+  if (key === 'draft' || key === 'approved' || key === 'disabled') return tc(key);
+  return t(key);
 };
 
 export default function BOMPage() {
+  const t = useTranslations('Orders');
+  const tc = useTranslations('Common');
+
   const router = useRouter();
   const { addToast: toast } = useToastContext();
   const [bomList, setBomList] = useState<BOMItem[]>([]);
@@ -107,18 +118,18 @@ export default function BOMPage() {
         const total = data.data?.total || 0;
         setTotalPages(Math.ceil(total / 20) || 1);
       } else {
-        toast({
-          title: '错误',
-          description: data.message || '获取BOM列表失败',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
       toast({
-        title: '错误',
-        description: '获取BOM列表失败',
+        title: tc('error'),
+        description: data.message || t('fetchBomFailed'),
         variant: 'destructive',
       });
+    }
+  } catch (error) {
+    toast({
+      title: tc('error'),
+      description: t('fetchBomFailed'),
+      variant: 'destructive',
+    });
     } finally {
       setLoading(false);
     }
@@ -133,23 +144,23 @@ export default function BOMPage() {
         setBomDetail(data.data);
         setDetailDialogOpen(true);
       } else {
-        toast({
-          title: '错误',
-          description: data.message || '获取BOM详情失败',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
       toast({
-        title: '错误',
-        description: '获取BOM详情失败',
+        title: tc('error'),
+        description: data.message || t('fetchBomDetailFailed'),
         variant: 'destructive',
       });
+    }
+  } catch (error) {
+    toast({
+      title: tc('error'),
+      description: t('fetchBomDetailFailed'),
+      variant: 'destructive',
+    });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除这个BOM吗？')) return;
+    if (!confirm(t('confirmDeleteBom'))) return;
 
     try {
       const res = await authFetch(`/api/orders/bom?id=${id}`, {
@@ -159,21 +170,21 @@ export default function BOMPage() {
 
       if (data.success) {
         toast({
-          title: '成功',
-          description: 'BOM删除成功',
+          title: tc('success'),
+          description: t('deleteBomSuccess'),
         });
         fetchBOMList();
       } else {
         toast({
-          title: '错误',
-          description: data.message || '删除失败',
+          title: tc('error'),
+          description: data.message || t('deleteFailed'),
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: '错误',
-        description: '删除失败',
+        title: tc('error'),
+        description: t('deleteFailed'),
         variant: 'destructive',
       });
     }
@@ -189,22 +200,22 @@ export default function BOMPage() {
 
       if (data.success) {
         toast({
-          title: '成功',
+          title: tc('success'),
           description:
-            action === 'audit' ? '审核成功' : action === 'publish' ? '发布成功' : '停用成功',
+            action === 'audit' ? t('auditSuccess') : action === 'publish' ? t('publishSuccess') : t('disableSuccess'),
         });
         fetchBOMList();
       } else {
         toast({
           title: '错误',
-          description: data.message || '操作失败',
+          description: data.message || tc('error'),
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
         title: '错误',
-        description: '操作失败',
+        description: tc('error'),
         variant: 'destructive',
       });
     }
@@ -220,19 +231,19 @@ export default function BOMPage() {
   }, [currentPage]);
 
   return (
-    <MainLayout title="BOM管理">
+    <MainLayout title={t('bomManagement')}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Layers className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">BOM管理</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">物料清单管理</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('bomManagement')}</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('bomListManagement')}</p>
             </div>
           </div>
           <Button onClick={() => router.push('/orders/bom/create')}>
             <Plus className="w-4 h-4 mr-2" />
-            新建BOM
+            {t('newBom')}
           </Button>
         </div>
 
@@ -240,7 +251,7 @@ export default function BOMPage() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
-              placeholder="搜索BOM编号、产品名称或编码..."
+              placeholder={t('searchBom')}
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -249,29 +260,29 @@ export default function BOMPage() {
           </div>
           <Button variant="outline" onClick={handleSearch}>
             <Search className="w-4 h-4 mr-2" />
-            搜索
+            {tc('search')}
           </Button>
         </div>
 
-        <div className="rounded-lg border shadow-sm bg-white dark:bg-slate-800 dark:border-slate-700">
+        <div className="rounded-lg border shadow-sm bg-card">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>BOM编号</TableHead>
-                <TableHead>产品信息</TableHead>
-                <TableHead>版本</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>物料数量</TableHead>
-                <TableHead>总成本</TableHead>
-                <TableHead>创建时间</TableHead>
-                <TableHead className="text-right">操作</TableHead>
+                <TableHead>{t('bomNo')}</TableHead>
+                <TableHead>{t('productInfo')}</TableHead>
+                <TableHead>{t('version')}</TableHead>
+                <TableHead>{tc('status')}</TableHead>
+                <TableHead>{t('materialCount')}</TableHead>
+                <TableHead>{t('totalCost')}</TableHead>
+                <TableHead>{tc('createTime')}</TableHead>
+                <TableHead className="text-right">{tc('operation')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8">
-                    加载中...
+                    {tc('loading')}
                   </TableCell>
                 </TableRow>
               ) : bomList.length === 0 ? (
@@ -280,7 +291,7 @@ export default function BOMPage() {
                     colSpan={8}
                     className="text-center py-8 text-gray-500 dark:text-gray-400"
                   >
-                    暂无BOM数据
+                    {t('noBomData')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -305,8 +316,8 @@ export default function BOMPage() {
                         <span>{bom.version}</span>
                         {bom.is_default === 1 && (
                           <Badge variant="default" className="text-xs">
-                            默认
-                          </Badge>
+                             {t('default')}
+                           </Badge>
                         )}
                       </div>
                     </TableCell>
@@ -314,10 +325,10 @@ export default function BOMPage() {
                       <Badge
                         className={statusMap[bom.status]?.color || 'bg-gray-100 dark:bg-gray-700'}
                       >
-                        {statusMap[bom.status]?.label || bom.status_name || '未知'}
+                        {getStatusLabel(bom.status, t, tc)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{bom.total_material_count} 项</TableCell>
+                    <TableCell>{bom.total_material_count} {t('itemsUnit')}</TableCell>
                     <TableCell>¥{Number(bom.total_cost || 0).toFixed(4)}</TableCell>
                     <TableCell>{new Date(bom.create_time).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
@@ -330,24 +341,24 @@ export default function BOMPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => fetchBOMDetail(bom.id)}>
                             <Eye className="w-4 h-4 mr-2" />
-                            查看详情
+                            {t('viewDetail')}
                           </DropdownMenuItem>
                           {bom.status === 10 && (
                             <DropdownMenuItem onClick={() => handleStatusChange(bom.id, 'audit')}>
                               <CheckCircle className="w-4 h-4 mr-2" />
-                              审核
+                              {t('audit')}
                             </DropdownMenuItem>
                           )}
                           {bom.status === 20 && (
                             <DropdownMenuItem onClick={() => handleStatusChange(bom.id, 'publish')}>
                               <FileText className="w-4 h-4 mr-2" />
-                              发布
+                              {t('publish')}
                             </DropdownMenuItem>
                           )}
                           {bom.status === 30 && (
                             <DropdownMenuItem onClick={() => handleStatusChange(bom.id, 'disable')}>
                               <XCircle className="w-4 h-4 mr-2" />
-                              停用
+                              {t('disable')}
                             </DropdownMenuItem>
                           )}
                           {bom.status < 30 && (
@@ -355,7 +366,7 @@ export default function BOMPage() {
                               onClick={() => router.push(`/orders/bom/edit/${bom.id}`)}
                             >
                               <Edit className="w-4 h-4 mr-2" />
-                              编辑
+                              {tc('edit')}
                             </DropdownMenuItem>
                           )}
                           {bom.status < 30 && (
@@ -364,7 +375,7 @@ export default function BOMPage() {
                               className="text-red-600 dark:text-red-400"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              删除
+                              {tc('delete')}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -384,7 +395,7 @@ export default function BOMPage() {
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
             >
-              上一页
+               {tc('prevPage')}
             </Button>
             <span className="flex items-center px-4">
               {currentPage} / {totalPages}
@@ -394,7 +405,7 @@ export default function BOMPage() {
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >
-              下一页
+               {tc('nextPage')}
             </Button>
           </div>
         )}
@@ -402,29 +413,29 @@ export default function BOMPage() {
         <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
           <DialogContent className="max-w-6xl w-[90vw] max-h-[90vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>BOM详情</DialogTitle>
+              <DialogTitle>{t('bomDetail')}</DialogTitle>
             </DialogHeader>
             {bomDetail && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
                   <div>
-                    <label className="text-sm text-gray-500 dark:text-gray-400">BOM编号</label>
+                    <label className="text-sm text-gray-500 dark:text-gray-400">{t('bomNo')}</label>
                     <div className="font-medium">{bomDetail.header.bom_no}</div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500 dark:text-gray-400">版本</label>
+                    <label className="text-sm text-gray-500 dark:text-gray-400">{t('version')}</label>
                     <div className="font-medium">{bomDetail.header.version}</div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500 dark:text-gray-400">产品名称</label>
+                    <label className="text-sm text-gray-500 dark:text-gray-400">{t('productName')}</label>
                     <div className="font-medium">{bomDetail.header.product_name}</div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500 dark:text-gray-400">产品编码</label>
+                    <label className="text-sm text-gray-500 dark:text-gray-400">{t('productCode')}</label>
                     <div className="font-medium">{bomDetail.header.product_code}</div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500 dark:text-gray-400">状态</label>
+                    <label className="text-sm text-gray-500 dark:text-gray-400">{tc('status')}</label>
                     <div>
                       <Badge className={statusMap[bomDetail.header.status]?.color}>
                         {bomDetail.header.status_name}
@@ -432,7 +443,7 @@ export default function BOMPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500 dark:text-gray-400">总成本</label>
+                    <label className="text-sm text-gray-500 dark:text-gray-400">{t('totalCost')}</label>
                     <div className="font-medium text-blue-600 dark:text-blue-400">
                       ¥{parseFloat(bomDetail.header.total_cost || 0).toFixed(4)}
                     </div>
@@ -442,19 +453,19 @@ export default function BOMPage() {
                 <div>
                   <h3 className="font-semibold mb-3 flex items-center gap-2">
                     <Package className="w-5 h-5" />
-                    物料清单 ({bomDetail.lines?.length || 0} 项)
+                    {t('bomDetailInfo', { count: bomDetail.lines?.length || 0 })}
                   </h3>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>行号</TableHead>
-                        <TableHead>物料编码</TableHead>
-                        <TableHead>物料名称</TableHead>
-                        <TableHead>规格</TableHead>
-                        <TableHead>用量</TableHead>
-                        <TableHead>损耗率</TableHead>
-                        <TableHead>实际用量</TableHead>
-                        <TableHead>成本</TableHead>
+                        <TableHead>{t('lineNo')}</TableHead>
+                        <TableHead>{t('materialCode')}</TableHead>
+                        <TableHead>{t('materialName')}</TableHead>
+                        <TableHead>{t('spec')}</TableHead>
+                        <TableHead>{t('consumption')}</TableHead>
+                        <TableHead>{t('lossRate')}</TableHead>
+                        <TableHead>{t('actualUsage')}</TableHead>
+                        <TableHead>{t('cost')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

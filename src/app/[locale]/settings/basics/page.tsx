@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermission } from '@/hooks/usePermission';
 import ApiClient from '@/lib/api-client';
+import { useTranslations } from 'next-intl';
 
 interface ConfigItem {
   id?: number;
@@ -71,6 +72,10 @@ interface SystemConfigResponse {
 }
 
 export default function BasicsSettingsPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const { hasRole, isAuthenticated } = useAuth();
   const { hasPermission } = usePermission();
   const [activeTab, setActiveTab] = useState<string>('theme');

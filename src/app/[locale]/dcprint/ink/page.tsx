@@ -38,6 +38,7 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { useTranslations } from 'next-intl';
 
 interface Item {
   id: number;
@@ -60,31 +61,32 @@ const typeMap: Record<number, string> = {
   4: '丝印油墨',
   5: '特种油墨',
 };
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '启用', variant: 'default' },
-  0: { label: '禁用', variant: 'destructive' },
-};
-
 type SortField = 'ink_code' | 'ink_name' | 'ink_type' | 'stock_qty' | 'safety_stock' | 'status';
 type SortDir = 'asc' | 'desc';
 
-const exportColumns = [
-  { key: 'ink_code', header: '油墨编码' },
-  { key: 'ink_name', header: '油墨名称' },
-  { key: 'ink_type_label', header: '类型' },
-  { key: 'color_name', header: '颜色' },
-  { key: 'color_code', header: '色号' },
-  { key: 'brand', header: '品牌' },
-  { key: 'unit', header: '单位' },
-  { key: 'stock_qty', header: '库存' },
-  { key: 'safety_stock', header: '安全库存' },
-  { key: 'status_label', header: '状态' },
-];
-
 export default function InkManagementPage() {
+  // 翻译钩子
+  const t = useTranslations('Dcprint');
+  const tc = useTranslations('Common');
+
+  const statusMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+    1: { label: tc('enabled'), variant: 'default' },
+    0: { label: tc('disabled'), variant: 'destructive' },
+  };
+
+  const exportColumns = [
+    { key: 'ink_code', header: '油墨编码' },
+    { key: 'ink_name', header: '油墨名称' },
+    { key: 'ink_type_label', header: tc('type') },
+    { key: 'color_name', header: '颜色' },
+    { key: 'color_code', header: '色号' },
+    { key: 'brand', header: '品牌' },
+    { key: 'unit', header: '单位' },
+    { key: 'stock_qty', header: '库存' },
+    { key: 'safety_stock', header: '安全库存' },
+    { key: 'status_label', header: tc('status') },
+  ];
+
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);

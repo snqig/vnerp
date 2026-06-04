@@ -40,6 +40,7 @@ import {
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -113,19 +114,25 @@ const severityMap: Record<
   2: { label: '一般', variant: 'secondary' },
   3: { label: '严重', variant: 'destructive' },
 };
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '已登记', variant: 'outline' },
-  2: { label: '分析中', variant: 'secondary' },
-  3: { label: '对策中', variant: 'secondary' },
-  4: { label: '验证中', variant: 'secondary' },
-  5: { label: '已关闭', variant: 'default' },
-  6: { label: '已退回', variant: 'destructive' },
-};
+
 
 export default function Complaint8DPage() {
+  // 翻译钩子
+  const t = useTranslations('Quality');
+  const tc = useTranslations('Common');
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: '已登记', variant: 'outline' },
+    2: { label: '分析中', variant: 'secondary' },
+    3: { label: '对策中', variant: 'secondary' },
+    4: { label: '验证中', variant: 'secondary' },
+    5: { label: tc('closed'), variant: 'default' },
+    6: { label: '已退回', variant: 'destructive' },
+  };
+
   const { toast } = useToast();
   const [list, setList] = useState<ComplaintRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -300,7 +307,7 @@ export default function Complaint8DPage() {
                       { key: 'product_name', header: '产品名称' },
                       { key: 'defect_type', header: '不良类型' },
                       { key: 'defect_qty', header: '不良数量' },
-                      { key: 'status', header: '状态' },
+                      { key: 'status', header: tc('status') },
                     ],
                     '客诉8D报告'
                   )
@@ -312,7 +319,7 @@ export default function Complaint8DPage() {
                     { key: 'product_name', header: '产品名称' },
                     { key: 'defect_type', header: '不良类型' },
                     { key: 'defect_qty', header: '不良数量' },
-                    { key: 'status', header: '状态' },
+                    { key: 'status', header: tc('status') },
                   ])
                 }
                 onExportWORD={() =>
@@ -325,7 +332,7 @@ export default function Complaint8DPage() {
                       { key: 'product_name', header: '产品名称' },
                       { key: 'defect_type', header: '不良类型' },
                       { key: 'defect_qty', header: '不良数量' },
-                      { key: 'status', header: '状态' },
+                      { key: 'status', header: tc('status') },
                     ],
                     '客诉8D报告'
                   )
@@ -419,13 +426,13 @@ export default function Complaint8DPage() {
                     <TableCell>{defectTypeMap[item.defect_type] || item.defect_type}</TableCell>
                     <TableCell>
                       <Badge variant={severityMap[item.severity]?.variant || 'outline'}>
-                        {severityMap[item.severity]?.label || '未知'}
+                        {severityMap[item.severity]?.label || tc('unknown')}
                       </Badge>
                     </TableCell>
                     <TableCell>{item.defect_qty}</TableCell>
                     <TableCell>
                       <Badge variant={statusMap[item.status]?.variant || 'outline'}>
-                        {statusMap[item.status]?.label || '未知'}
+                        {statusMap[item.status]?.label || tc('unknown')}
                       </Badge>
                     </TableCell>
                     <TableCell>

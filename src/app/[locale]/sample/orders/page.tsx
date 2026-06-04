@@ -53,6 +53,7 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -95,6 +96,10 @@ const statusLabelMap: Record<string, string> = {
 };
 
 export default function SampleOrdersPage() {
+  // 翻译钩子
+  const t = useTranslations('Orders');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -373,9 +378,9 @@ export default function SampleOrdersPage() {
     { key: 'material_no', header: '料号' },
     { key: 'version', header: '版本' },
     { key: 'size_spec', header: '尺寸' },
-    { key: 'quantity', header: '数量' },
+    { key: 'quantity', header: tc('quantity') },
     { key: 'customer_require_date', header: '需求日期' },
-    { key: 'delivery_status', header: '状态' },
+    { key: 'delivery_status', header: tc('status') },
   ];
   const getExportData = () =>
     sortedOrders.map((s, i) => ({
@@ -496,7 +501,7 @@ export default function SampleOrdersPage() {
         <Label>数量</Label>
         <Input
           type="number"
-          placeholder="数量"
+          placeholder=tc("quantity")
           value={formData.quantity}
           onChange={(e) => handleInputChange('quantity', e.target.value)}
         />
@@ -528,7 +533,7 @@ export default function SampleOrdersPage() {
       <div className="col-span-2 space-y-2">
         <Label>备注</Label>
         <Input
-          placeholder="备注"
+          placeholder=tc("remark")
           value={formData.remark}
           onChange={(e) => handleInputChange('remark', e.target.value)}
         />
@@ -667,7 +672,7 @@ export default function SampleOrdersPage() {
                       {sortableHeader('material_no', '料号')}
                       {sortableHeader('version', '版本')}
                       {sortableHeader('size_spec', '尺寸')}
-                      {sortableHeader('quantity', '数量')}
+                      {sortableHeader('quantity', tc('quantity'))}
                       {sortableHeader('customer_require_date', '需求日期')}
                       <th className="h-12 px-4 text-left align-middle font-medium">状态</th>
                       <th className="h-12 px-4 text-right align-middle font-medium">操作</th>

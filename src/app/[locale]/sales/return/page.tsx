@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -75,13 +76,6 @@ interface Customer {
   customer_code: string;
 }
 
-const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: '待审核', color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: '已审核', color: 'bg-blue-100 text-blue-800' },
-  3: { label: '已退货', color: 'bg-green-100 text-green-800' },
-  4: { label: '已拒绝', color: 'bg-red-100 text-red-800' },
-};
-
 const RETURN_TYPE_MAP: Record<number, string> = {
   1: '质量退货',
   2: '数量差异',
@@ -102,6 +96,17 @@ const INSPECTION_STATUS_MAP: Record<number, { label: string; color: string }> = 
 };
 
 export default function ReturnPage() {
+  // 翻译钩子
+  const t = useTranslations('Sales');
+  const tc = useTranslations('Common');
+
+  const STATUS_MAP: Record<number, { label: string; color: string }> = {
+  1: { label: tc('pending'), color: 'bg-yellow-100 text-yellow-800' },
+  2: { label: tc('approved'), color: 'bg-blue-100 text-blue-800' },
+  3: { label: '已退货', color: 'bg-green-100 text-green-800' },
+  4: { label: '已拒绝', color: 'bg-red-100 text-red-800' },
+};
+
   const [list, setList] = useState<ReturnOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
@@ -336,7 +341,7 @@ export default function ReturnPage() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="状态" />
+                  <SelectValue placeholder=tc("status") />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
@@ -423,12 +428,12 @@ export default function ReturnPage() {
                             INSPECTION_STATUS_MAP[r.inspection_status]?.color || 'bg-gray-100'
                           }
                         >
-                          {INSPECTION_STATUS_MAP[r.inspection_status]?.label || '未知'}
+                          {INSPECTION_STATUS_MAP[r.inspection_status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={STATUS_MAP[r.status]?.color || 'bg-gray-100'}>
-                          {STATUS_MAP[r.status]?.label || '未知'}
+                          {STATUS_MAP[r.status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">

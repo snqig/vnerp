@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Plus, Search, MoreHorizontal, Edit, Trash2, Car, Wrench, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 interface Vehicle {
   id: number;
@@ -41,17 +42,20 @@ interface Vehicle {
   create_time: string;
 }
 
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  0: { label: '停用', variant: 'secondary' },
-  1: { label: '可用', variant: 'default' },
-  2: { label: '维修中', variant: 'outline' },
-  3: { label: '报废', variant: 'destructive' },
-};
-
 export default function VehiclesPage() {
+  const t = useTranslations('Delivery');
+  const tc = useTranslations('Common');
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    0: { label: tc('disabled'), variant: 'secondary' },
+    1: { label: tc('enabled'), variant: 'default' },
+    2: { label: t('underRepair'), variant: 'outline' },
+    3: { label: t('scrapped'), variant: 'destructive' },
+  };
+
   const router = useRouter();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,17 +85,17 @@ export default function VehiclesPage() {
         setVehicles(result.data);
         setTotal(result.pagination.total);
       } else {
-        toast.error(result.message || '获取车辆列表失败');
+        toast.error(result.message || t('fetchFailed'));
       }
     } catch (error) {
-      toast.error('获取车辆列表失败');
+      toast.error(t('fetchFailed'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除这辆车吗？')) return;
+    if (!confirm(t('confirmDeleteVehicle'))) return;
 
     try {
       const response = await fetch(`/api/delivery/vehicles?id=${id}`, {
@@ -100,13 +104,13 @@ export default function VehiclesPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('删除成功');
+        toast.success(tc('deleteSuccess'));
         fetchVehicles();
       } else {
-        toast.error(result.message || '删除失败');
+        toast.error(result.message || tc('deleteFailed'));
       }
     } catch (error) {
-      toast.error('删除失败');
+      toast.error(tc('deleteFailed'));
     }
   };
 
@@ -118,27 +122,25 @@ export default function VehiclesPage() {
   return (
     <MainLayout>
       <div className="container mx-auto py-6">
-        {/* 头部 */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Car className="h-6 w-6" />
-              车辆管理
+              {t('vehicleManagement')}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">管理公司车辆信息、维修记录和费用</p>
+            <p className="text-sm text-muted-foreground mt-1">{t('vehicleManagementDesc')}</p>
           </div>
           <Button onClick={() => router.push('/delivery/vehicles/new')}>
             <Plus className="h-4 w-4 mr-2" />
-            新增车辆
+            {t('addVehicle')}
           </Button>
         </div>
 
-        {/* 搜索栏 */}
         <div className="flex gap-4 mb-6">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="搜索车牌号、品牌、司机..."
+              placeholder={t('searchVehiclePlaceholder')}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -153,43 +155,42 @@ export default function VehiclesPage() {
             }}
             className="border rounded-md px-3 py-2"
           >
-            <option value="all">全部状态</option>
-            <option value="1">可用</option>
-            <option value="2">维修中</option>
-            <option value="0">停用</option>
-            <option value="3">报废</option>
+            <option value="all">{tc('all')}</option>
+            <option value="1">{tc('enabled')}</option>
+            <option value="2">{t('underRepair')}</option>
+            <option value="0">{tc('disabled')}</option>
+            <option value="3">{t('scrapped')}</option>
           </select>
           <Button variant="outline" onClick={handleSearch}>
-            搜索
+            {tc('search')}
           </Button>
         </div>
 
-        {/* 车辆列表 */}
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>车牌号</TableHead>
-                <TableHead>车辆信息</TableHead>
-                <TableHead>司机</TableHead>
-                <TableHead>里程</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>保险到期</TableHead>
-                <TableHead>年检到期</TableHead>
-                <TableHead className="w-[100px]">操作</TableHead>
+                <TableHead>{t('plateNo')}</TableHead>
+                <TableHead>{t('vehicleInfo')}</TableHead>
+                <TableHead>{t('driver')}</TableHead>
+                <TableHead>{t('mileage')}</TableHead>
+                <TableHead>{tc('status')}</TableHead>
+                <TableHead>{t('insuranceExpire')}</TableHead>
+                <TableHead>{t('annualInspectExpire')}</TableHead>
+                <TableHead className="w-[100px]">{tc('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8">
-                    加载中...
+                    {tc('loading')}
                   </TableCell>
                 </TableRow>
               ) : vehicles.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    暂无车辆数据
+                    {tc('noData')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -219,7 +220,7 @@ export default function VehiclesPage() {
                     <TableCell>{vehicle.mileage?.toLocaleString()} km</TableCell>
                     <TableCell>
                       <Badge variant={statusMap[vehicle.status]?.variant || 'default'}>
-                        {statusMap[vehicle.status]?.label || '未知'}
+                        {statusMap[vehicle.status]?.label || tc('unknown')}
                       </Badge>
                     </TableCell>
                     <TableCell>{vehicle.insurance_expire || '-'}</TableCell>
@@ -236,26 +237,26 @@ export default function VehiclesPage() {
                             onClick={() => router.push(`/delivery/vehicles/${vehicle.id}`)}
                           >
                             <Edit className="h-4 w-4 mr-2" />
-                            编辑
+                            {tc('edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => router.push(`/delivery/vehicles/${vehicle.id}/repair`)}
                           >
                             <Wrench className="h-4 w-4 mr-2" />
-                            维修记录
+                            {t('repairRecords')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => router.push(`/delivery/vehicles/${vehicle.id}/cost`)}
                           >
                             <FileText className="h-4 w-4 mr-2" />
-                            费用记录
+                            {t('costRecords')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleDelete(vehicle.id)}
                             className="text-red-600"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
-                            删除
+                            {tc('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -267,11 +268,10 @@ export default function VehiclesPage() {
           </Table>
         </div>
 
-        {/* 分页 */}
         {total > pageSize && (
           <div className="flex items-center justify-between mt-4">
             <div className="text-sm text-muted-foreground">
-              共 {total} 条记录，第 {page} / {Math.ceil(total / pageSize)} 页
+              {t('paginationInfo', { total, page, pages: Math.ceil(total / pageSize) })}
             </div>
             <div className="flex gap-2">
               <Button
@@ -280,7 +280,7 @@ export default function VehiclesPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
               >
-                上一页
+                {tc('prevPage')}
               </Button>
               <Button
                 variant="outline"
@@ -288,7 +288,7 @@ export default function VehiclesPage() {
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= Math.ceil(total / pageSize)}
               >
-                下一页
+                {tc('nextPage')}
               </Button>
             </div>
           </div>

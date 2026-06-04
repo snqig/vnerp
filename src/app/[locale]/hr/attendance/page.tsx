@@ -71,6 +71,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -83,35 +84,6 @@ const authFetch = async (url: string, options: RequestInit = {}) => {
   }
   return fetch(url, { ...options, headers });
 };
-
-// 状态类型
-const statusOptions = [
-  {
-    value: 'all',
-    label: '全部',
-    color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  },
-  {
-    value: 'normal',
-    label: '正常',
-    color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-  },
-  {
-    value: 'late',
-    label: '迟到',
-    color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
-  },
-  {
-    value: 'absent',
-    label: '缺勤',
-    color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  },
-  {
-    value: 'leave',
-    label: '请假',
-    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  },
-];
 
 // 部门选项
 const departmentOptions = [
@@ -143,22 +115,53 @@ interface AttendanceRecord {
   remark?: string;
 }
 
-// 示例考勤记录数据
-const statusConfig: Record<
-  string,
-  { label: string; color: string; icon: React.ComponentType<any> }
-> = {
-  normal: {
-    label: '正常',
-    color: 'bg-green-100 text-green-700 border-green-200',
-    icon: CheckCircle2,
-  },
-  late: { label: '迟到', color: 'bg-yellow-100 text-yellow-700 border-yellow-200', icon: Clock3 },
-  absent: { label: '缺勤', color: 'bg-red-100 text-red-700 border-red-200', icon: AlertCircle },
-  leave: { label: '请假', color: 'bg-blue-100 text-blue-700 border-blue-200', icon: Calendar },
-};
-
 export default function AttendancePage() {
+  // 翻译钩子
+  const t = useTranslations('Hr');
+  const tc = useTranslations('Common');
+
+  const statusOptions = [
+    {
+      value: 'all',
+      label: tc('all'),
+      color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    },
+    {
+      value: 'normal',
+      label: tc('normal'),
+      color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    },
+    {
+      value: 'late',
+      label: '迟到',
+      color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+    },
+    {
+      value: 'absent',
+      label: '缺勤',
+      color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+    },
+    {
+      value: 'leave',
+      label: '请假',
+      color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    },
+  ];
+
+  const statusConfig: Record<
+    string,
+    { label: string; color: string; icon: React.ComponentType<any> }
+  > = {
+    normal: {
+      label: tc('normal'),
+      color: 'bg-green-100 text-green-700 border-green-200',
+      icon: CheckCircle2,
+    },
+    late: { label: '迟到', color: 'bg-yellow-100 text-yellow-700 border-yellow-200', icon: Clock3 },
+    absent: { label: '缺勤', color: 'bg-red-100 text-red-700 border-red-200', icon: AlertCircle },
+    leave: { label: '请假', color: 'bg-blue-100 text-blue-700 border-blue-200', icon: Calendar },
+  };
+
   const { companyName } = useCompanyName();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -503,7 +506,7 @@ export default function AttendancePage() {
     }
     const recordsToPrint = filteredRecords.filter((r) => selectedRecords.includes(r.id));
     const statusLabels: Record<string, string> = {
-      normal: '正常',
+      normal: tc('normal'),
       late: '迟到',
       absent: '缺勤',
       leave: '请假',

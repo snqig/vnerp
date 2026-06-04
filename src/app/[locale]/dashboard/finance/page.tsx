@@ -18,6 +18,7 @@ import {
   Activity,
   Target,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface FinanceData {
   overview: {
@@ -45,6 +46,8 @@ function DonutChart({
   color: string;
   size?: number;
 }) {
+  const t = useTranslations('Dashboard');
+  const tc = useTranslations('Common');
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage / 100) * circumference;
@@ -75,9 +78,9 @@ function DonutChart({
       <text x="60" y="55" textAnchor="middle" fill="white" fontSize="20" fontWeight="bold">
         {percentage.toFixed(1)}%
       </text>
-      <text x="60" y="75" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="10">
-        利润率
-      </text>
+       <text x="60" y="75" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="10">
+         {t('profitMargin')}
+       </text>
     </svg>
   );
 }
@@ -93,6 +96,7 @@ function DualLineChart({
   width?: number;
   height?: number;
 }) {
+  const tc = useTranslations('Common');
   const allData = [...revenueData, ...expenseData];
   if (allData.length === 0) return null;
 
@@ -185,11 +189,11 @@ function DualLineChart({
       <g transform={`translate(${width - 150}, 10)`}>
         <line x1="0" y1="0" x2="20" y2="0" stroke="#22c55e" strokeWidth="2" />
         <text x="25" y="4" fill="rgba(255,255,255,0.7)" fontSize="10">
-          收入
+          {tc('income')}
         </text>
         <line x1="0" y1="15" x2="20" y2="15" stroke="#ef4444" strokeWidth="2" />
         <text x="25" y="19" fill="rgba(255,255,255,0.7)" fontSize="10">
-          支出
+          {tc('expense')}
         </text>
       </g>
     </svg>
@@ -201,6 +205,7 @@ function HorizontalBarChart({
 }: {
   data: { supplier_name: string; count: number; total: number }[];
 }) {
+  const tc = useTranslations('Common');
   if (data.length === 0) return null;
   const maxTotal = Math.max(...data.map((d) => d.total), 1);
 
@@ -209,7 +214,7 @@ function HorizontalBarChart({
       {data.map((d, i) => (
         <div key={i} className="flex items-center gap-3">
           <span className="text-xs w-24 text-right text-cyan-300 truncate">
-            {d.supplier_name || '未知'}
+            {d.supplier_name || tc('unknown')}
           </span>
           <div className="flex-1 bg-white/10 rounded-full h-5 relative overflow-hidden">
             <div
@@ -230,6 +235,9 @@ function HorizontalBarChart({
 }
 
 export default function FinanceDashboard() {
+  const t = useTranslations('Dashboard');
+  const tc = useTranslations('Common');
+
   const { companyName } = useCompanyName();
   const [data, setData] = useState<FinanceData>({
     overview: {
@@ -344,7 +352,7 @@ export default function FinanceDashboard() {
                 <h1 className="text-2xl font-bold tracking-wider bg-gradient-to-r from-cyan-300 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
                   {companyName}
                 </h1>
-                <p className="text-xs text-white/50 mt-0.5">应收应付与收支数据监控</p>
+                <p className="text-xs text-white/50 mt-0.5">{t('financeMonitorSubtitle')}</p>
               </div>
               <div className="tech-title-line-right" />
             </div>
@@ -360,7 +368,7 @@ export default function FinanceDashboard() {
             <button
               onClick={toggleFullscreen}
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-              title={isFullscreen ? '退出全屏' : '全屏显示'}
+              title={isFullscreen ? t('exitFullscreen') : t('fullscreen')}
             >
               {isFullscreen ? (
                 <Minimize className="h-4 w-4 text-cyan-400" />
@@ -369,7 +377,7 @@ export default function FinanceDashboard() {
               )}
             </button>
             <div className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-xs text-cyan-300">
-              {loading ? '加载中...' : '● 实时'}
+              {loading ? tc('loading') : '● ' + t('realtime')}
             </div>
           </div>
         </div>
@@ -377,31 +385,31 @@ export default function FinanceDashboard() {
         <div className="relative z-10 grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           {[
             {
-              title: '应收总额',
+              title: t('totalReceivable'),
               value: formatMoney(data.overview.totalReceivable),
               icon: ArrowUpRight,
               color: 'from-blue-500 to-cyan-500',
             },
             {
-              title: '应付总额',
+              title: t('totalPayable'),
               value: formatMoney(data.overview.totalPayable),
               icon: ArrowDownRight,
               color: 'from-orange-500 to-red-500',
             },
             {
-              title: '月度收入',
+              title: t('monthlyIncome'),
               value: formatMoney(data.overview.monthRevenue),
               icon: TrendingUp,
               color: 'from-green-500 to-emerald-500',
             },
             {
-              title: '月度支出',
+              title: t('monthlyExpense'),
               value: formatMoney(data.overview.monthExpense),
               icon: TrendingDown,
               color: 'from-red-500 to-pink-500',
             },
             {
-              title: '净利润',
+              title: t('netProfit'),
               value: formatMoney(data.overview.netProfit),
               icon: Wallet,
               color:
@@ -431,7 +439,7 @@ export default function FinanceDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <Target className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">利润率</span>
+              <span className="text-sm font-medium text-white/80">{t('profitMargin')}</span>
             </div>
             <div className="p-4">
               <div className="flex justify-center">
@@ -443,13 +451,13 @@ export default function FinanceDashboard() {
               </div>
               <div className="mt-4 grid grid-cols-2 gap-4 text-center">
                 <div>
-                  <p className="text-xs text-white/50">月收入</p>
+                  <p className="text-xs text-white/50">{t('monthlyIncome')}</p>
                   <p className="text-lg font-bold text-green-400">
                     {formatMoney(data.overview.monthRevenue)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-white/50">月支出</p>
+                  <p className="text-xs text-white/50">{t('monthlyExpense')}</p>
                   <p className="text-lg font-bold text-red-400">
                     {formatMoney(data.overview.monthExpense)}
                   </p>
@@ -462,11 +470,11 @@ export default function FinanceDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <Activity className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">收支趋势（近30天）</span>
+              <span className="text-sm font-medium text-white/80">{t('incomeExpenseTrend')}</span>
             </div>
             <div className="p-4">
               {data.revenueTrend.length === 0 && data.expenseTrend.length === 0 ? (
-                <p className="text-white/40 text-center py-8">暂无数据</p>
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
               ) : (
                 <DualLineChart
                   revenueData={data.revenueTrend}
@@ -484,11 +492,11 @@ export default function FinanceDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-orange-400 to-red-500" />
               <AlertTriangle className="h-4 w-4 text-orange-400" />
-              <span className="text-sm font-medium text-white/80">应收账龄分析</span>
+              <span className="text-sm font-medium text-white/80">{t('agingAnalysis')}</span>
             </div>
             <div className="p-4">
               {data.receivableAging.length === 0 ? (
-                <p className="text-white/40 text-center py-8">暂无数据</p>
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
               ) : (
                 <div className="space-y-4">
                   {data.receivableAging.map((a, i) => {
@@ -530,11 +538,11 @@ export default function FinanceDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <DollarSign className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">应付TOP5供应商</span>
+              <span className="text-sm font-medium text-white/80">{t('topSuppliers')}</span>
             </div>
             <div className="p-4">
               {data.topPayables.length === 0 ? (
-                <p className="text-white/40 text-center py-8">暂无数据</p>
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
               ) : (
                 <HorizontalBarChart data={data.topPayables.slice(0, 5)} />
               )}
@@ -546,20 +554,20 @@ export default function FinanceDashboard() {
           <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
             <Clock className="h-4 w-4 text-cyan-400" />
-            <span className="text-sm font-medium text-white/80">最近收支记录</span>
+              <span className="text-sm font-medium text-white/80">{t('recentTransactions')}</span>
           </div>
           <div className="p-4">
             {data.recentTransactions.length === 0 ? (
-              <p className="text-white/40 text-center py-8">暂无记录</p>
+              <p className="text-white/40 text-center py-8">{tc('noRecords')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">类型</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">金额</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">日期</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">备注</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('inspectionType')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('amount')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('date')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('remark')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -576,7 +584,7 @@ export default function FinanceDashboard() {
                                 : 'bg-red-500/20 text-red-400 border border-red-500/30'
                             }`}
                           >
-                            {t.type === 'receipt' ? '收入' : '支出'}
+                            {t.type === 'receipt' ? tc('income') : tc('expense')}
                           </span>
                         </td>
                         <td

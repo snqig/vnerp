@@ -38,6 +38,7 @@ import {
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -69,28 +70,34 @@ const typeMap: Record<number, string> = {
   4: '退货',
   5: '报废',
 };
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '待处理', variant: 'outline' },
-  2: { label: '处理中', variant: 'default' },
-  3: { label: '已完成', variant: 'secondary' },
-  4: { label: '已关闭', variant: 'destructive' },
-};
 
-const exportColumns = [
-  { key: 'handle_no', header: '处理单号' },
-  { key: 'material_code', header: '物料编码' },
-  { key: 'material_name', header: '物料名称' },
-  { key: 'unqualified_qty', header: '不合格数量' },
-  { key: 'handle_type', header: '处理方式' },
-  { key: 'responsible_dept', header: '责任部门' },
-  { key: 'responsible_person', header: '责任人' },
-  { key: 'handle_status', header: '状态' },
-];
 
 export default function UnqualifiedPage() {
+  // 翻译钩子
+  const t = useTranslations('Quality');
+  const tc = useTranslations('Common');
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: '待处理', variant: 'outline' },
+    2: { label: '处理中', variant: 'default' },
+    3: { label: '已完成', variant: 'secondary' },
+    4: { label: tc('closed'), variant: 'destructive' },
+  };
+
+  const exportColumns = [
+    { key: 'handle_no', header: '处理单号' },
+    { key: 'material_code', header: '物料编码' },
+    { key: 'material_name', header: '物料名称' },
+    { key: 'unqualified_qty', header: '不合格数量' },
+    { key: 'handle_type', header: '处理方式' },
+    { key: 'responsible_dept', header: '责任部门' },
+    { key: 'responsible_person', header: '责任人' },
+    { key: 'handle_status', header: tc('status') },
+  ];
+
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);

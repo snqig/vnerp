@@ -2,9 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslations } from 'next-intl';
 import ApiClient from '@/lib/api-client';
 
 export default function DiagnosticPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const auth = useAuth();
   const [diagnosticInfo, setDiagnosticInfo] = useState<any>({});
   const [loginUsername, setLoginUsername] = useState('admin');
@@ -138,7 +143,7 @@ export default function DiagnosticPage() {
                 <strong>加载中:</strong>
               </td>
               <td style={{ padding: '8px', borderBottom: '1px solid #ddd' }}>
-                {auth.isLoading ? '⏳ 是' : '否'}
+                {auth.isLoading ? '⏳ 是' : tc('no')}
               </td>
             </tr>
             <tr>

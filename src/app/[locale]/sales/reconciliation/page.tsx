@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -80,16 +81,6 @@ interface Customer {
   customer_code: string;
 }
 
-const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: '草稿', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-  2: { label: '已发送', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
-  3: {
-    label: '已确认',
-    color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  },
-  4: { label: '已关闭', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-};
-
 const CONFIRM_STATUS_MAP: Record<number, { label: string; color: string }> = {
   0: { label: '未确认', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
   1: {
@@ -100,6 +91,20 @@ const CONFIRM_STATUS_MAP: Record<number, { label: string; color: string }> = {
 };
 
 export default function ReconciliationPage() {
+  // 翻译钩子
+  const t = useTranslations('Sales');
+  const tc = useTranslations('Common');
+
+  const STATUS_MAP: Record<number, { label: string; color: string }> = {
+  1: { label: tc('draft'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  2: { label: '已发送', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+  3: {
+    label: '已确认',
+    color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+  },
+  4: { label: tc('closed'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+};
+
   const [list, setList] = useState<Reconciliation[]>([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
@@ -294,7 +299,7 @@ export default function ReconciliationPage() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="状态" />
+                  <SelectValue placeholder=tc("status") />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部状态</SelectItem>
@@ -393,12 +398,12 @@ export default function ReconciliationPage() {
                         <Badge
                           className={CONFIRM_STATUS_MAP[r.confirm_status]?.color || 'bg-gray-100'}
                         >
-                          {CONFIRM_STATUS_MAP[r.confirm_status]?.label || '未知'}
+                          {CONFIRM_STATUS_MAP[r.confirm_status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={STATUS_MAP[r.status]?.color || 'bg-gray-100'}>
-                          {STATUS_MAP[r.status]?.label || '未知'}
+                          {STATUS_MAP[r.status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -410,7 +415,7 @@ export default function ReconciliationPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => exportReconciliation(r)}
-                            title="导出"
+                            title=tc("export")
                           >
                             <Download className="w-4 h-4" />
                           </Button>
@@ -493,7 +498,7 @@ export default function ReconciliationPage() {
               <Input
                 value={form.remark}
                 onChange={(e) => setForm((prev) => ({ ...prev, remark: e.target.value }))}
-                placeholder="备注"
+                placeholder=tc("remark")
               />
             </div>
             <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800">

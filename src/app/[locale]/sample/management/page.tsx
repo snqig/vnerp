@@ -49,6 +49,7 @@ import {
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { formatDate } from '@/lib/date-utils';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -124,6 +125,10 @@ const emptyForm = {
 };
 
 export default function SampleManagementPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<SampleOrder[]>([]);
   const [total, setTotal] = useState(0);
@@ -271,7 +276,7 @@ export default function SampleManagementPage() {
         setShowFormDialog(false);
         fetchData();
       } else {
-        toast({ title: result.message || '操作失败', variant: 'destructive' });
+        toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
     } catch {
       toast({ title: '保存失败', variant: 'destructive' });
@@ -302,7 +307,7 @@ export default function SampleManagementPage() {
     { key: 'customer_name', header: '客户' },
     { key: 'notify_date', header: '通知日期' },
     { key: 'customer_require_date', header: '要求交付日期' },
-    { key: 'delivery_status', header: '状态' },
+    { key: 'delivery_status', header: tc('status') },
   ];
   const getExportData = () =>
     sortedList.map((s) => ({
@@ -343,7 +348,7 @@ export default function SampleManagementPage() {
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="状态" />
+                    <SelectValue placeholder=tc("status") />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部</SelectItem>
@@ -731,7 +736,7 @@ export default function SampleManagementPage() {
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editId ? '保存' : '创建'}
+              {editId ? tc('save') : '创建'}
             </Button>
           </DialogFooter>
         </DialogContent>

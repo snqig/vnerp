@@ -6,58 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-interface TableInfo {
-  name: string;
-  comment: string;
-  rows: number;
-}
-
-interface Relation {
-  fromTable: string;
-  fromColumn: string;
-  toTable: string;
-  toColumn: string;
-  type: string;
-  constraint?: string;
-}
-
-interface ModuleData {
-  [key: string]: TableInfo[];
-}
-
-interface DbRelations {
-  tables: TableInfo[];
-  foreignKeys: Relation[];
-  logicalRelations: Relation[];
-  modules: ModuleData;
-}
-
-const moduleColors: Record<string, string> = {
-  system: 'bg-blue-500',
-  order: 'bg-green-500',
-  product: 'bg-yellow-500',
-  partner: 'bg-purple-500',
-  production: 'bg-cyan-500',
-  inventory: 'bg-orange-500',
-  finance: 'bg-pink-500',
-  sample: 'bg-lime-500',
-  other: 'bg-gray-500'
-};
-
-const moduleLabels: Record<string, string> = {
-  system: '系统管理',
-  order: '订单管理',
-  product: '产品管理',
-  partner: '合作伙伴',
-  production: '生产管理',
-  inventory: '库存管理',
-  finance: '财务管理',
-  sample: '样品管理',
-  other: '其他'
-};
+import { useToast } from '@/hooks/use-toast';
+import { useReactFlow, useNodesState, useEdgesState } from '@xyflow/react';
+import { useTranslations } from 'next-intl';
 
 export default function DbRelationsPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const [data, setData] = useState<DbRelations | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);

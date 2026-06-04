@@ -96,9 +96,9 @@ const STATUS_MAP: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  0: { label: '草稿', variant: 'outline' },
+  0: { label: tc('draft'), variant: 'outline' },
   1: { label: '进行中', variant: 'default' },
-  2: { label: '待审批', variant: 'secondary' },
+  2: { label: tc('pending'), variant: 'secondary' },
   3: { label: '已完成', variant: 'default' },
   4: { label: '已取消', variant: 'destructive' },
 };
@@ -117,6 +117,10 @@ const SPLIT_FLAG_MAP: Record<number, string> = {
 };
 
 export default function StocktakingPage() {
+  // 翻译钩子
+  const t = useTranslations('Warehouse');
+  const tc = useTranslations('Common');
+
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const headers: Record<string, string> = {
@@ -157,7 +161,7 @@ export default function StocktakingPage() {
     { key: 'total_items', header: '盘点项数' },
     { key: 'diff_items', header: '差异项数' },
     { key: 'diff_amount', header: '差异金额' },
-    { key: 'status_name', header: '状态' },
+    { key: 'status_name', header: tc('status') },
   ];
 
   const getExportData = () =>
@@ -225,10 +229,10 @@ export default function StocktakingPage() {
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '操作失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -244,14 +248,14 @@ export default function StocktakingPage() {
       const result = await res.json();
 
       if (result.success) {
-        toast({ title: '操作成功' });
+        toast({ title: tc('success') });
         fetchData();
         setShowApproveDialog(false);
       } else {
-        toast({ title: '操作失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 

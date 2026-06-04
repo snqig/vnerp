@@ -51,15 +51,15 @@ interface CuttingRecord {
 const getStatusBadge = (status: string) => {
   const statusMap: Record<string, { label: string; className: string }> = {
     active: {
-      label: '正常',
+      label: tc('normal'),
       className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     },
     frozen: {
-      label: '冻结',
+      label: tc('frozen'),
       className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
     },
     disabled: {
-      label: '禁用',
+      label: tc('disabled'),
       className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
     },
   };
@@ -71,6 +71,10 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function CuttingRecordsPage() {
+  // 翻译钩子
+  const t = useTranslations('Warehouse');
+  const tc = useTranslations('Common');
+
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const headers: Record<string, string> = {
@@ -94,33 +98,33 @@ export default function CuttingRecordsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const exportColumns = [
-    { key: '记录号', header: '记录号' },
-    { key: '源标签号', header: '源标签号' },
-    { key: '物料名称', header: '物料名称' },
-    { key: '物料编码', header: '物料编码' },
-    { key: '规格', header: '规格' },
-    { key: '原宽幅', header: '原宽幅(mm)' },
-    { key: '分切宽幅', header: '分切宽幅(mm)' },
-    { key: '分切总和', header: '分切总和(mm)' },
-    { key: '剩余宽幅', header: '剩余宽幅(mm)' },
-    { key: '操作人', header: '操作人' },
-    { key: '分切时间', header: '分切时间' },
-    { key: '状态', header: '状态' },
+    { key: 'recordNo', header: t('recordNoCol') },
+    { key: 'sourceLabelNo', header: t('sourceLabelNoCol') },
+    { key: 'materialName', header: t('materialName') },
+    { key: 'materialCode', header: t('materialCode') },
+    { key: 'specification', header: t('specification') },
+    { key: 'originalWidth', header: t('originalWidthMM') },
+    { key: 'cutWidth', header: t('cutWidthMM') },
+    { key: 'cutTotal', header: t('cutTotalMM') },
+    { key: 'remainWidth', header: t('remainWidthMM') },
+    { key: 'operator', header: t('operator') },
+    { key: 'cutTime', header: t('cutTime') },
+    { key: tc('status'), header: tc('status') },
   ];
   const getExportData = () =>
     records.map((r) => ({
-      记录号: r.recordNo,
-      源标签号: r.sourceLabelNo,
-      物料名称: r.materialName,
-      物料编码: r.materialCode,
-      规格: r.specification,
-      原宽幅: r.originalWidth,
-      分切宽幅: r.cutWidthStr,
-      分切总和: r.cutTotalWidth,
-      剩余宽幅: r.remainWidth,
-      操作人: r.operatorName,
-      分切时间: new Date(r.cutTime).toLocaleString(),
-      状态: r.status === 'active' ? '正常' : r.status === 'frozen' ? '冻结' : '禁用',
+      recordNo: r.recordNo,
+      sourceLabelNo: r.sourceLabelNo,
+      materialName: r.materialName,
+      materialCode: r.materialCode,
+      specification: r.specification,
+      originalWidth: r.originalWidth,
+      cutWidth: r.cutWidthStr,
+      cutTotal: r.cutTotalWidth,
+      remainWidth: r.remainWidth,
+      operator: r.operatorName,
+      cutTime: new Date(r.cutTime).toLocaleString(),
+      status: r.status === 'active' ? tc('normal') : r.status === 'frozen' ? tc('frozen') : tc('disabled'),
     }));
 
   useEffect(() => {
@@ -174,25 +178,24 @@ export default function CuttingRecordsPage() {
   };
 
   return (
-    <MainLayout title="分切记录管理">
+    <MainLayout title={t('cuttingRecordManagement')}>
       <div className="space-y-6">
-        {/* 搜索栏 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Scissors className="h-5 w-5" />
-              分切记录查询
+              {t('cuttingRecordQuery')}
             </CardTitle>
-            <CardDescription>查询和管理物料分切记录</CardDescription>
+            <CardDescription>{t('cuttingRecordQueryDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 min-w-[200px]">
-                <label className="text-sm font-medium mb-2 block">关键字</label>
+                <label className="text-sm font-medium mb-2 block">{t('keyword')}</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="记录号/源标签号..."
+                    placeholder={t('keywordPlaceholder')}
                     className="pl-10"
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
@@ -201,9 +204,9 @@ export default function CuttingRecordsPage() {
                 </div>
               </div>
               <div className="flex-1 min-w-[200px]">
-                <label className="text-sm font-medium mb-2 block">源标签号</label>
+                <label className="text-sm font-medium mb-2 block">{t('sourceLabelNo')}</label>
                 <Input
-                  placeholder="输入源标签号"
+                  placeholder={t('inputSourceLabelNo')}
                   value={sourceLabelNo}
                   onChange={(e) => setSourceLabelNo(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -212,24 +215,23 @@ export default function CuttingRecordsPage() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleReset}>
                   <Trash2 className="h-4 w-4 mr-2" />
-                  重置
+                  {t('reset')}
                 </Button>
                 <Button onClick={handleSearch}>
                   <Search className="h-4 w-4 mr-2" />
-                  查询
+                  {t('query')}
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 记录列表 */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>分切记录列表</CardTitle>
-                <CardDescription>共 {total} 条记录</CardDescription>
+                <CardTitle>{t('cuttingRecords')}</CardTitle>
+                <CardDescription>{t('recordCount', { count: total })}</CardDescription>
               </div>
               <div className="flex gap-2">
                 <TableExportToolbar
@@ -237,18 +239,18 @@ export default function CuttingRecordsPage() {
                   totalCount={records.length}
                   onSelectAll={() => setSelectedIds(new Set(records.map((r) => r.id)))}
                   onDeselectAll={() => setSelectedIds(new Set())}
-                  onPrint={() => printTable(getExportData(), exportColumns, '分切记录')}
+                  onPrint={() => printTable(getExportData(), exportColumns, t('exportTitle'))}
                   onExportPDF={() =>
-                    exportTableToPDF(getExportData(), '分切记录', exportColumns, '分切记录')
+                    exportTableToPDF(getExportData(), t('exportTitle'), exportColumns, t('exportTitle'))
                   }
-                  onExportXLS={() => exportTableToXLS(getExportData(), '分切记录', exportColumns)}
+                  onExportXLS={() => exportTableToXLS(getExportData(), t('exportTitle'), exportColumns)}
                   onExportWORD={() =>
-                    exportTableToWORD(getExportData(), '分切记录', exportColumns, '分切记录')
+                    exportTableToWORD(getExportData(), t('exportTitle'), exportColumns, t('exportTitle'))
                   }
                 />
                 <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  刷新
+                  {t('refresh')}
                 </Button>
               </div>
             </div>
@@ -267,29 +269,29 @@ export default function CuttingRecordsPage() {
                         }}
                       />
                     </TableHead>
-                    <TableHead>记录号</TableHead>
-                    <TableHead>源标签号</TableHead>
-                    <TableHead>物料信息</TableHead>
-                    <TableHead>原宽幅</TableHead>
-                    <TableHead>分切宽幅</TableHead>
-                    <TableHead>分切总和</TableHead>
-                    <TableHead>剩余宽幅</TableHead>
-                    <TableHead>操作人</TableHead>
-                    <TableHead>分切时间</TableHead>
-                    <TableHead>状态</TableHead>
+                    <TableHead>{t('recordNoCol')}</TableHead>
+                    <TableHead>{t('sourceLabelNoCol')}</TableHead>
+                    <TableHead>{t('materialInfo')}</TableHead>
+                    <TableHead>{t('originalWidthMM')}</TableHead>
+                    <TableHead>{t('cutWidthMM')}</TableHead>
+                    <TableHead>{t('cutTotalMM')}</TableHead>
+                    <TableHead>{t('remainWidthMM')}</TableHead>
+                    <TableHead>{t('operator')}</TableHead>
+                    <TableHead>{t('cutTime')}</TableHead>
+                    <TableHead>{tc('status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
                       <TableCell colSpan={11} className="text-center py-8">
-                        加载中...
+                        {t('loading')}
                       </TableCell>
                     </TableRow>
                   ) : records.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={11} className="text-center py-8">
-                        暂无数据
+                        {t('noData')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -337,7 +339,7 @@ export default function CuttingRecordsPage() {
             {total > pageSize && (
               <div className="flex items-center justify-between mt-4">
                 <div className="text-sm text-muted-foreground">
-                  第 {page} 页，共 {Math.ceil(total / pageSize)} 页
+                  {t('pageOf', { page, pages: Math.ceil(total / pageSize) })}
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -346,7 +348,7 @@ export default function CuttingRecordsPage() {
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
                   >
-                    上一页
+                    {tc('prevPage')}
                   </Button>
                   <Button
                     variant="outline"
@@ -354,7 +356,7 @@ export default function CuttingRecordsPage() {
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page * pageSize >= total}
                   >
-                    下一页
+                    {tc('nextPage')}
                   </Button>
                 </div>
               </div>

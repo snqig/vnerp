@@ -32,6 +32,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Edit, Trash2, History, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface ScreenPlate {
   id: number;
@@ -99,6 +100,10 @@ const actionMap: Record<string, string> = {
 };
 
 export default function ScreenPlatePage() {
+  // 翻译钩子
+  const t = useTranslations('Dcprint');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<ScreenPlate[]>([]);
   const [total, setTotal] = useState(0);
@@ -231,14 +236,14 @@ export default function ScreenPlatePage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="编码"
+                placeholder=tc("code")
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
                 className="w-28 h-8 text-sm"
               />
               <Select value={searchStatus} onValueChange={setSearchStatus}>
                 <SelectTrigger className="w-24 h-8 text-sm">
-                  <SelectValue placeholder="状态" />
+                  <SelectValue placeholder=tc("status") />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">全部</SelectItem>
@@ -324,7 +329,7 @@ export default function ScreenPlatePage() {
                               setEditItem(item);
                               setShowDialog(true);
                             }}
-                            title="编辑"
+                            title=tc("edit")
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -342,7 +347,7 @@ export default function ScreenPlatePage() {
                             variant="ghost"
                             className="h-6 w-6 p-0 text-red-600"
                             onClick={() => handleDelete(item.id)}
-                            title="删除"
+                            title=tc("delete")
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>

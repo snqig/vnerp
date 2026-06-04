@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Zap,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface QualityData {
   overview: {
@@ -212,7 +213,7 @@ function HorizontalBarChart({ data }: { data: { defect_type: string; count: numb
       {data.map((d, i) => (
         <div key={i} className="flex items-center gap-3">
           <span className="text-xs w-20 text-right text-cyan-300 truncate">
-            {d.defect_type || '未知'}
+            {d.defect_type || tc('unknown')}
           </span>
           <div className="flex-1 bg-white/10 rounded-full h-5 relative overflow-hidden">
             <div
@@ -233,6 +234,10 @@ function HorizontalBarChart({ data }: { data: { defect_type: string; count: numb
 }
 
 export default function QualityDashboard() {
+  // 翻译钩子
+  const t = useTranslations('Dashboard');
+  const tc = useTranslations('Common');
+
   const { companyName } = useCompanyName();
   const [data, setData] = useState<QualityData>({
     overview: {
@@ -374,7 +379,7 @@ export default function QualityDashboard() {
               )}
             </button>
             <div className="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-xs text-cyan-300">
-              {loading ? '加载中...' : '● 实时'}
+              {loading ? tc('loading') : '● 实时'}
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
@@ -91,28 +92,17 @@ const creditLevelMap: Record<string, { label: string; cls: string }> = {
   C: { label: '条件', cls: 'bg-orange-500 text-white' },
   D: { label: '失格', cls: 'bg-red-500 text-white' },
 };
-const statusMap: Record<number, { label: string; cls: string }> = {
-  1: { label: '启用', cls: 'bg-green-100 text-green-800' },
+export default function SuppliersPage() {
+  // 翻译钩子
+  const t = useTranslations('Purchase');
+  const tc = useTranslations('Common');
+
+  const statusMap: Record<number, { label: string; cls: string }> = {
+  1: { label: tc('enabled'), cls: 'bg-green-100 text-green-800' },
   0: { label: '停用', cls: 'bg-yellow-100 text-yellow-800' },
   2: { label: '黑名单', cls: 'bg-red-100 text-red-800' },
 };
 
-const emptyForm = {
-  supplier_code: '',
-  supplier_name: '',
-  short_name: '',
-  supplier_type: 1,
-  contact_name: '',
-  contact_phone: '',
-  contact_email: '',
-  address: '',
-  credit_level: 'B',
-  settlement_method: '月结',
-  payment_terms: '30天',
-  remark: '',
-};
-
-export default function SuppliersPage() {
   const { companyName } = useCompanyName();
   const { toast } = useToast();
   const [list, setList] = useState<Supplier[]>([]);
@@ -253,7 +243,7 @@ export default function SuppliersPage() {
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: result.message || '操作失败', variant: 'destructive' });
+        toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
     } catch (e) {
       toast({ title: '保存失败', variant: 'destructive' });
@@ -353,9 +343,9 @@ export default function SuppliersPage() {
     const headers = [
       '供应商编号',
       '供应商名称',
-      '类型',
+      tc('type'),
       '等级',
-      '状态',
+      tc('status'),
       '联系人',
       '联系电话',
       '邮箱',
@@ -510,7 +500,7 @@ export default function SuppliersPage() {
                 </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="状态" />
+                    <SelectValue placeholder=tc("status") />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部状态</SelectItem>

@@ -31,6 +31,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface FollowRecord {
   id?: number;
@@ -47,24 +48,27 @@ interface FollowRecord {
   create_time: string;
 }
 
-const followTypeMap: Record<string, string> = {
-  visit: '拜访',
-  phone: '电话',
-  email: '邮件',
-  wechat: '微信',
-  other: '其他',
-};
-
-const followStatusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '待跟进', variant: 'outline' },
-  2: { label: '已跟进', variant: 'default' },
-  3: { label: '已转化', variant: 'secondary' },
-};
-
 export default function CustomerFollowPage() {
+  const t = useTranslations('Crm');
+  const tc = useTranslations('Common');
+
+  const followTypeMap: Record<string, string> = {
+    visit: t('visit'),
+    phone: t('phone'),
+    email: t('email'),
+    wechat: t('wechat'),
+    other: tc('other'),
+  };
+
+  const followStatusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: t('pendingFollow'), variant: 'outline' },
+    2: { label: t('followed'), variant: 'default' },
+    3: { label: t('converted'), variant: 'secondary' },
+  };
+
   const { toast } = useToast();
   const [records, setRecords] = useState<FollowRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -128,10 +132,10 @@ export default function CustomerFollowPage() {
         setDialogOpen(false);
         fetchData();
       } else {
-        toast({ title: data.message || '操作失败', variant: 'destructive' });
+        toast({ title: data.message || tc('error'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 

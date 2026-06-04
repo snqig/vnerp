@@ -16,6 +16,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -48,6 +49,9 @@ interface Employee {
 }
 
 function EmployeeQueryContent() {
+  const t = useTranslations('Hr');
+  const tc = useTranslations('Common');
+
   const searchParams = useSearchParams();
   const employeeId = searchParams.get('id');
 
@@ -94,7 +98,7 @@ function EmployeeQueryContent() {
       2: '试用期',
       3: '离职',
     };
-    return <Badge className={styles[status] || 'bg-gray-100'}>{labels[status] || '未知'}</Badge>;
+    return <Badge className={styles[status] || 'bg-gray-100'}>{labels[status] || tc('unknown')}</Badge>;
   };
 
   if (loading) {

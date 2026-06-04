@@ -31,6 +31,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Edit, Trash2, FileText, Upload, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface SOPRecord {
   id?: number;
@@ -53,30 +54,33 @@ interface SOPRecord {
   create_time: string;
 }
 
-const sopTypeMap: Record<string, string> = {
-  printing: '丝印',
-  die_cut: '模切',
-  trademark: '商标',
-  inspection: '检验',
-  packaging: '包装',
-  other: '其他',
-};
-const workshopMap: Record<string, string> = {
-  die_cut: '模切车间',
-  trademark: '商标车间',
-  printing: '丝印车间',
-  all: '通用',
-};
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '草稿', variant: 'outline' },
-  2: { label: '已发布', variant: 'default' },
-  3: { label: '已废止', variant: 'destructive' },
-};
-
 export default function SOPManagementPage() {
+  const t = useTranslations('Engineering');
+  const tc = useTranslations('Common');
+
+  const sopTypeMap: Record<string, string> = {
+    printing: t('silkScreen'),
+    die_cut: t('dieCut'),
+    trademark: t('trademark'),
+    inspection: t('inspection'),
+    packaging: t('packaging'),
+    other: tc('other'),
+  };
+  const workshopMap: Record<string, string> = {
+    die_cut: t('dieCutWorkshop'),
+    trademark: t('trademarkWorkshop'),
+    printing: t('silkScreenWorkshop'),
+    all: tc('all'),
+  };
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: tc('draft'), variant: 'outline' },
+    2: { label: t('published'), variant: 'default' },
+    3: { label: t('obsolete'), variant: 'destructive' },
+  };
+
   const { toast } = useToast();
   const [list, setList] = useState<SOPRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -99,12 +103,12 @@ export default function SOPManagementPage() {
       const result = await res.json();
       if (result.success) {
         setEditItem({ ...editItem, file_url: result.data.url });
-        toast({ title: '文件上传成功' });
+        toast({ title: t('uploadSuccess') });
       } else {
-        toast({ title: '上传失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('uploadFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '上传失败', variant: 'destructive' });
+      toast({ title: t('uploadFailed'), variant: 'destructive' });
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -114,7 +118,7 @@ export default function SOPManagementPage() {
   const handleDownload = (fileUrl: string, fileName: string) => {
     const link = document.createElement('a');
     link.href = fileUrl;
-    link.download = fileName || 'SOP说明书.pdf';
+    link.download = fileName || t('defaultSopFileName');
     link.target = '_blank';
     document.body.appendChild(link);
     link.click();
@@ -154,33 +158,33 @@ export default function SOPManagementPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editItem.id ? '更新成功' : '创建成功' });
+        toast({ title: editItem.id ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除此SOP？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await fetch('/api/engineering/sop?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
   return (
-    <MainLayout title="SOP管理">
+    <MainLayout title={t('sopManagement')}>
       <div className="p-6 space-y-6">
         <Card>
           <CardContent className="pt-6">
@@ -189,7 +193,7 @@ export default function SOPManagementPage() {
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索产品名称"
+                    placeholder={t('searchProductPlaceholder')}
                     className="pl-8 w-60"
                     value={searchProduct}
                     onChange={(e) => setSearchProduct(e.target.value)}
@@ -197,10 +201,10 @@ export default function SOPManagementPage() {
                 </div>
                 <Select value={searchType} onValueChange={setSearchType}>
                   <SelectTrigger className="w-40">
-                    <SelectValue placeholder="SOP类型" />
+                    <SelectValue placeholder={t('sopType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部类型</SelectItem>
+                    <SelectItem value="all">{tc('all')}</SelectItem>
                     {Object.entries(sopTypeMap).map(([k, v]) => (
                       <SelectItem key={k} value={k}>
                         {v}
@@ -209,7 +213,7 @@ export default function SOPManagementPage() {
                   </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={fetchData}>
-                  查询
+                  {tc('search')}
                 </Button>
               </div>
               <Button
@@ -219,24 +223,24 @@ export default function SOPManagementPage() {
                 }}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                新建SOP
+                {t('newSop')}
               </Button>
             </div>
 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>SOP编号</TableHead>
-                  <TableHead>SOP名称</TableHead>
-                  <TableHead>产品名称</TableHead>
-                  <TableHead>工序</TableHead>
-                  <TableHead>版本</TableHead>
-                  <TableHead>类型</TableHead>
-                  <TableHead>车间</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>生效日期</TableHead>
-                  <TableHead>SOP文件</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{t('sopNo')}</TableHead>
+                  <TableHead>{t('sopName')}</TableHead>
+                  <TableHead>{t('productName')}</TableHead>
+                  <TableHead>{t('process')}</TableHead>
+                  <TableHead>{t('version')}</TableHead>
+                  <TableHead>{t('type')}</TableHead>
+                  <TableHead>{t('workshop')}</TableHead>
+                  <TableHead>{tc('status')}</TableHead>
+                  <TableHead>{t('effectiveDate')}</TableHead>
+                  <TableHead>{t('sopFile')}</TableHead>
+                  <TableHead>{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -251,7 +255,7 @@ export default function SOPManagementPage() {
                     <TableCell>{workshopMap[item.workshop] || item.workshop || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={statusMap[item.status]?.variant || 'outline'}>
-                        {statusMap[item.status]?.label || '未知'}
+                        {statusMap[item.status]?.label || tc('unknown')}
                       </Badge>
                     </TableCell>
                     <TableCell>{item.effective_date?.substring(0, 10) || '-'}</TableCell>
@@ -264,10 +268,10 @@ export default function SOPManagementPage() {
                           onClick={() => handleDownload(item.file_url, item.sop_name + '.pdf')}
                         >
                           <FileText className="h-3 w-3 mr-1" />
-                          查看PDF
+                          {t('viewPdf')}
                         </Button>
                       ) : (
-                        <span className="text-muted-foreground text-xs">无</span>
+                        <span className="text-muted-foreground text-xs">{tc('none')}</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -276,7 +280,7 @@ export default function SOPManagementPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            title="下载SOP文件"
+                            title={t('downloadSopFile')}
                             onClick={() => handleDownload(item.file_url, item.sop_name + '.pdf')}
                           >
                             <Download className="h-3 w-3" />
@@ -302,7 +306,7 @@ export default function SOPManagementPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -310,7 +314,7 @@ export default function SOPManagementPage() {
             </Table>
 
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">共 {total} 条</span>
+              <span className="text-sm text-muted-foreground">{tc('total', { count: total })}</span>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -318,7 +322,7 @@ export default function SOPManagementPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  上一页
+                  {tc('prevPage')}
                 </Button>
                 <Button
                   variant="outline"
@@ -326,7 +330,7 @@ export default function SOPManagementPage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  下一页
+                  {tc('nextPage')}
                 </Button>
               </div>
             </div>
@@ -336,46 +340,46 @@ export default function SOPManagementPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? '编辑SOP' : '新建SOP'}</DialogTitle>
+              <DialogTitle>{editItem.id ? t('editSop') : t('newSop')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div>
-                <Label>产品编码</Label>
+                <Label>{t('productCode')}</Label>
                 <Input
                   value={editItem.product_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, product_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>产品名称 *</Label>
+                <Label>{t('productName')} *</Label>
                 <Input
                   value={editItem.product_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, product_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>工序编码</Label>
+                <Label>{t('processCode')}</Label>
                 <Input
                   value={editItem.process_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, process_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>工序名称</Label>
+                <Label>{t('processName')}</Label>
                 <Input
                   value={editItem.process_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, process_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>版本</Label>
+                <Label>{t('version')}</Label>
                 <Input
                   value={editItem.version || 'V1.0'}
                   onChange={(e) => setEditItem({ ...editItem, version: e.target.value })}
                 />
               </div>
               <div>
-                <Label>SOP类型</Label>
+                <Label>{t('sopType')}</Label>
                 <Select
                   value={editItem.sop_type || 'printing'}
                   onValueChange={(v) => setEditItem({ ...editItem, sop_type: v })}
@@ -393,7 +397,7 @@ export default function SOPManagementPage() {
                 </Select>
               </div>
               <div>
-                <Label>适用车间</Label>
+                <Label>{t('applicableWorkshop')}</Label>
                 <Select
                   value={editItem.workshop || 'die_cut'}
                   onValueChange={(v) => setEditItem({ ...editItem, workshop: v })}
@@ -411,14 +415,14 @@ export default function SOPManagementPage() {
                 </Select>
               </div>
               <div>
-                <Label>设备类型</Label>
+                <Label>{t('equipmentType')}</Label>
                 <Input
                   value={editItem.equipment_type || ''}
                   onChange={(e) => setEditItem({ ...editItem, equipment_type: e.target.value })}
                 />
               </div>
               <div>
-                <Label>生效日期</Label>
+                <Label>{t('effectiveDate')}</Label>
                 <Input
                   type="date"
                   value={editItem.effective_date || ''}
@@ -426,7 +430,7 @@ export default function SOPManagementPage() {
                 />
               </div>
               <div>
-                <Label>SOP说明书(PDF)</Label>
+                <Label>{t('sopPdf')}</Label>
                 <div className="flex gap-2 items-center">
                   <Input
                     type="file"
@@ -440,21 +444,21 @@ export default function SOPManagementPage() {
                       size="sm"
                       variant="outline"
                       onClick={() =>
-                        handleDownload(editItem.file_url!, editItem.sop_name || 'SOP.pdf')
+                        handleDownload(editItem.file_url!, editItem.sop_name || t('defaultSopFileName'))
                       }
                     >
                       <Download className="h-3 w-3 mr-1" />
-                      下载
+                      {tc('download')}
                     </Button>
                   )}
                 </div>
                 {editItem.file_url && (
-                  <p className="text-xs text-muted-foreground mt-1">已上传: {editItem.file_url}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('uploaded')}: {editItem.file_url}</p>
                 )}
-                {uploading && <p className="text-xs text-blue-500 mt-1">上传中...</p>}
+                {uploading && <p className="text-xs text-blue-500 mt-1">{t('uploading')}...</p>}
               </div>
               <div className="col-span-2">
-                <Label>SOP内容</Label>
+                <Label>{t('sopContent')}</Label>
                 <Textarea
                   rows={5}
                   value={editItem.content || ''}
@@ -462,7 +466,7 @@ export default function SOPManagementPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   rows={2}
                   value={editItem.remark || ''}
@@ -472,9 +476,9 @@ export default function SOPManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

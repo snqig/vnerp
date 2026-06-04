@@ -111,32 +111,32 @@ import { toast } from 'sonner';
 const statusOptions = [
   {
     value: 'all',
-    label: '全部',
+    label: tc('all'),
     color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
   },
   {
     value: 'draft',
-    label: '草稿',
+    label: tc('draft'),
     color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
   },
   {
     value: 'pending',
-    label: '待审核',
+    label: tc('pending'),
     color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200',
   },
   {
     value: 'approved',
-    label: '已审核',
+    label: tc('approved'),
     color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
   },
   {
     value: 'rejected',
-    label: '已拒绝',
+    label: tc('rejected'),
     color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200',
   },
   {
     value: 'completed',
-    label: '已完成',
+    label: tc('completed'),
     color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
   },
 ];
@@ -356,19 +356,19 @@ const statusConfig: Record<
     icon: AlertCircle,
   },
   draft: {
-    label: '草稿',
+    label: tc('draft'),
     color:
       'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
     icon: FileText,
   },
   approved: {
-    label: '已审核',
+    label: tc('approved'),
     color:
       'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800',
     icon: CheckCircle2,
   },
   rejected: {
-    label: '已拒绝',
+    label: tc('rejected'),
     color:
       'bg-red-100 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-800',
     icon: X,
@@ -376,6 +376,10 @@ const statusConfig: Record<
 };
 
 export default function OutboundManagementPage() {
+  // 翻译钩子
+  const t = useTranslations('Warehouse');
+  const tc = useTranslations('Common');
+
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const headers: Record<string, string> = {
@@ -433,7 +437,7 @@ export default function OutboundManagementPage() {
     setIsLoading(true);
     await fetchOutboundRecords();
     setIsLoading(false);
-    toast.success('数据已刷新');
+    toast.success(t('dataRefreshed'));
   }, []);
 
   // 获取出库单列表
@@ -493,7 +497,7 @@ export default function OutboundManagementPage() {
     setStatusFilter('all');
     setDateRange('all');
     setSelectedRecords([]);
-    toast.success('筛选条件已重置');
+    toast.success(t('filterReset'));
   }, []);
 
   // 筛选出库记录
@@ -596,15 +600,15 @@ export default function OutboundManagementPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('出库单保存成功');
-        await fetchOutboundRecords();
+        toast.success(t('saveSuccess'));
         setIsAddDialogOpen(false);
+        fetchOutboundRecords();
       } else {
-        toast.error(result.message || '保存失败');
+        toast.error(result.message || t('saveFailed'));
       }
     } catch (error) {
       console.error('保存出库单失败:', error);
-      toast.error('保存失败');
+      toast.error(t('saveFailed'));
     }
   };
 
@@ -652,15 +656,15 @@ export default function OutboundManagementPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('出库单更新成功');
-        await fetchOutboundRecords();
+        toast.success(t('updateOutboundSuccess'));
         setIsEditDialogOpen(false);
+        fetchOutboundRecords();
       } else {
-        toast.error(result.message || '更新失败');
+        toast.error(result.message || t('updateFailed'));
       }
     } catch (error) {
       console.error('更新出库单失败:', error);
-      toast.error('更新失败');
+      toast.error(t('updateFailed'));
     }
   };
 
@@ -680,14 +684,15 @@ export default function OutboundManagementPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('出库单删除成功');
-        await fetchOutboundRecords();
+        toast.success(t('deleteOutboundSuccess'));
+        setIsDeleteDialogOpen(false);
+        fetchOutboundRecords();
       } else {
-        toast.error(result.message || '删除失败');
+        toast.error(result.message || t('deleteFailed'));
       }
     } catch (error) {
       console.error('删除出库单失败:', error);
-      toast.error('删除失败');
+      toast.error(t('deleteFailed'));
     }
     setIsDeleteDialogOpen(false);
   };
@@ -716,14 +721,14 @@ export default function OutboundManagementPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success(currentRecord.auditAction === 'approve' ? '审核成功' : '撤审成功');
+        toast.success(currentRecord.auditAction === 'approve' ? t('auditSuccess') : t('unauditSuccess'));
         await fetchOutboundRecords();
       } else {
-        toast.error(result.message || '操作失败');
+        toast.error(result.message || tc('error'));
       }
     } catch (error) {
       console.error('审核出库单失败:', error);
-      toast.error('操作失败');
+      toast.error(tc('error'));
     }
     setIsAuditDialogOpen(false);
   };
@@ -740,7 +745,7 @@ export default function OutboundManagementPage() {
       const warehouseId = warehouseData?.id || record.warehouseId;
 
       if (!warehouseId) {
-        toast.error('无法确定仓库信息');
+        toast.error(tc('fetchFailed'));
         setFifoLoading(false);
         return;
       }
@@ -753,11 +758,11 @@ export default function OutboundManagementPage() {
       if (result.success) {
         setFifoAllocation(result.data);
       } else {
-        toast.error(result.message || '获取FIFO分配方案失败');
+        toast.error(t('fifoFetchFailed'));
       }
     } catch (error) {
       console.error('获取FIFO分配方案失败:', error);
-      toast.error('获取FIFO分配方案失败');
+      toast.error(t('fifoFetchFailed'));
     }
     setFifoLoading(false);
   };
@@ -780,15 +785,14 @@ export default function OutboundManagementPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success('FIFO出库确认成功，库存已按先进先出扣减');
-        await fetchOutboundRecords();
+        toast.success(t('fifoConfirmSuccess'));
         setIsFifoDialogOpen(false);
+        fetchOutboundRecords();
       } else {
-        toast.error(result.message || 'FIFO出库确认失败');
+        toast.error(result.message || t('fifoConfirmFailed'));
       }
     } catch (error) {
-      console.error('FIFO出库确认失败:', error);
-      toast.error('FIFO出库确认失败');
+      toast.error(t('fifoConfirmFailed'));
     }
     setFifoConfirming(false);
   };
@@ -796,11 +800,9 @@ export default function OutboundManagementPage() {
   // 打印
   const handlePrint = () => {
     if (selectedRecords.length === 0) {
-      toast.error('请先选择要打印的记录');
-      return;
+      toast.error(t('printFirst'));
     }
-    window.print();
-    toast.success('打印任务已发送');
+    toast.success(t('printSent'));
   };
 
   // 选择记录
@@ -851,7 +853,7 @@ export default function OutboundManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border dark:border-slate-700"
+          className="flex flex-wrap items-center gap-3 bg-card p-4 rounded-xl shadow-sm border"
         >
           <Button onClick={handleAdd} className="gap-2 bg-blue-600 hover:bg-blue-700">
             <Plus className="w-4 h-4" />
@@ -877,7 +879,7 @@ export default function OutboundManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex flex-wrap items-center gap-4 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border dark:border-slate-700"
+          className="flex flex-wrap items-center gap-4 bg-card p-4 rounded-xl shadow-sm border"
         >
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-slate-500" />
@@ -1555,7 +1557,7 @@ export default function OutboundManagementPage() {
                   <p
                     className={`text-xs ${fifoAllocation.shortage > 0 ? 'text-red-600' : 'text-emerald-600'}`}
                   >
-                    {fifoAllocation.shortage > 0 ? '缺少' : '状态'}
+                    {fifoAllocation.shortage > 0 ? '缺少' : tc('status')}
                   </p>
                   <p
                     className={`text-xl font-bold ${fifoAllocation.shortage > 0 ? 'text-red-700' : 'text-emerald-700'}`}

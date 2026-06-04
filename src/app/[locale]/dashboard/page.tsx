@@ -29,6 +29,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 interface DashboardData {
   stats: {
@@ -57,6 +58,9 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations('Dashboard');
+  const tc = useTranslations('Common');
+
   const [currentTime, setCurrentTime] = useState<string>('');
   const [data, setData] = useState<DashboardData>({
     stats: {
@@ -126,25 +130,25 @@ export default function DashboardPage() {
       number,
       { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
     > = {
-      0: { label: '草稿', variant: 'secondary' },
-      1: { label: '已确认', variant: 'default' },
-      2: { label: '生产中', variant: 'default' },
-      3: { label: '已完成', variant: 'outline' },
+      0: { label: tc('draft'), variant: 'secondary' },
+       1: { label: t('statusConfirmed'), variant: 'default' },
+       2: { label: t('statusInProduction'), variant: 'default' },
+       3: { label: t('statusCompleted'), variant: 'outline' },
     };
-    const cfg = map[status] || { label: '未知', variant: 'secondary' as const };
+    const cfg = map[status] || { label: tc('unknown'), variant: 'secondary' as const };
     return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
   };
 
   const s = data.stats;
 
   return (
-    <MainLayout title="仪表盘">
+    <MainLayout title={t('title')}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">仪表盘</h2>
+            <h2 className="text-3xl font-bold tracking-tight">{t('title')}</h2>
             <p className="text-muted-foreground mt-1">
-              欢迎回来，这里是您的企业运营概览。当前时间：{currentTime}
+              {t('welcome', { time: currentTime })}
             </p>
           </div>
           <Button
@@ -157,14 +161,14 @@ export default function DashboardPage() {
             }}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            刷新数据
+            {tc('refresh')}
           </Button>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">今日订单</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('todayOrders')}</CardTitle>
               <FileText className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
@@ -179,38 +183,38 @@ export default function DashboardPage() {
                   {s.orderChange >= 0 ? '+' : ''}
                   {s.orderChange}%
                 </span>
-                <span className="text-muted-foreground ml-1">较昨日</span>
+                <span className="text-muted-foreground ml-1">{t('vsYesterday')}</span>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">待产工单</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pendingWorkOrders')}</CardTitle>
               <Factory className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.pendingOrders}</div>
-              <p className="text-xs text-muted-foreground">生产中: {s.producingOrders} 单</p>
+              <p className="text-xs text-muted-foreground">{t('producingCount', { count: s.producingOrders })}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">库存预警</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('lowStock')}</CardTitle>
               <AlertTriangle className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.inventoryAlert}</div>
-              <p className="text-xs text-muted-foreground">需要及时补货</p>
+              <p className="text-xs text-muted-foreground">{t('needRestock')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">今日完成</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('todayCompleted')}</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.completedToday}</div>
-              <p className="text-xs text-muted-foreground">工单完成数</p>
+              <p className="text-xs text-muted-foreground">{t('workOrderCompletion')}</p>
             </CardContent>
           </Card>
         </div>
@@ -218,27 +222,27 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">客户总数</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('customersTitle')}</CardTitle>
               <Users className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.totalCustomers}</div>
-              <p className="text-xs text-muted-foreground">活跃客户</p>
+              <p className="text-xs text-muted-foreground">{t('activeCustomers')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">员工总数</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('totalEmployees')}</CardTitle>
               <Users className="h-4 w-4 text-cyan-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.totalEmployees}</div>
-              <p className="text-xs text-muted-foreground">在职员工</p>
+              <p className="text-xs text-muted-foreground">{t('activeEmployees')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">今日产量</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('todayProduction')}</CardTitle>
               <Package className="h-4 w-4 text-indigo-600" />
             </CardHeader>
             <CardContent>
@@ -252,38 +256,38 @@ export default function DashboardPage() {
                 <span className={s.productionChange >= 0 ? 'text-green-600' : 'text-red-600'}>
                   +{s.productionChange}%
                 </span>
-                <span className="text-muted-foreground ml-1">较昨日</span>
+                <span className="text-muted-foreground ml-1">{t('vsYesterday')}</span>
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">今日营收</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('todayRevenue')}</CardTitle>
               <DollarSign className="h-4 w-4 text-emerald-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">¥{(s.todayOrders * 15000).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">预估营收</p>
+              <p className="text-xs text-muted-foreground">{t('estimatedRevenue')}</p>
             </CardContent>
           </Card>
         </div>
 
         <Tabs defaultValue="orders" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="orders">近期订单</TabsTrigger>
-            <TabsTrigger value="alerts">预警通知</TabsTrigger>
+            <TabsTrigger value="orders">{t('recentOrderList')}</TabsTrigger>
+            <TabsTrigger value="alerts">{t('alertNotifications')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders" className="space-y-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>近期工单</CardTitle>
-                  <CardDescription>最近创建的生产工单</CardDescription>
+                  <CardTitle>{t('recentWorkOrderList')}</CardTitle>
+                  <CardDescription>{t('recentWorkOrderDesc')}</CardDescription>
                 </div>
                 <Link href="/production/orders">
                   <Button variant="outline" size="sm">
-                    查看全部
+                    {t('viewAll')}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </Link>
@@ -291,18 +295,18 @@ export default function DashboardPage() {
               <CardContent>
                 {data.recentOrders.length === 0 ? (
                   <p className="text-gray-400 text-center py-8">
-                    {loading ? '加载中...' : '暂无工单'}
+                    {loading ? tc('loading') : t('noWorkOrderData')}
                   </p>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>工单号</TableHead>
-                        <TableHead>客户</TableHead>
-                        <TableHead>产品</TableHead>
-                        <TableHead>数量</TableHead>
-                        <TableHead>状态</TableHead>
-                        <TableHead>日期</TableHead>
+                        <TableHead>{t('workOrderNo')}</TableHead>
+                        <TableHead>{t('customer')}</TableHead>
+                        <TableHead>{t('product')}</TableHead>
+                        <TableHead>{t('quantity')}</TableHead>
+                        <TableHead>{t('status')}</TableHead>
+                        <TableHead>{t('date')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -326,12 +330,12 @@ export default function DashboardPage() {
           <TabsContent value="alerts" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>预警通知</CardTitle>
-                <CardDescription>需要关注的异常事项</CardDescription>
+                <CardTitle>{t('alertNotifications')}</CardTitle>
+                <CardDescription>{t('alertDesc')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {data.alerts.length === 0 ? (
-                  <p className="text-gray-400 text-center py-8">暂无预警</p>
+                  <p className="text-gray-400 text-center py-8">{t('noAlerts')}</p>
                 ) : (
                   <div className="space-y-3">
                     {data.alerts.map((a, i) => {
@@ -363,7 +367,7 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between">
                               <p className="font-medium">{a.message}</p>
                               <Badge variant={a.severity === 'high' ? 'destructive' : 'secondary'}>
-                                {a.severity === 'high' ? '高' : '中'}
+                                {a.severity === 'high' ? tc('high') : tc('medium')}
                               </Badge>
                             </div>
                             <p className="text-xs text-muted-foreground">{a.time}</p>
@@ -387,8 +391,8 @@ export default function DashboardPage() {
                     <Factory className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="font-medium">生产看板</p>
-                    <p className="text-xs text-muted-foreground">实时生产监控</p>
+                    <p className="font-medium">{t('productionBoard')}</p>
+                    <p className="text-xs text-muted-foreground">{t('productionMonitor')}</p>
                   </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -403,8 +407,8 @@ export default function DashboardPage() {
                     <Package className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="font-medium">仓库看板</p>
-                    <p className="text-xs text-muted-foreground">库存出入监控</p>
+                    <p className="font-medium">{t('warehouseBoard')}</p>
+                    <p className="text-xs text-muted-foreground">{t('warehouseMonitor')}</p>
                   </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -419,8 +423,8 @@ export default function DashboardPage() {
                     <DollarSign className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="font-medium">销售看板</p>
-                    <p className="text-xs text-muted-foreground">订单营收分析</p>
+                    <p className="font-medium">{t('salesBoard')}</p>
+                    <p className="text-xs text-muted-foreground">{t('salesMonitor')}</p>
                   </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
@@ -435,8 +439,8 @@ export default function DashboardPage() {
                     <CheckCircle className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="font-medium">质量看板</p>
-                    <p className="text-xs text-muted-foreground">品质检验监控</p>
+                    <p className="font-medium">{t('qualityBoard')}</p>
+                    <p className="text-xs text-muted-foreground">{t('qualityMonitor')}</p>
                   </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />

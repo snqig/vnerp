@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
 import {
   Button,
   PrimaryButton,
@@ -46,6 +47,10 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 
 export default function ButtonDemoPage() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const [loading, setLoading] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState('default');
   const [selectedSize, setSelectedSize] = useState('default');

@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/table-export-toolbar';
 import { Plus, Search, Edit, Trash2, FileCheck, Upload, FileText, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface ContractReviewRecord {
   id?: number;
@@ -70,39 +71,43 @@ interface ContractReviewRecord {
   create_time: string;
 }
 
-const sampleStatusMap: Record<
-  string,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  pending: { label: '未打样', variant: 'outline' },
-  sampling: { label: '打样中', variant: 'secondary' },
-  approved: { label: '样品OK', variant: 'default' },
-  rejected: { label: '样品NG', variant: 'destructive' },
-  not_required: { label: '无需打样', variant: 'secondary' },
-};
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '待评审', variant: 'outline' },
-  2: { label: '评审中', variant: 'secondary' },
-  3: { label: '已通过', variant: 'default' },
-  4: { label: '已拒绝', variant: 'destructive' },
-};
-
-const exportColumns = [
-  { key: 'review_no', header: '评审编号' },
-  { key: 'order_no', header: '订单号' },
-  { key: 'customer_name', header: '客户名称' },
-  { key: 'product_name', header: '产品名称' },
-  { key: 'quantity', header: '数量' },
-  { key: 'amount', header: '金额' },
-  { key: 'delivery_date', header: '交期' },
-  { key: 'sample_status_label', header: '样品状态' },
-  { key: 'status_label', header: '评审状态' },
-];
-
 export default function ContractReviewPage() {
+  const t = useTranslations('Business');
+  const tc = useTranslations('Common');
+
+  const sampleStatusMap: Record<
+    string,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    pending: { label: t('samplePending'), variant: 'outline' },
+    sampling: { label: t('sampleSampling'), variant: 'secondary' },
+    approved: { label: t('sampleApproved'), variant: 'default' },
+    rejected: { label: t('sampleRejected'), variant: 'destructive' },
+    not_required: { label: t('sampleNotRequired'), variant: 'secondary' },
+  };
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: t('pendingReview'), variant: 'outline' },
+    2: { label: t('reviewing'), variant: 'secondary' },
+    3: { label: t('approved'), variant: 'default' },
+    4: { label: t('rejected'), variant: 'destructive' },
+  };
+
+  const exportColumns = [
+    { key: 'review_no', header: t('reviewNo') },
+    { key: 'order_no', header: t('orderNo') },
+    { key: 'customer_name', header: t('customerName') },
+    { key: 'product_name', header: t('productName') },
+    { key: 'quantity', header: t('quantity') },
+    { key: 'amount', header: t('amount') },
+    { key: 'delivery_date', header: t('deliveryDate') },
+    { key: 'sample_status_label', header: t('sampleStatus') },
+    { key: 'status_label', header: t('reviewStatus') },
+  ];
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<ContractReviewRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -163,8 +168,8 @@ export default function ContractReviewPage() {
   const getExportData = () =>
     list.map((item) => ({
       ...item,
-      sample_status_label: sampleStatusMap[item.sample_status]?.label || '未知',
-      status_label: statusMap[item.status]?.label || '未知',
+      sample_status_label: sampleStatusMap[item.sample_status]?.label || tc('unknown'),
+      status_label: statusMap[item.status]?.label || tc('unknown'),
     }));
 
   const handlePrint = () => {
@@ -375,12 +380,12 @@ export default function ContractReviewPage() {
                     <TableCell>{item.delivery_date?.substring(0, 10) || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={sampleStatusMap[item.sample_status]?.variant || 'outline'}>
-                        {sampleStatusMap[item.sample_status]?.label || '未知'}
+                        {sampleStatusMap[item.sample_status]?.label || tc('unknown')}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusMap[item.status]?.variant || 'outline'}>
-                        {statusMap[item.status]?.label || '未知'}
+                        {statusMap[item.status]?.label || tc('unknown')}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -692,7 +697,7 @@ export default function ContractReviewPage() {
                   className="max-w-xs"
                 />
                 <Button size="sm" disabled={!uploadFile || uploading} onClick={handleFileUpload}>
-                  {uploading ? '上传中...' : '上传'}
+                  {uploading ? '上传中...' : tc('upload')}
                 </Button>
                 {uploadFile && (
                   <span className="text-sm text-muted-foreground truncate max-w-[200px]">

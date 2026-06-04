@@ -33,6 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, RefreshCw, QrCode, Eye, Printer, ScanLine, History } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface QRRecord {
   id: number;
@@ -60,29 +61,32 @@ interface QRRecord {
   remark: string;
 }
 
-const typeMap: Record<string, string> = {
-  material: '原料',
-  product: '成品',
-  workorder: '工单',
-  ink: '油墨',
-  screen_plate: '网版',
-  die: '刀具',
-  shipment: '出货',
-  ink_open: '开罐',
-  ink_mixed: '调色',
-};
-
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '有效', variant: 'default' },
-  2: { label: '已使用', variant: 'secondary' },
-  3: { label: '已失效', variant: 'outline' },
-  9: { label: '已作废', variant: 'destructive' },
-};
-
 export default function QRCodePage() {
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
+  const typeMap: Record<string, string> = {
+    material: t('rawMaterial'),
+    product: t('finished'),
+    workorder: t('workOrder'),
+    ink: t('ink'),
+    screen_plate: t('screen'),
+    die: t('blade'),
+    shipment: t('shipment'),
+    ink_open: t('inkOpen'),
+    ink_mixed: t('inkMixed'),
+  };
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: t('valid'), variant: 'default' },
+    2: { label: t('used'), variant: 'secondary' },
+    3: { label: t('expired'), variant: 'outline' },
+    9: { label: t('void'), variant: 'destructive' },
+  };
+
   const { toast } = useToast();
   const [list, setList] = useState<QRRecord[]>([]);
   const [total, setTotal] = useState(0);
@@ -156,7 +160,7 @@ export default function QRCodePage() {
         toast({ title: '生成失败', description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -169,7 +173,7 @@ export default function QRCodePage() {
       toast({ title: '打印记录已更新' });
       fetchData();
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -223,7 +227,7 @@ export default function QRCodePage() {
       toast({ title: '二维码已失效' });
       fetchData();
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -250,7 +254,7 @@ export default function QRCodePage() {
               }}
             >
               <SelectTrigger className="w-28 h-9">
-                <SelectValue placeholder="类型" />
+                <SelectValue placeholder=tc("type") />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部</SelectItem>
@@ -353,7 +357,7 @@ export default function QRCodePage() {
                       <TableCell className="text-center">{r.scan_count}</TableCell>
                       <TableCell>
                         <Badge variant={statusMap[r.status]?.variant || 'outline'}>
-                          {statusMap[r.status]?.label || '未知'}
+                          {statusMap[r.status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -362,7 +366,7 @@ export default function QRCodePage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handlePrint(r.id)}
-                            title="打印"
+                            title=tc("print")
                           >
                             <Printer className="h-4 w-4" />
                           </Button>

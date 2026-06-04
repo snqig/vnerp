@@ -53,6 +53,10 @@ interface BatchInventory {
 }
 
 export default function WarehousePage() {
+  // 翻译钩子
+  const t = useTranslations('Warehouse');
+  const tc = useTranslations('Common');
+
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const headers: Record<string, string> = {
@@ -123,7 +127,7 @@ export default function WarehousePage() {
         setTotal(data.data.total || 0);
       }
     } catch (error) {
-      toast.error('获取批次库存失败');
+      toast.error(tc('fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -137,7 +141,7 @@ export default function WarehousePage() {
     try {
       const items = inboundForm.items.filter((item) => item.material_id && item.quantity);
       if (items.length === 0) {
-        toast.error('请至少添加一个入库明细');
+        toast.error(tc('addInboundItemFirst'));
         return;
       }
 
@@ -158,14 +162,14 @@ export default function WarehousePage() {
       });
       const data = await res.json();
       if (data.code === 200) {
-        toast.success('入库成功');
+        toast.success(tc('inboundSuccess'));
         setInboundOpen(false);
         fetchBatches();
       } else {
-        toast.error(data.message || '入库失败');
+        toast.error(data.message || tc('inboundFailed'));
       }
     } catch (error) {
-      toast.error('入库失败');
+      toast.error(tc('inboundFailed'));
     }
   };
 
@@ -173,7 +177,7 @@ export default function WarehousePage() {
     try {
       const items = outboundForm.items.filter((item) => item.material_id && item.quantity);
       if (items.length === 0) {
-        toast.error('请至少添加一个出库明细');
+        toast.error(tc('addOutboundItemFirst'));
         return;
       }
 
@@ -197,14 +201,14 @@ export default function WarehousePage() {
       });
       const data = await res.json();
       if (data.code === 200) {
-        toast.success('出库成功');
+        toast.success(tc('outboundSuccess'));
         setOutboundOpen(false);
         fetchBatches();
       } else {
-        toast.error(data.message || '出库失败');
+        toast.error(data.message || tc('outboundFailed'));
       }
     } catch (error) {
-      toast.error('出库失败');
+      toast.error(tc('outboundFailed'));
     }
   };
 
@@ -219,168 +223,168 @@ export default function WarehousePage() {
         setAvailableBatches(data.data.batches || []);
       }
     } catch (error) {
-      toast.error('获取可用批次失败');
+      toast.error(tc('fetchBatchFailed'));
     }
   };
 
   const getStatusBadge = (status: number) => {
     switch (status) {
       case 1:
-        return <Badge className="bg-green-500">正常</Badge>;
+        return <Badge className="bg-green-500">{t('normal')}</Badge>;
       case 2:
-        return <Badge className="bg-gray-500">已用完</Badge>;
+        return <Badge className="bg-gray-500">{t('usedUp')}</Badge>;
       default:
-        return <Badge variant="secondary">未知</Badge>;
+        return <Badge variant="secondary">{t('unknown')}</Badge>;
     }
   };
 
   const getQcStatusBadge = (status: number) => {
     switch (status) {
       case 1:
-        return <Badge className="bg-green-500">合格</Badge>;
+        return <Badge className="bg-green-500">{t('qualified')}</Badge>;
       case 0:
-        return <Badge variant="destructive">不合格</Badge>;
+        return <Badge variant="destructive">{t('unqualified')}</Badge>;
       case 2:
-        return <Badge variant="secondary">待检</Badge>;
+        return <Badge variant="secondary">{t('pendingQc')}</Badge>;
       default:
-        return <Badge variant="secondary">未知</Badge>;
+        return <Badge variant="secondary">{t('unknown')}</Badge>;
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">仓库管理</h1>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
         <div className="flex gap-2">
           <Dialog open={inboundOpen} onOpenChange={setInboundOpen}>
             <DialogTrigger asChild>
               <Button className="bg-green-600 hover:bg-green-700">
                 <ArrowDownToLine className="w-4 h-4 mr-2" />
-                入库
+                {t('inbound')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl" resizable>
               <DialogHeader>
-                <DialogTitle>生产入库</DialogTitle>
+                <DialogTitle>{t('productionInbound')}</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>仓库</Label>
-                    <Select
-                      value={inboundForm.warehouse_id}
-                      onValueChange={(v) => setInboundForm({ ...inboundForm, warehouse_id: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="选择仓库" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">原材料仓</SelectItem>
-                        <SelectItem value="2">成品仓</SelectItem>
-                        <SelectItem value="3">半成品仓</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>入库日期</Label>
-                    <Input
-                      type="date"
-                      value={inboundForm.inbound_date}
-                      onChange={(e) =>
-                        setInboundForm({ ...inboundForm, inbound_date: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>入库明细</Label>
-                  {inboundForm.items.map((item, index) => (
-                    <div key={index} className="grid grid-cols-6 gap-2">
-                      <Input
-                        placeholder="物料编码"
-                        value={item.material_code}
-                        onChange={(e) => {
-                          const newItems = [...inboundForm.items];
-                          newItems[index].material_code = e.target.value;
-                          setInboundForm({ ...inboundForm, items: newItems });
-                        }}
-                      />
-                      <Input
-                        placeholder="物料名称"
-                        value={item.material_name}
-                        onChange={(e) => {
-                          const newItems = [...inboundForm.items];
-                          newItems[index].material_name = e.target.value;
-                          setInboundForm({ ...inboundForm, items: newItems });
-                        }}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="数量"
-                        value={item.quantity}
-                        onChange={(e) => {
-                          const newItems = [...inboundForm.items];
-                          newItems[index].quantity = e.target.value;
-                          setInboundForm({ ...inboundForm, items: newItems });
-                        }}
-                      />
-                      <Input
-                        placeholder="单位"
-                        value={item.unit}
-                        onChange={(e) => {
-                          const newItems = [...inboundForm.items];
-                          newItems[index].unit = e.target.value;
-                          setInboundForm({ ...inboundForm, items: newItems });
-                        }}
-                      />
-                      <Input
-                        placeholder="批次号（可选）"
-                        value={item.batch_no}
-                        onChange={(e) => {
-                          const newItems = [...inboundForm.items];
-                          newItems[index].batch_no = e.target.value;
-                          setInboundForm({ ...inboundForm, items: newItems });
-                        }}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const newItems = inboundForm.items.filter((_, i) => i !== index);
-                          setInboundForm({ ...inboundForm, items: newItems });
-                        }}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>{t('warehouse')}</Label>
+                      <Select
+                        value={inboundForm.warehouse_id}
+                        onValueChange={(v) => setInboundForm({ ...inboundForm, warehouse_id: v })}
                       >
-                        删除
-                      </Button>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('selectWarehouse')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">{t('rawMaterialWarehouse')}</SelectItem>
+                          <SelectItem value="2">{t('finishedWarehouse')}</SelectItem>
+                          <SelectItem value="3">{t('semiFinishedWarehouse')}</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setInboundForm({
-                        ...inboundForm,
-                        items: [
-                          ...inboundForm.items,
-                          {
-                            material_id: '',
-                            material_code: '',
-                            material_name: '',
-                            quantity: '',
-                            unit: '张',
-                            batch_no: '',
-                          },
-                        ],
-                      });
-                    }}
-                  >
-                    添加明细
+                    <div>
+                      <Label>{t('inboundDate')}</Label>
+                      <Input
+                        type="date"
+                        value={inboundForm.inbound_date}
+                        onChange={(e) =>
+                          setInboundForm({ ...inboundForm, inbound_date: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('inboundItems')}</Label>
+                    {inboundForm.items.map((item, index) => (
+                      <div key={index} className="grid grid-cols-6 gap-2">
+                        <Input
+                          placeholder={t('materialCode')}
+                          value={item.material_code}
+                          onChange={(e) => {
+                            const newItems = [...inboundForm.items];
+                            newItems[index].material_code = e.target.value;
+                            setInboundForm({ ...inboundForm, items: newItems });
+                          }}
+                        />
+                        <Input
+                          placeholder={t('materialName')}
+                          value={item.material_name}
+                          onChange={(e) => {
+                            const newItems = [...inboundForm.items];
+                            newItems[index].material_name = e.target.value;
+                            setInboundForm({ ...inboundForm, items: newItems });
+                          }}
+                        />
+                        <Input
+                          type="number"
+                          placeholder={tc('quantity')}
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const newItems = [...inboundForm.items];
+                            newItems[index].quantity = e.target.value;
+                            setInboundForm({ ...inboundForm, items: newItems });
+                          }}
+                        />
+                        <Input
+                          placeholder={t('unit')}
+                          value={item.unit}
+                          onChange={(e) => {
+                            const newItems = [...inboundForm.items];
+                            newItems[index].unit = e.target.value;
+                            setInboundForm({ ...inboundForm, items: newItems });
+                          }}
+                        />
+                        <Input
+                          placeholder={t('batchNoOptional')}
+                          value={item.batch_no}
+                          onChange={(e) => {
+                            const newItems = [...inboundForm.items];
+                            newItems[index].batch_no = e.target.value;
+                            setInboundForm({ ...inboundForm, items: newItems });
+                          }}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newItems = inboundForm.items.filter((_, i) => i !== index);
+                            setInboundForm({ ...inboundForm, items: newItems });
+                          }}
+                        >
+                          {tc('delete')}
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setInboundForm({
+                          ...inboundForm,
+                          items: [
+                            ...inboundForm.items,
+                            {
+                              material_id: '',
+                              material_code: '',
+                              material_name: '',
+                              quantity: '',
+                              unit: '张',
+                              batch_no: '',
+                            },
+                          ],
+                        });
+                      }}
+                    >
+                      {t('addItem')}
+                    </Button>
+                  </div>
+                  <Button onClick={handleInbound} className="w-full">
+                    {t('confirmInbound')}
                   </Button>
                 </div>
-                <Button onClick={handleInbound} className="w-full">
-                  确认入库
-                </Button>
-              </div>
             </DialogContent>
           </Dialog>
 
@@ -388,35 +392,35 @@ export default function WarehousePage() {
             <DialogTrigger asChild>
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <ArrowUpFromLine className="w-4 h-4 mr-2" />
-                出库
+                {t('outbound')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl" resizable>
               <DialogHeader>
-                <DialogTitle>销售出库</DialogTitle>
+                <DialogTitle>{t('salesOutboundTitle')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>仓库</Label>
+                    <Label>{t('warehouse')}</Label>
                     <Select
                       value={outboundForm.warehouse_id}
                       onValueChange={(v) => setOutboundForm({ ...outboundForm, warehouse_id: v })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="选择仓库" />
+                        <SelectValue placeholder={t('selectWarehouse')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1">原材料仓</SelectItem>
-                        <SelectItem value="2">成品仓</SelectItem>
-                        <SelectItem value="3">半成品仓</SelectItem>
+                        <SelectItem value="1">{t('rawMaterialWarehouse')}</SelectItem>
+                        <SelectItem value="2">{t('finishedWarehouse')}</SelectItem>
+                        <SelectItem value="3">{t('semiFinishedWarehouse')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>客户名称</Label>
+                    <Label>{t('customerName')}</Label>
                     <Input
-                      placeholder="客户名称"
+                      placeholder={t('customerName')}
                       value={outboundForm.customer_name}
                       onChange={(e) =>
                         setOutboundForm({ ...outboundForm, customer_name: e.target.value })
@@ -425,11 +429,11 @@ export default function WarehousePage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>出库明细</Label>
+                  <Label>{t('outboundItems')}</Label>
                   {outboundForm.items.map((item, index) => (
                     <div key={index} className="grid grid-cols-6 gap-2">
                       <Input
-                        placeholder="物料编码"
+                        placeholder={t('materialCode')}
                         value={item.material_code}
                         onChange={(e) => {
                           const newItems = [...outboundForm.items];
@@ -438,7 +442,7 @@ export default function WarehousePage() {
                         }}
                       />
                       <Input
-                        placeholder="物料名称"
+                        placeholder={t('materialName')}
                         value={item.material_name}
                         onChange={(e) => {
                           const newItems = [...outboundForm.items];
@@ -448,7 +452,7 @@ export default function WarehousePage() {
                       />
                       <Input
                         type="number"
-                        placeholder="数量"
+                        placeholder={tc('quantity')}
                         value={item.quantity}
                         onChange={(e) => {
                           const newItems = [...outboundForm.items];
@@ -457,7 +461,7 @@ export default function WarehousePage() {
                         }}
                       />
                       <Input
-                        placeholder="单位"
+                        placeholder={t('unit')}
                         value={item.unit}
                         onChange={(e) => {
                           const newItems = [...outboundForm.items];
@@ -474,12 +478,12 @@ export default function WarehousePage() {
                         }}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="选择批次" />
+                          <SelectValue placeholder={t('selectBatch')} />
                         </SelectTrigger>
                         <SelectContent>
                           {availableBatches.map((batch) => (
                             <SelectItem key={batch.id} value={batch.id.toString()}>
-                              {batch.batch_no} (可用: {batch.available_quantity})
+                              {batch.batch_no} ({tc('available')}: {batch.available_quantity})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -499,7 +503,7 @@ export default function WarehousePage() {
                           setOutboundForm({ ...outboundForm, items: newItems });
                         }}
                       >
-                        加载批次
+                        {t('loadBatch')}
                       </Button>
                     </div>
                   ))}
@@ -523,11 +527,11 @@ export default function WarehousePage() {
                       });
                     }}
                   >
-                    添加明细
+                    {t('addItem')}
                   </Button>
                 </div>
                 <Button onClick={handleOutbound} className="w-full">
-                  确认出库
+                  {t('confirmOutbound')}
                 </Button>
               </div>
             </DialogContent>
@@ -535,7 +539,7 @@ export default function WarehousePage() {
 
           <Button variant="outline" onClick={fetchBatches}>
             <RefreshCw className="w-4 h-4 mr-2" />
-            刷新
+            {t('refresh')}
           </Button>
         </div>
       </div>
@@ -544,7 +548,7 @@ export default function WarehousePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
-            批次库存管理
+            {t('batchInventory')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -553,31 +557,31 @@ export default function WarehousePage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="搜索物料名称/编码..."
+                  placeholder={t('searchMaterialPlaceholder')}
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            <Button onClick={fetchBatches}>搜索</Button>
+            <Button onClick={fetchBatches}>{t('query')}</Button>
           </div>
 
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>批次号</TableHead>
-                  <TableHead>物料编码</TableHead>
-                  <TableHead>物料名称</TableHead>
-                  <TableHead>规格</TableHead>
-                  <TableHead>仓库</TableHead>
-                  <TableHead>入库数量</TableHead>
-                  <TableHead>已出库</TableHead>
-                  <TableHead>可用库存</TableHead>
-                  <TableHead>入库日期</TableHead>
-                  <TableHead>质检</TableHead>
-                  <TableHead>状态</TableHead>
+                  <TableHead>{t('batchNoCol')}</TableHead>
+                  <TableHead>{t('materialCode')}</TableHead>
+                  <TableHead>{t('materialName')}</TableHead>
+                  <TableHead>{t('specification')}</TableHead>
+                  <TableHead>{t('warehouseShort')}</TableHead>
+                  <TableHead>{t('inboundQty')}</TableHead>
+                  <TableHead>{t('outboundQty')}</TableHead>
+                  <TableHead>{t('availableStock')}</TableHead>
+                  <TableHead>{t('inboundDate')}</TableHead>
+                  <TableHead>{t('qcStatus')}</TableHead>
+                  <TableHead>{t('status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -608,7 +612,7 @@ export default function WarehousePage() {
 
           <div className="flex justify-between items-center mt-4">
             <div className="text-sm text-gray-500">
-              共 {total} 条记录，第 {page} 页
+              {t('recordCount', { count: total })}，{t('pageOf', { page, pages: Math.ceil(total / pageSize) })}
             </div>
             <div className="flex gap-2">
               <Button
@@ -617,7 +621,7 @@ export default function WarehousePage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
               >
-                上一页
+                {tc('prevPage')}
               </Button>
               <Button
                 variant="outline"
@@ -625,7 +629,7 @@ export default function WarehousePage() {
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page * pageSize >= total}
               >
-                下一页
+                {tc('nextPage')}
               </Button>
             </div>
           </div>

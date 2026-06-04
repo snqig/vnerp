@@ -46,6 +46,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -133,6 +134,10 @@ const capabilityLabel = (value: number): string => {
 };
 
 export default function SPCPage() {
+  // 翻译钩子
+  const t = useTranslations('Quality');
+  const tc = useTranslations('Common');
+
   const [activeTab, setActiveTab] = useState('xbar-r');
   const [materials, setMaterials] = useState<Material[]>([]);
 
@@ -845,7 +850,7 @@ export default function SPCPage() {
                                 yAxisId="left"
                                 tick={{ fontSize: 11 }}
                                 label={{
-                                  value: '数量',
+                                  value: tc('quantity'),
                                   angle: -90,
                                   position: 'insideLeft',
                                   fontSize: 12,

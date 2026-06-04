@@ -32,6 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { useTranslations } from 'next-intl';
 
 interface PrintSequence {
   id: number;
@@ -288,6 +289,7 @@ const FileUploadCell = ({
 };
 
 function StandardCardInputContent() {
+  const tc = useTranslations('Common');
   const { companyName } = useCompanyName();
   const { toast } = useToast();
   const router = useRouter();
@@ -831,7 +833,7 @@ function StandardCardInputContent() {
   };
 
   return (
-    <MainLayout title={`${isEditMode ? '编辑' : '新建'}标准卡`}>
+    <MainLayout title={`${isEditMode ? tc('edit') : '新建'}标准卡`}>
       <form 
         className="space-y-4"
         noValidate
@@ -862,7 +864,7 @@ function StandardCardInputContent() {
             </Button>
             <Button type="button" variant="outline" onClick={handleSave} disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? '保存中...' : '保存'}
+              {isSaving ? '保存中...' : tc('save')}
             </Button>
             <Button type="button" variant="secondary" onClick={handleSaveAndPreview} disabled={isSaving}>
               <Eye className="h-4 w-4 mr-2" />
@@ -1604,8 +1606,8 @@ function StandardCardInputContent() {
                           <label className="flex items-center space-x-1 cursor-pointer text-xs">
                             <input
                               type="radio"
-                              value="是"
-                              checked={formData.releasePaperCode === '是'}
+                              value=tc("yes")
+                              checked={formData.releasePaperCode === tc('yes')}
                               onChange={(e) => setFormData(p => ({ ...p, releasePaperCode: e.target.value }))}
                               className="w-3 h-3"
                             />
@@ -1614,8 +1616,8 @@ function StandardCardInputContent() {
                           <label className="flex items-center space-x-1 cursor-pointer text-xs">
                             <input
                               type="radio"
-                              value="否"
-                              checked={formData.releasePaperCode === '否'}
+                              value=tc("no")
+                              checked={formData.releasePaperCode === tc('no')}
                               onChange={(e) => setFormData(p => ({ ...p, releasePaperCode: e.target.value }))}
                               className="w-3 h-3"
                             />
@@ -2017,8 +2019,9 @@ function StandardCardInputContent() {
 }
 
 function Loading() {
+  const tc = useTranslations('Common');
   return (
-    <MainLayout title="加载中...">
+    <MainLayout title=tc("loading")>
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
       </div>

@@ -17,6 +17,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -82,6 +83,10 @@ const sampleTypeColors: Record<string, string> = {
 };
 
 export default function SampleOrderDetailPage() {
+  // 翻译钩子
+  const t = useTranslations('Orders');
+  const tc = useTranslations('Common');
+
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
@@ -341,22 +346,22 @@ export default function SampleOrderDetailPage() {
                   <span
                     className={`px-2 py-1 rounded text-xs ${statusMap[order.status]?.color || ''}`}
                   >
-                    {statusMap[order.status]?.label || '未知'}
+                    {statusMap[order.status]?.label || tc('unknown')}
                   </span>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">是否确认</div>
-                  <div className="font-medium">{order.is_confirmed ? '是' : '否'}</div>
+                  <div className="font-medium">{order.is_confirmed ? tc('yes') : tc('no')}</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">是否急件</div>
                   <div className={`font-medium ${order.is_urgent ? 'text-red-600' : ''}`}>
-                    {order.is_urgent ? '是' : '否'}
+                    {order.is_urgent ? tc('yes') : tc('no')}
                   </div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">同时生产</div>
-                  <div className="font-medium">{order.is_produce_together ? '是' : '否'}</div>
+                  <div className="font-medium">{order.is_produce_together ? tc('yes') : tc('no')}</div>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4 mb-4">

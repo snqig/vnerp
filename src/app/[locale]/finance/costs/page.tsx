@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -41,6 +42,10 @@ interface CostRecord {
 }
 
 export default function CostsPage() {
+  // 翻译钩子
+  const t = useTranslations('Finance');
+  const tc = useTranslations('Common');
+
   const [costs, setCosts] = useState<CostRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);

@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,17 +46,21 @@ interface Item {
   operator_name: string;
   remark?: string;
 }
-const statusMap: Record<
+const STATUS_CONFIG: Record<
   number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  { variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '待发料', variant: 'outline' },
-  2: { label: '已发料', variant: 'default' },
-  3: { label: '已取消', variant: 'destructive' },
+  1: { variant: 'outline' },
+  2: { variant: 'default' },
+  3: { variant: 'destructive' },
 };
-const typeMap: Record<number, string> = { 1: '正常发料', 2: '补料', 3: '超领' };
+const TYPE_MAP: Record<number, string> = { 1: 'normalIssue', 2: 'supplementaryIssue', 3: 'overIssue' };
 
 export default function MaterialIssuePage() {
+  // 翻译钩子
+  const t = useTranslations('Production');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
   const [total, setTotal] = useState(0);
@@ -109,14 +114,14 @@ export default function MaterialIssuePage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
   const handleStatusChange = async (id: number, status: number) => {
@@ -128,24 +133,24 @@ export default function MaterialIssuePage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '更新成功' });
+        toast({ title: tc('updateSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await fetch('/api/production/material-issue?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -153,11 +158,11 @@ export default function MaterialIssuePage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">生产发料</h1>
+          <h1 className="text-2xl font-bold">{t('materialIssueTitle')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={t('searchByNo')}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -174,7 +179,7 @@ export default function MaterialIssuePage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增发料
+              {t('newIssue')}
             </Button>
           </div>
         </div>
@@ -183,19 +188,20 @@ export default function MaterialIssuePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">发料单号</TableHead>
-                  <TableHead className="text-xs">工单号</TableHead>
-                  <TableHead className="text-xs">仓库</TableHead>
-                  <TableHead className="text-xs">发料日期</TableHead>
-                  <TableHead className="text-xs">发料类型</TableHead>
-                  <TableHead className="text-xs">操作人</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{t('issueNo')}</TableHead>
+                  <TableHead className="text-xs">{t('workOrderNo')}</TableHead>
+                  <TableHead className="text-xs">{t('warehouse')}</TableHead>
+                  <TableHead className="text-xs">{t('issueDate')}</TableHead>
+                  <TableHead className="text-xs">{t('issueType')}</TableHead>
+                  <TableHead className="text-xs">{t('operator')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {list.map((item) => {
-                  const st = statusMap[item.status] || statusMap[1];
+                  const st = STATUS_CONFIG[item.status] || STATUS_CONFIG[1];
+                  const statusLabels: Record<number, string> = {1: t('pendingIssueStatus'), 2: t('issuedStatus'), 3: t('cancelledStatus')};
                   return (
                     <TableRow key={item.id}>
                       <TableCell className="text-xs font-mono">{item.issue_no}</TableCell>
@@ -204,11 +210,11 @@ export default function MaterialIssuePage() {
                       <TableCell className="text-xs">
                         {formatDate(item.issue_date) || '-'}
                       </TableCell>
-                      <TableCell className="text-xs">{typeMap[item.issue_type] || '-'}</TableCell>
+                      <TableCell className="text-xs">{t(TYPE_MAP[item.issue_type] || '') || '-'}</TableCell>
                       <TableCell className="text-xs">{item.operator_name || '-'}</TableCell>
                       <TableCell>
                         <Badge variant={st.variant} className="text-xs">
-                          {st.label}
+                          {statusLabels[item.status] || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -220,7 +226,7 @@ export default function MaterialIssuePage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              确认发料
+                              {t('confirmIssue')}
                             </Button>
                           )}
                           <Button
@@ -250,7 +256,7 @@ export default function MaterialIssuePage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-gray-400 py-8">
-                      暂无记录
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -259,7 +265,7 @@ export default function MaterialIssuePage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -267,7 +273,7 @@ export default function MaterialIssuePage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -275,24 +281,24 @@ export default function MaterialIssuePage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增发料单</DialogTitle>
+              <DialogTitle>{t('newIssueOrder')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>仓库</Label>
+                <Label>{t('warehouse')}</Label>
                 <Select
                   value={String(editItem.warehouse_id || '')}
                   onValueChange={(v) => setEditItem({ ...editItem, warehouse_id: Number(v) })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择仓库" />
+                    <SelectValue placeholder={t('selectWarehouse')} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w) => (
@@ -304,7 +310,7 @@ export default function MaterialIssuePage() {
                 </Select>
               </div>
               <div>
-                <Label>发料日期</Label>
+                <Label>{t('issueDate')}</Label>
                 <Input
                   type="date"
                   value={editItem.issue_date || ''}
@@ -312,14 +318,14 @@ export default function MaterialIssuePage() {
                 />
               </div>
               <div>
-                <Label>工单号</Label>
+                <Label>{t('workOrderNo')}</Label>
                 <Input
                   value={editItem.work_order_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, work_order_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>发料类型</Label>
+                <Label>{t('issueType')}</Label>
                 <Select
                   value={String(editItem.issue_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, issue_type: Number(v) })}
@@ -328,14 +334,14 @@ export default function MaterialIssuePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">正常发料</SelectItem>
-                    <SelectItem value="2">补料</SelectItem>
-                    <SelectItem value="3">超领</SelectItem>
+                    <SelectItem value="1">{t('normalIssue')}</SelectItem>
+                    <SelectItem value="2">{t('supplementaryIssue')}</SelectItem>
+                    <SelectItem value="3">{t('overIssue')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>操作人</Label>
+                <Label>{t('operator')}</Label>
                 <UserSelect
                   value={editItem.operator_name || ''}
                   onChange={(v) => setEditItem({ ...editItem, operator_name: v })}
@@ -344,9 +350,9 @@ export default function MaterialIssuePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

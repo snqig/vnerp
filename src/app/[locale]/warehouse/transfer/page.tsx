@@ -92,8 +92,8 @@ const STATUS_MAP: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  0: { label: '草稿', variant: 'outline' },
-  1: { label: '待审批', variant: 'secondary' },
+  0: { label: tc('draft'), variant: 'outline' },
+  1: { label: tc('pending'), variant: 'secondary' },
   2: { label: '已出库', variant: 'default' },
   3: { label: '已入库', variant: 'default' },
   4: { label: '已取消', variant: 'destructive' },
@@ -105,6 +105,10 @@ const TYPE_MAP: Record<number, string> = {
 };
 
 export default function TransferPage() {
+  // 翻译钩子
+  const t = useTranslations('Warehouse');
+  const tc = useTranslations('Common');
+
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const headers: Record<string, string> = {
@@ -196,11 +200,11 @@ export default function TransferPage() {
 
   const handleSave = async () => {
     if (!editItem.from_warehouse_id) {
-      toast({ title: '请选择源仓库', variant: 'destructive' });
+      toast({ title: t('selectSourceWarehouseFirst'), variant: 'destructive' });
       return;
     }
     if (!editItem.to_warehouse_id) {
-      toast({ title: '请选择目标仓库', variant: 'destructive' });
+      toast({ title: t('selectTargetWarehouseFirst'), variant: 'destructive' });
       return;
     }
 
@@ -220,14 +224,14 @@ export default function TransferPage() {
       const result = await res.json();
 
       if (result.success) {
-        toast({ title: '创建成功' });
-        setShowDialog(false);
+        toast({ title: t('createSuccess') });
+        setDialogOpen(false);
         fetchData();
       } else {
-        toast({ title: '操作失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -243,13 +247,13 @@ export default function TransferPage() {
       const result = await res.json();
 
       if (result.success) {
-        toast({ title: '操作成功' });
+        toast({ title: tc('success') });
         fetchData();
       } else {
-        toast({ title: '操作失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -259,13 +263,13 @@ export default function TransferPage() {
       const res = await authFetch(`/api/warehouse/transfer?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: t('deleteSuccess') });
         fetchData();
       } else {
-        toast({ title: '删除失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('deleteFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
-      toast({ title: '删除失败', variant: 'destructive' });
+    } catch (err) {
+      toast({ title: t('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -287,7 +291,7 @@ export default function TransferPage() {
 
   const executeOutbound = async () => {
     if (!currentTransferId || scanItems.length === 0) {
-      toast({ title: '请添加出库明细', variant: 'destructive' });
+      toast({ title: t('addOutboundItemsFirst'), variant: 'destructive' });
       return;
     }
 
@@ -299,14 +303,14 @@ export default function TransferPage() {
       const result = await res.json();
 
       if (result.success) {
-        toast({ title: `出库成功！已出 ${result.data.out_quantity} 件` });
-        setShowOutboundDialog(false);
+        toast({ title: t('outboundSuccessQty', { qty: result.data.out_quantity }) });
+        setScanOutOpen(false);
         fetchData();
       } else {
-        toast({ title: '出库失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('outboundFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
-      toast({ title: '出库失败', variant: 'destructive' });
+    } catch (err) {
+      toast({ title: t('outboundFailed'), variant: 'destructive' });
     }
   };
 
@@ -343,7 +347,7 @@ export default function TransferPage() {
 
   const executeInbound = async () => {
     if (!currentTransferId || scanItems.length === 0) {
-      toast({ title: '请添加入库明细', variant: 'destructive' });
+      toast({ title: t('addInboundItemsFirst'), variant: 'destructive' });
       return;
     }
 
@@ -355,14 +359,14 @@ export default function TransferPage() {
       const result = await res.json();
 
       if (result.success) {
-        toast({ title: `入库成功！已入 ${result.data.in_quantity} 件` });
-        setShowInboundDialog(false);
+        toast({ title: t('inboundSuccessQty', { qty: result.data.in_quantity }) });
+        setScanInOpen(false);
         fetchData();
       } else {
-        toast({ title: '入库失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('inboundFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
-      toast({ title: '入库失败', variant: 'destructive' });
+    } catch (err) {
+      toast({ title: t('inboundFailed'), variant: 'destructive' });
     }
   };
 

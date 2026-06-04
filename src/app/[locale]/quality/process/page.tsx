@@ -68,6 +68,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { useTranslations } from 'next-intl';
 
 // 品质检验数据类型
 interface QualityProcess {
@@ -125,32 +126,7 @@ const inspectItems = [
   { id: 'packaging', name: '包装检验', required: false },
 ];
 
-// 获取状态标签
-const getStatusBadge = (status: number) => {
-  const statusMap: Record<number, { label: string; className: string }> = {
-    0: {
-      label: '待排产',
-      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-    },
-    1: {
-      label: '待检验',
-      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    },
-    2: {
-      label: '检验中',
-      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-    },
-    3: {
-      label: '已检验',
-      className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    },
-  };
-  const config = statusMap[status] || {
-    label: '未知',
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  };
-  return <Badge className={config.className}>{config.label}</Badge>;
-};
+
 
 // 模拟品质检验数据
 const mockQualityProcesses: QualityProcess[] = [
@@ -397,6 +373,37 @@ const mockQualityProcesses: QualityProcess[] = [
 ];
 
 export default function QualityProcessPage() {
+  // 翻译钩子
+  const t = useTranslations('Quality');
+  const tc = useTranslations('Common');
+
+  // 获取状态标签
+  const getStatusBadge = (status: number) => {
+    const statusMap: Record<number, { label: string; className: string }> = {
+      0: {
+        label: '待排产',
+        className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+      },
+      1: {
+        label: '待检验',
+        className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+      },
+      2: {
+        label: '检验中',
+        className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+      },
+      3: {
+        label: '已检验',
+        className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+      },
+    };
+    const config = statusMap[status] || {
+      label: tc('unknown'),
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    };
+    return <Badge className={config.className}>{config.label}</Badge>;
+  };
+
   const [processes, setProcesses] = useState<QualityProcess[]>([]);
   const [stats, setStats] = useState<QualityStats>({
     pending: 0,
@@ -776,8 +783,8 @@ export default function QualityProcessPage() {
                         { key: 'product_name', header: '产品名称' },
                         { key: 'product_code', header: '产品编码' },
                         { key: 'material_spec', header: '规格' },
-                        { key: 'quantity', header: '数量' },
-                        { key: 'status', header: '状态' },
+                        { key: 'quantity', header: tc('quantity') },
+                        { key: 'status', header: tc('status') },
                       ],
                       '过程检验报告'
                     )
@@ -788,8 +795,8 @@ export default function QualityProcessPage() {
                       { key: 'product_name', header: '产品名称' },
                       { key: 'product_code', header: '产品编码' },
                       { key: 'material_spec', header: '规格' },
-                      { key: 'quantity', header: '数量' },
-                      { key: 'status', header: '状态' },
+                      { key: 'quantity', header: tc('quantity') },
+                      { key: 'status', header: tc('status') },
                     ])
                   }
                   onExportWORD={() =>
@@ -801,8 +808,8 @@ export default function QualityProcessPage() {
                         { key: 'product_name', header: '产品名称' },
                         { key: 'product_code', header: '产品编码' },
                         { key: 'material_spec', header: '规格' },
-                        { key: 'quantity', header: '数量' },
-                        { key: 'status', header: '状态' },
+                        { key: 'quantity', header: tc('quantity') },
+                        { key: 'status', header: tc('status') },
                       ],
                       '过程检验报告'
                     )

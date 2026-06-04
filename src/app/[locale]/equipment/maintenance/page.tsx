@@ -34,6 +34,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Edit, Trash2, RefreshCw, Wrench, ClipboardList } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -126,13 +127,17 @@ const PLAN_STATUS: Record<number, { label: string; color: string }> = {
   3: { label: '已完成', color: 'bg-green-100 text-green-800' },
   4: { label: '已逾期', color: 'bg-red-100 text-red-800' },
 };
-const RECORD_RESULT: Record<number, { label: string; color: string }> = {
-  1: { label: '正常', color: 'bg-green-100 text-green-800' },
-  2: { label: '异常', color: 'bg-red-100 text-red-800' },
-  3: { label: '需跟进', color: 'bg-yellow-100 text-yellow-800' },
-};
-
 export default function EquipmentMaintenancePage() {
+  // 翻译钩子
+  const t = useTranslations('Equipment');
+  const tc = useTranslations('Common');
+
+  const RECORD_RESULT: Record<number, { label: string; color: string }> = {
+    1: { label: tc('normal'), color: 'bg-green-100 text-green-800' },
+    2: { label: '异常', color: 'bg-red-100 text-red-800' },
+    3: { label: '需跟进', color: 'bg-yellow-100 text-yellow-800' },
+  };
+
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('plan');
   const [plans, setPlans] = useState<MaintenancePlan[]>([]);
@@ -224,7 +229,7 @@ export default function EquipmentMaintenancePage() {
         if (activeTab === 'plan') fetchPlans();
         else fetchRecords();
       } else {
-        toast({ title: result.message || '操作失败', variant: 'destructive' });
+        toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
     } catch (e) {
       console.error(e);
@@ -695,7 +700,7 @@ export default function EquipmentMaintenancePage() {
                   <Input
                     value={form.remark || ''}
                     onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                    placeholder="备注"
+                    placeholder=tc("remark")
                   />
                 </div>
               </>
@@ -831,7 +836,7 @@ export default function EquipmentMaintenancePage() {
                   <Input
                     value={form.remark || ''}
                     onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                    placeholder="备注"
+                    placeholder=tc("remark")
                   />
                 </div>
               </>

@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Search, Trash2, CheckCircle, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface OutsourceSettlement {
   id: number;
@@ -51,26 +52,30 @@ interface OutsourceSettlement {
   remark: string;
 }
 
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '待审核', variant: 'outline' },
-  2: { label: '已审核', variant: 'default' },
-  3: { label: '已完成', variant: 'secondary' },
-  9: { label: '已取消', variant: 'destructive' },
-};
-
-const paymentStatusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '未付款', variant: 'destructive' },
-  2: { label: '部分付款', variant: 'outline' },
-  3: { label: '已付款', variant: 'secondary' },
-};
-
 export default function OutsourceSettlementPage() {
+  const t = useTranslations('Outsource');
+  const tc = useTranslations('Common');
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: tc('pending'), variant: 'outline' },
+    2: { label: tc('approved'), variant: 'default' },
+    3: { label: t('settlementCompleted'), variant: 'secondary' },
+    9: { label: t('cancelled'), variant: 'destructive' },
+  };
+
+  const paymentStatusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: t('unpaid'), variant: 'destructive' },
+    2: { label: t('partialPayment'), variant: 'outline' },
+    3: { label: t('paid'), variant: 'secondary' },
+  };
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<OutsourceSettlement[]>([]);
   const [total, setTotal] = useState(0);
@@ -129,10 +134,10 @@ export default function OutsourceSettlementPage() {
         setForm({});
         fetchData();
       } else {
-        toast({ title: '操作失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -152,7 +157,7 @@ export default function OutsourceSettlementPage() {
         toast({ title: '确认失败', description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -170,7 +175,7 @@ export default function OutsourceSettlementPage() {
         fetchData();
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 

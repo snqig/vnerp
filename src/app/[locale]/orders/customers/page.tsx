@@ -96,43 +96,26 @@ interface CustomerListItem {
   updateTime: string;
 }
 
-// 客户类型映射
-const customerTypeMap: Record<number, { label: string; color: string }> = {
-  1: { label: '企业', color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  2: { label: '个人', color: 'bg-green-100 text-green-800 border-green-200' },
+const CUSTOMER_TYPE_LABEL_KEYS: Record<number, string> = {
+  1: 'typeEnterprise',
+  2: 'typeIndividual',
 };
 
-// 跟进状态映射
-const followUpStatusMap: Record<number, { label: string; color: string }> = {
-  1: {
-    label: '潜在客户',
-    color:
-      'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
-  },
-  2: {
-    label: '意向客户',
-    color:
-      'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
-  },
-  3: {
-    label: '成交客户',
-    color:
-      'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
-  },
-  4: {
-    label: '流失客户',
-    color:
-      'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
-  },
+const FOLLOW_UP_STATUS_LABEL_KEYS: Record<number, string> = {
+  1: 'statusPotential',
+  2: 'statusIntention',
+  3: 'statusCompleted',
+  4: 'statusLost',
 };
 
-// 状态映射
-const statusMap: Record<number, { label: string; color: string }> = {
-  0: { label: '禁用', color: 'bg-red-100 text-red-800 border-red-200' },
-  1: { label: '启用', color: 'bg-green-100 text-green-800 border-green-200' },
+const STATUS_LABEL_KEYS: Record<number, string> = {
+  0: 'disabled',
+  1: 'enabled',
 };
 
 export default function CustomersPage() {
+  const t = useTranslations('Orders');
+  const tc = useTranslations('Common');
   const router = useRouter();
   const [customers, setCustomers] = useState<CustomerListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -240,10 +223,10 @@ export default function CustomersPage() {
         setCustomers(formattedCustomers);
         setTotalCount(result.pagination?.total || result.data?.total || 0);
       } else {
-        console.error('加载数据失败:', result.message);
+        console.error(t('loadDataFailed'), result.message);
       }
     } catch (error) {
-      console.error('加载数据失败:', error);
+      console.error(t('loadDataFailed'), error);
     } finally {
       setLoading(false);
     }
@@ -298,7 +281,7 @@ export default function CustomersPage() {
 
   // 处理删除客户
   const handleDelete = async (customer: CustomerListItem) => {
-    if (!confirm(`确定要删除客户 "${customer.customerName}" 吗？`)) {
+    if (!confirm(t('confirmDeleteCustomer', { name: customer.customerName }))) {
       return;
     }
 
@@ -311,11 +294,11 @@ export default function CustomersPage() {
       if (result.success) {
         fetchCustomers();
       } else {
-        alert('删除失败: ' + result.message);
+        alert(tc('deleteFailed') + ': ' + result.message);
       }
     } catch (error) {
-      console.error('删除失败:', error);
-      alert('删除失败，请检查网络连接');
+      console.error(tc('deleteFailed'), error);
+      alert(t('deleteNetworkError'));
     }
   };
 
@@ -356,46 +339,66 @@ export default function CustomersPage() {
         setIsEditOpen(false);
         fetchCustomers();
       } else {
-        alert('保存失败: ' + result.message);
+        alert(t('saveFailed') + ': ' + result.message);
       }
     } catch (error) {
-      console.error('保存失败:', error);
-      alert('保存失败，请检查网络连接');
+      console.error(t('saveFailed'), error);
+      alert(t('saveNetworkError'));
     }
+  };
+
+  const customerTypeColors: Record<number, string> = {
+    1: 'bg-blue-100 text-blue-800 border-blue-200',
+    2: 'bg-green-100 text-green-800 border-green-200',
+  };
+
+  const followUpStatusColors: Record<number, string> = {
+    1: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
+    2: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
+    3: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
+    4: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
+  };
+
+  const statusColors: Record<number, string> = {
+    0: 'bg-red-100 text-red-800 border-red-200',
+    1: 'bg-green-100 text-green-800 border-green-200',
   };
 
   // 获取客户类型标签
   const getCustomerTypeBadge = (type: number) => {
-    const { label, color } = customerTypeMap[type] || customerTypeMap[1];
+    const key = CUSTOMER_TYPE_LABEL_KEYS[type] || 'typeEnterprise';
+    const color = customerTypeColors[type] || customerTypeColors[1];
     return (
       <span
         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${color}`}
       >
-        {label}
+        {t(key)}
       </span>
     );
   };
 
   // 获取跟进状态标签
   const getFollowUpStatusBadge = (status: number) => {
-    const { label, color } = followUpStatusMap[status] || followUpStatusMap[1];
+    const key = FOLLOW_UP_STATUS_LABEL_KEYS[status] || 'statusPotential';
+    const color = followUpStatusColors[status] || followUpStatusColors[1];
     return (
       <span
         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${color}`}
       >
-        {label}
+        {t(key)}
       </span>
     );
   };
 
   // 获取状态标签
   const getStatusBadge = (status: number) => {
-    const { label, color } = statusMap[status] || statusMap[1];
+    const key = STATUS_LABEL_KEYS[status] || 'enabled';
+    const color = statusColors[status] || statusColors[1];
     return (
       <span
         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border ${color}`}
       >
-        {label}
+        {tc(key)}
       </span>
     );
   };
@@ -438,13 +441,13 @@ export default function CustomersPage() {
   }, [customers, sortField, sortOrder]);
 
   return (
-    <MainLayout title="客户档案">
+    <MainLayout title={t('customerArchive')}>
       <div className="space-y-4">
         {/* 统计卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">客户总数</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('totalCustomers')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalCount}</div>
@@ -452,7 +455,7 @@ export default function CustomersPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">成交客户</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('completedCustomers')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
@@ -462,7 +465,7 @@ export default function CustomersPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">意向客户</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('intentionCustomers')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
@@ -472,7 +475,7 @@ export default function CustomersPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">企业客户</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t('enterpriseCustomers')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
@@ -487,9 +490,9 @@ export default function CustomersPage() {
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 min-w-[200px]">
-                <label className="text-sm font-medium mb-2 block">搜索</label>
+                <label className="text-sm font-medium mb-2 block">{tc('search')}</label>
                 <SearchInput
-                  placeholder="客户编码/名称/联系人/电话"
+                  placeholder={t('searchCustomerPlaceholder')}
                   value={searchTerm}
                   onChange={setSearchTerm}
                   onSearch={() => {
@@ -499,57 +502,57 @@ export default function CustomersPage() {
                 />
               </div>
               <div className="w-[140px]">
-                <label className="text-sm font-medium mb-2 block">客户类型</label>
+                <label className="text-sm font-medium mb-2 block">{t('customerType')}</label>
                 <Select value={customerTypeFilter} onValueChange={setCustomerTypeFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="全部类型" />
+                    <SelectValue placeholder={t('allTypes')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部类型</SelectItem>
-                    <SelectItem value="1">企业</SelectItem>
-                    <SelectItem value="2">个人</SelectItem>
+                    <SelectItem value="all">{t('allTypes')}</SelectItem>
+                    <SelectItem value="1">{t('typeEnterprise')}</SelectItem>
+                    <SelectItem value="2">{t('typeIndividual')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="w-[140px]">
-                <label className="text-sm font-medium mb-2 block">跟进状态</label>
+                <label className="text-sm font-medium mb-2 block">{t('followUpStatus')}</label>
                 <Select value={followUpStatusFilter} onValueChange={setFollowUpStatusFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="全部状态" />
+                    <SelectValue placeholder={t('allStatus')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
-                    <SelectItem value="1">潜在客户</SelectItem>
-                    <SelectItem value="2">意向客户</SelectItem>
-                    <SelectItem value="3">成交客户</SelectItem>
-                    <SelectItem value="4">流失客户</SelectItem>
+                    <SelectItem value="all">{t('allStatus')}</SelectItem>
+                    <SelectItem value="1">{t('statusPotential')}</SelectItem>
+                    <SelectItem value="2">{t('statusIntention')}</SelectItem>
+                    <SelectItem value="3">{t('statusCompleted')}</SelectItem>
+                    <SelectItem value="4">{t('statusLost')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="w-[120px]">
-                <label className="text-sm font-medium mb-2 block">状态</label>
+                <label className="text-sm font-medium mb-2 block">{tc('status')}</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="全部" />
+                    <SelectValue placeholder={tc('all')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部</SelectItem>
-                    <SelectItem value="1">启用</SelectItem>
-                    <SelectItem value="0">禁用</SelectItem>
+                    <SelectItem value="all">{tc('all')}</SelectItem>
+                    <SelectItem value="1">{tc('enabled')}</SelectItem>
+                    <SelectItem value="0">{tc('disabled')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <Button onClick={handleSearch}>
                 <Search className="h-4 w-4 mr-2" />
-                搜索
+                {tc('search')}
               </Button>
               <Button variant="outline" onClick={fetchCustomers}>
                 <RefreshCw className="h-4 w-4 mr-2" />
-                刷新
+                {tc('refresh')}
               </Button>
               <Button onClick={handleCreate}>
                 <Plus className="h-4 w-4 mr-2" />
-                新建客户
+                {t('newCustomer')}
               </Button>
             </div>
           </CardContent>
@@ -558,7 +561,7 @@ export default function CustomersPage() {
         {/* 客户列表 */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>客户列表</CardTitle>
+            <CardTitle>{t('customerList')}</CardTitle>
             <TableExportToolbar
               selectedCount={selectedIds.size}
               totalCount={filteredCustomers.length}
@@ -567,103 +570,103 @@ export default function CustomersPage() {
               onPrint={() =>
                 printTable(
                   filteredCustomers.map((c) => ({
-                    客户编码: c.customerCode,
-                    客户名称: c.customerName,
-                    类型: customerTypeMap[c.customerType]?.label || '',
-                    联系人: c.contactName,
-                    联系电话: c.contactPhone,
-                    地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                    跟进状态: followUpStatusMap[c.followUpStatus]?.label || '',
-                    状态: statusMap[c.status]?.label || '',
+                    [t('customerCode')]: c.customerCode,
+                    [t('customerName')]: c.customerName,
+                    [t('type')]: t(CUSTOMER_TYPE_LABEL_KEYS[c.customerType] || 'typeEnterprise'),
+                    [t('contactPerson')]: c.contactName,
+                    [t('contactPhone')]: c.contactPhone,
+                    [t('address')]: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                    [t('followUpStatus')]: t(FOLLOW_UP_STATUS_LABEL_KEYS[c.followUpStatus] || 'statusPotential'),
+                    [tc('status')]: tc(STATUS_LABEL_KEYS[c.status] || 'enabled'),
                   })),
                   [
-                    { key: '客户编码', header: '客户编码' },
-                    { key: '客户名称', header: '客户名称' },
-                    { key: '类型', header: '类型' },
-                    { key: '联系人', header: '联系人' },
-                    { key: '联系电话', header: '联系电话' },
-                    { key: '地址', header: '地址' },
-                    { key: '跟进状态', header: '跟进状态' },
-                    { key: '状态', header: '状态' },
+                    { key: t('customerCode'), header: t('customerCode') },
+                    { key: t('customerName'), header: t('customerName') },
+                    { key: t('type'), header: t('type') },
+                    { key: t('contactPerson'), header: t('contactPerson') },
+                    { key: t('contactPhone'), header: t('contactPhone') },
+                    { key: t('address'), header: t('address') },
+                    { key: t('followUpStatus'), header: t('followUpStatus') },
+                    { key: tc('status'), header: tc('status') },
                   ],
-                  '客户列表'
+                  t('customerList')
                 )
               }
               onExportPDF={() =>
                 exportTableToPDF(
                   filteredCustomers.map((c) => ({
-                    客户编码: c.customerCode,
-                    客户名称: c.customerName,
-                    类型: customerTypeMap[c.customerType]?.label || '',
-                    联系人: c.contactName,
-                    联系电话: c.contactPhone,
-                    地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                    跟进状态: followUpStatusMap[c.followUpStatus]?.label || '',
-                    状态: statusMap[c.status]?.label || '',
+                    [t('customerCode')]: c.customerCode,
+                    [t('customerName')]: c.customerName,
+                    [t('type')]: t(CUSTOMER_TYPE_LABEL_KEYS[c.customerType] || 'typeEnterprise'),
+                    [t('contactPerson')]: c.contactName,
+                    [t('contactPhone')]: c.contactPhone,
+                    [t('address')]: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                    [t('followUpStatus')]: t(FOLLOW_UP_STATUS_LABEL_KEYS[c.followUpStatus] || 'statusPotential'),
+                    [tc('status')]: tc(STATUS_LABEL_KEYS[c.status] || 'enabled'),
                   })),
-                  '客户列表',
+                  t('customerList'),
                   [
-                    { key: '客户编码', header: '客户编码' },
-                    { key: '客户名称', header: '客户名称' },
-                    { key: '类型', header: '类型' },
-                    { key: '联系人', header: '联系人' },
-                    { key: '联系电话', header: '联系电话' },
-                    { key: '地址', header: '地址' },
-                    { key: '跟进状态', header: '跟进状态' },
-                    { key: '状态', header: '状态' },
+                    { key: t('customerCode'), header: t('customerCode') },
+                    { key: t('customerName'), header: t('customerName') },
+                    { key: t('type'), header: t('type') },
+                    { key: t('contactPerson'), header: t('contactPerson') },
+                    { key: t('contactPhone'), header: t('contactPhone') },
+                    { key: t('address'), header: t('address') },
+                    { key: t('followUpStatus'), header: t('followUpStatus') },
+                    { key: tc('status'), header: tc('status') },
                   ],
-                  '客户列表'
+                  t('customerList')
                 )
               }
               onExportXLS={() =>
                 exportTableToXLS(
                   filteredCustomers.map((c) => ({
-                    客户编码: c.customerCode,
-                    客户名称: c.customerName,
-                    类型: customerTypeMap[c.customerType]?.label || '',
-                    联系人: c.contactName,
-                    联系电话: c.contactPhone,
-                    地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                    跟进状态: followUpStatusMap[c.followUpStatus]?.label || '',
-                    状态: statusMap[c.status]?.label || '',
+                    [t('customerCode')]: c.customerCode,
+                    [t('customerName')]: c.customerName,
+                    [t('type')]: t(CUSTOMER_TYPE_LABEL_KEYS[c.customerType] || 'typeEnterprise'),
+                    [t('contactPerson')]: c.contactName,
+                    [t('contactPhone')]: c.contactPhone,
+                    [t('address')]: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                    [t('followUpStatus')]: t(FOLLOW_UP_STATUS_LABEL_KEYS[c.followUpStatus] || 'statusPotential'),
+                    [tc('status')]: tc(STATUS_LABEL_KEYS[c.status] || 'enabled'),
                   })),
-                  '客户列表',
+                  t('customerList'),
                   [
-                    { key: '客户编码', header: '客户编码' },
-                    { key: '客户名称', header: '客户名称' },
-                    { key: '类型', header: '类型' },
-                    { key: '联系人', header: '联系人' },
-                    { key: '联系电话', header: '联系电话' },
-                    { key: '地址', header: '地址' },
-                    { key: '跟进状态', header: '跟进状态' },
-                    { key: '状态', header: '状态' },
+                    { key: t('customerCode'), header: t('customerCode') },
+                    { key: t('customerName'), header: t('customerName') },
+                    { key: t('type'), header: t('type') },
+                    { key: t('contactPerson'), header: t('contactPerson') },
+                    { key: t('contactPhone'), header: t('contactPhone') },
+                    { key: t('address'), header: t('address') },
+                    { key: t('followUpStatus'), header: t('followUpStatus') },
+                    { key: tc('status'), header: tc('status') },
                   ]
                 )
               }
               onExportWORD={() =>
                 exportTableToWORD(
                   filteredCustomers.map((c) => ({
-                    客户编码: c.customerCode,
-                    客户名称: c.customerName,
-                    类型: customerTypeMap[c.customerType]?.label || '',
-                    联系人: c.contactName,
-                    联系电话: c.contactPhone,
-                    地址: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                    跟进状态: followUpStatusMap[c.followUpStatus]?.label || '',
-                    状态: statusMap[c.status]?.label || '',
+                    [t('customerCode')]: c.customerCode,
+                    [t('customerName')]: c.customerName,
+                    [t('type')]: t(CUSTOMER_TYPE_LABEL_KEYS[c.customerType] || 'typeEnterprise'),
+                    [t('contactPerson')]: c.contactName,
+                    [t('contactPhone')]: c.contactPhone,
+                    [t('address')]: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
+                    [t('followUpStatus')]: t(FOLLOW_UP_STATUS_LABEL_KEYS[c.followUpStatus] || 'statusPotential'),
+                    [tc('status')]: tc(STATUS_LABEL_KEYS[c.status] || 'enabled'),
                   })),
-                  '客户列表',
+                  t('customerList'),
                   [
-                    { key: '客户编码', header: '客户编码' },
-                    { key: '客户名称', header: '客户名称' },
-                    { key: '类型', header: '类型' },
-                    { key: '联系人', header: '联系人' },
-                    { key: '联系电话', header: '联系电话' },
-                    { key: '地址', header: '地址' },
-                    { key: '跟进状态', header: '跟进状态' },
-                    { key: '状态', header: '状态' },
+                    { key: t('customerCode'), header: t('customerCode') },
+                    { key: t('customerName'), header: t('customerName') },
+                    { key: t('type'), header: t('type') },
+                    { key: t('contactPerson'), header: t('contactPerson') },
+                    { key: t('contactPhone'), header: t('contactPhone') },
+                    { key: t('address'), header: t('address') },
+                    { key: t('followUpStatus'), header: t('followUpStatus') },
+                    { key: tc('status'), header: tc('status') },
                   ],
-                  '客户列表'
+                  t('customerList')
                 )
               }
             />
@@ -689,7 +692,7 @@ export default function CustomersPage() {
                       onClick={() => handleSort('customerCode')}
                     >
                       <span className="inline-flex items-center">
-                        客户编码{getSortIcon('customerCode')}
+                        {t('customerCode')}{getSortIcon('customerCode')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -697,7 +700,7 @@ export default function CustomersPage() {
                       onClick={() => handleSort('customerName')}
                     >
                       <span className="inline-flex items-center">
-                        客户名称{getSortIcon('customerName')}
+                        {t('customerName')}{getSortIcon('customerName')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -705,7 +708,7 @@ export default function CustomersPage() {
                       onClick={() => handleSort('customerType')}
                     >
                       <span className="inline-flex items-center">
-                        类型{getSortIcon('customerType')}
+                        {t('type')}{getSortIcon('customerType')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -713,7 +716,7 @@ export default function CustomersPage() {
                       onClick={() => handleSort('contactName')}
                     >
                       <span className="inline-flex items-center">
-                        联系人{getSortIcon('contactName')}
+                        {t('contactPerson')}{getSortIcon('contactName')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -721,30 +724,30 @@ export default function CustomersPage() {
                       onClick={() => handleSort('contactPhone')}
                     >
                       <span className="inline-flex items-center">
-                        联系电话{getSortIcon('contactPhone')}
+                        {t('contactPhone')}{getSortIcon('contactPhone')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="w-[200px] cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('address')}
                     >
-                      <span className="inline-flex items-center">地址{getSortIcon('address')}</span>
+                      <span className="inline-flex items-center">{t('address')}{getSortIcon('address')}</span>
                     </TableHead>
                     <TableHead
                       className="w-[100px] cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('followUpStatus')}
                     >
                       <span className="inline-flex items-center">
-                        跟进状态{getSortIcon('followUpStatus')}
+                        {t('followUpStatus')}{getSortIcon('followUpStatus')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="w-[70px] cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('status')}
                     >
-                      <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
+                      <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
                     </TableHead>
-                    <TableHead className="w-[80px] text-center">操作</TableHead>
+                    <TableHead className="w-[80px] text-center">{tc('operation')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -753,14 +756,14 @@ export default function CustomersPage() {
                       <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
                         <div className="flex items-center justify-center gap-2">
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-                          加载中...
+                          {tc('loading')}
                         </div>
                       </TableCell>
                     </TableRow>
                   ) : filteredCustomers.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
-                        暂无数据
+                        {tc('noData')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -834,18 +837,18 @@ export default function CustomersPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => handleView(customer)}>
                                 <Eye className="h-4 w-4 mr-2" />
-                                查看
+                                {tc('view')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEdit(customer)}>
                                 <Edit className="h-4 w-4 mr-2" />
-                                编辑
+                                {tc('edit')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => handleDelete(customer)}
                                 className="text-red-600 focus:text-red-600"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                删除
+                                {tc('delete')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -861,7 +864,7 @@ export default function CustomersPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4">
                 <div className="text-sm text-muted-foreground">
-                  共 {totalCount} 条记录，第 {currentPage} / {totalPages} 页
+                  {t('paginationInfo', { total: totalCount, current: currentPage, pages: totalPages })}
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -870,7 +873,7 @@ export default function CustomersPage() {
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                   >
-                    上一页
+                    {t('prevPage')}
                   </Button>
                   <Button
                     variant="outline"
@@ -878,7 +881,7 @@ export default function CustomersPage() {
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                   >
-                    下一页
+                    {t('nextPage')}
                   </Button>
                 </div>
               </div>
@@ -890,70 +893,70 @@ export default function CustomersPage() {
         <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
           <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>客户详情</DialogTitle>
-              <DialogDescription>查看客户完整信息</DialogDescription>
+              <DialogTitle>{t('customerDetail')}</DialogTitle>
+              <DialogDescription>{t('viewCustomerInfo')}</DialogDescription>
             </DialogHeader>
             {selectedCustomer && (
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">客户编码</span>
+                    <span className="text-sm text-muted-foreground">{t('customerCode')}</span>
                     <p className="font-medium">{selectedCustomer.customerCode}</p>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">客户名称</span>
+                    <span className="text-sm text-muted-foreground">{t('customerName')}</span>
                     <p className="font-medium">{selectedCustomer.customerName}</p>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">简称</span>
+                    <span className="text-sm text-muted-foreground">{t('shortName')}</span>
                     <p className="font-medium">{selectedCustomer.shortName || '-'}</p>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">客户类型</span>
+                    <span className="text-sm text-muted-foreground">{t('customerType')}</span>
                     <p>{getCustomerTypeBadge(selectedCustomer.customerType)}</p>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">行业</span>
+                    <span className="text-sm text-muted-foreground">{t('industry')}</span>
                     <p className="font-medium">{selectedCustomer.industry || '-'}</p>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">规模</span>
+                    <span className="text-sm text-muted-foreground">{t('scale')}</span>
                     <p className="font-medium">{selectedCustomer.scale || '-'}</p>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">信用等级</span>
+                    <span className="text-sm text-muted-foreground">{t('creditLevel')}</span>
                     <p className="font-medium">{selectedCustomer.creditLevel || '-'}</p>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-sm text-muted-foreground">跟进状态</span>
+                    <span className="text-sm text-muted-foreground">{t('followUpStatus')}</span>
                     <p>{getFollowUpStatusBadge(selectedCustomer.followUpStatus)}</p>
                   </div>
                 </div>
                 <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3">联系信息</h4>
+                  <h4 className="font-medium mb-3">{t('contactInfo')}</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">联系人</span>
+                      <span className="text-sm text-muted-foreground">{t('contactPerson')}</span>
                       <p className="font-medium">{selectedCustomer.contactName || '-'}</p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">联系电话</span>
+                      <span className="text-sm text-muted-foreground">{t('contactPhone')}</span>
                       <p className="font-medium">{selectedCustomer.contactPhone || '-'}</p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">邮箱</span>
+                      <span className="text-sm text-muted-foreground">{t('email')}</span>
                       <p className="font-medium">{selectedCustomer.contactEmail || '-'}</p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">传真</span>
+                      <span className="text-sm text-muted-foreground">{t('fax')}</span>
                       <p className="font-medium">{selectedCustomer.fax || '-'}</p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">网址</span>
+                      <span className="text-sm text-muted-foreground">{t('website')}</span>
                       <p className="font-medium">{selectedCustomer.website || '-'}</p>
                     </div>
                     <div className="space-y-1 col-span-2">
-                      <span className="text-sm text-muted-foreground">地址</span>
+                      <span className="text-sm text-muted-foreground">{t('address')}</span>
                       <p className="font-medium">
                         {[
                           selectedCustomer.province,
@@ -968,29 +971,29 @@ export default function CustomersPage() {
                   </div>
                 </div>
                 <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3">财务信息</h4>
+                  <h4 className="font-medium mb-3">{t('financeInfo')}</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">税号</span>
+                      <span className="text-sm text-muted-foreground">{t('taxNumber')}</span>
                       <p className="font-medium">{selectedCustomer.taxNumber || '-'}</p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">开户银行</span>
+                      <span className="text-sm text-muted-foreground">{t('bankName')}</span>
                       <p className="font-medium">{selectedCustomer.bankName || '-'}</p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">银行账号</span>
+                      <span className="text-sm text-muted-foreground">{t('bankAccount')}</span>
                       <p className="font-medium">{selectedCustomer.bankAccount || '-'}</p>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-sm text-muted-foreground">状态</span>
+                      <span className="text-sm text-muted-foreground">{tc('status')}</span>
                       <p>{getStatusBadge(selectedCustomer.status)}</p>
                     </div>
                   </div>
                 </div>
                 {selectedCustomer.remark && (
                   <div className="border-t pt-4">
-                    <span className="text-sm text-muted-foreground">备注</span>
+                    <span className="text-sm text-muted-foreground">{tc('remark')}</span>
                     <p className="font-medium mt-1">{selectedCustomer.remark}</p>
                   </div>
                 )}
@@ -1003,13 +1006,13 @@ export default function CustomersPage() {
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>编辑客户</DialogTitle>
-              <DialogDescription>修改客户信息</DialogDescription>
+              <DialogTitle>{t('editCustomer')}</DialogTitle>
+              <DialogDescription>{t('modifyCustomerInfo')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>客户编码 *</Label>
+                  <Label>{t('customerCode')} *</Label>
                   <Input
                     value={editForm.customerCode || ''}
                     onChange={(e) =>
@@ -1018,7 +1021,7 @@ export default function CustomersPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>客户名称 *</Label>
+                  <Label>{t('customerName')} *</Label>
                   <Input
                     value={editForm.customerName || ''}
                     onChange={(e) =>
@@ -1027,7 +1030,7 @@ export default function CustomersPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>简称</Label>
+                  <Label>{t('shortName')}</Label>
                   <Input
                     value={editForm.shortName || ''}
                     onChange={(e) =>
@@ -1036,7 +1039,7 @@ export default function CustomersPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>客户类型</Label>
+                  <Label>{t('customerType')}</Label>
                   <Select
                     value={editForm.customerType || '1'}
                     onValueChange={(v) => setEditForm((prev) => ({ ...prev, customerType: v }))}
@@ -1045,27 +1048,27 @@ export default function CustomersPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">企业</SelectItem>
-                      <SelectItem value="2">个人</SelectItem>
+                      <SelectItem value="1">{t('typeEnterprise')}</SelectItem>
+                      <SelectItem value="2">{t('typeIndividual')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>行业</Label>
+                  <Label>{t('industry')}</Label>
                   <Input
                     value={editForm.industry || ''}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, industry: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>规模</Label>
+                  <Label>{t('scale')}</Label>
                   <Input
                     value={editForm.scale || ''}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, scale: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>信用等级</Label>
+                  <Label>{t('creditLevel')}</Label>
                   <Input
                     value={editForm.creditLevel || ''}
                     onChange={(e) =>
@@ -1074,7 +1077,7 @@ export default function CustomersPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>跟进状态</Label>
+                  <Label>{t('followUpStatus')}</Label>
                   <Select
                     value={editForm.followUpStatus || '1'}
                     onValueChange={(v) => setEditForm((prev) => ({ ...prev, followUpStatus: v }))}
@@ -1083,19 +1086,19 @@ export default function CustomersPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">潜在客户</SelectItem>
-                      <SelectItem value="2">意向客户</SelectItem>
-                      <SelectItem value="3">成交客户</SelectItem>
-                      <SelectItem value="4">流失客户</SelectItem>
+                      <SelectItem value="1">{t('statusPotential')}</SelectItem>
+                      <SelectItem value="2">{t('statusIntention')}</SelectItem>
+                      <SelectItem value="3">{t('statusCompleted')}</SelectItem>
+                      <SelectItem value="4">{t('statusLost')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">联系信息</h4>
+                <h4 className="font-medium mb-3">{t('contactInfo')}</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>联系人</Label>
+                    <Label>{t('contactPerson')}</Label>
                     <Input
                       value={editForm.contactName || ''}
                       onChange={(e) =>
@@ -1104,7 +1107,7 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>联系电话</Label>
+                    <Label>{t('contactPhone')}</Label>
                     <Input
                       value={editForm.contactPhone || ''}
                       onChange={(e) =>
@@ -1113,7 +1116,7 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>邮箱</Label>
+                    <Label>{t('email')}</Label>
                     <Input
                       value={editForm.contactEmail || ''}
                       onChange={(e) =>
@@ -1122,14 +1125,14 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>传真</Label>
+                    <Label>{t('fax')}</Label>
                     <Input
                       value={editForm.fax || ''}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, fax: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>网址</Label>
+                    <Label>{t('website')}</Label>
                     <Input
                       value={editForm.website || ''}
                       onChange={(e) =>
@@ -1138,7 +1141,7 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>省份</Label>
+                    <Label>{t('province')}</Label>
                     <Input
                       value={editForm.province || ''}
                       onChange={(e) =>
@@ -1147,14 +1150,14 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>城市</Label>
+                    <Label>{t('city')}</Label>
                     <Input
                       value={editForm.city || ''}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, city: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>区县</Label>
+                    <Label>{t('district')}</Label>
                     <Input
                       value={editForm.district || ''}
                       onChange={(e) =>
@@ -1163,7 +1166,7 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-2 col-span-2">
-                    <Label>详细地址</Label>
+                    <Label>{t('detailAddress')}</Label>
                     <Input
                       value={editForm.address || ''}
                       onChange={(e) =>
@@ -1174,10 +1177,10 @@ export default function CustomersPage() {
                 </div>
               </div>
               <div className="border-t pt-4">
-                <h4 className="font-medium mb-3">财务信息</h4>
+                <h4 className="font-medium mb-3">{t('financeInfo')}</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>税号</Label>
+                    <Label>{t('taxNumber')}</Label>
                     <Input
                       value={editForm.taxNumber || ''}
                       onChange={(e) =>
@@ -1186,7 +1189,7 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>开户银行</Label>
+                    <Label>{t('bankName')}</Label>
                     <Input
                       value={editForm.bankName || ''}
                       onChange={(e) =>
@@ -1195,7 +1198,7 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>银行账号</Label>
+                    <Label>{t('bankAccount')}</Label>
                     <Input
                       value={editForm.bankAccount || ''}
                       onChange={(e) =>
@@ -1204,7 +1207,7 @@ export default function CustomersPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>状态</Label>
+                    <Label>{tc('status')}</Label>
                     <Select
                       value={editForm.status || '1'}
                       onValueChange={(v) => setEditForm((prev) => ({ ...prev, status: v }))}
@@ -1213,15 +1216,15 @@ export default function CustomersPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1">启用</SelectItem>
-                        <SelectItem value="0">禁用</SelectItem>
+                        <SelectItem value="1">{tc('enabled')}</SelectItem>
+                        <SelectItem value="0">{tc('disabled')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>备注</Label>
+                <Label>{tc('remark')}</Label>
                 <Input
                   value={editForm.remark || ''}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, remark: e.target.value }))}
@@ -1230,9 +1233,9 @@ export default function CustomersPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSaveEdit}>保存</Button>
+              <Button onClick={handleSaveEdit}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

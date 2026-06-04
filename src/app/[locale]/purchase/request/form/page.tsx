@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { MainLayout } from '@/components/layout';
@@ -103,76 +104,22 @@ interface SavedRecord {
   approver_name?: string;
 }
 
-const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: '草稿', color: '#6b7280' },
+export default function PurchaseRequestFormPage() {
+  // 翻译钩子
+  const t = useTranslations('Purchase');
+  const tc = useTranslations('Common');
+
+  const STATUS_MAP: Record<number, { label: string; color: string }> = {
+  0: { label: tc('draft'), color: '#6b7280' },
   1: { label: '已提交', color: '#2563eb' },
   2: { label: '审校中', color: '#d97706' },
   3: { label: '审校通过', color: '#7c3aed' },
   4: { label: '已批准', color: '#059669' },
-  5: { label: '已转采购', color: '#0891b2' },
+  5: { label: tc('convertedToPurchase'), color: '#0891b2' },
   6: { label: '已驳回', color: '#dc2626' },
-  9: { label: '已关闭', color: '#9ca3af' },
+  9: { label: tc('closed'), color: '#9ca3af' },
 };
 
-let nextItemId = 100;
-const createEmptyItem = (): PurchaseItem => ({
-  id: nextItemId++,
-  material_id: 0,
-  material_code: '',
-  productName: '',
-  spec: '',
-  unit: '',
-  quantity: '',
-  price: '',
-  amount: '',
-  remark: '',
-});
-
-const generateOrderNo = () => {
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  const random = Math.floor(Math.random() * 10000)
-    .toString()
-    .padStart(4, '0');
-  return `PO-${yyyy}${mm}${dd}-${random}`;
-};
-
-const formatDateCN = (date: Date) => {
-  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
-};
-
-const commonUnits = [
-  '个',
-  '件',
-  '箱',
-  '卷',
-  '米',
-  '千克',
-  '公斤',
-  '吨',
-  '张',
-  '套',
-  '批',
-  '桶',
-  '瓶',
-  '包',
-  '条',
-  '块',
-  '片',
-  '支',
-  '根',
-  '台',
-  '把',
-  '双',
-  '对',
-  '只',
-  '令',
-  '令/张',
-];
-
-export default function PurchaseRequestFormPage() {
   const router = useRouter();
   const { companyName } = useCompanyName();
   const { toast } = useToast();
@@ -424,7 +371,7 @@ export default function PurchaseRequestFormPage() {
 
       const result = await res.json();
       if (result.success) {
-        const statusLabel = STATUS_MAP[submitStatus]?.label || '保存';
+        const statusLabel = STATUS_MAP[submitStatus]?.label || tc('save');
         toast({ title: `${statusLabel}成功` });
         setEditingStatus(submitStatus);
         if (!editingId && result.data?.id) {
@@ -574,7 +521,7 @@ export default function PurchaseRequestFormPage() {
                   borderRadius: '12px',
                 }}
               >
-                {STATUS_MAP[editingStatus]?.label || '未知'}
+                {STATUS_MAP[editingStatus]?.label || tc('unknown')}
               </span>
             )}
           </div>
@@ -760,11 +707,11 @@ export default function PurchaseRequestFormPage() {
                     '品名',
                     '规格',
                     '单位',
-                    '数量',
+                    tc('quantity'),
                     '单价',
-                    '金额',
-                    '备注',
-                    '操作',
+                    tc('amount'),
+                    tc('remark'),
+                    tc('operation'),
                   ].map((h, i) => (
                     <th
                       key={h}
@@ -1110,7 +1057,7 @@ export default function PurchaseRequestFormPage() {
               {[
                 { label: '申请人', key: 'applicant' as const, idKey: 'applicant_id' as const },
                 { label: '审校', key: 'reviewer' as const, idKey: 'reviewer_id' as const },
-                { label: '批准', key: 'approver' as const, idKey: 'approver_id' as const },
+                { label: tc('approve'), key: 'approver' as const, idKey: 'approver_id' as const },
               ].map((item) => (
                 <div
                   key={item.key}
@@ -1173,7 +1120,7 @@ export default function PurchaseRequestFormPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
                     <tr>
-                      {['单号', '部门', '申请人', '日期', '状态', '金额', '操作'].map((h) => (
+                      {['单号', '部门', '申请人', tc('date'), tc('status'), tc('amount'), tc('operation')].map((h) => (
                         <th
                           key={h}
                           style={{
@@ -1219,7 +1166,7 @@ export default function PurchaseRequestFormPage() {
                               borderRadius: '10px',
                             }}
                           >
-                            {STATUS_MAP[record.status]?.label || '未知'}
+                            {STATUS_MAP[record.status]?.label || tc('unknown')}
                           </span>
                         </td>
                         <td style={{ padding: '8px 12px', color: '#059669', fontWeight: 600 }}>

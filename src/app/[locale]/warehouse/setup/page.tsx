@@ -85,6 +85,10 @@ const warehouseNatures = [
 ];
 
 export default function WarehouseSetupPage() {
+  // 翻译钩子
+  const t = useTranslations('Warehouse');
+  const tc = useTranslations('Common');
+
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const headers: Record<string, string> = {
@@ -133,10 +137,10 @@ export default function WarehouseSetupPage() {
       if (result.success) {
         setWarehouses(result.data?.list || result.data || []);
       } else {
-        toast.error(result.message || '获取仓库列表失败');
+        toast.error(result.message || t('fetchWarehouseFailed'));
       }
-    } catch (error) {
-      toast.error('获取仓库列表失败');
+    } catch (err) {
+      toast.error(t('fetchWarehouseFailed'));
     } finally {
       setLoading(false);
     }
@@ -209,23 +213,23 @@ export default function WarehouseSetupPage() {
         const result = await response.json();
 
         if (result.success) {
-          toast.success(`仓库 ${warehouseToDelete.name} 已删除`);
+          toast.success(t('warehouseDeleteSuccess', { name: warehouseToDelete.name }));
+          setIsDeleteDialogOpen(false);
           fetchWarehouses();
         } else {
-          toast.error(result.message || '删除失败');
+          toast.error(result.message || t('deleteFailed'));
         }
-      } catch (error) {
-        toast.error('删除失败');
+      } catch (err) {
+        toast.error(t('deleteFailed'));
       }
-      setIsDeleteDialogOpen(false);
-      setWarehouseToDelete(null);
-    }
+    };
+
+    confirmDelete(deleteWarehouse);
   };
 
-  // 保存仓库
   const handleSave = async () => {
     if (!formData.code || !formData.name) {
-      toast.error('请填写仓库编码和名称');
+      toast.error(t('fillCodeAndName'));
       return;
     }
 
@@ -242,14 +246,14 @@ export default function WarehouseSetupPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success(editingWarehouse ? '仓库信息已更新' : '仓库已创建');
-        fetchWarehouses();
+        toast.success(editingWarehouse ? t('warehouseUpdated') : t('warehouseCreated'));
         setIsDialogOpen(false);
+        fetchWarehouses();
       } else {
-        toast.error(result.message || '保存失败');
+        toast.error(result.message || t('saveFailed'));
       }
-    } catch (error) {
-      toast.error('保存失败');
+    } catch (err) {
+      toast.error(t('saveFailed'));
     }
   };
 
@@ -608,7 +612,7 @@ export default function WarehouseSetupPage() {
                 取消
               </Button>
               <Button onClick={handleSave} className="btn-dashboard-primary">
-                {editingWarehouse ? '保存' : '创建'}
+                {editingWarehouse ? tc('save') : '创建'}
               </Button>
             </DialogFooter>
           </DialogContent>

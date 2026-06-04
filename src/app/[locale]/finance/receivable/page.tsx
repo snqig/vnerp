@@ -31,6 +31,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Plus, Search, RefreshCw, DollarSign, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface Receivable {
   id: number;
@@ -77,6 +78,10 @@ const statusMap: Record<
 };
 
 export default function ReceivablePage() {
+  // 翻译钩子
+  const t = useTranslations('Finance');
+  const tc = useTranslations('Common');
+
   const { toast } = useToast();
   const [list, setList] = useState<Receivable[]>([]);
   const [total, setTotal] = useState(0);
@@ -173,7 +178,7 @@ export default function ReceivablePage() {
         toast({ title: '收款失败', description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -258,7 +263,7 @@ export default function ReceivablePage() {
                       <TableCell>{r.due_date ? r.due_date.slice(0, 10) : ''}</TableCell>
                       <TableCell>
                         <Badge variant={statusMap[r.status]?.variant || 'outline'}>
-                          {statusMap[r.status]?.label || '未知'}
+                          {statusMap[r.status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>

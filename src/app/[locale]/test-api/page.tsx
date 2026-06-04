@@ -1,8 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function TestAPI() {
+  // 翻译钩子
+  const t = useTranslations('Common');
+  const tc = useTranslations('Common');
+
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);

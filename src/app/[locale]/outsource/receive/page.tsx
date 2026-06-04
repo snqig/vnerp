@@ -32,6 +32,7 @@ import {
 import { Plus, Search, Trash2, CheckCircle, XCircle, PackageCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { useTranslations } from 'next-intl';
 
 interface OutsourceReceive {
   id: number;
@@ -50,26 +51,29 @@ interface OutsourceReceive {
   remark: string;
 }
 
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '待审核', variant: 'outline' },
-  2: { label: '已审核', variant: 'default' },
-  3: { label: '已入库', variant: 'secondary' },
-  9: { label: '已取消', variant: 'destructive' },
-};
-
-const qcStatusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '待检', variant: 'outline' },
-  2: { label: '合格', variant: 'secondary' },
-  3: { label: '不合格', variant: 'destructive' },
-};
-
 export default function OutsourceReceivePage() {
+  const t = useTranslations('Outsource');
+  const tc = useTranslations('Common');
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: tc('pending'), variant: 'outline' },
+    2: { label: tc('approved'), variant: 'default' },
+    3: { label: t('received'), variant: 'secondary' },
+    9: { label: t('cancelled'), variant: 'destructive' },
+  };
+
+  const qcStatusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: t('pendingQc'), variant: 'outline' },
+    2: { label: t('qcPass'), variant: 'secondary' },
+    3: { label: t('qcFail'), variant: 'destructive' },
+  };
+
   const { toast } = useToast();
   const [list, setList] = useState<OutsourceReceive[]>([]);
   const [total, setTotal] = useState(0);
@@ -140,10 +144,10 @@ export default function OutsourceReceivePage() {
         setForm({});
         fetchData();
       } else {
-        toast({ title: '操作失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -163,7 +167,7 @@ export default function OutsourceReceivePage() {
         toast({ title: '过账失败', description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 
@@ -180,7 +184,7 @@ export default function OutsourceReceivePage() {
         fetchData();
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('error'), variant: 'destructive' });
     }
   };
 

@@ -33,6 +33,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, Search, RefreshCw, Cpu } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 interface Equipment {
   id: number;
@@ -75,6 +76,10 @@ const CURRENT_STATUS: Record<number, { label: string; color: string }> = {
 };
 
 export default function EquipmentPage() {
+  // 翻译钩子
+  const t = useTranslations('Equipment');
+  const tc = useTranslations('Common');
+
   const [list, setList] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
@@ -126,7 +131,7 @@ export default function EquipmentPage() {
         setDialogOpen(false);
         fetchData();
       } else {
-        toast.error(result.message || '操作失败');
+        toast.error(result.message || tc('error'));
       }
     } catch (e) {
       console.error(e);
@@ -265,7 +270,7 @@ export default function EquipmentPage() {
                         <Badge
                           className={CURRENT_STATUS[eq.current_status]?.color || 'bg-gray-100'}
                         >
-                          {CURRENT_STATUS[eq.current_status]?.label || '未知'}
+                          {CURRENT_STATUS[eq.current_status]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -407,7 +412,7 @@ export default function EquipmentPage() {
               <Textarea
                 value={form.remark || ''}
                 onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                placeholder="备注"
+                placeholder=tc("remark")
                 rows={2}
               />
             </div>

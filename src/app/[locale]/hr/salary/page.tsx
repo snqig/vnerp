@@ -63,6 +63,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { useTranslations } from 'next-intl';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -124,11 +125,6 @@ interface Department {
   dept_code: string;
   parent_id: number;
 }
-
-// 获取性别文本
-const getGenderText = (gender: number) => {
-  return gender === 1 ? '男' : gender === 2 ? '女' : '未知';
-};
 
 // 模拟薪资数据
 const mockSalaries: Salary[] = [
@@ -289,6 +285,14 @@ const mockDepartments: Department[] = [
 ];
 
 export default function HRSalaryPage() {
+  // 翻译钩子
+  const t = useTranslations('Hr');
+  const tc = useTranslations('Common');
+
+  const getGenderText = (gender: number) => {
+    return gender === 1 ? '男' : gender === 2 ? '女' : tc('unknown');
+  };
+
   const [salaries, setSalaries] = useState<Salary[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [stats, setStats] = useState<SalaryStats>({
@@ -640,7 +644,7 @@ export default function HRSalaryPage() {
         '个税',
         '其他扣款',
         '实发工资',
-        '备注',
+        tc('remark'),
       ],
       ...filteredSalaries.map((s) => [
         s.employee_no,
@@ -1136,7 +1140,7 @@ export default function HRSalaryPage() {
                       取消
                     </Button>
                     <Button onClick={handleSave} disabled={loading}>
-                      {loading ? '保存中...' : '保存'}
+                      {loading ? '保存中...' : tc('save')}
                     </Button>
                   </div>
                 </div>
