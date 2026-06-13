@@ -6,6 +6,9 @@
 // 内存黑名单（生产环境应使用 Redis）
 const tokenBlacklist = new Map<string, number>();
 
+// 用户级 token 撤销记录（用于 revokeAllUserTokens）
+const userTokenRevocations = new Map<number, number>();
+
 // 清理过期条目（每小时执行一次）
 const CLEANUP_INTERVAL = 60 * 60 * 1000;
 let lastCleanup = Date.now();
@@ -20,35 +23,64 @@ function cleanup() {
       tokenBlacklist.delete(token);
     }
   }
+
+  // 清理过期的用户级撤销记录（保留7天）
+  const USER_REVOKE_TTL = 7 * 24 * 60 * 60 * 1000;
+  for (const [userId, revokedAt] of userTokenRevocations) {
+    if (now - revokedAt > USER_REVOKE_TTL) {
+      userTokenRevocations.delete(userId);
+    }
+  }
+}
+
+/**
+ * 生成统一的 token key
+ * @param userId - 用户ID
+ * @param token - 原始 token
+ */
+function makeTokenKey(userId: number, token: string): string {
+  return `token:${userId}:${token.slice(-20)}`;
 }
 
 /**
  * 将 token 加入黑名单
- * @param jti - JWT ID (唯一标识)
+ * @param userId - 用户ID
+ * @param token - 原始 token
  * @param expiresAt - token 过期时间戳(ms)
  */
-export function revokeToken(jti: string, expiresAt: number): void {
+export function revokeToken(userId: number, token: string, expiresAt: number): void {
   cleanup();
-  tokenBlacklist.set(jti, expiresAt);
+  const tokenKey = makeTokenKey(userId, token);
+  tokenBlacklist.set(tokenKey, expiresAt);
 }
 
 /**
  * 检查 token 是否已被撤销
- * @param jti - JWT ID
+ * @param userId - 用户ID
+ * @param token - 原始 token
  */
-export function isTokenRevoked(jti: string): boolean {
+export function isTokenRevoked(userId: number, token: string): boolean {
   cleanup();
-  return tokenBlacklist.has(jti);
+  const tokenKey = makeTokenKey(userId, token);
+  if (tokenBlacklist.has(tokenKey)) {
+    return true;
+  }
+  // 检查用户是否被全局撤销过
+  const revokedAt = userTokenRevocations.get(userId);
+  if (revokedAt) {
+    return true;
+  }
+  return false;
 }
 
 /**
  * 撤销用户的所有 token（用于修改密码、账号锁定等场景）
- * 注意：内存实现无法撤销所有 token，需要配合 Redis 或数据库
+ * 内存实现：记录用户撤销时间戳，后续该用户所有 token 均视为无效
  */
-export function revokeAllUserTokens(_userId: number): void {
-  // 内存实现无法高效撤销用户所有 token
-  // 生产环境应使用 Redis: `SADD revoked_users:{userId} timestamp`
-  console.warn('revokeAllUserTokens: 内存实现无法撤销用户所有 token，请使用 Redis');
+export function revokeAllUserTokens(userId: number): void {
+  cleanup();
+  userTokenRevocations.set(userId, Date.now());
+  console.warn('revokeAllUserTokens: 使用内存实现，建议生产环境使用 Redis');
 }
 
 // Refresh Token 存储（生产环境应使用 Redis 或数据库）

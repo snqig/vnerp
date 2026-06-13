@@ -3,8 +3,7 @@ import { SignJWT } from 'jose';
 import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
 import { verifyRefreshToken, storeRefreshToken, removeRefreshToken } from '@/lib/token-blacklist';
 import { query } from '@/lib/db';
-
-const SECRET_KEY = process.env.JWT_SECRET || 'dev-only-secret-key';
+import { SECRET_KEY } from '@/lib/jwt-config';
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();

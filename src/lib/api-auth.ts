@@ -35,8 +35,7 @@ export function withAuth(
     }
 
     // 2.5 检查Token是否已被撤销（黑名单）
-    const tokenKey = `token:${tokenPayload.userId}:${token.slice(-20)}`;
-    if (isTokenRevoked(tokenKey)) {
+    if (isTokenRevoked(tokenPayload.userId, token)) {
       return errorResponse('认证令牌已失效，请重新登录', 401);
     }
 
@@ -94,8 +93,7 @@ export function withAuthAndErrorHandler(
       }
 
       // 2.5 检查Token是否已被撤销（黑名单）
-      const tokenKey = `token:${tokenPayload.userId}:${token.slice(-20)}`;
-      if (isTokenRevoked(tokenKey)) {
+      if (isTokenRevoked(tokenPayload.userId, token)) {
         return errorResponse('认证令牌已失效，请重新登录', 401);
       }
 

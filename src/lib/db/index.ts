@@ -251,7 +251,19 @@ export const db = {
     const result = await execute(sql, values);
     return result.affectedRows;
   },
+  /**
+   * 软删除：将 deleted 字段设为 1，并设置 update_time
+   * 项目统一使用软删除策略，避免数据永久丢失
+   */
   delete: async (table: string, where: string, whereValues: any[] = []): Promise<number> => {
+    const sql = `UPDATE ${table} SET deleted = 1, update_time = NOW() WHERE ${where}`;
+    const result = await execute(sql, whereValues);
+    return result.affectedRows;
+  },
+  /**
+   * 硬删除：仅在确实需要物理删除时使用（如清理临时数据）
+   */
+  hardDelete: async (table: string, where: string, whereValues: any[] = []): Promise<number> => {
     const sql = `DELETE FROM ${table} WHERE ${where}`;
     const result = await execute(sql, whereValues);
     return result.affectedRows;

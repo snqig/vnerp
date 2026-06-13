@@ -4,16 +4,7 @@ import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { storeRefreshToken } from '@/lib/token-blacklist';
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET must be set in production environment');
-  }
-}
-
-const SECRET_KEY = JWT_SECRET || 'dev-only-secret-key';
+import { SECRET_KEY } from '@/lib/jwt-config';
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
@@ -133,9 +124,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const isPasswordValid =
-      (await verifyPassword(password, user.password)) ||
-      (process.env.NODE_ENV !== 'production' && password === '521223' && username === 'admin');
+    const isPasswordValid = await verifyPassword(password, user.password);
 
     if (!isPasswordValid) {
       const failCount = (user.login_fail_count || 0) + 1;
@@ -153,7 +142,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            message: `密码错误次数过多，账号已锁定${LOCKOUT_MINUTES}分钟`,
+            message: '用户名或密码错误',
           },
           { status: 429 }
         );
@@ -162,12 +151,11 @@ export async function POST(request: NextRequest) {
           failCount,
           user.id,
         ]);
-        const remaining = MAX_LOGIN_ATTEMPTS - failCount;
-        await logLogin(username, request, false, `用户名或密码错误，还剩${remaining}次尝试机会`);
+        await logLogin(username, request, false, '用户名或密码错误');
         return NextResponse.json(
           {
             success: false,
-            message: `用户名或密码错误，还剩${remaining}次尝试机会`,
+            message: '用户名或密码错误',
           },
           { status: 401 }
         );

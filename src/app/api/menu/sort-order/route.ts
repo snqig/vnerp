@@ -3,16 +3,7 @@ import { execute, queryOne, transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
 import { jwtVerify } from 'jose';
 import { secureLog } from '@/lib/logger';
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET must be set in production environment');
-  }
-}
-
-const SECRET_KEY = JWT_SECRET || 'dev-only-secret-key';
+import { SECRET_KEY } from '@/lib/jwt-config';
 
 // 菜单排序项接口
 interface MenuSortItem {
