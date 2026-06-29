@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
-import { secureLog } from '@/lib/logger';
+import { drizzle } from 'drizzle-orm/mysql2';
+import * as schema from './schema';
 
 // SECURITY: All database queries in this module use parameterized prepared statements
 // via mysql2's pool.query() and pool.execute() with placeholder values (?).
@@ -35,7 +36,7 @@ const globalForDb = globalThis as unknown as {
 export function getPool(): mysql.Pool {
   if (!globalForDb.pool) {
     if (DEBUG_DB) {
-      secureLog('debug', 'MySQL pool created', {
+      console.log('[DB] MySQL pool created', {
         host: dbConfig.host,
         port: dbConfig.port,
         user: dbConfig.user,
@@ -45,6 +46,12 @@ export function getPool(): mysql.Pool {
     globalForDb.pool = mysql.createPool(dbConfig);
   }
   return globalForDb.pool;
+}
+
+// 获取单个连接（用于事务等场景）
+export async function getConnection(): Promise<mysql.PoolConnection> {
+  const pool = getPool();
+  return pool.getConnection();
 }
 
 // 执行查询
@@ -57,14 +64,14 @@ export async function query<T = any>(sql: string, values?: any[]): Promise<T[]> 
       const pool = getPool();
       if (DEBUG_DB) {
         const sqlStr = typeof sql === 'string' ? sql : String(sql);
-        secureLog('debug', 'DB query', {
+        console.log('[DB] query', {
           sql: sqlStr.substring(0, 100),
           valueCount: values?.length,
         });
       }
       const [rows] = await pool.query(sql, values);
       if (DEBUG_DB) {
-        secureLog('debug', 'DB query result', { rowCount: (rows as any[]).length });
+        console.log('[DB] query result', { rowCount: (rows as any[]).length });
       }
       return rows as T[];
     } catch (error: any) {
@@ -93,7 +100,7 @@ export async function execute(sql: string, values?: any[]): Promise<mysql.Result
     const pool = getPool();
     if (DEBUG_DB) {
       const sqlStr = typeof sql === 'string' ? sql : String(sql);
-      secureLog('debug', 'DB execute', { sql: sqlStr.substring(0, 100) });
+      console.log('[DB] execute', { sql: sqlStr.substring(0, 100) });
     }
     const [result] = await pool.execute(sql, values);
     return result as mysql.ResultSetHeader;
@@ -257,3 +264,7 @@ export const db = {
     return result.affectedRows;
   },
 };
+
+// Drizzle ORM 实例：基于现有 mysql2 连接池，加载 schema 提供类型安全查询构建器
+// 新代码可使用 drizzleDb 查询构建器替代 raw SQL；旧代码继续使用 query/execute 保持兼容
+export const drizzleDb = drizzle({ pool: getPool(), schema, mode: 'default' });
