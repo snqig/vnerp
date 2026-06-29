@@ -1,3 +1,5 @@
+import type { NextRequest } from 'next/server';
+
 interface RateLimitEntry {
   count: number;
   resetTime: number;
@@ -75,4 +77,14 @@ export function checkRateLimit(identifier: string, options: RateLimitOptions): R
 export function resetRateLimit(identifier: string, keyPrefix?: string): void {
   const key = `${keyPrefix || 'rl'}:${identifier}`;
   store.delete(key);
+}
+
+// 从请求头提取客户端 IP（供限流使用）
+export function getClientIP(request: NextRequest): string {
+  const xff = request.headers.get('x-forwarded-for');
+  if (xff) {
+    const ips = xff.split(',').map((ip) => ip.trim());
+    return ips[0] || '127.0.0.1';
+  }
+  return request.headers.get('x-real-ip') || '127.0.0.1';
 }

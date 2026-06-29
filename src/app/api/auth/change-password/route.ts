@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
 import {
   successResponse,
@@ -7,9 +7,24 @@ import {
   withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
+  // 限流：每 IP 15 分钟最多 10 次密码修改，防暴力篡改
+  const clientIP = getClientIP(request);
+  const rateResult = checkRateLimit(clientIP, {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 10,
+    keyPrefix: 'pwd-change',
+  });
+  if (!rateResult.allowed) {
+    return NextResponse.json(
+      { success: false, message: `操作过于频繁，请${Math.ceil(rateResult.retryAfterMs / 60000)}分钟后再试` },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(rateResult.retryAfterMs / 1000)) } }
+    );
+  }
+
   const body = await request.json();
   const { userId, oldPassword, newPassword } = body;
 
@@ -22,12 +37,42 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return errorResponse('userId 必须为数字', 400, 400);
   }
 
-  if (newPassword.length < 6) {
-    return errorResponse('新密码长度不能少于6位', 400, 400);
+  // 从系统配置读取密码策略
+  let minLength = 6;
+  let requireSpecialChar = false;
+  let requireUpperCase = false;
+  let passwordExpireDays = 0;
+  try {
+    const configs: any = await query('SELECT config_key, config_value FROM sys_config WHERE config_key IN (?, ?, ?, ?)', [
+      'system.password_min_length',
+      'system.password_require_special',
+      'system.password_require_uppercase',
+      'system.password_expire_days',
+    ]);
+    for (const cfg of configs) {
+      if (cfg.config_key === 'system.password_min_length') minLength = parseInt(cfg.config_value) || 6;
+      if (cfg.config_key === 'system.password_require_special') requireSpecialChar = cfg.config_value === 'true';
+      if (cfg.config_key === 'system.password_require_uppercase') requireUpperCase = cfg.config_value === 'true';
+      if (cfg.config_key === 'system.password_expire_days') passwordExpireDays = parseInt(cfg.config_value) || 0;
+    }
+  } catch (e) {
+    // 使用默认值
+  }
+
+  if (newPassword.length < minLength) {
+    return errorResponse(`新密码长度不能少于${minLength}位`, 400, 400);
   }
 
   if (!/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
     return errorResponse('新密码必须包含字母和数字', 400, 400);
+  }
+
+  if (requireUpperCase && !/[A-Z]/.test(newPassword)) {
+    return errorResponse('新密码必须包含大写字母', 400, 400);
+  }
+
+  if (requireSpecialChar && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)) {
+    return errorResponse('新密码必须包含特殊字符', 400, 400);
   }
 
   const users: any = await query(

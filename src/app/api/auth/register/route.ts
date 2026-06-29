@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
@@ -8,6 +8,7 @@ import {
   validateRequestBody,
   logOperation,
 } from '@/lib/api-response';
+import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 
 // 用户注册数据接口
@@ -43,6 +44,20 @@ function validateEmail(email: string): boolean {
 
 // POST - 用户注册
 export const POST = withErrorHandler(async (request: NextRequest) => {
+  // 限流：每 IP 15 分钟最多 5 次注册，防批量注册
+  const clientIP = getClientIP(request);
+  const rateResult = checkRateLimit(clientIP, {
+    windowMs: 15 * 60 * 1000,
+    maxRequests: 5,
+    keyPrefix: 'register',
+  });
+  if (!rateResult.allowed) {
+    return NextResponse.json(
+      { success: false, message: `注册请求过于频繁，请${Math.ceil(rateResult.retryAfterMs / 60000)}分钟后再试` },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(rateResult.retryAfterMs / 1000)) } }
+    );
+  }
+
   const body: RegisterData = await request.json();
 
   // 验证必填字段
