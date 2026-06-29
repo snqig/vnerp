@@ -71,7 +71,11 @@ describe('API响应工具测试', () => {
 
       expect(response.code).toBe(200);
       expect(response.success).toBe(true);
-      expect(response.data).toEqual(data);
+      // paginatedResponse 将数据包裹在 data.list 内
+      expect(response.data.list).toEqual(data);
+      expect(response.data.total).toBe(2);
+      expect(response.data.page).toBe(1);
+      expect(response.data.pageSize).toBe(10);
       expect(response.pagination).toEqual(pagination);
     });
   });

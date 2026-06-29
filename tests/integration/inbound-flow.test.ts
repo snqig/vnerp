@@ -209,6 +209,8 @@ describe('入库流程集成测试', () => {
       // 模拟两个并发审核请求
       let auditCount = 0;
 
+      // 清除前面测试残留的 mockResolvedValueOnce 队列，避免覆盖 mockImplementation
+      vi.mocked(execute).mockReset();
       vi.mocked(execute).mockImplementation(async () => {
         auditCount++;
         if (auditCount === 1) {
@@ -229,6 +231,8 @@ describe('入库流程集成测试', () => {
     it('应该使用乐观锁防止并发修改', async () => {
       const version = 1;
 
+      // 清除前面测试残留的 mockResolvedValueOnce 队列
+      vi.mocked(execute).mockReset();
       // Mock更新操作（带版本检查）
       vi.mocked(execute).mockResolvedValueOnce({ affectedRows: 1 } as any);
 

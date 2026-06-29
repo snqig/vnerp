@@ -43,7 +43,7 @@ describe('FIFO分配算法', () => {
   describe('allocateFIFO - 基础分配', () => {
     it('应该按FIFO顺序分配库存', async () => {
       // Mock批次数据（按入库日期排序）
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 1,
           batch_no: 'B001',
@@ -70,7 +70,7 @@ describe('FIFO分配算法', () => {
           opened_at: null,
           version: 1,
         },
-      ]);
+      ]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 60);
 
@@ -95,7 +95,7 @@ describe('FIFO分配算法', () => {
     });
 
     it('应该优先分配已开封的批次', async () => {
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 1,
           batch_no: 'B001',
@@ -122,7 +122,7 @@ describe('FIFO分配算法', () => {
           opened_at: null, // 未开封
           version: 1,
         },
-      ]);
+      ]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 40);
 
@@ -134,7 +134,7 @@ describe('FIFO分配算法', () => {
     });
 
     it('应该优先分配即将过期的批次', async () => {
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 1,
           batch_no: 'B001',
@@ -161,7 +161,7 @@ describe('FIFO分配算法', () => {
           opened_at: null,
           version: 1,
         },
-      ]);
+      ]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 60);
 
@@ -170,7 +170,7 @@ describe('FIFO分配算法', () => {
     });
 
     it('应该正确处理库存不足的情况', async () => {
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 1,
           batch_no: 'B001',
@@ -184,7 +184,7 @@ describe('FIFO分配算法', () => {
           opened_at: null,
           version: 1,
         },
-      ]);
+      ]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 50);
 
@@ -194,7 +194,7 @@ describe('FIFO分配算法', () => {
     });
 
     it('应该正确处理无库存的情况', async () => {
-      mockConn.query.mockResolvedValue([]);
+      mockConn.query.mockResolvedValue([[]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 50);
 
@@ -206,7 +206,7 @@ describe('FIFO分配算法', () => {
 
     it('应该排除过期的批次（默认行为）', async () => {
       // 查询SQL已包含过期检查，这里模拟返回未过期的批次
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 1,
           batch_no: 'B001',
@@ -220,7 +220,7 @@ describe('FIFO分配算法', () => {
           opened_at: null,
           version: 1,
         },
-      ]);
+      ]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 30);
 
@@ -228,7 +228,7 @@ describe('FIFO分配算法', () => {
     });
 
     it('应该允许分配过期批次（当allowExpired=true）', async () => {
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 1,
           batch_no: 'B001',
@@ -242,7 +242,7 @@ describe('FIFO分配算法', () => {
           opened_at: null,
           version: 1,
         },
-      ]);
+      ]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 30, { allowExpired: true });
 
@@ -250,7 +250,7 @@ describe('FIFO分配算法', () => {
     });
 
     it('应该排除指定的批次', async () => {
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 2,
           batch_no: 'B002',
@@ -264,7 +264,7 @@ describe('FIFO分配算法', () => {
           opened_at: null,
           version: 1,
         },
-      ]);
+      ]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 30, { excludeBatchIds: [1] });
 
@@ -276,7 +276,7 @@ describe('FIFO分配算法', () => {
 
   describe('allocateFIFO - 精度计算', () => {
     it('应该正确处理小数数量', async () => {
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 1,
           batch_no: 'B001',
@@ -290,7 +290,7 @@ describe('FIFO分配算法', () => {
           opened_at: null,
           version: 1,
         },
-      ]);
+      ]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 5.25);
 
@@ -298,7 +298,7 @@ describe('FIFO分配算法', () => {
     });
 
     it('应该避免浮点数精度问题', async () => {
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 1,
           batch_no: 'B001',
@@ -325,7 +325,7 @@ describe('FIFO分配算法', () => {
           opened_at: null,
           version: 1,
         },
-      ]);
+      ]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 0.3);
 
@@ -337,8 +337,8 @@ describe('FIFO分配算法', () => {
   describe('checkShortageAndWarn - 缺货预警', () => {
     it('应该返回缺货预警信息', async () => {
       vi.mocked(query)
-        .mockResolvedValueOnce([{ safety_stock: 20, reorder_point: 50 }])
-        .mockResolvedValueOnce([{ total_available: 30 }]);
+        .mockResolvedValueOnce([[{ safety_stock: 20, reorder_point: 50 }]])
+        .mockResolvedValueOnce([[{ total_available: 30 }]]);
 
       const warning = await checkShortageAndWarn(101, 100);
 
@@ -354,8 +354,8 @@ describe('FIFO分配算法', () => {
 
     it('应该返回null当没有缺货', async () => {
       vi.mocked(query)
-        .mockResolvedValueOnce([{ safety_stock: 20, reorder_point: 50 }])
-        .mockResolvedValueOnce([{ total_available: 150 }]);
+        .mockResolvedValueOnce([[{ safety_stock: 20, reorder_point: 50 }]])
+        .mockResolvedValueOnce([[{ total_available: 150 }]]);
 
       const warning = await checkShortageAndWarn(101, 100);
 
@@ -363,7 +363,7 @@ describe('FIFO分配算法', () => {
     });
 
     it('应该返回null当物料不存在', async () => {
-      vi.mocked(query).mockResolvedValueOnce([]);
+      vi.mocked(query).mockResolvedValueOnce([[]]);
 
       const warning = await checkShortageAndWarn(999, 100);
 
@@ -374,7 +374,7 @@ describe('FIFO分配算法', () => {
   describe('executeFIFOWithTransaction - 事务执行', () => {
     it('应该成功执行多个物料的FIFO分配', async () => {
       const mockConn = {
-        query: vi.fn().mockResolvedValue([
+        query: vi.fn().mockResolvedValue([[
           {
             id: 1,
             batch_no: 'B001',
@@ -388,8 +388,8 @@ describe('FIFO分配算法', () => {
             opened_at: null,
             version: 1,
           },
-        ]),
-        execute: vi.fn().mockResolvedValue({ affectedRows: 1, insertId: 1 }),
+        ]]),
+        execute: vi.fn().mockResolvedValue([{ affectedRows: 1, insertId: 1 }]),
       };
 
       vi.mocked(transaction).mockImplementation(async (fn) => {
@@ -415,9 +415,12 @@ describe('FIFO分配算法', () => {
 
     it('应该处理分配失败的情况', async () => {
       const mockConn = {
-        query: vi.fn().mockResolvedValue([]), // 无库存
+        query: vi.fn().mockResolvedValue([[]]), // 无库存
         execute: vi.fn(),
       };
+
+      // checkShortageAndWarn 使用模块级 query，mock 为空安全库存行使其返回 null
+      vi.mocked(query).mockResolvedValue([[]]);
 
       vi.mocked(transaction).mockImplementation(async (fn) => {
         return fn(mockConn);
@@ -452,7 +455,7 @@ describe('FIFO分配算法', () => {
         return { affectedRows: 1 };
       });
 
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 1,
           batch_no: 'B001',
@@ -466,7 +469,7 @@ describe('FIFO分配算法', () => {
           opened_at: null,
           version: 1,
         },
-      ]);
+      ]]);
 
       // 测试重试逻辑（实际实现在executeFIFODeductionWithRetry中）
       // 这里验证mock设置正确
@@ -476,7 +479,7 @@ describe('FIFO分配算法', () => {
 
   describe('边界情况', () => {
     it('应该处理需求数量为0的情况', async () => {
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 1,
           batch_no: 'B001',
@@ -490,7 +493,7 @@ describe('FIFO分配算法', () => {
           opened_at: null,
           version: 1,
         },
-      ]);
+      ]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 0);
 
@@ -500,7 +503,7 @@ describe('FIFO分配算法', () => {
     });
 
     it('应该处理单价为null的情况', async () => {
-      mockConn.query.mockResolvedValue([
+      mockConn.query.mockResolvedValue([[
         {
           id: 1,
           batch_no: 'B001',
@@ -514,7 +517,7 @@ describe('FIFO分配算法', () => {
           opened_at: null,
           version: 1,
         },
-      ]);
+      ]]);
 
       const result = await allocateFIFO(mockConn, 101, 1, 50);
 

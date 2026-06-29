@@ -112,8 +112,9 @@ describe('BOM展开计算', () => {
       ]);
 
       // Mock检查半成品是否有BOM（有BOM）
-      vi.mocked(query).mockResolvedValue([{ bomId: 2 }]);
-      vi.mocked(query).mockResolvedValue([{ productId: 2 }]);
+      vi.mocked(query).mockResolvedValueOnce([{ bomId: 2 }]);
+      // Mock获取半成品对应的产品ID
+      vi.mocked(query).mockResolvedValueOnce([{ productId: 2 }]);
 
       // Mock第二层BOM（半成品的BOM）
       vi.mocked(query).mockResolvedValueOnce([
@@ -130,8 +131,8 @@ describe('BOM展开计算', () => {
       ]);
 
       // Mock检查原材料是否有BOM（无BOM）
-      vi.mocked(query).mockResolvedValue([]);
-      vi.mocked(query).mockResolvedValue([]);
+      vi.mocked(query).mockResolvedValueOnce([]);
+      vi.mocked(query).mockResolvedValueOnce([]);
 
       const result = await expandBom(1, 10);
 
@@ -148,12 +149,12 @@ describe('BOM展开计算', () => {
       expect(rawMaterial).toBeDefined();
       expect(rawMaterial!.isLeaf).toBe(true);
       expect(rawMaterial!.level).toBe(1);
-      // 基础用量 = 10 * 1 * 3 = 30
-      expect(rawMaterial!.baseQuantity).toBe(30);
+      // 基础用量 = 父级 actualQuantity(10*1.02=10.2) * 子件用量3 = 30.6
+      expect(rawMaterial!.baseQuantity).toBeCloseTo(30.6);
       // 累计损耗率 = 2 + 3 = 5
       expect(rawMaterial!.accumulatedLossRate).toBe(5);
-      // 实际用量 = 30 * (1 + 5/100) = 31.5
-      expect(rawMaterial!.actualQuantity).toBeCloseTo(31.5);
+      // 实际用量 = 30.6 * (1 + 5/100) = 32.13
+      expect(rawMaterial!.actualQuantity).toBeCloseTo(32.13);
     });
 
     it('应该正确处理损耗率累加', async () => {
@@ -371,7 +372,9 @@ describe('BOM展开计算', () => {
   describe('expandBomBatch - 批量展开', () => {
     it('应该正确展开多个产品', async () => {
       vi.mocked(query)
+        // 产品1：产品信息
         .mockResolvedValueOnce([{ id: 1, code: 'PROD-001', name: '产品A', specification: '' }])
+        // 产品1：BOM明细
         .mockResolvedValueOnce([
           {
             materialId: 101,
@@ -384,9 +387,13 @@ describe('BOM展开计算', () => {
             bomId: 1,
           },
         ])
-        .mockResolvedValue([])
-        .mockResolvedValue([])
+        // 产品1：checkMaterialHasBom(101) → 无BOM
+        .mockResolvedValueOnce([])
+        // 产品1：getProductIdByMaterialId(101) → null
+        .mockResolvedValueOnce([])
+        // 产品2：产品信息
         .mockResolvedValueOnce([{ id: 2, code: 'PROD-002', name: '产品B', specification: '' }])
+        // 产品2：BOM明细
         .mockResolvedValueOnce([
           {
             materialId: 102,
@@ -399,8 +406,10 @@ describe('BOM展开计算', () => {
             bomId: 2,
           },
         ])
-        .mockResolvedValue([])
-        .mockResolvedValue([]);
+        // 产品2：checkMaterialHasBom(102) → 无BOM
+        .mockResolvedValueOnce([])
+        // 产品2：getProductIdByMaterialId(102) → null
+        .mockResolvedValueOnce([]);
 
       const results = await expandBomBatch([
         { productId: 1, quantity: 10 },
@@ -504,52 +513,59 @@ describe('BOM展开计算', () => {
 
   describe('统计信息', () => {
     it('应该正确计算统计信息', async () => {
-      vi.mocked(query).mockResolvedValueOnce([
-        { id: 1, code: 'PROD-001', name: '产品A', specification: '' },
-      ]);
-      vi.mocked(query).mockResolvedValueOnce([
-        {
-          materialId: 101,
-          materialCode: 'SEMI-001',
-          materialName: '半成品',
-          materialSpec: '',
-          unit: 'pcs',
-          quantity: 1,
-          lossRate: 0,
-          bomId: 1,
-        },
-        {
-          materialId: 102,
-          materialCode: 'MAT-001',
-          materialName: '原材料',
-          materialSpec: '',
-          unit: 'kg',
-          quantity: 2,
-          lossRate: 0,
-          bomId: 1,
-        },
-      ]);
-
-      // 半成品有BOM
-      vi.mocked(query).mockResolvedValue([{ bomId: 2 }]);
-      vi.mocked(query).mockResolvedValue([{ productId: 2 }]);
-
-      // 半成品的BOM
-      vi.mocked(query).mockResolvedValueOnce([
-        {
-          materialId: 201,
-          materialCode: 'MAT-002',
-          materialName: '原材料2',
-          materialSpec: '',
-          unit: 'kg',
-          quantity: 3,
-          lossRate: 0,
-          bomId: 2,
-        },
-      ]);
-
-      vi.mocked(query).mockResolvedValue([]);
-      vi.mocked(query).mockResolvedValue([]);
+      vi.mocked(query)
+        // 产品1信息
+        .mockResolvedValueOnce([
+          { id: 1, code: 'PROD-001', name: '产品A', specification: '' },
+        ])
+        // 产品1 BOM：半成品 + 原材料
+        .mockResolvedValueOnce([
+          {
+            materialId: 101,
+            materialCode: 'SEMI-001',
+            materialName: '半成品',
+            materialSpec: '',
+            unit: 'pcs',
+            quantity: 1,
+            lossRate: 0,
+            bomId: 1,
+          },
+          {
+            materialId: 102,
+            materialCode: 'MAT-001',
+            materialName: '原材料',
+            materialSpec: '',
+            unit: 'kg',
+            quantity: 2,
+            lossRate: 0,
+            bomId: 1,
+          },
+        ])
+        // 对 SEMI-001：checkMaterialHasBom(101) → 有BOM
+        .mockResolvedValueOnce([{ bomId: 2 }])
+        // 对 SEMI-001：getProductIdByMaterialId(101) → productId=2
+        .mockResolvedValueOnce([{ productId: 2 }])
+        // 半成品的BOM（MAT-002）
+        .mockResolvedValueOnce([
+          {
+            materialId: 201,
+            materialCode: 'MAT-002',
+            materialName: '原材料2',
+            materialSpec: '',
+            unit: 'kg',
+            quantity: 3,
+            lossRate: 0,
+            bomId: 2,
+          },
+        ])
+        // 对 MAT-002：checkMaterialHasBom(201) → 无BOM
+        .mockResolvedValueOnce([])
+        // 对 MAT-002：getProductIdByMaterialId(201) → null
+        .mockResolvedValueOnce([])
+        // 对 MAT-001：checkMaterialHasBom(102) → 无BOM
+        .mockResolvedValueOnce([])
+        // 对 MAT-001：getProductIdByMaterialId(102) → null
+        .mockResolvedValueOnce([]);
 
       const result = await expandBom(1, 10);
 

@@ -185,8 +185,9 @@ describe('系统配置API测试', () => {
 
       expect(data.success).toBe(true);
       expect(data.message).toBe('删除成功');
+      // 路由实现为硬删除 DELETE FROM（id 经 Number 转换）
       expect(execute).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE sys_config SET deleted = 1'),
+        expect.stringContaining('DELETE FROM sys_config WHERE id = ?'),
         [1]
       );
     });

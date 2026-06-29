@@ -26,6 +26,13 @@ import { query, execute, transaction } from '@/lib/db';
 describe('盘点流程集成测试', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // 清除前面测试残留的 mockResolvedValueOnce 队列，避免跨用例污染
+    mockConnection.query.mockReset();
+    mockConnection.execute.mockReset();
+    vi.mocked(execute).mockReset();
+    vi.mocked(query).mockReset();
+    // 重新设置 transaction 默认实现（mockReset 会清除）
+    vi.mocked(transaction).mockImplementation((fn: any) => fn(mockConnection));
   });
 
   afterEach(() => {

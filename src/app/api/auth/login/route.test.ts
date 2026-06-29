@@ -56,7 +56,11 @@ describe('登录API测试', () => {
       lock_time: null,
     };
 
-    vi.mocked(query).mockResolvedValueOnce([mockUser]).mockResolvedValueOnce([]);
+    vi.mocked(query)
+      .mockResolvedValueOnce([mockUser])
+      .mockResolvedValueOnce([{ last_login_ip: '127.0.0.1' }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ dept_name: '技术部' }]);
 
     mockCompare.mockResolvedValueOnce(true);
     mockExecute.mockResolvedValueOnce({ affectedRows: 1 });

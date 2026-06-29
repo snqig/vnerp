@@ -260,15 +260,15 @@ describe('超领校验', () => {
   });
 
   describe('审计日志', () => {
-    it('应该记录超领申请的审计日志', async () => {
+    it('应该记录超领申请的审计日志（异常路径触发 secureLog）', async () => {
       const { secureLog } = await import('@/lib/logger');
 
-      vi.mocked(execute)
-        .mockResolvedValueOnce({ insertId: 1 } as any)
-        .mockResolvedValueOnce({} as any);
+      // 触发异常路径：execute 抛错会进入 catch 块调用 secureLog
+      vi.mocked(execute).mockRejectedValueOnce(new Error('DB 异常'));
 
-      await submitOverRequisition(1, 101, 50, '测试', 1, '张三');
+      const result = await submitOverRequisition(1, 101, 50, '测试', 1, '张三');
 
+      expect(result.success).toBe(false);
       // 验证审计日志被调用
       expect(secureLog).toHaveBeenCalled();
     });

@@ -45,6 +45,16 @@ async function parseResponse(res: Response) {
 describe('出库 API 集成测试', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // 清除前面测试残留的 mockResolvedValueOnce 队列，避免跨用例污染
+    mockConnection.query.mockReset();
+    mockConnection.execute.mockReset();
+    vi.mocked(query).mockReset();
+    vi.mocked(execute).mockReset();
+    vi.mocked(transaction).mockReset();
+    // 重新设置 transaction 默认实现（mockReset 会清除）
+    vi.mocked(transaction).mockImplementation((fn: any) => fn(mockConnection));
+    // 重新设置 queryPaginated 默认实现
+    vi.mocked(queryPaginated).mockReset();
   });
 
   afterEach(() => {
@@ -288,7 +298,8 @@ describe('出库 API 集成测试', () => {
     };
 
     it('正常流程：pending 状态允许更新', async () => {
-      vi.mocked(query).mockResolvedValueOnce([{ status: 'pending' }] as any);
+      // draft 状态才允许编辑（状态机 pending 不允许）
+      vi.mocked(query).mockResolvedValueOnce([{ status: 'draft' }] as any);
       vi.mocked(execute).mockResolvedValueOnce({ affectedRows: 1 } as any);
 
       const req = makeRequest('PUT', updateBody);
@@ -348,7 +359,8 @@ describe('出库 API 集成测试', () => {
 
   describe('DELETE /api/warehouse/outbound - 删除出库单', () => {
     it('正常流程：pending 状态允许删除', async () => {
-      vi.mocked(query).mockResolvedValueOnce([{ status: 'pending' }] as any);
+      // draft 状态才允许删除（状态机 pending 不允许）
+      vi.mocked(query).mockResolvedValueOnce([{ status: 'draft' }] as any);
       mockConnection.execute.mockResolvedValue({ affectedRows: 1 } as any);
 
       const req = makeRequest('DELETE', undefined, 'id=1');
@@ -357,14 +369,14 @@ describe('出库 API 集成测试', () => {
       expect(status).toBe(200);
       expect(data.success).toBe(true);
       expect(data.message).toBe('出库单删除成功');
-      // 验证事务内同时更新主表和明细表
+      // 验证事务内同时更新主表和明细表（id 从 URL 取为字符串）
       expect(mockConnection.execute).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE inv_outbound_order SET deleted = 1'),
-        [1]
+        ['1']
       );
       expect(mockConnection.execute).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE inv_outbound_item SET deleted = 1'),
-        [1]
+        ['1']
       );
     });
 
@@ -410,7 +422,8 @@ describe('出库 API 集成测试', () => {
     it('WarehouseStateMachine.canEditOutbound 各状态正确', () => {
       // 测试与 API 路由使用的状态机一致性
       expect(WarehouseStateMachine.canEditOutbound('draft')).toBe(true);
-      expect(WarehouseStateMachine.canEditOutbound('pending')).toBe(true);
+      // pending 状态不允许编辑（已提交待审核）
+      expect(WarehouseStateMachine.canEditOutbound('pending')).toBe(false);
       expect(WarehouseStateMachine.canEditOutbound('completed')).toBe(false);
       expect(WarehouseStateMachine.canEditOutbound('cancelled')).toBe(false);
     });

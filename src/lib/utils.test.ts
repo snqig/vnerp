@@ -1,19 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
   cn,
-  generateId,
-  generateOrderNo,
-  generateBatchNo,
-  generateQRCode,
-  parseQRCode,
-  formatDate,
+  formatMoney,
   formatAmount,
-  formatQuantity,
-  calculateEfficiency,
-  needsEfficiencyWarning,
-  calculateExpiryDate,
-  compareDate,
-  getStatusConfig,
+  formatCurrency,
+  formatPercent,
+  formatDate,
+  generateBatchNo,
+  generateTransNo,
 } from './utils';
 
 describe('工具函数测试', () => {
@@ -37,240 +31,117 @@ describe('工具函数测试', () => {
     });
   });
 
-  describe('generateId - 生成唯一ID', () => {
-    it('应该生成带前缀的ID', () => {
-      const id = generateId('test');
-      expect(id).toMatch(/^test_[a-z0-9]+$/);
+  describe('formatMoney - 格式化金额', () => {
+    it('应该格式化数字金额并加 ¥ 前缀与千分位', () => {
+      expect(formatMoney(1234.56)).toBe('¥1,234.56');
     });
 
-    it('应该生成不带前缀的ID', () => {
-      const id = generateId();
-      expect(id).toMatch(/^[a-z0-9]+$/);
+    it('应该格式化字符串金额', () => {
+      expect(formatMoney('1234.56')).toBe('¥1,234.56');
     });
 
-    it('生成的ID应该是唯一的', () => {
-      const id1 = generateId('test');
-      const id2 = generateId('test');
-      expect(id1).not.toBe(id2);
-    });
-  });
-
-  describe('generateOrderNo - 生成单据编号', () => {
-    it('应该生成正确格式的单据编号', () => {
-      const orderNo = generateOrderNo('PO');
-      expect(orderNo).toMatch(/^PO\d{4}\d{2}\d{2}\d{4}$/);
+    it('null/undefined/空串应返回 ¥0.00', () => {
+      expect(formatMoney(null)).toBe('¥0.00');
+      expect(formatMoney(undefined)).toBe('¥0.00');
+      expect(formatMoney('')).toBe('¥0.00');
     });
 
-    it('应该使用不同前缀', () => {
-      const poNo = generateOrderNo('PO');
-      const soNo = generateOrderNo('SO');
-      expect(poNo.startsWith('PO')).toBe(true);
-      expect(soNo.startsWith('SO')).toBe(true);
+    it('NaN 应返回 ¥0.00', () => {
+      expect(formatMoney('invalid')).toBe('¥0.00');
+    });
+
+    it('应该支持自定义小数位', () => {
+      expect(formatMoney(1234.5, 3)).toBe('¥1,234.500');
     });
   });
 
-  describe('generateBatchNo - 生成批次号', () => {
-    it('应该生成正确格式的批次号', () => {
-      const batchNo = generateBatchNo('WH01');
-      expect(batchNo).toMatch(/^WH01\d{4}\d{2}\d{2}\d{4}$/);
+  describe('formatAmount - formatMoney 别名', () => {
+    it('应该与 formatMoney 行为一致', () => {
+      expect(formatAmount(1234.56)).toBe('¥1,234.56');
+      expect(formatAmount(null)).toBe('¥0.00');
     });
   });
 
-  describe('generateQRCode - 生成二维码', () => {
-    it('应该生成正确格式的二维码', () => {
-      const qr = generateQRCode('product', '123');
-      expect(qr).toMatch(/^DCERP:product:123:\d+$/);
+  describe('formatCurrency - 自定义货币', () => {
+    it('默认货币符号为 ¥', () => {
+      expect(formatCurrency(1234.56)).toBe('¥1,234.56');
+    });
+
+    it('应该使用自定义货币符号', () => {
+      expect(formatCurrency(1234.56, '$')).toBe('$1,234.56');
+    });
+
+    it('null 应返回 货币符号 + 0.00', () => {
+      expect(formatCurrency(null, '$')).toBe('$0.00');
+    });
+
+    it('NaN 应返回 货币符号 + 0.00', () => {
+      expect(formatCurrency('invalid', '$')).toBe('$0.00');
     });
   });
 
-  describe('parseQRCode - 解析二维码', () => {
-    it('应该正确解析有效的二维码', () => {
-      const qr = 'DCERP:product:123:1234567890';
-      const result = parseQRCode(qr);
-      expect(result).toEqual({
-        type: 'product',
-        id: '123',
-        timestamp: 1234567890,
-      });
+  describe('formatPercent - 格式化百分比', () => {
+    it('应该把小数转为百分比', () => {
+      expect(formatPercent(0.5)).toBe('50.00%');
     });
 
-    it('应该返回null对于无效的二维码', () => {
-      const result = parseQRCode('INVALID:QR');
-      expect(result).toBeNull();
+    it('null/undefined 应返回 0%', () => {
+      expect(formatPercent(null)).toBe('0%');
+      expect(formatPercent(undefined)).toBe('0%');
     });
 
-    it('应该返回null对于空字符串', () => {
-      const result = parseQRCode('');
-      expect(result).toBeNull();
+    it('应该支持自定义小数位', () => {
+      expect(formatPercent(0.123456, 1)).toBe('12.3%');
     });
   });
 
   describe('formatDate - 格式化日期', () => {
-    it('应该格式化日期为YYYY-MM-DD', () => {
-      const date = new Date('2024-03-15');
-      const result = formatDate(date, 'YYYY-MM-DD');
-      expect(result).toBe('2024-03-15');
+    it('应该格式化为 YYYY-MM-DD', () => {
+      const date = new Date(2024, 2, 15);
+      expect(formatDate(date, 'YYYY-MM-DD')).toBe('2024-03-15');
     });
 
-    it('应该格式化日期为YYYY-MM-DD HH:mm:ss', () => {
-      const date = new Date('2024-03-15 14:30:45');
-      const result = formatDate(date, 'YYYY-MM-DD HH:mm:ss');
-      expect(result).toBe('2024-03-15 14:30:45');
+    it('应该格式化为 YYYY-MM-DD HH:mm:ss', () => {
+      const date = new Date(2024, 2, 15, 14, 30, 45);
+      expect(formatDate(date, 'YYYY-MM-DD HH:mm:ss')).toBe('2024-03-15 14:30:45');
     });
 
     it('应该处理字符串日期', () => {
-      const result = formatDate('2024-03-15', 'YYYY-MM-DD');
-      expect(result).toBe('2024-03-15');
+      // 不带 Z 的日期时间字符串按本地时区解析，避免时区偏差
+      expect(formatDate('2024-03-15T10:00:00', 'YYYY-MM-DD')).toBe('2024-03-15');
     });
 
-    it('应该返回空字符串对于null值', () => {
-      const result = formatDate(null);
-      expect(result).toBe('');
+    it('默认格式应为 YYYY-MM-DD', () => {
+      expect(formatDate(new Date(2024, 2, 15))).toBe('2024-03-15');
     });
 
-    it('应该返回空字符串对于undefined值', () => {
-      const result = formatDate(undefined);
-      expect(result).toBe('');
-    });
-  });
-
-  describe('formatAmount - 格式化金额', () => {
-    it('应该格式化数字金额', () => {
-      const result = formatAmount(1234.56);
-      expect(result).toBe('1,234.56');
+    it('null/undefined 应返回空字符串', () => {
+      expect(formatDate(null)).toBe('');
+      expect(formatDate(undefined)).toBe('');
     });
 
-    it('应该格式化字符串金额', () => {
-      const result = formatAmount('1234.56');
-      expect(result).toBe('1,234.56');
-    });
-
-    it('应该处理NaN值', () => {
-      const result = formatAmount('invalid');
-      expect(result).toBe('0.00');
-    });
-
-    it('应该支持自定义小数位', () => {
-      const result = formatAmount(1234.5, 3);
-      expect(result).toBe('1,234.500');
+    it('无效日期应返回空字符串', () => {
+      expect(formatDate('invalid-date')).toBe('');
     });
   });
 
-  describe('formatQuantity - 格式化数量', () => {
-    it('应该格式化数字数量', () => {
-      const result = formatQuantity(100);
-      expect(result).toBe('100');
+  describe('generateBatchNo - 生成批次号', () => {
+    it('默认前缀 BAT 并包含 10 位日期随机串', () => {
+      expect(generateBatchNo()).toMatch(/^BAT\d{10}$/);
     });
 
-    it('应该格式化小数数量', () => {
-      const result = formatQuantity(100.5);
-      expect(result).toBe('100.5');
-    });
-
-    it('应该处理NaN值', () => {
-      const result = formatQuantity('invalid');
-      expect(result).toBe('0');
+    it('应该使用传入前缀', () => {
+      expect(generateBatchNo('WH01')).toMatch(/^WH01\d{10}$/);
     });
   });
 
-  describe('calculateEfficiency - 计算效率', () => {
-    it('应该正确计算效率', () => {
-      const result = calculateEfficiency(100, 80);
-      expect(result).toBe(80);
+  describe('generateTransNo - 生成交易号', () => {
+    it('默认前缀 TRN 并包含 14 位时间随机串', () => {
+      expect(generateTransNo()).toMatch(/^TRN\d{14}$/);
     });
 
-    it('应该返回0当实际时间为0', () => {
-      const result = calculateEfficiency(0, 80);
-      expect(result).toBe(0);
-    });
-
-    it('应该返回0当标准时间为0', () => {
-      const result = calculateEfficiency(100, 0);
-      expect(result).toBe(0);
-    });
-
-    it('应该返回0当时间为负数', () => {
-      const result = calculateEfficiency(-100, 80);
-      expect(result).toBe(0);
-    });
-  });
-
-  describe('needsEfficiencyWarning - 效率预警', () => {
-    it('应该在效率低于阈值时返回true', () => {
-      expect(needsEfficiencyWarning(70)).toBe(true);
-      expect(needsEfficiencyWarning(79)).toBe(true);
-    });
-
-    it('应该在效率等于阈值时返回false', () => {
-      expect(needsEfficiencyWarning(80)).toBe(false);
-    });
-
-    it('应该在效率高于阈值时返回false', () => {
-      expect(needsEfficiencyWarning(90)).toBe(false);
-    });
-
-    it('应该支持自定义阈值', () => {
-      expect(needsEfficiencyWarning(85, 90)).toBe(true);
-      expect(needsEfficiencyWarning(95, 90)).toBe(false);
-    });
-  });
-
-  describe('calculateExpiryDate - 计算有效期', () => {
-    it('应该正确计算有效期', () => {
-      const productionDate = new Date('2024-01-01');
-      const result = calculateExpiryDate(productionDate, 30);
-      expect(result).toEqual(new Date('2024-01-31'));
-    });
-
-    it('应该处理跨年', () => {
-      const productionDate = new Date('2024-12-15');
-      const result = calculateExpiryDate(productionDate, 30);
-      expect(result).toEqual(new Date('2025-01-14'));
-    });
-  });
-
-  describe('compareDate - 日期比较', () => {
-    it('应该返回负数当a早于b', () => {
-      const result = compareDate('2024-01-01', '2024-01-02');
-      expect(result).toBeLessThan(0);
-    });
-
-    it('应该返回正数当a晚于b', () => {
-      const result = compareDate('2024-01-02', '2024-01-01');
-      expect(result).toBeGreaterThan(0);
-    });
-
-    it('应该返回0当日期相等', () => {
-      const result = compareDate('2024-01-01', '2024-01-01');
-      expect(result).toBe(0);
-    });
-
-    it('应该支持Date对象', () => {
-      const result = compareDate(new Date('2024-01-01'), new Date('2024-01-02'));
-      expect(result).toBeLessThan(0);
-    });
-  });
-
-  describe('getStatusConfig - 状态配置', () => {
-    const statusList = [
-      { value: 'active', label: '启用', color: 'green' },
-      { value: 'inactive', label: '禁用', color: 'red' },
-    ] as const;
-
-    it('应该返回匹配的状态配置', () => {
-      const result = getStatusConfig('active', statusList);
-      expect(result).toEqual({ label: '启用', color: 'green' });
-    });
-
-    it('应该返回默认值当状态不存在', () => {
-      const result = getStatusConfig('unknown', statusList);
-      expect(result).toEqual({ label: 'unknown', color: 'default' });
-    });
-
-    it('应该使用默认颜色当未指定', () => {
-      const list = [{ value: 'test', label: '测试' }];
-      const result = getStatusConfig('test', list);
-      expect(result).toEqual({ label: '测试', color: 'default' });
+    it('应该使用传入前缀', () => {
+      expect(generateTransNo('OUT')).toMatch(/^OUT\d{14}$/);
     });
   });
 });

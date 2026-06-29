@@ -39,13 +39,13 @@ vi.mock('@/lib/db', () => ({
 }));
 
 // 让 withAuthAndErrorHandler 直接执行 handler，并注入固定的 userInfo
+// 同时模拟真实实现的 try-catch（未捕获错误返回 500）
 vi.mock('@/lib/api-auth', () => ({
   withAuthAndErrorHandler: (
     handler: (req: Request, userInfo: any) => Promise<Response>,
     _options?: { permission?: string }
   ) => {
     return async (request: Request): Promise<Response> => {
-      // 模拟通过认证的用户
       const userInfo = {
         userId: 1,
         username: 'admin',
@@ -53,7 +53,20 @@ vi.mock('@/lib/api-auth', () => ({
         roles: ['admin'],
         permissions: ['warehouse:inbound:list', 'warehouse:inbound:create', 'warehouse:inbound:edit', 'warehouse:inbound:delete'],
       };
-      return handler(request, userInfo);
+      try {
+        return await handler(request, userInfo);
+      } catch (error: any) {
+        const body = {
+          code: 500,
+          success: false,
+          message: error?.message || '服务器内部错误',
+          data: null,
+        };
+        return new Response(JSON.stringify(body), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
     };
   },
 }));
@@ -377,13 +390,14 @@ describe('入库 API 集成测试', () => {
       expect(data.message).toContain('id');
     });
 
-    it('未知 action 返回 400', async () => {
+    it('未知 action 返回 422（schema 枚举校验）', async () => {
       const req = makeRequest('PUT', { id: 1, action: 'unknown' as any });
       const { status, data } = await parseResponse(await PUT(req as any, {} as any));
 
-      expect(status).toBe(400);
+      // schema 用 z.enum 限制 action，未知值在 parse 阶段被拒
+      expect(status).toBe(422);
       expect(data.success).toBe(false);
-      expect(data.message).toBe('未知操作');
+      expect(data.message).toContain('输入校验失败');
     });
 
     it('仅更新 remark 字段时走直接 SQL 更新', async () => {
