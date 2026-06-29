@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, RefreshCw, QrCode, Eye, Printer, ScanLine, History } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface QRRecord {
   id: number;
@@ -62,8 +62,9 @@ interface QRRecord {
 }
 
 export default function QRCodePage() {
-  const t = useTranslations('Common');
+  const t = useTranslations('QRCode');
   const tc = useTranslations('Common');
+  const locale = useLocale();
 
   const typeMap: Record<string, string> = {
     material: t('rawMaterial'),
@@ -152,12 +153,12 @@ export default function QRCodePage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '二维码生成成功', description: result.data?.qr_code });
+        toast({ title: t('generateSuccess'), description: result.data?.qr_code });
         setShowDialog(false);
         setForm({});
         fetchData();
       } else {
-        toast({ title: '生成失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('generateFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
       toast({ title: tc('error'), variant: 'destructive' });
@@ -170,7 +171,7 @@ export default function QRCodePage() {
         method: 'PUT',
         body: JSON.stringify({ id, action: 'print' }),
       });
-      toast({ title: '打印记录已更新' });
+      toast({ title: t('printRecordUpdated') });
       fetchData();
     } catch (e) {
       toast({ title: tc('error'), variant: 'destructive' });
@@ -179,7 +180,7 @@ export default function QRCodePage() {
 
   const handleTrace = async () => {
     if (!traceInput) {
-      toast({ title: '请输入二维码编码或单号' });
+      toast({ title: t('enterQrCodeOrRefNo') });
       return;
     }
     try {
@@ -210,21 +211,21 @@ export default function QRCodePage() {
         setTraceData(result.data);
         setShowTrace(true);
       } else {
-        toast({ title: '查询失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('queryFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '查询失败', variant: 'destructive' });
+      toast({ title: t('queryFailed'), variant: 'destructive' });
     }
   };
 
   const handleInvalidate = async (id: number) => {
-    if (!confirm('确认使该二维码失效？')) return;
+    if (!confirm(t('confirmInvalidate'))) return;
     try {
       await authFetch('/api/qrcode', {
         method: 'PUT',
         body: JSON.stringify({ id, action: 'invalidate' }),
       });
-      toast({ title: '二维码已失效' });
+      toast({ title: t('qrCodeInvalidated') });
       fetchData();
     } catch (e) {
       toast({ title: tc('error'), variant: 'destructive' });
@@ -235,12 +236,12 @@ export default function QRCodePage() {
     <MainLayout>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">二维码管理</h2>
+          <h2 className="text-2xl font-bold">{t('qrCodeManagement')}</h2>
           <div className="flex items-center gap-2">
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="搜索编码/单号/物料"
+                placeholder={t('searchPlaceholder')}
                 value={keyword}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 h-9"
@@ -254,17 +255,17 @@ export default function QRCodePage() {
               }}
             >
               <SelectTrigger className="w-28 h-9">
-                <SelectValue placeholder=tc("type") />
-              </SelectTrigger>
+              <SelectValue placeholder={tc("type")} />
+            </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部</SelectItem>
-                <SelectItem value="material">原料</SelectItem>
-                <SelectItem value="product">成品</SelectItem>
-                <SelectItem value="workorder">工单</SelectItem>
-                <SelectItem value="ink">油墨</SelectItem>
-                <SelectItem value="screen_plate">网版</SelectItem>
-                <SelectItem value="die">刀具</SelectItem>
-                <SelectItem value="shipment">出货</SelectItem>
+                <SelectItem value="all">{tc("all")}</SelectItem>
+                <SelectItem value="material">{t('rawMaterial')}</SelectItem>
+                <SelectItem value="product">{t('finished')}</SelectItem>
+                <SelectItem value="workorder">{tc("workOrder")}</SelectItem>
+                <SelectItem value="ink">{t('ink')}</SelectItem>
+                <SelectItem value="screen_plate">{t('screen')}</SelectItem>
+                <SelectItem value="die">{t('blade')}</SelectItem>
+                <SelectItem value="shipment">{t('shipment')}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" onClick={fetchData}>
@@ -278,55 +279,40 @@ export default function QRCodePage() {
               }}
             >
               <Plus className="h-4 w-4 mr-1" />
-              生成二维码
+              {t('generateQRCode')}
             </Button>
           </div>
         </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-4">
-              <ScanLine className="h-5 w-5 text-primary" />
-              <CardTitle className="text-base">追溯查询</CardTitle>
-              <div className="flex-1 flex gap-2">
-                <Input
-                  placeholder="输入二维码编码、单号、批次号进行追溯查询"
-                  value={traceInput}
-                  onChange={(e) => setTraceInput(e.target.value)}
-                  className="max-w-md"
-                />
-                <Button onClick={handleTrace}>
-                  <History className="h-4 w-4 mr-1" />
-                  追溯
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
+        <Tabs defaultValue="records">
+          <TabsList>
+            <TabsTrigger value="records">{t('tabRecords')}</TabsTrigger>
+            <TabsTrigger value="trace">{t('tabTrace')}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="records">
         <Card>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>二维码编码</TableHead>
-                  <TableHead>类型</TableHead>
-                  <TableHead>关联单号</TableHead>
-                  <TableHead>物料名称</TableHead>
-                  <TableHead>规格</TableHead>
-                  <TableHead className="text-right">数量</TableHead>
-                  <TableHead>仓库</TableHead>
-                  <TableHead>打印</TableHead>
-                  <TableHead>扫描</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{t('qrCode')}</TableHead>
+                  <TableHead>{tc("type")}</TableHead>
+                  <TableHead>{t('refNo')}</TableHead>
+                  <TableHead>{t('materialName')}</TableHead>
+                  <TableHead>{tc("specification")}</TableHead>
+                  <TableHead className="text-right">{tc("quantity")}</TableHead>
+                  <TableHead>{tc("warehouse")}</TableHead>
+                  <TableHead>{tc("print")}</TableHead>
+                  <TableHead>{t('scanCount')}</TableHead>
+                  <TableHead>{tc("status")}</TableHead>
+                  <TableHead>{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {list.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -366,7 +352,7 @@ export default function QRCodePage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handlePrint(r.id)}
-                            title=tc("print")
+                            title={tc("print")}
                           >
                             <Printer className="h-4 w-4" />
                           </Button>
@@ -377,7 +363,7 @@ export default function QRCodePage() {
                               setTraceInput(r.qr_code);
                               handleTrace();
                             }}
-                            title="追溯"
+                            title={t('trace')}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -386,7 +372,7 @@ export default function QRCodePage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleInvalidate(r.id)}
-                              title="失效"
+                              title={t('invalidate')}
                             >
                               <QrCode className="h-4 w-4 text-muted-foreground" />
                             </Button>
@@ -402,7 +388,7 @@ export default function QRCodePage() {
         </Card>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>共 {total} 条记录</span>
+          <span>{t('totalRecords', { total })}</span>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -410,7 +396,7 @@ export default function QRCodePage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('prevPage')}
             </Button>
             <Button
               variant="outline"
@@ -418,77 +404,101 @@ export default function QRCodePage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
+          </TabsContent>
+          <TabsContent value="trace">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-4">
+                  <ScanLine className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-base">{t('traceQuery')}</CardTitle>
+                  <div className="flex-1 flex gap-2">
+                    <Input
+                      placeholder={t('tracePlaceholder')}
+                      value={traceInput}
+                      onChange={(e) => setTraceInput(e.target.value)}
+                      className="max-w-md"
+                    />
+                    <Button onClick={handleTrace}>
+                      <History className="h-4 w-4 mr-1" />
+                      {t('trace')}
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>生成二维码</DialogTitle>
+              <DialogTitle>{t('generateQRCode')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>二维码类型</Label>
+                <Label>{t('qrType')}</Label>
                 <Select
                   value={form.qr_type || ''}
                   onValueChange={(v) => setForm({ ...form, qr_type: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择类型" />
+                    <SelectValue placeholder={t('selectType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="material">原料</SelectItem>
-                    <SelectItem value="product">成品</SelectItem>
-                    <SelectItem value="workorder">工单</SelectItem>
-                    <SelectItem value="ink">油墨</SelectItem>
-                    <SelectItem value="screen_plate">网版</SelectItem>
-                    <SelectItem value="die">刀具</SelectItem>
-                    <SelectItem value="shipment">出货</SelectItem>
-                    <SelectItem value="ink_open">开罐</SelectItem>
-                    <SelectItem value="ink_mixed">调色</SelectItem>
+                    <SelectItem value="material">{t('rawMaterial')}</SelectItem>
+                    <SelectItem value="product">{t('finished')}</SelectItem>
+                    <SelectItem value="workorder">{tc("workOrder")}</SelectItem>
+                    <SelectItem value="ink">{t('ink')}</SelectItem>
+                    <SelectItem value="screen_plate">{t('screen')}</SelectItem>
+                    <SelectItem value="die">{t('blade')}</SelectItem>
+                    <SelectItem value="shipment">{t('shipment')}</SelectItem>
+                    <SelectItem value="ink_open">{t('inkOpen')}</SelectItem>
+                    <SelectItem value="ink_mixed">{t('inkMixed')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>关联单号</Label>
+                <Label>{t('refNo')}</Label>
                 <Input
                   value={form.ref_no || ''}
                   onChange={(e) => setForm({ ...form, ref_no: e.target.value })}
-                  placeholder="如PO2024001"
+                  placeholder={t('refNoPlaceholder')}
                 />
               </div>
               <div>
-                <Label>物料编码</Label>
+                <Label>{tc('materialCode')}</Label>
                 <Input
                   value={form.material_code || ''}
                   onChange={(e) => setForm({ ...form, material_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>物料名称</Label>
+                <Label>{t('materialName')}</Label>
                 <Input
                   value={form.material_name || ''}
                   onChange={(e) => setForm({ ...form, material_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>规格型号</Label>
+                <Label>{tc('specification')}</Label>
                 <Input
                   value={form.specification || ''}
                   onChange={(e) => setForm({ ...form, specification: e.target.value })}
                 />
               </div>
               <div>
-                <Label>批次号</Label>
+                <Label>{tc("batchNo")}</Label>
                 <Input
                   value={form.batch_no || ''}
                   onChange={(e) => setForm({ ...form, batch_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>数量</Label>
+                <Label>{tc("quantity")}</Label>
                 <Input
                   type="number"
                   value={form.quantity || ''}
@@ -496,42 +506,42 @@ export default function QRCodePage() {
                 />
               </div>
               <div>
-                <Label>单位</Label>
+                <Label>{tc("unit")}</Label>
                 <Input
                   value={form.unit || ''}
                   onChange={(e) => setForm({ ...form, unit: e.target.value })}
                 />
               </div>
               <div>
-                <Label>仓库名称</Label>
+                <Label>{t('warehouseName')}</Label>
                 <Input
                   value={form.warehouse_name || ''}
                   onChange={(e) => setForm({ ...form, warehouse_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>供应商</Label>
+                <Label>{tc("supplier")}</Label>
                 <Input
                   value={form.supplier_name || ''}
                   onChange={(e) => setForm({ ...form, supplier_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>客户</Label>
+                <Label>{tc("customer")}</Label>
                 <Input
                   value={form.customer_name || ''}
                   onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>工单编号</Label>
+                <Label>{t('workOrderNo')}</Label>
                 <Input
                   value={form.work_order_no || ''}
                   onChange={(e) => setForm({ ...form, work_order_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>生产日期</Label>
+                <Label>{t('productionDate')}</Label>
                 <Input
                   type="date"
                   value={form.production_date || ''}
@@ -539,7 +549,7 @@ export default function QRCodePage() {
                 />
               </div>
               <div>
-                <Label>有效期</Label>
+                <Label>{t('expiryDate')}</Label>
                 <Input
                   type="date"
                   value={form.expiry_date || ''}
@@ -547,7 +557,7 @@ export default function QRCodePage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -556,9 +566,9 @@ export default function QRCodePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleGenerate}>生成二维码</Button>
+              <Button onClick={handleGenerate}>{t('generateQRCode')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -566,87 +576,87 @@ export default function QRCodePage() {
         <Dialog open={showTrace} onOpenChange={setShowTrace}>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>二维码追溯详情</DialogTitle>
+              <DialogTitle>{t('qrTraceDetails')}</DialogTitle>
             </DialogHeader>
             {traceData && (
               <Tabs defaultValue="info">
                 <TabsList>
-                  <TabsTrigger value="info">基本信息</TabsTrigger>
-                  <TabsTrigger value="timeline">追溯时间线</TabsTrigger>
-                  <TabsTrigger value="related">关联记录</TabsTrigger>
-                  <TabsTrigger value="inventory">库存信息</TabsTrigger>
+                  <TabsTrigger value="info">{t('basicInfo')}</TabsTrigger>
+                  <TabsTrigger value="timeline">{t('traceTimeline')}</TabsTrigger>
+                  <TabsTrigger value="related">{t('relatedRecords')}</TabsTrigger>
+                  <TabsTrigger value="inventory">{t('inventoryInfo')}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="info" className="space-y-3">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-muted-foreground">二维码编码：</span>
+                      <span className="text-muted-foreground">{t('qrCode')}：</span>
                       <span className="font-mono">{traceData.record?.qr_code}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">类型：</span>
+                      <span className="text-muted-foreground">{tc('type')}：</span>
                       {typeMap[traceData.record?.qr_type] || traceData.record?.qr_type}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">关联单号：</span>
+                      <span className="text-muted-foreground">{t('refNo')}：</span>
                       {traceData.record?.ref_no || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">批次号：</span>
+                      <span className="text-muted-foreground">{tc('batchNo')}：</span>
                       {traceData.record?.batch_no || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">物料编码：</span>
+                      <span className="text-muted-foreground">{tc('materialCode')}：</span>
                       {traceData.record?.material_code || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">物料名称：</span>
+                      <span className="text-muted-foreground">{t('materialName')}：</span>
                       {traceData.record?.material_name || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">规格：</span>
+                      <span className="text-muted-foreground">{tc('specification')}：</span>
                       {traceData.record?.specification || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">数量：</span>
+                      <span className="text-muted-foreground">{tc('quantity')}：</span>
                       {traceData.record?.quantity}
                       {traceData.record?.unit}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">仓库：</span>
+                      <span className="text-muted-foreground">{tc('warehouse')}：</span>
                       {traceData.record?.warehouse_name || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">供应商：</span>
+                      <span className="text-muted-foreground">{tc('supplier')}：</span>
                       {traceData.record?.supplier_name || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">客户：</span>
+                      <span className="text-muted-foreground">{tc('customer')}：</span>
                       {traceData.record?.customer_name || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">工单：</span>
+                      <span className="text-muted-foreground">{t('workOrderNo')}：</span>
                       {traceData.record?.work_order_no || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">生产日期：</span>
+                      <span className="text-muted-foreground">{t('productionDate')}：</span>
                       {traceData.record?.production_date?.slice(0, 10) || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">有效期：</span>
+                      <span className="text-muted-foreground">{t('expiryDate')}：</span>
                       {traceData.record?.expiry_date?.slice(0, 10) || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">打印次数：</span>
+                      <span className="text-muted-foreground">{t('printCount')}：</span>
                       {traceData.record?.print_count}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">扫描次数：</span>
+                      <span className="text-muted-foreground">{t('scanCount')}：</span>
                       {traceData.record?.scan_count}
                     </div>
                   </div>
                   {traceData.order && (
                     <div className="mt-4 p-3 bg-muted rounded-lg">
-                      <h4 className="font-medium mb-2">关联订单</h4>
+                      <h4 className="font-medium mb-2">{t('relatedOrder')}</h4>
                       <pre className="text-xs overflow-auto">
                         {JSON.stringify(traceData.order, null, 2)}
                       </pre>
@@ -655,14 +665,14 @@ export default function QRCodePage() {
                 </TabsContent>
                 <TabsContent value="timeline">
                   {traceData.timeline?.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">暂无追溯记录</div>
+                    <div className="text-center py-8 text-muted-foreground">{t('noTraceRecords')}</div>
                   ) : (
                     <div className="space-y-3">
-                      {traceData.timeline?.map((t: any, i: number) => (
+                      {traceData.timeline?.map((item: any, i: number) => (
                         <div key={i} className="flex gap-3 items-start">
                           <div className="flex flex-col items-center">
                             <div
-                              className={`h-3 w-3 rounded-full ${t.result === 'success' ? 'bg-green-500' : 'bg-red-500'}`}
+                              className={`h-3 w-3 rounded-full ${item.result === 'success' ? 'bg-green-500' : 'bg-red-500'}`}
                             />
                             {i < traceData.timeline.length - 1 && (
                               <div className="w-0.5 h-8 bg-border" />
@@ -670,16 +680,16 @@ export default function QRCodePage() {
                           </div>
                           <div className="flex-1 pb-4">
                             <div className="flex justify-between">
-                              <span className="font-medium">{t.event}</span>
+                              <span className="font-medium">{item.event}</span>
                               <span className="text-xs text-muted-foreground">
-                                {new Date(t.time).toLocaleString('zh-CN')}
+                                {new Date(item.time).toLocaleString(locale)}
                               </span>
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              操作人: {t.operator}
+                              {t('operator')}: {item.operator}
                             </div>
-                            {t.message && (
-                              <div className="text-sm text-muted-foreground">{t.message}</div>
+                            {item.message && (
+                              <div className="text-sm text-muted-foreground">{item.message}</div>
                             )}
                           </div>
                         </div>
@@ -689,17 +699,17 @@ export default function QRCodePage() {
                 </TabsContent>
                 <TabsContent value="related">
                   {traceData.related_records?.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">暂无关联记录</div>
+                    <div className="text-center py-8 text-muted-foreground">{t('noRelatedRecords')}</div>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>二维码</TableHead>
-                          <TableHead>类型</TableHead>
-                          <TableHead>单号</TableHead>
-                          <TableHead>物料</TableHead>
-                          <TableHead>数量</TableHead>
-                          <TableHead>状态</TableHead>
+                          <TableHead>{t('qrCode')}</TableHead>
+                          <TableHead>{tc("type")}</TableHead>
+                          <TableHead>{t('orderNo')}</TableHead>
+                          <TableHead>{tc("material")}</TableHead>
+                          <TableHead>{tc("quantity")}</TableHead>
+                          <TableHead>{tc("status")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -725,16 +735,16 @@ export default function QRCodePage() {
                 </TabsContent>
                 <TabsContent value="inventory">
                   {traceData.inventory?.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">暂无库存信息</div>
+                    <div className="text-center py-8 text-muted-foreground">{t('noInventoryInfo')}</div>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>仓库</TableHead>
-                          <TableHead>物料编码</TableHead>
-                          <TableHead>物料名称</TableHead>
-                          <TableHead className="text-right">库存数量</TableHead>
-                          <TableHead>单位</TableHead>
+                          <TableHead>{tc("warehouse")}</TableHead>
+                          <TableHead>{tc('materialCode')}</TableHead>
+                          <TableHead>{t('materialName')}</TableHead>
+                          <TableHead className="text-right">{t('inventoryQty')}</TableHead>
+                          <TableHead>{tc("unit")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -755,7 +765,7 @@ export default function QRCodePage() {
             )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowTrace(false)}>
-                关闭
+                {tc('close')}
               </Button>
             </DialogFooter>
           </DialogContent>

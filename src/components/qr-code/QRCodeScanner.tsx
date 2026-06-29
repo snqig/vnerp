@@ -16,6 +16,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLocale } from 'next-intl';
 
 type ScanMode = 'inbound' | 'outbound' | 'feed' | 'query' | 'verify';
 
@@ -52,6 +53,7 @@ export function QRCodeScanner({
   className = '',
 }: QRCodeScannerProps) {
   const { toast } = useToast();
+  const locale = useLocale();
   const [mode, setMode] = useState<'manual' | 'camera'>('manual');
   const [inputValue, setInputValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -282,7 +284,7 @@ export function QRCodeScanner({
                     <span className="font-mono">{item.qrCode}</span>
                   </div>
                   <span className="text-muted-foreground">
-                    {new Date(item.time).toLocaleTimeString('zh-CN')}
+                    {new Date(item.time).toLocaleTimeString(locale)}
                   </span>
                 </div>
               ))}

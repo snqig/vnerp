@@ -43,7 +43,7 @@ import {
   ScanLine,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { QRCodeTypeLabels, QRCodeStatusLabels } from './qr-code-types';
+import { useLocale, useTranslations } from 'next-intl';
 import type { TraceData, TraceEvent } from './qr-code-types';
 
 interface QRCodeTraceProps {
@@ -83,6 +83,31 @@ export function QRCodeTrace({
   initialQRCode: propQRCode,
 }: QRCodeTraceProps) {
   const { toast } = useToast();
+  const locale = useLocale();
+  const t = useTranslations('QRCode');
+  const tc = useTranslations('Common');
+
+  const typeMap: Record<string, string> = {
+    material: t('rawMaterial'),
+    product: t('finished'),
+    workorder: tc('workOrder'),
+    ink: t('ink'),
+    screen_plate: t('screen'),
+    die: t('blade'),
+    shipment: t('shipment'),
+    ink_open: t('inkOpen'),
+    ink_mixed: t('inkMixed'),
+  };
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: t('valid'), variant: 'default' },
+    2: { label: t('used'), variant: 'secondary' },
+    3: { label: t('expired'), variant: 'outline' },
+    9: { label: t('void'), variant: 'destructive' },
+  };
   const [internalShowDialog, setInternalShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [traceData, setTraceData] = useState<TraceData | null>(null);
@@ -101,7 +126,7 @@ export function QRCodeTrace({
 
   const handleTrace = async () => {
     if (!qrCode) {
-      toast({ title: '请输入二维码编码', variant: 'destructive' });
+      toast({ title: t('enterQrCode'), variant: 'destructive' });
       return;
     }
 
@@ -114,13 +139,13 @@ export function QRCodeTrace({
       if (result.success) {
         setTraceData(result.data);
         if (!result.data?.timeline?.length) {
-          toast({ title: '未找到追溯记录' });
+          toast({ title: t('noTraceFound') });
         }
       } else {
-        toast({ title: '查询失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('queryFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (error) {
-      toast({ title: '查询失败', variant: 'destructive' });
+      toast({ title: t('queryFailed'), variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +168,7 @@ export function QRCodeTrace({
       return (
         <div className="text-center py-12 text-muted-foreground">
           <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
-          <p>暂无追溯记录</p>
+          <p>{t('noTraceRecords')}</p>
         </div>
       );
     }
@@ -172,7 +197,7 @@ export function QRCodeTrace({
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium">{event.event}</span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(event.time).toLocaleString('zh-CN')}
+                      {new Date(event.time).toLocaleString(locale)}
                     </span>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -188,7 +213,7 @@ export function QRCodeTrace({
                       ) : (
                         <Clock className="h-3 w-3" />
                       )}
-                      {event.result === 'success' ? '成功' : '失败'}
+                      {event.result === 'success' ? t('success') : t('fail')}
                     </span>
                   </div>
                   {event.message && (
@@ -208,14 +233,14 @@ export function QRCodeTrace({
       {!showDialog && (
         <Button variant="outline" size="sm" onClick={() => setShowDialog(true)}>
           <Search className="h-4 w-4 mr-1" />
-          追溯查询
+          {t('traceQuery')}
         </Button>
       )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>二维码追溯查询</DialogTitle>
+            <DialogTitle>{t('qrTraceQuery')}</DialogTitle>
           </DialogHeader>
 
           {/* 搜索区域 */}
@@ -226,23 +251,23 @@ export function QRCodeTrace({
                 value={inputQRCode}
                 onChange={(e) => setInputQRCode(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="输入二维码编码进行追溯..."
+                placeholder={t('traceInputPlaceholder')}
                 className="pl-10 font-mono"
               />
             </div>
             <Button onClick={handleTrace} disabled={isLoading}>
               {isLoading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-              查询
+              {tc('search')}
             </Button>
           </div>
 
           {traceData ? (
             <Tabs defaultValue="timeline">
               <TabsList className="w-full">
-                <TabsTrigger value="timeline">追溯时间线</TabsTrigger>
-                <TabsTrigger value="info">基本信息</TabsTrigger>
-                <TabsTrigger value="related">关联记录</TabsTrigger>
-                <TabsTrigger value="inventory">库存信息</TabsTrigger>
+                <TabsTrigger value="timeline">{t('traceTimeline')}</TabsTrigger>
+                <TabsTrigger value="info">{t('basicInfo')}</TabsTrigger>
+                <TabsTrigger value="related">{t('relatedRecords')}</TabsTrigger>
+                <TabsTrigger value="inventory">{t('inventoryInfo')}</TabsTrigger>
               </TabsList>
 
               {/* 时间线视图 */}
@@ -250,13 +275,13 @@ export function QRCodeTrace({
                 <Card>
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">追溯链路</CardTitle>
+                      <CardTitle className="text-base">{t('traceLink')}</CardTitle>
                       <div className="flex items-center gap-2">
                         <QRCodeSVG value={qrCode} size={60} level="H" />
                         <div className="text-sm">
                           <div className="font-mono font-medium">{qrCode}</div>
                           <Badge variant="outline" className="mt-1">
-                            {QRCodeTypeLabels[traceData.record?.qr_type as any] ||
+                            {typeMap[traceData.record?.qr_type as any] ||
                               traceData.record?.qr_type}
                           </Badge>
                         </div>
@@ -273,58 +298,58 @@ export function QRCodeTrace({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
                       <div className="text-sm">
-                        <span className="text-muted-foreground">二维码编码：</span>
+                        <span className="text-muted-foreground">{t('qrCodeLabel')}：</span>
                         <span className="font-mono">{traceData.record.qr_code}</span>
                       </div>
                       <div className="text-sm">
-                        <span className="text-muted-foreground">类型：</span>
+                        <span className="text-muted-foreground">{tc('type')}：</span>
                         <Badge variant="outline">
-                          {QRCodeTypeLabels[traceData.record.qr_type as any] ||
+                          {typeMap[traceData.record.qr_type as any] ||
                             traceData.record.qr_type}
                         </Badge>
                       </div>
                       <div className="text-sm">
-                        <span className="text-muted-foreground">状态：</span>
+                        <span className="text-muted-foreground">{tc('status')}：</span>
                         <Badge
-                          variant={QRCodeStatusLabels[traceData.record.status as any]?.variant}
+                          variant={statusMap[traceData.record.status as any]?.variant}
                         >
-                          {QRCodeStatusLabels[traceData.record.status as any]?.label}
+                          {statusMap[traceData.record.status as any]?.label}
                         </Badge>
                       </div>
                       <div className="text-sm">
-                        <span className="text-muted-foreground">关联单号：</span>
+                        <span className="text-muted-foreground">{t('refNo')}：</span>
                         {traceData.record.ref_no || '-'}
                       </div>
                       <div className="text-sm">
-                        <span className="text-muted-foreground">批次号：</span>
+                        <span className="text-muted-foreground">{tc('batchNo')}：</span>
                         {traceData.record.batch_no || '-'}
                       </div>
                     </div>
                     <div className="space-y-3">
                       <div className="text-sm">
-                        <span className="text-muted-foreground">物料名称：</span>
+                        <span className="text-muted-foreground">{t('materialName')}：</span>
                         {traceData.record.material_name || '-'}
                       </div>
                       <div className="text-sm">
-                        <span className="text-muted-foreground">规格：</span>
+                        <span className="text-muted-foreground">{tc('specification')}：</span>
                         {traceData.record.specification || '-'}
                       </div>
                       <div className="text-sm">
-                        <span className="text-muted-foreground">数量：</span>
+                        <span className="text-muted-foreground">{tc('quantity')}：</span>
                         {traceData.record.quantity} {traceData.record.unit || ''}
                       </div>
                       <div className="text-sm">
-                        <span className="text-muted-foreground">仓库：</span>
+                        <span className="text-muted-foreground">{tc('warehouse')}：</span>
                         {traceData.record.warehouse_name || '-'}
                       </div>
                       <div className="text-sm">
-                        <span className="text-muted-foreground">供应商：</span>
+                        <span className="text-muted-foreground">{tc('supplier')}：</span>
                         {traceData.record.supplier_name || '-'}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">暂无基本信息</div>
+                  <div className="text-center py-8 text-muted-foreground">{t('noBasicInfo')}</div>
                 )}
               </TabsContent>
 
@@ -334,12 +359,12 @@ export function QRCodeTrace({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>二维码</TableHead>
-                        <TableHead>类型</TableHead>
-                        <TableHead>单号</TableHead>
-                        <TableHead>物料</TableHead>
-                        <TableHead>数量</TableHead>
-                        <TableHead>状态</TableHead>
+                        <TableHead>{t('qrCodeLabel')}</TableHead>
+                        <TableHead>{tc('type')}</TableHead>
+                        <TableHead>{tc('orderNo')}</TableHead>
+                        <TableHead>{tc('material')}</TableHead>
+                        <TableHead>{tc('quantity')}</TableHead>
+                        <TableHead>{tc('status')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -348,7 +373,7 @@ export function QRCodeTrace({
                           <TableCell className="font-mono text-xs">{record.qr_code}</TableCell>
                           <TableCell>
                             <Badge variant="outline">
-                              {QRCodeTypeLabels[record.qr_type as any] || record.qr_type}
+                              {typeMap[record.qr_type as any] || record.qr_type}
                             </Badge>
                           </TableCell>
                           <TableCell className="font-mono text-sm">
@@ -357,8 +382,8 @@ export function QRCodeTrace({
                           <TableCell>{record.material_name || '-'}</TableCell>
                           <TableCell>{record.quantity}</TableCell>
                           <TableCell>
-                            <Badge variant={QRCodeStatusLabels[record.status as any]?.variant}>
-                              {QRCodeStatusLabels[record.status as any]?.label}
+                            <Badge variant={statusMap[record.status as any]?.variant}>
+                              {statusMap[record.status as any]?.label}
                             </Badge>
                           </TableCell>
                         </TableRow>
@@ -366,7 +391,7 @@ export function QRCodeTrace({
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">暂无关联记录</div>
+                  <div className="text-center py-8 text-muted-foreground">{t('noRelatedRecords')}</div>
                 )}
               </TabsContent>
 
@@ -376,11 +401,11 @@ export function QRCodeTrace({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>仓库</TableHead>
-                        <TableHead>物料编码</TableHead>
-                        <TableHead>物料名称</TableHead>
-                        <TableHead className="text-right">库存数量</TableHead>
-                        <TableHead>单位</TableHead>
+                        <TableHead>{tc('warehouse')}</TableHead>
+                        <TableHead>{tc('materialCode')}</TableHead>
+                        <TableHead>{t('materialName')}</TableHead>
+                        <TableHead className="text-right">{t('inventoryQty')}</TableHead>
+                        <TableHead>{tc('unit')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -396,20 +421,20 @@ export function QRCodeTrace({
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">暂无库存信息</div>
+                  <div className="text-center py-8 text-muted-foreground">{t('noInventoryInfo')}</div>
                 )}
               </TabsContent>
             </Tabs>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
               <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>请输入二维码编码进行追溯查询</p>
+              <p>{t('enterQrCodeToTrace')}</p>
             </div>
           )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>
-              关闭
+              {tc('close')}
             </Button>
           </DialogFooter>
         </DialogContent>
