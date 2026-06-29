@@ -7,6 +7,27 @@
 # !.eslintrc.js
 # !.prettierrc.js
 
+# 明确排除 IDE/工具/Agent 相关目录（与项目无关，不同步）
+.agentic-tools-mcp/
+.agents/
+.augment.claude/
+.continue/
+.cursor/
+.iflow/
+.ro0/
+.superdesign/
+.venv/
+.VS/
+.agency-agents/
+-github/
+trae/
+
+# Trae IDE 自动化脚本与文档（与项目无关，不同步）
+scripts/trae-auto-continue*
+scripts/trae-desktop-auto-continue*
+docs/TRADE-AUTO-CONTINUE.md
+docs/TRADE-DESKTOP-AUTO-CONTINUE.md
+
 # 依赖目录
 node_modules/
 __pycache__/
@@ -17,6 +38,9 @@ __pycache__/
 out/
 build/
 dist/
+coverage/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
 
 # 环境变量
 .env
@@ -43,6 +67,9 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+
+# 临时生成的 i18n 缺失清单
+i18n-missing.json
 
 # 调试脚本与测试截图（根目录）
 /test-*.js
