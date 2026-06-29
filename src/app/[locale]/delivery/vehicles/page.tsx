@@ -43,6 +43,18 @@ interface Vehicle {
 }
 
 export default function VehiclesPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   const t = useTranslations('Delivery');
   const tc = useTranslations('Common');
 
@@ -78,7 +90,7 @@ export default function VehiclesPage() {
       if (status !== 'all') params.append('status', status);
       if (keyword) params.append('keyword', keyword);
 
-      const response = await fetch(`/api/delivery/vehicles?${params}`);
+      const response = await authFetch(`/api/delivery/vehicles?${params}`);
       const result = await response.json();
 
       if (result.success) {
@@ -98,7 +110,7 @@ export default function VehiclesPage() {
     if (!confirm(t('confirmDeleteVehicle'))) return;
 
     try {
-      const response = await fetch(`/api/delivery/vehicles?id=${id}`, {
+      const response = await authFetch(`/api/delivery/vehicles?id=${id}`, {
         method: 'DELETE',
       });
       const result = await response.json();

@@ -93,6 +93,60 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       }
     }
 
+    // 超领校验：检查是否超过工单BOM需求量
+    if (work_order_id) {
+      for (const item of items) {
+        if (!item.material_id) continue;
+        
+        // 获取BOM需求量
+        const [bomRows]: any = await conn.execute(
+          `SELECT bm.quantity, bm.loss_rate 
+           FROM prod_bom b 
+           JOIN prod_bom_material bm ON b.id = bm.bom_id 
+           WHERE b.product_id = (SELECT product_id FROM prod_work_order WHERE id = ?) 
+           AND bm.material_id = ? 
+           AND b.status = 1 
+           LIMIT 1`,
+          [work_order_id, item.material_id]
+        );
+        
+        if (bomRows.length > 0) {
+          const bomQty = Number(bomRows[0].quantity);
+          const lossRate = Number(bomRows[0].loss_rate || 0);
+          const [planRows]: any = await conn.execute('SELECT plan_qty FROM prod_work_order WHERE id = ?', [work_order_id]);
+          const planQty = Number(planRows[0]?.plan_qty || 0);
+          
+          // 理论需求量 = BOM用量 × 工单数量 × (1 + 损耗率)
+          const requiredQty = bomQty * planQty * (1 + lossRate / 100);
+          
+          // 已领料数量
+          const [issuedRows]: any = await conn.execute(
+            `SELECT COALESCE(SUM(ii.issued_qty), 0) as total_issued 
+             FROM prd_material_issue i 
+             JOIN prd_material_issue_item ii ON i.id = ii.issue_id 
+             WHERE i.work_order_id = ? AND ii.material_id = ? AND i.status >= 3 AND i.deleted = 0`,
+            [work_order_id, item.material_id]
+          );
+          const alreadyIssued = Number(issuedRows[0]?.total_issued || 0);
+          
+          // 本次领料后总量
+          const totalAfterIssue = alreadyIssued + Number(item.issued_qty);
+          
+          // 允许超领比例（默认10%）
+          const overIssueRatio = 1.1;
+          const maxAllowed = requiredQty * overIssueRatio;
+          
+          if (totalAfterIssue > maxAllowed) {
+            throw new Error(
+              `物料 ${item.material_name || item.material_id} 超领校验失败: ` +
+              `BOM需求 ${requiredQty.toFixed(2)}, 已领 ${alreadyIssued.toFixed(2)}, ` +
+              `本次 ${item.issued_qty}, 最大允许 ${maxAllowed.toFixed(2)} (允许超领10%)`
+            );
+          }
+        }
+      }
+    }
+
     for (const item of items) {
       if (!item.material_id || !item.issued_qty || Number(item.issued_qty) <= 0) {
         throw new Error(`物料 ${item.material_name || item.material_id} 发料数量必须大于0`);

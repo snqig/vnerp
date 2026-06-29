@@ -76,36 +76,36 @@ interface Customer {
   customer_code: string;
 }
 
-const RETURN_TYPE_MAP: Record<number, string> = {
-  1: '质量退货',
-  2: '数量差异',
-  3: '规格不符',
-  4: '其他',
-};
-
-const INSPECTION_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: '未质检', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-  1: {
-    label: '质检中',
-    color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  },
-  2: {
-    label: '已质检',
-    color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  },
-};
-
 export default function ReturnPage() {
   // 翻译钩子
-  const t = useTranslations('Sales');
+  const t = useTranslations('SalesReturn');
   const tc = useTranslations('Common');
 
+  const RETURN_TYPE_MAP: Record<number, string> = {
+    1: t('qualityReturn'),
+    2: t('quantityDiff'),
+    3: t('specMismatch'),
+    4: tc('other'),
+  };
+
+  const INSPECTION_STATUS_MAP: Record<number, { label: string; color: string }> = {
+    0: { label: t('notInspected'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+    1: {
+      label: t('inspecting'),
+      color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+    },
+    2: {
+      label: t('inspected'),
+      color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+    },
+  };
+
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: tc('pending'), color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: tc('approved'), color: 'bg-blue-100 text-blue-800' },
-  3: { label: '已退货', color: 'bg-green-100 text-green-800' },
-  4: { label: '已拒绝', color: 'bg-red-100 text-red-800' },
-};
+    1: { label: tc('pending'), color: 'bg-yellow-100 text-yellow-800' },
+    2: { label: tc('approved'), color: 'bg-blue-100 text-blue-800' },
+    3: { label: t('returned'), color: 'bg-green-100 text-green-800' },
+    4: { label: tc('rejected'), color: 'bg-red-100 text-red-800' },
+  };
 
   const [list, setList] = useState<ReturnOrder[]>([]);
   const [loading, setLoading] = useState(false);
@@ -158,7 +158,7 @@ export default function ReturnPage() {
       }
     } catch (e) {
       console.error(e);
-      toast.error('获取退货单列表失败');
+      toast.error(t('fetchListFailed'));
     } finally {
       setLoading(false);
     }
@@ -222,11 +222,11 @@ export default function ReturnPage() {
 
   const saveReturn = async () => {
     if (!form.customer_id) {
-      toast.error('请选择客户');
+      toast.error(t('selectCustomer'));
       return;
     }
     if (!form.items || form.items.length === 0) {
-      toast.error('请添加退货明细');
+      toast.error(t('addReturnItems'));
       return;
     }
     try {
@@ -236,15 +236,15 @@ export default function ReturnPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast.success('退货单创建成功');
+        toast.success(t('createSuccess'));
         setDialogOpen(false);
         fetchData();
       } else {
-        toast.error(result.message || '创建失败');
+        toast.error(result.message || tc('createFailed'));
       }
     } catch (e) {
       console.error(e);
-      toast.error('保存退货单失败');
+      toast.error(t('saveFailed'));
     }
   };
 
@@ -256,31 +256,31 @@ export default function ReturnPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast.success('状态更新成功');
+        toast.success(tc('updateSuccess'));
         fetchData();
       } else {
-        toast.error(result.message || '更新失败');
+        toast.error(result.message || tc('updateFailed'));
       }
     } catch (e) {
       console.error(e);
-      toast.error('更新状态失败');
+      toast.error(tc('updateFailed'));
     }
   };
 
   const deleteReturn = async (id: number) => {
-    if (!confirm('确定要删除该退货单吗？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch(`/api/sales/return?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast.success('删除成功');
+        toast.success(tc('deleteSuccess'));
         fetchData();
       } else {
-        toast.error(result.message || '删除失败');
+        toast.error(result.message || tc('deleteFailed'));
       }
     } catch (e) {
       console.error(e);
-      toast.error('删除失败');
+      toast.error(tc('deleteFailed'));
     }
   };
 
@@ -289,17 +289,17 @@ export default function ReturnPage() {
     (form.items || []).reduce((sum, item) => sum + (parseFloat(String(item.quantity)) || 0), 0);
 
   return (
-    <MainLayout title="退货单管理">
+    <MainLayout title={t('pageTitle')}>
       <div className="space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <RotateCcw className="w-5 h-5" />
-                退货单管理
+                {t('pageTitle')}
               </CardTitle>
               <CardDescription>
-                处理客户退货申请，自动关联原销售订单，支持退货质检流程
+                {t('pageDescription')}
               </CardDescription>
             </div>
             <Button
@@ -325,7 +325,7 @@ export default function ReturnPage() {
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              新增退货单
+              {t('newReturnOrder')}
             </Button>
           </CardHeader>
           <CardContent>
@@ -333,7 +333,7 @@ export default function ReturnPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="搜索退货单号/客户名称/订单号..."
+                  placeholder={t('searchPlaceholder')}
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   className="pl-9"
@@ -341,10 +341,10 @@ export default function ReturnPage() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder=tc("status") />
+                  <SelectValue placeholder={tc("status")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部状态</SelectItem>
+                  <SelectItem value="all">{tc('allStatus')}</SelectItem>
                   {Object.entries(STATUS_MAP).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
                       {v.label}
@@ -360,13 +360,13 @@ export default function ReturnPage() {
             <div className="grid grid-cols-4 gap-4 mb-4">
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">总退货单</div>
+                  <div className="text-sm text-gray-500">{t('totalReturnOrders')}</div>
                   <div className="text-2xl font-bold">{total}</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">待审核</div>
+                  <div className="text-sm text-gray-500">{tc("pending")}</div>
                   <div className="text-2xl font-bold text-yellow-600">
                     {list.filter((r) => r.status === 1).length}
                   </div>
@@ -374,7 +374,7 @@ export default function ReturnPage() {
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">已审核</div>
+                  <div className="text-sm text-gray-500">{tc("approved")}</div>
                   <div className="text-2xl font-bold text-blue-600">
                     {list.filter((r) => r.status === 2).length}
                   </div>
@@ -382,7 +382,7 @@ export default function ReturnPage() {
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">已退货</div>
+                  <div className="text-sm text-gray-500">{t('returned')}</div>
                   <div className="text-2xl font-bold text-green-600">
                     {list.filter((r) => r.status === 3).length}
                   </div>
@@ -398,16 +398,16 @@ export default function ReturnPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>退货单号</TableHead>
-                    <TableHead>关联订单</TableHead>
-                    <TableHead>客户名称</TableHead>
-                    <TableHead>退货日期</TableHead>
-                    <TableHead>退货类型</TableHead>
-                    <TableHead>退货数量</TableHead>
-                    <TableHead>退货金额</TableHead>
-                    <TableHead>质检状态</TableHead>
-                    <TableHead>单据状态</TableHead>
-                    <TableHead className="text-right">操作</TableHead>
+                    <TableHead>{t('returnNo')}</TableHead>
+                    <TableHead>{t('relatedOrder')}</TableHead>
+                    <TableHead>{tc('customerName')}</TableHead>
+                    <TableHead>{t('returnDate')}</TableHead>
+                    <TableHead>{t('returnType')}</TableHead>
+                    <TableHead>{t('returnQty')}</TableHead>
+                    <TableHead>{t('returnAmount')}</TableHead>
+                    <TableHead>{t('inspectionStatus')}</TableHead>
+                    <TableHead>{t('orderStatus')}</TableHead>
+                    <TableHead className="text-right">{tc("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -418,7 +418,7 @@ export default function ReturnPage() {
                       <TableCell>{r.customer_name || '-'}</TableCell>
                       <TableCell>{r.return_date || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{RETURN_TYPE_MAP[r.return_type] || '其他'}</Badge>
+                        <Badge variant="outline">{RETURN_TYPE_MAP[r.return_type] || tc('other')}</Badge>
                       </TableCell>
                       <TableCell>{parseFloat(String(r.total_qty || 0)).toLocaleString()}</TableCell>
                       <TableCell>¥{parseFloat(String(r.total_amount || 0)).toFixed(2)}</TableCell>
@@ -453,9 +453,9 @@ export default function ReturnPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => updateStatus(r.id, 2)}
-                              title="审核通过"
+                              title={t('approve')}
                             >
-                              <Badge className="bg-blue-100 text-blue-800 text-xs">审核</Badge>
+                              <Badge className="bg-blue-100 text-blue-800 text-xs">{tc("review")}</Badge>
                             </Button>
                           )}
                           {r.status === 2 && (
@@ -463,9 +463,9 @@ export default function ReturnPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => updateStatus(r.id, 3)}
-                              title="确认退货"
+                              title={t('confirmReturn')}
                             >
-                              <Badge className="bg-green-100 text-green-800 text-xs">退货</Badge>
+                              <Badge className="bg-green-100 text-green-800 text-xs">{tc("returnOrder")}</Badge>
                             </Button>
                           )}
                           <Button variant="ghost" size="sm" onClick={() => deleteReturn(r.id)}>
@@ -478,7 +478,7 @@ export default function ReturnPage() {
                   {list.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-                        暂无数据
+                        {tc('noData')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -492,14 +492,14 @@ export default function ReturnPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" resizable>
           <DialogHeader>
-            <DialogTitle>新增退货单</DialogTitle>
-            <DialogDescription>处理客户退货申请，自动关联原销售订单</DialogDescription>
+            <DialogTitle>{t('newReturnOrder')}</DialogTitle>
+            <DialogDescription>{t('dialogDescription')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>
-                  客户 <span className="text-red-500">*</span>
+                  {tc('customer')} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={String(form.customer_id || '')}
@@ -513,7 +513,7 @@ export default function ReturnPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择客户" />
+                    <SelectValue placeholder={t('selectCustomer')} />
                   </SelectTrigger>
                   <SelectContent>
                     {customers.map((c: any) => (
@@ -525,7 +525,7 @@ export default function ReturnPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>退货日期</Label>
+                <Label>{t('returnDate')}</Label>
                 <Input
                   type="date"
                   value={form.return_date || ''}
@@ -533,7 +533,7 @@ export default function ReturnPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>退货类型</Label>
+                <Label>{t('returnType')}</Label>
                 <Select
                   value={String(form.return_type || 1)}
                   onValueChange={(v) => setForm((prev) => ({ ...prev, return_type: parseInt(v) }))}
@@ -553,50 +553,50 @@ export default function ReturnPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>原销售订单号</Label>
+                <Label>{t('originalOrderNo')}</Label>
                 <Input
                   value={form.order_no || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, order_no: e.target.value }))}
-                  placeholder="关联原销售订单"
+                  placeholder={t('relatedOrderPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>原送货单号</Label>
+                <Label>{t('originalDeliveryNo')}</Label>
                 <Input
                   value={form.delivery_no || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, delivery_no: e.target.value }))}
-                  placeholder="关联原送货单"
+                  placeholder={t('relatedDeliveryPlaceholder')}
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>退货原因</Label>
+              <Label>{t('returnReason')}</Label>
               <Textarea
                 value={form.return_reason || ''}
                 onChange={(e) => setForm((prev) => ({ ...prev, return_reason: e.target.value }))}
-                placeholder="请详细描述退货原因"
+                placeholder={t('returnReasonPlaceholder')}
                 rows={3}
               />
             </div>
 
             <div className="border-t pt-4">
               <div className="flex items-center justify-between mb-3">
-                <Label className="text-base font-semibold">退货明细</Label>
+                <Label className="text-base font-semibold">{t('returnDetails')}</Label>
                 <Button variant="outline" size="sm" onClick={addItem}>
                   <Plus className="w-4 h-4 mr-1" />
-                  添加物料
+                  {t('addMaterial')}
                 </Button>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>物料名称</TableHead>
-                    <TableHead>规格型号</TableHead>
-                    <TableHead>数量</TableHead>
-                    <TableHead>单位</TableHead>
-                    <TableHead>单价</TableHead>
-                    <TableHead>金额</TableHead>
-                    <TableHead>批次号</TableHead>
+                    <TableHead>{tc('materialName')}</TableHead>
+                    <TableHead>{tc('specification')}</TableHead>
+                    <TableHead>{tc("quantity")}</TableHead>
+                    <TableHead>{tc("unit")}</TableHead>
+                    <TableHead>{t('unitPrice')}</TableHead>
+                    <TableHead>{tc("amount")}</TableHead>
+                    <TableHead>{tc("batchNo")}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -607,7 +607,7 @@ export default function ReturnPage() {
                         <Input
                           value={item.material_name}
                           onChange={(e) => updateItem(idx, 'material_name', e.target.value)}
-                          placeholder="物料名称"
+                          placeholder={tc('materialName')}
                           className="w-32"
                         />
                       </TableCell>
@@ -615,7 +615,7 @@ export default function ReturnPage() {
                         <Input
                           value={item.material_spec}
                           onChange={(e) => updateItem(idx, 'material_spec', e.target.value)}
-                          placeholder="规格"
+                          placeholder={tc("specification")}
                           className="w-28"
                         />
                       </TableCell>
@@ -653,7 +653,7 @@ export default function ReturnPage() {
                         <Input
                           value={item.batch_no}
                           onChange={(e) => updateItem(idx, 'batch_no', e.target.value)}
-                          placeholder="批次"
+                          placeholder={tc("batch")}
                           className="w-24"
                         />
                       </TableCell>
@@ -670,20 +670,20 @@ export default function ReturnPage() {
               </Table>
               <div className="flex justify-end gap-6 mt-3 text-sm">
                 <span>
-                  总数量: <strong>{calcTotalQty().toLocaleString()}</strong>
+                  {t('totalQty')}: <strong>{calcTotalQty().toLocaleString()}</strong>
                 </span>
                 <span>
-                  总金额: <strong className="text-red-600">¥{calcTotal().toFixed(2)}</strong>
+                  {t('totalAmount')}: <strong className="text-red-600">¥{calcTotal().toFixed(2)}</strong>
                 </span>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={saveReturn} className="bg-blue-600 hover:bg-blue-700">
-              保存
+              {tc('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -692,53 +692,53 @@ export default function ReturnPage() {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-2xl" resizable>
           <DialogHeader>
-            <DialogTitle>退货单详情</DialogTitle>
+            <DialogTitle>{t('returnDetail')}</DialogTitle>
             <DialogDescription>{detailData?.return_no}</DialogDescription>
           </DialogHeader>
           {detailData && (
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">客户名称：</span>
+                  <span className="text-gray-500">{tc('customerName')}：</span>
                   {detailData.customer_name}
                 </div>
                 <div>
-                  <span className="text-gray-500">退货日期：</span>
+                  <span className="text-gray-500">{t('returnDate')}：</span>
                   {detailData.return_date}
                 </div>
                 <div>
-                  <span className="text-gray-500">原订单号：</span>
+                  <span className="text-gray-500">{t('originalOrderNo')}：</span>
                   {detailData.order_no || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">原送货单号：</span>
+                  <span className="text-gray-500">{t('originalDeliveryNo')}：</span>
                   {detailData.delivery_no || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">退货类型：</span>
-                  {RETURN_TYPE_MAP[detailData.return_type] || '其他'}
+                  <span className="text-gray-500">{t('returnType')}：</span>
+                  {RETURN_TYPE_MAP[detailData.return_type] || tc('other')}
                 </div>
                 <div>
-                  <span className="text-gray-500">质检状态：</span>
+                  <span className="text-gray-500">{t('inspectionStatus')}：</span>
                   {INSPECTION_STATUS_MAP[detailData.inspection_status]?.label}
                 </div>
               </div>
               {detailData.return_reason && (
                 <div className="text-sm">
-                  <span className="text-gray-500">退货原因：</span>
+                  <span className="text-gray-500">{t('returnReason')}：</span>
                   {detailData.return_reason}
                 </div>
               )}
               <div className="border-t pt-4">
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
-                    <div className="text-gray-500 text-sm">退货数量</div>
+                    <div className="text-gray-500 text-sm">{t('returnQty')}</div>
                     <div className="text-xl font-bold">
                       {parseFloat(String(detailData.total_qty || 0)).toLocaleString()}
                     </div>
                   </div>
                   <div>
-                    <div className="text-gray-500 text-sm">退货金额</div>
+                    <div className="text-gray-500 text-sm">{t('returnAmount')}</div>
                     <div className="text-xl font-bold text-red-600">
                       ¥{parseFloat(String(detailData.total_amount || 0)).toFixed(2)}
                     </div>
@@ -749,7 +749,7 @@ export default function ReturnPage() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDetailOpen(false)}>
-              关闭
+              {tc('close')}
             </Button>
           </DialogFooter>
         </DialogContent>

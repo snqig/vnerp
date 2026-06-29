@@ -63,16 +63,16 @@ export default function OperLogPage() {
   }, [page]);
 
   const handleClear = async () => {
-    if (!confirm('确定清空所有操作日志？')) return;
+    if (!confirm(tc("confirmClearOperLogs"))) return;
     try {
       const res = await authFetch('/api/system/oper-log', { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '清空成功' });
+        toast({ title: tc("clearSuccess") });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc("failed"), variant: 'destructive' });
     }
   };
 
@@ -80,11 +80,11 @@ export default function OperLogPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">操作日志</h1>
+          <h1 className="text-2xl font-bold">{t("operLog")}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索操作标题"
+                placeholder={tc("searchOperTitle")}
                 value={searchTitle}
                 onChange={(e) => setSearchTitle(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -94,7 +94,7 @@ export default function OperLogPage() {
               </Button>
             </div>
             <Button size="sm" variant="destructive" onClick={handleClear}>
-              清空日志
+              {tc("clearLogs")}
             </Button>
           </div>
         </div>
@@ -103,14 +103,14 @@ export default function OperLogPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">操作标题</TableHead>
-                  <TableHead className="text-xs">操作人</TableHead>
-                  <TableHead className="text-xs">操作类型</TableHead>
-                  <TableHead className="text-xs">请求方式</TableHead>
-                  <TableHead className="text-xs">操作URL</TableHead>
-                  <TableHead className="text-xs">IP地址</TableHead>
-                  <TableHead className="text-xs">操作时间</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
+                  <TableHead className="text-xs">{tc("operTitle")}</TableHead>
+                  <TableHead className="text-xs">{tc("operator")}</TableHead>
+                  <TableHead className="text-xs">{tc("operType")}</TableHead>
+                  <TableHead className="text-xs">{tc("requestMethod")}</TableHead>
+                  <TableHead className="text-xs">{tc("operUrl")}</TableHead>
+                  <TableHead className="text-xs">{tc("ipAddress")}</TableHead>
+                  <TableHead className="text-xs">{tc("operTime")}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -130,7 +130,7 @@ export default function OperLogPage() {
                         variant={item.status === 1 ? 'default' : 'destructive'}
                         className="text-xs"
                       >
-                        {item.status === 1 ? '成功' : '失败'}
+                        {item.status === 1 ? tc("success") : tc("failed")}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -138,7 +138,7 @@ export default function OperLogPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-gray-400 py-8">
-                      暂无记录
+                      {tc("noRecords")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -147,7 +147,7 @@ export default function OperLogPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc("totalItems", { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -155,7 +155,7 @@ export default function OperLogPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc("prevPage")}
             </Button>
             <Button
               size="sm"
@@ -163,7 +163,7 @@ export default function OperLogPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc("nextPage")}
             </Button>
           </div>
         </div>

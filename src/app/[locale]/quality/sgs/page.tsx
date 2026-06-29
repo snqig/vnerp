@@ -97,18 +97,18 @@ const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  0: { label: '失效', variant: 'destructive' },
-  1: { label: '有效', variant: 'default' },
-  2: { label: '待检测', variant: 'outline' },
-  3: { label: '已过期', variant: 'destructive' },
+  0: { label: 'invalid', variant: 'destructive' },
+  1: { label: 'valid', variant: 'default' },
+  2: { label: 'pendingTest', variant: 'outline' },
+  3: { label: 'expired', variant: 'destructive' },
 };
 const testResultMap: Record<
   string,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  PASS: { label: '合格', variant: 'default' },
-  FAIL: { label: '不合格', variant: 'destructive' },
-  PENDING: { label: '待检测', variant: 'outline' },
+  PASS: { label: 'qualified', variant: 'default' },
+  FAIL: { label: 'unqualified', variant: 'destructive' },
+  PENDING: { label: 'pendingTest', variant: 'outline' },
 };
 
 const rohsTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
@@ -280,30 +280,30 @@ export default function SGSManagementPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editItem.id ? '更新成功' : '创建成功' });
+        toast({ title: editItem.id ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
         fetchWarning();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除此SGS认证记录？')) return;
+    if (!confirm(t('confirmDeleteSGS'))) return;
     try {
       const res = await fetch('/api/quality/sgs?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
         fetchWarning();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
@@ -370,18 +370,18 @@ export default function SGSManagementPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-6 w-6 text-blue-600" />
-            <h1 className="text-2xl font-bold">SGS认证管理</h1>
+            <h1 className="text-2xl font-bold">{t('sgsCertManagement')}</h1>
           </div>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="证书编号"
+                placeholder={t('certNo')}
                 value={searchCertNo}
                 onChange={(e) => setSearchCertNo(e.target.value)}
                 className="w-28 h-8 text-sm"
               />
               <Input
-                placeholder="物料名称"
+                placeholder={tc('materialName')}
                 value={searchMaterial}
                 onChange={(e) => setSearchMaterial(e.target.value)}
                 className="w-28 h-8 text-sm"
@@ -391,15 +391,15 @@ export default function SGSManagementPage() {
                 onValueChange={(v) => setSearchCertType(v === 'all' ? '' : v)}
               >
                 <SelectTrigger className="w-24 h-8 text-sm">
-                  <SelectValue placeholder="认证类型" />
+                  <SelectValue placeholder={t('certType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部</SelectItem>
+                  <SelectItem value="all">{tc("all")}</SelectItem>
                   <SelectItem value="RoHS">RoHS</SelectItem>
                   <SelectItem value="REACH">REACH</SelectItem>
                   <SelectItem value="FDA">FDA</SelectItem>
                   <SelectItem value="EN71-3">EN71-3</SelectItem>
-                  <SelectItem value="其他">其他</SelectItem>
+                  <SelectItem value="其他">{tc('other')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -407,14 +407,14 @@ export default function SGSManagementPage() {
                 onValueChange={(v) => setSearchStatus(v === 'all' ? '' : v)}
               >
                 <SelectTrigger className="w-24 h-8 text-sm">
-                  <SelectValue placeholder=tc("status") />
+                  <SelectValue placeholder={tc("status")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部</SelectItem>
-                  <SelectItem value="1">有效</SelectItem>
-                  <SelectItem value="2">待检测</SelectItem>
-                  <SelectItem value="3">已过期</SelectItem>
-                  <SelectItem value="0">失效</SelectItem>
+                  <SelectItem value="all">{tc("all")}</SelectItem>
+                  <SelectItem value="1">{t('valid')}</SelectItem>
+                  <SelectItem value="2">{t('pendingTest')}</SelectItem>
+                  <SelectItem value="3">{t('expired')}</SelectItem>
+                  <SelectItem value="0">{t('invalid')}</SelectItem>
                 </SelectContent>
               </Select>
               <Button size="sm" variant="outline" onClick={fetchData}>
@@ -435,7 +435,7 @@ export default function SGSManagementPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增认证
+              {t('addCert')}
             </Button>
             <TableExportToolbar
               selectedCount={selectedIds.length}
@@ -446,41 +446,41 @@ export default function SGSManagementPage() {
               onExportPDF={() =>
                 exportTableToPDF(
                   sortedData,
-                  'SGS认证报告',
+                  t('sgsCertReport'),
                   [
-                    { key: 'cert_no', header: '证书编号' },
-                    { key: 'material_name', header: '物料名称' },
-                    { key: 'supplier_name', header: '供应商' },
-                    { key: 'cert_type', header: '认证类型' },
-                    { key: 'test_result', header: '检测结果' },
-                    { key: 'expire_date', header: '有效期至' },
+                    { key: 'cert_no', header: t('certNo') },
+                    { key: 'material_name', header: tc('materialName') },
+                    { key: 'supplier_name', header: tc('supplier') },
+                    { key: 'cert_type', header: t('certType') },
+                    { key: 'test_result', header: t('testResult') },
+                    { key: 'expire_date', header: t('validUntil') },
                   ],
-                  'SGS认证报告'
+                  t('sgsCertReport')
                 )
               }
               onExportXLS={() =>
-                exportTableToXLS(sortedData, 'SGS认证报告', [
-                  { key: 'cert_no', header: '证书编号' },
-                  { key: 'material_name', header: '物料名称' },
-                  { key: 'supplier_name', header: '供应商' },
-                  { key: 'cert_type', header: '认证类型' },
-                  { key: 'test_result', header: '检测结果' },
-                  { key: 'expire_date', header: '有效期至' },
+                exportTableToXLS(sortedData, t('sgsCertReport'), [
+                  { key: 'cert_no', header: t('certNo') },
+                  { key: 'material_name', header: tc('materialName') },
+                  { key: 'supplier_name', header: tc('supplier') },
+                  { key: 'cert_type', header: t('certType') },
+                  { key: 'test_result', header: t('testResult') },
+                  { key: 'expire_date', header: t('validUntil') },
                 ])
               }
               onExportWORD={() =>
                 exportTableToWORD(
                   sortedData,
-                  'SGS认证报告',
+                  t('sgsCertReport'),
                   [
-                    { key: 'cert_no', header: '证书编号' },
-                    { key: 'material_name', header: '物料名称' },
-                    { key: 'supplier_name', header: '供应商' },
-                    { key: 'cert_type', header: '认证类型' },
-                    { key: 'test_result', header: '检测结果' },
-                    { key: 'expire_date', header: '有效期至' },
+                    { key: 'cert_no', header: t('certNo') },
+                    { key: 'material_name', header: tc('materialName') },
+                    { key: 'supplier_name', header: tc('supplier') },
+                    { key: 'cert_type', header: t('certType') },
+                    { key: 'test_result', header: t('testResult') },
+                    { key: 'expire_date', header: t('validUntil') },
                   ],
-                  'SGS认证报告'
+                  t('sgsCertReport')
                 )
               }
             />
@@ -493,8 +493,7 @@ export default function SGSManagementPage() {
               <div className="flex items-center gap-2 text-amber-700">
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-sm font-medium">
-                  SGS认证预警：{warningData.expired.length} 个已过期，{warningData.expiring.length}{' '}
-                  个即将过期（90天内）
+                  {t('sgsCertWarning', { expired: warningData.expired.length, expiring: warningData.expiring.length })}
                 </span>
               </div>
             </CardContent>
@@ -518,14 +517,14 @@ export default function SGSManagementPage() {
                       }
                     />
                   </TableHead>
-                  <TableHead className="text-xs w-12 text-center">序号</TableHead>
+                  <TableHead className="text-xs w-12 text-center">{tc("serialNo")}</TableHead>
                   <SortableTableHeader
                     field="cert_no"
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    <span className="text-xs">证书编号</span>
+                    <span className="text-xs">{t('certNo')}</span>
                   </SortableTableHeader>
                   <SortableTableHeader
                     field="material_name"
@@ -533,20 +532,20 @@ export default function SGSManagementPage() {
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    <span className="text-xs">物料名称</span>
+                    <span className="text-xs">{tc('materialName')}</span>
                   </SortableTableHeader>
-                  <TableHead className="text-xs">供应商</TableHead>
-                  <TableHead className="text-xs">认证类型</TableHead>
-                  <TableHead className="text-xs">检测结果</TableHead>
-                  <TableHead className="text-xs">检测机构</TableHead>
-                  <TableHead className="text-xs">发证日期</TableHead>
+                  <TableHead className="text-xs">{tc("supplier")}</TableHead>
+                  <TableHead className="text-xs">{t('certType')}</TableHead>
+                  <TableHead className="text-xs">{t('testResult')}</TableHead>
+                  <TableHead className="text-xs">{t('testOrg')}</TableHead>
+                  <TableHead className="text-xs">{t('issueDate')}</TableHead>
                   <SortableTableHeader
                     field="expire_date"
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    <span className="text-xs">有效期至</span>
+                    <span className="text-xs">{t('validUntil')}</span>
                   </SortableTableHeader>
                   <SortableTableHeader
                     field="status"
@@ -554,10 +553,10 @@ export default function SGSManagementPage() {
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    <span className="text-xs">状态</span>
+                    <span className="text-xs">{tc("status")}</span>
                   </SortableTableHeader>
-                  <TableHead className="text-xs">检测项</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{t('testItems')}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -592,7 +591,7 @@ export default function SGSManagementPage() {
                         variant={testResultMap[item.test_result]?.variant || 'outline'}
                         className="text-xs"
                       >
-                        {testResultMap[item.test_result]?.label || item.test_result}
+                        {t(testResultMap[item.test_result]?.label || item.test_result)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs">{item.test_org || '-'}</TableCell>
@@ -615,10 +614,10 @@ export default function SGSManagementPage() {
                         variant={statusMap[item.status]?.variant || 'outline'}
                         className="text-xs"
                       >
-                        {statusMap[item.status]?.label || tc('unknown')}
+                        {t(statusMap[item.status]?.label || tc('unknown'))}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-xs">{item.item_count ?? 0}项</TableCell>
+                    <TableCell className="text-xs">{item.item_count ?? 0}{t('items')}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button
@@ -659,7 +658,7 @@ export default function SGSManagementPage() {
                 {sortedData.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={14} className="text-center text-muted-foreground py-8">
-                      暂无SGS认证记录
+                      {t('noSGSCertRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -669,7 +668,7 @@ export default function SGSManagementPage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc('totalRecords', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -677,7 +676,7 @@ export default function SGSManagementPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -685,7 +684,7 @@ export default function SGSManagementPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
@@ -693,39 +692,39 @@ export default function SGSManagementPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? '编辑SGS认证' : '新增SGS认证'}</DialogTitle>
+              <DialogTitle>{editItem.id ? t('editSGSCert') : t('addSGSCert')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label>证书编号</Label>
+                <Label>{t('certNo')}</Label>
                 <Input
                   value={editItem.cert_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, cert_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>物料编码</Label>
+                <Label>{tc('materialCode')}</Label>
                 <Input
                   value={editItem.material_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, material_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>物料名称</Label>
+                <Label>{tc('materialName')}</Label>
                 <Input
                   value={editItem.material_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, material_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>供应商名称</Label>
+                <Label>{t('supplierName')}</Label>
                 <Input
                   value={editItem.supplier_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, supplier_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>认证类型</Label>
+                <Label>{t('certType')}</Label>
                 <Select value={editItem.cert_type || 'RoHS'} onValueChange={handleCertTypeChange}>
                   <SelectTrigger>
                     <SelectValue />
@@ -735,12 +734,12 @@ export default function SGSManagementPage() {
                     <SelectItem value="REACH">REACH</SelectItem>
                     <SelectItem value="FDA">FDA</SelectItem>
                     <SelectItem value="EN71-3">EN71-3</SelectItem>
-                    <SelectItem value="其他">其他</SelectItem>
+                    <SelectItem value="其他">{tc('other')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>检测结果</Label>
+                <Label>{t('testResult')}</Label>
                 <Select
                   value={editItem.test_result || 'PENDING'}
                   onValueChange={(v) => setEditItem({ ...editItem, test_result: v })}
@@ -749,28 +748,28 @@ export default function SGSManagementPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PASS">合格</SelectItem>
-                    <SelectItem value="FAIL">不合格</SelectItem>
-                    <SelectItem value="PENDING">待检测</SelectItem>
+                    <SelectItem value="PASS">{tc("qualified")}</SelectItem>
+                    <SelectItem value="FAIL">{tc("unqualified")}</SelectItem>
+                    <SelectItem value="PENDING">{t('pendingTest')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>测试报告编号</Label>
+                <Label>{t('testReportNo')}</Label>
                 <Input
                   value={editItem.test_report_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, test_report_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>检测机构</Label>
+                <Label>{t('testOrg')}</Label>
                 <Input
                   value={editItem.test_org || ''}
                   onChange={(e) => setEditItem({ ...editItem, test_org: e.target.value })}
                 />
               </div>
               <div>
-                <Label>状态</Label>
+                <Label>{tc("status")}</Label>
                 <Select
                   value={String(editItem.status ?? 2)}
                   onValueChange={(v) => setEditItem({ ...editItem, status: Number(v) })}
@@ -779,15 +778,15 @@ export default function SGSManagementPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">有效</SelectItem>
-                    <SelectItem value="2">待检测</SelectItem>
-                    <SelectItem value="0">失效</SelectItem>
-                    <SelectItem value="3">已过期</SelectItem>
+                    <SelectItem value="1">{t('valid')}</SelectItem>
+                    <SelectItem value="2">{t('pendingTest')}</SelectItem>
+                    <SelectItem value="0">{t('invalid')}</SelectItem>
+                    <SelectItem value="3">{t('expired')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>发证日期</Label>
+                <Label>{t('issueDate')}</Label>
                 <Input
                   type="date"
                   value={editItem.issue_date || ''}
@@ -795,7 +794,7 @@ export default function SGSManagementPage() {
                 />
               </div>
               <div>
-                <Label>有效期至</Label>
+                <Label>{t('validUntil')}</Label>
                 <Input
                   type="date"
                   value={editItem.expire_date || ''}
@@ -803,15 +802,15 @@ export default function SGSManagementPage() {
                 />
               </div>
               <div>
-                <Label>证书文件</Label>
+                <Label>{t('certFile')}</Label>
                 <Input
                   value={editItem.file_url || ''}
                   onChange={(e) => setEditItem({ ...editItem, file_url: e.target.value })}
-                  placeholder="文件路径或URL"
+                  placeholder={t('filePathOrURL')}
                 />
               </div>
               <div className="col-span-3">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -822,22 +821,22 @@ export default function SGSManagementPage() {
 
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
-                <Label className="text-sm font-medium">检测项目明细</Label>
+                <Label className="text-sm font-medium">{t('testItemDetails')}</Label>
                 <Button size="sm" variant="outline" onClick={handleAddItem}>
                   <Plus className="h-3 w-3 mr-1" />
-                  添加项目
+                  {t('addItem')}
                 </Button>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-xs w-36">检测项目</TableHead>
-                    <TableHead className="text-xs w-36">检测标准</TableHead>
-                    <TableHead className="text-xs w-20">限值</TableHead>
-                    <TableHead className="text-xs w-20">检测值</TableHead>
-                    <TableHead className="text-xs w-16">单位</TableHead>
-                    <TableHead className="text-xs w-20">结果</TableHead>
-                    <TableHead className="text-xs w-12">操作</TableHead>
+                    <TableHead className="text-xs w-36">{t('testItem')}</TableHead>
+                    <TableHead className="text-xs w-36">{t('testStandard')}</TableHead>
+                    <TableHead className="text-xs w-20">{t('limitValue')}</TableHead>
+                    <TableHead className="text-xs w-20">{t('testValue')}</TableHead>
+                    <TableHead className="text-xs w-16">{tc("unit")}</TableHead>
+                    <TableHead className="text-xs w-20">{tc('result')}</TableHead>
+                    <TableHead className="text-xs w-12">{tc("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -908,7 +907,7 @@ export default function SGSManagementPage() {
                   {(!editItem.items || editItem.items.length === 0) && (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center text-gray-400 py-4 text-xs">
-                        暂无检测项目，请点击"添加项目"或选择认证类型自动填充
+                        {t('noTestItemsHint')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -918,9 +917,9 @@ export default function SGSManagementPage() {
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -928,50 +927,50 @@ export default function SGSManagementPage() {
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>SGS认证详情 - {detailItem?.cert_no}</DialogTitle>
+              <DialogTitle>{t('sgsCertDetail')} - {detailItem?.cert_no}</DialogTitle>
             </DialogHeader>
             {detailItem && (
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-3 text-sm">
                   <div>
-                    <span className="text-gray-500">物料名称：</span>
+                    <span className="text-gray-500">{tc('materialName')}：</span>
                     {detailItem.material_name || '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">物料编码：</span>
+                    <span className="text-gray-500">{tc('materialCode')}：</span>
                     {detailItem.material_code || '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">供应商：</span>
+                    <span className="text-gray-500">{tc('supplier')}：</span>
                     {detailItem.supplier_name || '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">认证类型：</span>
+                    <span className="text-gray-500">{t('certType')}：</span>
                     {detailItem.cert_type}
                   </div>
                   <div>
-                    <span className="text-gray-500">检测结果：</span>
+                    <span className="text-gray-500">{t('testResult')}：</span>
                     <Badge
                       variant={testResultMap[detailItem.test_result]?.variant || 'outline'}
                       className="text-xs"
                     >
-                      {testResultMap[detailItem.test_result]?.label || detailItem.test_result}
+                      {t(testResultMap[detailItem.test_result]?.label || detailItem.test_result)}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-gray-500">检测机构：</span>
+                    <span className="text-gray-500">{t('testOrg')}：</span>
                     {detailItem.test_org || '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">报告编号：</span>
+                    <span className="text-gray-500">{t('reportNo')}：</span>
                     {detailItem.test_report_no || '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">发证日期：</span>
+                    <span className="text-gray-500">{t('issueDate')}：</span>
                     {detailItem.issue_date || '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">有效期至：</span>
+                    <span className="text-gray-500">{t('validUntil')}：</span>
                     <span
                       className={
                         isExpired(detailItem.expire_date)
@@ -985,34 +984,34 @@ export default function SGSManagementPage() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">状态：</span>
+                    <span className="text-gray-500">{tc('status')}：</span>
                     <Badge
                       variant={statusMap[detailItem.status]?.variant || 'outline'}
                       className="text-xs"
                     >
-                      {statusMap[detailItem.status]?.label || tc('unknown')}
+                      {t(statusMap[detailItem.status]?.label || tc('unknown'))}
                     </Badge>
                   </div>
                 </div>
                 {detailItem.remark && (
                   <div className="text-sm">
-                    <span className="text-gray-500">备注：</span>
+                    <span className="text-gray-500">{tc('remark')}：</span>
                     {detailItem.remark}
                   </div>
                 )}
 
                 {detailItem.items && detailItem.items.length > 0 && (
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">检测项目明细</Label>
+                    <Label className="text-sm font-medium mb-2 block">{t('testItemDetails')}</Label>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="text-xs">检测项目</TableHead>
-                          <TableHead className="text-xs">检测标准</TableHead>
-                          <TableHead className="text-xs">限值</TableHead>
-                          <TableHead className="text-xs">检测值</TableHead>
-                          <TableHead className="text-xs">单位</TableHead>
-                          <TableHead className="text-xs">结果</TableHead>
+                          <TableHead className="text-xs">{t('testItem')}</TableHead>
+                          <TableHead className="text-xs">{t('testStandard')}</TableHead>
+                          <TableHead className="text-xs">{t('limitValue')}</TableHead>
+                          <TableHead className="text-xs">{t('testValue')}</TableHead>
+                          <TableHead className="text-xs">{tc("unit")}</TableHead>
+                          <TableHead className="text-xs">{tc('result')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

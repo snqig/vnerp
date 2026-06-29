@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -30,36 +31,37 @@ export function TableExportToolbar({
   onExportXLS,
   onExportWORD,
 }: TableExportToolbarProps) {
+  const t = useTranslations('Common');
   return (
     <div className="flex items-center gap-2">
       {selectedCount > 0 && (
         <span className="text-sm text-muted-foreground mr-1">
-          已选 {selectedCount}/{totalCount} 项
+          {t('selectedCount', { selected: selectedCount, total: totalCount })}
         </span>
       )}
       <Button variant="outline" size="sm" className="h-8" onClick={onPrint}>
         <Printer className="h-3.5 w-3.5 mr-1.5" />
-        打印
+        {t('print')}
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="h-8">
             <Download className="h-3.5 w-3.5 mr-1.5" />
-            导出
+            {t('export')}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={onExportPDF}>
             <FileText className="h-4 w-4 mr-2 text-red-500" />
-            导出 PDF
+            {t('exportPDF')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onExportXLS}>
             <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
-            导出 XLS
+            {t('exportXLS')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onExportWORD}>
             <File className="h-4 w-4 mr-2 text-blue-500" />
-            导出 WORD
+            {t('exportWORD')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

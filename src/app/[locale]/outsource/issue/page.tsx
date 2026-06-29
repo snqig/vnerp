@@ -69,6 +69,18 @@ interface OutsourceIssueItem {
 }
 
 export default function OutsourceIssuePage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   const t = useTranslations('Outsource');
   const tc = useTranslations('Common');
 
@@ -95,31 +107,31 @@ export default function OutsourceIssuePage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const exportColumns = [
-    { key: '发料单号', header: '发料单号' },
-    { key: '委外订单号', header: '委外订单号' },
-    { key: '仓库', header: '仓库' },
-    { key: '发料日期', header: '发料日期' },
-    { key: '物料明细', header: '物料明细' },
-    { key: '操作人', header: '操作人' },
+    { key: t('issueNo'), header: t('issueNo') },
+    { key: t('orderNo'), header: t('orderNo') },
+    { key: tc('warehouse'), header: tc('warehouse') },
+    { key: t('issueDate'), header: t('issueDate') },
+    { key: t('issueDetail'), header: t('issueDetail') },
+    { key: t('operatorName'), header: t('operatorName') },
     { key: tc('status'), header: tc('status') },
   ];
   const getExportData = () =>
     list.map((item) => ({
-      发料单号: item.issue_no,
-      委外订单号: item.outsource_order_no || '-',
-      仓库: item.warehouse_name || '-',
-      发料日期: item.issue_date || '-',
-      物料明细:
+      [t('issueNo')]: item.issue_no,
+      [t('orderNo')]: item.outsource_order_no || '-',
+      [tc('warehouse')]: item.warehouse_name || '-',
+      [t('issueDate')]: item.issue_date || '-',
+      [t('issueDetail')]:
         (item.items || []).map((i: any) => `${i.material_name || '-'}×${i.quantity}`).join(', ') ||
         '-',
-      操作人: item.operator_name || '-',
-      状态: statusMap[item.status]?.label || '-',
+      [t('operatorName')]: item.operator_name || '-',
+      [tc('status')]: statusMap[item.status]?.label || '-',
     }));
 
   const fetchData = async () => {
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: '20', issueNo: searchNo });
-      const res = await fetch('/api/outsource/issue?' + params);
+      const res = await authFetch('/api/outsource/issue?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -132,7 +144,7 @@ export default function OutsourceIssuePage() {
 
   const fetchOutsourceOrders = async () => {
     try {
-      const res = await fetch('/api/outsource/order?pageSize=100');
+      const res = await authFetch('/api/outsource/order?pageSize=100');
       const result = await res.json();
       if (result.success) setOutsourceOrders(result.data?.list || []);
     } catch (e) {
@@ -142,7 +154,7 @@ export default function OutsourceIssuePage() {
 
   const fetchWarehouses = async () => {
     try {
-      const res = await fetch('/api/warehouse/categories');
+      const res = await authFetch('/api/warehouse/categories');
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
     } catch (e) {
@@ -152,7 +164,7 @@ export default function OutsourceIssuePage() {
 
   const fetchMaterials = async () => {
     try {
-      const res = await fetch('/api/materials?pageSize=200');
+      const res = await authFetch('/api/materials?pageSize=200');
       const result = await res.json();
       if (result.success) setMaterials(result.data?.list || result.data || []);
     } catch (e) {
@@ -171,14 +183,14 @@ export default function OutsourceIssuePage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/outsource/issue', {
+      const res = await authFetch('/api/outsource/issue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         setForm({ items: [] });
         fetchData();
@@ -191,19 +203,19 @@ export default function OutsourceIssuePage() {
   };
 
   const handlePost = async (id: number) => {
-    if (!confirm('确认过账发料？过账后将扣减库存。')) return;
+    if (!confirm(t('confirmPostIssue'))) return;
     try {
-      const res = await fetch('/api/outsource/issue', {
+      const res = await authFetch('/api/outsource/issue', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action: 'post' }),
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '发料过账成功，库存已扣减' });
+        toast({ title: t('issuePostSuccess') });
         fetchData();
       } else {
-        toast({ title: '过账失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('issuePostFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
       toast({ title: tc('error'), variant: 'destructive' });
@@ -211,16 +223,18 @@ export default function OutsourceIssuePage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
-      const res = await fetch('/api/outsource/issue?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/outsource/issue?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
+      } else {
+        toast({ title: tc('deleteFailed'), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -255,11 +269,11 @@ export default function OutsourceIssuePage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">委外发料</h1>
+          <h1 className="text-2xl font-bold">{t('issue')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={tc("searchOrderNo")}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -273,13 +287,13 @@ export default function OutsourceIssuePage() {
               totalCount={list.length}
               onSelectAll={() => setSelectedIds(new Set(list.map((i) => i.id)))}
               onDeselectAll={() => setSelectedIds(new Set())}
-              onPrint={() => printTable(getExportData(), exportColumns, '委外发料')}
+              onPrint={() => printTable(getExportData(), exportColumns, t('issue'))}
               onExportPDF={() =>
-                exportTableToPDF(getExportData(), '委外发料', exportColumns, '委外发料')
+                exportTableToPDF(getExportData(), t('issue'), exportColumns, t('issue'))
               }
-              onExportXLS={() => exportTableToXLS(getExportData(), '委外发料', exportColumns)}
+              onExportXLS={() => exportTableToXLS(getExportData(), t('issue'), exportColumns)}
               onExportWORD={() =>
-                exportTableToWORD(getExportData(), '委外发料', exportColumns, '委外发料')
+                exportTableToWORD(getExportData(), t('issue'), exportColumns, t('issue'))
               }
             />
             <Button
@@ -290,7 +304,7 @@ export default function OutsourceIssuePage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增发料
+              {t('addIssue')}
             </Button>
           </div>
         </div>
@@ -309,14 +323,14 @@ export default function OutsourceIssuePage() {
                       }}
                     />
                   </TableHead>
-                  <TableHead className="text-xs">发料单号</TableHead>
-                  <TableHead className="text-xs">委外订单号</TableHead>
-                  <TableHead className="text-xs">仓库</TableHead>
-                  <TableHead className="text-xs">发料日期</TableHead>
-                  <TableHead className="text-xs">物料明细</TableHead>
-                  <TableHead className="text-xs">操作人</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{t('issueNo')}</TableHead>
+                  <TableHead className="text-xs">{t('orderNo')}</TableHead>
+                  <TableHead className="text-xs">{tc("warehouse")}</TableHead>
+                  <TableHead className="text-xs">{t('issueDate')}</TableHead>
+                  <TableHead className="text-xs">{t('issueDetail')}</TableHead>
+                  <TableHead className="text-xs">{t('operatorName')}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -363,7 +377,7 @@ export default function OutsourceIssuePage() {
                               onClick={() => handlePost(item.id)}
                             >
                               <Send className="h-3 w-3 mr-1" />
-                              过账
+                              {t('post')}
                             </Button>
                           )}
                           {item.status === 1 && (
@@ -384,7 +398,7 @@ export default function OutsourceIssuePage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                      暂无发料记录
+                      {t('noIssueRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -394,7 +408,7 @@ export default function OutsourceIssuePage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -402,7 +416,7 @@ export default function OutsourceIssuePage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -410,7 +424,7 @@ export default function OutsourceIssuePage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
@@ -418,13 +432,13 @@ export default function OutsourceIssuePage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
-              <DialogTitle>新增委外发料</DialogTitle>
+              <DialogTitle>{t('createIssue')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label>
-                    委外订单 <span className="text-red-500">*</span>
+                    {t('orderNo')} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={String(form.outsource_order_id || '')}
@@ -438,7 +452,7 @@ export default function OutsourceIssuePage() {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择委外订单" />
+                      <SelectValue placeholder={t('selectOutsourceOrder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {outsourceOrders
@@ -453,14 +467,14 @@ export default function OutsourceIssuePage() {
                 </div>
                 <div>
                   <Label>
-                    发料仓库 <span className="text-red-500">*</span>
+                    {t('issueWarehouse')} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={String(form.warehouse_id || '')}
                     onValueChange={(v) => setForm({ ...form, warehouse_id: Number(v) })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择仓库" />
+                      <SelectValue placeholder={t('selectWarehouse')} />
                     </SelectTrigger>
                     <SelectContent>
                       {warehouses.map((w) => (
@@ -472,7 +486,7 @@ export default function OutsourceIssuePage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>发料日期</Label>
+                  <Label>{t('issueDate')}</Label>
                   <Input
                     type="date"
                     value={form.issue_date || ''}
@@ -482,19 +496,19 @@ export default function OutsourceIssuePage() {
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label>发料明细</Label>
+                  <Label>{t('issueDetail')}</Label>
                   <Button size="sm" variant="outline" onClick={addItem}>
                     <Plus className="h-3 w-3 mr-1" />
-                    添加物料
+                    {t('addMaterial')}
                   </Button>
                 </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">物料</TableHead>
-                      <TableHead className="text-xs">数量</TableHead>
-                      <TableHead className="text-xs">单位</TableHead>
-                      <TableHead className="text-xs">批次号</TableHead>
+                      <TableHead className="text-xs">{tc("material")}</TableHead>
+                      <TableHead className="text-xs">{tc("quantity")}</TableHead>
+                      <TableHead className="text-xs">{tc("unit")}</TableHead>
+                      <TableHead className="text-xs">{tc("batchNo")}</TableHead>
                       <TableHead className="text-xs w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -507,7 +521,7 @@ export default function OutsourceIssuePage() {
                             onValueChange={(v) => updateItem(idx, 'material_id', v)}
                           >
                             <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="选择物料" />
+                              <SelectValue placeholder={t('selectMaterial')} />
                             </SelectTrigger>
                             <SelectContent>
                               {materials.map((m: any) => (
@@ -555,7 +569,7 @@ export default function OutsourceIssuePage() {
                     {(form.items || []).length === 0 && (
                       <TableRow>
                         <TableCell colSpan={5} className="text-center text-gray-400 py-4 text-xs">
-                          点击"添加物料"添加发料明细
+                          {t('clickAddMaterial')}
                         </TableCell>
                       </TableRow>
                     )}
@@ -564,14 +578,14 @@ export default function OutsourceIssuePage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>操作人</Label>
+                  <Label>{t('operatorName')}</Label>
                   <UserSelect
                     value={form.operator_name || ''}
                     onChange={(v) => setForm({ ...form, operator_name: v })}
                   />
                 </div>
                 <div>
-                  <Label>备注</Label>
+                  <Label>{tc("remark")}</Label>
                   <Input
                     value={form.remark || ''}
                     onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -581,9 +595,9 @@ export default function OutsourceIssuePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

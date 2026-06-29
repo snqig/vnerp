@@ -52,6 +52,18 @@ interface OutsourceReceive {
 }
 
 export default function OutsourceReceivePage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   const t = useTranslations('Outsource');
   const tc = useTranslations('Common');
 
@@ -91,7 +103,7 @@ export default function OutsourceReceivePage() {
         pageSize: '20',
         receiveNo: searchNo,
       });
-      const res = await fetch('/api/outsource/receive?' + params);
+      const res = await authFetch('/api/outsource/receive?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -104,7 +116,7 @@ export default function OutsourceReceivePage() {
 
   const fetchOutsourceOrders = async () => {
     try {
-      const res = await fetch('/api/outsource/order?pageSize=100');
+      const res = await authFetch('/api/outsource/order?pageSize=100');
       const result = await res.json();
       if (result.success) setOutsourceOrders(result.data?.list || []);
     } catch (e) {
@@ -114,7 +126,7 @@ export default function OutsourceReceivePage() {
 
   const fetchWarehouses = async () => {
     try {
-      const res = await fetch('/api/warehouse/categories');
+      const res = await authFetch('/api/warehouse/categories');
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
     } catch (e) {
@@ -132,14 +144,14 @@ export default function OutsourceReceivePage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/outsource/receive', {
+      const res = await authFetch('/api/outsource/receive', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         setForm({});
         fetchData();
@@ -152,19 +164,19 @@ export default function OutsourceReceivePage() {
   };
 
   const handlePost = async (id: number) => {
-    if (!confirm('确认过账入库？过账后将增加库存并更新委外订单。')) return;
+    if (!confirm(t('confirmPostReceive'))) return;
     try {
-      const res = await fetch('/api/outsource/receive', {
+      const res = await authFetch('/api/outsource/receive', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action: 'post' }),
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '入库过账成功' });
+        toast({ title: t('receivePostSuccess') });
         fetchData();
       } else {
-        toast({ title: '过账失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('receivePostFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
       toast({ title: tc('error'), variant: 'destructive' });
@@ -173,14 +185,14 @@ export default function OutsourceReceivePage() {
 
   const handleQc = async (id: number, action: string) => {
     try {
-      const res = await fetch('/api/outsource/receive', {
+      const res = await authFetch('/api/outsource/receive', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action }),
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: action === 'qc_pass' ? '质检合格' : '质检不合格' });
+        toast({ title: action === 'qc_pass' ? t('qcPassTitle') : t('qcFailTitle') });
         fetchData();
       }
     } catch (e) {
@@ -189,16 +201,18 @@ export default function OutsourceReceivePage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
-      const res = await fetch('/api/outsource/receive?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/outsource/receive?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
+      } else {
+        toast({ title: tc('deleteFailed'), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -206,11 +220,11 @@ export default function OutsourceReceivePage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">委外收货</h1>
+          <h1 className="text-2xl font-bold">{t('receive')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={tc("searchOrderNo")}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -227,7 +241,7 @@ export default function OutsourceReceivePage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增收货
+              {t('addReceive')}
             </Button>
           </div>
         </div>
@@ -237,16 +251,16 @@ export default function OutsourceReceivePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">收货单号</TableHead>
-                  <TableHead className="text-xs">委外订单号</TableHead>
-                  <TableHead className="text-xs">入库仓库</TableHead>
-                  <TableHead className="text-xs">收货日期</TableHead>
-                  <TableHead className="text-xs text-right">收货数量</TableHead>
-                  <TableHead className="text-xs text-right">合格数量</TableHead>
-                  <TableHead className="text-xs text-right">不良数量</TableHead>
-                  <TableHead className="text-xs">质检状态</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{t('receiveNo')}</TableHead>
+                  <TableHead className="text-xs">{t('orderNo')}</TableHead>
+                  <TableHead className="text-xs">{t('warehouseIn')}</TableHead>
+                  <TableHead className="text-xs">{t('receiveDate')}</TableHead>
+                  <TableHead className="text-xs text-right">{t('receiveQty')}</TableHead>
+                  <TableHead className="text-xs text-right">{t('qualifiedQty')}</TableHead>
+                  <TableHead className="text-xs text-right">{t('defectiveQty')}</TableHead>
+                  <TableHead className="text-xs">{t('qcStatus')}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -287,7 +301,7 @@ export default function OutsourceReceivePage() {
                                 variant="ghost"
                                 className="h-6 w-6 p-0 text-green-600"
                                 onClick={() => handleQc(item.id, 'qc_pass')}
-                                title="质检合格"
+                                title={t('qcPass')}
                               >
                                 <CheckCircle className="h-3 w-3" />
                               </Button>
@@ -296,7 +310,7 @@ export default function OutsourceReceivePage() {
                                 variant="ghost"
                                 className="h-6 w-6 p-0 text-red-600"
                                 onClick={() => handleQc(item.id, 'qc_fail')}
-                                title="质检不合格"
+                                title={t('qcFail')}
                               >
                                 <XCircle className="h-3 w-3" />
                               </Button>
@@ -310,7 +324,7 @@ export default function OutsourceReceivePage() {
                               onClick={() => handlePost(item.id)}
                             >
                               <PackageCheck className="h-3 w-3 mr-1" />
-                              入库
+                              {t('storeIn')}
                             </Button>
                           )}
                           {item.status === 1 && (
@@ -331,7 +345,7 @@ export default function OutsourceReceivePage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                      暂无收货记录
+                      {t('noReceiveRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -341,7 +355,7 @@ export default function OutsourceReceivePage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -349,7 +363,7 @@ export default function OutsourceReceivePage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -357,7 +371,7 @@ export default function OutsourceReceivePage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
@@ -365,12 +379,12 @@ export default function OutsourceReceivePage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增委外收货</DialogTitle>
+              <DialogTitle>{t('createReceive')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  委外订单 <span className="text-red-500">*</span>
+                  {t('orderNo')} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={String(form.outsource_order_id || '')}
@@ -384,7 +398,7 @@ export default function OutsourceReceivePage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择委外订单" />
+                    <SelectValue placeholder={t('selectOutsourceOrder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {outsourceOrders
@@ -399,14 +413,14 @@ export default function OutsourceReceivePage() {
               </div>
               <div>
                 <Label>
-                  入库仓库 <span className="text-red-500">*</span>
+                  {t('warehouseIn')} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={String(form.warehouse_id || '')}
                   onValueChange={(v) => setForm({ ...form, warehouse_id: Number(v) })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择仓库" />
+                    <SelectValue placeholder={t('selectWarehouse')} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w) => (
@@ -418,7 +432,7 @@ export default function OutsourceReceivePage() {
                 </Select>
               </div>
               <div>
-                <Label>收货日期</Label>
+                <Label>{t('receiveDate')}</Label>
                 <Input
                   type="date"
                   value={form.receive_date || ''}
@@ -427,7 +441,7 @@ export default function OutsourceReceivePage() {
               </div>
               <div>
                 <Label>
-                  收货数量 <span className="text-red-500">*</span>
+                  {t('receiveQty')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   type="number"
@@ -436,7 +450,7 @@ export default function OutsourceReceivePage() {
                 />
               </div>
               <div>
-                <Label>合格数量</Label>
+                <Label>{t('qualifiedQty')}</Label>
                 <Input
                   type="number"
                   value={form.qualified_qty || ''}
@@ -444,7 +458,7 @@ export default function OutsourceReceivePage() {
                 />
               </div>
               <div>
-                <Label>不良数量</Label>
+                <Label>{t('defectiveQty')}</Label>
                 <Input
                   type="number"
                   value={form.defective_qty || ''}
@@ -452,14 +466,14 @@ export default function OutsourceReceivePage() {
                 />
               </div>
               <div>
-                <Label>操作人</Label>
+                <Label>{t('operatorName')}</Label>
                 <UserSelect
                   value={form.operator_name || ''}
                   onChange={(v) => setForm({ ...form, operator_name: v })}
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Input
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -468,9 +482,9 @@ export default function OutsourceReceivePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -59,6 +59,18 @@ const initialForm: VehicleForm = {
 };
 
 export default function NewVehiclePage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Delivery');
   const tc = useTranslations('Common');
@@ -77,7 +89,7 @@ export default function NewVehiclePage() {
 
     try {
       setSaving(true);
-      const response = await fetch('/api/delivery/vehicles', {
+      const response = await authFetch('/api/delivery/vehicles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

@@ -151,7 +151,7 @@ export default function MenusPage() {
           <TableCell className="font-mono text-sm">{item.menu_code}</TableCell>
           <TableCell>
             <Badge variant={item.menu_type === 1 ? 'default' : 'secondary'}>
-              {item.menu_type === 1 ? '目录' : item.menu_type === 2 ? '菜单' : '按钮'}
+              {item.menu_type === 1 ? tc("directory") : item.menu_type === 2 ? tc("menu") : tc("button")}
             </Badge>
           </TableCell>
           <TableCell>{item.icon || '-'}</TableCell>
@@ -278,12 +278,12 @@ export default function MenusPage() {
     <MainLayout>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">菜单管理</h2>
+          <h2 className="text-2xl font-bold">{t("menuManagement")}</h2>
           <div className="flex items-center gap-2">
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="搜索菜单名称"
+                placeholder={tc("searchMenuPlaceholder")}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="pl-10 h-9"
@@ -294,7 +294,7 @@ export default function MenusPage() {
             </Button>
             <Button size="sm" onClick={() => handleAdd(0)}>
               <Plus className="h-4 w-4 mr-1" />
-              新增目录
+              {t("addDirectory")}
             </Button>
           </div>
         </div>
@@ -304,27 +304,27 @@ export default function MenusPage() {
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                <span className="ml-2 text-gray-400">加载中...</span>
+                <span className="ml-2 text-gray-400">{tc("loading")}</span>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>菜单名称</TableHead>
-                    <TableHead>编码</TableHead>
-                    <TableHead>类型</TableHead>
-                    <TableHead>图标</TableHead>
-                    <TableHead>路径</TableHead>
-                    <TableHead>权限</TableHead>
-                    <TableHead>排序</TableHead>
-                    <TableHead>操作</TableHead>
+                    <TableHead>{tc("menuName")}</TableHead>
+                    <TableHead>{tc("code")}</TableHead>
+                    <TableHead>{tc("type")}</TableHead>
+                    <TableHead>{tc("icon")}</TableHead>
+                    <TableHead>{tc("path")}</TableHead>
+                    <TableHead>{tc("permission")}</TableHead>
+                    <TableHead>{tc("sortOrder")}</TableHead>
+                    <TableHead>{tc("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {tree.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        暂无数据
+                        {tc("noData")}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -339,18 +339,18 @@ export default function MenusPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.is_new ? '新增菜单' : '编辑菜单'}</DialogTitle>
+              <DialogTitle>{editItem.is_new ? t("addMenu") : t("editMenu")}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>菜单名称</Label>
+                <Label>{tc("menuName")}</Label>
                 <Input
                   value={editItem.menu_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, menu_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>菜单编码</Label>
+                <Label>{tc("menuCode")}</Label>
                 <Input
                   value={editItem.menu_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, menu_code: e.target.value })}
@@ -358,7 +358,7 @@ export default function MenusPage() {
                 />
               </div>
               <div>
-                <Label>菜单类型</Label>
+                <Label>{tc("menuType")}</Label>
                 <Select
                   value={String(editItem.menu_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, menu_type: Number(v) })}
@@ -367,35 +367,35 @@ export default function MenusPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">目录</SelectItem>
-                    <SelectItem value="2">菜单</SelectItem>
-                    <SelectItem value="3">按钮</SelectItem>
+                    <SelectItem value="1">{tc("directory")}</SelectItem>
+                    <SelectItem value="2">{tc("menu")}</SelectItem>
+                    <SelectItem value="3">{tc("button")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>图标</Label>
+                <Label>{tc("icon")}</Label>
                 <Input
                   value={editItem.icon || ''}
                   onChange={(e) => setEditItem({ ...editItem, icon: e.target.value })}
                 />
               </div>
               <div>
-                <Label>路径</Label>
+                <Label>{tc("path")}</Label>
                 <Input
                   value={editItem.path || ''}
                   onChange={(e) => setEditItem({ ...editItem, path: e.target.value })}
                 />
               </div>
               <div>
-                <Label>权限标识</Label>
+                <Label>{tc("permission")}</Label>
                 <Input
                   value={editItem.permission || ''}
                   onChange={(e) => setEditItem({ ...editItem, permission: e.target.value })}
                 />
               </div>
               <div>
-                <Label>排序</Label>
+                <Label>{tc("sortOrder")}</Label>
                 <Input
                   type="number"
                   value={editItem.sort_order || 0}
@@ -403,7 +403,7 @@ export default function MenusPage() {
                 />
               </div>
               <div>
-                <Label>是否可见</Label>
+                <Label>{tc("visible")}</Label>
                 <Select
                   value={String(editItem.is_visible ?? 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, is_visible: Number(v) })}
@@ -412,18 +412,18 @@ export default function MenusPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">可见</SelectItem>
-                    <SelectItem value="0">隐藏</SelectItem>
+                    <SelectItem value="1">{tc("visible")}</SelectItem>
+                    <SelectItem value="0">{tc("hidden")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc("cancel")}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}保存
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{tc("save")}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
+import { useTranslations } from 'next-intl';
 
 interface TransferOrder {
   id: number;
@@ -88,26 +89,26 @@ interface Warehouse {
   name: string;
 }
 
-const STATUS_MAP: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  0: { label: tc('draft'), variant: 'outline' },
-  1: { label: tc('pending'), variant: 'secondary' },
-  2: { label: '已出库', variant: 'default' },
-  3: { label: '已入库', variant: 'default' },
-  4: { label: '已取消', variant: 'destructive' },
-};
-
-const TYPE_MAP: Record<number, string> = {
-  1: '库位调拨',
-  2: '仓库调拨',
-};
-
 export default function TransferPage() {
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
+
+  const TYPE_MAP: Record<number, string> = {
+    1: t('locationTransfer'),
+    2: t('warehouseTransfer'),
+  };
+
+  const STATUS_MAP: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    0: { label: tc('draft'), variant: 'outline' },
+    1: { label: tc('pending'), variant: 'secondary' },
+    2: { label: t('outbound'), variant: 'default' },
+    3: { label: t('inbound'), variant: 'default' },
+    4: { label: t('cancelled'), variant: 'destructive' },
+  };
 
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -225,7 +226,7 @@ export default function TransferPage() {
 
       if (result.success) {
         toast({ title: t('createSuccess') });
-        setDialogOpen(false);
+        setShowDialog(false);
         fetchData();
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
@@ -258,7 +259,7 @@ export default function TransferPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch(`/api/warehouse/transfer?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
@@ -304,7 +305,7 @@ export default function TransferPage() {
 
       if (result.success) {
         toast({ title: t('outboundSuccessQty', { qty: result.data.out_quantity }) });
-        setScanOutOpen(false);
+        setShowOutboundDialog(false);
         fetchData();
       } else {
         toast({ title: t('outboundFailed'), description: result.message, variant: 'destructive' });
@@ -360,7 +361,7 @@ export default function TransferPage() {
 
       if (result.success) {
         toast({ title: t('inboundSuccessQty', { qty: result.data.in_quantity }) });
-        setScanInOpen(false);
+        setShowInboundDialog(false);
         fetchData();
       } else {
         toast({ title: t('inboundFailed'), description: result.message, variant: 'destructive' });
@@ -452,11 +453,11 @@ export default function TransferPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">库存调拨</h1>
+          <h1 className="text-2xl font-bold">{t('transfer')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={tc("searchOrderNo")}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -473,7 +474,7 @@ export default function TransferPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增调拨
+              {t('addTransfer')}
             </Button>
           </div>
         </div>
@@ -489,18 +490,18 @@ export default function TransferPage() {
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
-                  <SortableHeader field="transfer_no">调拨单号</SortableHeader>
-                  <SortableHeader field="type">类型</SortableHeader>
-                  <SortableHeader field="from_warehouse_name">源仓库</SortableHeader>
-                  <SortableHeader field="to_warehouse_name">目标仓库</SortableHeader>
+                  <SortableHeader field="transfer_no">{t('transferNo')}</SortableHeader>
+                  <SortableHeader field="type">{tc("type")}</SortableHeader>
+                  <SortableHeader field="from_warehouse_name">{t('sourceWarehouse')}</SortableHeader>
+                  <SortableHeader field="to_warehouse_name">{t('targetWarehouse')}</SortableHeader>
                   <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
-                    状态
+                    {tc("status")}
                   </TableHead>
                   <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
-                    申请人
+                    {t('applicant')}
                   </TableHead>
                   <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
-                    操作
+                    {tc("actions")}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -554,7 +555,7 @@ export default function TransferPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleAction(item.id, 'cancel')}
                             >
-                              取消
+                              {tc('cancel')}
                             </Button>
                           )}
                           {item.status === 1 && (
@@ -564,7 +565,7 @@ export default function TransferPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleAction(item.id, 'approve', { approver_id: 1 })}
                             >
-                              审批通过
+                              {t('approveTransfer')}
                             </Button>
                           )}
                           {item.status === 2 && (
@@ -575,7 +576,7 @@ export default function TransferPage() {
                               onClick={() => openOutboundDialog(item)}
                             >
                               <PackageOpen className="h-3 w-3 mr-1" />
-                              扫码出库
+                              {t('scanOut')}
                             </Button>
                           )}
                           {item.status === 2 && (
@@ -586,7 +587,7 @@ export default function TransferPage() {
                               onClick={() => openInboundDialog(item)}
                             >
                               <PackageCheck className="h-3 w-3 mr-1" />
-                              扫码入库
+                              {t('scanIn')}
                             </Button>
                           )}
                           <Button
@@ -618,7 +619,7 @@ export default function TransferPage() {
                       colSpan={8}
                       className="text-center text-muted-foreground py-8 border border-border"
                     >
-                      暂无调拨记录
+                      {t('noTransferRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -628,7 +629,7 @@ export default function TransferPage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{t('totalRecordsCount', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -636,7 +637,7 @@ export default function TransferPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('previousPage')}
             </Button>
             <Button
               size="sm"
@@ -644,7 +645,7 @@ export default function TransferPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
@@ -652,12 +653,12 @@ export default function TransferPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增调拨单</DialogTitle>
+              <DialogTitle>{t('addTransferOrder')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  调拨类型 <span className="text-red-500">*</span>
+                  {t('transferType')} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={String(editItem.type || 1)}
@@ -673,14 +674,14 @@ export default function TransferPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">库位调拨</SelectItem>
-                    <SelectItem value="2">仓库调拨</SelectItem>
+                    <SelectItem value="1">{t('locationTransfer')}</SelectItem>
+                    <SelectItem value="2">{t('warehouseTransfer')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>
-                  源仓库 <span className="text-red-500">*</span>
+                  {t('sourceWarehouse')} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={String(editItem.from_warehouse_id || '')}
@@ -693,7 +694,7 @@ export default function TransferPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择仓库" />
+                    <SelectValue placeholder={t('selectSourceWarehouse')} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w) => (
@@ -708,14 +709,14 @@ export default function TransferPage() {
                 <>
                   <div>
                     <Label>
-                      调出库位 <span className="text-red-500">*</span>
+                      {t('outLocationRequired')}
                     </Label>
                     <Select
                       value={editItem.from_location || ''}
                       onValueChange={(v) => setEditItem({ ...editItem, from_location: v })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="选择库位" />
+                        <SelectValue placeholder={t('selectOutLocation')} />
                       </SelectTrigger>
                       <SelectContent>
                         {locations.map((l) => (
@@ -728,14 +729,14 @@ export default function TransferPage() {
                   </div>
                   <div>
                     <Label>
-                      调入库位 <span className="text-red-500">*</span>
+                      {t('inLocationRequired')}
                     </Label>
                     <Select
                       value={editItem.to_location || ''}
                       onValueChange={(v) => setEditItem({ ...editItem, to_location: v })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="选择库位" />
+                        <SelectValue placeholder={t('selectInLocation')} />
                       </SelectTrigger>
                       <SelectContent>
                         {locations.map((l) => (
@@ -750,14 +751,14 @@ export default function TransferPage() {
               )}
               <div>
                 <Label>
-                  目标仓库 <span className="text-red-500">*</span>
+                  {t('targetWarehouse')} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={String(editItem.to_warehouse_id || '')}
                   onValueChange={(v) => setEditItem({ ...editItem, to_warehouse_id: Number(v) })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择仓库" />
+                    <SelectValue placeholder={t('selectTargetWarehouse')} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w) => (
@@ -769,14 +770,14 @@ export default function TransferPage() {
                 </Select>
               </div>
               <div>
-                <Label>申请人</Label>
+                <Label>{tc("applicant")}</Label>
                 <UserSelect
                   value={editItem.applicant_id ? String(editItem.applicant_id) : ''}
                   onChange={(v) => setEditItem({ ...editItem, applicant_id: Number(v) })}
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Input
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -785,9 +786,9 @@ export default function TransferPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -795,35 +796,35 @@ export default function TransferPage() {
         <Dialog open={showOutboundDialog} onOpenChange={setShowOutboundDialog}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto" resizable>
             <DialogHeader>
-              <DialogTitle>扫码出库</DialogTitle>
+              <DialogTitle>{t('scanOut')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="border rounded p-3 space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium">调拨明细</span>
+                  <span className="font-medium">{t('transferDetail')}</span>
                   <Button size="sm" variant="outline" onClick={addScanItem}>
                     <QrCode className="h-3 w-3 mr-1" />
-                    添加扫码项
+                    {t('addScanItem')}
                   </Button>
                 </div>
                 {scanItems.length === 0 ? (
                   <p className="text-muted-foreground text-sm text-center py-4">
-                    点击上方按钮添加出库明细
+                    {t('clickToAddOutbound')}
                   </p>
                 ) : (
                   scanItems.map((item, index) => (
                     <div key={index} className="grid grid-cols-12 gap-2 items-end">
                       <div className="col-span-5">
-                        <Label className="text-xs">二维码</Label>
+                        <Label className="text-xs">{t('qrCodeCol')}</Label>
                         <Input
                           value={item.qr_code}
                           onChange={(e) => updateScanItem(index, 'qr_code', e.target.value)}
-                          placeholder="扫描或输入二维码"
+                          placeholder={tc("scanOrEnterQrCode")}
                           className="font-mono text-xs"
                         />
                       </div>
                       <div className="col-span-3">
-                        <Label className="text-xs">数量</Label>
+                        <Label className="text-xs">{tc("quantity")}</Label>
                         <Input
                           type="number"
                           value={item.quantity || ''}
@@ -834,7 +835,7 @@ export default function TransferPage() {
                         />
                       </div>
                       <div className="col-span-3">
-                        <Label className="text-xs">物料ID</Label>
+                        <Label className="text-xs">{t('materialId')}</Label>
                         <Input
                           type="number"
                           value={item.material_id || ''}
@@ -861,11 +862,11 @@ export default function TransferPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowOutboundDialog(false)}>
-                关闭
+                {tc('close')}
               </Button>
               <Button onClick={executeOutbound}>
                 <PackageOpen className="h-4 w-4 mr-1" />
-                确认出库
+                {t('confirmOutbound')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -874,35 +875,35 @@ export default function TransferPage() {
         <Dialog open={showInboundDialog} onOpenChange={setShowInboundDialog}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto" resizable>
             <DialogHeader>
-              <DialogTitle>扫码入库</DialogTitle>
+              <DialogTitle>{t('scanIn')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="border rounded p-3 space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="font-medium">入库明细</span>
+                  <span className="font-medium">{t('inboundDetail')}</span>
                   <Button size="sm" variant="outline" onClick={addScanItem}>
                     <QrCode className="h-3 w-3 mr-1" />
-                    添加扫码项
+                    {t('addScanItem')}
                   </Button>
                 </div>
                 {scanItems.length === 0 ? (
                   <p className="text-muted-foreground text-sm text-center py-4">
-                    点击上方按钮添加入库明细
+                    {t('clickToAddInbound')}
                   </p>
                 ) : (
                   scanItems.map((item, index) => (
                     <div key={index} className="grid grid-cols-12 gap-2 items-end">
                       <div className="col-span-5">
-                        <Label className="text-xs">二维码</Label>
+                        <Label className="text-xs">{t('qrCodeCol')}</Label>
                         <Input
                           value={item.qr_code}
                           onChange={(e) => updateScanItem(index, 'qr_code', e.target.value)}
-                          placeholder="扫描或输入二维码"
+                          placeholder={tc("scanOrEnterQrCode")}
                           className="font-mono text-xs"
                         />
                       </div>
                       <div className="col-span-3">
-                        <Label className="text-xs">数量</Label>
+                        <Label className="text-xs">{tc("quantity")}</Label>
                         <Input
                           type="number"
                           value={item.quantity || ''}
@@ -913,7 +914,7 @@ export default function TransferPage() {
                         />
                       </div>
                       <div className="col-span-3">
-                        <Label className="text-xs">物料ID</Label>
+                        <Label className="text-xs">{t('materialId')}</Label>
                         <Input
                           type="number"
                           value={item.material_id || ''}
@@ -940,11 +941,11 @@ export default function TransferPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowInboundDialog(false)}>
-                关闭
+                {tc('close')}
               </Button>
               <Button onClick={executeInbound}>
                 <PackageCheck className="h-4 w-4 mr-1" />
-                确认入库
+                {t('confirmInbound')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -953,25 +954,25 @@ export default function TransferPage() {
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto" resizable>
             <DialogHeader>
-              <DialogTitle>调拨明细 - {currentTransfer?.transfer_no}</DialogTitle>
+              <DialogTitle>{t('transferDetailTitle', { transferNo: currentTransfer?.transfer_no })}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {currentTransfer && (
                 <div className="grid grid-cols-4 gap-4 p-3 border rounded bg-muted/30 text-sm">
                   <div>
-                    <span className="text-muted-foreground">类型：</span>
+                    <span className="text-muted-foreground">{tc("type")}：</span>
                     {TYPE_MAP[currentTransfer.type]}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">源仓库：</span>
+                    <span className="text-muted-foreground">{t('sourceWarehouse')}：</span>
                     {currentTransfer.from_warehouse_name || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">目标仓库：</span>
+                    <span className="text-muted-foreground">{t('targetWarehouse')}：</span>
                     {currentTransfer.to_warehouse_name || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">状态：</span>
+                    <span className="text-muted-foreground">{tc("status")}：</span>
                     <Badge variant={(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).variant}>
                       {(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).label}
                     </Badge>
@@ -981,20 +982,20 @@ export default function TransferPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>物料名称</TableHead>
-                    <TableHead>二维码</TableHead>
-                    <TableHead>批次号</TableHead>
-                    <TableHead>计划数量</TableHead>
-                    <TableHead>已出库</TableHead>
-                    <TableHead>已入库</TableHead>
-                    <TableHead>单位</TableHead>
+                    <TableHead>{t('materialName')}</TableHead>
+                    <TableHead>{t('qrCodeCol')}</TableHead>
+                    <TableHead>{tc("batchNo")}</TableHead>
+                    <TableHead>{t('qtyPlan')}</TableHead>
+                    <TableHead>{tc("stockedOut")}</TableHead>
+                    <TableHead>{tc("stockedIn")}</TableHead>
+                    <TableHead>{tc("unit")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {detailItems.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center text-muted-foreground py-4">
-                        暂无明细数据
+                        {t('noDetailData')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -1015,7 +1016,7 @@ export default function TransferPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
-                关闭
+                {tc('close')}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -76,6 +76,18 @@ const CURRENT_STATUS: Record<number, { label: string; color: string }> = {
 };
 
 export default function EquipmentPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Equipment');
   const tc = useTranslations('Common');
@@ -95,7 +107,7 @@ export default function EquipmentPage() {
       const params = new URLSearchParams();
       if (keyword) params.append('keyword', keyword);
       if (typeFilter !== 'all') params.append('equipment_type', typeFilter);
-      const res = await fetch(`/api/equipment?${params.toString()}`);
+      const res = await authFetch(`/api/equipment?${params.toString()}`);
       const result = await res.json();
       if (result.success) {
         setList(result.data?.list || []);
@@ -120,7 +132,7 @@ export default function EquipmentPage() {
     }
     try {
       const method = editing ? 'PUT' : 'POST';
-      const res = await fetch('/api/equipment', {
+      const res = await authFetch('/api/equipment', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -142,7 +154,7 @@ export default function EquipmentPage() {
   const deleteEquipment = async (id: number) => {
     if (!confirm('确定要删除该设备吗？')) return;
     try {
-      const res = await fetch(`/api/equipment?id=${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/equipment?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast.success('设备删除成功');
@@ -235,13 +247,13 @@ export default function EquipmentPage() {
                   <TableRow>
                     <TableHead>设备编码</TableHead>
                     <TableHead>设备名称</TableHead>
-                    <TableHead>类型</TableHead>
+                    <TableHead>{tc("type")}</TableHead>
                     <TableHead>品牌/型号</TableHead>
                     <TableHead>位置</TableHead>
                     <TableHead>产能</TableHead>
                     <TableHead>OEE</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead className="text-right">操作</TableHead>
+                    <TableHead>{tc("status")}</TableHead>
+                    <TableHead className="text-right">{tc("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -350,11 +362,11 @@ export default function EquipmentPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>品牌</Label>
+                <Label>{tc("brand")}</Label>
                 <Input
                   value={form.brand || ''}
                   onChange={(e) => setForm({ ...form, brand: e.target.value })}
-                  placeholder="品牌"
+                  placeholder={tc("brand")}
                 />
               </div>
             </div>
@@ -408,11 +420,11 @@ export default function EquipmentPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>备注</Label>
+              <Label>{tc("remark")}</Label>
               <Textarea
                 value={form.remark || ''}
                 onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                placeholder=tc("remark")
+                placeholder={tc("remark")}
                 rows={2}
               />
             </div>

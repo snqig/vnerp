@@ -109,6 +109,7 @@ interface SortableMenuItemProps {
   expanded: boolean;
   onToggle: () => void;
   getIcon: (iconName?: string) => React.ReactNode;
+  getMenuName: (menu: MenuItem) => string;
   renderChildren: (menu: MenuItem, level: number) => React.ReactNode;
   onMenuClick?: (menuPath?: string) => void;
 }
@@ -121,6 +122,7 @@ function SortableMenuItem({
   expanded,
   onToggle,
   getIcon,
+  getMenuName,
   renderChildren,
   onMenuClick,
 }: SortableMenuItemProps) {
@@ -159,7 +161,7 @@ function SortableMenuItem({
               </div>
             )}
             {getIcon(menu.icon)}
-            {!collapsed && <span>{menu.name}</span>}
+            {!collapsed && <span>{getMenuName(menu)}</span>}
           </div>
           {!collapsed &&
             (expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
@@ -183,7 +185,7 @@ function SortableMenuItem({
           active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
         )}
         style={{ paddingLeft: collapsed ? '12px' : `${12 + level * 12}px` }}
-        title={collapsed ? menu.name : undefined}
+        title={collapsed ? getMenuName(menu) : undefined}
       >
         {!collapsed && (
           <div
@@ -196,7 +198,7 @@ function SortableMenuItem({
           </div>
         )}
         {getIcon(menu.icon)}
-        {!collapsed && <span>{menu.name}</span>}
+        {!collapsed && <span>{getMenuName(menu)}</span>}
       </Link>
     </div>
   );
@@ -216,7 +218,31 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const { companyName } = useCompanyName();
   const t = useTranslations('Auth');
   const tc = useTranslations('Common');
+  const tn = useTranslations('Nav');
   const { toast } = useToast();
+
+  // 获取菜单的翻译名称
+  const getMenuName = (menu: MenuItem): string => {
+    // 尝试使用菜单 code 作为翻译键
+    if (menu.code) {
+      try {
+        const translated = tn(menu.code);
+        // 如果翻译存在且不等于翻译键本身，使用翻译
+        // next-intl 在找不到翻译时会返回翻译键本身
+        if (translated && translated !== menu.code && translated.trim() !== '') {
+          return translated;
+        } else {
+          console.warn(`[i18n:Nav] ⚠ 菜单翻译缺失: code="${menu.code}", 原始名称="${menu.name}", 回退到数据库名称`);
+        }
+      } catch {
+        // 翻译键不存在，使用原始名称
+        console.warn(`[i18n:Nav] ⚠ 菜单翻译异常: code="${menu.code}", 回退到数据库名称="${menu.name}"`);
+      }
+    } else {
+      console.warn(`[i18n:Nav] ⚠ 菜单缺少code字段: name="${menu.name}", 无法查找翻译`);
+    }
+    return menu.name;
+  };
 
   // 从 localStorage 加载排序
   // 用ref缓存menus的序列化值，避免引用变化但内容不变时触发重排序
@@ -347,7 +373,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
           const newIndex = items.findIndex((item) => item.id === over.id);
           const newOrder = arrayMove(items, oldIndex, newIndex);
           saveMenuOrder(newOrder);
-          toast({ title: '菜单顺序已保存' });
+          toast({ title: tc('menuOrderSaved') });
           return newOrder;
         });
       }
@@ -450,7 +476,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
           >
             <div className="flex items-center gap-3">
               {getIcon(menu.icon)}
-              {!collapsed && <span>{menu.name}</span>}
+              {!collapsed && <span>{getMenuName(menu)}</span>}
             </div>
             {!collapsed &&
               (isExpanded ? (
@@ -478,10 +504,10 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
           active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
         )}
         style={{ paddingLeft: collapsed ? '12px' : `${12 + level * 12}px` }}
-        title={collapsed ? menu.name : undefined}
+        title={collapsed ? getMenuName(menu) : undefined}
       >
         {getIcon(menu.icon)}
-        {!collapsed && <span>{menu.name}</span>}
+        {!collapsed && <span>{getMenuName(menu)}</span>}
       </Link>
     );
   };
@@ -539,7 +565,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
           <div className="h-full flex flex-col">
             <div className="h-16 flex items-center px-4 border-b border-border">
               <span className="font-semibold text-sm text-foreground">
-                {orderedMenus.find((m) => m.code === activeParentCode)?.name || '子菜单'}
+                {getMenuName(orderedMenus.find((m) => m.code === activeParentCode)!) || '子菜单'}
               </span>
             </div>
             <ScrollArea className="flex-1">
@@ -553,12 +579,12 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                       className={cn('snow-mixed-submenu-item', isActive(child.path) && 'active')}
                     >
                       {getIcon(child.icon)}
-                      <span>{child.name}</span>
+                      <span>{getMenuName(child)}</span>
                     </Link>
                   ))
                 ) : (
                   <div className="text-center py-8 text-muted-foreground text-sm">
-                    请从顶部菜单选择模块
+                    {tc('selectFromTopMenu')}
                   </div>
                 )}
               </nav>
@@ -577,7 +603,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                   </div>
                 ) : !Array.isArray(orderedMenus) || orderedMenus.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground text-sm">暂无菜单权限</div>
+                  <div className="text-center py-8 text-muted-foreground text-sm">{tc('noMenuPermission')}</div>
                 ) : (
                   <DndContext
                     sensors={sensors}
@@ -598,6 +624,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                           expanded={expandedMenus.includes(menu.code)}
                           onToggle={() => toggleMenu(menu.code)}
                           getIcon={getIcon}
+                          getMenuName={getMenuName}
                           renderChildren={renderMenuItem}
                           onMenuClick={handleMenuClick}
                         />

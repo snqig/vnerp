@@ -24,6 +24,7 @@ export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo
       SELECT 
         id,
         menu_name,
+        menu_code,
         parent_id,
         path,
         icon,

@@ -31,6 +31,7 @@ import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { PageHeader, StatusBadge, usePaginatedList } from '@/components/common';
+import { useTranslations } from 'next-intl';
 
 interface Item {
   id: number;
@@ -44,21 +45,22 @@ interface Item {
   operator_name: string;
   remark?: string;
 }
-const statusMap = {
-  1: { label: tc('pendingInbound'), variant: 'outline' as const },
-  2: { label: tc('received'), variant: 'default' as const },
-  3: { label: tc('cancelled'), variant: 'destructive' as const },
-};
-const qcMap = {
-  0: { label: tc('qcUnchecked'), variant: 'secondary' as const },
-  1: { label: tc('qcQualified'), variant: 'default' as const },
-  2: { label: tc('qcUnqualified'), variant: 'destructive' as const },
-};
 
 export default function ProductionInboundPage() {
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
+
+  const statusMap = {
+    1: { label: tc('pendingInbound'), variant: 'outline' as const },
+    2: { label: tc('received'), variant: 'default' as const },
+    3: { label: tc('cancelled'), variant: 'destructive' as const },
+  };
+  const qcMap = {
+    0: { label: tc('qcUnchecked'), variant: 'secondary' as const },
+    1: { label: tc('qcQualified'), variant: 'default' as const },
+    2: { label: tc('qcUnqualified'), variant: 'destructive' as const },
+  };
 
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -150,7 +152,7 @@ export default function ProductionInboundPage() {
             <>
               <div className="flex items-center gap-2">
                 <Input
-                  placeholder="搜索单号"
+                  placeholder={tc("searchOrderNo")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-36 h-8 text-sm"
@@ -179,12 +181,12 @@ export default function ProductionInboundPage() {
                 <TableRow>
                   <TableHead className="text-xs">入库单号</TableHead>
                   <TableHead className="text-xs">工单号</TableHead>
-                  <TableHead className="text-xs">仓库</TableHead>
+                  <TableHead className="text-xs">{tc("warehouse")}</TableHead>
                   <TableHead className="text-xs">入库日期</TableHead>
                   <TableHead className="text-xs">质检状态</TableHead>
                   <TableHead className="text-xs">操作人</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -275,7 +277,7 @@ export default function ProductionInboundPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>仓库</Label>
+                <Label>{tc("warehouse")}</Label>
                 <Select
                   value={String(editItem.warehouse_id || '')}
                   onValueChange={(v) => {
@@ -326,7 +328,7 @@ export default function ProductionInboundPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 取消
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

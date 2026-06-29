@@ -238,7 +238,7 @@ export default function ReportsPage() {
                 <div className="text-2xl font-bold text-green-600">
                   {formatCurrency(data?.financeMetrics.pendingReceivable || 0)}
                 </div>
-                <p className="text-xs text-muted-foreground">应收</p>
+                <p className="text-xs text-muted-foreground">{tc("receivable")}</p>
                 <div className="mt-2 text-sm text-red-500">
                   应付: {formatCurrency(data?.financeMetrics.pendingPayable || 0)}
                 </div>
@@ -262,7 +262,7 @@ export default function ReportsPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">已完成</span>
+                    <span className="text-sm">{tc("completed")}</span>
                     <span className="font-medium text-green-600">
                       {formatNumber(data?.orderMetrics.completedOrders || 0)}
                     </span>
@@ -315,7 +315,7 @@ export default function ReportsPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">进行中</span>
+                    <span className="text-sm">{tc("inProgress")}</span>
                     <span className="font-medium text-blue-500">
                       {formatNumber(data?.productionMetrics.inProgressWorkOrders || 0)}
                     </span>

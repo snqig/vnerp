@@ -36,6 +36,8 @@ import { toast } from 'sonner';
 import { LabelPrintTrigger, LabelData } from '@/components/printing/LabelPrintPreview';
 import { PrinterManagement } from '@/components/printing/PrinterManagement';
 import { useTranslations } from 'next-intl';
+import { logger } from '@/lib/logger';
+import { mockLabels, USE_MOCK } from '@/lib/mock-data';
 
 // 物料标签类型
 interface MaterialLabel {
@@ -62,22 +64,34 @@ interface MaterialLabel {
   createTime?: string;
 }
 
-// 是否徽章
-
-const getYesNoBadge = (value: number) => {
-  return value === 1 ? (
-    <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-      是
-    </Badge>
-  ) : (
-    <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">否</Badge>
-  );
+// 是否徽章 - 需要在组件内部使用翻译
+export default function MaterialLabelsPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
 };
 
-export default function MaterialLabelsPage() {
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
+
+  // 是否徽章
+  const getYesNoBadge = (value: number) => {
+    return value === 1 ? (
+      <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+        {tc('yes')}
+      </Badge>
+    ) : (
+      <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">{tc('no')}</Badge>
+    );
+  };
 
   // 状态徽章
   const getStatusBadge = (status: string) => {
@@ -91,7 +105,7 @@ export default function MaterialLabelsPage() {
         className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
       },
       cut: {
-        label: '已分切',
+        label: t('cut'),
         className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
       },
       disabled: {
@@ -131,6 +145,15 @@ export default function MaterialLabelsPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
+
+        if (USE_MOCK) {
+          logger.info({ module: 'Dcprint', action: 'fetchLabels' }, '使用 mock 标签数据');
+          setLabels(mockLabels);
+          setTotal(mockLabels.length);
+          setLoading(false);
+          return;
+        }
+
         const params = new URLSearchParams();
         if (keyword) params.append('keyword', keyword);
         if (isMainMaterial && isMainMaterial !== 'all')
@@ -139,7 +162,7 @@ export default function MaterialLabelsPage() {
         params.append('page', page.toString());
         params.append('pageSize', pageSize.toString());
 
-        const response = await fetch(`/api/dcprint/labels?${params}`, {
+        const response = await authFetch(`/api/dcprint/labels?${params}`, {
           signal: controller.signal,
         });
 
@@ -152,10 +175,11 @@ export default function MaterialLabelsPage() {
         if (result.success) {
           setLabels(result.data?.list || []);
           setTotal(result.data?.pagination?.total || 0);
+          logger.info({ module: 'Dcprint', action: 'fetchLabels' }, '标签数据获取成功', { count: (result.data?.list || []).length });
         }
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
-          console.error('Failed to fetch labels:', error);
+          logger.error({ module: 'Dcprint', action: 'fetchLabels' }, '获取标签数据失败', { error: (error as Error).message });
         }
       } finally {
         setLoading(false);
@@ -189,14 +213,14 @@ export default function MaterialLabelsPage() {
   // 执行分切操作
   const handleCutting = async () => {
     if (!selectedLabel || !cutWidthStr || !user) {
-      toast.error('请填写分切宽幅');
+      toast.error(t('pleaseFillCutWidth'));
       return;
     }
 
     try {
       setCuttingLoading(true);
 
-      const response = await fetch('/api/warehouse/inbound/cutting', {
+      const response = await authFetch('/api/warehouse/inbound/cutting', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -211,20 +235,20 @@ export default function MaterialLabelsPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`分切操作失败: ${response.status}`);
+        throw new Error(`${t('cuttingFailed')}: ${response.status}`);
       }
 
       const result = await response.json();
       if (result.success) {
-        toast.success('分切操作成功');
+        toast.success(t('cuttingSuccess'));
         setCuttingDialogOpen(false);
         setPage((prevPage) => prevPage);
       } else {
-        toast.error(result.message || '分切操作失败');
+        toast.error(result.message || t('cuttingFailed'));
       }
     } catch (error) {
-      console.error('分切操作失败:', error);
-      toast.error('分切操作失败，请重试');
+      console.error(t('cuttingFailed'), error);
+      toast.error(t('cuttingFailedRetry'));
     } finally {
       setCuttingLoading(false);
     }
@@ -248,25 +272,25 @@ export default function MaterialLabelsPage() {
   const selectedPrintLabels = labels.filter((l) => selectedLabels.has(l.id)).map(toPrintData);
 
   return (
-    <MainLayout title="物料标签管理">
+    <MainLayout title={t('labelManagement')}>
       <div className="space-y-6">
         {/* 搜索栏 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <QrCode className="h-5 w-5" />
-              物料标签查询
+              {t('labelQuery')}
             </CardTitle>
-            <CardDescription>查询和管理物料标签，支持二维码追溯</CardDescription>
+            <CardDescription>{t('labelQueryDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 min-w-[200px]">
-                <label className="text-sm font-medium mb-2 block">关键字</label>
+                <label className="text-sm font-medium mb-2 block">{tc('keyword')}</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="标签号/物料代号/批号..."
+                    placeholder={t('labelNoMaterialCodeBatchNo')}
                     className="pl-10"
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
@@ -275,39 +299,39 @@ export default function MaterialLabelsPage() {
                 </div>
               </div>
               <div className="w-[150px]">
-                <label className="text-sm font-medium mb-2 block">母材</label>
+                <label className="text-sm font-medium mb-2 block">{t('mainMaterial')}</label>
                 <Select value={isMainMaterial} onValueChange={setIsMainMaterial}>
                   <SelectTrigger>
-                    <SelectValue placeholder=tc("all") />
+                    <SelectValue placeholder={tc("all")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部</SelectItem>
-                    <SelectItem value="1">是</SelectItem>
-                    <SelectItem value="0">否</SelectItem>
+                    <SelectItem value="all">{tc("all")}</SelectItem>
+                    <SelectItem value="1">{tc("yes")}</SelectItem>
+                    <SelectItem value="0">{tc("no")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="w-[150px]">
-                <label className="text-sm font-medium mb-2 block">已分切</label>
+                <label className="text-sm font-medium mb-2 block">{t('isCut')}</label>
                 <Select value={isCut} onValueChange={setIsCut}>
                   <SelectTrigger>
-                    <SelectValue placeholder=tc("all") />
+                    <SelectValue placeholder={tc("all")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部</SelectItem>
-                    <SelectItem value="1">是</SelectItem>
-                    <SelectItem value="0">否</SelectItem>
+                    <SelectItem value="all">{tc("all")}</SelectItem>
+                    <SelectItem value="1">{tc("yes")}</SelectItem>
+                    <SelectItem value="0">{tc("no")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleReset}>
                   <Trash2 className="h-4 w-4 mr-2" />
-                  重置
+                  {tc('reset')}
                 </Button>
                 <Button onClick={handleSearch}>
                   <Search className="h-4 w-4 mr-2" />
-                  查询
+                  {tc('search')}
                 </Button>
               </div>
             </div>
@@ -319,25 +343,25 @@ export default function MaterialLabelsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>标签列表</CardTitle>
-                <CardDescription>共 {total} 条记录</CardDescription>
+                <CardTitle>{t('labelList')}</CardTitle>
+                <CardDescription>{tc('totalRecords', { count: total })}</CardDescription>
               </div>
               <div className="flex gap-2">
                 {selectedPrintLabels.length > 0 && (
                   <LabelPrintTrigger labels={selectedPrintLabels}>
                     <Button>
                       <Printer className="h-4 w-4 mr-2" />
-                      打印选中 ({selectedPrintLabels.length})
+                      {t('printSelected')} ({selectedPrintLabels.length})
                     </Button>
                   </LabelPrintTrigger>
                 )}
                 <Button variant="outline" onClick={() => setShowPrinterSettings(true)}>
                   <Settings className="h-4 w-4 mr-2" />
-                  打印机设置
+                  {t('printerSettings')}
                 </Button>
                 <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  刷新
+                  {tc('refresh')}
                 </Button>
               </div>
             </div>
@@ -359,30 +383,30 @@ export default function MaterialLabelsPage() {
                         }}
                       />
                     </TableHead>
-                    <TableHead>标签编号</TableHead>
-                    <TableHead>物料信息</TableHead>
-                    <TableHead>规格</TableHead>
-                    <TableHead>宽幅/米数</TableHead>
-                    <TableHead>批号</TableHead>
-                    <TableHead>仓库</TableHead>
-                    <TableHead>母材</TableHead>
-                    <TableHead>已分切</TableHead>
-                    <TableHead>已使用</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead>操作</TableHead>
+                    <TableHead>{t('labelNo')}</TableHead>
+                    <TableHead>{t('materialInfo')}</TableHead>
+                    <TableHead>{tc("specification")}</TableHead>
+                    <TableHead>{t('widthLength')}</TableHead>
+                    <TableHead>{tc('batchNo')}</TableHead>
+                    <TableHead>{tc("warehouse")}</TableHead>
+                    <TableHead>{t('mainMaterial')}</TableHead>
+                    <TableHead>{t('isCut')}</TableHead>
+                    <TableHead>{t('isUsed')}</TableHead>
+                    <TableHead>{tc("status")}</TableHead>
+                    <TableHead>{tc("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
                       <TableCell colSpan={12} className="text-center py-8">
-                        加载中...
+                        {tc('loading')}
                       </TableCell>
                     </TableRow>
                   ) : labels.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={12} className="text-center py-8">
-                        暂无数据
+                        {tc('noRecords')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -440,7 +464,7 @@ export default function MaterialLabelsPage() {
                               </DialogTrigger>
                               <DialogContent>
                                 <DialogHeader>
-                                  <DialogTitle>二维码信息</DialogTitle>
+                                  <DialogTitle>{t('qrCodeInfo')}</DialogTitle>
                                 </DialogHeader>
                                 <div className="flex flex-col items-center gap-4 py-4">
                                   <div className="p-4 bg-white border rounded-lg">
@@ -460,7 +484,7 @@ export default function MaterialLabelsPage() {
                                 handleOpenCutDialog(label);
                               }}
                               disabled={label.isCut === 1}
-                              title={label.isCut === 1 ? '已分切' : '分切'}
+                              title={label.isCut === 1 ? t('cut') : t('cutting')}
                             >
                               <Scissors className="h-4 w-4" />
                             </Button>
@@ -482,7 +506,7 @@ export default function MaterialLabelsPage() {
             {total > pageSize && (
               <div className="flex items-center justify-between mt-4">
                 <div className="text-sm text-muted-foreground">
-                  第 {page} 页，共 {Math.ceil(total / pageSize)} 页
+                  {t('pageInfo', { page, total: Math.ceil(total / pageSize) })}
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -491,7 +515,7 @@ export default function MaterialLabelsPage() {
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
                   >
-                    上一页
+                    {tc('prevPage')}
                   </Button>
                   <Button
                     variant="outline"
@@ -499,7 +523,7 @@ export default function MaterialLabelsPage() {
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page * pageSize >= total}
                   >
-                    下一页
+                    {tc('nextPage')}
                   </Button>
                 </div>
               </div>
@@ -512,36 +536,36 @@ export default function MaterialLabelsPage() {
       <Dialog open={cuttingDialogOpen} onOpenChange={setCuttingDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>物料分切</DialogTitle>
+            <DialogTitle>{t('materialCutting')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
               <div className="bg-muted p-3 rounded-md">
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="text-muted-foreground">标签号:</span>
+                    <span className="text-muted-foreground">{t('labelNo')}:</span>
                     <span className="ml-2 font-medium">{selectedLabel?.labelNo}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">物料:</span>
+                    <span className="text-muted-foreground">{t('material')}:</span>
                     <span className="ml-2 font-medium">{selectedLabel?.materialName}</span>
                   </div>
                 </div>
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">分切宽幅</label>
+              <label className="text-sm font-medium mb-2 block">{t('cutWidth')}</label>
               <Input
-                placeholder="如：10+20+30 (单位：mm)"
+                placeholder={t('cutWidthPlaceholder')}
                 value={cutWidthStr}
                 onChange={(e) => setCutWidthStr(e.target.value)}
                 className="w-full"
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">备注</label>
+              <label className="text-sm font-medium mb-2 block">{tc("remark")}</label>
               <Input
-                placeholder="分切备注"
+                placeholder={t('cuttingRemark')}
                 value={cutRemark}
                 onChange={(e) => setCutRemark(e.target.value)}
                 className="w-full"
@@ -550,10 +574,10 @@ export default function MaterialLabelsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCuttingDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={handleCutting} loading={cuttingLoading} disabled={!cutWidthStr}>
-              执行分切
+              {t('executeCutting')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -563,7 +587,7 @@ export default function MaterialLabelsPage() {
       <Dialog open={showPrinterSettings} onOpenChange={setShowPrinterSettings}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>打印机管理</DialogTitle>
+            <DialogTitle>{t('printerManagement')}</DialogTitle>
           </DialogHeader>
           <PrinterManagement />
         </DialogContent>

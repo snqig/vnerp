@@ -468,10 +468,10 @@ export default function OrganizationPage() {
 
   // 菜单项配置
   const menuItems = [
-    { key: 'company', label: '企业信息', icon: Building2 },
-    { key: 'department', label: '部门管理', icon: Users },
-    { key: 'role', label: '角色权限', icon: Shield },
-    { key: 'warehouse', label: '仓库分类', icon: Warehouse },
+    { key: 'company', label: tc("companyInfo"), icon: Building2 },
+    { key: 'department', label: tc("deptManagement"), icon: Users },
+    { key: 'role', label: tc("rolePermission"), icon: Shield },
+    { key: 'warehouse', label: tc("warehouseCategory"), icon: Warehouse },
   ];
 
   return (
@@ -510,9 +510,9 @@ export default function OrganizationPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="w-5 h-5" />
-                  企业基本信息
+                  {tc("companyBasicInfo")}
                 </CardTitle>
-                <CardDescription>配置企业的基本信息和联系方式</CardDescription>
+                <CardDescription>{tc("companyBasicInfoDesc")}</CardDescription>
               </CardHeader>
               <CardContent>
                 {companyLoading ? (
@@ -523,61 +523,61 @@ export default function OrganizationPage() {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>企业全称</Label>
+                        <Label>{tc("companyFullName")}</Label>
                         <Input
                           value={company.full_name || ''}
                           onChange={(e) => setCompany({ ...company, full_name: e.target.value })}
-                          placeholder="请输入企业全称"
+                          placeholder={tc("enterCompanyFullName")}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>企业简称</Label>
+                        <Label>{tc("companyShortName")}</Label>
                         <Input
                           value={company.short_name || ''}
                           onChange={(e) => setCompany({ ...company, short_name: e.target.value })}
-                          placeholder="请输入企业简称"
+                          placeholder={tc("enterCompanyShortName")}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>企业编码</Label>
+                        <Label>{tc("companyCode")}</Label>
                         <Input
                           value={company.code || ''}
                           onChange={(e) => setCompany({ ...company, code: e.target.value })}
-                          placeholder="请输入企业编码"
+                          placeholder={tc("enterCompanyCode")}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>法定代表人</Label>
+                        <Label>{tc("legalPerson")}</Label>
                         <Input
                           value={company.legal_person || ''}
                           onChange={(e) => setCompany({ ...company, legal_person: e.target.value })}
-                          placeholder="请输入法定代表人"
+                          placeholder={tc("enterLegalPerson")}
                         />
                       </div>
                       <div className="space-y-2 md:col-span-2">
-                        <Label>注册地址</Label>
+                        <Label>{tc("regAddress")}</Label>
                         <Input
                           value={company.reg_address || ''}
                           onChange={(e) => setCompany({ ...company, reg_address: e.target.value })}
-                          placeholder="请输入注册地址"
+                          placeholder={tc("enterRegAddress")}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>联系电话</Label>
+                        <Label>{tc("phone")}</Label>
                         <Input
                           value={company.contact_phone || ''}
                           onChange={(e) =>
                             setCompany({ ...company, contact_phone: e.target.value })
                           }
-                          placeholder="请输入联系电话"
+                          placeholder={tc("enterPhone")}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>企业邮箱</Label>
+                        <Label>{tc("companyEmail")}</Label>
                         <Input
                           value={company.email || ''}
                           onChange={(e) => setCompany({ ...company, email: e.target.value })}
-                          placeholder="请输入企业邮箱"
+                          placeholder={tc("enterCompanyEmail")}
                         />
                       </div>
                       <div className="space-y-2">
@@ -585,7 +585,7 @@ export default function OrganizationPage() {
                         <Input
                           value={company.website || ''}
                           onChange={(e) => setCompany({ ...company, website: e.target.value })}
-                          placeholder="请输入企业官网"
+                          placeholder={tc("enterCompanyWebsite")}
                         />
                       </div>
                       <div className="space-y-2">
@@ -593,7 +593,7 @@ export default function OrganizationPage() {
                         <Input
                           value={company.fax || ''}
                           onChange={(e) => setCompany({ ...company, fax: e.target.value })}
-                          placeholder="请输入传真号码"
+                          placeholder={tc("enterFax")}
                         />
                       </div>
                       <div className="space-y-2">
@@ -601,7 +601,7 @@ export default function OrganizationPage() {
                         <Input
                           value={company.postcode || ''}
                           onChange={(e) => setCompany({ ...company, postcode: e.target.value })}
-                          placeholder="请输入邮编"
+                          placeholder={tc("enterPostalCode")}
                         />
                       </div>
                     </div>
@@ -614,7 +614,7 @@ export default function OrganizationPage() {
                           <Input
                             value={company.tax_no || ''}
                             onChange={(e) => setCompany({ ...company, tax_no: e.target.value })}
-                            placeholder="请输入纳税人识别号"
+                            placeholder={tc("enterTaxId")}
                           />
                         </div>
                         <div className="space-y-2">
@@ -622,7 +622,7 @@ export default function OrganizationPage() {
                           <Input
                             value={company.bank_name || ''}
                             onChange={(e) => setCompany({ ...company, bank_name: e.target.value })}
-                            placeholder="请输入开户银行"
+                            placeholder={tc("enterBankName")}
                           />
                         </div>
                         <div className="space-y-2 md:col-span-2">
@@ -632,7 +632,7 @@ export default function OrganizationPage() {
                             onChange={(e) =>
                               setCompany({ ...company, bank_account: e.target.value })
                             }
-                            placeholder="请输入银行账号"
+                            placeholder={tc("enterBankAccount")}
                           />
                         </div>
                       </div>
@@ -643,7 +643,7 @@ export default function OrganizationPage() {
                       <Textarea
                         value={company.description || ''}
                         onChange={(e) => setCompany({ ...company, description: e.target.value })}
-                        placeholder="请输入企业简介"
+                        placeholder={tc("enterCompanyIntro")}
                         rows={4}
                       />
                     </div>
@@ -754,14 +754,14 @@ export default function OrganizationPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[60px]">序号</TableHead>
+                        <TableHead className="w-[60px]">{tc("serialNo")}</TableHead>
                         <TableHead>角色编码</TableHead>
                         <TableHead>角色名称</TableHead>
-                        <TableHead>类型</TableHead>
-                        <TableHead>描述</TableHead>
-                        <TableHead>排序</TableHead>
-                        <TableHead>状态</TableHead>
-                        <TableHead className="text-right">操作</TableHead>
+                        <TableHead>{tc("type")}</TableHead>
+                        <TableHead>{tc("description")}</TableHead>
+                        <TableHead>{tc("sortOrder")}</TableHead>
+                        <TableHead>{tc("status")}</TableHead>
+                        <TableHead className="text-right">{tc("actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -837,7 +837,7 @@ export default function OrganizationPage() {
                 <Input
                   value={deptForm.dept_name || ''}
                   onChange={(e) => setDeptForm({ ...deptForm, dept_name: e.target.value })}
-                  placeholder="请输入部门名称"
+                  placeholder={tc("enterDepartmentName")}
                 />
               </div>
             </div>
@@ -848,7 +848,7 @@ export default function OrganizationPage() {
                 onValueChange={(value) => setDeptForm({ ...deptForm, parent_id: parseInt(value) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="请选择上级部门" />
+                  <SelectValue placeholder={tc("selectParentDepartment")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0">无（一级部门）</SelectItem>
@@ -884,16 +884,16 @@ export default function OrganizationPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>状态</Label>
+              <Label>{tc("status")}</Label>
               <Select
                 value={String(deptForm.status ?? 1)}
                 onValueChange={(value) => setDeptForm({ ...deptForm, status: parseInt(value) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="请选择状态" />
+                  <SelectValue placeholder={tc("selectStatus")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">启用</SelectItem>
+                  <SelectItem value="1">{tc("enable")}</SelectItem>
                   <SelectItem value="0">停用</SelectItem>
                 </SelectContent>
               </Select>
@@ -903,7 +903,7 @@ export default function OrganizationPage() {
               <Textarea
                 value={deptForm.description || ''}
                 onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })}
-                placeholder="请输入部门描述"
+                placeholder={tc("enterDepartmentDesc")}
                 rows={3}
               />
             </div>
@@ -947,7 +947,7 @@ export default function OrganizationPage() {
                       setCodeError('');
                     }
                   }}
-                  placeholder="请输入角色编码"
+                  placeholder={tc("enterRoleCode")}
                   className={codeError ? 'border-red-500' : ''}
                 />
                 {!roleEditing && (
@@ -973,7 +973,7 @@ export default function OrganizationPage() {
               <Input
                 value={roleForm.name || ''}
                 onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })}
-                placeholder="请输入角色名称"
+                placeholder={tc("enterRoleName")}
               />
             </div>
             <div className="space-y-2">
@@ -983,7 +983,7 @@ export default function OrganizationPage() {
                 onValueChange={(value) => setRoleForm({ ...roleForm, role_type: parseInt(value) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="请选择角色类型" />
+                  <SelectValue placeholder={tc("selectRoleType")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">系统角色</SelectItem>
@@ -998,7 +998,7 @@ export default function OrganizationPage() {
                 onValueChange={(value) => setRoleForm({ ...roleForm, data_scope: parseInt(value) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="请选择数据范围" />
+                  <SelectValue placeholder={tc("selectDataScope")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">全部数据</SelectItem>
@@ -1015,20 +1015,20 @@ export default function OrganizationPage() {
                 onChange={(e) =>
                   setRoleForm({ ...roleForm, sort_order: parseInt(e.target.value) || 0 })
                 }
-                placeholder="请输入排序号"
+                placeholder={tc("enterSortOrder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>状态</Label>
+              <Label>{tc("status")}</Label>
               <Select
                 value={String(roleForm.status ?? 1)}
                 onValueChange={(value) => setRoleForm({ ...roleForm, status: parseInt(value) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="请选择状态" />
+                  <SelectValue placeholder={tc("selectStatus")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">启用</SelectItem>
+                  <SelectItem value="1">{tc("enable")}</SelectItem>
                   <SelectItem value="0">停用</SelectItem>
                 </SelectContent>
               </Select>
@@ -1038,7 +1038,7 @@ export default function OrganizationPage() {
               <Textarea
                 value={roleForm.description || ''}
                 onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })}
-                placeholder="请输入角色描述"
+                placeholder={tc("enterRoleDesc")}
                 rows={3}
               />
             </div>

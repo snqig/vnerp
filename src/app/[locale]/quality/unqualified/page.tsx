@@ -64,11 +64,11 @@ interface Item {
   responsible_person: string;
 }
 const typeMap: Record<number, string> = {
-  1: '返工',
-  2: '返修',
-  3: '让步接收',
-  4: '退货',
-  5: '报废',
+  1: 'rework',
+  2: 'repair',
+  3: 'concessionAccept',
+  4: 'return',
+  5: 'scrap',
 };
 
 
@@ -81,20 +81,20 @@ export default function UnqualifiedPage() {
     number,
     { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
   > = {
-    1: { label: '待处理', variant: 'outline' },
-    2: { label: '处理中', variant: 'default' },
-    3: { label: '已完成', variant: 'secondary' },
+    1: { label: 'pending', variant: 'outline' },
+    2: { label: 'processing', variant: 'default' },
+    3: { label: 'completed', variant: 'secondary' },
     4: { label: tc('closed'), variant: 'destructive' },
   };
 
   const exportColumns = [
-    { key: 'handle_no', header: '处理单号' },
-    { key: 'material_code', header: '物料编码' },
-    { key: 'material_name', header: '物料名称' },
-    { key: 'unqualified_qty', header: '不合格数量' },
-    { key: 'handle_type', header: '处理方式' },
-    { key: 'responsible_dept', header: '责任部门' },
-    { key: 'responsible_person', header: '责任人' },
+    { key: 'handle_no', header: t('handleNo') },
+    { key: 'material_code', header: tc('materialCode') },
+    { key: 'material_name', header: tc('materialName') },
+    { key: 'unqualified_qty', header: t('unqualifiedQty') },
+    { key: 'handle_type', header: t('handlingMethod') },
+    { key: 'responsible_dept', header: t('responsibleDept') },
+    { key: 'responsible_person', header: t('responsiblePerson') },
     { key: 'handle_status', header: tc('status') },
   ];
 
@@ -138,14 +138,14 @@ export default function UnqualifiedPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editItem.id ? '更新成功' : '创建成功' });
+        toast({ title: editItem.id ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
   const handleStatusChange = async (id: number, handle_status: number) => {
@@ -157,38 +157,38 @@ export default function UnqualifiedPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '更新成功' });
+        toast({ title: tc('updateSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/quality/unqualified?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
   const displayList = sortedData;
 
   return (
-    <MainLayout title="不合格品处理">
+    <MainLayout title={t('unqualifiedProductHandling')}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">不合格品处理</h1>
+          <h1 className="text-2xl font-bold">{t('unqualifiedProductHandling')}</h1>
           <div className="flex gap-2 items-center">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={tc("searchOrderNo")}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -205,7 +205,7 @@ export default function UnqualifiedPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增处理单
+              {t('addHandleOrder')}
             </Button>
             <TableExportToolbar
               selectedCount={selectedIds.length}
@@ -214,15 +214,15 @@ export default function UnqualifiedPage() {
               onDeselectAll={() => setSelectedIds([])}
               onPrint={() => {}}
               onExportPDF={() =>
-                exportTableToPDF(displayList, '不合格品处理报告', exportColumns, '不合格品处理报告')
+                exportTableToPDF(displayList, t('unqualifiedProductReport'), exportColumns, t('unqualifiedProductReport'))
               }
-              onExportXLS={() => exportTableToXLS(displayList, '不合格品处理报告', exportColumns)}
+              onExportXLS={() => exportTableToXLS(displayList, t('unqualifiedProductReport'), exportColumns)}
               onExportWORD={() =>
                 exportTableToWORD(
                   displayList,
-                  '不合格品处理报告',
+                  t('unqualifiedProductReport'),
                   exportColumns,
-                  '不合格品处理报告'
+                  t('unqualifiedProductReport')
                 )
               }
             />
@@ -245,37 +245,37 @@ export default function UnqualifiedPage() {
                       }
                     />
                   </TableHead>
-                  <TableHead className="text-xs w-12 text-center">序号</TableHead>
+                  <TableHead className="text-xs w-12 text-center">{tc("serialNo")}</TableHead>
                   <SortableTableHeader
                     field="handle_no"
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    <span className="text-xs">处理单号</span>
+                    <span className="text-xs">{t('handleNo')}</span>
                   </SortableTableHeader>
-                  <TableHead className="text-xs">物料编码</TableHead>
+                  <TableHead className="text-xs">{tc('materialCode')}</TableHead>
                   <SortableTableHeader
                     field="material_name"
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    <span className="text-xs">物料名称</span>
+                    <span className="text-xs">{tc('materialName')}</span>
                   </SortableTableHeader>
-                  <TableHead className="text-xs">不合格数量</TableHead>
-                  <TableHead className="text-xs">处理方式</TableHead>
-                  <TableHead className="text-xs">责任部门</TableHead>
-                  <TableHead className="text-xs">责任人</TableHead>
+                  <TableHead className="text-xs">{t('unqualifiedQty')}</TableHead>
+                  <TableHead className="text-xs">{t('handlingMethod')}</TableHead>
+                  <TableHead className="text-xs">{t('responsibleDept')}</TableHead>
+                  <TableHead className="text-xs">{t('responsiblePerson')}</TableHead>
                   <SortableTableHeader
                     field="handle_status"
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    <span className="text-xs">状态</span>
+                    <span className="text-xs">{tc("status")}</span>
                   </SortableTableHeader>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -302,12 +302,12 @@ export default function UnqualifiedPage() {
                       <TableCell className="text-xs">{item.material_code || '-'}</TableCell>
                       <TableCell className="text-xs">{item.material_name || '-'}</TableCell>
                       <TableCell className="text-xs">{item.unqualified_qty}</TableCell>
-                      <TableCell className="text-xs">{typeMap[item.handle_type] || '-'}</TableCell>
+                      <TableCell className="text-xs">{t(typeMap[item.handle_type] || '-')}</TableCell>
                       <TableCell className="text-xs">{item.responsible_dept || '-'}</TableCell>
                       <TableCell className="text-xs">{item.responsible_person || '-'}</TableCell>
                       <TableCell>
                         <Badge variant={st.variant} className="text-xs">
-                          {st.label}
+                          {t(st.label)}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -319,7 +319,7 @@ export default function UnqualifiedPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              开始处理
+                              {t('startHandle')}
                             </Button>
                           )}
                           {item.handle_status === 2 && (
@@ -329,7 +329,7 @@ export default function UnqualifiedPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 3)}
                             >
-                              完成
+                              {tc('complete')}
                             </Button>
                           )}
                           <Button
@@ -359,7 +359,7 @@ export default function UnqualifiedPage() {
                 {displayList.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
-                      暂无记录
+                      {tc('noRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -368,7 +368,7 @@ export default function UnqualifiedPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">共 {total} 条</span>
+          <span className="text-sm text-muted-foreground">{tc('totalRecords', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -376,7 +376,7 @@ export default function UnqualifiedPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -384,32 +384,32 @@ export default function UnqualifiedPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? '编辑不合格品处理单' : '新增不合格品处理单'}</DialogTitle>
+              <DialogTitle>{editItem.id ? t('editUnqualifiedOrder') : t('addUnqualifiedOrder')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>物料编码</Label>
+                <Label>{tc('materialCode')}</Label>
                 <Input
                   value={editItem.material_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, material_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>物料名称</Label>
+                <Label>{tc('materialName')}</Label>
                 <Input
                   value={editItem.material_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, material_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>不合格数量</Label>
+                <Label>{t('unqualifiedQty')}</Label>
                 <Input
                   type="number"
                   value={editItem.unqualified_qty || ''}
@@ -419,7 +419,7 @@ export default function UnqualifiedPage() {
                 />
               </div>
               <div>
-                <Label>处理方式</Label>
+                <Label>{t('handlingMethod')}</Label>
                 <Select
                   value={String(editItem.handle_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, handle_type: Number(v) })}
@@ -428,23 +428,23 @@ export default function UnqualifiedPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">返工</SelectItem>
-                    <SelectItem value="2">返修</SelectItem>
-                    <SelectItem value="3">让步接收</SelectItem>
-                    <SelectItem value="4">退货</SelectItem>
-                    <SelectItem value="5">报废</SelectItem>
+                    <SelectItem value="1">{t('rework')}</SelectItem>
+                    <SelectItem value="2">{t('repair')}</SelectItem>
+                    <SelectItem value="3">{t('concessionAccept')}</SelectItem>
+                    <SelectItem value="4">{tc("returnOrder")}</SelectItem>
+                    <SelectItem value="5">{tc("discard")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>责任部门</Label>
+                <Label>{t('responsibleDept')}</Label>
                 <Input
                   value={editItem.responsible_dept || ''}
                   onChange={(e) => setEditItem({ ...editItem, responsible_dept: e.target.value })}
                 />
               </div>
               <div>
-                <Label>责任人</Label>
+                <Label>{t('responsiblePerson')}</Label>
                 <Input
                   value={editItem.responsible_person || ''}
                   onChange={(e) => setEditItem({ ...editItem, responsible_person: e.target.value })}
@@ -453,9 +453,9 @@ export default function UnqualifiedPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

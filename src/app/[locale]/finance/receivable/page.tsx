@@ -67,20 +67,20 @@ interface ReceivableDetail extends Receivable {
   }>;
 }
 
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '未收款', variant: 'outline' },
-  2: { label: '部分收款', variant: 'secondary' },
-  3: { label: '已收款', variant: 'default' },
-  9: { label: '已取消', variant: 'destructive' },
-};
-
 export default function ReceivablePage() {
   // 翻译钩子
   const t = useTranslations('Finance');
   const tc = useTranslations('Common');
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: t('notReceived'), variant: 'outline' },
+    2: { label: t('partialReceived'), variant: 'secondary' },
+    3: { label: t('fullyReceived'), variant: 'default' },
+    9: { label: tc('cancelled'), variant: 'destructive' },
+  };
 
   const { toast } = useToast();
   const [list, setList] = useState<Receivable[]>([]);
@@ -188,12 +188,12 @@ export default function ReceivablePage() {
     <MainLayout>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">应收款管理</h2>
+          <h2 className="text-2xl font-bold">{t('receivableManagement')}</h2>
           <div className="flex items-center gap-2">
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="搜索单号/客户"
+                placeholder={t('searchNoOrCustomer')}
                 value={keyword}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 h-9"
@@ -207,17 +207,18 @@ export default function ReceivablePage() {
               }}
             >
               <SelectTrigger className="w-32 h-9">
-                <SelectValue placeholder="状态筛选" />
+                <SelectValue placeholder={t('statusFilter')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部</SelectItem>
-                <SelectItem value="1">未收款</SelectItem>
-                <SelectItem value="2">部分收款</SelectItem>
-                <SelectItem value="3">已收款</SelectItem>
+                <SelectItem value="all">{tc("all")}</SelectItem>
+                <SelectItem value="1">{t('notReceived')}</SelectItem>
+                <SelectItem value="2">{t('partialReceived')}</SelectItem>
+                <SelectItem value="3">{t('fullyReceived')}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" onClick={fetchData}>
               <RefreshCw className="h-4 w-4" />
+              {tc('refresh')}
             </Button>
           </div>
         </div>
@@ -227,22 +228,22 @@ export default function ReceivablePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>应收单号</TableHead>
-                  <TableHead>来源单号</TableHead>
-                  <TableHead>客户名称</TableHead>
-                  <TableHead className="text-right">应收金额</TableHead>
-                  <TableHead className="text-right">已收金额</TableHead>
-                  <TableHead className="text-right">余额</TableHead>
-                  <TableHead>到期日</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{t('receivableNo')}</TableHead>
+                  <TableHead>{t('sourceNo')}</TableHead>
+                  <TableHead>{t('customerName')}</TableHead>
+                  <TableHead className="text-right">{t('receivableAmount')}</TableHead>
+                  <TableHead className="text-right">{t('receivedAmount')}</TableHead>
+                  <TableHead className="text-right">{tc("balance")}</TableHead>
+                  <TableHead>{t('dueDate')}</TableHead>
+                  <TableHead>{tc("status")}</TableHead>
+                  <TableHead>{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {list.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {t('noData')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -280,7 +281,7 @@ export default function ReceivablePage() {
         </Card>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>共 {total} 条记录</span>
+          <span>{tc('totalRecords', { total })}</span>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -288,7 +289,7 @@ export default function ReceivablePage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {t('previousPage')}
             </Button>
             <Button
               variant="outline"
@@ -296,7 +297,7 @@ export default function ReceivablePage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {t('nextPage')}
             </Button>
           </div>
         </div>
@@ -304,42 +305,42 @@ export default function ReceivablePage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>应收款详情</DialogTitle>
+              <DialogTitle>{t('receivableDetail')}</DialogTitle>
             </DialogHeader>
             {detailItem && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">单号：</span>
+                    <span className="text-muted-foreground">{t('receivableNo')}：</span>
                     {detailItem.receivable_no}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">客户：</span>
+                    <span className="text-muted-foreground">{t('customerName')}：</span>
                     {detailItem.customer_name}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">应收金额：</span>¥
+                    <span className="text-muted-foreground">{t('receivableAmount')}：</span>¥
                     {formatAmount(detailItem.amount)}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">已收金额：</span>¥
+                    <span className="text-muted-foreground">{t('receivedAmount')}：</span>¥
                     {formatAmount(detailItem.received_amount)}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">余额：</span>¥
+                    <span className="text-muted-foreground">{tc('balance')}：</span>¥
                     {formatAmount(detailItem.balance)}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">到期日：</span>
+                    <span className="text-muted-foreground">{t('dueDate')}：</span>
                     {detailItem.due_date?.slice(0, 10)}
                   </div>
                 </div>
                 {Number(detailItem.balance) > 0 && (
                   <div className="border-t pt-4 space-y-3">
-                    <h4 className="font-medium">登记收款</h4>
+                    <h4 className="font-medium">{t('registerReceipt')}</h4>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label>收款金额(元)</Label>
+                        <Label>{t('receiptAmount')}</Label>
                         <Input
                           type="number"
                           value={receiptForm.amount}
@@ -349,7 +350,7 @@ export default function ReceivablePage() {
                         />
                       </div>
                       <div>
-                        <Label>收款日期</Label>
+                        <Label>{t('receiptDate')}</Label>
                         <Input
                           type="date"
                           value={receiptForm.receipt_date}
@@ -360,7 +361,7 @@ export default function ReceivablePage() {
                       </div>
                     </div>
                     <div>
-                      <Label>备注</Label>
+                      <Label>{tc("remark")}</Label>
                       <Input
                         value={receiptForm.remark}
                         onChange={(e) => setReceiptForm({ ...receiptForm, remark: e.target.value })}
@@ -370,7 +371,7 @@ export default function ReceivablePage() {
                 )}
                 {detailItem.receipts && detailItem.receipts.length > 0 && (
                   <div className="border-t pt-4">
-                    <h4 className="font-medium mb-2">收款记录</h4>
+                    <h4 className="font-medium mb-2">{t('receiptRecords')}</h4>
                     {detailItem.receipts.map((rc: any) => (
                       <div key={rc.id} className="flex justify-between text-sm py-1 border-b">
                         <span>{rc.receipt_date?.slice(0, 10)}</span>
@@ -384,10 +385,10 @@ export default function ReceivablePage() {
             )}
             <DialogFooter>
               {detailItem && Number(detailItem.balance) > 0 && (
-                <Button onClick={handleReceipt}>确认收款</Button>
+                <Button onClick={handleReceipt}>{t('confirmReceipt')}</Button>
               )}
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                关闭
+                {tc('close')}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -41,6 +41,18 @@ interface Payable {
 }
 
 export default function PayablesPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Finance');
   const tc = useTranslations('Common');
@@ -131,13 +143,13 @@ export default function PayablesPage() {
               <TableRow>
                 <TableHead>应付单号</TableHead>
                 <TableHead>来源订单</TableHead>
-                <TableHead>供应商</TableHead>
+                <TableHead>{tc("supplier")}</TableHead>
                 <TableHead>应付金额</TableHead>
                 <TableHead>已付金额</TableHead>
-                <TableHead>余额</TableHead>
+                <TableHead>{tc("balance")}</TableHead>
                 <TableHead>到期日</TableHead>
-                <TableHead>状态</TableHead>
-                <TableHead>操作</TableHead>
+                <TableHead>{tc("status")}</TableHead>
+                <TableHead>{tc("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -193,7 +205,7 @@ export default function PayablesPage() {
               <Input value={selectedPay ? formatAmount(selectedPay.amount) : ''} disabled />
             </div>
             <div>
-              <Label>余额</Label>
+              <Label>{tc("balance")}</Label>
               <Input value={selectedPay ? formatAmount(selectedPay.balance) : ''} disabled />
             </div>
             <div>

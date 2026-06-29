@@ -167,12 +167,21 @@ export const PUT = withAuthAndErrorHandler(async (request: NextRequest, user: Us
 
       await execute('UPDATE sal_order SET status = 2, update_time = NOW() WHERE id = ?', [id]);
 
-      await eventBus.publish(
-        new SalesOrderSubmittedEvent({
-          orderId: order.id,
-          orderNo: order.order_no,
-        })
-      );
+      // 1.5.1 publish 失败不阻断 API 响应（业务 UPDATE 已成功，事件失败由 outbox 重试）
+      try {
+        await eventBus.publish(
+          new SalesOrderSubmittedEvent({
+            orderId: order.id,
+            orderNo: order.order_no,
+          })
+        );
+      } catch (publishError: unknown) {
+        const errorMessage = publishError instanceof Error ? publishError.message : String(publishError);
+        secureLog('error', 'Sales order submitted event publish failed', {
+          orderId: id,
+          error: errorMessage,
+        });
+      }
 
       secureLog('info', 'Sales order submitted', { orderId: id, orderNo: order.order_no });
 
@@ -193,23 +202,32 @@ export const PUT = withAuthAndErrorHandler(async (request: NextRequest, user: Us
         [id]
       );
 
-      await eventBus.publish(
-        new SalesOrderApprovedEvent({
-          orderId: order.id,
-          orderNo: order.order_no,
-          customerId: order.customer_id,
-          customerName: order.customer_name,
-          lines: lines.map((l) => ({
-            materialId: l.material_id,
-            materialCode: l.material_code,
-            materialName: l.material_name,
-            orderQty: l.quantity,
-            unitPrice: parseFloat(l.unit_price),
-            remainingQty: l.quantity,
-          })),
-          totalAmount: parseFloat(order.total_amount),
-        })
-      );
+      // 1.5.1 publish 失败不阻断 API 响应（业务 UPDATE 已成功，事件失败由 outbox 重试）
+      try {
+        await eventBus.publish(
+          new SalesOrderApprovedEvent({
+            orderId: order.id,
+            orderNo: order.order_no,
+            customerId: order.customer_id,
+            customerName: order.customer_name,
+            lines: lines.map((l) => ({
+              materialId: l.material_id,
+              materialCode: l.material_code,
+              materialName: l.material_name,
+              orderQty: l.quantity,
+              unitPrice: parseFloat(l.unit_price),
+              remainingQty: l.quantity,
+            })),
+            totalAmount: parseFloat(order.total_amount),
+          })
+        );
+      } catch (publishError: unknown) {
+        const errorMessage = publishError instanceof Error ? publishError.message : String(publishError);
+        secureLog('error', 'Sales order approved event publish failed', {
+          orderId: id,
+          error: errorMessage,
+        });
+      }
 
       secureLog('info', 'Sales order approved, work order creation triggered', {
         orderId: id,

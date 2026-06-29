@@ -40,6 +40,24 @@ const authFetch = async (url: string, options: RequestInit = {}) => {
   return fetch(url, { ...options, headers });
 };
 
+const generateOrderNo = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `PR${year}${month}${day}${random}`;
+};
+
+const formatDateCN = (date: Date) => {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  return `${year}年${month}月${day}日`;
+};
+
+const commonUnits = ['个', '件', '套', '张', '米', '千克', '升', '包', '箱', '卷'];
+
 interface Department {
   id: number;
   dept_code: string;
@@ -108,6 +126,19 @@ export default function PurchaseRequestFormPage() {
   // 翻译钩子
   const t = useTranslations('Purchase');
   const tc = useTranslations('Common');
+
+  const createEmptyItem = (): PurchaseItem => ({
+    id: Date.now() + Math.random(),
+    material_id: 0,
+    material_code: '',
+    productName: '',
+    spec: '',
+    unit: '',
+    quantity: '',
+    price: '',
+    amount: '',
+    remark: '',
+  });
 
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
   0: { label: tc('draft'), color: '#6b7280' },
@@ -223,6 +254,7 @@ export default function PurchaseRequestFormPage() {
     });
 
     if (record.items && record.items.length > 0) {
+      let nextItemId = Date.now();
       const items = record.items.map((item: any) => ({
         id: nextItemId++,
         material_id: item.material_id || 0,
@@ -452,7 +484,7 @@ export default function PurchaseRequestFormPage() {
           <div class="date">${formatDateCN(new Date(requestDate))}</div>
         </div>
         <table>
-          <thead><tr><th style="width:40px">序号</th><th>品名</th><th>规格</th><th style="width:60px">单位</th><th style="width:70px">数量</th><th>备注</th></tr></thead>
+          <thead><tr><th style="width:40px">{tc("serialNo")}</th><th>品名</th><th>{tc("specification")}</th><th style="width:60px">{tc("unit")}</th><th style="width:70px">{tc("quantity")}</th><th>{tc("remark")}</th></tr></thead>
           <tbody>${itemRows}</tbody>
         </table>
         <div class="sign-bar">

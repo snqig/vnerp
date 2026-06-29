@@ -118,7 +118,7 @@ export default function FinanceReportPage() {
     <MainLayout>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">财务报表</h2>
+          <h2 className="text-2xl font-bold">{t('financialReport')}</h2>
           <div className="flex items-center gap-2">
             <Select
               value={periodType}
@@ -131,15 +131,16 @@ export default function FinanceReportPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="day">按日</SelectItem>
-                <SelectItem value="week">按周</SelectItem>
-                <SelectItem value="month">按月</SelectItem>
-                <SelectItem value="quarter">按季</SelectItem>
-                <SelectItem value="year">按年</SelectItem>
+                <SelectItem value="day">{t('byDay')}</SelectItem>
+                <SelectItem value="week">{t('byWeek')}</SelectItem>
+                <SelectItem value="month">{t('byMonth')}</SelectItem>
+                <SelectItem value="quarter">{t('byQuarter')}</SelectItem>
+                <SelectItem value="year">{t('byYear')}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" onClick={fetchData}>
               <RefreshCw className="h-4 w-4" />
+              {tc('refresh')}
             </Button>
           </div>
         </div>
@@ -149,7 +150,7 @@ export default function FinanceReportPage() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-green-500" />
-                <span className="text-sm text-muted-foreground">总收入</span>
+                <span className="text-sm text-muted-foreground">{t('totalRevenue')}</span>
               </div>
               <div className="text-2xl font-bold text-green-600">
                 ¥{formatAmount(summary.total_revenue)}
@@ -160,7 +161,7 @@ export default function FinanceReportPage() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-2">
                 <TrendingDown className="h-5 w-5 text-red-500" />
-                <span className="text-sm text-muted-foreground">总成本</span>
+                <span className="text-sm text-muted-foreground">{t('totalCost')}</span>
               </div>
               <div className="text-2xl font-bold text-red-600">
                 ¥{formatAmount(summary.total_cost)}
@@ -171,7 +172,7 @@ export default function FinanceReportPage() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-blue-500" />
-                <span className="text-sm text-muted-foreground">总利润</span>
+                <span className="text-sm text-muted-foreground">{t('totalProfit')}</span>
               </div>
               <div className="text-2xl font-bold">¥{formatAmount(summary.total_profit)}</div>
             </CardContent>
@@ -180,7 +181,7 @@ export default function FinanceReportPage() {
             <CardContent className="pt-6">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-purple-500" />
-                <span className="text-sm text-muted-foreground">利润率</span>
+                <span className="text-sm text-muted-foreground">{t('profitRate')}</span>
               </div>
               <div className="text-2xl font-bold">{(summary.profit_rate || 0).toFixed(1)}%</div>
             </CardContent>
@@ -189,30 +190,30 @@ export default function FinanceReportPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>收支明细</CardTitle>
+            <CardTitle>{t('incomeExpenseDetail')}</CardTitle>
             <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-1" />
-              导出
+              {tc('export')}
             </Button>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>期间</TableHead>
-                  <TableHead>类型</TableHead>
-                  <TableHead>分类</TableHead>
-                  <TableHead className="text-right">收入</TableHead>
-                  <TableHead className="text-right">成本</TableHead>
-                  <TableHead className="text-right">利润</TableHead>
-                  <TableHead className="text-right">利润率</TableHead>
+                  <TableHead>{t('period')}</TableHead>
+                  <TableHead>{tc("type")}</TableHead>
+                  <TableHead>{tc("category")}</TableHead>
+                  <TableHead className="text-right">{tc("revenue")}</TableHead>
+                  <TableHead className="text-right">{tc("cost")}</TableHead>
+                  <TableHead className="text-right">{tc("profit")}</TableHead>
+                  <TableHead className="text-right">{t('profitRate')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {list.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -246,7 +247,7 @@ export default function FinanceReportPage() {
         </Card>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>共 {total} 条记录</span>
+          <span>{tc('totalRecords', { total })}</span>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -254,7 +255,7 @@ export default function FinanceReportPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {t('previousPage')}
             </Button>
             <Button
               variant="outline"
@@ -262,7 +263,7 @@ export default function FinanceReportPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {t('nextPage')}
             </Button>
           </div>
         </div>

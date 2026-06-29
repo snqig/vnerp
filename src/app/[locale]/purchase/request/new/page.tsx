@@ -248,7 +248,7 @@ export default function NewPurchaseRequestPage() {
                   <SelectContent>
                     <SelectItem value="原材料">原材料</SelectItem>
                     <SelectItem value="辅料">辅料</SelectItem>
-                    <SelectItem value="设备">设备</SelectItem>
+                    <SelectItem value="设备">{tc("equipment")}</SelectItem>
                     <SelectItem value="办公用品">办公用品</SelectItem>
                     <SelectItem value="其他">其他</SelectItem>
                   </SelectContent>
@@ -285,7 +285,7 @@ export default function NewPurchaseRequestPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>优先级</Label>
+                <Label>{tc("priority")}</Label>
                 <Select
                   value={formData.priority.toString()}
                   onValueChange={(v) => setFormData((prev) => ({ ...prev, priority: parseInt(v) }))}
@@ -351,7 +351,7 @@ export default function NewPurchaseRequestPage() {
                       <Input
                         value={item.material_code}
                         onChange={(e) => updateItem(index, 'material_code', e.target.value)}
-                        placeholder=tc("code")
+                        placeholder={tc("code")}
                       />
                     </div>
                     <div className="col-span-2">
@@ -361,7 +361,7 @@ export default function NewPurchaseRequestPage() {
                       <Input
                         value={item.material_name}
                         onChange={(e) => updateItem(index, 'material_name', e.target.value)}
-                        placeholder=tc("name")
+                        placeholder={tc("name")}
                       />
                     </div>
                     <div className="col-span-2">
@@ -369,15 +369,15 @@ export default function NewPurchaseRequestPage() {
                       <Input
                         value={item.material_spec}
                         onChange={(e) => updateItem(index, 'material_spec', e.target.value)}
-                        placeholder="规格"
+                        placeholder={tc("specification")}
                       />
                     </div>
                     <div className="col-span-1">
-                      <Label className="text-xs">单位</Label>
+                      <Label className="text-xs">{tc("unit")}</Label>
                       <Input
                         value={item.material_unit}
                         onChange={(e) => updateItem(index, 'material_unit', e.target.value)}
-                        placeholder="单位"
+                        placeholder={tc("unit")}
                       />
                     </div>
                     <div className="col-span-1">
@@ -407,7 +407,7 @@ export default function NewPurchaseRequestPage() {
                       />
                     </div>
                     <div className="col-span-1">
-                      <Label className="text-xs">金额</Label>
+                      <Label className="text-xs">{tc("amount")}</Label>
                       <div className="text-sm font-medium py-2 text-gray-900 dark:text-white">
                         {item.amount.toFixed(2)}
                       </div>
@@ -442,7 +442,7 @@ export default function NewPurchaseRequestPage() {
           {/* 备注 */}
           <Card>
             <CardHeader>
-              <CardTitle>备注</CardTitle>
+              <CardTitle>{tc("remark")}</CardTitle>
             </CardHeader>
             <CardContent>
               <textarea

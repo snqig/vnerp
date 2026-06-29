@@ -38,6 +38,18 @@ interface Item {
   status: number;
 }
 export default function EquipmentScrapPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Equipment');
   const tc = useTranslations('Common');
@@ -62,7 +74,7 @@ export default function EquipmentScrapPage() {
   const fetchData = async () => {
     try {
       const params = new URLSearchParams({ page: String(page), pageSize: '20', scrapNo: searchNo });
-      const res = await fetch('/api/equipment/scrap?' + params);
+      const res = await authFetch('/api/equipment/scrap?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -78,7 +90,7 @@ export default function EquipmentScrapPage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/equipment/scrap', {
+      const res = await authFetch('/api/equipment/scrap', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -97,7 +109,7 @@ export default function EquipmentScrapPage() {
   };
   const handleStatusChange = async (id: number, status: number) => {
     try {
-      const res = await fetch('/api/equipment/scrap', {
+      const res = await authFetch('/api/equipment/scrap', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
@@ -114,7 +126,7 @@ export default function EquipmentScrapPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
     try {
-      const res = await fetch('/api/equipment/scrap?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/equipment/scrap?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });
@@ -133,7 +145,7 @@ export default function EquipmentScrapPage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={tc("searchOrderNo")}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -166,9 +178,9 @@ export default function EquipmentScrapPage() {
                   <TableHead className="text-xs">报废原因</TableHead>
                   <TableHead className="text-xs">原值</TableHead>
                   <TableHead className="text-xs">净值</TableHead>
-                  <TableHead className="text-xs">审批人</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("approver")}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -302,7 +314,7 @@ export default function EquipmentScrapPage() {
                 />
               </div>
               <div>
-                <Label>审批人</Label>
+                <Label>{tc("approver")}</Label>
                 <Input
                   value={editItem.approval_person || ''}
                   onChange={(e) => setEditItem({ ...editItem, approval_person: e.target.value })}
@@ -338,7 +350,7 @@ export default function EquipmentScrapPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 取消
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

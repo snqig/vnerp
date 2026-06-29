@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { query, execute, queryOne } from '@/lib/db';
+import { query, execute, queryOne, transaction } from '@/lib/db';
 import { withErrorHandler, successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { getIcPrefix, generateDocNo, getConfig } from '@/lib/global-config';
 
@@ -117,11 +117,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const { type = 1, warehouse_id, checker_id, remark } = body;
 
   if (!warehouse_id) {
-    return errorResponse('请选择盘点仓库', 400, 400);
+    return errorResponse('SELECT_WAREHOUSE', 400, 400);
   }
 
   if (![1, 2, 3, 4].includes(type)) {
-    return errorResponse('盘点类型无效', 400, 400);
+    return errorResponse('INVALID_STOCKTAKING_TYPE', 400, 400);
   }
 
   const now = new Date();
@@ -207,7 +207,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   switch (action) {
     case 'submit':
       if (check.status !== 1) {
-        return errorResponse('只有进行中的盘点单才能提交', 400, 400);
+        return errorResponse('ONLY_IN_PROGRESS_CAN_SUBMIT', 400, 400);
       }
 
       const uncheckedCount: any = await queryOne(
@@ -217,7 +217,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       );
 
       if (uncheckedCount.count > 0) {
-        return errorResponse(`还有 ${uncheckedCount.count} 项未盘点，请完成所有盘点项`, 400, 400);
+        return errorResponse(`盘点项目未完成，还有 ${uncheckedCount.count} 项未盘点`, 400, 400);
       }
 
       const diffStats: any = await queryOne(
@@ -237,62 +237,80 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         [id]
       );
 
-      return successResponse(null, '盘点结果已提交，等待审批');
+      return successResponse(null, 'STOCKTAKING_SUBMITTED');
 
     case 'approve':
       if (check.status !== 2) {
-        return errorResponse('只有待审批的盘点单才能审批', 400, 400);
+        return errorResponse('ONLY_PENDING_APPROVAL_CAN_APPROVE', 400, 400);
       }
 
       if (!approver_id) {
-        return errorResponse('请指定审批人', 400, 400);
+        return errorResponse('APPROVER_REQUIRED', 400, 400);
       }
 
       const stocktakingThreshold = Number(getConfig('stocktaking_diff_threshold') || 100);
 
-      const diffItems: any[] = await query(
-        `SELECT * FROM inv_stocktaking_item
-         WHERE taking_id = ? AND diff_qty != 0`,
-        [id]
-      );
+      // 使用事务保护盘点审批操作，确保数据一致性
+      await transaction(async (conn) => {
+        const diffItems: any[] = await conn.execute(
+          `SELECT * FROM inv_stocktaking_item WHERE taking_id = ? AND diff_qty != 0`,
+          [id]
+        ).then(([rows]) => rows as any[]);
 
-      for (const item of diffItems) {
-        await execute(
-          `UPDATE inv_inventory
-           SET quantity = quantity + ?,
-               update_time = NOW()
-           WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
-          [item.diff_qty, item.material_id, check.warehouse_id]
+        for (const item of diffItems) {
+          // 检查是否会产生负库存
+          const currentStock: any = await conn.execute(
+            `SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
+            [item.material_id, check.warehouse_id]
+          ).then(([rows]) => (rows as any[])[0]);
+
+          if (currentStock && currentStock.quantity + item.diff_qty < 0) {
+            throw new Error(`物料ID ${item.material_id} 盘点后将产生负库存，请检查盘点数据`);
+          }
+
+          // 更新库存
+          await conn.execute(
+            `UPDATE inv_inventory SET quantity = quantity + ?, update_time = NOW() WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
+            [item.diff_qty, item.material_id, check.warehouse_id]
+          );
+
+          // 记录库存流水
+          await conn.execute(
+            `INSERT INTO inv_inventory_log (material_id, warehouse_id, change_qty, change_type, ref_no, ref_id, create_time)
+             VALUES (?, ?, ?, 'STOCKTAKING', ?, ?, NOW())`,
+            [item.material_id, check.warehouse_id, item.diff_qty, check.taking_no, id]
+          );
+        }
+
+        // 更新盘点单状态
+        await conn.execute(
+          `UPDATE inv_stocktaking SET status = 3, approver_id = ?, update_time = NOW() WHERE id = ?`,
+          [approver_id, id]
         );
-      }
 
-      await execute(
-        `UPDATE inv_stocktaking
-         SET status = 3, update_time = NOW()
-         WHERE id = ?`,
-        [id]
-      );
+        // 解锁库存
+        await conn.execute(
+          `UPDATE inv_inventory SET stocktaking_flag = 0 WHERE warehouse_id = ?`,
+          [check.warehouse_id]
+        );
+      });
 
-      await execute(`UPDATE inv_inventory SET stocktaking_flag = 0 WHERE warehouse_id = ?`, [
-        check.warehouse_id,
-      ]);
-
-      return successResponse(null, '盘点审批通过，库存已调整');
+      return successResponse(null, 'STOCKTAKING_APPROVED');
 
     case 'reject':
       if (check.status !== 2) {
-        return errorResponse('只有待审批的盘点单才能驳回', 400, 400);
+        return errorResponse('ONLY_PENDING_APPROVAL_CAN_REJECT', 400, 400);
       }
 
       await execute(`UPDATE inv_stocktaking SET status = 1, update_time = NOW() WHERE id = ?`, [
         id,
       ]);
 
-      return successResponse(null, '盘点单已驳回，请重新盘点');
+      return successResponse(null, 'STOCKTAKING_REJECTED');
 
     case 'cancel':
       if (![1].includes(check.status)) {
-        return errorResponse('只有进行中的盘点单才能取消', 400, 400);
+        return errorResponse('ONLY_IN_PROGRESS_CAN_CANCEL', 400, 400);
       }
 
       await execute(`UPDATE inv_stocktaking SET status = 4, update_time = NOW() WHERE id = ?`, [
@@ -303,11 +321,11 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
         check.warehouse_id,
       ]);
 
-      return successResponse(null, '盘点单已取消');
+      return successResponse(null, 'STOCKTAKING_CANCELLED');
 
     case 'update_items':
       if (!items || !Array.isArray(items)) {
-        return errorResponse('缺少盘点明细数据', 400, 400);
+        return errorResponse('STOCKTAKING_ITEMS_REQUIRED', 400, 400);
       }
 
       for (const item of items) {
@@ -351,7 +369,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       );
 
     default:
-      return errorResponse('无效的操作类型', 400, 400);
+      return errorResponse('INVALID_OPERATION_TYPE', 400, 400);
   }
 });
 
@@ -360,7 +378,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   const id = searchParams.get('id');
 
   if (!id) {
-    return errorResponse('缺少ID参数', 400, 400);
+    return errorResponse('ID_PARAM_REQUIRED', 400, 400);
   }
 
   const check: any = await queryOne(`SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0`, [
@@ -372,7 +390,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
 
   if (![4].includes(check.status)) {
-    return errorResponse('只能删除已取消的盘点单', 400, 400);
+    return errorResponse('ONLY_CANCELLED_CAN_DELETE', 400, 400);
   }
 
   await execute(`UPDATE inv_stocktaking SET deleted = 1, update_time = NOW() WHERE id = ?`, [
@@ -383,5 +401,5 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     check.warehouse_id,
   ]);
 
-  return successResponse(null, '盘点单删除成功');
+  return successResponse(null, 'STOCKTAKING_DELETED');
 });

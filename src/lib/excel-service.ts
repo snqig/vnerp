@@ -134,8 +134,9 @@ export class ExcelExportService {
     const workbook = XLSX.utils.book_new();
     const worksheetData: any[][] = [];
 
-    worksheetData.push([template.sheetName + ' - 导入模板']);
-    worksheetData.push(['说明：红色标记的列为必填项']);
+    // 注意: 模板生成时无法获取locale,这些文本需要在调用时传入翻译后的文本
+    worksheetData.push([template.sheetName + ' - Import Template']);
+    worksheetData.push(['Note: Columns marked with * are required']);
     worksheetData.push([]);
 
     const headers = template.headers.map((h, index) => {
@@ -149,20 +150,20 @@ export class ExcelExportService {
 
     if (template.sampleData && template.sampleData.length > 0) {
       worksheetData.push([]);
-      worksheetData.push(['示例数据：']);
+      worksheetData.push(['Sample Data:']);
       for (const sample of template.sampleData) {
         worksheetData.push(Object.values(sample));
       }
     }
 
     worksheetData.push([]);
-    worksheetData.push(['填写说明：']);
-    worksheetData.push(['1. 带 * 的列为必填项']);
-    worksheetData.push(['2. 日期格式：YYYY-MM-DD']);
-    worksheetData.push(['3. 数字格式：不包含逗号']);
+    worksheetData.push(['Instructions:']);
+    worksheetData.push(['1. Columns with * are required']);
+    worksheetData.push(['2. Date format: YYYY-MM-DD']);
+    worksheetData.push(['3. Number format: No commas']);
 
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    XLSX.utils.book_append_sheet(workbook, worksheet, '模板');
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
 
     const buffer = XLSX.write(workbook, {
       type: 'buffer',
@@ -246,7 +247,7 @@ export class ExcelImportService {
           errors.push({
             row: rowNumber,
             field: headerName,
-            message: `必填字段不能为空`,
+            message: 'Required field cannot be empty',
             value,
           });
           continue;
@@ -262,7 +263,7 @@ export class ExcelImportService {
             errors.push({
               row: rowNumber,
               field: headerName,
-              message: `必须为有效的数字`,
+              message: 'Must be a valid number',
               value,
             });
           } else {
@@ -270,7 +271,7 @@ export class ExcelImportService {
               errors.push({
                 row: rowNumber,
                 field: headerName,
-                message: `不能小于 ${rules.min}`,
+                message: `Cannot be less than ${rules.min}`,
                 value,
               });
             }
@@ -278,7 +279,7 @@ export class ExcelImportService {
               errors.push({
                 row: rowNumber,
                 field: headerName,
-                message: `不能大于 ${rules.max}`,
+                message: `Cannot be greater than ${rules.max}`,
                 value,
               });
             }
@@ -291,7 +292,7 @@ export class ExcelImportService {
             errors.push({
               row: rowNumber,
               field: headerName,
-              message: `日期格式不正确，请使用 YYYY-MM-DD 格式`,
+              message: 'Invalid date format, please use YYYY-MM-DD',
               value,
             });
           }
@@ -301,7 +302,7 @@ export class ExcelImportService {
           errors.push({
             row: rowNumber,
             field: headerName,
-            message: `必须为文本`,
+            message: 'Must be text',
             value,
           });
         }
@@ -312,7 +313,7 @@ export class ExcelImportService {
             errors.push({
               row: rowNumber,
               field: headerName,
-              message: `格式不正确`,
+              message: 'Invalid format',
               value,
             });
           }
@@ -323,7 +324,7 @@ export class ExcelImportService {
             errors.push({
               row: rowNumber,
               field: headerName,
-              message: `值必须在 ${rules.enum.join(', ')} 中`,
+              message: `Value must be one of: ${rules.enum.join(', ')}`,
               value,
             });
           }

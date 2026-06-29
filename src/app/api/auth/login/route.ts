@@ -4,6 +4,7 @@ import { SignJWT } from 'jose';
 import bcrypt from 'bcryptjs';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { storeRefreshToken } from '@/lib/token-blacklist';
+import { logger, generateTraceId } from '@/lib/logger';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -32,8 +33,13 @@ function getClientIP(request: NextRequest): string {
 }
 
 export async function POST(request: NextRequest) {
+  const traceId = generateTraceId();
+  const ctx = { module: 'auth', action: 'login', traceId };
+
   try {
     const clientIP = getClientIP(request);
+    logger.stepStart(ctx, '用户登录', { clientIP });
+
     const rateResult = checkRateLimit(clientIP, {
       windowMs: 15 * 60 * 1000,
       maxRequests: 20,
@@ -41,6 +47,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!rateResult.allowed) {
+      logger.branch(ctx, '限流检查', '请求频率超限', true, { retryAfterMs: rateResult.retryAfterMs });
       return NextResponse.json(
         {
           success: false,
@@ -61,6 +68,7 @@ export async function POST(request: NextRequest) {
     const { username, password } = body;
 
     if (!username || !password) {
+      logger.branch(ctx, '参数校验', '用户名密码非空', false);
       return NextResponse.json(
         {
           success: false,
@@ -88,6 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (users.length === 0) {
+      logger.branch(ctx, '用户查找', '用户存在', false, { username });
       await logLogin(username, request, false, '用户名或密码错误');
       return NextResponse.json(
         {
@@ -101,6 +110,7 @@ export async function POST(request: NextRequest) {
     const user = users[0];
 
     if (user.status === 0) {
+      logger.branch(ctx, '账号状态', '账号启用', false, { userId: user.id });
       await logLogin(username, request, false, '账号已被禁用');
       return NextResponse.json(
         {
@@ -138,8 +148,10 @@ export async function POST(request: NextRequest) {
       (process.env.NODE_ENV !== 'production' && password === '521223' && username === 'admin');
 
     if (!isPasswordValid) {
+      logger.branch(ctx, '密码验证', '密码正确', false, { userId: user.id });
       const failCount = (user.login_fail_count || 0) + 1;
       if (failCount >= MAX_LOGIN_ATTEMPTS) {
+        logger.branch(ctx, '锁定判断', '失败次数>=最大尝试', true, { failCount, MAX_LOGIN_ATTEMPTS });
         await execute('UPDATE sys_user SET login_fail_count = ?, lock_time = NOW() WHERE id = ?', [
           failCount,
           user.id,
@@ -174,8 +186,37 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    await execute('UPDATE sys_user SET login_fail_count = 0, lock_time = NULL WHERE id = ?', [
-      user.id,
+    // 检查异地登录
+    let isAbnormalLogin = false;
+    logger.branch(ctx, '密码验证', '密码正确', true, { userId: user.id });
+    try {
+      const lastLogin: any = await query(
+        'SELECT last_login_ip FROM sys_user WHERE id = ? AND last_login_ip IS NOT NULL',
+        [user.id]
+      );
+      if (lastLogin.length > 0 && lastLogin[0].last_login_ip) {
+        const lastIP = lastLogin[0].last_login_ip;
+        const currentIP = getClientIP(request);
+        if (lastIP !== currentIP && currentIP !== '127.0.0.1') {
+          isAbnormalLogin = true;
+          logger.branch(ctx, '异地登录', 'IP地址变化', true, { lastIP, currentIP });
+          // 记录异地登录告警
+          await execute(
+            `INSERT INTO sys_notification (type, title, content, user_id, is_read, create_time)
+             VALUES ('security', '异地登录提醒', ?, ?, 0, NOW())`,
+            [
+              `您的账号 ${username} 在新IP地址 ${currentIP} 登录，上次登录IP为 ${lastIP}。如非本人操作，请立即修改密码。`,
+              user.id,
+            ]
+          );
+        }
+      }
+    } catch (e) {
+      // 忽略异地登录检查错误
+    }
+
+    await execute('UPDATE sys_user SET login_fail_count = 0, lock_time = NULL, last_login_ip = ?, last_login_time = NOW() WHERE id = ?', [
+      getClientIP(request), user.id,
     ]);
 
     const userRoles = await query(
@@ -226,12 +267,6 @@ export async function POST(request: NextRequest) {
       .setExpirationTime('24h')
       .sign(new TextEncoder().encode(SECRET_KEY));
 
-    try {
-      await execute('UPDATE sys_user SET last_login_time = NOW() WHERE id = ?', [user.id]);
-    } catch (e) {
-      console.error('更新最后登录时间失败:', e);
-    }
-
     const userInfo = {
       id: user.id,
       username: user.username,
@@ -248,7 +283,38 @@ export async function POST(request: NextRequest) {
       })),
       permissions: [...new Set(permissions)],
       firstLogin: Number(user.first_login || 0) === 1,
+      passwordExpired: false,
     };
+
+    // 检查密码是否过期
+    try {
+      const pwdExpireConfigs: any = await query(
+        "SELECT config_value FROM sys_config WHERE config_key = 'system.password_expire_days'"
+      );
+      const expireDays = pwdExpireConfigs.length > 0 ? parseInt(pwdExpireConfigs[0].config_value) || 0 : 0;
+      if (expireDays > 0 && user.pwd_update_time) {
+        const pwdUpdateTime = new Date(user.pwd_update_time);
+        const now = new Date();
+        const diffDays = (now.getTime() - pwdUpdateTime.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffDays > expireDays) {
+          userInfo.passwordExpired = true;
+        }
+      }
+    } catch (e) {
+      // 忽略配置查询错误
+    }
+
+    // 检查是否强制修改初始密码
+    try {
+      const forceChangeConfig: any = await query(
+        "SELECT config_value FROM sys_config WHERE config_key = 'system.force_change_password'"
+      );
+      if (forceChangeConfig.length > 0 && forceChangeConfig[0].config_value === 'true' && Number(user.first_login || 0) === 1) {
+        userInfo.passwordExpired = true;
+      }
+    } catch (e) {
+      // 忽略
+    }
 
     await logLogin(username, request, true, '登录成功');
 

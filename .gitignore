@@ -19,6 +19,7 @@
 .venv/
 .VS/
 .agency-agents/
+agency-agents
 -github/
 trae/
 

@@ -199,6 +199,17 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   switch (action) {
+    case 'submit':
+      // 提交审批：草稿→待审批
+      if (transfer.status !== 0) {
+        return errorResponse('只有草稿状态的调拨单才能提交审批', 400, 400);
+      }
+      await execute(
+        `UPDATE inv_transfer_order SET status = 1, update_time = NOW() WHERE id = ?`,
+        [id]
+      );
+      return successResponse(null, '调拨单已提交审批');
+
     case 'approve':
       if (transfer.status !== 1) {
         return errorResponse('只有待审批的调拨单才能审批', 400, 400);
@@ -210,7 +221,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
       await execute(
         `UPDATE inv_transfer_order
-         SET status = 1, approver_id = ?, update_time = NOW()
+         SET status = 2, approver_id = ?, update_time = NOW()
          WHERE id = ?`,
         [approver_id, id]
       );

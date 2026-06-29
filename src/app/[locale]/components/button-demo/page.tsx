@@ -122,7 +122,7 @@ export default function ButtonDemoPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="size">尺寸</Label>
+                      <Label htmlFor="size">{tc("size")}</Label>
                       <Select value={selectedSize} onValueChange={setSelectedSize}>
                         <SelectTrigger id="size">
                           <SelectValue placeholder="选择尺寸" />
@@ -171,7 +171,7 @@ export default function ButtonDemoPage() {
                             onChange={(e) => setDisabled(e.target.checked)}
                             className="rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary"
                           />
-                          <span className="text-sm">禁用</span>
+                          <span className="text-sm">{tc("disable")}</span>
                         </label>
                       </div>
                     </div>
@@ -391,7 +391,7 @@ export default function ButtonDemoPage() {
                         <RefreshCw className="w-4 h-4" />
                         重置
                       </OutlineButton>
-                      <LinkButton>取消</LinkButton>
+                      <LinkButton>{tc("cancel")}</LinkButton>
                     </div>
                   </div>
 

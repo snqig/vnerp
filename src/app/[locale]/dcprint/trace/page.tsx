@@ -71,6 +71,18 @@ interface TraceRecord {
 }
 
 export default function TracePage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -90,7 +102,7 @@ export default function TracePage() {
 
   const fetchRecords = async () => {
     try {
-      const response = await fetch('/api/dcprint/trace');
+      const response = await authFetch('/api/dcprint/trace');
       const result = await response.json();
       if (result.success) {
         setRecords(result.data.list || []);
@@ -117,7 +129,7 @@ export default function TracePage() {
       }
 
       // 执行追溯查询
-      const response = await fetch('/api/dcprint/trace', {
+      const response = await authFetch('/api/dcprint/trace', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -287,7 +299,7 @@ export default function TracePage() {
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">规格</span>
+                          <span className="text-muted-foreground">{tc("specification")}</span>
                           <span className="font-medium">
                             {traceResult.mainMaterial.specification}
                           </span>
@@ -297,7 +309,7 @@ export default function TracePage() {
                           <span className="font-medium">{traceResult.mainMaterial.batchNo}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">供应商</span>
+                          <span className="text-muted-foreground">{tc("supplier")}</span>
                           <span className="font-medium">
                             {traceResult.mainMaterial.supplierName}
                           </span>
@@ -357,12 +369,12 @@ export default function TracePage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>标签编号</TableHead>
-                        <TableHead>类型</TableHead>
+                        <TableHead>{tc("type")}</TableHead>
                         <TableHead>物料代号</TableHead>
                         <TableHead>物料名称</TableHead>
-                        <TableHead>规格</TableHead>
+                        <TableHead>{tc("specification")}</TableHead>
                         <TableHead>批号</TableHead>
-                        <TableHead>供应商</TableHead>
+                        <TableHead>{tc("supplier")}</TableHead>
                         <TableHead>进料日期</TableHead>
                       </TableRow>
                     </TableHeader>

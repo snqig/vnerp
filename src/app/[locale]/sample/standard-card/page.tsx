@@ -94,28 +94,12 @@ interface StandardCardListItem {
 // 标准卡类型定义（符合设计文档第3节）
 type StandardCardType = 'color' | 'process' | 'quality' | 'comprehensive';
 
-// 标准卡类型映射
-const typeMap: Record<StandardCardType, { label: string; color: string }> = {
-  color: {
-    label: '颜色标准卡',
-    color:
-      'bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-700',
-  },
-  process: {
-    label: '工艺标准卡',
-    color:
-      'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
-  },
-  quality: {
-    label: '质量标准卡',
-    color:
-      'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
-  },
-  comprehensive: {
-    label: '综合标准卡',
-    color:
-      'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700',
-  },
+// 标准卡类型映射（移到组件内部以使用翻译函数）
+const typeMapColors: Record<StandardCardType, string> = {
+  color: 'bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-700',
+  process: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
+  quality: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
+  comprehensive: 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700',
 };
 
 // 审核状态接口
@@ -140,8 +124,8 @@ interface ApprovalStatus {
 
 export default function StandardCardPage() {
   // 翻译钩子
-  const t = useTranslations('Common');
   const tc = useTranslations('Common');
+  const t = useTranslations('StandardCard');
 
   // 状态映射（符合设计文档 5.1 节：草稿、待审核、已生效、已失效）
   const statusMap: Record<number, { label: string; color: string }> = {
@@ -156,25 +140,25 @@ export default function StandardCardPage() {
         'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
     },
     3: {
-      label: '已生效',
+      label: t('effective'),
       color:
         'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
     },
     4: {
-      label: '已失效',
+      label: t('invalid'),
       color:
         'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700',
     },
   };
 
   // 印刷类型选项
-  const printTypes = [tc('all'), '胶印', '卷料丝印', '片料丝印', '轮转印'];
+  const printTypes = [tc('all'), t('offsetPrint'), t('rollScreenPrint'), t('sheetScreenPrint'), t('rotaryPrint')];
 
   // 加工方式选项
-  const processMethods = [tc('all'), '模切', '冲压'];
+  const processMethods = [tc('all'), t('dieCut'), t('stamping')];
 
   // 材料类型选项
-  const materialTypes = [tc('all'), '硬胶', '软胶'];
+  const materialTypes = [tc('all'), t('hardGlue'), t('softGlue')];
 
   const router = useRouter();
   const [cards, setCards] = useState<StandardCardListItem[]>([]);
@@ -297,11 +281,11 @@ export default function StandardCardPage() {
         setApproveDialogOpen(true);
       } else {
         console.error('[StandardCard] handleApprove - 获取审核状态失败:', result.message);
-        alert('获取审核状态失败: ' + result.message);
+        alert(t('getReviewStatusFailed') + ': ' + result.message);
       }
     } catch (error) {
       console.error('[StandardCard] handleApprove - 异常:', error);
-      alert('获取审核状态失败');
+      alert(t('getReviewStatusFailed'));
     } finally {
       setLoadingApproval(false);
     }
@@ -331,18 +315,18 @@ export default function StandardCardPage() {
         loadCards();
       } else {
         console.error('[StandardCard] handleApproveAction - 失败:', result.message);
-        alert('操作失败: ' + result.message);
+        alert(t('operationFailed') + ': ' + result.message);
       }
     } catch (error) {
       console.error('[StandardCard] handleApproveAction - 异常:', error);
-      alert('审核失败');
+      alert(t('reviewFailed'));
     }
   };
 
   const handleUnapprove = async (type: string) => {
     if (!cardToApprove) return;
 
-    if (!confirm('确定要撤销此审核吗？')) return;
+    if (!confirm(t('revokeConfirm'))) return;
 
     try {
       const response = await fetch('/api/standard-cards/approve', {
@@ -352,7 +336,7 @@ export default function StandardCardPage() {
           id: cardToApprove.id,
           type,
           userId: 1,
-          userName: '当前用户',
+          userName: 'Current User',
         }),
       });
 
@@ -362,11 +346,11 @@ export default function StandardCardPage() {
         setApproveDialogOpen(false);
         loadCards();
       } else {
-        alert('操作失败: ' + result.message);
+        alert(t('operationFailed') + ': ' + result.message);
       }
     } catch (error) {
       console.error('撤销审核失败:', error);
-      alert('撤销审核失败');
+      alert(t('revokeFailed'));
     }
   };
 
@@ -392,11 +376,11 @@ export default function StandardCardPage() {
           setDeleteDialogOpen(false);
           setCardToDelete(null);
         } else {
-          alert('删除失败: ' + (result.message || '未知错误'));
+          alert(t('deleteFailed') + ': ' + (result.message || t('unknownError')));
         }
       } catch (error: any) {
         console.error('删除失败:', error);
-        alert('删除失败: ' + (error.message || '请检查网络连接'));
+        alert(t('deleteFailed') + ': ' + (error.message || t('checkNetwork')));
       }
     }
   };
@@ -422,25 +406,25 @@ export default function StandardCardPage() {
           id: card.id,
           type: 'review',
           userId: 1,
-          userName: '当前用户',
+          userName: 'Current User',
         }),
       });
       const result = await response.json();
       console.log('[StandardCard] handleSubmitForReview - 响应:', { success: result.success, message: result.message, newStatus: result.data?.status });
       if (result.success) {
-        alert('提交审核成功');
+        alert(t('submitReviewSuccess'));
         loadCards();
       } else {
-        alert('提交审核失败: ' + result.message);
+        alert(t('submitReviewFailed') + ': ' + result.message);
       }
     } catch (error) {
       console.error('[StandardCard] handleSubmitForReview - 异常:', error);
-      alert('提交审核失败');
+      alert(t('submitReviewFailed'));
     }
   };
 
   const handleReject = async (card: StandardCardListItem) => {
-    if (!confirm('确定要驳回此标准卡吗？驳回后将回退到草稿状态。')) return;
+    if (!confirm(t('rejectConfirm'))) return;
     console.log('[StandardCard] handleReject - 卡片:', { id: card.id, card_no: card.card_no, 当前状态: card.status });
     try {
       const response = await fetch('/api/standard-cards/approve', {
@@ -450,48 +434,48 @@ export default function StandardCardPage() {
           id: card.id,
           type: 'reject',
           userId: 1,
-          userName: '当前用户',
+          userName: 'Current User',
         }),
       });
       const result = await response.json();
       console.log('[StandardCard] handleReject - 响应:', { success: result.success, message: result.message, newStatus: result.data?.status });
       if (result.success) {
-        alert('驳回成功，已回退到草稿');
+        alert(t('rejectSuccess'));
         loadCards();
       } else {
-        alert('驳回失败: ' + result.message);
+        alert(t('rejectFailed') + ': ' + result.message);
       }
     } catch (error) {
       console.error('[StandardCard] handleReject - 异常:', error);
-      alert('驳回失败');
+      alert(t('rejectFailed'));
     }
   };
 
   return (
-    <MainLayout title="标准卡管理">
+    <MainLayout title={t('listTitle')}>
       <div className="space-y-6">
         {/* 页面标题 */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <ClipboardList className="h-6 w-6 text-blue-500" />
-              标准卡管理
+              {t('listTitle')}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              管理产品标准卡信息，支持新建、编辑、预览和打印
+            <p className="text-sm text-muted-foreground">
+              {t('listSubtitle')}
             </p>
           </div>
           <div className="flex gap-2">
             <Link href="/sample/standard-card/input">
               <Button variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
-                新建标准卡
+                {t('newCardBtn')}
               </Button>
             </Link>
             <Link href="/sample/standard-card/input-v2">
               <Button>
                 <Sparkles className="h-4 w-4 mr-2" />
-                传统录入
+                {t('traditionalInput')}
               </Button>
             </Link>
           </div>
@@ -506,7 +490,7 @@ export default function StandardCardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{totalCount}</p>
-                <p className="text-xs text-muted-foreground">总数量</p>
+                <p className="text-xs text-muted-foreground">{t('totalCount')}</p>
               </div>
             </CardContent>
           </Card>
@@ -517,7 +501,7 @@ export default function StandardCardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{cards.filter((c) => c.status === 3).length}</p>
-                <p className="text-xs text-muted-foreground">已生效</p>
+                <p className="text-xs text-muted-foreground">{t('effective')}</p>
               </div>
             </CardContent>
           </Card>
@@ -528,7 +512,7 @@ export default function StandardCardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{cards.filter((c) => c.status === 2).length}</p>
-                <p className="text-xs text-muted-foreground">待审核</p>
+                <p className="text-xs text-muted-foreground">{t('pendingReview')}</p>
               </div>
             </CardContent>
           </Card>
@@ -539,7 +523,7 @@ export default function StandardCardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{cards.filter((c) => c.status === 1).length}</p>
-                <p className="text-xs text-muted-foreground">草稿</p>
+                <p className="text-xs text-muted-foreground">{t('draft')}</p>
               </div>
             </CardContent>
           </Card>
@@ -550,7 +534,7 @@ export default function StandardCardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{cards.filter((c) => c.status === 4).length}</p>
-                <p className="text-xs text-muted-foreground">已失效</p>
+                <p className="text-xs text-muted-foreground">{t('invalid')}</p>
               </div>
             </CardContent>
           </Card>
@@ -565,7 +549,7 @@ export default function StandardCardPage() {
                 <div className="relative flex-1 min-w-[200px] max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索编号、客户、产品..."
+                    placeholder={t('searchPlaceholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -576,21 +560,21 @@ export default function StandardCardPage() {
                 {/* 状态筛选 */}
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder=tc("status") />
+                    <SelectValue placeholder={tc("status")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
-                    <SelectItem value="1">草稿</SelectItem>
-                    <SelectItem value="2">待审核</SelectItem>
-                    <SelectItem value="3">已启用</SelectItem>
-                    <SelectItem value="4">已归档</SelectItem>
+                    <SelectItem value="all">{t('allStatus')}</SelectItem>
+                    <SelectItem value="1">{t('draft')}</SelectItem>
+                    <SelectItem value="2">{t('pendingReview')}</SelectItem>
+                    <SelectItem value="3">{t('enabled')}</SelectItem>
+                    <SelectItem value="4">{t('archived')}</SelectItem>
                   </SelectContent>
                 </Select>
 
                 {/* 印刷类型筛选 */}
                 <Select value={printTypeFilter} onValueChange={setPrintTypeFilter}>
                   <SelectTrigger className="w-[130px]">
-                    <SelectValue placeholder="印刷类型" />
+                    <SelectValue placeholder={t('printTypeFilter')} />
                   </SelectTrigger>
                   <SelectContent>
                     {printTypes.map((type) => (
@@ -604,7 +588,7 @@ export default function StandardCardPage() {
                 {/* 加工方式筛选 */}
                 <Select value={processMethodFilter} onValueChange={setProcessMethodFilter}>
                   <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="加工方式" />
+                    <SelectValue placeholder={t('processMethodFilter')} />
                   </SelectTrigger>
                   <SelectContent>
                     {processMethods.map((method) => (
@@ -618,7 +602,7 @@ export default function StandardCardPage() {
                 {/* 材料类型筛选 */}
                 <Select value={materialTypeFilter} onValueChange={setMaterialTypeFilter}>
                   <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="材料类型" />
+                    <SelectValue placeholder={t('materialTypeFilter')} />
                   </SelectTrigger>
                   <SelectContent>
                     {materialTypes.map((type) => (
@@ -631,7 +615,7 @@ export default function StandardCardPage() {
 
                 <Button variant="secondary" onClick={handleSearch}>
                   <Search className="h-4 w-4 mr-2" />
-                  查询
+                  {t('query')}
                 </Button>
               </div>
             </div>
@@ -642,9 +626,9 @@ export default function StandardCardPage() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">标准卡列表</CardTitle>
+              <CardTitle className="text-base">{t('cardList')}</CardTitle>
               <span className="text-sm text-muted-foreground">
-                共 {totalCount} 条，第 {currentPage}/{totalPages || 1} 页
+                {t('totalItems', { total: totalCount, current: currentPage, totalPages: totalPages || 1 })}
               </span>
             </div>
           </CardHeader>
@@ -667,15 +651,15 @@ export default function StandardCardPage() {
                         className="w-4 h-4"
                       />
                     </TableHead>
-                    <TableHead className="w-[50px]">序号</TableHead>
-                    <TableHead className="w-[130px]">标准卡编号</TableHead>
-                    <TableHead className="w-[120px]">客户</TableHead>
-                    <TableHead className="w-[60px]">版次</TableHead>
-                    <TableHead className="w-[90px]">日期</TableHead>
-                    <TableHead className="w-[120px]">品名</TableHead>
-                    <TableHead className="w-[110px]">客户料号</TableHead>
-                    <TableHead className="w-[70px]">状态</TableHead>
-                    <TableHead className="w-[70px] text-center">操作</TableHead>
+                    <TableHead className="w-[50px]">{t('index')}</TableHead>
+                    <TableHead className="w-[130px]">{t('cardNoCol')}</TableHead>
+                    <TableHead className="w-[120px]">{t('customerCol')}</TableHead>
+                    <TableHead className="w-[60px]">{t('versionCol')}</TableHead>
+                    <TableHead className="w-[90px]">{t('dateCol')}</TableHead>
+                    <TableHead className="w-[120px]">{t('productNameCol')}</TableHead>
+                    <TableHead className="w-[110px]">{t('customerCodeCol')}</TableHead>
+                    <TableHead className="w-[70px]">{t('statusCol')}</TableHead>
+                    <TableHead className="w-[70px] text-center">{t('actionCol')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -684,14 +668,14 @@ export default function StandardCardPage() {
                       <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
                         <div className="flex items-center justify-center gap-2">
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-                          加载中...
+                          {t('loading')}
                         </div>
                       </TableCell>
                     </TableRow>
                   ) : filteredCards.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
-                        暂无数据
+                        {t('noData')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -751,7 +735,7 @@ export default function StandardCardPage() {
                                 size="icon"
                                 className="h-8 w-8 text-green-600"
                                 onClick={() => handleApprove(card)}
-                                title="审核"
+                                title={t('review')}
                               >
                                 <FileText className="h-4 w-4" />
                               </Button>
@@ -761,7 +745,7 @@ export default function StandardCardPage() {
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => handleView(card)}
-                              title=tc("view")
+                              title={tc("view")}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -770,7 +754,7 @@ export default function StandardCardPage() {
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => handlePrint(card)}
-                              title=tc("print")
+                              title={tc("print")}
                             >
                               <Printer className="h-4 w-4" />
                             </Button>
@@ -784,31 +768,31 @@ export default function StandardCardPage() {
                                 {card.status === 1 && (
                                   <DropdownMenuItem onClick={() => handleSubmitForReview(card)}>
                                     <Send className="h-4 w-4 mr-2" />
-                                    提交审核
+                                    {t('submitReview')}
                                   </DropdownMenuItem>
                                 )}
                                 {card.status === 2 && (
                                   <>
                                     <DropdownMenuItem onClick={() => handleApprove(card)}>
                                       <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                                      审核
+                                      {t('review')}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleReject(card)} className="text-orange-600">
                                       <XCircle className="h-4 w-4 mr-2" />
-                                      驳回
+                                      {t('reject')}
                                     </DropdownMenuItem>
                                   </>
                                 )}
                                 <DropdownMenuItem onClick={() => handleEdit(card)}>
                                   <Edit className="h-4 w-4 mr-2" />
-                                  编辑
+                                  {t('edit')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDelete(card)}
                                   className="text-red-600"
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
-                                  删除
+                                  {tc('delete')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -825,8 +809,7 @@ export default function StandardCardPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-4 border-t">
                 <div className="text-sm text-muted-foreground">
-                  显示第 {(currentPage - 1) * pageSize + 1} 到{' '}
-                  {Math.min(currentPage * pageSize, totalCount)} 条，共 {totalCount} 条
+                  {t('showingRange', { start: (currentPage - 1) * pageSize + 1, end: Math.min(currentPage * pageSize, totalCount), total: totalCount })}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -835,7 +818,7 @@ export default function StandardCardPage() {
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                   >
-                    上一页
+                    {t('prevPage')}
                   </Button>
                   <span className="text-sm text-muted-foreground px-2">
                     {currentPage} / {totalPages}
@@ -846,7 +829,7 @@ export default function StandardCardPage() {
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                   >
-                    下一页
+                    {t('nextPage')}
                   </Button>
                 </div>
               </div>
@@ -858,17 +841,17 @@ export default function StandardCardPage() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>确认删除</DialogTitle>
+              <DialogTitle>{t('confirmDelete')}</DialogTitle>
               <DialogDescription>
-                您确定要删除标准卡 <strong>{cardToDelete?.card_no}</strong> 吗？此操作不可恢复。
+                {t('confirmDeleteMsg', { cardNo: cardToDelete?.card_no || '' })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
               <Button variant="destructive" onClick={confirmDelete}>
-                删除
+                {tc('delete')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -878,8 +861,8 @@ export default function StandardCardPage() {
         <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
-              <DialogTitle>标准卡审核流程</DialogTitle>
-              <DialogDescription>标准卡编号：{cardToApprove?.card_no}</DialogDescription>
+              <DialogTitle>{t('reviewProcess')}</DialogTitle>
+              <DialogDescription>{t('reviewCardNo', { cardNo: cardToApprove?.card_no || '' })}</DialogDescription>
             </DialogHeader>
             {loadingApproval ? (
               <div className="flex items-center justify-center py-8">
@@ -888,7 +871,7 @@ export default function StandardCardPage() {
             ) : approvalStatus ? (
               <div className="space-y-4 py-4">
                 <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                  <span className="text-sm font-medium">当前状态：</span>
+                  <span className="text-sm font-medium">{t('currentStatus')}</span>
                   <Badge variant={approvalStatus.status === 3 ? 'default' : 'secondary'}>
                     {approvalStatus.statusLabel}
                   </Badge>
@@ -912,19 +895,19 @@ export default function StandardCardPage() {
                           )}
                         </div>
                         {step.status === 'completed' && (
-                          <div className="text-xs text-muted-foreground mt-1">已审核</div>
+                          <div className="text-xs text-muted-foreground mt-1">{t('reviewed')}</div>
                         )}
                         {step.status === 'pending' && (
-                          <div className="text-xs text-muted-foreground mt-1">待审核</div>
+                          <div className="text-xs text-muted-foreground mt-1">{t('waitingReview')}</div>
                         )}
                         {step.status === 'waiting' && (
-                          <div className="text-xs text-muted-foreground mt-1">等待前置审核</div>
+                          <div className="text-xs text-muted-foreground mt-1">{t('waitingPrevious')}</div>
                         )}
                       </div>
                       <div className="flex gap-2">
                         {step.status === 'pending' && (
                           <Input
-                            placeholder="请输入审核人姓名"
+                            placeholder={t('reviewerPlaceholder')}
                             className="w-40"
                             id={`approve-input-${step.type}`}
                           />
@@ -939,11 +922,11 @@ export default function StandardCardPage() {
                               if (input?.value.trim() !== '') {
                                 handleApproveAction(step.type, input.value.trim());
                               } else {
-                                alert('请输入审核人姓名');
+                                alert(t('reviewerRequired'));
                               }
                             }}
                           >
-                            审核
+                            {t('review')}
                           </Button>
                         )}
                         {step.status === 'completed' && (
@@ -952,7 +935,7 @@ export default function StandardCardPage() {
                             variant="outline"
                             onClick={() => handleUnapprove(step.type)}
                           >
-                            撤销
+                            {t('revoke')}
                           </Button>
                         )}
                       </div>
@@ -963,7 +946,7 @@ export default function StandardCardPage() {
             ) : null}
             <DialogFooter>
               <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>
-                关闭
+                {t('close')}
               </Button>
             </DialogFooter>
           </DialogContent>

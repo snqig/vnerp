@@ -17,6 +17,7 @@ import {
   ArrowUpRight,
   Activity,
   Target,
+  PieChart,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -126,10 +127,12 @@ function HorizontalBarChart({
   data,
   valueKey,
   labelKey,
+  unknownText,
 }: {
   data: ChartDataItem[];
   valueKey: string;
   labelKey: string;
+  unknownText: string;
 }) {
   if (data.length === 0) return null;
   const maxVal = Math.max(...data.map((d) => Number(d[valueKey]) || 0), 1);
@@ -138,7 +141,7 @@ function HorizontalBarChart({
       {data.slice(0, 5).map((d, i) => (
         <div key={i} className="flex items-center gap-3">
           <span className="text-xs w-24 text-right text-cyan-300 truncate">
-            {d[labelKey] || tc('unknown')}
+            {d[labelKey] || unknownText}
           </span>
           <div className="flex-1 bg-white/10 rounded-full h-5 relative overflow-hidden">
             <div
@@ -460,6 +463,7 @@ export default function SalesDashboard() {
                 data={data.topProducts}
                 valueKey="total_qty"
                 labelKey="product_name"
+                unknownText={tc('unknown')}
               />
             )}
           </div>

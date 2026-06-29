@@ -43,6 +43,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTranslations } from 'next-intl';
 import {
   TableExportToolbar,
   printTable,
@@ -92,17 +93,6 @@ interface InventoryCheckItem {
   unit?: string;
 }
 
-const STATUS_MAP: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  0: { label: tc('draft'), variant: 'outline' },
-  1: { label: '进行中', variant: 'default' },
-  2: { label: tc('pending'), variant: 'secondary' },
-  3: { label: '已完成', variant: 'default' },
-  4: { label: '已取消', variant: 'destructive' },
-};
-
 const TYPE_MAP: Record<number, string> = {
   1: '定期盘点',
   2: '不定期盘点',
@@ -120,6 +110,17 @@ export default function StocktakingPage() {
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
+
+  const STATUS_MAP: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    0: { label: tc('draft'), variant: 'outline' },
+    1: { label: t('inProgress'), variant: 'default' },
+    2: { label: tc('pending'), variant: 'secondary' },
+    3: { label: t('completed'), variant: 'default' },
+    4: { label: t('cancelled'), variant: 'destructive' },
+  };
 
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -155,12 +156,12 @@ export default function StocktakingPage() {
   const [showApproveDialog, setShowApproveDialog] = useState(false);
 
   const exportColumns = [
-    { key: 'check_no', header: '盘点单号' },
-    { key: 'warehouse_name', header: '仓库' },
-    { key: 'type_name', header: '盘点类型' },
-    { key: 'total_items', header: '盘点项数' },
-    { key: 'diff_items', header: '差异项数' },
-    { key: 'diff_amount', header: '差异金额' },
+    { key: 'check_no', header: t('checkNo') },
+    { key: 'warehouse_name', header: t('warehouse') },
+    { key: 'type_name', header: t('checkType') },
+    { key: 'total_items', header: t('checkItems') },
+    { key: 'diff_items', header: t('diffItems') },
+    { key: 'diff_amount', header: t('diffAmount') },
     { key: 'status_name', header: tc('status') },
   ];
 
@@ -223,8 +224,8 @@ export default function StocktakingPage() {
       const result = await res.json();
       if (result.success) {
         toast({
-          title: '盘点单生成成功',
-          description: `已锁定库存，共 ${result.data.item_count} 项待盘点`,
+          title: t('checkOrderGenerated'),
+          description: t('checkOrderGeneratedDesc', { count: result.data.item_count }),
         });
         setShowDialog(false);
         fetchData();
@@ -260,18 +261,18 @@ export default function StocktakingPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(t('confirmDelete'))) return;
     try {
       const res = await authFetch(`/api/warehouse/stocktaking?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: t('checkDeleteSuccess') });
         fetchData();
       } else {
-        toast({ title: '删除失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('checkDeleteFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: t('checkDeleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -285,7 +286,7 @@ export default function StocktakingPage() {
 
   const executeScan = async () => {
     if (!currentCheckId || !scanQrCode || !scanQuantity) {
-      toast({ title: '请填写完整的扫码信息', variant: 'destructive' });
+      toast({ title: t('fillScanInfo'), variant: 'destructive' });
       return;
     }
 
@@ -301,14 +302,14 @@ export default function StocktakingPage() {
 
       if (result.success) {
         setScanResult(result.data);
-        toast({ title: '扫码盘点成功' });
+        toast({ title: t('scanCheckSuccess') });
         setScanQrCode('');
         setScanQuantity('');
       } else {
-        toast({ title: '扫码失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('scanCheckFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '扫码失败', variant: 'destructive' });
+      toast({ title: t('scanCheckFailed'), variant: 'destructive' });
     }
   };
 
@@ -330,11 +331,11 @@ export default function StocktakingPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">库存盘点</h1>
+          <h1 className="text-2xl font-bold">{t('stocktaking')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={tc("searchOrderNo")}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -348,13 +349,13 @@ export default function StocktakingPage() {
               totalCount={list.length}
               onSelectAll={() => setSelectedIds(new Set(list.map((i) => i.id)))}
               onDeselectAll={() => setSelectedIds(new Set())}
-              onPrint={() => printTable(getExportData(), exportColumns, '库存盘点')}
+              onPrint={() => printTable(getExportData(), exportColumns, t('stocktaking'))}
               onExportPDF={() =>
-                exportTableToPDF(getExportData(), '库存盘点', exportColumns, '库存盘点')
+                exportTableToPDF(getExportData(), t('stocktaking'), exportColumns, t('stocktaking'))
               }
-              onExportXLS={() => exportTableToXLS(getExportData(), '库存盘点', exportColumns)}
+              onExportXLS={() => exportTableToXLS(getExportData(), t('stocktaking'), exportColumns)}
               onExportWORD={() =>
-                exportTableToWORD(getExportData(), '库存盘点', exportColumns, '库存盘点')
+                exportTableToWORD(getExportData(), t('stocktaking'), exportColumns, t('stocktaking'))
               }
             />
             <Button
@@ -365,7 +366,7 @@ export default function StocktakingPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增盘点
+              {t('addStocktaking')}
             </Button>
           </div>
         </div>
@@ -384,14 +385,14 @@ export default function StocktakingPage() {
                       }}
                     />
                   </TableHead>
-                  <TableHead className="text-xs">盘点单号</TableHead>
-                  <TableHead className="text-xs">仓库</TableHead>
-                  <TableHead className="text-xs">类型</TableHead>
-                  <TableHead className="text-xs">盘点项数</TableHead>
-                  <TableHead className="text-xs">差异项数</TableHead>
-                  <TableHead className="text-xs">差异金额</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{t('checkNo')}</TableHead>
+                  <TableHead className="text-xs">{tc("warehouse")}</TableHead>
+                  <TableHead className="text-xs">{tc("type")}</TableHead>
+                  <TableHead className="text-xs">{t('checkItems')}</TableHead>
+                  <TableHead className="text-xs">{t('diffItems')}</TableHead>
+                  <TableHead className="text-xs">{t('diffAmount')}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -433,7 +434,7 @@ export default function StocktakingPage() {
                               onClick={() => openScanDialog(item)}
                             >
                               <QrCode className="h-3 w-3 mr-1" />
-                              扫码
+                              {t('scan')}
                             </Button>
                           )}
                           {(item.status === 0 || item.status === 1) && (
@@ -443,7 +444,7 @@ export default function StocktakingPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleAction(item.id, 'cancel')}
                             >
-                              取消
+                              {tc('cancel')}
                             </Button>
                           )}
                           {item.status === 1 && (
@@ -453,7 +454,7 @@ export default function StocktakingPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleAction(item.id, 'submit')}
                             >
-                              提交
+                              {tc('submit')}
                             </Button>
                           )}
                           {item.status === 2 && (
@@ -463,7 +464,7 @@ export default function StocktakingPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => setShowApproveDialog(true)}
                             >
-                              审批
+                              {tc('approve')}
                             </Button>
                           )}
                           <Button
@@ -503,7 +504,7 @@ export default function StocktakingPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                      暂无盘点记录
+                      {t('noStocktakingRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -513,7 +514,7 @@ export default function StocktakingPage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{t('totalRecordsCount', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -521,7 +522,7 @@ export default function StocktakingPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('previousPage')}
             </Button>
             <Button
               size="sm"
@@ -529,7 +530,7 @@ export default function StocktakingPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
@@ -537,19 +538,19 @@ export default function StocktakingPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增盘点单</DialogTitle>
+              <DialogTitle>{t('addStocktaking')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  仓库 <span className="text-red-500">*</span>
+                  {t('warehouse')} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={String(editItem.warehouse_id || '')}
                   onValueChange={(v) => setEditItem({ ...editItem, warehouse_id: Number(v) })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择仓库" />
+                    <SelectValue placeholder={t('selectWarehouse')} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w) => (
@@ -561,7 +562,7 @@ export default function StocktakingPage() {
                 </Select>
               </div>
               <div>
-                <Label>盘点类型</Label>
+                <Label>{t('checkType')}</Label>
                 <Select
                   value={String(editItem.type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, type: Number(v) })}
@@ -570,22 +571,22 @@ export default function StocktakingPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">定期盘点</SelectItem>
-                    <SelectItem value="2">不定期盘点</SelectItem>
-                    <SelectItem value="3">循环盘点</SelectItem>
-                    <SelectItem value="4">抽盘</SelectItem>
+                    <SelectItem value="1">{t('periodic')}</SelectItem>
+                    <SelectItem value="2">{t('irregular')}</SelectItem>
+                    <SelectItem value="3">{t('cyclic')}</SelectItem>
+                    <SelectItem value="4">{t('spotCheck')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>盘点人</Label>
+                <Label>{t('checker')}</Label>
                 <UserSelect
                   value={editItem.checker_id ? String(editItem.checker_id) : ''}
                   onChange={(v) => setEditItem({ ...editItem, checker_id: Number(v) })}
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Input
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -594,9 +595,9 @@ export default function StocktakingPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>生成盘点单</Button>
+              <Button onClick={handleSave}>{t('generateCheckOrder')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -604,62 +605,62 @@ export default function StocktakingPage() {
         <Dialog open={showScanDialog} onOpenChange={setShowScanDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>扫码盘点</DialogTitle>
+              <DialogTitle>{t('scanCheckTitle')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label>
-                  二维码 <span className="text-red-500">*</span>
+                  {t('scanCheckQrCode')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={scanQrCode}
                   onChange={(e) => setScanQrCode(e.target.value)}
-                  placeholder="扫描或输入二维码"
+                  placeholder={tc("scanOrEnterQrCode")}
                   className="font-mono"
                 />
               </div>
               <div>
                 <Label>
-                  实际数量 <span className="text-red-500">*</span>
+                  {t('scanCheckQuantity')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   type="number"
                   value={scanQuantity}
                   onChange={(e) => setScanQuantity(e.target.value)}
-                  placeholder="输入实际盘点数量"
+                  placeholder={t('scanCheckQtyPlaceholder')}
                 />
               </div>
               {scanResult && (
                 <div className="border rounded p-3 bg-muted/30 space-y-2">
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <span className="text-muted-foreground">物料名称：</span>
+                      <span className="text-muted-foreground">{t('materialNameLabel')}:</span>
                       {scanResult.material_name}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">批次号：</span>
+                      <span className="text-muted-foreground">{t('batchNoLabel')}:</span>
                       {scanResult.batch_no || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">类型：</span>
-                      {SPLIT_FLAG_MAP[scanResult.split_flag] || '整料'}
+                      <span className="text-muted-foreground">{t('type')}:</span>
+                      {SPLIT_FLAG_MAP[scanResult.split_flag] || t('whole')}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">库位：</span>
+                      <span className="text-muted-foreground">{t('locationLabel')}:</span>
                       {scanResult.warehouse_location || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">账面数量：</span>
+                      <span className="text-muted-foreground">{t('bookQtyLabel')}:</span>
                       {scanResult.book_quantity}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">实际数量：</span>
+                      <span className="text-muted-foreground">{t('scanCheckQuantity')}:</span>
                       {scanResult.actual_quantity}
                     </div>
                     <div
                       className={`col-span-2 font-bold ${scanResult.difference !== 0 ? 'text-red-600' : 'text-green-600'}`}
                     >
-                      差异：{scanResult.difference > 0 ? '+' : ''}
+                      {t('diffLabel')}:{scanResult.difference > 0 ? '+' : ''}
                       {scanResult.difference}
                     </div>
                   </div>
@@ -668,11 +669,11 @@ export default function StocktakingPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowScanDialog(false)}>
-                关闭
+                {tc('close')}
               </Button>
               <Button onClick={executeScan}>
                 <QrCode className="h-4 w-4 mr-1" />
-                确认盘点
+                {t('confirmCheck')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -681,18 +682,18 @@ export default function StocktakingPage() {
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto" resizable>
             <DialogHeader>
-              <DialogTitle>盘点明细</DialogTitle>
+              <DialogTitle>{t('checkDetail')}</DialogTitle>
             </DialogHeader>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>二维码</TableHead>
-                  <TableHead>物料名称</TableHead>
-                  <TableHead>类型</TableHead>
-                  <TableHead>账面数量</TableHead>
-                  <TableHead>实际数量</TableHead>
-                  <TableHead>差异数量</TableHead>
-                  <TableHead>状态</TableHead>
+                  <TableHead>{t('qrCodeCol')}</TableHead>
+                  <TableHead>{t('materialNameCol')}</TableHead>
+                  <TableHead>{tc("type")}</TableHead>
+                  <TableHead>{t('bookQtyCol')}</TableHead>
+                  <TableHead>{t('actualQtyCol')}</TableHead>
+                  <TableHead>{t('diffQtyCol')}</TableHead>
+                  <TableHead>{tc("status")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -701,7 +702,7 @@ export default function StocktakingPage() {
                     <TableCell className="font-mono text-xs">{item.qr_code || '-'}</TableCell>
                     <TableCell className="text-xs">{item.material_name || '-'}</TableCell>
                     <TableCell className="text-xs">
-                      {SPLIT_FLAG_MAP[item.split_flag] || '整料'}
+                      {SPLIT_FLAG_MAP[item.split_flag] || t('whole')}
                     </TableCell>
                     <TableCell className="text-xs text-center">{item.book_quantity}</TableCell>
                     <TableCell className="text-xs text-center">
@@ -718,7 +719,7 @@ export default function StocktakingPage() {
                         variant={item.status === 1 ? 'default' : 'outline'}
                         className="text-xs"
                       >
-                        {item.status === 0 ? '未盘点' : item.status === 1 ? '已盘点' : '已调整'}
+                        {item.status === 0 ? t('unchecked') : item.status === 1 ? t('checked') : t('adjusted')}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -731,11 +732,11 @@ export default function StocktakingPage() {
         <Dialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
           <DialogContent className="max-w-md" resizable>
             <DialogHeader>
-              <DialogTitle>审批盘点结果</DialogTitle>
+              <DialogTitle>{t('approveCheckTitle')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>审批人</Label>
+                <Label>{tc("approver")}</Label>
                 <UserSelect value="" onChange={(v) => {}} />
               </div>
               <div className="flex gap-2">
@@ -748,7 +749,7 @@ export default function StocktakingPage() {
                   }
                 >
                   <CheckCircle className="h-4 w-4 mr-1" />
-                  通过
+                  {t('approve')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -756,7 +757,7 @@ export default function StocktakingPage() {
                   onClick={() => handleAction(list.find((i) => i.status === 2)?.id || 0, 'reject')}
                 >
                   <XCircle className="h-4 w-4 mr-1" />
-                  驳回
+                  {t('reject')}
                 </Button>
               </div>
             </div>

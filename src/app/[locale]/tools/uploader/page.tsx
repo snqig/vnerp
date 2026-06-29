@@ -194,7 +194,7 @@ export default function ProjectUploaderPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">已选择</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc("selected")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-500">{selectedCount}</div>
@@ -233,7 +233,7 @@ export default function ProjectUploaderPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-64"
                   />
-                  <Button onClick={selectAll}>全选</Button>
+                  <Button onClick={selectAll}>{tc("selectAll")}</Button>
                   <Button variant="outline" onClick={deselectAll}>取消全选</Button>
                 </div>
               </div>
@@ -245,7 +245,7 @@ export default function ProjectUploaderPage() {
                     <TableRow>
                       <TableHead className="w-12">选择</TableHead>
                       <TableHead>文件路径</TableHead>
-                      <TableHead className="w-24">类型</TableHead>
+                      <TableHead className="w-24">{tc("type")}</TableHead>
                       <TableHead className="w-24">大小</TableHead>
                       <TableHead className="w-36">修改时间</TableHead>
                     </TableRow>

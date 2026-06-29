@@ -118,6 +118,19 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
 
   const menus = propMenus || authMenus || [];
 
+  const getMenuName = (menu: MenuItem): string => {
+    if (menu.code) {
+      try {
+        const translated = t(menu.code);
+        if (translated && translated !== menu.code && translated.trim() !== '') {
+          return translated;
+        }
+      } catch {
+      }
+    }
+    return menu.name;
+  };
+
   const getIcon = (iconName?: string) => {
     if (!iconName) return <LayoutDashboard className="w-4 h-4" />;
     const IconComponent = iconMap[iconName];
@@ -171,7 +184,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
           title: n.notice_title,
           content: n.notice_content || '',
           time: n.create_time ? new Date(n.create_time).toLocaleString('zh-CN') : '',
-          type: n.notice_type === 1 ? ts('notice') : n.notice_type === 2 ? '公告' : tc('all'),
+          type: n.notice_type === 1 ? ts('notice') : n.notice_type === 2 ? ts('announcement') : tc('all'),
           read: false,
         }));
         setNotifications(items);
@@ -182,9 +195,9 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
         {
           id: 1,
           title: ts('notice'),
-          content: '欢迎使用ERP系统',
+          content: ts('welcomeToErp'),
           time: new Date().toLocaleString('zh-CN'),
-          type: '系统',
+          type: ts('system'),
           read: false,
         },
       ]);
@@ -268,7 +281,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
                       <DropdownMenuTrigger asChild>
                         <button className={cn('snow-top-nav-item', isTopActive && 'active')}>
                           {getIcon(menu.icon)}
-                          <span>{menu.name}</span>
+                          <span>{getMenuName(menu)}</span>
                           <ChevronDown className="w-3 h-3 ml-1" />
                         </button>
                       </DropdownMenuTrigger>
@@ -283,7 +296,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
                               )}
                             >
                               {getIcon(child.icon)}
-                              <span>{child.name}</span>
+                              <span>{getMenuName(child)}</span>
                             </Link>
                           </DropdownMenuItem>
                         ))}
@@ -298,7 +311,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
                     className={cn('snow-top-nav-item', isTopActive && 'active')}
                   >
                     {getIcon(menu.icon)}
-                    <span>{menu.name}</span>
+                    <span>{getMenuName(menu)}</span>
                   </Link>
                 );
               })}
@@ -331,7 +344,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
                   className="h-6 text-xs"
                   onClick={handleMarkAllRead}
                 >
-                  全部已读
+                  {tc('markAllRead')}
                 </Button>
               )}
             </div>
@@ -383,7 +396,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleSwitchWarehouse}>
               <Warehouse className="mr-2 h-4 w-4" />
-              切换仓库
+              {tc('switchWarehouse')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive" onClick={handleLogout}>

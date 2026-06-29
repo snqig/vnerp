@@ -92,6 +92,23 @@ const creditLevelMap: Record<string, { label: string; cls: string }> = {
   C: { label: '条件', cls: 'bg-orange-500 text-white' },
   D: { label: '失格', cls: 'bg-red-500 text-white' },
 };
+
+const emptyForm = {
+  supplier_code: '',
+  supplier_name: '',
+  short_name: '',
+  supplier_type: 1,
+  contact_name: '',
+  contact_phone: '',
+  contact_email: '',
+  address: '',
+  credit_level: 'B',
+  settlement_method: '月结',
+  payment_terms: '30天',
+  status: 1,
+  remark: '',
+};
+
 export default function SuppliersPage() {
   // 翻译钩子
   const t = useTranslations('Purchase');
@@ -99,8 +116,8 @@ export default function SuppliersPage() {
 
   const statusMap: Record<number, { label: string; cls: string }> = {
   1: { label: tc('enabled'), cls: 'bg-green-100 text-green-800' },
-  0: { label: '停用', cls: 'bg-yellow-100 text-yellow-800' },
-  2: { label: '黑名单', cls: 'bg-red-100 text-red-800' },
+  0: { label: tc('disabled'), cls: 'bg-yellow-100 text-yellow-800' },
+  2: { label: tc('blacklist'), cls: 'bg-red-100 text-red-800' },
 };
 
   const { companyName } = useCompanyName();
@@ -218,6 +235,7 @@ export default function SuppliersPage() {
       credit_level: item.credit_level || 'B',
       settlement_method: item.settlement_method || '月结',
       payment_terms: item.payment_terms || '30天',
+      status: item.status ?? 1,
       remark: item.remark || '',
     });
     setShowDialog(true);
@@ -253,7 +271,7 @@ export default function SuppliersPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除这个供应商吗？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch(`/api/purchase/suppliers?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
@@ -323,7 +341,7 @@ export default function SuppliersPage() {
         <h1>供应商列表</h1>
         <div class="info">打印时间：${new Date().toLocaleString('zh-CN')} | 共 ${recordsToPrint.length} 条</div>
         <table>
-          <thead><tr><th>编号</th><th>名称</th><th>类型</th><th>等级</th><th>状态</th><th>联系人</th><th>联系电话</th></tr></thead>
+          <thead><tr><th>编号</th><th>{tc("name")}</th><th>{tc("type")}</th><th>等级</th><th>{tc("status")}</th><th>联系人</th><th>{tc("phone")}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
         <div class="footer">${companyName}</div>
@@ -419,7 +437,7 @@ export default function SuppliersPage() {
         <h1>供应商列表</h1>
         <div class="info">导出时间：${new Date().toLocaleString('zh-CN')} | 共 ${recordsToExport.length} 条</div>
         <table>
-          <thead><tr><th>编号</th><th>名称</th><th>类型</th><th>等级</th><th>状态</th><th>联系人</th><th>联系电话</th><th>邮箱</th><th>地址</th></tr></thead>
+          <thead><tr><th>编号</th><th>{tc("name")}</th><th>{tc("type")}</th><th>等级</th><th>{tc("status")}</th><th>联系人</th><th>{tc("phone")}</th><th>{tc("email")}</th><th>{tc("address")}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
         <div class="footer">${companyName}</div>
@@ -439,37 +457,37 @@ export default function SuppliersPage() {
   };
 
   return (
-    <MainLayout title="供应商管理">
+    <MainLayout title={t('supplierManagement')}>
       <div className="space-y-6">
         <div className="grid grid-cols-5 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-yellow-600">{stats.S}</div>
-              <div className="text-sm text-muted-foreground">战略供应商(S)</div>
+              <div className="text-sm text-muted-foreground">{tc('strategicSupplier')}(S)</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-gray-600">{stats.A}</div>
-              <div className="text-sm text-muted-foreground">优选供应商(A)</div>
+              <div className="text-sm text-muted-foreground">{tc('preferredSupplier')}(A)</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-orange-500">{stats.B}</div>
-              <div className="text-sm text-muted-foreground">合格供应商(B)</div>
+              <div className="text-sm text-muted-foreground">{tc('qualifiedSupplier')}(B)</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-orange-600">{stats.C}</div>
-              <div className="text-sm text-muted-foreground">条件供应商(C)</div>
+              <div className="text-sm text-muted-foreground">{tc('conditionalSupplier')}(C)</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <div className="text-2xl font-bold text-red-600">{stats.D}</div>
-              <div className="text-sm text-muted-foreground">失格供应商(D)</div>
+              <div className="text-sm text-muted-foreground">{tc('disqualifiedSupplier')}(D)</div>
             </CardContent>
           </Card>
         </div>
@@ -479,7 +497,7 @@ export default function SuppliersPage() {
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex flex-1 gap-4 items-center w-full md:w-auto">
                 <SearchInput
-                  placeholder="搜索供应商编号、名称..."
+                  placeholder={t('searchSupplierPlaceholder')}
                   value={keyword}
                   onChange={setKeyword}
                   onSearch={() => fetchData()}
@@ -487,26 +505,26 @@ export default function SuppliersPage() {
                 />
                 <Select value={gradeFilter} onValueChange={setGradeFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="等级" />
+                    <SelectValue placeholder={tc('grade')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部等级</SelectItem>
-                    <SelectItem value="S">战略(S)</SelectItem>
-                    <SelectItem value="A">优选(A)</SelectItem>
-                    <SelectItem value="B">合格(B)</SelectItem>
-                    <SelectItem value="C">条件(C)</SelectItem>
-                    <SelectItem value="D">失格(D)</SelectItem>
+                    <SelectItem value="all">{tc('allGrades')}</SelectItem>
+                    <SelectItem value="S">{tc('strategic')}(S)</SelectItem>
+                    <SelectItem value="A">{tc('preferred')}(A)</SelectItem>
+                    <SelectItem value="B">{tc('qualified')}(B)</SelectItem>
+                    <SelectItem value="C">{tc('conditional')}(C)</SelectItem>
+                    <SelectItem value="D">{tc('disqualified')}(D)</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder=tc("status") />
+                    <SelectValue placeholder={tc("status")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
-                    <SelectItem value="1">启用</SelectItem>
-                    <SelectItem value="0">停用</SelectItem>
-                    <SelectItem value="2">黑名单</SelectItem>
+                    <SelectItem value="all">{tc('allStatus')}</SelectItem>
+                    <SelectItem value="1">{tc("enable")}</SelectItem>
+                    <SelectItem value="0">{tc('disabled')}</SelectItem>
+                    <SelectItem value="2">{tc('blacklist')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" size="sm" onClick={fetchData}>
@@ -515,7 +533,7 @@ export default function SuppliersPage() {
               </div>
               <Button onClick={handleOpenAdd}>
                 <Plus className="h-4 w-4 mr-2" />
-                新建供应商
+                {t('newSupplier')}
               </Button>
               <div className="flex gap-1 ml-2">
                 <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1">
@@ -619,7 +637,7 @@ export default function SuppliersPage() {
                         联系电话{getSortIcon('contact_phone')}
                       </span>
                     </TableHead>
-                    <TableHead className="text-right">操作</TableHead>
+                    <TableHead className="text-right">{tc("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -719,7 +737,7 @@ export default function SuppliersPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
-              <DialogTitle>{editId ? '编辑供应商' : '新建供应商'}</DialogTitle>
+              <DialogTitle>{editId ? t('editSupplier') : t('newSupplier')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
@@ -761,7 +779,7 @@ export default function SuppliersPage() {
                     <SelectItem value="2">油墨</SelectItem>
                     <SelectItem value="3">辅料</SelectItem>
                     <SelectItem value="4">包装</SelectItem>
-                    <SelectItem value="5">设备</SelectItem>
+                    <SelectItem value="5">{tc("equipment")}</SelectItem>
                     <SelectItem value="6">委外</SelectItem>
                   </SelectContent>
                 </Select>
@@ -775,7 +793,7 @@ export default function SuppliersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>联系电话</Label>
+                <Label>{tc("phone")}</Label>
                 <Input
                   value={form.contact_phone}
                   onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
@@ -783,11 +801,11 @@ export default function SuppliersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>邮箱</Label>
+                <Label>{tc("email")}</Label>
                 <Input
                   value={form.contact_email}
                   onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
-                  placeholder="请输入邮箱"
+                  placeholder={tc("enterEmail")}
                 />
               </div>
               <div className="space-y-2">
@@ -846,15 +864,15 @@ export default function SuppliersPage() {
                 </Select>
               </div>
               <div className="space-y-2 col-span-2">
-                <Label>地址</Label>
+                <Label>{tc("address")}</Label>
                 <Input
                   value={form.address}
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  placeholder="请输入地址"
+                  placeholder={tc("enterAddress")}
                 />
               </div>
               <div className="space-y-2 col-span-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Input
                   value={form.remark}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}

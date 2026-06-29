@@ -1,123 +1,92 @@
 /**
  * 数据库备份脚本
- * 使用 Node.js 执行 MySQL 备份
+ * 用法: npx tsx scripts/backup-database.ts
+ * 
+ * 支持功能:
+ * - 全量备份（mysqldump）
+ * - 自动清理过期备份（默认保留7天）
+ * - 备份文件压缩
  */
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 
 const execAsync = promisify(exec);
 
-// 数据库配置
-const DB_CONFIG = {
-  host: '127.0.0.1',
-  user: 'root',
-  password: 'Snqig521223',
-  database: 'vnerpdacahng',
+// 配置
+const config = {
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || '3306',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'vnerp',
+  backupDir: process.env.BACKUP_DIR || './backups',
+  retentionDays: parseInt(process.env.BACKUP_RETENTION_DAYS || '7'),
 };
 
-async function backupDatabase() {
+async function backup() {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const backupDir = path.join(process.cwd(), 'backups');
-  const backupFile = path.join(backupDir, `backup_${timestamp}.sql`);
+  const filename = `${config.database}_${timestamp}.sql.gz`;
+  const filepath = path.join(config.backupDir, filename);
 
-  // 创建备份目录
-  if (!fs.existsSync(backupDir)) {
-    fs.mkdirSync(backupDir, { recursive: true });
+  // 确保备份目录存在
+  if (!fs.existsSync(config.backupDir)) {
+    fs.mkdirSync(config.backupDir, { recursive: true });
   }
 
-  console.log('========================================');
-  console.log('数据库备份');
-  console.log('========================================\n');
-  console.log(`数据库: ${DB_CONFIG.database}`);
-  console.log(`备份文件: ${backupFile}\n`);
+  console.log(`[${new Date().toISOString()}] 开始备份数据库: ${config.database}`);
 
   try {
-    // 构建 mysqldump 命令
-    const cmd = `mysqldump -h ${DB_CONFIG.host} -u ${DB_CONFIG.user} -p${DB_CONFIG.password} ${DB_CONFIG.database}`;
+    const dumpCommand = `mysqldump -h${config.host} -P${config.port} -u${config.user} ${config.password ? `-p${config.password}` : ''} --single-transaction --routines --triggers --events ${config.database} | gzip > "${filepath}"`;
 
-    console.log('正在执行备份...');
-
-    // 执行备份
-    const { stdout, stderr } = await execAsync(cmd, {
-      maxBuffer: 1024 * 1024 * 100, // 100MB buffer
-    });
+    const { stdout, stderr } = await execAsync(dumpCommand);
 
     if (stderr && !stderr.includes('Warning')) {
       console.error('备份警告:', stderr);
     }
 
-    // 写入文件
-    fs.writeFileSync(backupFile, stdout);
-
-    // 获取文件大小
-    const stats = fs.statSync(backupFile);
+    const stats = fs.statSync(filepath);
     const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
 
-    console.log('✓ 备份完成！');
-    console.log(`文件大小: ${sizeMB} MB`);
-    console.log(`保存位置: ${backupFile}\n`);
+    console.log(`[${new Date().toISOString()}] 备份完成: ${filename} (${sizeMB}MB)`);
 
-    // 列出最近的备份
-    listRecentBackups(backupDir);
+    // 清理过期备份
+    await cleanupOldBackups();
 
-    return backupFile;
-
+    return { success: true, filename, size: sizeMB };
   } catch (error: any) {
-    if (error.message.includes('mysqldump')) {
-      console.error('错误: 找不到 mysqldump 命令');
-      console.error('请确保 MySQL 已安装并添加到系统 PATH');
-      console.error('\n或者手动执行备份命令:');
-      console.error(`mysqldump -h ${DB_CONFIG.host} -u ${DB_CONFIG.user} -p ${DB_CONFIG.database} > ${backupFile}`);
-    } else {
-      console.error('备份失败:', error.message);
+    console.error(`[${new Date().toISOString()}] 备份失败:`, error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+async function cleanupOldBackups() {
+  if (!fs.existsSync(config.backupDir)) return;
+
+  const files = fs.readdirSync(config.backupDir);
+  const now = Date.now();
+  const retentionMs = config.retentionDays * 24 * 60 * 60 * 1000;
+
+  let cleaned = 0;
+  for (const file of files) {
+    const filepath = path.join(config.backupDir, file);
+    const stats = fs.statSync(filepath);
+
+    if (now - stats.mtimeMs > retentionMs) {
+      fs.unlinkSync(filepath);
+      cleaned++;
+      console.log(`清理过期备份: ${file}`);
     }
-    throw error;
+  }
+
+  if (cleaned > 0) {
+    console.log(`已清理 ${cleaned} 个过期备份（保留${config.retentionDays}天内）`);
   }
 }
 
-function listRecentBackups(backupDir: string) {
-  console.log('最近的备份文件:');
-  console.log('-'.repeat(60));
-
-  if (!fs.existsSync(backupDir)) {
-    console.log('无');
-    return;
-  }
-
-  const files = fs.readdirSync(backupDir)
-    .filter(f => f.endsWith('.sql'))
-    .map(f => {
-      const stat = fs.statSync(path.join(backupDir, f));
-      return {
-        name: f,
-        size: (stat.size / 1024 / 1024).toFixed(2) + ' MB',
-        time: stat.mtime.toLocaleString(),
-      };
-    })
-    .sort((a, b) => b.time.localeCompare(a.time))
-    .slice(0, 5);
-
-  if (files.length === 0) {
-    console.log('无');
-  } else {
-    files.forEach(f => {
-      console.log(`${f.name} | ${f.size} | ${f.time}`);
-    });
-  }
-  console.log('');
-}
-
-// 主函数
-async function main() {
-  try {
-    await backupDatabase();
-    process.exit(0);
-  } catch (error) {
-    process.exit(1);
-  }
-}
-
-main();
+// 执行备份
+backup().then((result) => {
+  process.exit(result.success ? 0 : 1);
+});

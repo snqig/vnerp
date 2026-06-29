@@ -63,16 +63,16 @@ export default function LoginLogPage() {
   }, [page]);
 
   const handleClear = async () => {
-    if (!confirm('确定清空所有登录日志？')) return;
+    if (!confirm(tc("confirmClearLoginLogs"))) return;
     try {
       const res = await authFetch('/api/system/login-log', { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '清空成功' });
+        toast({ title: tc("clearSuccess") });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc("failed"), variant: 'destructive' });
     }
   };
 
@@ -80,11 +80,11 @@ export default function LoginLogPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">登录日志</h1>
+          <h1 className="text-2xl font-bold">{t("loginLog")}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索用户名"
+                placeholder={tc("searchUsername")}
                 value={searchUser}
                 onChange={(e) => setSearchUser(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -94,7 +94,7 @@ export default function LoginLogPage() {
               </Button>
             </div>
             <Button size="sm" variant="destructive" onClick={handleClear}>
-              清空日志
+              {tc("clearLogs")}
             </Button>
           </div>
         </div>
@@ -103,14 +103,14 @@ export default function LoginLogPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">用户名</TableHead>
-                  <TableHead className="text-xs">登录时间</TableHead>
-                  <TableHead className="text-xs">IP地址</TableHead>
-                  <TableHead className="text-xs">登录地点</TableHead>
-                  <TableHead className="text-xs">浏览器</TableHead>
-                  <TableHead className="text-xs">操作系统</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">提示消息</TableHead>
+                  <TableHead className="text-xs">{tc("username")}</TableHead>
+                  <TableHead className="text-xs">{tc("loginTime")}</TableHead>
+                  <TableHead className="text-xs">{tc("ipAddress")}</TableHead>
+                  <TableHead className="text-xs">{tc("loginLocation")}</TableHead>
+                  <TableHead className="text-xs">{tc("browser")}</TableHead>
+                  <TableHead className="text-xs">{tc("os")}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("message")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -127,7 +127,7 @@ export default function LoginLogPage() {
                         variant={item.status === 1 ? 'default' : 'destructive'}
                         className="text-xs"
                       >
-                        {item.status === 1 ? '成功' : '失败'}
+                        {item.status === 1 ? tc("success") : tc("failed")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs max-w-32 truncate">{item.msg || '-'}</TableCell>
@@ -136,7 +136,7 @@ export default function LoginLogPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-gray-400 py-8">
-                      暂无记录
+                      {tc("noRecords")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -145,7 +145,7 @@ export default function LoginLogPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc("totalItems", { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -153,7 +153,7 @@ export default function LoginLogPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc("prevPage")}
             </Button>
             <Button
               size="sm"
@@ -161,7 +161,7 @@ export default function LoginLogPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc("nextPage")}
             </Button>
           </div>
         </div>

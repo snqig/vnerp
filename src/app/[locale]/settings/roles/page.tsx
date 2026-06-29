@@ -103,6 +103,10 @@ export default function RolesPage() {
   const [selectedMenus, setSelectedMenus] = useState<number[]>([]);
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [activePermissionTab, setActivePermissionTab] = useState('menus');
+  const [dataScopeConfig, setDataScopeConfig] = useState<Record<string, number[]>>({});
+  const [warehouses, setWarehouses] = useState<{ id: number; name: string }[]>([]);
+  const [customers, setCustomers] = useState<{ id: number; name: string }[]>([]);
+  const [suppliers, setSuppliers] = useState<{ id: number; name: string }[]>([]);
 
   const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -131,7 +135,7 @@ export default function RolesPage() {
       }
     } catch (error) {
       console.error('获取角色列表失败:', error);
-      toast({ title: '获取角色列表失败', variant: 'destructive' });
+      toast({ title: tc('fetchRoleListFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -185,7 +189,7 @@ export default function RolesPage() {
   // 保存角色
   const saveRole = async () => {
     if (!form.role_code || !form.role_name) {
-      toast({ title: '角色编码和名称不能为空', variant: 'destructive' });
+      toast({ title: tc('roleCodeNameRequired'), variant: 'destructive' });
       return;
     }
 
@@ -200,21 +204,21 @@ export default function RolesPage() {
 
       const result = await response.json();
       if (result.success) {
-        toast({ title: editing ? '角色更新成功' : '角色创建成功' });
+        toast({ title: editing ? tc('roleUpdateSuccess') : tc('roleCreateSuccess') });
         setDialogOpen(false);
         fetchRoles();
       } else {
-        toast({ title: result.message || '保存失败', variant: 'destructive' });
+        toast({ title: result.message || tc('saveFailed'), variant: 'destructive' });
       }
     } catch (error) {
       console.error('保存角色失败:', error);
-      toast({ title: '保存角色失败', variant: 'destructive' });
+      toast({ title: tc('saveRoleFailed'), variant: 'destructive' });
     }
   };
 
   // 删除角色
   const deleteRole = async (id: number) => {
-    if (!confirm('确定要删除该角色吗？')) return;
+    if (!confirm(tc('confirmDeleteRole'))) return;
 
     try {
       const response = await authFetch(`/api/organization/role?id=${id}`, {
@@ -223,14 +227,14 @@ export default function RolesPage() {
 
       const result = await response.json();
       if (result.success) {
-        toast({ title: '角色删除成功' });
+        toast({ title: tc('roleDeleteSuccess') });
         fetchRoles();
       } else {
-        toast({ title: result.message || '删除失败', variant: 'destructive' });
+        toast({ title: result.message || tc('deleteFailed'), variant: 'destructive' });
       }
     } catch (error) {
       console.error('删除角色失败:', error);
-      toast({ title: '删除角色失败', variant: 'destructive' });
+      toast({ title: tc('deleteRoleFailed'), variant: 'destructive' });
     }
   };
 
@@ -250,7 +254,7 @@ export default function RolesPage() {
 
       const menuResult = await menuResponse.json();
       if (!menuResult.success) {
-        toast({ title: menuResult.message || '菜单权限设置失败', variant: 'destructive' });
+        toast({ title: menuResult.message || tc('menuPermissionFailed'), variant: 'destructive' });
         return;
       }
 
@@ -264,11 +268,24 @@ export default function RolesPage() {
 
       const btnResult = await btnResponse.json();
       if (!btnResult.success) {
-        toast({ title: btnResult.message || '按钮权限设置失败', variant: 'destructive' });
+        toast({ title: btnResult.message || tc('buttonPermissionFailed'), variant: 'destructive' });
         return;
       }
 
-      toast({ title: '权限设置成功' });
+      // 保存数据权限
+      try {
+        await authFetch('/api/system/data-scope', {
+          method: 'POST',
+          body: JSON.stringify({
+            roleId: selectedRole.id,
+            scopes: dataScopeConfig,
+          }),
+        });
+      } catch (e) {
+        console.error('保存数据权限失败:', e);
+      }
+
+      toast({ title: tc('permissionSetSuccess') });
       setPermissionDialogOpen(false);
       fetchRoles();
 
@@ -279,7 +296,7 @@ export default function RolesPage() {
       }
     } catch (error) {
       console.error('保存权限失败:', error);
-      toast({ title: '保存权限失败', variant: 'destructive' });
+      toast({ title: tc('savePermissionFailed'), variant: 'destructive' });
     }
   };
 
@@ -303,6 +320,7 @@ export default function RolesPage() {
     setSelectedMenus([]);
     setSelectedPermissions([]);
     setActivePermissionTab('menus');
+    setDataScopeConfig({});
 
     let currentMenus = menus;
     if (currentMenus.length === 0) {
@@ -310,6 +328,51 @@ export default function RolesPage() {
     }
 
     await fetchRolePermissions(role.id);
+
+    // 加载数据权限配置
+    try {
+      const scopeRes = await authFetch(`/api/system/data-scope?roleId=${role.id}`);
+      const scopeResult = await scopeRes.json();
+      if (scopeResult.success) {
+        setDataScopeConfig(scopeResult.data || {});
+      }
+    } catch (e) {
+      console.error('加载数据权限失败:', e);
+    }
+
+    // 加载仓库列表
+    try {
+      const whRes = await authFetch('/api/warehouse/list');
+      const whResult = await whRes.json();
+      if (whResult.success) {
+        setWarehouses((whResult.data || []).map((w: any) => ({ id: w.id, name: w.warehouse_name || w.name })));
+      }
+    } catch (e) {
+      console.error('加载仓库列表失败:', e);
+    }
+
+    // 加载客户列表
+    try {
+      const custRes = await authFetch('/api/customers');
+      const custResult = await custRes.json();
+      if (custResult.success) {
+        setCustomers((Array.isArray(custResult.data) ? custResult.data : (custResult.data?.list || [])).map((c: any) => ({ id: c.id, name: c.customer_name || c.name })));
+      }
+    } catch (e) {
+      console.error('加载客户列表失败:', e);
+    }
+
+    // 加载供应商列表
+    try {
+      const supRes = await authFetch('/api/suppliers');
+      const supResult = await supRes.json();
+      if (supResult.success) {
+        setSuppliers((Array.isArray(supResult.data) ? supResult.data : (supResult.data?.list || [])).map((s: any) => ({ id: s.id, name: s.supplier_name || s.name })));
+      }
+    } catch (e) {
+      console.error('加载供应商列表失败:', e);
+    }
+
     setPermissionDialogOpen(true);
   };
 
@@ -357,11 +420,11 @@ export default function RolesPage() {
   const getStatusBadge = (status: number) => {
     switch (status) {
       case 1:
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">启用</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{tc('enabled')}</Badge>;
       case 0:
-        return <Badge className="bg-muted text-muted-foreground hover:bg-muted">停用</Badge>;
+        return <Badge className="bg-muted text-muted-foreground hover:bg-muted">{tc('disabled')}</Badge>;
       default:
-        return <Badge variant="secondary">未知</Badge>;
+        return <Badge variant="secondary">{tc('unknown')}</Badge>;
     }
   };
 
@@ -379,13 +442,13 @@ export default function RolesPage() {
               <div>
                 <CardTitle className="text-2xl flex items-center gap-2">
                   <Shield className="w-6 h-6" />
-                  角色管理
+                  {tc('roleManagement')}
                 </CardTitle>
-                <CardDescription>管理系统角色和权限分配</CardDescription>
+                <CardDescription>{tc('roleManagementDesc')}</CardDescription>
               </div>
               <Button onClick={openAddDialog} className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="w-4 h-4 mr-2" />
-                新增角色
+                {tc('addRole')}
               </Button>
             </div>
           </CardHeader>
@@ -395,7 +458,7 @@ export default function RolesPage() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="搜索角色名称、编码..."
+                  placeholder={tc('searchRolePlaceholder')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && fetchRoles()}
@@ -404,7 +467,7 @@ export default function RolesPage() {
               </div>
               <Button variant="outline" onClick={fetchRoles}>
                 <RefreshCw className="w-4 h-4 mr-2" />
-                刷新
+                {tc('refresh')}
               </Button>
             </div>
 
@@ -417,12 +480,12 @@ export default function RolesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-16">序号</TableHead>
-                    <TableHead>角色编码</TableHead>
-                    <TableHead>角色名称</TableHead>
-                    <TableHead>描述</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead className="text-right">操作</TableHead>
+                    <TableHead className="w-16">{tc('index')}</TableHead>
+                    <TableHead>{tc('roleCode')}</TableHead>
+                    <TableHead>{tc('roleName')}</TableHead>
+                    <TableHead>{tc('description')}</TableHead>
+                    <TableHead>{tc('status')}</TableHead>
+                    <TableHead className="text-right">{tc('operation')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -443,11 +506,11 @@ export default function RolesPage() {
                             onClick={() => openPermissionDialog(role)}
                           >
                             <Shield className="w-4 h-4 mr-1" />
-                            权限
+                            {tc('permission')}
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => openEditDialog(role)}>
                             <Edit className="w-4 h-4 mr-1" />
-                            编辑
+                            {tc('edit')}
                           </Button>
                           <Button
                             variant="ghost"
@@ -456,7 +519,7 @@ export default function RolesPage() {
                             onClick={() => deleteRole(role.id)}
                           >
                             <Trash2 className="w-4 h-4 mr-1" />
-                            删除
+                            {tc('delete')}
                           </Button>
                         </div>
                       </TableCell>
@@ -473,61 +536,61 @@ export default function RolesPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg" resizable>
           <DialogHeader>
-            <DialogTitle>{editing ? '编辑角色' : '新增角色'}</DialogTitle>
-            <DialogDescription>{editing ? '修改角色信息' : '填写新角色信息'}</DialogDescription>
+            <DialogTitle>{editing ? tc('editRole') : tc('addRole')}</DialogTitle>
+            <DialogDescription>{editing ? tc('editRoleDesc') : tc('addRoleDesc')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label>
-                角色编码 <span className="text-red-500">*</span>
+                {tc('roleCode')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={form.role_code || ''}
                 onChange={(e) => setForm({ ...form, role_code: e.target.value })}
-                placeholder="请输入角色编码"
+                placeholder={tc('roleCodePlaceholder')}
                 readOnly={editing}
               />
             </div>
             <div className="space-y-2">
               <Label>
-                角色名称 <span className="text-red-500">*</span>
+                {tc('roleName')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={form.role_name || ''}
                 onChange={(e) => setForm({ ...form, role_name: e.target.value })}
-                placeholder="请输入角色名称"
+                placeholder={tc('roleNamePlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label>描述</Label>
+              <Label>{tc('description')}</Label>
               <Input
                 value={form.description || ''}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="请输入角色描述"
+                placeholder={tc('descriptionPlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label>状态</Label>
+              <Label>{tc('status')}</Label>
               <Select
                 value={form.status?.toString() || '1'}
                 onValueChange={(v) => setForm({ ...form, status: parseInt(v) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="选择状态" />
+                  <SelectValue placeholder={tc('selectStatus')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">启用</SelectItem>
-                  <SelectItem value="0">停用</SelectItem>
+                  <SelectItem value="1">{tc('enabled')}</SelectItem>
+                  <SelectItem value="0">{tc('disabled')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={saveRole} className="bg-blue-600 hover:bg-blue-700">
-              {editing ? '更新' : '创建'}
+              {editing ? tc('update') : tc('create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -537,19 +600,23 @@ export default function RolesPage() {
       <Dialog open={permissionDialogOpen} onOpenChange={setPermissionDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" resizable>
           <DialogHeader>
-            <DialogTitle>设置权限 - {selectedRole?.role_name}</DialogTitle>
-            <DialogDescription>配置该角色的菜单访问权限和按钮操作权限</DialogDescription>
+            <DialogTitle>{tc('setPermission')} - {selectedRole?.role_name}</DialogTitle>
+            <DialogDescription>{tc('setPermissionDesc')}</DialogDescription>
           </DialogHeader>
 
           <Tabs value={activePermissionTab} onValueChange={setActivePermissionTab} className="mt-4">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="menus" className="flex items-center gap-2">
                 <LayoutGrid className="w-4 h-4" />
-                菜单权限
+                {tc('menuPermission')}
               </TabsTrigger>
               <TabsTrigger value="buttons" className="flex items-center gap-2">
                 <MousePointer className="w-4 h-4" />
-                按钮权限
+                {tc('buttonPermission')}
+              </TabsTrigger>
+              <TabsTrigger value="dataScope" className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                {tc('dataPermission')}
               </TabsTrigger>
             </TabsList>
 
@@ -569,9 +636,9 @@ export default function RolesPage() {
                       }
                     }}
                   />
-                  <span className="font-medium">全选</span>
+                  <span className="font-medium">{tc('selectAll')}</span>
                   <span className="text-sm text-gray-500 ml-auto">
-                    已选择 {selectedMenus.length} 个菜单
+                    {tc('selectedMenuCount', { count: selectedMenus.length })}
                   </span>
                 </div>
                 <div className="space-y-1 max-h-[400px] overflow-y-auto">
@@ -601,9 +668,9 @@ export default function RolesPage() {
                       }
                     }}
                   />
-                  <span className="font-medium">全选所有权限</span>
+                  <span className="font-medium">{tc('selectAllPermissions')}</span>
                   <span className="text-sm text-gray-500 ml-auto">
-                    已选择 {selectedPermissions.length} 个权限
+                    {tc('selectedPermissionCount', { count: selectedPermissions.length })}
                   </span>
                 </div>
                 <div className="space-y-4 max-h-[400px] overflow-y-auto">
@@ -659,14 +726,151 @@ export default function RolesPage() {
                 </div>
               </div>
             </TabsContent>
+
+            <TabsContent value="dataScope" className="mt-4">
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  {tc('dataPermissionDesc')}
+                </p>
+
+                {/* 仓库维度 */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
+                    <Checkbox
+                      checked={warehouses.length > 0 && (dataScopeConfig.warehouse || []).length === warehouses.length}
+                      onCheckedChange={(checked) => {
+                        setDataScopeConfig((prev) => ({
+                          ...prev,
+                          warehouse: checked ? warehouses.map((w) => w.id) : [],
+                        }));
+                      }}
+                    />
+                    <span className="font-medium text-sm">{tc('warehousePermission')}</span>
+                    <span className="text-xs text-gray-400 ml-auto">
+                      {(dataScopeConfig.warehouse || []).length}/{warehouses.length}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                    {warehouses.map((wh) => (
+                      <div key={wh.id} className="flex items-center gap-2">
+                        <Checkbox
+                          checked={(dataScopeConfig.warehouse || []).includes(wh.id)}
+                          onCheckedChange={(checked) => {
+                            setDataScopeConfig((prev) => {
+                              const current = prev.warehouse || [];
+                              return {
+                                ...prev,
+                                warehouse: checked
+                                  ? [...current, wh.id]
+                                  : current.filter((id) => id !== wh.id),
+                              };
+                            });
+                          }}
+                        />
+                        <span className="text-sm">{wh.name}</span>
+                      </div>
+                    ))}
+                    {warehouses.length === 0 && (
+                      <p className="text-sm text-muted-foreground col-span-2">{tc('noWarehouseData')}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 客户维度 */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
+                    <Checkbox
+                      checked={customers.length > 0 && (dataScopeConfig.customer || []).length === customers.length}
+                      onCheckedChange={(checked) => {
+                        setDataScopeConfig((prev) => ({
+                          ...prev,
+                          customer: checked ? customers.map((c) => c.id) : [],
+                        }));
+                      }}
+                    />
+                    <span className="font-medium text-sm">{tc('customerPermission')}</span>
+                    <span className="text-xs text-gray-400 ml-auto">
+                      {(dataScopeConfig.customer || []).length}/{customers.length}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                    {customers.map((cust) => (
+                      <div key={cust.id} className="flex items-center gap-2">
+                        <Checkbox
+                          checked={(dataScopeConfig.customer || []).includes(cust.id)}
+                          onCheckedChange={(checked) => {
+                            setDataScopeConfig((prev) => {
+                              const current = prev.customer || [];
+                              return {
+                                ...prev,
+                                customer: checked
+                                  ? [...current, cust.id]
+                                  : current.filter((id) => id !== cust.id),
+                              };
+                            });
+                          }}
+                        />
+                        <span className="text-sm">{cust.name}</span>
+                      </div>
+                    ))}
+                    {customers.length === 0 && (
+                      <p className="text-sm text-muted-foreground col-span-2">{tc('noCustomerData')}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 供应商维度 */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
+                    <Checkbox
+                      checked={suppliers.length > 0 && (dataScopeConfig.supplier || []).length === suppliers.length}
+                      onCheckedChange={(checked) => {
+                        setDataScopeConfig((prev) => ({
+                          ...prev,
+                          supplier: checked ? suppliers.map((s) => s.id) : [],
+                        }));
+                      }}
+                    />
+                    <span className="font-medium text-sm">{tc('supplierPermission')}</span>
+                    <span className="text-xs text-gray-400 ml-auto">
+                      {(dataScopeConfig.supplier || []).length}/{suppliers.length}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                    {suppliers.map((sup) => (
+                      <div key={sup.id} className="flex items-center gap-2">
+                        <Checkbox
+                          checked={(dataScopeConfig.supplier || []).includes(sup.id)}
+                          onCheckedChange={(checked) => {
+                            setDataScopeConfig((prev) => {
+                              const current = prev.supplier || [];
+                              return {
+                                ...prev,
+                                supplier: checked
+                                  ? [...current, sup.id]
+                                  : current.filter((id) => id !== sup.id),
+                              };
+                            });
+                          }}
+                        />
+                        <span className="text-sm">{sup.name}</span>
+                      </div>
+                    ))}
+                    {suppliers.length === 0 && (
+                      <p className="text-sm text-muted-foreground col-span-2">{tc('noSupplierData')}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
 
           <DialogFooter className="mt-6">
             <Button variant="outline" onClick={() => setPermissionDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={saveRolePermissions} className="bg-blue-600 hover:bg-blue-700">
-              保存权限
+              {tc('savePermission')}
             </Button>
           </DialogFooter>
         </DialogContent>

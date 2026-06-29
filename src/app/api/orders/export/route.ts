@@ -1,25 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { commonErrors, withErrorHandler } from '@/lib/api-response';
-
-const STATUS_MAP: Record<string, string> = {
-  '1': '待确认',
-  '2': '已确认',
-  '3': '部分发货',
-  '4': '已完成',
-  '5': '已取消',
-  '10': '草稿',
-  '20': '已确认',
-  '30': '生产中',
-  '40': '已发货',
-  '50': '已完成',
-  '60': '已对账',
-};
+import { getTranslator } from '@/lib/i18n-server';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const format = searchParams.get('format') || 'pdf';
+  
+  // 获取翻译函数
+  const t = await getTranslator('Export');
+
+  // 状态映射
+  const STATUS_MAP: Record<string, string> = {
+    '1': t('statusPending'),
+    '2': t('statusConfirmed'),
+    '3': t('statusPartialShip'),
+    '4': t('statusCompleted'),
+    '5': t('statusCancelled'),
+    '10': t('statusDraft'),
+    '20': t('statusConfirmed'),
+    '30': t('statusInProduction'),
+    '40': t('statusShipped'),
+    '50': t('statusCompleted'),
+    '60': t('statusReconciled'),
+  };
 
   if (format === 'excel' || format === 'xls' || format === 'csv') {
     const orders = await query(
@@ -32,7 +37,15 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     );
 
     const BOM = '\uFEFF';
-    const headers = ['订单号', '客户名称', '订单日期', '交货日期', '订单金额', '状态', '备注'];
+    const headers = [
+      t('orderNo'),
+      t('customerName'),
+      t('orderDate'),
+      t('deliveryDate'),
+      t('orderAmount'),
+      t('status'),
+      t('remark')
+    ];
     const rows = (orders as any[]).map((order) => [
       `"${order.order_no || ''}"`,
       `"${order.customer_name || ''}"`,
@@ -54,7 +67,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   if (!id) {
-    return commonErrors.badRequest('订单编号不能为空');
+    return commonErrors.badRequest(t('orderIdRequired'));
   }
 
   const orders = await query(
@@ -63,7 +76,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 
   if (!orders || (orders as any[]).length === 0) {
-    return commonErrors.notFound('订单不存在');
+    return commonErrors.notFound(t('orderNotFound'));
   }
 
   const order = (orders as any[])[0];
@@ -76,7 +89,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>订单 ${order.order_no}</title>
+  <title>${t('orderTitle')} ${order.order_no}</title>
   <style>
     @page { size: A4; margin: 15mm; }
     body { font-family: 'Microsoft YaHei', Arial, sans-serif; padding: 20px; color: #333; }
@@ -94,22 +107,22 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   </style>
 </head>
 <body>
-  <h1>销售订单</h1>
+  <h1>${t('salesOrder')}</h1>
   <div class="info">
-    <div class="info-row"><span class="info-label">订单号：</span><span class="info-value">${order.order_no}</span></div>
-    <div class="info-row"><span class="info-label">客户：</span><span class="info-value">${order.customer_name || '-'}</span></div>
-    <div class="info-row"><span class="info-label">订单日期：</span><span class="info-value">${order.order_date || '-'}</span></div>
-    <div class="info-row"><span class="info-label">交货日期：</span><span class="info-value">${order.delivery_date || '-'}</span></div>
-    <div class="info-row"><span class="info-label">状态：</span><span class="info-value">${statusLabel}</span></div>
+    <div class="info-row"><span class="info-label">${t('orderNoLabel')}</span><span class="info-value">${order.order_no}</span></div>
+    <div class="info-row"><span class="info-label">${t('customerLabel')}</span><span class="info-value">${order.customer_name || '-'}</span></div>
+    <div class="info-row"><span class="info-label">${t('orderDateLabel')}</span><span class="info-value">${order.order_date || '-'}</span></div>
+    <div class="info-row"><span class="info-label">${t('deliveryDateLabel')}</span><span class="info-value">${order.delivery_date || '-'}</span></div>
+    <div class="info-row"><span class="info-label">${t('statusLabel')}</span><span class="info-value">${statusLabel}</span></div>
   </div>
   <table>
     <thead>
       <tr>
-        <th>产品</th>
-        <th style="text-align:right">数量</th>
-        <th>单位</th>
-        <th style="text-align:right">单价</th>
-        <th style="text-align:right">金额</th>
+        <th>${t('product')}</th>
+        <th style="text-align:right">${t('quantity')}</th>
+        <th>${t('unit')}</th>
+        <th style="text-align:right">${t('unitPrice')}</th>
+        <th style="text-align:right">${t('amount')}</th>
       </tr>
     </thead>
     <tbody>
@@ -128,11 +141,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         .join('')}
     </tbody>
   </table>
-  <div class="total">订单总金额：¥${Number(order.total_amount || 0).toFixed(2)}</div>
-  ${order.remark ? `<div style="margin-top:20px"><strong>备注：</strong>${order.remark}</div>` : ''}
+  <div class="total">${t('totalAmountLabel')}: ¥${Number(order.total_amount || 0).toFixed(2)}</div>
+  ${order.remark ? `<div style="margin-top:20px"><strong>${t('remarkLabel')}:</strong>${order.remark}</div>` : ''}
   <div class="footer">
-    <span>越南达昌印刷科技有限公司</span>
-    <span>打印时间：${new Date().toLocaleString('zh-CN')}</span>
+    <span>${t('companyName')}</span>
+    <span>${t('printTimeLabel')}: ${new Date().toLocaleString('zh-CN')}</span>
   </div>
 </body>
 </html>`;

@@ -298,11 +298,11 @@ export default function PurchaseRequestPage() {
             <span class="order-info">申请部门：${r.request_dept || '-'} | 申请人：${r.requester_name || '-'} | 申请日期：${formatDate(r.request_date)} | 优先级：${priorityMapCN[r.priority] || '中'} | 状态：${statusMapCN[r.status] || '未知'}</span>
           </div>
           <table>
-            <thead><tr><th>序号</th><th>物料编码</th><th>物料名称</th><th>规格型号</th><th>单位</th><th>数量</th><th>单价</th><th>金额</th></tr></thead>
+            <thead><tr><th>{tc("serialNo")}</th><th>物料编码</th><th>物料名称</th><th>规格型号</th><th>{tc("unit")}</th><th>{tc("quantity")}</th><th>单价</th><th>{tc("amount")}</th></tr></thead>
             <tbody>${itemRows}</tbody>
             <tfoot>
               <tr>
-                <td colspan="5" style="text-align:right;font-weight:bold;">合计</td>
+                <td colspan="5" style="text-align:right;font-weight:bold;">{tc("total")}</td>
                 <td class="num" style="font-weight:bold;">${items.reduce((s, i) => s + (i.quantity || 0), 0)}</td>
                 <td></td>
                 <td class="num" style="font-weight:bold;">${formatAmount(r.total_amount, r.currency)}</td>
@@ -425,7 +425,7 @@ export default function PurchaseRequestPage() {
         <h1>采购申请列表</h1>
         <div class="info">导出时间：${new Date().toLocaleString('zh-CN')} | 共 ${recordsToExport.length} 条</div>
         <table>
-          <thead><tr><th>申请单号</th><th>申请日期</th><th>申请部门</th><th>申请人</th><th>类型</th><th>优先级</th><th>金额</th><th>状态</th></tr></thead>
+          <thead><tr><th>申请单号</th><th>申请日期</th><th>申请部门</th><th>{tc("applicant")}</th><th>{tc("type")}</th><th>{tc("priority")}</th><th>{tc("amount")}</th><th>{tc("status")}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
         <div class="footer">${companyName}</div>

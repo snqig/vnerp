@@ -35,6 +35,8 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { logger } from '@/lib/logger';
+import { mockProcessCards, USE_MOCK } from '@/lib/mock-data';
 
 // 流程卡类型
 interface ProcessCard {
@@ -77,6 +79,18 @@ interface MaterialLabel {
 }
 
 export default function ProcessCardsPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -103,13 +117,20 @@ export default function ProcessCardsPage() {
 
   const fetchCards = async () => {
     try {
-      const response = await fetch('/api/dcprint/process-cards');
+      if (USE_MOCK) {
+        logger.info({ module: 'Dcprint', action: 'fetchProcessCards' }, '使用 mock 流程卡数据');
+        setCards(mockProcessCards);
+        return;
+      }
+
+      const response = await authFetch('/api/dcprint/process-cards');
       const result = await response.json();
       if (result.success) {
         setCards(result.data.list || []);
+        logger.info({ module: 'Dcprint', action: 'fetchProcessCards' }, '流程卡数据获取成功', { count: (result.data.list || []).length });
       }
     } catch (error) {
-      console.error('Failed to fetch cards:', error);
+      logger.error({ module: 'Dcprint', action: 'fetchProcessCards' }, '获取流程卡数据失败', { error: (error as Error).message });
     }
   };
 
@@ -120,7 +141,7 @@ export default function ProcessCardsPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/dcprint/scan', {
+      const response = await authFetch('/api/dcprint/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -139,36 +160,36 @@ export default function ProcessCardsPage() {
           if (type === '3') {
             setWorkOrder(data);
             setScanState('mainMaterial');
-            setSuccess('工单扫描成功，请扫描主材');
+            setSuccess(t('workOrderScanSuccess'));
           } else {
-            setError('请先扫描工单二维码');
+            setError(t('pleaseScanWorkOrderFirst'));
           }
         } else if (scanState === 'mainMaterial') {
           if (type === '0' || type === '1' || type === '2') {
             if (data.isMainMaterial === 1) {
               setMainMaterial(data);
               setScanState('auxiliary');
-              setSuccess('主材扫描成功，可以继续扫描辅料或点击生成流程卡');
+              setSuccess(t('mainMaterialScanSuccess'));
             } else {
-              setError('该标签不是母材标签，不能作为主材');
+              setError(t('notMainMaterialLabel'));
             }
           } else if (type === '3') {
             // 切换工单
             setWorkOrder(data);
             setMainMaterial(null);
             setAuxiliaryMaterials([]);
-            setSuccess('工单切换成功，请扫描主材');
+            setSuccess(t('workOrderSwitchSuccess'));
           } else {
-            setError('请扫描物料标签');
+            setError(t('pleaseScanMaterialLabel'));
           }
         } else if (scanState === 'auxiliary') {
           if (type === '0' || type === '1' || type === '2') {
             // 添加辅料
             if (!auxiliaryMaterials.find((m) => m.id === data.id)) {
               setAuxiliaryMaterials([...auxiliaryMaterials, data]);
-              setSuccess(`辅料 ${data.materialName} 添加成功`);
+              setSuccess(t('auxiliaryAdded', { name: data.materialName }));
             } else {
-              setError('该辅料已添加');
+              setError(t('auxiliaryAlreadyAdded'));
             }
           } else if (type === '3') {
             // 切换工单
@@ -176,7 +197,7 @@ export default function ProcessCardsPage() {
             setMainMaterial(null);
             setAuxiliaryMaterials([]);
             setScanState('mainMaterial');
-            setSuccess('工单切换成功，请扫描主材');
+            setSuccess(t('workOrderSwitchSuccess'));
           } else if (type === '4') {
             // 查看流程卡详情
             setSelectedCard(data);
@@ -184,10 +205,10 @@ export default function ProcessCardsPage() {
           }
         }
       } else {
-        setError(result.message || '扫码失败');
+        setError(result.message || tc('scanFailed'));
       }
     } catch (err) {
-      setError('扫码查询失败');
+      setError(t('scanQueryFailed'));
     } finally {
       setLoading(false);
       setQrCode('');
@@ -197,7 +218,7 @@ export default function ProcessCardsPage() {
 
   const handleGenerateCard = async () => {
     if (!workOrder || !mainMaterial) {
-      setError('请扫描工单和主材');
+      setError(t('pleaseScanWorkOrderAndMain'));
       return;
     }
 
@@ -205,7 +226,7 @@ export default function ProcessCardsPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/dcprint/process-cards', {
+      const response = await authFetch('/api/dcprint/process-cards', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -218,21 +239,21 @@ export default function ProcessCardsPage() {
           mainLabelId: mainMaterial.id,
           mainLabelNo: mainMaterial.labelNo,
           createUserId: 1,
-          createUserName: '操作员',
+          createUserName: t('operator'),
         }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        setSuccess('流程卡生成成功！');
+        setSuccess(t('cardGeneratedSuccess'));
         fetchCards();
         handleReset();
       } else {
-        setError(result.message || '生成失败');
+        setError(result.message || t('generateFailed'));
       }
     } catch (err) {
-      setError('生成流程卡失败');
+      setError(t('generateCardFailed'));
     } finally {
       setLoading(false);
     }
@@ -256,11 +277,11 @@ export default function ProcessCardsPage() {
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string }> = {
       pending: {
-        label: '未配料',
+        label: t('notBurdened'),
         className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
       },
       completed: {
-        label: '已配料',
+        label: t('burdened'),
         className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
       },
     };
@@ -273,25 +294,25 @@ export default function ProcessCardsPage() {
 
   const getLockBadge = (status: string) => {
     return status === 'locked' ? (
-      <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">已锁</Badge>
+      <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">{t('locked')}</Badge>
     ) : (
       <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
-        未锁
+        {t('unlocked')}
       </Badge>
     );
   };
 
   return (
-    <MainLayout title="生产流程卡">
+    <MainLayout title={t('processCard')}>
       <div className="space-y-6">
         {/* 扫码生成区域 */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <QrCode className="h-5 w-5" />
-              扫码生成流程卡
+              {t('scanGenerateCard')}
             </CardTitle>
-            <CardDescription>按顺序扫描工单、主材、辅料生成流程卡</CardDescription>
+            <CardDescription>{t('scanSequenceDesc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -303,7 +324,7 @@ export default function ProcessCardsPage() {
                   }`}
                 >
                   <FileText className="h-4 w-4" />
-                  <span className="font-medium">1. 扫描工单</span>
+                  <span className="font-medium">1. {t('scanWorkOrder')}</span>
                 </div>
                 <div className="text-muted-foreground">→</div>
                 <div
@@ -316,7 +337,7 @@ export default function ProcessCardsPage() {
                   }`}
                 >
                   <QrCode className="h-4 w-4" />
-                  <span className="font-medium">2. 扫描主材</span>
+                  <span className="font-medium">2. {t('scanMainMaterial')}</span>
                 </div>
                 <div className="text-muted-foreground">→</div>
                 <div
@@ -325,7 +346,7 @@ export default function ProcessCardsPage() {
                   }`}
                 >
                   <Plus className="h-4 w-4" />
-                  <span className="font-medium">3. 添加辅料（可选）</span>
+                  <span className="font-medium">3. {t('addAuxiliaryOptional')}</span>
                 </div>
               </div>
 
@@ -334,7 +355,7 @@ export default function ProcessCardsPage() {
                 <div className="flex-1">
                   <Input
                     ref={qrInputRef}
-                    placeholder="请扫描二维码..."
+                    placeholder={t('pleaseScanQR')}
                     value={qrCode}
                     onChange={(e) => setQrCode(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleScanQRCode()}
@@ -343,14 +364,14 @@ export default function ProcessCardsPage() {
                 </div>
                 <Button variant="outline" onClick={handleReset}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  重置
+                  {tc('reset')}
                 </Button>
                 <Button
                   onClick={handleGenerateCard}
                   disabled={!workOrder || !mainMaterial || loading}
                 >
                   <FileText className="h-4 w-4 mr-2" />
-                  生成流程卡
+                  {t('generateCard')}
                 </Button>
               </div>
 
@@ -373,30 +394,30 @@ export default function ProcessCardsPage() {
                 {/* 工单信息 */}
                 <Card className={workOrder ? 'border-blue-200' : ''}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">工单信息</CardTitle>
+                    <CardTitle className="text-sm">{t('workOrderInfo')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {workOrder ? (
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">工单号</span>
+                          <span className="text-muted-foreground">{t('workOrderNo')}</span>
                           <span className="font-medium">{workOrder.orderNo}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">成品料号</span>
+                          <span className="text-muted-foreground">{t('productCode')}</span>
                           <span className="font-medium">{workOrder.productCode}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">成品名称</span>
+                          <span className="text-muted-foreground">{t('productName')}</span>
                           <span className="font-medium">{workOrder.productName}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">生产数量</span>
+                          <span className="text-muted-foreground">{t('productionQty')}</span>
                           <span className="font-medium">{workOrder.quantity}</span>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-muted-foreground text-center py-4">请扫描工单二维码</div>
+                      <div className="text-muted-foreground text-center py-4">{t('pleaseScanWorkOrder')}</div>
                     )}
                   </CardContent>
                 </Card>
@@ -404,30 +425,30 @@ export default function ProcessCardsPage() {
                 {/* 主材信息 */}
                 <Card className={mainMaterial ? 'border-green-200' : ''}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">主材信息</CardTitle>
+                    <CardTitle className="text-sm">{t('mainMaterialInfo')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {mainMaterial ? (
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">标签编号</span>
+                          <span className="text-muted-foreground">{t('labelNo')}</span>
                           <span className="font-medium">{mainMaterial.labelNo}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">物料代号</span>
+                          <span className="text-muted-foreground">{t('materialCode')}</span>
                           <span className="font-medium">{mainMaterial.materialCode}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">物料名称</span>
+                          <span className="text-muted-foreground">{t('materialName')}</span>
                           <span className="font-medium">{mainMaterial.materialName}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">批号</span>
+                          <span className="text-muted-foreground">{tc('batchNo')}</span>
                           <span className="font-medium">{mainMaterial.batchNo}</span>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-muted-foreground text-center py-4">请扫描主材标签</div>
+                      <div className="text-muted-foreground text-center py-4">{t('pleaseScanMainMaterial')}</div>
                     )}
                   </CardContent>
                 </Card>
@@ -438,7 +459,7 @@ export default function ProcessCardsPage() {
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm">
-                      已添加辅料 ({auxiliaryMaterials.length})
+                      {t('addedAuxiliary')} ({auxiliaryMaterials.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -454,7 +475,7 @@ export default function ProcessCardsPage() {
                               {material.materialCode}
                             </span>
                             <span className="text-sm text-muted-foreground">
-                              批号: {material.batchNo}
+                              {tc('batchNo')}: {material.batchNo}
                             </span>
                           </div>
                           <Button
@@ -477,30 +498,30 @@ export default function ProcessCardsPage() {
         {/* 流程卡列表 */}
         <Card>
           <CardHeader>
-            <CardTitle>流程卡列表</CardTitle>
-            <CardDescription>已生成的生产流程卡</CardDescription>
+            <CardTitle>{t('cardList')}</CardTitle>
+            <CardDescription>{t('generatedCards')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>流程卡卡号</TableHead>
-                    <TableHead>工单号</TableHead>
-                    <TableHead>成品料号</TableHead>
-                    <TableHead>主材标签</TableHead>
-                    <TableHead>配料状态</TableHead>
-                    <TableHead>锁住状态</TableHead>
-                    <TableHead>创建人</TableHead>
-                    <TableHead>创建时间</TableHead>
-                    <TableHead>操作</TableHead>
+                    <TableHead>{t('cardNo')}</TableHead>
+                    <TableHead>{t('workOrderNo')}</TableHead>
+                    <TableHead>{t('productCode')}</TableHead>
+                    <TableHead>{t('mainLabel')}</TableHead>
+                    <TableHead>{t('burdeningStatus')}</TableHead>
+                    <TableHead>{t('lockStatus')}</TableHead>
+                    <TableHead>{tc("createdBy")}</TableHead>
+                    <TableHead>{tc("createdAt")}</TableHead>
+                    <TableHead>{tc("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {cards.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-8">
-                        暂无数据
+                        {tc('noRecords')}
                       </TableCell>
                     </TableRow>
                   ) : (

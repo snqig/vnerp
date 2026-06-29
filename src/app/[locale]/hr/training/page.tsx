@@ -123,14 +123,14 @@ export default function TrainingPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: t('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('operationFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: t('operationFailed'), variant: 'destructive' });
     }
   };
   const handleStatusChange = async (id: number, status: number) => {
@@ -141,36 +141,36 @@ export default function TrainingPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '更新成功' });
+        toast({ title: t('updateSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: t('operationFailed'), variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(t('confirmDelete'))) return;
     try {
       const res = await fetch('/api/hr/training?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: t('deleteSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: t('operationFailed'), variant: 'destructive' });
     }
   };
 
   return (
-    <MainLayout title="培训管理">
+    <MainLayout title={t("trainingManagement")}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">培训管理</h1>
+          <h1 className="text-2xl font-bold">{t("trainingManagement")}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索培训名称"
+                placeholder={tc("searchTrainingPlaceholder")}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -187,7 +187,7 @@ export default function TrainingPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增培训
+              {t("newTraining")}
             </Button>
           </div>
         </div>
@@ -196,16 +196,16 @@ export default function TrainingPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs w-12 text-center">序号</TableHead>
-                  <TableHead className="text-xs">培训编号</TableHead>
-                  <TableHead className="text-xs">培训名称</TableHead>
-                  <TableHead className="text-xs">培训类型</TableHead>
-                  <TableHead className="text-xs">培训日期</TableHead>
-                  <TableHead className="text-xs">学时</TableHead>
-                  <TableHead className="text-xs">讲师</TableHead>
-                  <TableHead className="text-xs">地点</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs w-12 text-center">{tc("serialNo")}</TableHead>
+                  <TableHead className="text-xs">{tc("trainingNo")}</TableHead>
+                  <TableHead className="text-xs">{tc("trainingName")}</TableHead>
+                  <TableHead className="text-xs">{tc("trainingType")}</TableHead>
+                  <TableHead className="text-xs">{tc("trainingDate")}</TableHead>
+                  <TableHead className="text-xs">{tc("hours")}</TableHead>
+                  <TableHead className="text-xs">{tc("trainer")}</TableHead>
+                  <TableHead className="text-xs">{tc("location")}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -239,7 +239,7 @@ export default function TrainingPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              开始
+                              {tc("start")}
                             </Button>
                           )}
                           {item.status === 2 && (
@@ -249,7 +249,7 @@ export default function TrainingPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 3)}
                             >
-                              完成
+                              {tc("complete")}
                             </Button>
                           )}
                           <Button
@@ -279,7 +279,7 @@ export default function TrainingPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                      暂无记录
+                      {tc("noRecords")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -288,7 +288,7 @@ export default function TrainingPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">共 {total} 条</span>
+          <span className="text-sm text-muted-foreground">{tc("totalRecords", { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -296,7 +296,7 @@ export default function TrainingPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc("prevPage")}
             </Button>
             <Button
               size="sm"
@@ -304,25 +304,25 @@ export default function TrainingPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc("nextPage")}
             </Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增培训</DialogTitle>
+              <DialogTitle>{t("addTrainingTitle")}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>培训名称</Label>
+                <Label>{tc("trainingName")}</Label>
                 <Input
                   value={editItem.training_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, training_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>培训类型</Label>
+                <Label>{tc("trainingType")}</Label>
                 <Select
                   value={String(editItem.training_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, training_type: Number(v) })}
@@ -331,16 +331,16 @@ export default function TrainingPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">安全培训</SelectItem>
-                    <SelectItem value="2">技能培训</SelectItem>
-                    <SelectItem value="3">质量培训</SelectItem>
-                    <SelectItem value="4">管理培训</SelectItem>
-                    <SelectItem value="5">新员工培训</SelectItem>
+                    <SelectItem value="1">{tc("safetyTraining")}</SelectItem>
+                    <SelectItem value="2">{tc("skillTraining")}</SelectItem>
+                    <SelectItem value="3">{tc("qualityTraining")}</SelectItem>
+                    <SelectItem value="4">{tc("managementTraining")}</SelectItem>
+                    <SelectItem value="5">{tc("newEmployeeTraining")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>培训日期</Label>
+                <Label>{tc("trainingDate")}</Label>
                 <Input
                   type="date"
                   value={editItem.training_date || ''}
@@ -348,7 +348,7 @@ export default function TrainingPage() {
                 />
               </div>
               <div>
-                <Label>学时</Label>
+                <Label>{tc("hours")}</Label>
                 <Input
                   type="number"
                   value={editItem.training_hours ?? ''}
@@ -358,14 +358,14 @@ export default function TrainingPage() {
                 />
               </div>
               <div>
-                <Label>讲师</Label>
+                <Label>{tc("trainer")}</Label>
                 <Input
                   value={editItem.trainer || ''}
                   onChange={(e) => setEditItem({ ...editItem, trainer: e.target.value })}
                 />
               </div>
               <div>
-                <Label>地点</Label>
+                <Label>{tc("location")}</Label>
                 <Input
                   value={editItem.training_place || ''}
                   onChange={(e) => setEditItem({ ...editItem, training_place: e.target.value })}
@@ -374,9 +374,9 @@ export default function TrainingPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc("cancel")}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

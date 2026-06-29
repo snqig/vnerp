@@ -244,7 +244,7 @@ export default function PurchaseRequestDetailPage() {
                 <div className="font-medium">{request.request_dept || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">申请人</div>
+                <div className="text-sm text-muted-foreground">{tc("applicant")}</div>
                 <div className="font-medium">{request.requester_name || '-'}</div>
               </div>
               <div>
@@ -256,7 +256,7 @@ export default function PurchaseRequestDetailPage() {
                 <div className="font-medium">{request.supplier_name || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">创建时间</div>
+                <div className="text-sm text-muted-foreground">{tc("createdAt")}</div>
                 <div className="font-medium">{new Date(request.create_time).toLocaleString()}</div>
               </div>
               <div>
@@ -282,11 +282,11 @@ export default function PurchaseRequestDetailPage() {
                   <TableHead>物料编码</TableHead>
                   <TableHead>物料名称</TableHead>
                   <TableHead>规格型号</TableHead>
-                  <TableHead>单位</TableHead>
-                  <TableHead className="text-right">数量</TableHead>
+                  <TableHead>{tc("unit")}</TableHead>
+                  <TableHead className="text-right">{tc("quantity")}</TableHead>
                   <TableHead className="text-right">单价</TableHead>
-                  <TableHead className="text-right">金额</TableHead>
-                  <TableHead>备注</TableHead>
+                  <TableHead className="text-right">{tc("amount")}</TableHead>
+                  <TableHead>{tc("remark")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -331,7 +331,7 @@ export default function PurchaseRequestDetailPage() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 <div>
-                  <div className="text-sm text-muted-foreground">审批人</div>
+                  <div className="text-sm text-muted-foreground">{tc("approver")}</div>
                   <div className="font-medium">{request.approver_name || '-'}</div>
                 </div>
                 <div>
@@ -351,7 +351,7 @@ export default function PurchaseRequestDetailPage() {
         {request.remark && (
           <Card>
             <CardHeader>
-              <CardTitle>备注</CardTitle>
+              <CardTitle>{tc("remark")}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-700">{request.remark}</p>

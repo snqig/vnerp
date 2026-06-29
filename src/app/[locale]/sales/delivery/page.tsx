@@ -46,6 +46,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
+import { mockShipments, mockCustomers, USE_MOCK, mockApiListResponse } from '@/lib/mock-data';
 
 // ============================================================
 // 发货类型定义（符合设计文档 3.1 节）
@@ -122,32 +124,7 @@ interface Customer {
 // ============================================================
 
 // 发货类型映射
-const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> = {
-  normal: {
-    label: '正常发货',
-    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  },
-  partial: {
-    label: '部分发货',
-    color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  },
-  return: {
-    label: '退货发货',
-    color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  },
-  re_ship: {
-    label: '补发发货',
-    color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-  },
-};
-
 // 发货状态映射（符合设计文档 4.1 节：6种状态）
-const SIGN_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: '未签收', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-  1: { label: '部分签收', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
-  2: { label: '全部签收', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
-  3: { label: '拒收', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
-};
 
 export default function DeliveryPage() {
   // 翻译钩子
@@ -160,16 +137,42 @@ export default function DeliveryPage() {
     label: tc('pending'),
     color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
   },
-  3: { label: '待发货', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+  3: { label: t('pendingDelivery'), color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
   4: {
-    label: '部分发货',
+    label: t('partialShip'),
     color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
   },
   5: {
-    label: '已发货',
+    label: t('delivered'),
     color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
   },
-  6: { label: '已取消', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+  6: { label: tc('cancelled'), color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+};
+
+const SIGN_STATUS_MAP: Record<number, { label: string; color: string }> = {
+  0: { label: t('notSigned'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  1: { label: t('partialSigned'), color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
+  2: { label: t('allSigned'), color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  3: { label: t('rejected'), color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+};
+
+const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> = {
+  normal: {
+    label: t('normalShip'),
+    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  },
+  partial: {
+    label: t('partialShip'),
+    color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+  },
+  return: {
+    label: t('returnShip'),
+    color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+  },
+  re_ship: {
+    label: t('reShip'),
+    color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  },
 };
 
   const [list, setList] = useState<Shipment[]>([]);
@@ -220,7 +223,18 @@ export default function DeliveryPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    logger.info({ module: 'Sales', action: 'fetchDelivery' }, '开始获取发货单列表', { keyword, statusFilter, typeFilter });
     try {
+      if (USE_MOCK) {
+        logger.info({ module: 'Sales', action: 'fetchDelivery' }, '使用 mock 数据');
+        const filtered = keyword
+          ? mockShipments.filter(s => s.shipment_no?.includes(keyword) || s.customer_name?.includes(keyword))
+          : mockShipments;
+        setList(filtered);
+        setTotal(filtered.length);
+        return;
+      }
+
       const params = new URLSearchParams();
       if (keyword) params.append('keyword', keyword);
       if (statusFilter !== 'all') params.append('status', statusFilter);
@@ -230,9 +244,10 @@ export default function DeliveryPage() {
       if (result.success) {
         setList(result.data?.list || []);
         setTotal(result.data?.total || 0);
+        logger.info({ module: 'Sales', action: 'fetchDelivery' }, '发货单列表获取成功', { count: (result.data?.list || []).length });
       }
     } catch (e) {
-      console.error(e);
+      logger.error({ module: 'Sales', action: 'fetchDelivery' }, '获取发货单列表失败', { error: (e as Error).message });
       toast.error('获取发货单列表失败');
     } finally {
       setLoading(false);
@@ -240,14 +255,22 @@ export default function DeliveryPage() {
   }, [keyword, statusFilter, typeFilter]);
 
   const fetchCustomers = useCallback(async () => {
+    logger.info({ module: 'Sales', action: 'fetchCustomers' }, '开始获取客户列表');
     try {
+      if (USE_MOCK) {
+        logger.info({ module: 'Sales', action: 'fetchCustomers' }, '使用 mock 数据');
+        setCustomers(mockCustomers);
+        return;
+      }
+
       const res = await authFetch('/api/customers');
       const result = await res.json();
       if (result.success) {
         setCustomers(result.data?.list || result.data || []);
+        logger.info({ module: 'Sales', action: 'fetchCustomers' }, '客户列表获取成功', { count: (result.data?.list || []).length });
       }
     } catch (e) {
-      console.error(e);
+      logger.error({ module: 'Sales', action: 'fetchCustomers' }, '获取客户列表失败', { error: (e as Error).message });
     }
   }, []);
 
@@ -524,17 +547,17 @@ export default function DeliveryPage() {
   };
 
   return (
-    <MainLayout title="送货单管理">
+    <MainLayout title={t('deliveryManagement')}>
       <div className="space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Truck className="w-5 h-5" />
-                送货单管理
+                {t('deliveryManagement')}
               </CardTitle>
               <CardDescription>
-                管理送货单据，支持扫码出库、打印送货单据、客户签收记录电子化留存
+                {t('deliveryManagementDesc')}
               </CardDescription>
             </div>
             <Button
@@ -561,7 +584,7 @@ export default function DeliveryPage() {
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              新增送货单
+              {t('newDelivery')}
             </Button>
           </CardHeader>
           <CardContent>
@@ -569,7 +592,7 @@ export default function DeliveryPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="搜索送货单号/客户名称/订单号..."
+                  placeholder={t('searchDeliveryPlaceholder')}
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   className="pl-9"
@@ -577,10 +600,10 @@ export default function DeliveryPage() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder=tc("status") />
+                  <SelectValue placeholder={tc("status")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部状态</SelectItem>
+                  <SelectItem value="all">{tc('allStatus')}</SelectItem>
                   {Object.entries(STATUS_MAP).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
                       {v.label}
@@ -596,13 +619,13 @@ export default function DeliveryPage() {
             <div className="grid grid-cols-4 gap-4 mb-4">
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">总送货单</div>
+                  <div className="text-sm text-gray-500">{t('totalDelivery')}</div>
                   <div className="text-2xl font-bold">{total}</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">待发货</div>
+                  <div className="text-sm text-gray-500">{t('pendingDelivery')}</div>
                   <div className="text-2xl font-bold text-yellow-600">
                     {list.filter((d) => d.status === 1).length}
                   </div>
@@ -610,7 +633,7 @@ export default function DeliveryPage() {
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">已发货</div>
+                  <div className="text-sm text-gray-500">{t('delivered')}</div>
                   <div className="text-2xl font-bold text-blue-600">
                     {list.filter((d) => d.status === 2).length}
                   </div>
@@ -618,7 +641,7 @@ export default function DeliveryPage() {
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">已签收</div>
+                  <div className="text-sm text-gray-500">{t('signed')}</div>
                   <div className="text-2xl font-bold text-green-600">
                     {list.filter((d) => d.status === 3).length}
                   </div>
@@ -634,15 +657,15 @@ export default function DeliveryPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>送货单号</TableHead>
-                    <TableHead>关联订单</TableHead>
-                    <TableHead>客户名称</TableHead>
-                    <TableHead>送货日期</TableHead>
-                    <TableHead>总数量</TableHead>
-                    <TableHead>总金额</TableHead>
-                    <TableHead>签收状态</TableHead>
-                    <TableHead>单据状态</TableHead>
-                    <TableHead className="text-right">操作</TableHead>
+                    <TableHead>{t('deliveryNo')}</TableHead>
+                    <TableHead>{t('relatedOrder')}</TableHead>
+                    <TableHead>{tc('customerName')}</TableHead>
+                    <TableHead>{t('deliveryDate')}</TableHead>
+                    <TableHead>{tc("totalQuantity")}</TableHead>
+                    <TableHead>{tc("totalAmount")}</TableHead>
+                    <TableHead>{t('signStatus')}</TableHead>
+                    <TableHead>{t('documentStatus')}</TableHead>
+                    <TableHead className="text-right">{tc("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -772,7 +795,7 @@ export default function DeliveryPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>联系电话</Label>
+                <Label>{tc("phone")}</Label>
                 <Input
                   value={form.contact_phone || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, contact_phone: e.target.value }))}
@@ -786,7 +809,7 @@ export default function DeliveryPage() {
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, delivery_address: e.target.value }))
                   }
-                  placeholder="地址"
+                  placeholder={tc("address")}
                 />
               </div>
             </div>
@@ -810,11 +833,11 @@ export default function DeliveryPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Input
                   value={form.remark || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, remark: e.target.value }))}
-                  placeholder=tc("remark")
+                  placeholder={tc("remark")}
                 />
               </div>
             </div>
@@ -832,11 +855,11 @@ export default function DeliveryPage() {
                   <TableRow>
                     <TableHead>物料名称</TableHead>
                     <TableHead>规格型号</TableHead>
-                    <TableHead>数量</TableHead>
-                    <TableHead>单位</TableHead>
+                    <TableHead>{tc("quantity")}</TableHead>
+                    <TableHead>{tc("unit")}</TableHead>
                     <TableHead>单价</TableHead>
-                    <TableHead>金额</TableHead>
-                    <TableHead>批次号</TableHead>
+                    <TableHead>{tc("amount")}</TableHead>
+                    <TableHead>{tc("batchNo")}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -855,7 +878,7 @@ export default function DeliveryPage() {
                         <Input
                           value={item.material_spec}
                           onChange={(e) => updateItem(idx, 'material_spec', e.target.value)}
-                          placeholder="规格"
+                          placeholder={tc("specification")}
                           className="w-28"
                         />
                       </TableCell>
@@ -893,7 +916,7 @@ export default function DeliveryPage() {
                         <Input
                           value={item.batch_no}
                           onChange={(e) => updateItem(idx, 'batch_no', e.target.value)}
-                          placeholder="批次"
+                          placeholder={tc("batch")}
                           className="w-24"
                         />
                       </TableCell>
@@ -974,13 +997,13 @@ export default function DeliveryPage() {
               <div className="border-t pt-4">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <div className="text-gray-500 text-sm">总数量</div>
+                    <div className="text-gray-500 text-sm">{tc("totalQuantity")}</div>
                     <div className="text-xl font-bold">
                       {parseFloat(String(detailData.total_qty || 0)).toLocaleString()}
                     </div>
                   </div>
                   <div>
-                    <div className="text-gray-500 text-sm">总金额</div>
+                    <div className="text-gray-500 text-sm">{tc("totalAmount")}</div>
                     <div className="text-xl font-bold text-blue-600">
                       ¥{parseFloat(String(detailData.total_amount || 0)).toFixed(2)}
                     </div>

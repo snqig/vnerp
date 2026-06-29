@@ -1,5 +1,5 @@
 'use client';
-
+// v2 - i18n fixed
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
@@ -10,10 +10,6 @@ import {
   Printer, 
   ArrowLeft, 
   Building2, 
-  Upload, 
-  FileText, 
-  Image as ImageIcon, 
-  X,
   Eye,
   RotateCcw
 } from 'lucide-react';
@@ -33,6 +29,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useTranslations } from 'next-intl';
+import { FileUploadCell } from './FileUploadCell';
 
 interface PrintSequence {
   id: number;
@@ -214,82 +211,9 @@ const InputCell = ({
   );
 };
 
-const FileUploadCell = ({
-  value,
-  onChange,
-  accept = '.pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp',
-  className = ''
-}: {
-  value: string;
-  onChange?: (value: string) => void;
-  accept?: string;
-  className?: string;
-}) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [fileName, setFileName] = useState(value);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      onChange?.(file.name);
-    }
-  };
-
-  const handleClear = () => {
-    setFileName('');
-    onChange?.('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const getFileIcon = () => {
-    if (!fileName) return <Upload className="h-4 w-4 text-gray-400" />;
-    const ext = fileName.split('.').pop()?.toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext || '')) {
-      return <ImageIcon className="h-4 w-4 text-blue-500" />;
-    }
-    return <FileText className="h-4 w-4 text-red-500" />;
-  };
-
-  return (
-    <div className={`min-h-[24px] flex items-center justify-center gap-1 ${className}`}>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept={accept}
-        onChange={handleFileChange}
-        className="hidden"
-      />
-      {fileName ? (
-        <div className="flex items-center gap-1 flex-1 min-w-0">
-          {getFileIcon()}
-          <span className="text-xs truncate flex-1 dark:text-gray-300" title={fileName}>{fileName}</span>
-          <button
-            type="button"
-            onClick={handleClear}
-            className="p-0.5 hover:bg-accent/50 rounded"
-          >
-            <X className="h-3 w-3 text-gray-400 dark:text-gray-500" />
-          </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-        >
-          <Upload className="h-4 w-4" />
-          <span>点击上传</span>
-        </button>
-      )}
-    </div>
-  );
-};
-
 function StandardCardInputContent() {
   const tc = useTranslations('Common');
+  const t = useTranslations('StandardCard');
   const { companyName } = useCompanyName();
   const { toast } = useToast();
   const router = useRouter();
@@ -334,13 +258,13 @@ function StandardCardInputContent() {
     jumpDistance: '',
     processFlow1: '',
     processFlow2: '',
-    printType: '卷料丝印',
+    printType: t('rollScreenPrint'),
     firstJumpDistance: '',
     sequences: Array.from({ length: 7 }, (_, i) => ({ ...initialSequence, id: i + 1 })),
     filmManufacturer: '',
     filmCode: '',
     filmSize: '',
-    processMethod: '模切',
+    processMethod: t('dieCut'),
     stampingMethod: '',
     moldCode: '',
     backMoldCode: '',
@@ -383,8 +307,8 @@ function StandardCardInputContent() {
     sales: '',
     approver: '',
     documentCode: '',
-    glueType: '硬胶',
-    packingType: '包装',
+    glueType: t('hardGlue'),
+    packingType: t('packing'),
     materialType: '',
     moldType: '',
     etchMold: '',
@@ -411,7 +335,7 @@ function StandardCardInputContent() {
           setCustomerList(formattedCustomers);
         }
       } catch (error) {
-        console.error('加载客户列表失败:', error);
+        console.error(t('loadCustomerFailed'), error);
       }
     };
     fetchCustomers();
@@ -427,7 +351,7 @@ function StandardCardInputContent() {
           setMaterialList(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error('加载材料列表失败:', error);
+        console.error(t('loadMaterialFailed'), error);
       }
     };
     const fetchInks = async () => {
@@ -439,7 +363,7 @@ function StandardCardInputContent() {
           setInkList(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error('加载油墨列表失败:', error);
+        console.error(t('loadInkFailed'), error);
       }
     };
     const fetchScreenPlates = async () => {
@@ -451,7 +375,7 @@ function StandardCardInputContent() {
           setScreenPlateList(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error('加载网版列表失败:', error);
+        console.error(t('loadScreenPlateFailed'), error);
       }
     };
     const fetchDies = async () => {
@@ -463,7 +387,7 @@ function StandardCardInputContent() {
           setDieList(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error('加载刀模列表失败:', error);
+        console.error(t('loadDieFailed'), error);
       }
     };
     const fetchEmployees = async () => {
@@ -475,7 +399,7 @@ function StandardCardInputContent() {
           setEmployeeList(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error('加载员工列表失败:', error);
+        console.error(t('loadEmployeeFailed'), error);
       }
     };
     fetchMaterials();
@@ -514,7 +438,7 @@ function StandardCardInputContent() {
           jumpDistance: card.jump_distance || '',
           processFlow1: card.process_flow1 || '',
           processFlow2: card.process_flow2 || '',
-          printType: card.print_type || '卷料丝印',
+          printType: card.print_type || t('rollScreenPrint'),
           firstJumpDistance: card.first_jump_distance || '',
           sequences: card.sequences ? 
             (typeof card.sequences === 'string' ? JSON.parse(card.sequences) : card.sequences) 
@@ -522,7 +446,7 @@ function StandardCardInputContent() {
           filmManufacturer: card.film_manufacturer || '',
           filmCode: card.film_code || '',
           filmSize: card.film_size || '',
-          processMethod: card.process_method || '模切',
+          processMethod: card.process_method || t('dieCut'),
           stampingMethod: card.stamping_method || '',
           moldCode: card.mold_code || '',
           backMoldCode: card.back_mold_code || '',
@@ -565,8 +489,8 @@ function StandardCardInputContent() {
           sales: card.sales || '',
           approver: card.approver || '',
           documentCode: card.document_code || '',
-          glueType: card.glue_type || '硬胶',
-          packingType: card.packing_type || '包装',
+          glueType: card.glue_type || t('hardGlue'),
+          packingType: card.packing_type || t('packing'),
           materialType: card.material_type || '',
           moldType: card.mold_type || '',
           etchMold: card.etch_mold || '',
@@ -575,8 +499,8 @@ function StandardCardInputContent() {
         });
       }
     } catch (error) {
-      console.error('加载标准卡数据失败:', error);
-      toast({ title: '加载数据失败', variant: 'destructive' });
+      console.error(t('loadCardFailed'), error);
+      toast({ title: t('loadDataFailed'), variant: 'destructive' });
     }
   }, [toast]);
 
@@ -691,15 +615,15 @@ function StandardCardInputContent() {
       if (result.success) {
         const cardId = result.data?.id || parseInt(editId || '0');
         setSavedCardId(cardId);
-        toast({ title: isEditMode ? '更新成功' : '保存成功' });
+        toast({ title: isEditMode ? t('updateSuccess') : t('saveSuccess') });
         return cardId;
       } else {
-        toast({ title: '保存失败: ' + result.message, variant: 'destructive' });
+        toast({ title: t('saveFailed') + ': ' + result.message, variant: 'destructive' });
         return null;
       }
     } catch (error) {
-      console.error('保存失败:', error);
-      toast({ title: '保存失败，请检查网络连接', variant: 'destructive' });
+      console.error(t('saveFailed'), error);
+      toast({ title: t('saveFailedNetwork'), variant: 'destructive' });
       return null;
     } finally {
       setIsSaving(false);
@@ -739,7 +663,7 @@ function StandardCardInputContent() {
   };
 
   const handleReset = () => {
-    if (confirm('确定要重置表单吗？所有未保存的数据将丢失。')) {
+    if (confirm(t('confirmReset'))) {
       setFormData({
         cardNo: '',
         customer: '',
@@ -762,13 +686,13 @@ function StandardCardInputContent() {
         jumpDistance: '',
         processFlow1: '',
         processFlow2: '',
-        printType: '卷料丝印',
+        printType: t('rollScreenPrint'),
         firstJumpDistance: '',
         sequences: Array.from({ length: 7 }, (_, i) => ({ ...initialSequence, id: i + 1 })),
         filmManufacturer: '',
         filmCode: '',
         filmSize: '',
-        processMethod: '模切',
+        processMethod: t('dieCut'),
         stampingMethod: '',
         moldCode: '',
         backMoldCode: '',
@@ -811,8 +735,8 @@ function StandardCardInputContent() {
         sales: '',
         approver: '',
         documentCode: '',
-        glueType: '硬胶',
-        packingType: '包装',
+        glueType: t('hardGlue'),
+        packingType: t('packing'),
         materialType: '',
         moldType: '',
         etchMold: '',
@@ -833,7 +757,7 @@ function StandardCardInputContent() {
   };
 
   return (
-    <MainLayout title={`${isEditMode ? tc('edit') : '新建'}标准卡`}>
+    <MainLayout title={`${isEditMode ? tc('edit') : t('newCard')}`}>
       <form 
         className="space-y-4"
         noValidate
@@ -851,28 +775,28 @@ function StandardCardInputContent() {
             onClick={() => router.push('/sample/standard-card')}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            返回列表
+            {t('backToList')}
           </Button>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={handleReset}>
               <RotateCcw className="h-4 w-4 mr-2" />
-              重置
+              {t('reset')}
             </Button>
             <Button type="button" variant="outline" onClick={handlePreview}>
               <Eye className="h-4 w-4 mr-2" />
-              预览
+              {t('preview')}
             </Button>
             <Button type="button" variant="outline" onClick={handleSave} disabled={isSaving}>
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? '保存中...' : tc('save')}
+              {isSaving ? t('saving') : tc('save')}
             </Button>
             <Button type="button" variant="secondary" onClick={handleSaveAndPreview} disabled={isSaving}>
               <Eye className="h-4 w-4 mr-2" />
-              保存并预览
+              {t('saveAndPreview')}
             </Button>
             <Button type="button" onClick={handleSaveAndPrint} disabled={isSaving}>
               <Printer className="h-4 w-4 mr-2" />
-              保存并打印
+              {t('saveAndPrint')}
             </Button>
           </div>
         </div>
@@ -932,7 +856,7 @@ function StandardCardInputContent() {
                       type="text"
                       value={formData.cardNo}
                       onChange={(e) => setFormData(p => ({ ...p, cardNo: e.target.value }))}
-                      placeholder="编号"
+                      placeholder={t('cardNo')}
                       className="flex-1 min-w-[120px] h-6 text-base font-bold text-[#1a3c7a] dark:text-blue-300 text-center bg-transparent border-0 border-b border-black dark:border-gray-400 outline-none px-0"
                     />
                   </div>
@@ -940,7 +864,7 @@ function StandardCardInputContent() {
               </tr>
 
               <tr>
-                <td className="font-bold pr-2 border-none">客户：</td>
+                <td className="font-bold pr-2 border-none">{t('customer')}</td>
                 <td colSpan={4} className="font-bold border-none">
                   <Popover open={customerOpen} onOpenChange={setCustomerOpen}>
                     <PopoverTrigger asChild>
@@ -950,14 +874,14 @@ function StandardCardInputContent() {
                         role="combobox"
                         className="w-full justify-center font-normal h-6 min-h-[24px] px-1 py-0 text-xs border-0 border-b border-black dark:border-gray-400 rounded-none bg-transparent hover:bg-transparent"
                       >
-                        {formData.customer || "选择客户..."}
+                        {formData.customer || t('selectCustomer')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[300px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="搜索客户..." />
+                        <CommandInput placeholder={t('searchCustomer')} />
                         <CommandList>
-                          <CommandEmpty>未找到客户</CommandEmpty>
+                          <CommandEmpty>{t('noCustomerFound')}</CommandEmpty>
                           <CommandGroup>
                             {customerList.map((customer) => (
                               <CommandItem
@@ -985,23 +909,23 @@ function StandardCardInputContent() {
                     </PopoverContent>
                   </Popover>
                 </td>
-                <td className="font-bold px-2 border-none">版次:</td>
+                <td className="font-bold px-2 border-none">{t('version')}</td>
                 <td className="font-bold border-none">
                   <input
                     type="text"
                     value={formData.version}
                     onChange={(e) => setFormData(p => ({ ...p, version: e.target.value }))}
-                    placeholder="版次"
+                    placeholder={t('versionPlaceholder')}
                     className="h-6 w-full text-center bg-transparent border-0 border-b border-black dark:border-gray-400 outline-none px-0"
                   />
                 </td>
                 <td colSpan={4} className="text-center text-xl font-bold border-none">
-                  标准卡（流程卡）
+                  {t('title')}
                 </td>
                 <td colSpan={4} className="text-center border-none">
                   <span className="bg-[#1a3c7a] dark:bg-blue-700 text-white px-3 py-1 rounded font-bold">HSF</span>
                 </td>
-                <td colSpan={2} className="font-bold text-right px-2 border-none">日期：</td>
+                <td colSpan={2} className="font-bold text-right px-2 border-none">{t('date')}</td>
                 <td colSpan={2} className="font-bold border-none">
                   <input
                     type="date"
@@ -1017,21 +941,21 @@ function StandardCardInputContent() {
               </tr>
 
               <tr>
-                <td className="border font-bold text-center w-[4%]">品名</td>
+                <td className="border font-bold text-center w-[4%]">{t('productName')}</td>
                 <td colSpan={4} className="border font-bold">
                   <InputCell 
                     value={formData.productName}
                     onChange={(v) => setFormData(p => ({ ...p, productName: v }))}
                   />
                 </td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center w-[8%]">客户料号</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center w-[8%]">{t('customerCode')}</td>
                 <td colSpan={3} className="border">
                   <InputCell 
                     value={formData.customerCode}
                     onChange={(v) => setFormData(p => ({ ...p, customerCode: v }))}
                   />
                 </td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center w-[8%]">成品尺寸</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center w-[8%]">{t('finishedSize')}</td>
                 <td colSpan={4} className="border">
                   <InputCell 
                     value={formData.finishedSize}
@@ -1039,7 +963,7 @@ function StandardCardInputContent() {
                   />
                 </td>
                 <td className="border w-[4%]">m/m</td>
-                <td colSpan={2} className="border font-bold">公差+</td>
+                <td colSpan={2} className="border font-bold">{t('tolerance')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.tolerance}
@@ -1050,7 +974,7 @@ function StandardCardInputContent() {
               </tr>
 
               <tr>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">材料名称</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('materialName')}</td>
                 <td colSpan={4} className="border font-bold">
                   <Popover open={materialOpen} onOpenChange={setMaterialOpen}>
                     <PopoverTrigger asChild>
@@ -1058,14 +982,14 @@ function StandardCardInputContent() {
                         type="button"
                         className="w-full text-xs text-center bg-transparent border-none outline-none cursor-pointer"
                       >
-                        {formData.materialName || '选择材料...'}
+                        {formData.materialName || t('selectMaterial')}
                       </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[320px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="搜索材料..." />
+                        <CommandInput placeholder={t('searchMaterial')} />
                         <CommandList>
-                          <CommandEmpty>未找到材料</CommandEmpty>
+                          <CommandEmpty>{t('noMaterialFound')}</CommandEmpty>
                           <CommandGroup>
                             {materialList.map((mat) => (
                               <CommandItem
@@ -1088,36 +1012,36 @@ function StandardCardInputContent() {
                     </PopoverContent>
                   </Popover>
                 </td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">排版方式</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('layoutType')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.layoutType}
                     onChange={(v) => setFormData(p => ({ ...p, layoutType: v }))}
                   />
                 </td>
-                <td rowSpan={2} className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">间距</td>
+                <td rowSpan={2} className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('spacing')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.spacing}
                     onChange={(v) => setFormData(p => ({ ...p, spacing: v }))}
                   />
                 </td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">片料规格</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('sheetSpecs')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.sheetSpecs.width}
                     onChange={(v) => setFormData(p => ({ ...p, sheetSpecs: { ...p.sheetSpecs, width: v } }))}
                   />
                 </td>
-                <td colSpan={2} className="border">m/m宽x</td>
+                <td colSpan={2} className="border">{t('sheetWidthX')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.sheetSpecs.length}
                     onChange={(v) => setFormData(p => ({ ...p, sheetSpecs: { ...p.sheetSpecs, length: v } }))}
                   />
                 </td>
-                <td className="border">m/m长</td>
-                <td colSpan={2} className="border font-bold">标准用量</td>
+                <td className="border">{t('sheetLength')}</td>
+                <td colSpan={2} className="border font-bold">{t('standardUsage')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.standardUsage}
@@ -1128,7 +1052,7 @@ function StandardCardInputContent() {
               </tr>
 
               <tr>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">纸芯类型</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('coreType')}</td>
                 <td colSpan={4} className="border font-bold">
                   <div className="flex justify-center gap-3">
                     {['3#', '2#', '1#'].map((num) => (
@@ -1157,7 +1081,7 @@ function StandardCardInputContent() {
                     ))}
                   </div>
                 </td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">出纸方向</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('paperDirection')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.paperDirection}
@@ -1170,7 +1094,7 @@ function StandardCardInputContent() {
                     onChange={(v) => setFormData(p => ({ ...p, spacingValue: v }))}
                   />
                 </td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">卷料宽度</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('rollWidth')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.rollWidth}
@@ -1178,7 +1102,7 @@ function StandardCardInputContent() {
                   />
                 </td>
                 <td className="border">mm</td>
-                <td className="border">纸边</td>
+                <td className="border">{t('paperEdge')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.paperEdge}
@@ -1186,7 +1110,7 @@ function StandardCardInputContent() {
                   />
                 </td>
                 <td className="border">mm</td>
-                <td colSpan={2} className="border font-bold"> 跳距</td>
+                <td colSpan={2} className="border font-bold"> {t('jumpDistance')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.jumpDistance}
@@ -1197,7 +1121,7 @@ function StandardCardInputContent() {
               </tr>
 
               <tr>
-                <td rowSpan={2} className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">工艺<br/>流程</td>
+                <td rowSpan={2} className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('processFlow')}<br/>{t('processFlow')}</td>
                 <td colSpan={18} className="border">
                   <InputCell 
                     value={formData.processFlow1}
@@ -1215,10 +1139,10 @@ function StandardCardInputContent() {
               </tr>
 
               <tr>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">印刷方式</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('printType')}</td>
                 <td colSpan={6} className="border">
                   <div className="flex justify-center gap-3">
-                    {['胶印', '卷料丝印', '片料丝印', '轮转印'].map((type) => (
+                    {[t('offsetPrint'), t('rollScreenPrint'), t('sheetScreenPrint'), t('rotaryPrint')].map((type) => (
                       <label key={type} className="flex items-center gap-1 cursor-pointer">
                         <input
                           type="checkbox"
@@ -1244,29 +1168,29 @@ function StandardCardInputContent() {
                     ))}
                   </div>
                 </td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">第一跳距</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('firstJumpDistance')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.firstJumpDistance}
                     onChange={(v) => setFormData(p => ({ ...p, firstJumpDistance: v }))}
                   />
                 </td>
-                <td colSpan={2} className="border font-bold text-center">覆 膜</td>
-                <td colSpan={4} className="border font-bold text-center">成 型</td>
-                <td colSpan={4} className="border font-bold text-center">MYLAR</td>
+                <td colSpan={2} className="border font-bold text-center">{t('laminating')}</td>
+                <td colSpan={4} className="border font-bold text-center">{t('forming')}</td>
+                <td colSpan={4} className="border font-bold text-center">{t('mylar')}</td>
               </tr>
 
               <tr>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">印序</td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">印色</td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">油墨编号</td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">菲林编号</td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">存放位置</td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">印版编号</td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">网目</td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">存放位置</td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">印面</td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">种类</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('printSequence')}</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('printColor')}</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('inkCode')}</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('filmCode')}</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('storageLocation')}</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('plateCode')}</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('meshCount')}</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('storageLocation')}</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('printSide')}</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('category')}</td>
                 <td className="border">
                   <InputCell 
                     value={formData.moldType}
@@ -1275,7 +1199,7 @@ function StandardCardInputContent() {
                 </td>
                 <td colSpan={4} className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">
                   <div className="flex justify-center gap-3">
-                    {['模切', '冲压'].map((type) => (
+                    {[t('dieCut'), t('stamping')].map((type) => (
                       <label key={type} className="flex items-center gap-1 cursor-pointer">
                         <input
                           type="checkbox"
@@ -1301,7 +1225,7 @@ function StandardCardInputContent() {
                     ))}
                   </div>
                 </td>
-                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">材料</td>
+                <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{t('material')}</td>
                 <td colSpan={3} className="border">
                   <InputCell 
                     value={formData.materialType}
@@ -1332,9 +1256,9 @@ function StandardCardInputContent() {
                       </PopoverTrigger>
                       <PopoverContent className="w-[280px] p-0" align="start">
                         <Command>
-                          <CommandInput placeholder="搜索油墨..." />
-                          <CommandList>
-                            <CommandEmpty>未找到油墨</CommandEmpty>
+                          <CommandInput placeholder={t('searchInk')} />
+                        <CommandList>
+                          <CommandEmpty>{t('noInkFound')}</CommandEmpty>
                             <CommandGroup>
                               {inkList.map((ink) => (
                                 <CommandItem
@@ -1382,9 +1306,9 @@ function StandardCardInputContent() {
                       </PopoverTrigger>
                       <PopoverContent className="w-[280px] p-0" align="start">
                         <Command>
-                          <CommandInput placeholder="搜索网版..." />
-                          <CommandList>
-                            <CommandEmpty>未找到网版</CommandEmpty>
+                          <CommandInput placeholder={t('searchScreenPlate')} />
+                        <CommandList>
+                          <CommandEmpty>{t('noScreenPlateFound')}</CommandEmpty>
                             <CommandGroup>
                               {screenPlateList.map((plate) => (
                                 <CommandItem
@@ -1399,7 +1323,7 @@ function StandardCardInputContent() {
                                 >
                                   <div className="flex flex-col">
                                     <span>{plate.plate_code}</span>
-                                    <span className="text-xs text-muted-foreground">{plate.plate_name} {plate.mesh_count ? `| ${plate.mesh_count}目` : ''}</span>
+                                    <span className="text-xs text-muted-foreground">{plate.plate_name} {plate.mesh_count ? `| ${plate.mesh_count}${t('meshUnit')}` : ''}</span>
                                   </div>
                                 </CommandItem>
                               ))}
@@ -1429,21 +1353,21 @@ function StandardCardInputContent() {
                   </td>
                   {index === 0 ? (
                     <>
-                      <td className="border">厂商</td>
+                      <td className="border">{t('manufacturer')}</td>
                       <td className="border">
                         <InputCell 
                           value={formData.filmManufacturer}
                           onChange={(v) => setFormData(p => ({ ...p, filmManufacturer: v }))}
                         />
                       </td>
-                      <td colSpan={2} className="border">冲压方法</td>
+                      <td colSpan={2} className="border">{t('stampingMethod')}</td>
                       <td colSpan={2} className="border">
                         <InputCell 
                           value={formData.stampingMethod}
                           onChange={(v) => setFormData(p => ({ ...p, stampingMethod: v }))}
                         />
                       </td>
-                      <td className="border">规格</td>
+                      <td className="border">{t('specs')}</td>
                       <td colSpan={2} className="border">
                         <InputCell 
                           value={formData.mylarSpecs}
@@ -1454,7 +1378,7 @@ function StandardCardInputContent() {
                     </>
                   ) : index === 1 ? (
                     <>
-                      <td className="border">编号</td>
+                      <td className="border">{t('dieCode')}</td>
                       <td className="border">
                         <Popover open={diePickerField === 'moldCode'} onOpenChange={(open) => setDiePickerField(open ? 'moldCode' : null)}>
                           <PopoverTrigger asChild>
@@ -1468,9 +1392,9 @@ function StandardCardInputContent() {
                           </PopoverTrigger>
                           <PopoverContent className="w-[280px] p-0" align="start">
                             <Command>
-                              <CommandInput placeholder="搜索刀模..." />
+                              <CommandInput placeholder={t('searchDie')} />
                               <CommandList>
-                                <CommandEmpty>未找到刀模</CommandEmpty>
+                                <CommandEmpty>{t('noDieFound')}</CommandEmpty>
                                 <CommandGroup>
                                   {dieList.map((die) => (
                                     <CommandItem
@@ -1493,7 +1417,7 @@ function StandardCardInputContent() {
                           </PopoverContent>
                         </Popover>
                       </td>
-                      <td colSpan={2} className="border">模具编号</td>
+                      <td colSpan={2} className="border">{t('moldCode')}</td>
                       <td colSpan={2} className="border">
                         <Popover open={diePickerField === 'backMoldCode'} onOpenChange={(open) => setDiePickerField(open ? 'backMoldCode' : null)}>
                           <PopoverTrigger asChild>
@@ -1507,9 +1431,9 @@ function StandardCardInputContent() {
                           </PopoverTrigger>
                           <PopoverContent className="w-[280px] p-0" align="start">
                             <Command>
-                              <CommandInput placeholder="搜索刀模..." />
+                              <CommandInput placeholder={t('searchDie')} />
                               <CommandList>
-                                <CommandEmpty>未找到刀模</CommandEmpty>
+                                <CommandEmpty>{t('noDieFound')}</CommandEmpty>
                                 <CommandGroup>
                                   {dieList.map((die) => (
                                     <CommandItem
@@ -1532,7 +1456,7 @@ function StandardCardInputContent() {
                           </PopoverContent>
                         </Popover>
                       </td>
-                      <td className="border">排模</td>
+                      <td className="border">{t('layoutMold')}</td>
                       <td colSpan={3} className="border">
                         <InputCell 
                           value={formData.layoutMethod}
@@ -1542,14 +1466,14 @@ function StandardCardInputContent() {
                     </>
                   ) : index === 2 ? (
                     <>
-                      <td className="border">尺寸</td>
+                      <td className="border">{t('size')}</td>
                       <td className="border">
                         <InputCell 
                           value={formData.adhesiveSize}
                           onChange={(v) => setFormData(p => ({ ...p, adhesiveSize: v }))}
                         />
                       </td>
-                      <td colSpan={2} className="border">排模方法</td>
+                      <td colSpan={2} className="border">{t('layoutMethod')}</td>
                       <td colSpan={2} className="border">
                         <Popover open={diePickerField === 'backMylarMold'} onOpenChange={(open) => setDiePickerField(open ? 'backMylarMold' : null)}>
                           <PopoverTrigger asChild>
@@ -1563,9 +1487,9 @@ function StandardCardInputContent() {
                           </PopoverTrigger>
                           <PopoverContent className="w-[280px] p-0" align="start">
                             <Command>
-                              <CommandInput placeholder="搜索刀模..." />
+                              <CommandInput placeholder={t('searchDie')} />
                               <CommandList>
-                                <CommandEmpty>未找到刀模</CommandEmpty>
+                                <CommandEmpty>{t('noDieFound')}</CommandEmpty>
                                 <CommandGroup>
                                   {dieList.map((die) => (
                                     <CommandItem
@@ -1588,7 +1512,7 @@ function StandardCardInputContent() {
                           </PopoverContent>
                         </Popover>
                       </td>
-                      <td className="border">跳距</td>
+                      <td className="border">{t('jumpDistance')}</td>
                       <td colSpan={2} className="border">
                         <InputCell 
                           value={formData.jumpDistance2}
@@ -1599,62 +1523,62 @@ function StandardCardInputContent() {
                     </>
                   ) : index === 3 ? (
                     <>
-                      <td colSpan={2} className="border">背胶</td>
-                      <td colSpan={2} className="border">加虚线刀</td>
+                      <td colSpan={2} className="border">{t('adhesive')}</td>
+                      <td colSpan={2} className="border">{t('dashedKnife')}</td>
                       <td colSpan={2} className="border">
                         <div className="flex justify-center gap-4">
                           <label className="flex items-center space-x-1 cursor-pointer text-xs">
                             <input
                               type="radio"
-                              value=tc("yes")
+                              value={tc("yes")}
                               checked={formData.releasePaperCode === tc('yes')}
                               onChange={(e) => setFormData(p => ({ ...p, releasePaperCode: e.target.value }))}
                               className="w-3 h-3"
                             />
-                            <span>是</span>
+                            <span>{t('yes')}</span>
                           </label>
                           <label className="flex items-center space-x-1 cursor-pointer text-xs">
                             <input
                               type="radio"
-                              value=tc("no")
+                              value={tc("no")}
                               checked={formData.releasePaperCode === tc('no')}
                               onChange={(e) => setFormData(p => ({ ...p, releasePaperCode: e.target.value }))}
                               className="w-3 h-3"
                             />
-                            <span>否</span>
+                            <span>{t('no')}</span>
                           </label>
                         </div>
                       </td>
-                      <td colSpan={4} className="border">包装</td>
+                      <td colSpan={4} className="border">{t('packing')}</td>
                     </>
                   ) : index === 4 ? (
                     <>
-                      <td className="border">种类</td>
+                      <td className="border">{t('category')}</td>
                       <td className="border">
-                        <InputCell 
+                        <InputCell
                           value={formData.adhesiveType}
                           onChange={(v) => setFormData(p => ({ ...p, adhesiveType: v }))}
                         />
                       </td>
-                      <td rowSpan={3} colSpan={2} className="border font-bold">切片方式</td>
+                      <td rowSpan={3} colSpan={2} className="border font-bold">{t('slicingMethod')}</td>
                       <td className="border">
-                        <InputCell 
+                        <InputCell
                           value={formData.slicePerRow}
                           onChange={(v) => setFormData(p => ({ ...p, slicePerRow: v }))}
                         />
                       </td>
-                      <td className="border">PCS/排</td>
+                      <td className="border">{t('pcsPerRow')}</td>
                       <td colSpan={2} className="border">
-                        <InputCell 
+                        <InputCell
                           value={formData.slicePerRoll}
                           onChange={(v) => setFormData(p => ({ ...p, slicePerRoll: v }))}
                         />
                       </td>
-                      <td colSpan={2} className="border">PCS/卷</td>
+                      <td colSpan={2} className="border">{t('pcsPerRoll')}</td>
                     </>
                   ) : index === 5 ? (
                     <>
-                      <td className="border">厂商</td>
+                      <td className="border">{t('manufacturer')}</td>
                       <td className="border">
                         <InputCell 
                           value={formData.adhesiveManufacturer}
@@ -1667,18 +1591,18 @@ function StandardCardInputContent() {
                           onChange={(v) => setFormData(p => ({ ...p, slicePerBundle: v }))}
                         />
                       </td>
-                      <td className="border">PCS/袋</td>
+                      <td className="border">{t('pcsPerBag')}</td>
                       <td colSpan={2} className="border">
-                        <InputCell 
+                        <InputCell
                           value={formData.slicePerBag}
                           onChange={(v) => setFormData(p => ({ ...p, slicePerBag: v }))}
                         />
                       </td>
-                      <td colSpan={2} className="border">PCS/扎</td>
+                      <td colSpan={2} className="border">{t('pcsPerBundle')}</td>
                     </>
                   ) : (
                     <>
-                      <td className="border">规格</td>
+                      <td className="border">{t('specs')}</td>
                       <td className="border">
                         <InputCell 
                           value={formData.adhesiveSpecs}
@@ -1691,9 +1615,9 @@ function StandardCardInputContent() {
                           onChange={(v) => setFormData(p => ({ ...p, slicePerBox: v }))}
                         />
                       </td>
-                      <td className="border">PCS/箱</td>
+                      <td className="border">{t('pcsPerBox')}</td>
                       <td colSpan={2} className="border"><InputCell value={formData.packingQty} onChange={(v) => setFormData(p => ({ ...p, packingQty: v }))} /></td>
-                      <td colSpan={2} className="border">PCS/袋</td>
+                      <td colSpan={2} className="border">{t('pcsPerBag')}</td>
                     </>
                   )}
                 </tr>
@@ -1702,18 +1626,18 @@ function StandardCardInputContent() {
               {[8, 9, 10, 11, 12].map((rowNum) => (
                 <tr key={`extra-${rowNum}`}>
                   {rowNum === 8 ? (
-                    <td rowSpan={3} className="border text-center font-bold">专色配比</td>
+                    <td rowSpan={3} className="border text-center font-bold">{t('specialColorRatio')}</td>
                   ) : rowNum === 9 || rowNum === 10 ? (
                     null
                   ) : rowNum === 11 ? (
                     <td colSpan={3} className="border">
                       <InputCell 
-                        value="电脑图档存储路径"
+                        value={t('computerFilePath')}
                         onChange={() => {}}
                       />
                     </td>
                   ) : (
-                    <td className="border text-center font-bold">样品</td>
+                    <td className="border text-center font-bold">{t('sample')}</td>
                   )}
                   {rowNum === 8 ? (
                     <td rowSpan={3} colSpan={8} className="border">
@@ -1729,6 +1653,7 @@ function StandardCardInputContent() {
                       <FileUploadCell 
                         value={formData.filePath}
                         onChange={(v) => setFormData(p => ({ ...p, filePath: v }))}
+                        uploadText={t('clickToUpload')}
                       />
                     </td>
                   ) : rowNum === 12 ? (
@@ -1754,22 +1679,22 @@ function StandardCardInputContent() {
                     <>
                       {rowNum === 8 ? (
                         <td colSpan={2} className="border">
-                          <InputCell 
-                            value="离型纸"
+                          <InputCell
+                            value={t('releasePaper')}
                             onChange={() => {}}
                           />
                         </td>
                       ) : rowNum === 9 ? (
                         <td className="border">
-                          <InputCell 
-                            value="种类"
+                          <InputCell
+                            value={t('category')}
                             onChange={() => {}}
                           />
                         </td>
                       ) : (
                         <td className="border">
-                          <InputCell 
-                            value="规格"
+                          <InputCell
+                            value={t('specs')}
                             onChange={() => {}}
                           />
                         </td>
@@ -1777,11 +1702,11 @@ function StandardCardInputContent() {
                       {rowNum === 8 ? null : <td className="border"><InputCell value={rowNum === 9 ? formData.releasePaperType : formData.releasePaperSpecs} onChange={(v) => setFormData(p => ({ ...p, [rowNum === 9 ? 'releasePaperType' : 'releasePaperSpecs']: v }))} /></td>}
                       <td colSpan={2} className="border">
                         {rowNum === 8 ? (
-                          <div className="text-center">背刀刀模</div>
+                          <div className="text-center">{t('backKnifeMold')}</div>
                         ) : rowNum === 9 ? (
-                          <div className="text-center">腐蚀刀模</div>
+                          <div className="text-center">{t('etchMold')}</div>
                         ) : (
-                          <div className="text-center">腐蚀刀模</div>
+                          <div className="text-center">{t('etchMold')}</div>
                         )}
                       </td>
                       <td colSpan={2} className="border">
@@ -1800,14 +1725,14 @@ function StandardCardInputContent() {
                             onChange={(v) => setFormData(p => ({ ...p, releasePaperCategory: v }))}
                           />
                         ) : rowNum === 9 ? (
-                          "垫纸材料"
+                          t('paddingMaterial')
                         ) : (
-                          "打包材料"
+                          t('packingMaterial')
                         )}
                       </td>
                       <td colSpan={2} className="border">
                         {rowNum === 8 ? (
-                          "PCS/箱"
+                          t('pcsPerBox')
                         ) : rowNum === 9 ? (
                           <InputCell 
                             value={formData.paddingMaterial}
@@ -1834,7 +1759,7 @@ function StandardCardInputContent() {
                           <InputCell 
                             value={formData.notes}
                             onChange={(v) => setFormData(p => ({ ...p, notes: v }))}
-                            placeholder="注意事项："
+                            placeholder={t('notesPlaceholder')}
                           />
                         </td>
                       ) : null}
@@ -1844,7 +1769,7 @@ function StandardCardInputContent() {
               ))}
 
               <tr>
-                <td className="border"> 制表 </td>
+                <td className="border"> {t('creator')} </td>
                 <td colSpan={2} className="border font-bold text-center">
                   <Popover open={employeePickerField === 'creator'} onOpenChange={(open) => setEmployeePickerField(open ? 'creator' : null)}>
                     <PopoverTrigger asChild>
@@ -1854,9 +1779,9 @@ function StandardCardInputContent() {
                     </PopoverTrigger>
                     <PopoverContent className="w-[260px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="搜索员工..." />
+                        <CommandInput placeholder={t('searchEmployee')} />
                         <CommandList>
-                          <CommandEmpty>未找到员工</CommandEmpty>
+                          <CommandEmpty>{t('noEmployeeFound')}</CommandEmpty>
                           <CommandGroup>
                             {employeeList.map((emp) => (
                               <CommandItem key={emp.id} value={`${emp.name} ${emp.employee_no} ${emp.dept_name || ''}`}
@@ -1870,7 +1795,7 @@ function StandardCardInputContent() {
                     </PopoverContent>
                   </Popover>
                 </td>
-                <td className="border"> 审核</td>
+                <td className="border"> {t('reviewer')}</td>
                 <td className="border">
                   <Popover open={employeePickerField === 'reviewer'} onOpenChange={(open) => setEmployeePickerField(open ? 'reviewer' : null)}>
                     <PopoverTrigger asChild>
@@ -1880,9 +1805,9 @@ function StandardCardInputContent() {
                     </PopoverTrigger>
                     <PopoverContent className="w-[260px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="搜索员工..." />
+                        <CommandInput placeholder={t('searchEmployee')} />
                         <CommandList>
-                          <CommandEmpty>未找到员工</CommandEmpty>
+                          <CommandEmpty>{t('noEmployeeFound')}</CommandEmpty>
                           <CommandGroup>
                             {employeeList.map((emp) => (
                               <CommandItem key={emp.id} value={`${emp.name} ${emp.employee_no} ${emp.dept_name || ''}`}
@@ -1896,7 +1821,7 @@ function StandardCardInputContent() {
                     </PopoverContent>
                   </Popover>
                 </td>
-                <td className="border"> 厂务</td>
+                <td className="border"> {t('factoryManager')}</td>
                 <td colSpan={2} className="border font-bold text-center">
                   <Popover open={employeePickerField === 'factoryManager'} onOpenChange={(open) => setEmployeePickerField(open ? 'factoryManager' : null)}>
                     <PopoverTrigger asChild>
@@ -1906,9 +1831,9 @@ function StandardCardInputContent() {
                     </PopoverTrigger>
                     <PopoverContent className="w-[260px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="搜索员工..." />
+                        <CommandInput placeholder={t('searchEmployee')} />
                         <CommandList>
-                          <CommandEmpty>未找到员工</CommandEmpty>
+                          <CommandEmpty>{t('noEmployeeFound')}</CommandEmpty>
                           <CommandGroup>
                             {employeeList.map((emp) => (
                               <CommandItem key={emp.id} value={`${emp.name} ${emp.employee_no} ${emp.dept_name || ''}`}
@@ -1922,7 +1847,7 @@ function StandardCardInputContent() {
                     </PopoverContent>
                   </Popover>
                 </td>
-                <td className="border"> 品管</td>
+                <td className="border"> {t('qualityManager')}</td>
                 <td colSpan={2} className="border font-bold text-center">
                   <Popover open={employeePickerField === 'qualityManager'} onOpenChange={(open) => setEmployeePickerField(open ? 'qualityManager' : null)}>
                     <PopoverTrigger asChild>
@@ -1932,9 +1857,9 @@ function StandardCardInputContent() {
                     </PopoverTrigger>
                     <PopoverContent className="w-[260px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="搜索员工..." />
+                        <CommandInput placeholder={t('searchEmployee')} />
                         <CommandList>
-                          <CommandEmpty>未找到员工</CommandEmpty>
+                          <CommandEmpty>{t('noEmployeeFound')}</CommandEmpty>
                           <CommandGroup>
                             {employeeList.map((emp) => (
                               <CommandItem key={emp.id} value={`${emp.name} ${emp.employee_no} ${emp.dept_name || ''}`}
@@ -1948,7 +1873,7 @@ function StandardCardInputContent() {
                     </PopoverContent>
                   </Popover>
                 </td>
-                <td className="border"> 业务</td>
+                <td className="border"> {t('sales')}</td>
                 <td colSpan={3} className="border font-bold text-center">
                   <Popover open={employeePickerField === 'sales'} onOpenChange={(open) => setEmployeePickerField(open ? 'sales' : null)}>
                     <PopoverTrigger asChild>
@@ -1958,9 +1883,9 @@ function StandardCardInputContent() {
                     </PopoverTrigger>
                     <PopoverContent className="w-[260px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="搜索员工..." />
+                        <CommandInput placeholder={t('searchEmployee')} />
                         <CommandList>
-                          <CommandEmpty>未找到员工</CommandEmpty>
+                          <CommandEmpty>{t('noEmployeeFound')}</CommandEmpty>
                           <CommandGroup>
                             {employeeList.map((emp) => (
                               <CommandItem key={emp.id} value={`${emp.name} ${emp.employee_no} ${emp.dept_name || ''}`}
@@ -1974,7 +1899,7 @@ function StandardCardInputContent() {
                     </PopoverContent>
                   </Popover>
                 </td>
-                <td className="border"> 核准</td>
+                <td className="border"> {t('approver')}</td>
                 <td colSpan={3} className="border font-bold text-center">
                   <Popover open={employeePickerField === 'approver'} onOpenChange={(open) => setEmployeePickerField(open ? 'approver' : null)}>
                     <PopoverTrigger asChild>
@@ -1984,9 +1909,9 @@ function StandardCardInputContent() {
                     </PopoverTrigger>
                     <PopoverContent className="w-[260px] p-0" align="start">
                       <Command>
-                        <CommandInput placeholder="搜索员工..." />
+                        <CommandInput placeholder={t('searchEmployee')} />
                         <CommandList>
-                          <CommandEmpty>未找到员工</CommandEmpty>
+                          <CommandEmpty>{t('noEmployeeFound')}</CommandEmpty>
                           <CommandGroup>
                             {employeeList.map((emp) => (
                               <CommandItem key={emp.id} value={`${emp.name} ${emp.employee_no} ${emp.dept_name || ''}`}
@@ -2005,7 +1930,7 @@ function StandardCardInputContent() {
           </table>
           
           <div className="mt-2 flex items-center">
-            <span className="font-bold text-sm mr-2">编号：</span>
+            <span className="font-bold text-sm mr-2">{t('cardNoLabel')}</span>
             <InputCell 
               value={formData.documentCode}
               onChange={(v) => setFormData(p => ({ ...p, documentCode: v }))}
@@ -2021,7 +1946,7 @@ function StandardCardInputContent() {
 function Loading() {
   const tc = useTranslations('Common');
   return (
-    <MainLayout title=tc("loading")>
+    <MainLayout title={tc("loading")}>
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
       </div>

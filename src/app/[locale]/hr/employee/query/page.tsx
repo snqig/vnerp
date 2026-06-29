@@ -222,7 +222,7 @@ function EmployeeQueryContent() {
                   <UserCircle className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">角色</p>
+                  <p className="text-sm text-gray-500 mb-1">{tc("role")}</p>
                   <p className="font-semibold text-gray-900">{employee.role_name || '-'}</p>
                 </div>
               </div>
@@ -244,7 +244,7 @@ function EmployeeQueryContent() {
                   <Phone className="w-5 h-5 text-pink-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">联系电话</p>
+                  <p className="text-sm text-gray-500 mb-1">{tc("phone")}</p>
                   <p className="font-semibold text-gray-900">{employee.phone || '-'}</p>
                 </div>
               </div>
@@ -255,7 +255,7 @@ function EmployeeQueryContent() {
                   <Mail className="w-5 h-5 text-cyan-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">邮箱</p>
+                  <p className="text-sm text-gray-500 mb-1">{tc("email")}</p>
                   <p className="font-semibold text-gray-900">{employee.email || '-'}</p>
                 </div>
               </div>
@@ -264,7 +264,7 @@ function EmployeeQueryContent() {
             {/* 备注 */}
             {employee.remark && (
               <div className="mt-6 p-4 bg-yellow-50 rounded-xl border border-yellow-100">
-                <p className="text-sm text-yellow-800 font-medium mb-1">备注</p>
+                <p className="text-sm text-yellow-800 font-medium mb-1">{tc("remark")}</p>
                 <p className="text-gray-700">{employee.remark}</p>
               </div>
             )}

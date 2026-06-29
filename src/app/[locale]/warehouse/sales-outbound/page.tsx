@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 interface Item {
   id: number;
@@ -43,19 +44,21 @@ interface Item {
   status: number;
   remark?: string;
 }
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: '待出库', variant: 'outline' },
-  2: { label: '已出库', variant: 'default' },
-  3: { label: '已取消', variant: 'destructive' },
-};
 
 export default function SalesOutboundPage() {
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
+
+  // 状态映射 - 在组件内部使用翻译
+  const statusMap: Record<
+    number,
+    { labelKey: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { labelKey: 'pendingOutbound', variant: 'outline' },
+    2: { labelKey: 'outbounded', variant: 'default' },
+    3: { labelKey: 'cancelled', variant: 'destructive' },
+  };
 
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -132,14 +135,14 @@ export default function SalesOutboundPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
         toast({ title: '失败', description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
   const handleStatusChange = async (id: number, status: number) => {
@@ -154,7 +157,7 @@ export default function SalesOutboundPage() {
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
@@ -167,7 +170,7 @@ export default function SalesOutboundPage() {
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
@@ -179,7 +182,7 @@ export default function SalesOutboundPage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={tc("searchOrderNo")}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -207,12 +210,12 @@ export default function SalesOutboundPage() {
                 <TableRow>
                   <TableHead className="text-xs">出库单号</TableHead>
                   <TableHead className="text-xs">销售订单</TableHead>
-                  <TableHead className="text-xs">客户</TableHead>
-                  <TableHead className="text-xs">仓库</TableHead>
+                  <TableHead className="text-xs">{tc("customer")}</TableHead>
+                  <TableHead className="text-xs">{tc("warehouse")}</TableHead>
                   <TableHead className="text-xs">出库日期</TableHead>
                   <TableHead className="text-xs">发货人</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -228,7 +231,7 @@ export default function SalesOutboundPage() {
                       <TableCell className="text-xs">{item.delivery_person || '-'}</TableCell>
                       <TableCell>
                         <Badge variant={st.variant} className="text-xs">
-                          {st.label}
+                          {t(st.labelKey)}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -270,7 +273,7 @@ export default function SalesOutboundPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                      暂无记录
+                      {t('noRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -302,11 +305,11 @@ export default function SalesOutboundPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增销售出库单</DialogTitle>
+              <DialogTitle>{t('addSalesOutboundOrder')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>仓库</Label>
+                <Label>{tc("warehouse")}</Label>
                 <Select
                   value={String(editItem.warehouse_id || '')}
                   onValueChange={(v) => {
@@ -319,7 +322,7 @@ export default function SalesOutboundPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择仓库" />
+                    <SelectValue placeholder={t('selectWarehouse')} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w) => (
@@ -339,7 +342,7 @@ export default function SalesOutboundPage() {
                 />
               </div>
               <div>
-                <Label>销售订单号</Label>
+                <Label>{t('salesOrderNo')}</Label>
                 <Input
                   value={editItem.order_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, order_no: e.target.value })}
@@ -364,7 +367,7 @@ export default function SalesOutboundPage() {
                 </Select>
               </div>
               <div>
-                <Label>发货人</Label>
+                <Label>{t('deliveryPerson')}</Label>
                 <Input
                   value={editItem.delivery_person || ''}
                   onChange={(e) => setEditItem({ ...editItem, delivery_person: e.target.value })}
@@ -373,9 +376,9 @@ export default function SalesOutboundPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

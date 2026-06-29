@@ -56,6 +56,18 @@ interface EcoRecord {
 }
 
 export default function EcoPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   const t = useTranslations('Engineering');
   const tc = useTranslations('Common');
 
@@ -108,7 +120,7 @@ export default function EcoPage() {
       if (searchEcoNo) params.set('ecoNo', searchEcoNo);
       if (searchType) params.set('ecoType', searchType);
       if (searchStatus) params.set('status', searchStatus);
-      const res = await fetch('/api/plm/eco?' + params);
+      const res = await authFetch('/api/plm/eco?' + params);
       const data = await res.json();
       if (data.code === 200) {
         setRecords(data.data.list || []);
@@ -132,7 +144,7 @@ export default function EcoPage() {
     try {
       const method = editRecord ? 'PUT' : 'POST';
       const body = editRecord ? { id: editRecord.id, ...form } : form;
-      const res = await fetch('/api/plm/eco', {
+      const res = await authFetch('/api/plm/eco', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -153,7 +165,7 @@ export default function EcoPage() {
   const handleDelete = async (id: number) => {
     if (!confirm(tc('confirmDelete'))) return;
     try {
-      const res = await fetch('/api/plm/eco?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/plm/eco?id=' + id, { method: 'DELETE' });
       const data = await res.json();
       if (data.code === 200) {
         toast({ title: tc('deleteSuccess') });

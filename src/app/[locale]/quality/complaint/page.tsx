@@ -93,26 +93,26 @@ interface ComplaintRecord {
 }
 
 const sourceMap: Record<string, string> = {
-  customer: '客户投诉',
-  internal: '内部发现',
-  audit: '审核发现',
-  other: '其他',
+  customer: 'customerComplaint',
+  internal: 'internalDiscovery',
+  audit: 'auditDiscovery',
+  other: 'other',
 };
 const defectTypeMap: Record<string, string> = {
-  appearance: '外观不良',
-  dimension: '尺寸不良',
-  function: '功能不良',
-  color: '色差',
-  adhesion: '附着力',
-  other: '其他',
+  appearance: 'appearanceDefect',
+  dimension: 'dimensionDefect',
+  function: 'functionDefect',
+  color: 'colorDefect',
+  adhesion: 'adhesionDefect',
+  other: 'other',
 };
 const severityMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '轻微', variant: 'outline' },
-  2: { label: '一般', variant: 'secondary' },
-  3: { label: '严重', variant: 'destructive' },
+  1: { label: 'minor', variant: 'outline' },
+  2: { label: 'general', variant: 'secondary' },
+  3: { label: 'serious', variant: 'destructive' },
 };
 
 
@@ -125,12 +125,12 @@ export default function Complaint8DPage() {
     number,
     { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
   > = {
-    1: { label: '已登记', variant: 'outline' },
-    2: { label: '分析中', variant: 'secondary' },
-    3: { label: '对策中', variant: 'secondary' },
-    4: { label: '验证中', variant: 'secondary' },
+    1: { label: 'registered', variant: 'outline' },
+    2: { label: 'analyzing', variant: 'secondary' },
+    3: { label: 'countermeasure', variant: 'secondary' },
+    4: { label: 'verifying', variant: 'secondary' },
     5: { label: tc('closed'), variant: 'default' },
-    6: { label: '已退回', variant: 'destructive' },
+    6: { label: 'returned', variant: 'destructive' },
   };
 
   const { toast } = useToast();
@@ -180,14 +180,14 @@ export default function Complaint8DPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editItem.id ? '更新成功' : '创建成功' });
+        toast({ title: editItem.id ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
@@ -200,27 +200,27 @@ export default function Complaint8DPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '8D报告保存成功' });
+        toast({ title: t('8DReportSaved') });
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除此客诉记录？')) return;
+    if (!confirm(t('confirmDeleteComplaint'))) return;
     try {
       const res = await authFetch('/api/quality/complaint?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
@@ -231,7 +231,7 @@ export default function Complaint8DPage() {
   };
 
   return (
-    <MainLayout title="客诉8D管理">
+    <MainLayout title={t('complaint8DManagement')}>
       <div className="p-6 space-y-6">
         <Card>
           <CardContent className="pt-6">
@@ -240,7 +240,7 @@ export default function Complaint8DPage() {
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索客户名称"
+                    placeholder={t('searchCustomerName')}
                     className="pl-8 w-48"
                     value={searchCustomer}
                     onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -251,7 +251,7 @@ export default function Complaint8DPage() {
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索产品名称"
+                    placeholder={tc("searchProductName")}
                     className="pl-8 w-48"
                     value={searchProduct}
                     onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -261,19 +261,19 @@ export default function Complaint8DPage() {
                 </div>
                 <Select value={searchStatus} onValueChange={setSearchStatus}>
                   <SelectTrigger className="w-36">
-                    <SelectValue placeholder="状态筛选" />
+                    <SelectValue placeholder={t('statusFilter')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
+                    <SelectItem value="all">{t('allStatus')}</SelectItem>
                     {Object.entries(statusMap).map(([k, v]) => (
                       <SelectItem key={k} value={k}>
-                        {v.label}
+                        {t(v.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={fetchData}>
-                  查询
+                  {tc('query')}
                 </Button>
               </div>
               <Button
@@ -283,7 +283,7 @@ export default function Complaint8DPage() {
                 }}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                新建客诉
+                {t('newComplaint')}
               </Button>
               <TableExportToolbar
                 selectedCount={selectedIds.length}
@@ -300,41 +300,41 @@ export default function Complaint8DPage() {
                 onExportPDF={() =>
                   exportTableToPDF(
                     sortedData,
-                    '客诉8D报告',
+                    t('complaint8DReport'),
                     [
-                      { key: 'complaint_no', header: '客诉编号' },
-                      { key: 'customer_name', header: '客户名称' },
-                      { key: 'product_name', header: '产品名称' },
-                      { key: 'defect_type', header: '不良类型' },
-                      { key: 'defect_qty', header: '不良数量' },
+                      { key: 'complaint_no', header: t('complaintNo') },
+                      { key: 'customer_name', header: tc('customerName') },
+                      { key: 'product_name', header: tc('productName') },
+                      { key: 'defect_type', header: t('defectType') },
+                      { key: 'defect_qty', header: t('defectQty') },
                       { key: 'status', header: tc('status') },
                     ],
-                    '客诉8D报告'
+                    t('complaint8DReport')
                   )
                 }
                 onExportXLS={() =>
-                  exportTableToXLS(sortedData, '客诉8D报告', [
-                    { key: 'complaint_no', header: '客诉编号' },
-                    { key: 'customer_name', header: '客户名称' },
-                    { key: 'product_name', header: '产品名称' },
-                    { key: 'defect_type', header: '不良类型' },
-                    { key: 'defect_qty', header: '不良数量' },
+                  exportTableToXLS(sortedData, t('complaint8DReport'), [
+                    { key: 'complaint_no', header: t('complaintNo') },
+                    { key: 'customer_name', header: tc('customerName') },
+                    { key: 'product_name', header: tc('productName') },
+                    { key: 'defect_type', header: t('defectType') },
+                    { key: 'defect_qty', header: t('defectQty') },
                     { key: 'status', header: tc('status') },
                   ])
                 }
                 onExportWORD={() =>
                   exportTableToWORD(
                     sortedData,
-                    '客诉8D报告',
+                    t('complaint8DReport'),
                     [
-                      { key: 'complaint_no', header: '客诉编号' },
-                      { key: 'customer_name', header: '客户名称' },
-                      { key: 'product_name', header: '产品名称' },
-                      { key: 'defect_type', header: '不良类型' },
-                      { key: 'defect_qty', header: '不良数量' },
+                      { key: 'complaint_no', header: t('complaintNo') },
+                      { key: 'customer_name', header: tc('customerName') },
+                      { key: 'product_name', header: tc('productName') },
+                      { key: 'defect_type', header: t('defectType') },
+                      { key: 'defect_qty', header: t('defectQty') },
                       { key: 'status', header: tc('status') },
                     ],
-                    '客诉8D报告'
+                    t('complaint8DReport')
                   )
                 }
               />
@@ -357,23 +357,23 @@ export default function Complaint8DPage() {
                       }
                     />
                   </TableHead>
-                  <TableHead className="w-12 text-center">序号</TableHead>
+                  <TableHead className="w-12 text-center">{tc("serialNo")}</TableHead>
                   <SortableTableHeader
                     field="complaint_no"
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    客诉编号
+                    {t('complaintNo')}
                   </SortableTableHeader>
-                  <TableHead>来源</TableHead>
+                  <TableHead>{tc("source")}</TableHead>
                   <SortableTableHeader
                     field="customer_name"
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    客户名称
+                    {tc('customerName')}
                   </SortableTableHeader>
                   <SortableTableHeader
                     field="product_name"
@@ -381,21 +381,21 @@ export default function Complaint8DPage() {
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    产品名称
+                    {tc('productName')}
                   </SortableTableHeader>
-                  <TableHead>不良类型</TableHead>
-                  <TableHead>严重程度</TableHead>
-                  <TableHead>不良数量</TableHead>
+                  <TableHead>{t('defectType')}</TableHead>
+                  <TableHead>{t('severity')}</TableHead>
+                  <TableHead>{t('defectQty')}</TableHead>
                   <SortableTableHeader
                     field="status"
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    状态
+                    {tc('status')}
                   </SortableTableHeader>
-                  <TableHead>登记日期</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{t('registerDate')}</TableHead>
+                  <TableHead>{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -419,20 +419,20 @@ export default function Complaint8DPage() {
                     </TableCell>
                     <TableCell className="font-mono text-sm">{item.complaint_no}</TableCell>
                     <TableCell>
-                      {sourceMap[item.complaint_source] || item.complaint_source}
+                      {t(sourceMap[item.complaint_source] || item.complaint_source)}
                     </TableCell>
                     <TableCell>{item.customer_name}</TableCell>
                     <TableCell>{item.product_name}</TableCell>
-                    <TableCell>{defectTypeMap[item.defect_type] || item.defect_type}</TableCell>
+                    <TableCell>{t(defectTypeMap[item.defect_type] || item.defect_type)}</TableCell>
                     <TableCell>
                       <Badge variant={severityMap[item.severity]?.variant || 'outline'}>
-                        {severityMap[item.severity]?.label || tc('unknown')}
+                        {t(severityMap[item.severity]?.label || tc('unknown'))}
                       </Badge>
                     </TableCell>
                     <TableCell>{item.defect_qty}</TableCell>
                     <TableCell>
                       <Badge variant={statusMap[item.status]?.variant || 'outline'}>
-                        {statusMap[item.status]?.label || tc('unknown')}
+                        {t(statusMap[item.status]?.label || tc('unknown'))}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -469,7 +469,7 @@ export default function Complaint8DPage() {
                 {sortedData.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -477,7 +477,7 @@ export default function Complaint8DPage() {
             </Table>
 
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">共 {total} 条</span>
+              <span className="text-sm text-muted-foreground">{tc('totalRecords', { count: total })}</span>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -485,7 +485,7 @@ export default function Complaint8DPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p: number) => p - 1)}
                 >
-                  上一页
+                  {tc('prevPage')}
                 </Button>
                 <Button
                   variant="outline"
@@ -493,7 +493,7 @@ export default function Complaint8DPage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p: number) => p + 1)}
                 >
-                  下一页
+                  {tc('nextPage')}
                 </Button>
               </div>
             </div>
@@ -503,11 +503,11 @@ export default function Complaint8DPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? '编辑客诉' : '新建客诉'}</DialogTitle>
+              <DialogTitle>{editItem.id ? t('editComplaint') : t('newComplaint')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div>
-                <Label>投诉来源</Label>
+                <Label>{t('complaintSource')}</Label>
                 <Select
                   value={editItem.complaint_source || 'customer'}
                   onValueChange={(v: string) => setEditItem({ ...editItem, complaint_source: v })}
@@ -518,14 +518,14 @@ export default function Complaint8DPage() {
                   <SelectContent>
                     {Object.entries(sourceMap).map(([k, v]) => (
                       <SelectItem key={k} value={k}>
-                        {v}
+                        {t(v)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>客户名称 *</Label>
+                <Label>{tc('customerName')} *</Label>
                 <Input
                   value={editItem.customer_name || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -534,7 +534,7 @@ export default function Complaint8DPage() {
                 />
               </div>
               <div>
-                <Label>产品编码</Label>
+                <Label>{tc('productCode')}</Label>
                 <Input
                   value={editItem.product_code || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -543,7 +543,7 @@ export default function Complaint8DPage() {
                 />
               </div>
               <div>
-                <Label>产品名称 *</Label>
+                <Label>{tc('productName')} *</Label>
                 <Input
                   value={editItem.product_name || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -552,7 +552,7 @@ export default function Complaint8DPage() {
                 />
               </div>
               <div>
-                <Label>订单号</Label>
+                <Label>{tc('orderNo')}</Label>
                 <Input
                   value={editItem.order_no || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -561,7 +561,7 @@ export default function Complaint8DPage() {
                 />
               </div>
               <div>
-                <Label>不良日期</Label>
+                <Label>{t('defectDate')}</Label>
                 <Input
                   type="date"
                   value={editItem.defect_date || ''}
@@ -571,7 +571,7 @@ export default function Complaint8DPage() {
                 />
               </div>
               <div>
-                <Label>不良数量</Label>
+                <Label>{t('defectQty')}</Label>
                 <Input
                   type="number"
                   value={editItem.defect_qty || 0}
@@ -581,7 +581,7 @@ export default function Complaint8DPage() {
                 />
               </div>
               <div>
-                <Label>不良类型</Label>
+                <Label>{t('defectType')}</Label>
                 <Select
                   value={editItem.defect_type || 'other'}
                   onValueChange={(v: string) => setEditItem({ ...editItem, defect_type: v })}
@@ -592,14 +592,14 @@ export default function Complaint8DPage() {
                   <SelectContent>
                     {Object.entries(defectTypeMap).map(([k, v]) => (
                       <SelectItem key={k} value={k}>
-                        {v}
+                        {t(v)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>严重程度</Label>
+                <Label>{t('severity')}</Label>
                 <Select
                   value={String(editItem.severity || 2)}
                   onValueChange={(v: string) => setEditItem({ ...editItem, severity: Number(v) })}
@@ -610,14 +610,14 @@ export default function Complaint8DPage() {
                   <SelectContent>
                     {Object.entries(severityMap).map(([k, v]) => (
                       <SelectItem key={k} value={k}>
-                        {v.label}
+                        {t(v.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>登记人</Label>
+                <Label>{t('reporter')}</Label>
                 <Input
                   value={editItem.reporter || ''}
                   onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -626,7 +626,7 @@ export default function Complaint8DPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>不良描述</Label>
+                <Label>{t('defectDesc')}</Label>
                 <Textarea
                   rows={3}
                   value={editItem.defect_desc || ''}
@@ -636,7 +636,7 @@ export default function Complaint8DPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   rows={2}
                   value={editItem.remark || ''}
@@ -648,9 +648,9 @@ export default function Complaint8DPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -658,7 +658,7 @@ export default function Complaint8DPage() {
         <Dialog open={show8DDialog} onOpenChange={setShow8DDialog}>
           <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>8D报告 - {editItem.complaint_no}</DialogTitle>
+              <DialogTitle>{t('8DReport')} - {editItem.complaint_no}</DialogTitle>
             </DialogHeader>
             <Tabs value={active8DTab} onValueChange={setActive8DTab}>
               <TabsList className="grid grid-cols-8">
@@ -672,20 +672,20 @@ export default function Complaint8DPage() {
                 <TabsTrigger value="d8">D8</TabsTrigger>
               </TabsList>
               <TabsContent value="d1" className="space-y-4 mt-4">
-                <h3 className="font-semibold">D1 - 成立团队</h3>
+                <h3 className="font-semibold">{t('D1TeamFormation')}</h3>
                 <div>
-                  <Label>团队成员</Label>
+                  <Label>{t('teamMembers')}</Label>
                   <Textarea
                     rows={4}
                     value={editItem.d1_team || ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                       setEditItem({ ...editItem, d1_team: e.target.value })
                     }
-                    placeholder="列出团队成员及其职责"
+                    placeholder={t('teamMembersPlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>成立日期</Label>
+                  <Label>{t('formationDate')}</Label>
                   <Input
                     type="date"
                     value={editItem.d1_date || ''}
@@ -696,20 +696,20 @@ export default function Complaint8DPage() {
                 </div>
               </TabsContent>
               <TabsContent value="d2" className="space-y-4 mt-4">
-                <h3 className="font-semibold">D2 - 描述问题</h3>
+                <h3 className="font-semibold">{t('D2ProblemDescription')}</h3>
                 <div>
-                  <Label>问题描述</Label>
+                  <Label>{t('problemDesc')}</Label>
                   <Textarea
                     rows={4}
                     value={editItem.d2_desc || ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                       setEditItem({ ...editItem, d2_desc: e.target.value })
                     }
-                    placeholder="5W2H方法描述问题：What/When/Where/Who/Why/How/How many"
+                    placeholder={t('5W2HPlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>描述日期</Label>
+                  <Label>{t('descDate')}</Label>
                   <Input
                     type="date"
                     value={editItem.d2_date || ''}
@@ -720,20 +720,20 @@ export default function Complaint8DPage() {
                 </div>
               </TabsContent>
               <TabsContent value="d3" className="space-y-4 mt-4">
-                <h3 className="font-semibold">D3 - 临时遏制措施</h3>
+                <h3 className="font-semibold">{t('D3InterimMeasures')}</h3>
                 <div>
-                  <Label>临时措施</Label>
+                  <Label>{t('interimMeasures')}</Label>
                   <Textarea
                     rows={4}
                     value={editItem.d3_interim_action || ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                       setEditItem({ ...editItem, d3_interim_action: e.target.value })
                     }
-                    placeholder="描述为防止问题扩大采取的临时措施"
+                    placeholder={t('interimMeasuresPlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>执行日期</Label>
+                  <Label>{t('executionDate')}</Label>
                   <Input
                     type="date"
                     value={editItem.d3_date || ''}
@@ -744,20 +744,20 @@ export default function Complaint8DPage() {
                 </div>
               </TabsContent>
               <TabsContent value="d4" className="space-y-4 mt-4">
-                <h3 className="font-semibold">D4 - 根本原因分析</h3>
+                <h3 className="font-semibold">{t('D4RootCauseAnalysis')}</h3>
                 <div>
-                  <Label>根本原因</Label>
+                  <Label>{t('rootCause')}</Label>
                   <Textarea
                     rows={4}
                     value={editItem.d4_root_cause || ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                       setEditItem({ ...editItem, d4_root_cause: e.target.value })
                     }
-                    placeholder="使用鱼骨图/5Why等方法分析根本原因"
+                    placeholder={t('rootCausePlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>分析日期</Label>
+                  <Label>{t('analysisDate')}</Label>
                   <Input
                     type="date"
                     value={editItem.d4_date || ''}
@@ -768,20 +768,20 @@ export default function Complaint8DPage() {
                 </div>
               </TabsContent>
               <TabsContent value="d5" className="space-y-4 mt-4">
-                <h3 className="font-semibold">D5 - 制定永久纠正措施</h3>
+                <h3 className="font-semibold">{t('D5CorrectiveMeasures')}</h3>
                 <div>
-                  <Label>纠正措施</Label>
+                  <Label>{t('correctiveMeasures')}</Label>
                   <Textarea
                     rows={4}
                     value={editItem.d5_corrective_action || ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                       setEditItem({ ...editItem, d5_corrective_action: e.target.value })
                     }
-                    placeholder="针对根本原因制定的永久纠正措施"
+                    placeholder={t('correctiveMeasuresPlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>制定日期</Label>
+                  <Label>{t('planDate')}</Label>
                   <Input
                     type="date"
                     value={editItem.d5_date || ''}
@@ -792,20 +792,20 @@ export default function Complaint8DPage() {
                 </div>
               </TabsContent>
               <TabsContent value="d6" className="space-y-4 mt-4">
-                <h3 className="font-semibold">D6 - 实施并验证纠正措施</h3>
+                <h3 className="font-semibold">{t('D6ImplementVerify')}</h3>
                 <div>
-                  <Label>实施与验证</Label>
+                  <Label>{t('implementVerify')}</Label>
                   <Textarea
                     rows={4}
                     value={editItem.d6_implement_verify || ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                       setEditItem({ ...editItem, d6_implement_verify: e.target.value })
                     }
-                    placeholder="描述纠正措施的实施情况及验证结果"
+                    placeholder={t('implementVerifyPlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>验证日期</Label>
+                  <Label>{t('verifyDate')}</Label>
                   <Input
                     type="date"
                     value={editItem.d6_date || ''}
@@ -816,20 +816,20 @@ export default function Complaint8DPage() {
                 </div>
               </TabsContent>
               <TabsContent value="d7" className="space-y-4 mt-4">
-                <h3 className="font-semibold">D7 - 预防再发生</h3>
+                <h3 className="font-semibold">{t('D7PreventRecurrence')}</h3>
                 <div>
-                  <Label>预防措施</Label>
+                  <Label>{t('preventiveMeasures')}</Label>
                   <Textarea
                     rows={4}
                     value={editItem.d7_preventive_action || ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                       setEditItem({ ...editItem, d7_preventive_action: e.target.value })
                     }
-                    placeholder="系统性的预防措施，如修改SOP、增加检验等"
+                    placeholder={t('preventiveMeasuresPlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>预防日期</Label>
+                  <Label>{t('preventDate')}</Label>
                   <Input
                     type="date"
                     value={editItem.d7_date || ''}
@@ -840,20 +840,20 @@ export default function Complaint8DPage() {
                 </div>
               </TabsContent>
               <TabsContent value="d8" className="space-y-4 mt-4">
-                <h3 className="font-semibold">D8 - 祝贺团队</h3>
+                <h3 className="font-semibold">{t('D8CongratulateTeam')}</h3>
                 <div>
-                  <Label>总结与表彰</Label>
+                  <Label>{t('summaryRecognition')}</Label>
                   <Textarea
                     rows={4}
                     value={editItem.d8_congratulations || ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
                       setEditItem({ ...editItem, d8_congratulations: e.target.value })
                     }
-                    placeholder="总结本次8D活动的成果，表彰团队贡献"
+                    placeholder={t('summaryRecognitionPlaceholder')}
                   />
                 </div>
                 <div>
-                  <Label>关闭日期</Label>
+                  <Label>{t('closeDate')}</Label>
                   <Input
                     type="date"
                     value={editItem.d8_date || ''}
@@ -866,9 +866,9 @@ export default function Complaint8DPage() {
             </Tabs>
             <DialogFooter className="mt-4">
               <Button variant="outline" onClick={() => setShow8DDialog(false)}>
-                关闭
+                {tc('close')}
               </Button>
-              <Button onClick={handleSave8D}>保存8D报告</Button>
+              <Button onClick={handleSave8D}>{t('save8DReport')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

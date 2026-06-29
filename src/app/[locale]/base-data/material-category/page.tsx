@@ -45,7 +45,7 @@ interface Item {
 }
 
 export default function MaterialCategoryPage() {
-  const t = useTranslations('Common');
+  const t = useTranslations('MaterialCategory');
   const tc = useTranslations('Common');
 
   const typeMap: Record<number, string> = {
@@ -60,7 +60,6 @@ export default function MaterialCategoryPage() {
     9: t('blade'),
     10: t('equipmentParts'),
   };
-  const tc = useTranslations('Common');
 
   const { toast } = useToast();
   const { hasPermission } = usePermission();
@@ -130,11 +129,11 @@ export default function MaterialCategoryPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">物料分类</h1>
+          <h1 className="text-2xl font-bold">{t("materialCategory")}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索分类名称"
+                placeholder={tc("searchCategoryPlaceholder")}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -152,7 +151,7 @@ export default function MaterialCategoryPage() {
                 }}
               >
                 <Plus className="h-3 w-3 mr-1" />
-                新增分类
+                {t("addCategory")}
               </Button>
             )}
           </div>
@@ -162,13 +161,13 @@ export default function MaterialCategoryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">分类编码</TableHead>
-                  <TableHead className="text-xs">分类名称</TableHead>
-                  <TableHead className="text-xs">分类类型</TableHead>
-                  <TableHead className="text-xs">排序</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">备注</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("categoryCode")}</TableHead>
+                  <TableHead className="text-xs">{tc("categoryName")}</TableHead>
+                  <TableHead className="text-xs">{tc("categoryType")}</TableHead>
+                  <TableHead className="text-xs">{tc("sortOrder")}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("remark")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -217,7 +216,7 @@ export default function MaterialCategoryPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-gray-400 py-8">
-                      暂无记录
+                      {tc("noRecords")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -226,7 +225,7 @@ export default function MaterialCategoryPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc("totalRecords", { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -234,7 +233,7 @@ export default function MaterialCategoryPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc("prevPage")}
             </Button>
             <Button
               size="sm"
@@ -242,32 +241,32 @@ export default function MaterialCategoryPage() {
               disabled={page * 50 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc("nextPage")}
             </Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? '编辑分类' : '新增分类'}</DialogTitle>
+              <DialogTitle>{editItem.id ? t("editCategory") : t("addCategory")}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>分类编码</Label>
+                <Label>{tc("categoryCode")}</Label>
                 <Input
                   value={editItem.category_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, category_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>分类名称</Label>
+                <Label>{tc("categoryName")}</Label>
                 <Input
                   value={editItem.category_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, category_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>分类类型</Label>
+                <Label>{tc("categoryType")}</Label>
                 <Select
                   value={String(editItem.category_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, category_type: Number(v) })}
@@ -276,21 +275,21 @@ export default function MaterialCategoryPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">原材料</SelectItem>
-                    <SelectItem value="2">半成品</SelectItem>
-                    <SelectItem value="3">成品</SelectItem>
-                    <SelectItem value="4">辅料</SelectItem>
-                    <SelectItem value="5">包材</SelectItem>
-                    <SelectItem value="6">油墨</SelectItem>
-                    <SelectItem value="7">溶剂/洗网水</SelectItem>
-                    <SelectItem value="8">网版/丝网</SelectItem>
-                    <SelectItem value="9">刀具/刀模</SelectItem>
-                    <SelectItem value="10">设备配件</SelectItem>
+                    <SelectItem value="1">{tc("rawMaterial")}</SelectItem>
+                    <SelectItem value="2">{tc("semiFinished")}</SelectItem>
+                    <SelectItem value="3">{tc("finishedProduct")}</SelectItem>
+                    <SelectItem value="4">{tc("auxiliaryMaterial")}</SelectItem>
+                    <SelectItem value="5">{tc("packagingMaterial")}</SelectItem>
+                    <SelectItem value="6">{tc("ink")}</SelectItem>
+                    <SelectItem value="7">{tc("solvent")}</SelectItem>
+                    <SelectItem value="8">{tc("screen")}</SelectItem>
+                    <SelectItem value="9">{tc("tool")}</SelectItem>
+                    <SelectItem value="10">{tc("equipmentPart")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>排序</Label>
+                <Label>{tc("sortOrder")}</Label>
                 <Input
                   type="number"
                   value={editItem.sort_order ?? 0}
@@ -298,7 +297,7 @@ export default function MaterialCategoryPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Input
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -307,9 +306,9 @@ export default function MaterialCategoryPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc("cancel")}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

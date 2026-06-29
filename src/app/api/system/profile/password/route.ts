@@ -1,0 +1,57 @@
+import { NextRequest } from 'next/server';
+import {
+  successResponse,
+  errorResponse,
+} from '@/lib/api-response';
+import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { query, execute } from '@/lib/db';
+import bcrypt from 'bcryptjs';
+
+/**
+ * 修改密码 API
+ */
+
+export const PUT = withAuthAndErrorHandler(
+  async (request: NextRequest, userInfo: UserInfo) => {
+    const body = await request.json();
+    const { oldPassword, newPassword } = body;
+
+    if (!oldPassword || !newPassword) {
+      return errorResponse('请填写完整密码信息', 400, 400);
+    }
+
+    if (newPassword.length < 6) {
+      return errorResponse('新密码长度不能少于6位', 400, 400);
+    }
+
+    // 检查密码复杂度
+    const hasLetter = /[a-zA-Z]/.test(newPassword);
+    const hasNumber = /[0-9]/.test(newPassword);
+    if (!hasLetter || !hasNumber) {
+      return errorResponse('密码必须包含字母和数字', 400, 400);
+    }
+
+    const users: any = await query(
+      'SELECT password FROM sys_user WHERE id = ? AND deleted = 0',
+      [userInfo.userId]
+    );
+
+    if (users.length === 0) {
+      return errorResponse('用户不存在', 404, 404);
+    }
+
+    const isValid = await bcrypt.compare(oldPassword, users[0].password);
+    if (!isValid) {
+      return errorResponse('当前密码不正确', 400, 400);
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await execute(
+      'UPDATE sys_user SET password = ?, pwd_update_time = NOW(), first_login = 0, update_time = NOW() WHERE id = ?',
+      [hashedPassword, userInfo.userId]
+    );
+
+    return successResponse(null, '密码修改成功');
+  },
+  { permission: '' }
+);

@@ -1,8 +1,12 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { logger, generateTraceId } from '@/lib/logger';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
+  const traceId = generateTraceId();
+  const ctx = { module: 'inventory', action: 'list', traceId };
+
   const { searchParams } = new URL(request.url);
   const pageSize = parseInt(searchParams.get('pageSize') || '100');
   const page = parseInt(searchParams.get('page') || '1');
@@ -10,6 +14,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const categoryId = searchParams.get('categoryId');
   const warehouseId = searchParams.get('warehouseId');
   const lowStock = searchParams.get('lowStock');
+
+  logger.stepStart(ctx, '查询库存列表', { keyword, categoryId, warehouseId, lowStock, page, pageSize });
 
   let sql = `
     SELECT m.*, w.warehouse_name, mc.category_name
@@ -21,22 +27,26 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const values: any[] = [];
 
   if (keyword) {
+    logger.branch(ctx, '筛选条件', '关键词搜索', true, { keyword });
     sql += ` AND (m.material_code LIKE ? OR m.material_name LIKE ?)`;
     const likeKeyword = `%${keyword}%`;
     values.push(likeKeyword, likeKeyword);
   }
 
   if (categoryId) {
+    logger.branch(ctx, '筛选条件', '分类筛选', true, { categoryId });
     sql += ` AND m.category_id = ?`;
     values.push(parseInt(categoryId));
   }
 
   if (warehouseId) {
+    logger.branch(ctx, '筛选条件', '仓库筛选', true, { warehouseId });
     sql += ` AND m.warehouse_id = ?`;
     values.push(parseInt(warehouseId));
   }
 
   if (lowStock === 'true') {
+    logger.branch(ctx, '筛选条件', '低库存筛选', true);
     sql += ` AND m.safety_stock > 0 AND m.stock_qty <= m.safety_stock`;
   }
 
@@ -95,6 +105,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const countResult = await query(countSql, countValues);
   const total = (countResult as any[])[0]?.total || 0;
 
+  logger.stepEnd(ctx, '查询库存列表', { total, page, pageSize });
   return successResponse({
     list: result,
     total,

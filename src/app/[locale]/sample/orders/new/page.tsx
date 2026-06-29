@@ -161,7 +161,7 @@ export default function NewSampleOrderPage() {
               <div className="space-y-2">
                 <Label>客户名称 *</Label>
                 <Input
-                  placeholder="请输入客户名称"
+                  placeholder={tc("enterCustomerName")}
                   value={formData.customer_name}
                   onChange={(e) => handleChange('customer_name', e.target.value)}
                 />
@@ -229,7 +229,7 @@ export default function NewSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>尺寸</Label>
+                <Label>{tc("size")}</Label>
                 <Input
                   placeholder="如: 296.3*96.8"
                   value={formData.size_spec}
@@ -282,10 +282,10 @@ export default function NewSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>数量</Label>
+                <Label>{tc("quantity")}</Label>
                 <Input
                   type="number"
-                  placeholder="请输入数量"
+                  placeholder={tc("enterQuantity")}
                   value={formData.quantity}
                   onChange={(e) => handleChange('quantity', e.target.value)}
                 />
@@ -439,7 +439,7 @@ export default function NewSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   placeholder="请输入备注信息"
                   value={formData.remark}

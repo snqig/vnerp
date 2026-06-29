@@ -81,29 +81,29 @@ interface Customer {
   customer_code: string;
 }
 
-const CONFIRM_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: '未确认', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-  1: {
-    label: '已确认',
-    color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  },
-  2: { label: '有异议', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
-};
-
 export default function ReconciliationPage() {
   // 翻译钩子
-  const t = useTranslations('Sales');
+  const t = useTranslations('SalesReconciliation');
   const tc = useTranslations('Common');
 
+  const CONFIRM_STATUS_MAP: Record<number, { label: string; color: string }> = {
+    0: { label: t('notConfirmed'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+    1: {
+      label: t('confirmed'),
+      color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+    },
+    2: { label: t('disputed'), color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+  };
+
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: tc('draft'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-  2: { label: '已发送', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
-  3: {
-    label: '已确认',
-    color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  },
-  4: { label: tc('closed'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-};
+    1: { label: tc('draft'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+    2: { label: t('sent'), color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+    3: {
+      label: t('confirmed'),
+      color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+    },
+    4: { label: tc('closed'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  };
 
   const [list, setList] = useState<Reconciliation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -162,7 +162,7 @@ export default function ReconciliationPage() {
       }
     } catch (e) {
       console.error(e);
-      toast.error('获取对账单列表失败');
+      toast.error(t('fetchListFailed'));
     } finally {
       setLoading(false);
     }
@@ -187,11 +187,11 @@ export default function ReconciliationPage() {
 
   const createReconciliation = async () => {
     if (!form.customer_id) {
-      toast.error('请选择客户');
+      toast.error(t('selectCustomer'));
       return;
     }
     if (!form.period_start || !form.period_end) {
-      toast.error('请选择对账期间');
+      toast.error(t('selectPeriod'));
       return;
     }
     try {
@@ -202,16 +202,16 @@ export default function ReconciliationPage() {
       const result = await res.json();
       if (result.success) {
         toast.success(
-          `对账单创建成功，净额: ¥${parseFloat(result.data?.net_amount || 0).toFixed(2)}`
+          `${t('createSuccess')}, ${t('netAmount')}: ¥${parseFloat(result.data?.net_amount || 0).toFixed(2)}`
         );
         setDialogOpen(false);
         fetchData();
       } else {
-        toast.error(result.message || '创建失败');
+        toast.error(result.message || tc('createFailed'));
       }
     } catch (e) {
       console.error(e);
-      toast.error('创建对账单失败');
+      toast.error(t('createFailed'));
     }
   };
 
@@ -252,21 +252,21 @@ export default function ReconciliationPage() {
     a.download = `对账单_${rc.reconciliation_no}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('对账单已导出');
+    toast.success(t('exportSuccess'));
   };
 
   return (
-    <MainLayout title="销售对账">
+    <MainLayout title={t('pageTitle')}>
       <div className="space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Calculator className="w-5 h-5" />
-                销售对账
+                {t('pageTitle')}
               </CardTitle>
               <CardDescription>
-                自动汇总期间内的送货单、退货单数据，生成对账单，支持在线确认或导出Excel对账
+                {t('pageDescription')}
               </CardDescription>
             </div>
             <Button
@@ -283,7 +283,7 @@ export default function ReconciliationPage() {
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              生成对账单
+              {t('generateReconciliation')}
             </Button>
           </CardHeader>
           <CardContent>
@@ -291,7 +291,7 @@ export default function ReconciliationPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  placeholder="搜索对账单号/客户名称..."
+                  placeholder={t('searchPlaceholder')}
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   className="pl-9"
@@ -299,10 +299,10 @@ export default function ReconciliationPage() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder=tc("status") />
+                  <SelectValue placeholder={tc("status")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部状态</SelectItem>
+                  <SelectItem value="all">{tc('allStatus')}</SelectItem>
                   {Object.entries(STATUS_MAP).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
                       {v.label}
@@ -318,7 +318,7 @@ export default function ReconciliationPage() {
             <div className="grid grid-cols-4 gap-4 mb-4">
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">送货总额</div>
+                  <div className="text-sm text-gray-500">{t('totalDelivery')}</div>
                   <div className="text-2xl font-bold text-blue-600">
                     ¥{summary.totalDelivery.toFixed(2)}
                   </div>
@@ -326,7 +326,7 @@ export default function ReconciliationPage() {
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">退货总额</div>
+                  <div className="text-sm text-gray-500">{t('totalReturn')}</div>
                   <div className="text-2xl font-bold text-red-600">
                     ¥{summary.totalReturn.toFixed(2)}
                   </div>
@@ -334,7 +334,7 @@ export default function ReconciliationPage() {
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">对账净额</div>
+                  <div className="text-sm text-gray-500">{t('netAmount')}</div>
                   <div className="text-2xl font-bold text-green-600">
                     ¥{summary.totalNet.toFixed(2)}
                   </div>
@@ -342,7 +342,7 @@ export default function ReconciliationPage() {
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">未收余额</div>
+                  <div className="text-sm text-gray-500">{t('balanceAmount')}</div>
                   <div className="text-2xl font-bold text-orange-600">
                     ¥{summary.totalBalance.toFixed(2)}
                   </div>
@@ -358,17 +358,17 @@ export default function ReconciliationPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>对账单号</TableHead>
-                    <TableHead>客户名称</TableHead>
-                    <TableHead>对账期间</TableHead>
-                    <TableHead>送货金额</TableHead>
-                    <TableHead>退货金额</TableHead>
-                    <TableHead>净额</TableHead>
-                    <TableHead>已收</TableHead>
-                    <TableHead>余额</TableHead>
-                    <TableHead>客户确认</TableHead>
-                    <TableHead>状态</TableHead>
-                    <TableHead className="text-right">操作</TableHead>
+                    <TableHead>{t('reconciliationNo')}</TableHead>
+                    <TableHead>{tc('customerName')}</TableHead>
+                    <TableHead>{t('reconciliationPeriod')}</TableHead>
+                    <TableHead>{t('deliveryAmount')}</TableHead>
+                    <TableHead>{t('returnAmount')}</TableHead>
+                    <TableHead>{t('netAmount')}</TableHead>
+                    <TableHead>{t('receivedAmount')}</TableHead>
+                    <TableHead>{tc("balance")}</TableHead>
+                    <TableHead>{t('customerConfirm')}</TableHead>
+                    <TableHead>{tc("status")}</TableHead>
+                    <TableHead className="text-right">{tc("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -415,7 +415,7 @@ export default function ReconciliationPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => exportReconciliation(r)}
-                            title=tc("export")
+                            title={tc("export")}
                           >
                             <Download className="w-4 h-4" />
                           </Button>
@@ -426,7 +426,7 @@ export default function ReconciliationPage() {
                   {list.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={11} className="text-center py-8 text-gray-500">
-                        暂无数据
+                        {tc('noData')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -440,13 +440,13 @@ export default function ReconciliationPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg" resizable>
           <DialogHeader>
-            <DialogTitle>生成对账单</DialogTitle>
-            <DialogDescription>自动汇总期间内的送货单、退货单数据，生成对账单</DialogDescription>
+            <DialogTitle>{t('generateReconciliation')}</DialogTitle>
+            <DialogDescription>{t('dialogDescription')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>
-                客户 <span className="text-red-500">*</span>
+                {tc('customer')} <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={String(form.customer_id || '')}
@@ -460,7 +460,7 @@ export default function ReconciliationPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="选择客户" />
+                  <SelectValue placeholder={t('selectCustomer')} />
                 </SelectTrigger>
                 <SelectContent>
                   {customers.map((c: any) => (
@@ -474,7 +474,7 @@ export default function ReconciliationPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  期间开始 <span className="text-red-500">*</span>
+                  {t('periodStart')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   type="date"
@@ -484,7 +484,7 @@ export default function ReconciliationPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  期间结束 <span className="text-red-500">*</span>
+                  {t('periodEnd')} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   type="date"
@@ -494,23 +494,23 @@ export default function ReconciliationPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>备注</Label>
+              <Label>{tc("remark")}</Label>
               <Input
                 value={form.remark}
                 onChange={(e) => setForm((prev) => ({ ...prev, remark: e.target.value }))}
-                placeholder=tc("remark")
+                placeholder={tc("remark")}
               />
             </div>
             <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800">
-              系统将自动汇总该客户在指定期间内的所有已发货送货单和已审核退货单，计算对账净额。
+              {t('autoGenerateHint')}
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={createReconciliation} className="bg-blue-600 hover:bg-blue-700">
-              生成对账单
+              {t('generateReconciliation')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -519,7 +519,7 @@ export default function ReconciliationPage() {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-3xl" resizable>
           <DialogHeader>
-            <DialogTitle>对账单详情</DialogTitle>
+            <DialogTitle>{t('reconciliationDetail')}</DialogTitle>
             <DialogDescription>
               {detailData?.reconciliation_no} | {detailData?.customer_name}
             </DialogDescription>
@@ -528,18 +528,18 @@ export default function ReconciliationPage() {
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">对账期间：</span>
+                  <span className="text-gray-500">{t('reconciliationPeriod')}：</span>
                   {detailData.period_start} ~ {detailData.period_end}
                 </div>
                 <div>
-                  <span className="text-gray-500">客户确认：</span>
+                  <span className="text-gray-500">{t('customerConfirm')}：</span>
                   {CONFIRM_STATUS_MAP[detailData.confirm_status]?.label}
                 </div>
               </div>
               <div className="grid grid-cols-5 gap-3 text-center">
                 <Card>
                   <CardContent className="pt-3 pb-3">
-                    <div className="text-xs text-gray-500">送货金额</div>
+                    <div className="text-xs text-gray-500">{t('deliveryAmount')}</div>
                     <div className="text-lg font-bold text-blue-600">
                       ¥{parseFloat(String(detailData.delivery_amount || 0)).toFixed(2)}
                     </div>
@@ -547,7 +547,7 @@ export default function ReconciliationPage() {
                 </Card>
                 <Card>
                   <CardContent className="pt-3 pb-3">
-                    <div className="text-xs text-gray-500">退货金额</div>
+                    <div className="text-xs text-gray-500">{t('returnAmount')}</div>
                     <div className="text-lg font-bold text-red-600">
                       ¥{parseFloat(String(detailData.return_amount || 0)).toFixed(2)}
                     </div>
@@ -555,7 +555,7 @@ export default function ReconciliationPage() {
                 </Card>
                 <Card>
                   <CardContent className="pt-3 pb-3">
-                    <div className="text-xs text-gray-500">折扣</div>
+                    <div className="text-xs text-gray-500">{tc("discount")}</div>
                     <div className="text-lg font-bold">
                       ¥{parseFloat(String(detailData.discount_amount || 0)).toFixed(2)}
                     </div>
@@ -563,7 +563,7 @@ export default function ReconciliationPage() {
                 </Card>
                 <Card>
                   <CardContent className="pt-3 pb-3">
-                    <div className="text-xs text-gray-500">对账净额</div>
+                    <div className="text-xs text-gray-500">{t('netAmount')}</div>
                     <div className="text-lg font-bold text-green-600">
                       ¥{parseFloat(String(detailData.net_amount || 0)).toFixed(2)}
                     </div>
@@ -571,7 +571,7 @@ export default function ReconciliationPage() {
                 </Card>
                 <Card>
                   <CardContent className="pt-3 pb-3">
-                    <div className="text-xs text-gray-500">未收余额</div>
+                    <div className="text-xs text-gray-500">{t('balanceAmount')}</div>
                     <div className="text-lg font-bold text-orange-600">
                       ¥{parseFloat(String(detailData.balance_amount || 0)).toFixed(2)}
                     </div>
@@ -580,14 +580,14 @@ export default function ReconciliationPage() {
               </div>
               {detailItems.length > 0 && (
                 <div className="border-t pt-4">
-                  <Label className="text-base font-semibold mb-3 block">对账明细</Label>
+                  <Label className="text-base font-semibold mb-3 block">{t('reconciliationDetails')}</Label>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>类型</TableHead>
-                        <TableHead>单号</TableHead>
-                        <TableHead>日期</TableHead>
-                        <TableHead>金额</TableHead>
+                        <TableHead>{tc("type")}</TableHead>
+                        <TableHead>{t('orderNo')}</TableHead>
+                        <TableHead>{tc("date")}</TableHead>
+                        <TableHead>{tc("amount")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -595,7 +595,7 @@ export default function ReconciliationPage() {
                         <TableRow key={idx}>
                           <TableCell>
                             <Badge variant="outline">
-                              {item.source_type === 1 ? '送货' : '退货'}
+                              {item.source_type === 1 ? t('delivery') : t('return')}
                             </Badge>
                           </TableCell>
                           <TableCell>{item.source_no}</TableCell>
@@ -615,12 +615,12 @@ export default function ReconciliationPage() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDetailOpen(false)}>
-              关闭
+              {tc('close')}
             </Button>
             {detailData && (
               <Button onClick={() => exportReconciliation(detailData)} variant="outline">
                 <Download className="w-4 h-4 mr-2" />
-                导出
+                {tc('export')}
               </Button>
             )}
           </DialogFooter>

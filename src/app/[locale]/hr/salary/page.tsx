@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -290,7 +291,7 @@ export default function HRSalaryPage() {
   const tc = useTranslations('Common');
 
   const getGenderText = (gender: number) => {
-    return gender === 1 ? '男' : gender === 2 ? '女' : tc('unknown');
+    return gender === 1 ? tc('maleShort') : gender === 2 ? tc('femaleShort') : tc('unknown');
   };
 
   const [salaries, setSalaries] = useState<Salary[]>([]);
@@ -576,10 +577,10 @@ export default function HRSalaryPage() {
       );
 
       setIsEditOpen(false);
-      alert('薪资保存成功');
+      toast.success(t('salarySaveSuccess'));
     } catch (error) {
       console.error('保存薪资失败:', error);
-      alert('保存失败');
+      toast.error(t('salarySaveFailed'));
     } finally {
       setLoading(false);
     }
@@ -587,9 +588,9 @@ export default function HRSalaryPage() {
 
   // 删除薪资
   const handleDelete = (salary: Salary) => {
-    if (confirm(`确定要删除 ${salary.name} 的薪资记录吗？`)) {
+    if (confirm(t('confirmDeleteSalary', { name: salary.name }))) {
       setSalaries(salaries.filter((s) => s.id !== salary.id));
-      alert('删除成功');
+      toast.success(t('salaryDeleteSuccess'));
     }
   };
 
@@ -606,7 +607,7 @@ export default function HRSalaryPage() {
       printWindow.document.write(`
         <html>
           <head>
-            <title>薪资报表</title>
+            <title>${t('salaryReport')}</title>
             <style>
               body { font-family: Arial, sans-serif; padding: 20px; }
               table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -630,20 +631,20 @@ export default function HRSalaryPage() {
   const handleExport = () => {
     const csvContent = [
       [
-        '员工编号',
-        '姓名',
-        '部门',
-        '职位',
-        '基本工资',
-        '岗位津贴',
-        '绩效奖金',
-        '加班费',
-        '其他奖金',
-        '社保',
-        '公积金',
-        '个税',
-        '其他扣款',
-        '实发工资',
+        t('employeeNo'),
+        tc('name'),
+        tc('department'),
+        t('position'),
+        t('basicSalary'),
+        t('positionAllowance'),
+        t('performanceBonus'),
+        t('overtimePay'),
+        t('otherBonus'),
+        t('socialSecurity'),
+        t('housingFund'),
+        t('personalTax'),
+        t('otherDeduction'),
+        t('actualSalary'),
         tc('remark'),
       ],
       ...filteredSalaries.map((s) => [
@@ -670,7 +671,7 @@ export default function HRSalaryPage() {
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `薪资表_${currentMonth}.csv`;
+    link.download = `${t('salaryTable')}_${currentMonth}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -684,13 +685,13 @@ export default function HRSalaryPage() {
   };
 
   return (
-    <MainLayout title="薪资管理">
+    <MainLayout title={t("salaryManagement")}>
       <div className="space-y-6">
         {/* 统计卡片 */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">员工总数</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc("totalEmployees")}</CardTitle>
               <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
@@ -700,7 +701,7 @@ export default function HRSalaryPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">已发薪人数</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc("paidEmployees")}</CardTitle>
               <CreditCard className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -710,7 +711,7 @@ export default function HRSalaryPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">薪资总额</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc("totalSalary")}</CardTitle>
               <DollarSign className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
@@ -720,7 +721,7 @@ export default function HRSalaryPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">平均工资</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc("avgSalary")}</CardTitle>
               <TrendingUp className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
@@ -730,7 +731,7 @@ export default function HRSalaryPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">最高工资</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc("maxSalary")}</CardTitle>
               <Wallet className="h-4 w-4 text-indigo-600" />
             </CardHeader>
             <CardContent>
@@ -740,7 +741,7 @@ export default function HRSalaryPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">最低工资</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc("minSalary")}</CardTitle>
               <PieChart className="h-4 w-4 text-pink-600" />
             </CardHeader>
             <CardContent>
@@ -771,10 +772,10 @@ export default function HRSalaryPage() {
                 {/* 部门筛选 */}
                 <Select value={selectedDept} onValueChange={setSelectedDept}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="选择部门" />
+                    <SelectValue placeholder={tc("selectDepartment")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部部门</SelectItem>
+                    <SelectItem value="all">{tc("allDepartment")}</SelectItem>
                     {departments.map((dept) => (
                       <SelectItem key={dept.id} value={String(dept.id)}>
                         {dept.dept_name}
@@ -787,7 +788,7 @@ export default function HRSalaryPage() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索员工姓名、编号..."
+                    placeholder={tc("searchPlaceholder")}
                     className="pl-10 w-[250px]"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -798,15 +799,15 @@ export default function HRSalaryPage() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleGenerateReport}>
                   <FileText className="h-4 w-4 mr-2" />
-                  薪资报表
+                  {tc("salaryReport")}
                 </Button>
                 <Button variant="outline" onClick={handlePrint}>
                   <Printer className="h-4 w-4 mr-2" />
-                  打印
+                  {tc("print")}
                 </Button>
                 <Button variant="outline" onClick={handleExport}>
                   <Download className="h-4 w-4 mr-2" />
-                  导出
+                  {tc("export")}
                 </Button>
               </div>
             </div>
@@ -828,19 +829,19 @@ export default function HRSalaryPage() {
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
-                  <TableHead className="w-12 text-center">序号</TableHead>
-                  <SortableHeader field="name">员工信息</SortableHeader>
-                  <SortableHeader field="dept_name">部门/职位</SortableHeader>
+                  <TableHead className="w-12 text-center">{tc("serialNo")}</TableHead>
+                  <SortableHeader field="name">{tc("employeeInfo")}</SortableHeader>
+                  <SortableHeader field="dept_name">{tc("deptPosition")}</SortableHeader>
                   <SortableHeader field="basic_salary" className="text-right">
-                    基本工资
+                    {tc("baseSalary")}
                   </SortableHeader>
-                  <TableHead className="text-right">津贴/奖金</TableHead>
-                  <TableHead className="text-right">扣款项</TableHead>
+                  <TableHead className="text-right">{tc("allowanceBonus")}</TableHead>
+                  <TableHead className="text-right">{tc("deductionItems")}</TableHead>
                   <SortableHeader field="actual_salary" className="text-right">
-                    实发工资
+                    {tc("netSalary")}
                   </SortableHeader>
-                  <TableHead>状态</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{tc("status")}</TableHead>
+                  <TableHead>{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1125,9 +1126,9 @@ export default function HRSalaryPage() {
 
                   {/* 备注 */}
                   <div className="space-y-2">
-                    <Label>备注</Label>
+                    <Label>{tc("remark")}</Label>
                     <Textarea
-                      placeholder="输入备注信息..."
+                      placeholder={t('enterRemark')}
                       value={salaryForm.remark}
                       onChange={(e) => setSalaryForm({ ...salaryForm, remark: e.target.value })}
                       rows={3}
@@ -1228,7 +1229,7 @@ export default function HRSalaryPage() {
                           </TableCell>
                         </TableRow>
                         <TableRow className="bg-green-50">
-                          <TableCell className="font-bold">收入合计</TableCell>
+                          <TableCell className="font-bold">{t('incomeTotal')}</TableCell>
                           <TableCell className="text-right font-bold text-green-600">
                             ¥
                             {(
@@ -1276,7 +1277,7 @@ export default function HRSalaryPage() {
 
                   {selectedSalary.remark && (
                     <div className="space-y-2">
-                      <h4 className="font-semibold text-sm text-muted-foreground">备注</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{tc("remark")}</h4>
                       <p className="text-sm bg-gray-50 p-3 rounded">{selectedSalary.remark}</p>
                     </div>
                   )}
@@ -1375,7 +1376,7 @@ export default function HRSalaryPage() {
                     <TableRow>
                       <TableHead>员工编号</TableHead>
                       <TableHead>姓名</TableHead>
-                      <TableHead>部门</TableHead>
+                      <TableHead>{tc("department")}</TableHead>
                       <TableHead>职位</TableHead>
                       <TableHead className="text-right">基本工资</TableHead>
                       <TableHead className="text-right">实发工资</TableHead>

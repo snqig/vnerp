@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -74,7 +74,6 @@ export default function OutsourceSettlementPage() {
     2: { label: t('partialPayment'), variant: 'outline' },
     3: { label: t('paid'), variant: 'secondary' },
   };
-  const tc = useTranslations('Common');
 
   const { toast } = useToast();
   const [list, setList] = useState<OutsourceSettlement[]>([]);
@@ -85,6 +84,18 @@ export default function OutsourceSettlementPage() {
   const [form, setForm] = useState<any>({});
   const [outsourceOrders, setOutsourceOrders] = useState<any[]>([]);
 
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const fetchData = async () => {
     try {
       const params = new URLSearchParams({
@@ -92,7 +103,7 @@ export default function OutsourceSettlementPage() {
         pageSize: '20',
         settlementNo: searchNo,
       });
-      const res = await fetch('/api/outsource/settlement?' + params);
+      const res = await authFetch('/api/outsource/settlement?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -105,7 +116,7 @@ export default function OutsourceSettlementPage() {
 
   const fetchOutsourceOrders = async () => {
     try {
-      const res = await fetch('/api/outsource/order?pageSize=100');
+      const res = await authFetch('/api/outsource/order?pageSize=100');
       const result = await res.json();
       if (result.success) setOutsourceOrders(result.data?.list || []);
     } catch (e) {
@@ -122,14 +133,14 @@ export default function OutsourceSettlementPage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/outsource/settlement', {
+      const res = await authFetch('/api/outsource/settlement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         setForm({});
         fetchData();
@@ -142,19 +153,19 @@ export default function OutsourceSettlementPage() {
   };
 
   const handleConfirm = async (id: number) => {
-    if (!confirm('确认结算？确认后将更新委外订单结算金额。')) return;
+    if (!confirm(t('confirmSettlement'))) return;
     try {
-      const res = await fetch('/api/outsource/settlement', {
+      const res = await authFetch('/api/outsource/settlement', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action: 'confirm' }),
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '结算确认成功' });
+        toast({ title: t('settlementConfirmSuccess') });
         fetchData();
       } else {
-        toast({ title: '确认失败', description: result.message, variant: 'destructive' });
+        toast({ title: t('settlementConfirmFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
       toast({ title: tc('error'), variant: 'destructive' });
@@ -162,16 +173,16 @@ export default function OutsourceSettlementPage() {
   };
 
   const handlePayment = async (id: number) => {
-    if (!confirm('确认已付款？')) return;
+    if (!confirm(t('confirmPayment'))) return;
     try {
-      const res = await fetch('/api/outsource/settlement', {
+      const res = await authFetch('/api/outsource/settlement', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action: 'payment' }),
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '付款确认成功' });
+        toast({ title: t('paymentConfirmSuccess') });
         fetchData();
       }
     } catch (e) {
@@ -180,16 +191,18 @@ export default function OutsourceSettlementPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
-      const res = await fetch('/api/outsource/settlement?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/outsource/settlement?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
+      } else {
+        toast({ title: tc('deleteFailed'), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -201,11 +214,11 @@ export default function OutsourceSettlementPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">委外结算</h1>
+          <h1 className="text-2xl font-bold">{t('settlement')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={tc("searchOrderNo")}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -222,7 +235,7 @@ export default function OutsourceSettlementPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增结算
+              {t('addSettlement')}
             </Button>
           </div>
         </div>
@@ -232,17 +245,17 @@ export default function OutsourceSettlementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">结算单号</TableHead>
-                  <TableHead className="text-xs">委外订单号</TableHead>
-                  <TableHead className="text-xs">供应商</TableHead>
-                  <TableHead className="text-xs">结算日期</TableHead>
-                  <TableHead className="text-xs text-right">结算数量</TableHead>
-                  <TableHead className="text-xs text-right">结算金额</TableHead>
-                  <TableHead className="text-xs text-right">扣款金额</TableHead>
-                  <TableHead className="text-xs text-right">实付金额</TableHead>
-                  <TableHead className="text-xs">付款状态</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{t('settlementNo')}</TableHead>
+                  <TableHead className="text-xs">{t('orderNo')}</TableHead>
+                  <TableHead className="text-xs">{tc("supplier")}</TableHead>
+                  <TableHead className="text-xs">{t('settlementDate')}</TableHead>
+                  <TableHead className="text-xs text-right">{t('settlementQty')}</TableHead>
+                  <TableHead className="text-xs text-right">{t('settlementAmount')}</TableHead>
+                  <TableHead className="text-xs text-right">{t('deductAmount')}</TableHead>
+                  <TableHead className="text-xs text-right">{t('actualAmount')}</TableHead>
+                  <TableHead className="text-xs">{t('paymentStatus')}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -289,7 +302,7 @@ export default function OutsourceSettlementPage() {
                               onClick={() => handleConfirm(item.id)}
                             >
                               <CheckCircle className="h-3 w-3 mr-1" />
-                              确认
+                              {t('confirm')}
                             </Button>
                           )}
                           {item.status === 3 && item.payment_status < 3 && (
@@ -300,7 +313,7 @@ export default function OutsourceSettlementPage() {
                               onClick={() => handlePayment(item.id)}
                             >
                               <DollarSign className="h-3 w-3 mr-1" />
-                              付款
+                              {t('payment')}
                             </Button>
                           )}
                           {item.status === 1 && (
@@ -321,7 +334,7 @@ export default function OutsourceSettlementPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center text-gray-400 py-8">
-                      暂无结算记录
+                      {t('noSettlementRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -331,7 +344,7 @@ export default function OutsourceSettlementPage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -339,7 +352,7 @@ export default function OutsourceSettlementPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -347,7 +360,7 @@ export default function OutsourceSettlementPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
@@ -355,12 +368,12 @@ export default function OutsourceSettlementPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增委外结算</DialogTitle>
+              <DialogTitle>{t('createSettlement')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label>
-                  委外订单 <span className="text-red-500">*</span>
+                  {t('orderNo')} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={String(form.outsource_order_id || '')}
@@ -378,7 +391,7 @@ export default function OutsourceSettlementPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择委外订单" />
+                    <SelectValue placeholder={t('selectOutsourceOrder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {outsourceOrders
@@ -392,7 +405,7 @@ export default function OutsourceSettlementPage() {
                 </Select>
               </div>
               <div>
-                <Label>结算日期</Label>
+                <Label>{t('settlementDate')}</Label>
                 <Input
                   type="date"
                   value={form.settlement_date || ''}
@@ -400,7 +413,7 @@ export default function OutsourceSettlementPage() {
                 />
               </div>
               <div>
-                <Label>结算数量</Label>
+                <Label>{t('settlementQty')}</Label>
                 <Input
                   type="number"
                   value={form.settlement_qty || ''}
@@ -408,7 +421,7 @@ export default function OutsourceSettlementPage() {
                 />
               </div>
               <div>
-                <Label>单价(元)</Label>
+                <Label>{t('unitPrice')}</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -419,7 +432,7 @@ export default function OutsourceSettlementPage() {
                 />
               </div>
               <div>
-                <Label>扣款金额(元)</Label>
+                <Label>{t('deductAmount')}</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -430,7 +443,7 @@ export default function OutsourceSettlementPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Input
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -439,9 +452,9 @@ export default function OutsourceSettlementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

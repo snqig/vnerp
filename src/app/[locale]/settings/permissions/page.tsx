@@ -395,7 +395,7 @@ export default function PermissionsSettingsPage() {
                             <h4 className="font-semibold text-lg">{module.name}</h4>
                             {!selectedRole.isSystem && (
                               <div className="flex items-center gap-2">
-                                <Label className="text-sm text-muted-foreground">全选</Label>
+                                <Label className="text-sm text-muted-foreground">{tc("selectAll")}</Label>
                                 <Switch
                                   checked={module.permissions.every((p) => rolePermissions[p.id])}
                                   onCheckedChange={(checked) =>

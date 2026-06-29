@@ -1,5 +1,5 @@
-import { NextIntlClientProvider, useMessages } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import { IntlProvider } from '@/components/IntlProvider';
 import { notFound } from 'next/navigation';
 import { locales, type Locale } from '@/i18n/locales';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -44,7 +44,8 @@ export default async function LocaleLayout({
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
-  const { locale }: { locale: Locale } = await params;
+  const { locale: rawLocale } = await params;
+  const locale = (locales as readonly string[]).includes(rawLocale) ? rawLocale as Locale : 'zh-CN';
 
   // 验证 locale 是否有效
   if (!locales.includes(locale)) {
@@ -66,14 +67,14 @@ export default async function LocaleLayout({
         <title>{`${companyName} | VNERP`}</title>
       </head>
       <body className="antialiased bg-background text-foreground" suppressHydrationWarning>
-        <NextIntlClientProvider messages={messages}>
+        <IntlProvider locale={locale} messages={messages}>
           <SnowAdminThemeProvider>
             <AuthProvider>
               <SystemConfigInitializer />
               <ToastProviderComponent>{children}</ToastProviderComponent>
             </AuthProvider>
           </SnowAdminThemeProvider>
-        </NextIntlClientProvider>
+        </IntlProvider>
       </body>
     </html>
   );

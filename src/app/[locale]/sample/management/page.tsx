@@ -94,21 +94,21 @@ const statusColorMap: Record<string, { className: string }> = {
 };
 
 const statusLabelMap: Record<string, string> = {
-  pending: '待处理',
-  approved: '已批准',
-  rejected: '已拒绝',
-  producing: '生产中',
-  completed: '已完成',
-  delivered: '已发货',
-  signed: '已签收',
+  pending: 'pendingApproval',
+  approved: 'approved',
+  rejected: 'rejected',
+  producing: 'producing',
+  completed: 'completed',
+  delivered: 'delivered',
+  signed: 'signed',
 };
 
 const deliveryStatusLabelMap: Record<number, string> = {
-  0: '未发货',
-  1: '部分发货',
-  2: '已发货',
-  3: '部分签收',
-  4: '全部签收',
+  0: 'notDelivered',
+  1: 'partialDelivered',
+  2: 'delivered',
+  3: 'partialSigned',
+  4: 'allSigned',
 };
 
 const emptyForm = {
@@ -126,7 +126,7 @@ const emptyForm = {
 
 export default function SampleManagementPage() {
   // 翻译钩子
-  const t = useTranslations('Common');
+  const t = useTranslations('SampleManagement');
   const tc = useTranslations('Common');
 
   const { toast } = useToast();
@@ -214,7 +214,7 @@ export default function SampleManagementPage() {
         setTotal(result.pagination?.total || result.data?.total || sampleList.length);
       }
     } catch (e) {
-      console.error('获取样品列表失败:', e);
+      console.error('Failed to fetch sample list:', e);
     } finally {
       setLoading(false);
     }
@@ -255,7 +255,7 @@ export default function SampleManagementPage() {
   const handleSave = async () => {
     if (!form.notify_date || !form.customer_name || !form.product_name || !form.material_no) {
       toast({
-        title: '请填写必填字段（通知日期、客户、产品名称、物料编号）',
+        title: t('fillRequiredFields'),
         variant: 'destructive',
       });
       return;
@@ -272,41 +272,41 @@ export default function SampleManagementPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editId ? '更新成功' : '创建成功' });
+        toast({ title: editId ? tc('updateSuccess') : tc('createSuccess') });
         setShowFormDialog(false);
         fetchData();
       } else {
         toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '保存失败', variant: 'destructive' });
+      toast({ title: tc('saveFailed'), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除这个样品订单吗？')) return;
+    if (!confirm(t('confirmDelete'))) return;
     try {
       const res = await authFetch(`/api/sample/orders?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       } else {
-        toast({ title: result.message || '删除失败', variant: 'destructive' });
+        toast({ title: result.message || tc('deleteFailed'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
   const exportColumns = [
-    { key: 'order_no', header: '样品编号' },
-    { key: 'product_name', header: '产品名称' },
-    { key: 'customer_name', header: '客户' },
-    { key: 'notify_date', header: '通知日期' },
-    { key: 'customer_require_date', header: '要求交付日期' },
+    { key: 'order_no', header: t('sampleNo') },
+    { key: 'product_name', header: t('productName') },
+    { key: 'customer_name', header: tc('customer') },
+    { key: 'notify_date', header: t('notifyDate') },
+    { key: 'customer_require_date', header: t('requireDeliveryDate') },
     { key: 'delivery_status', header: tc('status') },
   ];
   const getExportData = () =>
@@ -316,7 +316,7 @@ export default function SampleManagementPage() {
       customer_name: s.customer_name,
       notify_date: formatDate(s.notify_date),
       customer_require_date: formatDate(s.customer_require_date),
-      delivery_status: statusLabelMap[s.delivery_status] || s.delivery_status,
+      delivery_status: t(statusLabelMap[s.delivery_status] || s.delivery_status),
     }));
 
   const toggleSelect = (id: number) => {
@@ -331,7 +331,7 @@ export default function SampleManagementPage() {
   };
 
   return (
-    <MainLayout title="样品管理">
+    <MainLayout title={t('sampleManagement')}>
       <div className="space-y-6">
         <Card>
           <CardContent className="p-4">
@@ -340,7 +340,7 @@ export default function SampleManagementPage() {
                 <div className="relative flex-1 max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索样品编号、产品名称、物料编号..."
+                    placeholder={t('searchPlaceholder')}
                     className="pl-10"
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
@@ -348,16 +348,16 @@ export default function SampleManagementPage() {
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder=tc("status") />
+                    <SelectValue placeholder={tc("status")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部</SelectItem>
-                    <SelectItem value="pending">待审批</SelectItem>
-                    <SelectItem value="approved">已通过</SelectItem>
-                    <SelectItem value="producing">生产中</SelectItem>
-                    <SelectItem value="completed">已完成</SelectItem>
-                    <SelectItem value="delivered">已交付</SelectItem>
-                    <SelectItem value="signed">已签收</SelectItem>
+                    <SelectItem value="all">{tc("all")}</SelectItem>
+                    <SelectItem value="pending">{t('pendingApproval')}</SelectItem>
+                    <SelectItem value="approved">{t('approved')}</SelectItem>
+                    <SelectItem value="producing">{t('producing')}</SelectItem>
+                    <SelectItem value="completed">{tc("completed")}</SelectItem>
+                    <SelectItem value="delivered">{t('delivered')}</SelectItem>
+                    <SelectItem value="signed">{t('signed')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -367,18 +367,18 @@ export default function SampleManagementPage() {
                   totalCount={list.length}
                   onSelectAll={toggleSelectAll}
                   onDeselectAll={() => setSelectedIds(new Set())}
-                  onPrint={() => printTable(getExportData(), exportColumns, '样品列表')}
+                  onPrint={() => printTable(getExportData(), exportColumns, t('sampleList'))}
                   onExportPDF={() =>
-                    exportTableToPDF(getExportData(), '样品列表', exportColumns, '样品列表')
+                    exportTableToPDF(getExportData(), t('sampleList'), exportColumns, t('sampleList'))
                   }
-                  onExportXLS={() => exportTableToXLS(getExportData(), '样品列表', exportColumns)}
+                  onExportXLS={() => exportTableToXLS(getExportData(), t('sampleList'), exportColumns)}
                   onExportWORD={() =>
-                    exportTableToWORD(getExportData(), '样品列表', exportColumns, '样品列表')
+                    exportTableToWORD(getExportData(), t('sampleList'), exportColumns, t('sampleList'))
                   }
                 />
                 <Button onClick={handleOpenAdd}>
                   <Plus className="h-4 w-4 mr-2" />
-                  新增样品
+                  {t('addSample')}
                 </Button>
               </div>
             </div>
@@ -387,16 +387,16 @@ export default function SampleManagementPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>样品列表{total > 0 ? ` (${total})` : ''}</CardTitle>
+            <CardTitle>{t('sampleList')}{total > 0 ? ` (${total})` : ''}</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                <span className="ml-2 text-muted-foreground">加载中...</span>
+                <span className="ml-2 text-muted-foreground">{tc('loading')}</span>
               </div>
             ) : list.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">暂无样品数据</div>
+              <div className="text-center py-12 text-muted-foreground">{t('noSampleData')}</div>
             ) : (
               <div className="rounded-md border">
                 <table className="w-full">
@@ -409,14 +409,14 @@ export default function SampleManagementPage() {
                         />
                       </th>
                       <th className="h-12 px-4 text-left align-middle font-medium w-[60px]">
-                        序号
+                        {tc('sequence')}
                       </th>
                       <th
                         className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
                         onClick={() => handleSort('order_no')}
                       >
                         <span className="inline-flex items-center">
-                          样品编号{getSortIcon('order_no')}
+                          {t('sampleNo')}{getSortIcon('order_no')}
                         </span>
                       </th>
                       <th
@@ -424,7 +424,7 @@ export default function SampleManagementPage() {
                         onClick={() => handleSort('product_name')}
                       >
                         <span className="inline-flex items-center">
-                          产品名称{getSortIcon('product_name')}
+                          {t('productName')}{getSortIcon('product_name')}
                         </span>
                       </th>
                       <th
@@ -432,16 +432,16 @@ export default function SampleManagementPage() {
                         onClick={() => handleSort('customer_name')}
                       >
                         <span className="inline-flex items-center">
-                          客户{getSortIcon('customer_name')}
+                          {tc('customer')}{getSortIcon('customer_name')}
                         </span>
                       </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">规格</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">{tc("specification")}</th>
                       <th
                         className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
                         onClick={() => handleSort('quantity')}
                       >
                         <span className="inline-flex items-center">
-                          数量{getSortIcon('quantity')}
+                          {tc('quantity')}{getSortIcon('quantity')}
                         </span>
                       </th>
                       <th
@@ -449,19 +449,19 @@ export default function SampleManagementPage() {
                         onClick={() => handleSort('notify_date')}
                       >
                         <span className="inline-flex items-center">
-                          通知日期{getSortIcon('notify_date')}
+                          {t('notifyDate')}{getSortIcon('notify_date')}
                         </span>
                       </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">要求交付日期</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">{t('requireDeliveryDate')}</th>
                       <th
                         className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
                         onClick={() => handleSort('delivery_status')}
                       >
                         <span className="inline-flex items-center">
-                          状态{getSortIcon('delivery_status')}
+                          {tc('status')}{getSortIcon('delivery_status')}
                         </span>
                       </th>
-                      <th className="h-12 px-4 text-right align-middle font-medium">操作</th>
+                      <th className="h-12 px-4 text-right align-middle font-medium">{tc("actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -503,18 +503,18 @@ export default function SampleManagementPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => handleViewDetail(item)}>
                                 <Eye className="h-4 w-4 mr-2" />
-                                查看详情
+                                {t('viewDetail')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleOpenEdit(item)}>
                                 <Edit className="h-4 w-4 mr-2" />
-                                编辑
+                                {tc('edit')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-red-600"
                                 onClick={() => handleDelete(item.id)}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                删除
+                                {tc('delete')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -528,7 +528,7 @@ export default function SampleManagementPage() {
             {total > pageSize && (
               <div className="flex items-center justify-between mt-4">
                 <span className="text-sm text-muted-foreground">
-                  共 {total} 条，第 {page}/{Math.ceil(total / pageSize)} 页
+                  {t('totalRecordsPage', { total, page, totalPages: Math.ceil(total / pageSize) })}
                 </span>
                 <div className="flex gap-2">
                   <Button
@@ -537,7 +537,7 @@ export default function SampleManagementPage() {
                     disabled={page <= 1}
                     onClick={() => setPage((p) => p - 1)}
                   >
-                    上一页
+                    {tc('prevPage')}
                   </Button>
                   <Button
                     variant="outline"
@@ -545,7 +545,7 @@ export default function SampleManagementPage() {
                     disabled={page >= Math.ceil(total / pageSize)}
                     onClick={() => setPage((p) => p + 1)}
                   >
-                    下一页
+                    {tc('nextPage')}
                   </Button>
                 </div>
               </div>
@@ -557,70 +557,70 @@ export default function SampleManagementPage() {
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>样品详情 - {detailItem?.order_no}</DialogTitle>
+            <DialogTitle>{t('sampleDetail')} - {detailItem?.order_no}</DialogTitle>
           </DialogHeader>
           {detailItem && (
             <div className="grid grid-cols-2 gap-4 py-4">
               <div>
-                <Label className="text-muted-foreground">样品编号</Label>
+                <Label className="text-muted-foreground">{t('sampleNo')}</Label>
                 <p className="font-mono">{detailItem.order_no}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">客户名称</Label>
+                <Label className="text-muted-foreground">{t('customerName')}</Label>
                 <p>{detailItem.customer_name}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">产品名称</Label>
+                <Label className="text-muted-foreground">{t('productName')}</Label>
                 <p className="font-medium">{detailItem.product_name}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">物料编号</Label>
+                <Label className="text-muted-foreground">{t('materialNo')}</Label>
                 <p className="font-mono">{detailItem.material_no}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">版本</Label>
+                <Label className="text-muted-foreground">{tc("version")}</Label>
                 <p>{detailItem.version || '-'}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">规格</Label>
+                <Label className="text-muted-foreground">{tc("specification")}</Label>
                 <p>{detailItem.size_spec || '-'}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">材料规格</Label>
+                <Label className="text-muted-foreground">{t('materialSpec')}</Label>
                 <p>{detailItem.material_spec || '-'}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">数量</Label>
+                <Label className="text-muted-foreground">{tc("quantity")}</Label>
                 <p>{detailItem.quantity || 0}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">通知日期</Label>
+                <Label className="text-muted-foreground">{t('notifyDate')}</Label>
                 <p>{formatDate(detailItem.notify_date)}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">要求交付日期</Label>
+                <Label className="text-muted-foreground">{t('requireDeliveryDate')}</Label>
                 <p>{formatDate(detailItem.customer_require_date)}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">实际交付日期</Label>
+                <Label className="text-muted-foreground">{t('actualDeliveryDate')}</Label>
                 <p>{formatDate(detailItem.actual_delivery_date) || '-'}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">状态</Label>
+                <Label className="text-muted-foreground">{tc("status")}</Label>
                 <p>{getStatusBadge(detailItem)}</p>
               </div>
               <div className="col-span-2">
-                <Label className="text-muted-foreground">备注</Label>
+                <Label className="text-muted-foreground">{tc("remark")}</Label>
                 <p>{detailItem.remark || '-'}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">创建时间</Label>
+                <Label className="text-muted-foreground">{tc("createdAt")}</Label>
                 <p className="text-sm text-muted-foreground">
                   {formatDate(detailItem.create_time)}
                 </p>
               </div>
               <div>
-                <Label className="text-muted-foreground">更新时间</Label>
+                <Label className="text-muted-foreground">{tc("updatedAt")}</Label>
                 <p className="text-sm text-muted-foreground">
                   {formatDate(detailItem.update_time)}
                 </p>
@@ -629,7 +629,7 @@ export default function SampleManagementPage() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDetailDialog(false)}>
-              关闭
+              {tc('close')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -638,12 +638,12 @@ export default function SampleManagementPage() {
       <Dialog open={showFormDialog} onOpenChange={setShowFormDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editId ? '编辑样品订单' : '新增样品订单'}</DialogTitle>
+            <DialogTitle>{editId ? t('editSampleOrder') : t('addSampleOrder')}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div>
               <Label>
-                通知日期 <span className="text-red-500">*</span>
+                {t('notifyDate')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 type="date"
@@ -653,60 +653,60 @@ export default function SampleManagementPage() {
             </div>
             <div>
               <Label>
-                客户名称 <span className="text-red-500">*</span>
+                {t('customerName')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={form.customer_name}
                 onChange={(e) => setForm((f) => ({ ...f, customer_name: e.target.value }))}
-                placeholder="输入客户名称"
+                placeholder={t('enterCustomerName')}
               />
             </div>
             <div>
               <Label>
-                产品名称 <span className="text-red-500">*</span>
+                {t('productName')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={form.product_name}
                 onChange={(e) => setForm((f) => ({ ...f, product_name: e.target.value }))}
-                placeholder="输入产品名称"
+                placeholder={t('enterProductName')}
               />
             </div>
             <div>
               <Label>
-                物料编号 <span className="text-red-500">*</span>
+                {t('materialNo')} <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={form.material_no}
                 onChange={(e) => setForm((f) => ({ ...f, material_no: e.target.value }))}
-                placeholder="输入物料编号"
+                placeholder={t('enterMaterialNo')}
               />
             </div>
             <div>
-              <Label>版本</Label>
+              <Label>{tc("version")}</Label>
               <Input
                 value={form.version}
                 onChange={(e) => setForm((f) => ({ ...f, version: e.target.value }))}
-                placeholder="如 A、B、C"
+                placeholder={t('versionPlaceholder')}
               />
             </div>
             <div>
-              <Label>规格</Label>
+              <Label>{tc("specification")}</Label>
               <Input
                 value={form.size_spec}
                 onChange={(e) => setForm((f) => ({ ...f, size_spec: e.target.value }))}
-                placeholder="如 150×80mm"
+                placeholder={t('specPlaceholder')}
               />
             </div>
             <div>
-              <Label>材料规格</Label>
+              <Label>{t('materialSpec')}</Label>
               <Input
                 value={form.material_spec}
                 onChange={(e) => setForm((f) => ({ ...f, material_spec: e.target.value }))}
-                placeholder="如 PET材料"
+                placeholder={t('materialSpecPlaceholder')}
               />
             </div>
             <div>
-              <Label>数量</Label>
+              <Label>{tc("quantity")}</Label>
               <Input
                 type="number"
                 value={form.quantity}
@@ -714,7 +714,7 @@ export default function SampleManagementPage() {
               />
             </div>
             <div>
-              <Label>要求交付日期</Label>
+              <Label>{t('requireDeliveryDate')}</Label>
               <Input
                 type="date"
                 value={form.customer_require_date}
@@ -722,21 +722,21 @@ export default function SampleManagementPage() {
               />
             </div>
             <div className="col-span-2">
-              <Label>备注</Label>
+              <Label>{tc("remark")}</Label>
               <Input
                 value={form.remark}
                 onChange={(e) => setForm((f) => ({ ...f, remark: e.target.value }))}
-                placeholder="输入备注"
+                placeholder={tc('enterRemark')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowFormDialog(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editId ? tc('save') : '创建'}
+              {editId ? tc('save') : tc('create')}
             </Button>
           </DialogFooter>
         </DialogContent>

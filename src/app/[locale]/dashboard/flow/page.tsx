@@ -668,6 +668,7 @@ function ModuleGroupSection({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const Icon = group.icon;
+  const t = useTranslations('Dashboard');
   return (
     <div className="border border-border rounded-lg overflow-hidden">
       <button
@@ -874,7 +875,8 @@ export default function FlowPage() {
                 {moduleGroups.map((group) => (
                   <ModuleGroupSection
                     key={group.nameKey}
-
+                    group={group}
+                    defaultOpen={
                       group.nameKey === 'procurementManagement' ||
                       group.nameKey === 'salesManagement' ||
                       group.nameKey === 'productionManagement'

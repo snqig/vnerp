@@ -164,8 +164,8 @@ export default function SystemConfigPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="true">是</SelectItem>
-              <SelectItem value="false">否</SelectItem>
+              <SelectItem value="true">{tc("yes")}</SelectItem>
+              <SelectItem value="false">{tc("no")}</SelectItem>
             </SelectContent>
           </Select>
         );

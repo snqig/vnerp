@@ -62,6 +62,18 @@ interface Summary {
 }
 
 export default function CustomerAnalysisPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   const t = useTranslations('Crm');
   const tc = useTranslations('Common');
 
@@ -114,7 +126,7 @@ export default function CustomerAnalysisPage() {
       const params = new URLSearchParams({ page: String(page), pageSize: '20' });
       if (searchName) params.set('customerName', searchName);
       if (searchLevel) params.set('customerLevel', searchLevel);
-      const res = await fetch('/api/crm/analysis?' + params);
+      const res = await authFetch('/api/crm/analysis?' + params);
       const data = await res.json();
       if (data.code === 200) {
         const rawList = data.data.list || [];
@@ -154,7 +166,7 @@ export default function CustomerAnalysisPage() {
     try {
       const method = editRecord ? 'PUT' : 'POST';
       const body = editRecord ? { id: editRecord.id, ...form } : form;
-      const res = await fetch('/api/crm/analysis', {
+      const res = await authFetch('/api/crm/analysis', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -175,7 +187,7 @@ export default function CustomerAnalysisPage() {
   const handleDelete = async (id: number) => {
     if (!confirm(t('confirmDelete'))) return;
     try {
-      const res = await fetch('/api/crm/analysis?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/crm/analysis?id=' + id, { method: 'DELETE' });
       const data = await res.json();
       if (data.code === 200) {
         toast({ title: t('deleteSuccess') });

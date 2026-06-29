@@ -87,17 +87,17 @@ interface SampleOrder {
 }
 
 const statusLabelMap: Record<string, string> = {
-  pending: '待交付',
-  delivered: '已交付',
-  signed: '已签样',
-  approved: '已通过',
-  completed: '已完成',
-  producing: '生产中',
+  pending: 'pendingDelivery',
+  delivered: 'delivered',
+  signed: 'signed',
+  approved: 'approved',
+  completed: 'completed',
+  producing: 'producing',
 };
 
 export default function SampleOrdersPage() {
   // 翻译钩子
-  const t = useTranslations('Orders');
+  const t = useTranslations('SampleOrders');
   const tc = useTranslations('Common');
 
   const { toast } = useToast();
@@ -193,7 +193,7 @@ export default function SampleOrdersPage() {
         }));
       }
     } catch {
-      toast({ title: '获取打样订单列表失败', variant: 'destructive' });
+      toast({ title: t('fetchOrdersFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -218,15 +218,15 @@ export default function SampleOrdersPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast({ title: `打样订单 ${result.data.order_no} 已创建` });
+        toast({ title: t('orderCreated', { orderNo: result.data.order_no }) });
         setIsCreateOpen(false);
         resetForm();
         fetchOrders();
       } else {
-        toast({ title: result.message || '创建失败', variant: 'destructive' });
+        toast({ title: result.message || tc('createFailed'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '创建失败', variant: 'destructive' });
+      toast({ title: tc('createFailed'), variant: 'destructive' });
     }
   };
 
@@ -243,32 +243,32 @@ export default function SampleOrdersPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast({ title: '更新成功' });
+        toast({ title: tc('updateSuccess') });
         setIsEditOpen(false);
         setEditingOrder(null);
         resetForm();
         fetchOrders();
       } else {
-        toast({ title: result.message || '更新失败', variant: 'destructive' });
+        toast({ title: result.message || tc('updateFailed'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '更新失败', variant: 'destructive' });
+      toast({ title: tc('updateFailed'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除此打样订单吗？')) return;
+    if (!confirm(t('confirmDelete'))) return;
     try {
       const response = await authFetch(`/api/sample/orders?id=${id}`, { method: 'DELETE' });
       const result = await response.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchOrders();
       } else {
-        toast({ title: result.message || '删除失败', variant: 'destructive' });
+        toast({ title: result.message || tc('deleteFailed'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -284,13 +284,13 @@ export default function SampleOrdersPage() {
       });
       const result = await response.json();
       if (result.success) {
-        toast({ title: `状态已更新为${statusLabelMap[status] || status}` });
+        toast({ title: t('statusUpdated', { status: t(statusLabelMap[status] || status) }) });
         fetchOrders();
       } else {
-        toast({ title: result.message || '状态更新失败', variant: 'destructive' });
+        toast({ title: result.message || t('statusUpdateFailed'), variant: 'destructive' });
       }
     } catch {
-      toast({ title: '状态更新失败', variant: 'destructive' });
+      toast({ title: t('statusUpdateFailed'), variant: 'destructive' });
     }
   };
 
@@ -332,21 +332,21 @@ export default function SampleOrdersPage() {
         return (
           <Badge className="bg-green-100 text-green-700">
             <CheckCircle2 className="h-3 w-3 mr-1" />
-            已签样
+            {t('signed')}
           </Badge>
         );
       case 'delivered':
         return (
           <Badge className="bg-blue-100 text-blue-700">
             <FileText className="h-3 w-3 mr-1" />
-            已交付
+            {t('delivered')}
           </Badge>
         );
       case 'pending':
         return (
           <Badge className="bg-yellow-100 text-yellow-700">
             <Clock className="h-3 w-3 mr-1" />
-            待交付
+            {t('pendingDelivery')}
           </Badge>
         );
       default:
@@ -372,40 +372,40 @@ export default function SampleOrdersPage() {
   };
 
   const exportColumns = [
-    { key: 'notify_date', header: '通知日期' },
-    { key: 'customer_name', header: '客户' },
-    { key: 'product_name', header: '品名' },
-    { key: 'material_no', header: '料号' },
-    { key: 'version', header: '版本' },
-    { key: 'size_spec', header: '尺寸' },
+    { key: 'notify_date', header: t('notifyDate') },
+    { key: 'customer_name', header: tc('customer') },
+    { key: 'product_name', header: t('productName') },
+    { key: 'material_no', header: t('materialNo') },
+    { key: 'version', header: tc('version') },
+    { key: 'size_spec', header: tc('size') },
     { key: 'quantity', header: tc('quantity') },
-    { key: 'customer_require_date', header: '需求日期' },
+    { key: 'customer_require_date', header: t('requireDate') },
     { key: 'delivery_status', header: tc('status') },
   ];
   const getExportData = () =>
     sortedOrders.map((s, i) => ({
-      序号: i + 1,
-      通知日期: formatDate(s.notify_date),
-      客户: s.customer_name,
-      品名: s.product_name,
-      料号: s.material_no,
-      版本: s.version,
-      尺寸: s.size_spec,
-      数量: s.quantity,
-      需求日期: formatDate(s.customer_require_date),
-      状态: statusLabelMap[s.delivery_status] || s.delivery_status,
+      [tc('serialNo')]: i + 1,
+      [t('notifyDate')]: formatDate(s.notify_date),
+      [tc('customer')]: s.customer_name,
+      [t('productName')]: s.product_name,
+      [t('materialNo')]: s.material_no,
+      [tc('version')]: s.version,
+      [tc('size')]: s.size_spec,
+      [tc('quantity')]: s.quantity,
+      [t('requireDate')]: formatDate(s.customer_require_date),
+      [tc('status')]: t(statusLabelMap[s.delivery_status] || s.delivery_status),
     }));
 
   const handlePrint = () => {
     const items =
       selectedIds.size > 0 ? sortedOrders.filter((o) => selectedIds.has(o.id)) : sortedOrders;
     if (items.length === 0) {
-      toast({ title: '没有可打印的数据', variant: 'destructive' });
+      toast({ title: t('noDataToPrint'), variant: 'destructive' });
       return;
     }
     const printWindow = window.open('', '_blank', 'width=900,height=600');
     if (!printWindow) return;
-    printWindow.document.write(`<html><head><title>打样订单列表</title>
+    printWindow.document.write(`<html><head><title>${t('sampleOrderList')}</title>
       <style>
         body { font-family: 'Microsoft YaHei', sans-serif; margin: 20px; }
         h2 { text-align: center; margin-bottom: 10px; }
@@ -414,16 +414,16 @@ export default function SampleOrdersPage() {
         th { background: #f0f0f0; font-weight: bold; }
         .right { text-align: right; }
       </style></head><body>
-      <h2>打样订单列表</h2>
+      <h2>${t('sampleOrderList')}</h2>
       <table><thead><tr>
-        <th>序号</th><th>通知日期</th><th>客户</th><th>品名</th><th>料号</th><th>版本</th><th>尺寸</th><th>数量</th><th>需求日期</th><th>状态</th>
+        <th>${tc('serialNo')}</th><th>${t('notifyDate')}</th><th>${tc('customer')}</th><th>${t('productName')}</th><th>${t('materialNo')}</th><th>${tc('version')}</th><th>${tc('size')}</th><th>${tc('quantity')}</th><th>${t('requireDate')}</th><th>${tc('status')}</th>
       </tr></thead><tbody>`);
     items.forEach((o, i) => {
       printWindow.document.write(`<tr>
         <td>${i + 1}</td><td>${formatDate(o.notify_date)}</td><td>${o.customer_name}</td>
         <td>${o.product_name}</td><td>${o.material_no}</td><td>${o.version}</td>
         <td>${o.size_spec || '-'}</td><td>${o.quantity}</td><td>${formatDate(o.customer_require_date)}</td>
-        <td>${statusLabelMap[o.delivery_status] || o.delivery_status}</td>
+        <td>${t(statusLabelMap[o.delivery_status] || o.delivery_status)}</td>
       </tr>`);
     });
     printWindow.document.write(`</tbody></table></body></html>`);
@@ -451,7 +451,7 @@ export default function SampleOrdersPage() {
     <div className="grid grid-cols-2 gap-4 py-4">
       <div className="space-y-2">
         <Label>
-          通知打样日期 <span className="text-red-500">*</span>
+          {t('notifyDate')} <span className="text-red-500">*</span>
         </Label>
         <Input
           type="date"
@@ -461,61 +461,61 @@ export default function SampleOrdersPage() {
       </div>
       <div className="space-y-2">
         <Label>
-          客户名称 <span className="text-red-500">*</span>
+          {tc('customer')} <span className="text-red-500">*</span>
         </Label>
         <Input
-          placeholder="客户名称"
+          placeholder={tc('customer')}
           value={formData.customer_name}
           onChange={(e) => handleInputChange('customer_name', e.target.value)}
         />
       </div>
       <div className="space-y-2">
         <Label>
-          品名 <span className="text-red-500">*</span>
+          {t('productName')} <span className="text-red-500">*</span>
         </Label>
         <Input
-          placeholder="品名"
+          placeholder={t('productName')}
           value={formData.product_name}
           onChange={(e) => handleInputChange('product_name', e.target.value)}
         />
       </div>
       <div className="space-y-2">
         <Label>
-          料号 <span className="text-red-500">*</span>
+          {t('materialNo')} <span className="text-red-500">*</span>
         </Label>
         <Input
-          placeholder="料号"
+          placeholder={t('materialNo')}
           value={formData.material_no}
           onChange={(e) => handleInputChange('material_no', e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <Label>版本</Label>
+        <Label>{tc("version")}</Label>
         <Input
-          placeholder="版本"
+          placeholder={tc("version")}
           value={formData.version}
           onChange={(e) => handleInputChange('version', e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <Label>数量</Label>
+        <Label>{tc("quantity")}</Label>
         <Input
           type="number"
-          placeholder=tc("quantity")
+          placeholder={tc("quantity")}
           value={formData.quantity}
           onChange={(e) => handleInputChange('quantity', e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <Label>尺寸规格</Label>
+        <Label>{t('sizeSpec')}</Label>
         <Input
-          placeholder="尺寸规格"
+          placeholder={t('sizeSpec')}
           value={formData.size_spec}
           onChange={(e) => handleInputChange('size_spec', e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <Label>客户需求日期</Label>
+        <Label>{t('requireDate')}</Label>
         <Input
           type="date"
           value={formData.customer_require_date}
@@ -523,17 +523,17 @@ export default function SampleOrdersPage() {
         />
       </div>
       <div className="col-span-2 space-y-2">
-        <Label>材料规格</Label>
+        <Label>{t('materialSpec')}</Label>
         <Input
-          placeholder="材料规格"
+          placeholder={t('materialSpec')}
           value={formData.material_spec}
           onChange={(e) => handleInputChange('material_spec', e.target.value)}
         />
       </div>
       <div className="col-span-2 space-y-2">
-        <Label>备注</Label>
+        <Label>{tc("remark")}</Label>
         <Input
-          placeholder=tc("remark")
+          placeholder={tc("remark")}
           value={formData.remark}
           onChange={(e) => handleInputChange('remark', e.target.value)}
         />
@@ -542,7 +542,7 @@ export default function SampleOrdersPage() {
   );
 
   return (
-    <MainLayout title="打样订单管理">
+    <MainLayout title={t('sampleOrderManagement')}>
       <div className="space-y-6">
         <Card>
           <CardContent className="p-4">
@@ -551,7 +551,7 @@ export default function SampleOrdersPage() {
                 <div className="relative flex-1 max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索订单号、品名、料号..."
+                    placeholder={t('searchPlaceholder')}
                     className="pl-10"
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
@@ -559,10 +559,10 @@ export default function SampleOrdersPage() {
                 </div>
                 <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="客户筛选" />
+                    <SelectValue placeholder={t('customerFilter')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部客户</SelectItem>
+                    <SelectItem value="all">{t('allCustomers')}</SelectItem>
                     {customers.map((customer) => (
                       <SelectItem key={customer} value={customer}>
                         {customer}
@@ -572,13 +572,13 @@ export default function SampleOrdersPage() {
                 </Select>
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="状态筛选" />
+                    <SelectValue placeholder={t('statusFilter')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
-                    <SelectItem value="pending">待交付</SelectItem>
-                    <SelectItem value="delivered">已交付</SelectItem>
-                    <SelectItem value="signed">已签样</SelectItem>
+                    <SelectItem value="all">{tc('all')}</SelectItem>
+                    <SelectItem value="pending">{t('pendingDelivery')}</SelectItem>
+                    <SelectItem value="delivered">{t('delivered')}</SelectItem>
+                    <SelectItem value="signed">{t('signed')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -590,17 +590,17 @@ export default function SampleOrdersPage() {
                   onDeselectAll={() => setSelectedIds(new Set())}
                   onPrint={handlePrint}
                   onExportPDF={() =>
-                    exportTableToPDF(getExportData(), '打样订单列表', exportColumns, '打样订单列表')
+                    exportTableToPDF(getExportData(), t('sampleOrderList'), exportColumns, t('sampleOrderList'))
                   }
                   onExportXLS={() =>
-                    exportTableToXLS(getExportData(), '打样订单列表', exportColumns)
+                    exportTableToXLS(getExportData(), t('sampleOrderList'), exportColumns)
                   }
                   onExportWORD={() =>
                     exportTableToWORD(
                       getExportData(),
-                      '打样订单列表',
+                      t('sampleOrderList'),
                       exportColumns,
-                      '打样订单列表'
+                      t('sampleOrderList')
                     )
                   }
                 />
@@ -608,13 +608,13 @@ export default function SampleOrdersPage() {
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
-                      新建打样单
+                      {t('createSampleOrder')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" resizable>
                     <DialogHeader>
-                      <DialogTitle>新建打样订单</DialogTitle>
-                      <DialogDescription>填写打样订单信息</DialogDescription>
+                      <DialogTitle>{t('createSampleOrder')}</DialogTitle>
+                      <DialogDescription>{t('fillSampleOrderInfo')}</DialogDescription>
                     </DialogHeader>
                     {formFields}
                     <div className="flex justify-end gap-2">
@@ -625,9 +625,9 @@ export default function SampleOrdersPage() {
                           resetForm();
                         }}
                       >
-                        取消
+                        {tc('cancel')}
                       </Button>
-                      <Button onClick={handleCreate}>保存</Button>
+                      <Button onClick={handleCreate}>{tc('save')}</Button>
                     </div>
                   </DialogContent>
                 </Dialog>
@@ -638,10 +638,10 @@ export default function SampleOrdersPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>打样订单列表</CardTitle>
+            <CardTitle>{t('sampleOrderList')}</CardTitle>
             <CardDescription>
-              共 {pagination.total} 个打样订单
-              {selectedIds.size > 0 ? `，已选 ${selectedIds.size} 项` : ''}
+              {t('totalOrders', { total: pagination.total })}
+              {selectedIds.size > 0 ? `，${t('selectedItems', { count: selectedIds.size })}` : ''}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -650,7 +650,7 @@ export default function SampleOrdersPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : sortedOrders.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">暂无打样订单数据</div>
+              <div className="text-center py-12 text-muted-foreground">{t('noSampleOrderData')}</div>
             ) : (
               <div className="rounded-md border overflow-x-auto">
                 <table className="w-full">
@@ -663,19 +663,19 @@ export default function SampleOrdersPage() {
                         />
                       </th>
                       <th className="h-12 px-4 text-left align-middle font-medium w-[60px]">
-                        序号
+                        {tc('sequence')}
                       </th>
-                      {sortableHeader('order_no', '订单号')}
-                      {sortableHeader('notify_date', '通知日期')}
-                      {sortableHeader('customer_name', '客户')}
-                      {sortableHeader('product_name', '品名')}
-                      {sortableHeader('material_no', '料号')}
-                      {sortableHeader('version', '版本')}
-                      {sortableHeader('size_spec', '尺寸')}
+                      {sortableHeader('order_no', t('orderNo'))}
+                      {sortableHeader('notify_date', t('notifyDate'))}
+                      {sortableHeader('customer_name', tc('customer'))}
+                      {sortableHeader('product_name', t('productName'))}
+                      {sortableHeader('material_no', t('materialNo'))}
+                      {sortableHeader('version', tc('version'))}
+                      {sortableHeader('size_spec', tc('size'))}
                       {sortableHeader('quantity', tc('quantity'))}
-                      {sortableHeader('customer_require_date', '需求日期')}
-                      <th className="h-12 px-4 text-left align-middle font-medium">状态</th>
-                      <th className="h-12 px-4 text-right align-middle font-medium">操作</th>
+                      {sortableHeader('customer_require_date', t('requireDate'))}
+                      <th className="h-12 px-4 text-left align-middle font-medium">{tc("status")}</th>
+                      <th className="h-12 px-4 text-right align-middle font-medium">{tc("actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -716,7 +716,7 @@ export default function SampleOrdersPage() {
                                   onClick={() => handleUpdateStatus(order.id, 'delivered')}
                                 >
                                   <FileText className="h-4 w-4 mr-2" />
-                                  标记已交付
+                                  {t('markDelivered')}
                                 </DropdownMenuItem>
                               )}
                               {order.delivery_status === 'delivered' && (
@@ -724,19 +724,19 @@ export default function SampleOrdersPage() {
                                   onClick={() => handleUpdateStatus(order.id, 'signed')}
                                 >
                                   <CheckCircle2 className="h-4 w-4 mr-2" />
-                                  标记已签样
+                                  {t('markSigned')}
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem onClick={() => openEditDialog(order)}>
                                 <Edit className="h-4 w-4 mr-2" />
-                                编辑
+                                {tc('edit')}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-destructive"
                                 onClick={() => handleDelete(order.id)}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                删除
+                                {tc('delete')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -751,7 +751,7 @@ export default function SampleOrdersPage() {
             {pagination.totalPages > 1 && (
               <div className="flex items-center justify-between mt-4">
                 <span className="text-sm text-muted-foreground">
-                  共 {pagination.total} 条，第 {pagination.page}/{pagination.totalPages} 页
+                  {t('paginationInfo', { total: pagination.total, page: pagination.page, totalPages: pagination.totalPages })}
                 </span>
                 <div className="flex gap-2">
                   <Button
@@ -760,7 +760,7 @@ export default function SampleOrdersPage() {
                     disabled={pagination.page === 1}
                     onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
                   >
-                    上一页
+                    {tc('prevPage')}
                   </Button>
                   <Button
                     variant="outline"
@@ -768,7 +768,7 @@ export default function SampleOrdersPage() {
                     disabled={pagination.page === pagination.totalPages}
                     onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                   >
-                    下一页
+                    {tc('nextPage')}
                   </Button>
                 </div>
               </div>
@@ -780,8 +780,8 @@ export default function SampleOrdersPage() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" resizable>
           <DialogHeader>
-            <DialogTitle>编辑打样订单</DialogTitle>
-            <DialogDescription>修改打样订单信息</DialogDescription>
+            <DialogTitle>{t('editSampleOrder')}</DialogTitle>
+            <DialogDescription>{t('modifySampleOrderInfo')}</DialogDescription>
           </DialogHeader>
           {formFields}
           <div className="flex justify-end gap-2">
@@ -793,9 +793,9 @@ export default function SampleOrdersPage() {
                 resetForm();
               }}
             >
-              取消
+              {tc('cancel')}
             </Button>
-            <Button onClick={handleUpdate}>保存</Button>
+            <Button onClick={handleUpdate}>{tc('save')}</Button>
           </div>
         </DialogContent>
       </Dialog>

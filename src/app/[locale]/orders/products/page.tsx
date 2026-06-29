@@ -413,7 +413,8 @@ export default function ProductsPage() {
   const handlePrint = () => {
     const printContent = document.createElement('div');
     printContent.style.padding = '20px';
-    
+
+    const title = document.createElement('h1');
     title.textContent = t('productArchiveList');
     title.style.textAlign = 'center';
     title.style.marginBottom = '20px';

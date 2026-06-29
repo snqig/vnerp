@@ -64,6 +64,18 @@ interface TransferRecord {
 }
 
 export default function SampleToMassPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   const t = useTranslations('Engineering');
   const tc = useTranslations('Common');
 
@@ -94,7 +106,7 @@ export default function SampleToMassPage() {
 
   const fetchCustomers = async () => {
     try {
-      const res = await fetch('/api/customers?pageSize=999');
+      const res = await authFetch('/api/customers?pageSize=999');
       const result = await res.json();
       if (result.success) {
         setCustomers(result.data?.list || result.data || []);
@@ -112,7 +124,7 @@ export default function SampleToMassPage() {
         productName: searchProduct,
         status: searchStatus,
       });
-      const res = await fetch('/api/engineering/sample-to-mass?' + params);
+      const res = await authFetch('/api/engineering/sample-to-mass?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -131,7 +143,7 @@ export default function SampleToMassPage() {
   const handleSave = async () => {
     try {
       const method = editItem.id ? 'PUT' : 'POST';
-      const res = await fetch('/api/engineering/sample-to-mass', {
+      const res = await authFetch('/api/engineering/sample-to-mass', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -152,7 +164,7 @@ export default function SampleToMassPage() {
   const handleDelete = async (id: number) => {
     if (!confirm(tc('confirmDelete'))) return;
     try {
-      const res = await fetch('/api/engineering/sample-to-mass?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/engineering/sample-to-mass?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: tc('deleteSuccess') });
@@ -165,7 +177,7 @@ export default function SampleToMassPage() {
 
   const handleConfirm = async (id: number, currentStatus: number) => {
     try {
-      const res = await fetch('/api/engineering/sample-to-mass', {
+      const res = await authFetch('/api/engineering/sample-to-mass', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: currentStatus + 1 }),

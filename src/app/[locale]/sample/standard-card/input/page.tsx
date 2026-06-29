@@ -1565,7 +1565,7 @@ function StandardCardInputContent() {
                         <th className="border p-2 text-center font-medium">网目</th>
                         <th className="border p-2 text-center font-medium">印版存放</th>
                         <th className="border p-2 text-center font-medium">印面</th>
-                        <th className="border p-2 text-center font-medium w-12">操作</th>
+                        <th className="border p-2 text-center font-medium w-12">{tc("actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1946,7 +1946,7 @@ function StandardCardInputContent() {
                       <CardTitle className="text-base">离型纸信息</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <FormField label=tc("type")>
+                      <FormField label={tc("type")}>
                         <Input 
                           value={formData.releasePaperType}
                           onChange={(e) => setFormData(p => ({ ...p, releasePaperType: e.target.value }))}
@@ -2082,7 +2082,7 @@ function StandardCardInputContent() {
                   />
                 </FormField>
 
-                <FormField label=tc("remark")>
+                <FormField label={tc("remark")}>
                   <textarea 
                     value={formData.notes}
                     onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}
@@ -2126,7 +2126,7 @@ function StandardCardInputContent() {
 function Loading() {
   const tc = useTranslations('Common');
   return (
-    <MainLayout title=tc("loading")>
+    <MainLayout title={tc("loading")}>
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
       </div>

@@ -121,6 +121,7 @@ function PrintPageContent() {
   const { companyName } = useCompanyName();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const tc = useTranslations('Common');
   const printRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -604,7 +605,7 @@ function PrintPageContent() {
             </tr>
 
             <tr>
-              <td rowSpan={2} className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">工艺<br/>流程</td>
+              <td rowSpan={2} className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{tc("craft")}<br/>{tc("process")}</td>
               <td colSpan={18} className="border">
                 <InputCell value={d.processFlow1} />
               </td>
@@ -713,7 +714,7 @@ function PrintPageContent() {
                     <td colSpan={2} className="border">
                       <InputCell value={d.stampingMethod} />
                     </td>
-                    <td className="border">规格</td>
+                    <td className="border">{tc("specification")}</td>
                     <td colSpan={2} className="border">
                       <InputCell value={d.mylarSpecs} />
                     </td>
@@ -736,7 +737,7 @@ function PrintPageContent() {
                   </>
                 ) : index === 2 ? (
                   <>
-                    <td className="border">尺寸</td>
+                    <td className="border">{tc("size")}</td>
                     <td className="border">
                       <InputCell value={d.adhesiveSize} />
                     </td>
@@ -799,7 +800,7 @@ function PrintPageContent() {
                   </>
                 ) : (
                   <>
-                    <td className="border">规格</td>
+                    <td className="border">{tc("specification")}</td>
                     <td className="border">
                       <InputCell value={d.adhesiveSpecs} />
                     </td>
@@ -847,7 +848,7 @@ function PrintPageContent() {
                     ) : rowNum === 9 ? (
                       <td className="border">种类</td>
                     ) : (
-                      <td className="border">规格</td>
+                      <td className="border">{tc("specification")}</td>
                     )}
                     {rowNum === 8 ? null : (
                       <td className="border">
@@ -906,7 +907,7 @@ function PrintPageContent() {
               <td colSpan={2} className="border font-bold text-center">
                 <InputCell value={d.creator} />
               </td>
-              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">审核</td>
+              <td className="border bg-white dark:bg-gray-700 font-bold text-black dark:text-gray-100 text-center">{tc("review")}</td>
               <td className="border">
                 <InputCell value={d.reviewer} />
               </td>

@@ -41,12 +41,11 @@ interface Item {
   status: number;
   create_time: string;
 }
-const typeMap: Record<number, string> = { 1: '通知', 2: '公告', 3: tc('warning') };
-
 export default function NoticePage() {
   // 翻译钩子
   const t = useTranslations('Common');
   const tc = useTranslations('Common');
+  const typeMap: Record<number, string> = { 1: tc('notice'), 2: tc('announcement'), 3: tc('warning') };
 
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);
@@ -113,11 +112,11 @@ export default function NoticePage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">通知公告</h1>
+          <h1 className="text-2xl font-bold">{t("noticeAnnouncement")}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索标题"
+                placeholder={tc("searchTitle")}
                 value={searchTitle}
                 onChange={(e) => setSearchTitle(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -134,7 +133,7 @@ export default function NoticePage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增公告
+              {t("addNotice")}
             </Button>
           </div>
         </div>
@@ -143,12 +142,12 @@ export default function NoticePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">标题</TableHead>
-                  <TableHead className="text-xs">类型</TableHead>
-                  <TableHead className="text-xs">内容</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">创建时间</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("title")}</TableHead>
+                  <TableHead className="text-xs">{tc("type")}</TableHead>
+                  <TableHead className="text-xs">{tc("content")}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("createdAt")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -164,7 +163,7 @@ export default function NoticePage() {
                         variant={item.status === 1 ? 'default' : 'secondary'}
                         className="text-xs"
                       >
-                        {item.status === 1 ? '已发布' : tc('draft')}
+                        {item.status === 1 ? tc("published") : tc('draft')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs">{item.create_time || '-'}</TableCell>
@@ -196,7 +195,7 @@ export default function NoticePage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-gray-400 py-8">
-                      暂无记录
+                      {tc("noRecords")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -205,7 +204,7 @@ export default function NoticePage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc("totalItems", { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -213,7 +212,7 @@ export default function NoticePage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc("prevPage")}
             </Button>
             <Button
               size="sm"
@@ -221,25 +220,25 @@ export default function NoticePage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc("nextPage")}
             </Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增通知公告</DialogTitle>
+              <DialogTitle>{t("addNoticeAnnouncement")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>标题</Label>
+                <Label>{tc("title")}</Label>
                 <Input
                   value={editItem.notice_title || ''}
                   onChange={(e) => setEditItem({ ...editItem, notice_title: e.target.value })}
                 />
               </div>
               <div>
-                <Label>类型</Label>
+                <Label>{tc("type")}</Label>
                 <Select
                   value={String(editItem.notice_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, notice_type: Number(v) })}
@@ -248,14 +247,14 @@ export default function NoticePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">通知</SelectItem>
-                    <SelectItem value="2">公告</SelectItem>
-                    <SelectItem value="3">预警</SelectItem>
+                    <SelectItem value="1">{tc("notice")}</SelectItem>
+                    <SelectItem value="2">{tc("announcement")}</SelectItem>
+                    <SelectItem value="3">{tc("warning")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>内容</Label>
+                <Label>{tc("content")}</Label>
                 <textarea
                   className="w-full min-h-[100px] p-2 border rounded-md text-sm"
                   value={editItem.notice_content || ''}
@@ -265,9 +264,9 @@ export default function NoticePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc("cancel")}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

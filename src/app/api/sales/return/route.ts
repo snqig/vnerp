@@ -1,220 +1,326 @@
 import { NextRequest } from 'next/server';
-import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
+  paginatedResponse,
   errorResponse,
-  commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { query, execute } from '@/lib/db';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status');
-  const page = parseInt(searchParams.get('page') || '1');
-  const pageSize = parseInt(searchParams.get('pageSize') || '20');
+// 获取销售退货单列表
+export const GET = withAuthAndErrorHandler(
+  async (request: NextRequest, userInfo: UserInfo) => {
+    const { searchParams } = new URL(request.url);
+    const keyword = searchParams.get('keyword') || '';
+    const status = searchParams.get('status') || '';
+    const customerId = searchParams.get('customerId') || '';
+    const startDate = searchParams.get('startDate') || '';
+    const endDate = searchParams.get('endDate') || '';
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
-  if (id) {
-    const order = await queryOne('SELECT * FROM sal_return_order WHERE id = ? AND deleted = 0', [
-      parseInt(id),
-    ]);
-    if (!order) return commonErrors.notFound('退货单不存在');
-    const items = await query('SELECT * FROM sal_return_order_item WHERE return_id = ?', [
-      parseInt(id),
-    ]);
-    return successResponse({ ...order, items });
-  }
+    let where = 'WHERE 1=1';
+    const params: any[] = [];
 
-  let sql = `SELECT r.*, c.customer_name
-    FROM sal_return_order r
-    LEFT JOIN crm_customer c ON r.customer_id = c.id
-    WHERE r.deleted = 0`;
-  const values: any[] = [];
-
-  if (keyword) {
-    sql += ' AND (r.return_no LIKE ? OR r.customer_name LIKE ? OR r.order_no LIKE ?)';
-    const like = `%${keyword}%`;
-    values.push(like, like, like);
-  }
-  if (status) {
-    sql += ' AND r.status = ?';
-    values.push(parseInt(status));
-  }
-
-  sql += ' ORDER BY r.create_time DESC LIMIT ? OFFSET ?';
-  values.push(pageSize, (page - 1) * pageSize);
-
-  const list = await query(sql, values);
-
-  const countSql = `SELECT COUNT(*) as total FROM sal_return_order WHERE deleted = 0`;
-  const countResult = (await queryOne(countSql)) as any;
-
-  return successResponse({ list, total: countResult?.total || 0, page, pageSize });
-}, '获取退货单列表失败');
-
-export const POST = withErrorHandler(async (request: NextRequest) => {
-  const body = await request.json();
-  const validation = validateRequestBody(body, ['customer_id', 'items']);
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
-
-  const result = await transaction(async (conn) => {
-    const {
-      order_id,
-      order_no,
-      delivery_id,
-      delivery_no,
-      customer_id,
-      customer_name,
-      return_date,
-      return_type,
-      return_reason,
-      warehouse_id,
-      remark,
-      items,
-    } = body;
-
-    const returnNo = `RT${Date.now()}`;
-
-    let totalQty = 0,
-      totalAmount = 0;
-    for (const item of items) {
-      totalQty += parseFloat(item.quantity) || 0;
-      totalAmount += (parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0);
+    if (keyword) {
+      where += ' AND (r.return_no LIKE ? OR r.remark LIKE ?)';
+      params.push(`%${keyword}%`, `%${keyword}%`);
+    }
+    if (status && status !== 'all') {
+      where += ' AND r.status = ?';
+      params.push(status);
+    }
+    if (customerId) {
+      where += ' AND r.customer_id = ?';
+      params.push(Number(customerId));
+    }
+    if (startDate) {
+      where += ' AND r.return_date >= ?';
+      params.push(startDate);
+    }
+    if (endDate) {
+      where += ' AND r.return_date <= ?';
+      params.push(endDate);
     }
 
-    await conn.execute(
-      `INSERT INTO sal_return_order (return_no, order_id, order_no, delivery_id, delivery_no, customer_id, customer_name, return_date, return_type, return_reason, total_qty, total_amount, warehouse_id, status, remark)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-      [
-        returnNo,
-        order_id || null,
-        order_no || null,
-        delivery_id || null,
-        delivery_no || null,
-        customer_id,
-        customer_name || null,
-        return_date || null,
-        return_type || 1,
-        return_reason || null,
-        totalQty,
-        totalAmount,
-        warehouse_id || null,
-        remark || null,
-      ]
+    const countRows: any = await query(
+      `SELECT COUNT(*) as total FROM sales_return r ${where}`,
+      params
+    );
+    const total = countRows[0]?.total || 0;
+    const totalPages = Math.ceil(total / pageSize);
+
+    const rows: any = await query(
+      `SELECT r.*, c.customer_name, c.customer_code,
+        (SELECT COUNT(*) FROM sales_return_item WHERE return_id = r.id) as item_count
+      FROM sales_return r
+      LEFT JOIN customers c ON r.customer_id = c.id
+      ${where}
+      ORDER BY r.id DESC
+      LIMIT ? OFFSET ?`,
+      [...params, pageSize, (page - 1) * pageSize]
     );
 
-    const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
-    const returnId = rows[0].id;
+    return paginatedResponse(rows, { page, pageSize, total, totalPages });
+  },
+  { permission: 'sales:view' }
+);
 
-    for (const item of items) {
-      await conn.execute(
-        `INSERT INTO sal_return_order_item (return_id, material_id, material_name, material_spec, quantity, unit, unit_price, amount, batch_no)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          returnId,
-          item.material_id,
-          item.material_name || null,
-          item.material_spec || null,
-          item.quantity,
-          item.unit || null,
-          item.unit_price || null,
-          (item.quantity || 0) * (item.unit_price || 0),
-          item.batch_no || null,
-        ]
-      );
+// 创建销售退货单
+export const POST = withAuthAndErrorHandler(
+  async (request: NextRequest, userInfo: UserInfo) => {
+    const body = await request.json();
+    const validation = validateRequestBody(body, ['customer_id', 'items']);
+
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
     }
 
-    return { id: returnId, return_no: returnNo };
-  });
+    if (!Array.isArray(body.items) || body.items.length === 0) {
+      return errorResponse('退货明细不能为空', 400, 400);
+    }
 
-  return successResponse(result, '退货单创建成功');
-}, '创建退货单失败');
+    // 生成退货单号
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const countRows: any = await query(
+      'SELECT COUNT(*) as cnt FROM sales_return WHERE return_no LIKE ?',
+      [`SR${dateStr}%`]
+    );
+    const seq = String((countRows[0]?.cnt || 0) + 1).padStart(3, '0');
+    const returnNo = `SR${dateStr}${seq}`;
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
-  const body = await request.json();
-  if (!body.id) return commonErrors.badRequest('退货单ID不能为空');
+    const conn = await (await import('@/lib/db')).getConnection();
 
-  const existing = await queryOne(
-    'SELECT id, status FROM sal_return_order WHERE id = ? AND deleted = 0',
-    [body.id]
-  );
-  if (!existing) return commonErrors.notFound('退货单不存在');
+    try {
+      await conn.beginTransaction();
 
-  if (body.status !== undefined) {
-    const result = await transaction(async (conn) => {
-      await conn.execute('UPDATE sal_return_order SET status = ? WHERE id = ?', [
-        body.status,
-        body.id,
-      ]);
+      let totalAmount = 0;
+      let totalTax = 0;
 
-      if (body.status === 3) {
-        const returnOrder = (await queryOne('SELECT * FROM sal_return_order WHERE id = ?', [
-          body.id,
-        ])) as any;
-        if (returnOrder && returnOrder.warehouse_id) {
-          const items = (await query('SELECT * FROM sal_return_order_item WHERE return_id = ?', [
-            body.id,
-          ])) as any[];
-          for (const item of items) {
-            await conn.execute(
-              `INSERT INTO inv_inventory (warehouse_id, material_id, quantity, status) VALUES (?, ?, ?, 1)
-               ON DUPLICATE KEY UPDATE quantity = quantity + ?`,
-              [returnOrder.warehouse_id, item.material_id, item.quantity, item.quantity]
-            );
-            await conn.execute(
-              `INSERT INTO inv_inventory_log (warehouse_id, material_id, change_type, change_qty, order_no, remark, create_time)
-               VALUES (?, ?, 'in', ?, ?, '退货入库', NOW())`,
-              [returnOrder.warehouse_id, item.material_id, item.quantity, returnOrder.return_no]
-            );
-          }
-          await conn.execute('UPDATE sal_return_order SET inbound_status = 1 WHERE id = ?', [
-            body.id,
-          ]);
-        }
+      for (const item of body.items) {
+        const amount = (item.return_qty || 0) * (item.unit_price || 0);
+        const tax = amount * ((item.tax_rate || 13) / 100);
+        totalAmount += amount;
+        totalTax += tax;
       }
 
-      return null;
-    });
+      const [result]: any = await conn.execute(
+        `INSERT INTO sales_return
+        (return_no, order_id, order_no, customer_id, customer_name, warehouse_id, return_date,
+         return_type, total_amount, tax_amount, grand_total, status, remark,
+         create_by, create_time)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          returnNo,
+          body.order_id || null,
+          body.order_no || '',
+          body.customer_id,
+          body.customer_name || '',
+          body.warehouse_id || 1,
+          body.return_date || new Date().toISOString().slice(0, 10),
+          body.return_type || 'quality',
+          totalAmount,
+          totalTax,
+          totalAmount + totalTax,
+          'pending',
+          body.remark || '',
+          userInfo.userId,
+        ]
+      );
 
-    return successResponse(result, '退货单状态更新成功');
-  }
+      const returnId = result.insertId;
 
-  const fields: string[] = [];
-  const values: any[] = [];
-  const allowedFields = ['return_reason', 'remark', 'inspection_status', 'inspection_result'];
-  for (const field of allowedFields) {
-    if (body[field] !== undefined) {
-      fields.push(`${field} = ?`);
-      values.push(body[field]);
+      for (let i = 0; i < body.items.length; i++) {
+        const item = body.items[i];
+        const amount = (item.return_qty || 0) * (item.unit_price || 0);
+        const tax = amount * ((item.tax_rate || 13) / 100);
+
+        await conn.execute(
+          `INSERT INTO sales_return_item
+          (return_id, line_no, order_item_id, material_id, material_code, material_name,
+           material_spec, unit, return_qty, unit_price, amount, tax_rate, tax_amount, line_total, remark)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            returnId, i + 1, item.order_item_id || null,
+            item.material_id, item.material_code || '', item.material_name || '',
+            item.material_spec || '', item.unit || '件',
+            item.return_qty, item.unit_price || 0,
+            amount, item.tax_rate || 13, tax, amount + tax,
+            item.remark || '',
+          ]
+        );
+      }
+
+      await conn.commit();
+      return successResponse({ id: returnId, return_no: returnNo }, '销售退货单创建成功');
+    } catch (error) {
+      await conn.rollback();
+      throw error;
+    } finally {
+      conn.release();
     }
-  }
-  if (fields.length > 0) {
-    values.push(body.id);
-    await execute(`UPDATE sal_return_order SET ${fields.join(', ')} WHERE id = ?`, values);
-  }
+  },
+  { permission: 'sales:create' }
+);
 
-  return successResponse(null, '退货单更新成功');
-}, '更新退货单失败');
+// 更新退货单状态
+export const PUT = withAuthAndErrorHandler(
+  async (request: NextRequest, userInfo: UserInfo) => {
+    const body = await request.json();
+    const { id, action } = body;
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  if (!id) return commonErrors.badRequest('退货单ID不能为空');
+    if (!id || !action) {
+      return errorResponse('参数不完整', 400, 400);
+    }
 
-  const existing = await queryOne(
-    'SELECT id, status FROM sal_return_order WHERE id = ? AND deleted = 0',
-    [parseInt(id)]
-  );
-  if (!existing) return commonErrors.notFound('退货单不存在');
+    const conn = await (await import('@/lib/db')).getConnection();
 
-  if ((existing as any).status >= 3) {
-    return errorResponse('已退货的单据不能删除', 400, 400);
-  }
+    try {
+      await conn.beginTransaction();
 
-  await execute('UPDATE sal_return_order SET deleted = 1 WHERE id = ?', [parseInt(id)]);
-  return successResponse(null, '退货单删除成功');
-}, '删除退货单失败');
+      const [rows]: any = await conn.execute('SELECT * FROM sales_return WHERE id = ?', [id]);
+      if (rows.length === 0) {
+        await conn.rollback();
+        return errorResponse('退货单不存在', 404, 404);
+      }
+
+      const returnOrder = rows[0];
+
+      if (action === 'approve') {
+        if (returnOrder.status !== 'pending') {
+          await conn.rollback();
+          return errorResponse('只有待审核状态才能审核', 400, 400);
+        }
+        await conn.execute(
+          'UPDATE sales_return SET status = ?, audit_by = ?, audit_time = NOW() WHERE id = ?',
+          ['approved', userInfo.userId, id]
+        );
+        await conn.commit();
+        return successResponse(null, '退货单审核成功');
+      }
+
+      if (action === 'complete') {
+        if (returnOrder.status !== 'approved') {
+          await conn.rollback();
+          return errorResponse('只有已审核状态才能完成退货', 400, 400);
+        }
+
+        // 退货入库 - 增加库存
+        const [items]: any = await conn.execute(
+          'SELECT * FROM sales_return_item WHERE return_id = ?',
+          [id]
+        );
+
+        for (const item of items) {
+          await conn.execute(
+            `UPDATE stock SET quantity = quantity + ?, update_time = NOW()
+             WHERE material_id = ? AND warehouse_id = ?`,
+            [item.return_qty, item.material_id, returnOrder.warehouse_id || 1]
+          );
+
+          await conn.execute(
+            `INSERT INTO stock_movement
+            (movement_type, movement_no, material_id, material_code, material_name,
+             warehouse_id, quantity, unit, order_no, order_type, remark, create_by, create_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            [
+              'sales_return', returnOrder.return_no,
+              item.material_id, item.material_code, item.material_name,
+              returnOrder.warehouse_id || 1,
+              item.return_qty, item.unit,
+              returnOrder.return_no, 'sales_return',
+              `销售退货入库：${returnOrder.return_no}`,
+              userInfo.userId,
+            ]
+          );
+        }
+
+        // 生成红字应收单
+        await conn.execute(
+          `INSERT INTO finance_receivable
+          (receivable_no, source_type, source_id, source_no, customer_id, customer_name,
+           amount, tax_amount, grand_total, status, remark, create_by, create_time)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+          [
+            `RSR${returnOrder.return_no.slice(2)}`,
+            'sales_return', id, returnOrder.return_no,
+            returnOrder.customer_id, returnOrder.customer_name,
+            -returnOrder.total_amount, -returnOrder.tax_amount, -returnOrder.grand_total,
+            'pending',
+            `销售退货红字应收：${returnOrder.return_no}`,
+            userInfo.userId,
+          ]
+        );
+
+        await conn.execute(
+          'UPDATE sales_return SET status = ? WHERE id = ?',
+          ['completed', id]
+        );
+
+        await conn.commit();
+        return successResponse(null, '退货完成，已增加库存并生成红字应收单');
+      }
+
+      if (action === 'cancel') {
+        if (returnOrder.status === 'completed') {
+          // 已完成的退货单需要回滚库存
+          const [items]: any = await conn.execute(
+            'SELECT * FROM sales_return_item WHERE return_id = ?',
+            [id]
+          );
+
+          for (const item of items) {
+            // 回滚库存（扣减之前增加的库存）
+            await conn.execute(
+              `UPDATE stock SET quantity = quantity - ?, update_time = NOW()
+               WHERE material_id = ? AND warehouse_id = ?`,
+              [item.return_qty, item.material_id, returnOrder.warehouse_id || 1]
+            );
+
+            // 记录库存流水
+            await conn.execute(
+              `INSERT INTO stock_movement
+              (movement_type, movement_no, material_id, material_code, material_name,
+               warehouse_id, quantity, unit, order_no, order_type, remark, create_by, create_time)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+              [
+                'sales_return_cancel',
+                returnOrder.return_no,
+                item.material_id,
+                item.material_code,
+                item.material_name,
+                returnOrder.warehouse_id || 1,
+                -item.return_qty,
+                item.unit,
+                returnOrder.return_no,
+                'sales_return_cancel',
+                `销售退货取消，回滚库存：${returnOrder.return_no}`,
+                userInfo.userId,
+              ]
+            );
+          }
+
+          // 删除红字应收单
+          await conn.execute(
+            `DELETE FROM finance_receivable WHERE source_type = 'sales_return' AND source_id = ?`,
+            [id]
+          );
+        }
+
+        await conn.execute('UPDATE sales_return SET status = ? WHERE id = ?', ['cancelled', id]);
+        await conn.commit();
+        return successResponse(null, '退货单已取消');
+      }
+
+      await conn.rollback();
+      return errorResponse('不支持的操作类型', 400, 400);
+    } catch (error) {
+      await conn.rollback();
+      throw error;
+    } finally {
+      conn.release();
+    }
+  },
+  { permission: 'sales:audit' }
+);

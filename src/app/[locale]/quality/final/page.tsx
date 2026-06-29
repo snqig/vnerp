@@ -70,6 +70,8 @@ import {
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { useTranslations } from 'next-intl';
+import { logger } from '@/lib/logger';
+import { mockQualityFinal, USE_MOCK } from '@/lib/mock-data';
 
 const authFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -124,14 +126,14 @@ interface FinalStats {
 }
 
 // 终检项目
-const finalInspectItems = [
-  { id: 'appearance', name: '外观检验', required: true },
-  { id: 'size', name: '尺寸检验', required: true },
-  { id: 'color', name: '颜色检验', required: true },
-  { id: 'printing', name: '印刷质量', required: true },
-  { id: 'packaging', name: '包装检验', required: true },
-  { id: 'quantity', name: '数量清点', required: true },
-  { id: 'label', name: '标签核对', required: true },
+const getFinalInspectItems = (t: (key: string) => string) => [
+  { id: 'appearance', name: t('appearanceCheck'), required: true },
+  { id: 'size', name: t('sizeCheck'), required: true },
+  { id: 'color', name: t('colorCheck'), required: true },
+  { id: 'printing', name: t('printingQuality'), required: true },
+  { id: 'packaging', name: t('packagingCheck'), required: true },
+  { id: 'quantity', name: t('quantityCheck'), required: true },
+  { id: 'label', name: t('labelCheck'), required: true },
 ];
 
 
@@ -141,23 +143,25 @@ export default function QualityFinalPage() {
   const t = useTranslations('Quality');
   const tc = useTranslations('Common');
 
+  const finalInspectItems = getFinalInspectItems(t);
+
   // 获取状态标签
   const getStatusBadge = (status: number) => {
     const statusMap: Record<number, { label: string; className: string }> = {
       0: {
-        label: '待排产',
+        label: t('pendingProduction'),
         className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
       },
       1: {
-        label: '已排产',
+        label: t('scheduled'),
         className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
       },
       2: {
-        label: '待终检',
+        label: t('pendingFinalInspection'),
         className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
       },
       3: {
-        label: '已终检',
+        label: t('finalInspectionCompleted'),
         className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
       },
     };
@@ -189,12 +193,30 @@ export default function QualityFinalPage() {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
 
   const fetchFinals = async () => {
+    logger.info({ module: 'Quality', action: 'fetchFinals' }, '开始获取终检数据');
     try {
       setLoading(true);
+
+      if (USE_MOCK) {
+        logger.info({ module: 'Quality', action: 'fetchFinals' }, '使用 mock 数据');
+        setFinals(mockQualityFinal);
+        const pendingCount = mockQualityFinal.filter((f: FinalInspect) => f.burdening_status === 1).length;
+        const inspectingCount = mockQualityFinal.filter((f: FinalInspect) => f.burdening_status === 2).length;
+        const passedCount = mockQualityFinal.filter((f: FinalInspect) => f.burdening_status === 3).length;
+        setStats({
+          pending: pendingCount,
+          inspecting: inspectingCount,
+          passed: passedCount,
+          today: mockQualityFinal.length,
+          week: mockQualityFinal.length,
+          passRate: mockQualityFinal.length > 0 ? Math.round((passedCount / mockQualityFinal.length) * 100) : 0,
+        });
+        return;
+      }
+
       const res = await authFetch('/api/quality/final');
       const data = await res.json();
       if (data.success) {
-        // 统一处理API返回的数据结构，可能是直接数组或包含list的对象
         const rawData = data.data;
         const rawList = Array.isArray(rawData) ? rawData : (rawData?.list || []);
         const list = rawList.map((item: any) => ({
@@ -237,9 +259,10 @@ export default function QualityFinalPage() {
           week: list.length,
           passRate: list.length > 0 ? Math.round((passedCount / list.length) * 100) : 0,
         });
+        logger.info({ module: 'Quality', action: 'fetchFinals' }, '终检数据获取成功', { count: list.length });
       }
     } catch (error) {
-      console.error('获取终检数据失败:', error);
+      logger.error({ module: 'Quality', action: 'fetchFinals' }, '获取终检数据失败', { error: (error as Error).message });
     } finally {
       setLoading(false);
     }
@@ -326,10 +349,10 @@ export default function QualityFinalPage() {
       );
 
       setIsFinalOpen(false);
-      alert('终检提交成功');
+      alert(t('finalInspectionSubmitted'));
     } catch (error) {
       console.error('提交终检失败:', error);
-      alert('提交失败');
+      alert(t('submissionFailed'));
     } finally {
       setLoading(false);
     }
@@ -373,7 +396,7 @@ export default function QualityFinalPage() {
       printWindow.document.write(`
         <html>
           <head>
-            <title>终检报告</title>
+            <title>${t('finalInspectionReport')}</title>
             <style>
               body { font-family: Arial, sans-serif; padding: 20px; }
               table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -405,13 +428,13 @@ export default function QualityFinalPage() {
   };
 
   return (
-    <MainLayout title="终检管理">
+    <MainLayout title={t('finalInspection')}>
       <div className="space-y-6">
         {/* 统计卡片 */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">待终检</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pendingFinalInspection')}</CardTitle>
               <Clock className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
@@ -421,7 +444,7 @@ export default function QualityFinalPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">终检中</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('finalInspecting')}</CardTitle>
               <ClipboardCheck className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
@@ -431,7 +454,7 @@ export default function QualityFinalPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">已终检</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('finalInspectionCompleted')}</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -441,7 +464,7 @@ export default function QualityFinalPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">今日终检</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('todayFinalInspection')}</CardTitle>
               <Calendar className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
@@ -451,7 +474,7 @@ export default function QualityFinalPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">本周终检</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('weekFinalInspection')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-indigo-600" />
             </CardHeader>
             <CardContent>
@@ -461,7 +484,7 @@ export default function QualityFinalPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">合格率</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('passRate')}</CardTitle>
               <Percent className="h-4 w-4 text-pink-600" />
             </CardHeader>
             <CardContent>
@@ -477,7 +500,7 @@ export default function QualityFinalPage() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="搜索流程卡号、工单号、产品..."
+                  placeholder={t('searchCardNoWorkOrderProduct')}
                   className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -486,11 +509,11 @@ export default function QualityFinalPage() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleGenerateReport}>
                   <FileText className="h-4 w-4 mr-2" />
-                  终检报告
+                  {t('finalInspectionReport')}
                 </Button>
                 <Button variant="outline" onClick={handlePrint}>
                   <Printer className="h-4 w-4 mr-2" />
-                  打印
+                  {tc('print')}
                 </Button>
                 <TableExportToolbar
                   selectedCount={selectedIds.length}
@@ -501,24 +524,24 @@ export default function QualityFinalPage() {
                   onExportPDF={() =>
                     exportTableToPDF(
                       filteredFinals,
-                      '成品检验报告',
+                      t('finalInspectionReport'),
                       [
-                        { key: 'card_no', header: '流程卡号' },
-                        { key: 'product_name', header: '产品名称' },
-                        { key: 'product_code', header: '产品编码' },
-                        { key: 'material_spec', header: '规格' },
+                        { key: 'card_no', header: tc('processCardNo') },
+                        { key: 'product_name', header: tc('productName') },
+                        { key: 'product_code', header: tc('productCode') },
+                        { key: 'material_spec', header: tc('specification') },
                         { key: 'quantity', header: tc('quantity') },
                         { key: 'status', header: tc('status') },
                       ],
-                      '成品检验报告'
+                      t('finalInspectionReport')
                     )
                   }
                   onExportXLS={() =>
-                    exportTableToXLS(filteredFinals, '成品检验报告', [
-                      { key: 'card_no', header: '流程卡号' },
-                      { key: 'product_name', header: '产品名称' },
-                      { key: 'product_code', header: '产品编码' },
-                      { key: 'material_spec', header: '规格' },
+                    exportTableToXLS(filteredFinals, t('finalInspectionReport'), [
+                      { key: 'card_no', header: tc('processCardNo') },
+                      { key: 'product_name', header: tc('productName') },
+                      { key: 'product_code', header: tc('productCode') },
+                      { key: 'material_spec', header: tc('specification') },
                       { key: 'quantity', header: tc('quantity') },
                       { key: 'status', header: tc('status') },
                     ])
@@ -526,16 +549,16 @@ export default function QualityFinalPage() {
                   onExportWORD={() =>
                     exportTableToWORD(
                       filteredFinals,
-                      '成品检验报告',
+                      t('finalInspectionReport'),
                       [
-                        { key: 'card_no', header: '流程卡号' },
-                        { key: 'product_name', header: '产品名称' },
-                        { key: 'product_code', header: '产品编码' },
-                        { key: 'material_spec', header: '规格' },
+                        { key: 'card_no', header: tc('processCardNo') },
+                        { key: 'product_name', header: tc('productName') },
+                        { key: 'product_code', header: tc('productCode') },
+                        { key: 'material_spec', header: tc('specification') },
                         { key: 'quantity', header: tc('quantity') },
                         { key: 'status', header: tc('status') },
                       ],
-                      '成品检验报告'
+                      t('finalInspectionReport')
                     )
                   }
                 />
@@ -547,9 +570,9 @@ export default function QualityFinalPage() {
         {/* 终检列表 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="all">全部 ({finals.length})</TabsTrigger>
-            <TabsTrigger value="pending">待终检 ({stats.pending})</TabsTrigger>
-            <TabsTrigger value="passed">已终检 ({stats.passed})</TabsTrigger>
+            <TabsTrigger value="all">{tc('all')} ({finals.length})</TabsTrigger>
+            <TabsTrigger value="pending">{t('pendingFinalInspection')} ({stats.pending})</TabsTrigger>
+            <TabsTrigger value="passed">{t('finalInspectionCompleted')} ({stats.passed})</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-4">
@@ -573,14 +596,14 @@ export default function QualityFinalPage() {
                           }}
                         />
                       </TableHead>
-                      <TableHead className="w-12 text-center">序号</TableHead>
+                      <TableHead className="w-12 text-center">{tc("serialNo")}</TableHead>
                       <SortableTableHeader
                         field="card_no"
                         sortField={sortField}
                         sortDirection={sortDirection}
                         onSort={handleSort}
                       >
-                        流程卡号
+                        {t('cardNo')}
                       </SortableTableHeader>
                       <SortableTableHeader
                         field="product_name"
@@ -588,21 +611,21 @@ export default function QualityFinalPage() {
                         sortDirection={sortDirection}
                         onSort={handleSort}
                       >
-                        产品信息
+                        {t('productInfo')}
                       </SortableTableHeader>
-                      <TableHead>客户</TableHead>
-                      <TableHead>规格要求</TableHead>
-                      <TableHead>数量</TableHead>
-                      <TableHead>包装方式</TableHead>
+                      <TableHead>{tc("customer")}</TableHead>
+                      <TableHead>{t('specificationRequirement')}</TableHead>
+                      <TableHead>{tc("quantity")}</TableHead>
+                      <TableHead>{t('packagingMethod')}</TableHead>
                       <SortableTableHeader
                         field="status"
                         sortField={sortField}
                         sortDirection={sortDirection}
                         onSort={handleSort}
                       >
-                        状态
+                        {tc('status')}
                       </SortableTableHeader>
-                      <TableHead>操作</TableHead>
+                      <TableHead>{tc("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -652,8 +675,8 @@ export default function QualityFinalPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col text-sm">
-                            <span>尺寸: {final.finished_size}</span>
-                            <span>公差: {final.tolerance}</span>
+                            <span>{t('size')}: {final.finished_size}</span>
+                            <span>{t('tolerance')}: {final.tolerance}</span>
                           </div>
                         </TableCell>
                         <TableCell>{(final.plan_qty ?? 0).toLocaleString()}</TableCell>
@@ -661,7 +684,7 @@ export default function QualityFinalPage() {
                           <div className="flex flex-col text-sm">
                             <span>{final.packing_type}</span>
                             <span className="text-xs text-muted-foreground">
-                              {final.slice_per_box}片/箱
+                              {final.slice_per_box}{t('slicePerBox')}
                             </span>
                           </div>
                         </TableCell>
@@ -678,7 +701,7 @@ export default function QualityFinalPage() {
                             {final.burdening_status === 2 && (
                               <Button size="sm" onClick={() => handleStartFinal(final)}>
                                 <ClipboardCheck className="h-4 w-4 mr-1" />
-                                终检
+                                {t('finalInspect')}
                               </Button>
                             )}
                             <DropdownMenu>
@@ -690,15 +713,15 @@ export default function QualityFinalPage() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleViewDetail(final)}>
                                   <Eye className="h-4 w-4 mr-2" />
-                                  查看详情
+                                  {t('viewDetail')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleViewQRCode(final)}>
                                   <QrCode className="h-4 w-4 mr-2" />
-                                  查看二维码
+                                  {t('viewQRCode')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleViewDetail(final)}>
                                   <FileText className="h-4 w-4 mr-2" />
-                                  终检记录
+                                  {t('finalInspectionRecords')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -721,69 +744,69 @@ export default function QualityFinalPage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    终检详情: {selectedFinal.card_no}
+                    {t('finalInspectionDetail')}: {selectedFinal.card_no}
                     {getStatusBadge(selectedFinal.burdening_status)}
                   </DialogTitle>
-                  <DialogDescription>查看终检详细信息</DialogDescription>
+                  <DialogDescription>{t('viewFinalInspectionDetail')}</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">流程信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('processInfo')}</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">流程卡号:</span>
+                        <span className="text-muted-foreground">{t('cardNo')}:</span>
                         <span>{selectedFinal.card_no}</span>
-                        <span className="text-muted-foreground">工单号:</span>
+                        <span className="text-muted-foreground">{t('workOrderNo')}:</span>
                         <span>{selectedFinal.work_order_no}</span>
-                        <span className="text-muted-foreground">主标编号:</span>
+                        <span className="text-muted-foreground">{t('mainLabelNo')}:</span>
                         <span>{selectedFinal.main_label_no}</span>
-                        <span className="text-muted-foreground">排产日期:</span>
+                        <span className="text-muted-foreground">{t('workOrderDate')}:</span>
                         <span>{selectedFinal.work_order_date}</span>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">产品信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('productInfo')}</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">产品名称:</span>
+                        <span className="text-muted-foreground">{tc('productName')}:</span>
                         <span>{selectedFinal.product_name}</span>
-                        <span className="text-muted-foreground">物料规格:</span>
+                        <span className="text-muted-foreground">{t('materialSpec')}:</span>
                         <span>{selectedFinal.material_spec}</span>
-                        <span className="text-muted-foreground">印刷方式:</span>
+                        <span className="text-muted-foreground">{t('printType')}:</span>
                         <span>{selectedFinal.print_type}</span>
-                        <span className="text-muted-foreground">计划数量:</span>
+                        <span className="text-muted-foreground">{t('planQty')}:</span>
                         <span>{(selectedFinal.plan_qty ?? 0).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">规格与包装</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">{t('specificationAndPackaging')}</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="space-y-2">
-                        <span className="text-muted-foreground">成品尺寸:</span>
+                        <span className="text-muted-foreground">{t('finishedSize')}:</span>
                         <span>{selectedFinal.finished_size}</span>
                       </div>
                       <div className="space-y-2">
-                        <span className="text-muted-foreground">公差要求:</span>
+                        <span className="text-muted-foreground">{t('toleranceRequirement')}:</span>
                         <span>{selectedFinal.tolerance}</span>
                       </div>
                       <div className="space-y-2">
-                        <span className="text-muted-foreground">包装方式:</span>
+                        <span className="text-muted-foreground">{t('packagingMethod')}:</span>
                         <span>{selectedFinal.packing_type}</span>
                       </div>
                       <div className="space-y-2">
-                        <span className="text-muted-foreground">装箱规格:</span>
+                        <span className="text-muted-foreground">{t('packingSpec')}:</span>
                         <span>
-                          {selectedFinal.slice_per_box}片/箱 × {selectedFinal.slice_per_bundle}片/捆
+                          {selectedFinal.slice_per_box}{t('slicePerBox')} × {selectedFinal.slice_per_bundle}{t('slicePerBundle')}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">工艺流程</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">{t('processFlow')}</h4>
                     <div className="flex items-center gap-2 flex-wrap">
                       {selectedFinal.process_flow1
                         ?.split('-')
@@ -808,7 +831,7 @@ export default function QualityFinalPage() {
 
                   <div className="flex justify-end gap-2 pt-4 border-t">
                     <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
-                      关闭
+                      {tc('close')}
                     </Button>
                     {selectedFinal.burdening_status === 2 && (
                       <Button
@@ -818,7 +841,7 @@ export default function QualityFinalPage() {
                         }}
                       >
                         <ClipboardCheck className="h-4 w-4 mr-2" />
-                        开始终检
+                        {t('startFinalInspection')}
                       </Button>
                     )}
                   </div>
@@ -836,30 +859,30 @@ export default function QualityFinalPage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Award className="h-5 w-5" />
-                    终检: {selectedFinal.card_no}
+                    {t('finalInspection')}: {selectedFinal.card_no}
                   </DialogTitle>
-                  <DialogDescription>记录终检结果</DialogDescription>
+                  <DialogDescription>{t('recordFinalInspectionResult')}</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">产品:</span>
+                        <span className="text-muted-foreground">{tc('product')}:</span>
                         <span className="ml-2 font-medium">{selectedFinal.product_name}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">客户:</span>
+                        <span className="text-muted-foreground">{tc('customer')}:</span>
                         <span className="ml-2">{selectedFinal.customer_name}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">规格:</span>
+                        <span className="text-muted-foreground">{tc('specification')}:</span>
                         <span className="ml-2">
                           {selectedFinal.finished_size} ({selectedFinal.tolerance})
                         </span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">计划数量:</span>
+                        <span className="text-muted-foreground">{t('planQty')}:</span>
                         <span className="ml-2">
                           {(selectedFinal.plan_qty ?? 0).toLocaleString()}
                         </span>
@@ -869,7 +892,7 @@ export default function QualityFinalPage() {
 
                   <div className="space-y-3">
                     <Label>
-                      终检项目 <span className="text-red-500">*</span>
+                      {t('finalInspectionItems')} <span className="text-red-500">*</span>
                     </Label>
                     <div className="grid grid-cols-2 gap-3">
                       {finalInspectItems.map((item) => (
@@ -891,31 +914,31 @@ export default function QualityFinalPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <Label>终检结果</Label>
+                    <Label>{t('finalInspectionResult')}</Label>
                     <Select
                       value={finalForm.result}
                       onValueChange={(value) => setFinalForm({ ...finalForm, result: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="选择终检结果" />
+                        <SelectValue placeholder={t('selectFinalInspectionResult')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="pass">
                           <div className="flex items-center">
                             <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                            合格入库
+                            {t('qualifiedInbound')}
                           </div>
                         </SelectItem>
                         <SelectItem value="fail">
                           <div className="flex items-center">
                             <XCircle className="h-4 w-4 mr-2 text-red-600" />
-                            不合格返工
+                            {t('unqualifiedRework')}
                           </div>
                         </SelectItem>
                         <SelectItem value="concession">
                           <div className="flex items-center">
                             <AlertTriangle className="h-4 w-4 mr-2 text-orange-600" />
-                            让步接收
+                            {t('concessionAccept')}
                           </div>
                         </SelectItem>
                       </SelectContent>
@@ -924,7 +947,7 @@ export default function QualityFinalPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <Label>合格数量</Label>
+                      <Label>{t('qualifiedQty')}</Label>
                       <Input
                         type="number"
                         value={finalForm.qualifiedQty}
@@ -937,7 +960,7 @@ export default function QualityFinalPage() {
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label>不良数量</Label>
+                      <Label>{t('defectQty')}</Label>
                       <Input
                         type="number"
                         value={finalForm.defectQty}
@@ -950,7 +973,7 @@ export default function QualityFinalPage() {
 
                   {finalForm.defectQty > 0 && (
                     <div className="space-y-3">
-                      <Label>不良原因</Label>
+                      <Label>{t('defectReason')}</Label>
                       <Select
                         value={finalForm.defectReason}
                         onValueChange={(value) =>
@@ -958,43 +981,43 @@ export default function QualityFinalPage() {
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="选择不良原因" />
+                          <SelectValue placeholder={t('selectDefectReason')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="size">尺寸不良</SelectItem>
-                          <SelectItem value="color">颜色不良</SelectItem>
-                          <SelectItem value="appearance">外观不良</SelectItem>
-                          <SelectItem value="printing">印刷不良</SelectItem>
-                          <SelectItem value="packaging">包装不良</SelectItem>
-                          <SelectItem value="quantity">数量不符</SelectItem>
-                          <SelectItem value="other">其他</SelectItem>
+                          <SelectItem value="size">{t('sizeDefect')}</SelectItem>
+                          <SelectItem value="color">{t('colorDefect')}</SelectItem>
+                          <SelectItem value="appearance">{t('appearanceDefect')}</SelectItem>
+                          <SelectItem value="printing">{t('printingDefect')}</SelectItem>
+                          <SelectItem value="packaging">{t('packagingDefect')}</SelectItem>
+                          <SelectItem value="quantity">{t('quantityMismatch')}</SelectItem>
+                          <SelectItem value="other">{tc('other')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   )}
 
                   <div className="space-y-3">
-                    <Label>包装方式确认</Label>
+                    <Label>{t('packagingMethodConfirm')}</Label>
                     <Input
                       value={finalForm.packMethod}
                       onChange={(e) => setFinalForm({ ...finalForm, packMethod: e.target.value })}
-                      placeholder="确认包装方式"
+                      placeholder={t('confirmPackagingMethod')}
                     />
                   </div>
 
                   <div className="space-y-3">
-                    <Label>终检员</Label>
+                    <Label>{t('finalInspector')}</Label>
                     <Input
-                      placeholder="输入终检员姓名"
+                      placeholder={t('enterFinalInspectorName')}
                       value={finalForm.inspector}
                       onChange={(e) => setFinalForm({ ...finalForm, inspector: e.target.value })}
                     />
                   </div>
 
                   <div className="space-y-3">
-                    <Label>备注</Label>
+                    <Label>{tc("remark")}</Label>
                     <Textarea
-                      placeholder="输入终检备注..."
+                      placeholder={t('enterFinalInspectionRemark')}
                       value={finalForm.remark}
                       onChange={(e) => setFinalForm({ ...finalForm, remark: e.target.value })}
                       rows={3}
@@ -1003,10 +1026,10 @@ export default function QualityFinalPage() {
 
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => setIsFinalOpen(false)}>
-                      取消
+                      {tc('cancel')}
                     </Button>
                     <Button onClick={handleSubmitFinal} disabled={loading}>
-                      {loading ? '提交中...' : '提交终检'}
+                      {loading ? tc('submitting') : t('submitFinalInspection')}
                     </Button>
                   </div>
                 </div>
@@ -1021,16 +1044,16 @@ export default function QualityFinalPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                终检报告
+                {t('finalInspectionReport')}
               </DialogTitle>
-              <DialogDescription>查看终检汇总报告</DialogDescription>
+              <DialogDescription>{t('viewFinalInspectionSummary')}</DialogDescription>
             </DialogHeader>
 
             <div ref={printRef} className="space-y-6 py-4">
               <div className="text-center border-b pb-4">
-                <h1 className="text-2xl font-bold">终检报告</h1>
+                <h1 className="text-2xl font-bold">{t('finalInspectionReport')}</h1>
                 <p className="text-muted-foreground mt-2">
-                  生成时间: {format(new Date(), 'yyyy-MM-dd HH:mm:ss')}
+                  {t('generatedTime')}: {format(new Date(), 'yyyy-MM-dd HH:mm:ss')}
                 </p>
               </div>
 
@@ -1038,52 +1061,52 @@ export default function QualityFinalPage() {
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-blue-600">{stats.pending}</div>
-                    <div className="text-sm text-muted-foreground">待终检</div>
+                    <div className="text-sm text-muted-foreground">{t('pendingFinalInspection')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-orange-600">{stats.inspecting}</div>
-                    <div className="text-sm text-muted-foreground">终检中</div>
+                    <div className="text-sm text-muted-foreground">{t('finalInspecting')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-green-600">{stats.passed}</div>
-                    <div className="text-sm text-muted-foreground">已终检</div>
+                    <div className="text-sm text-muted-foreground">{t('finalInspectionCompleted')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-purple-600">{stats.today}</div>
-                    <div className="text-sm text-muted-foreground">今日终检</div>
+                    <div className="text-sm text-muted-foreground">{t('todayFinalInspection')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-indigo-600">{stats.week}</div>
-                    <div className="text-sm text-muted-foreground">本周终检</div>
+                    <div className="text-sm text-muted-foreground">{t('weekFinalInspection')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-pink-600">{stats.passRate}%</div>
-                    <div className="text-sm text-muted-foreground">合格率</div>
+                    <div className="text-sm text-muted-foreground">{t('passRate')}</div>
                   </CardContent>
                 </Card>
               </div>
 
               <div>
-                <h3 className="font-semibold mb-4">终检明细</h3>
+                <h3 className="font-semibold mb-4">{t('finalInspectionDetails')}</h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>流程卡号</TableHead>
-                      <TableHead>产品名称</TableHead>
-                      <TableHead>客户</TableHead>
-                      <TableHead>规格</TableHead>
-                      <TableHead>数量</TableHead>
-                      <TableHead>状态</TableHead>
+                      <TableHead>{t('cardNo')}</TableHead>
+                      <TableHead>{tc('productName')}</TableHead>
+                      <TableHead>{tc("customer")}</TableHead>
+                      <TableHead>{tc("specification")}</TableHead>
+                      <TableHead>{tc("quantity")}</TableHead>
+                      <TableHead>{tc("status")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1104,26 +1127,26 @@ export default function QualityFinalPage() {
               <div className="grid grid-cols-3 gap-8 pt-8 border-t mt-8">
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">终检员签字</div>
+                  <div className="text-sm text-muted-foreground">{t('finalInspectorSignature')}</div>
                 </div>
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">质量主管签字</div>
+                  <div className="text-sm text-muted-foreground">{t('qualityManagerSignature')}</div>
                 </div>
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">审核签字</div>
+                  <div className="text-sm text-muted-foreground">{t('auditorSignature')}</div>
                 </div>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button variant="outline" onClick={() => setIsReportOpen(false)}>
-                关闭
+                {tc('close')}
               </Button>
               <Button onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-2" />
-                打印报告
+                {t('printReport')}
               </Button>
             </div>
           </DialogContent>
@@ -1135,9 +1158,9 @@ export default function QualityFinalPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <QrCode className="h-5 w-5" />
-                流程卡二维码
+                {t('cardQRCode')}
               </DialogTitle>
-              <DialogDescription>扫描二维码查看流程卡信息</DialogDescription>
+              <DialogDescription>{t('scanQRCodeToViewCard')}</DialogDescription>
             </DialogHeader>
 
             {selectedFinal && (
@@ -1151,37 +1174,37 @@ export default function QualityFinalPage() {
                     />
                   ) : (
                     <div className="w-64 h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span className="text-muted-foreground">生成中...</span>
+                      <span className="text-muted-foreground">{t('generating')}</span>
                     </div>
                   )}
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">流程卡号:</span>
+                    <span className="text-muted-foreground">{t('cardNo')}:</span>
                     <span className="font-medium">{selectedFinal.card_no}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">产品名称:</span>
+                    <span className="text-muted-foreground">{tc('productName')}:</span>
                     <span>{selectedFinal.product_name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">客户:</span>
+                    <span className="text-muted-foreground">{tc('customer')}:</span>
                     <span>{selectedFinal.customer_name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">数量:</span>
+                    <span className="text-muted-foreground">{tc('quantity')}:</span>
                     <span>{(selectedFinal.plan_qty ?? 0).toLocaleString()}</span>
                   </div>
                 </div>
 
                 <div className="flex justify-center gap-2">
                   <Button variant="outline" onClick={() => setIsQRCodeOpen(false)}>
-                    关闭
+                    {tc('close')}
                   </Button>
                   <Button onClick={handleDownloadQRCode}>
                     <Download className="h-4 w-4 mr-2" />
-                    下载二维码
+                    {t('downloadQRCode')}
                   </Button>
                 </div>
               </div>

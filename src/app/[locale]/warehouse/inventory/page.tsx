@@ -35,7 +35,13 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Download,
+  Snowflake,
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { AdvancedSearch, FilterField, ActiveFilter } from '@/components/ui/advanced-search';
+import { BatchToolbar, BatchAction } from '@/components/ui/batch-toolbar';
+import { useToast } from '@/hooks/use-toast';
 
 export default function InventoryPage() {
   // 添加翻译钩子
@@ -64,6 +70,77 @@ export default function InventoryPage() {
   const [status, setStatus] = useState('all');
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
+  const { toast } = useToast();
+
+  // 高级搜索字段配置
+  const filterFields: FilterField[] = [
+    { key: 'material_code', label: t('materialCode'), type: 'text', placeholder: t('materialCode') },
+    { key: 'material_name', label: t('material'), type: 'text', placeholder: t('material') },
+    { key: 'specification', label: t('specification'), type: 'text', placeholder: t('specification') },
+    { key: 'batch_no', label: t('batchNo'), type: 'text', placeholder: t('batchNo') },
+    {
+      key: 'status',
+      label: tc('status'),
+      type: 'select',
+      options: [
+        { label: tc('normal'), value: 'normal' },
+        { label: tc('frozen'), value: 'frozen' },
+        { label: tc('expired'), value: 'expired' },
+      ],
+    },
+    { key: 'expiry_date_start', label: t('expiryDate') + '(起)', type: 'date' },
+    { key: 'expiry_date_end', label: t('expiryDate') + '(止)', type: 'date' },
+  ];
+
+  // 批量操作配置
+  const batchActions: BatchAction[] = [
+    {
+      key: 'freeze',
+      label: t('freeze'),
+      icon: <Snowflake className="h-3 w-3" />,
+      onClick: async (ids) => {
+        try {
+          const res = await authFetch('/api/warehouse/freeze', {
+            method: 'POST',
+            body: JSON.stringify({ inventoryIds: ids, action: 'freeze' }),
+          });
+          const result = await res.json();
+          if (result.success) {
+            toast({ title: tc('frozenCount', { count: ids.length }) });
+            setSelectedIds([]);
+            fetchInventory();
+          } else {
+            toast({ title: result.message || tc('freezeFailed'), variant: 'destructive' });
+          }
+        } catch (e) {
+          toast({ title: tc('freezeFailed'), variant: 'destructive' });
+        }
+      },
+      confirm: tc('confirmFreezeSelected'),
+    },
+    {
+      key: 'export',
+      label: tc('export'),
+      icon: <Download className="h-3 w-3" />,
+      onClick: async (ids) => {
+        try {
+          const res = await authFetch(`/api/warehouse/inventory/export?ids=${ids.join(',')}`);
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `inventory_${new Date().toISOString().slice(0, 10)}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast({ title: tc('exportSuccess') });
+        } catch (e) {
+          toast({ title: tc('exportFailed'), variant: 'destructive' });
+        }
+      },
+    },
+  ];
 
   // 使用翻译的状态映射
   const getStatusBadge = (status: string) => {
@@ -363,10 +440,57 @@ export default function InventoryPage() {
                   <RefreshCw className="h-4 w-4 mr-1" />
                   {tc('refresh')}
                 </Button>
+                <AdvancedSearch
+                  fields={filterFields}
+                  onSearch={(filters) => {
+                    const newFilters: ActiveFilter[] = [];
+                    Object.entries(filters).forEach(([key, value]) => {
+                      if (value) {
+                        const field = filterFields.find(f => f.key === key);
+                        if (field) {
+                          const option = field.options?.find(o => o.value === value);
+                          newFilters.push({
+                            key,
+                            label: field.label,
+                            value,
+                            displayValue: option?.label || value,
+                          });
+                        }
+                      }
+                    });
+                    setActiveFilters(newFilters);
+                    // 将筛选条件应用到搜索
+                    Object.entries(filters).forEach(([key, value]) => {
+                      if (key === 'status' && value) setStatus(value);
+                    });
+                    const kw = filters.material_name || filters.material_code || '';
+                    if (kw) setKeyword(kw);
+                    fetchInventory();
+                  }}
+                  onReset={() => {
+                    setActiveFilters([]);
+                    setKeyword('');
+                    setWarehouseId('all');
+                    setStatus('all');
+                    fetchInventory();
+                  }}
+                  activeFilters={activeFilters}
+                  onRemoveFilter={(key) => {
+                    setActiveFilters(prev => prev.filter(f => f.key !== key));
+                    if (key === 'status') setStatus('all');
+                  }}
+                />
               </div>
             </div>
           </CardHeader>
           <CardContent>
+            <BatchToolbar
+              selectedIds={selectedIds}
+              totalItems={inventoryItems.length}
+              onSelectAll={() => setSelectedIds(sortedInventory.map((i: any) => i.id))}
+              onClearSelection={() => setSelectedIds([])}
+              actions={batchActions}
+            />
             {loading ? (
               <div className="text-center py-4">{tc('loading')}</div>
             ) : inventoryItems.length === 0 ? (
@@ -375,6 +499,15 @@ export default function InventoryPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={selectedIds.length === sortedInventory.length && sortedInventory.length > 0}
+                        onCheckedChange={(checked) => {
+                          if (checked) setSelectedIds(sortedInventory.map((i: any) => i.id));
+                          else setSelectedIds([]);
+                        }}
+                      />
+                    </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('batch_no')}
@@ -460,6 +593,15 @@ export default function InventoryPage() {
                 <TableBody>
                   {sortedInventory.map((item: any) => (
                     <TableRow key={item.id}>
+                      <TableCell className="w-[40px]">
+                        <Checkbox
+                          checked={selectedIds.includes(item.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) setSelectedIds(prev => [...prev, item.id]);
+                            else setSelectedIds(prev => prev.filter(id => id !== item.id));
+                          }}
+                        />
+                      </TableCell>
                       <TableCell className="font-mono">
                         <div className="flex items-center gap-2">
                           <Barcode className="h-4 w-4 text-muted-foreground" />

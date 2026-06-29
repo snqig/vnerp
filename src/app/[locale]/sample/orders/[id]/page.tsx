@@ -262,7 +262,7 @@ export default function SampleOrderDetailPage() {
                 <div className="font-medium">{order.material_code || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">尺寸</div>
+                <div className="text-sm text-muted-foreground">{tc("size")}</div>
                 <div className="font-medium">{order.size_spec || '-'}</div>
               </div>
               <div>
@@ -290,7 +290,7 @@ export default function SampleOrderDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">数量</div>
+                  <div className="text-sm text-muted-foreground">{tc("quantity")}</div>
                   <div className="font-medium">{order.quantity || 0} PCS</div>
                 </div>
                 <div>
@@ -342,7 +342,7 @@ export default function SampleOrderDetailPage() {
             <CardContent>
               <div className="grid grid-cols-4 gap-4 mb-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">状态</div>
+                  <div className="text-sm text-muted-foreground">{tc("status")}</div>
                   <span
                     className={`px-2 py-1 rounded text-xs ${statusMap[order.status]?.color || ''}`}
                   >
@@ -380,7 +380,7 @@ export default function SampleOrderDetailPage() {
               </div>
               {order.remark && (
                 <div>
-                  <div className="text-sm text-muted-foreground">备注</div>
+                  <div className="text-sm text-muted-foreground">{tc("remark")}</div>
                   <div className="text-sm mt-1">{order.remark}</div>
                 </div>
               )}

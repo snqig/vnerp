@@ -309,7 +309,7 @@ export default function SPCPage() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
                     <div className="space-y-2">
-                      <Label>物料</Label>
+                      <Label>{tc("material")}</Label>
                       <Select value={xbarMaterialId} onValueChange={setXbarMaterialId}>
                         <SelectTrigger>
                           <SelectValue placeholder="选择物料" />
@@ -337,7 +337,7 @@ export default function SPCPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>开始日期</Label>
+                      <Label>{tc("startDate")}</Label>
                       <Input
                         type="date"
                         value={xbarStartDate}
@@ -347,7 +347,7 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>结束日期</Label>
+                      <Label>{tc("endDate")}</Label>
                       <Input
                         type="date"
                         value={xbarEndDate}
@@ -681,11 +681,11 @@ export default function SPCPage() {
                             <TableHeader>
                               <TableRow>
                                 <TableHead>子组</TableHead>
-                                <TableHead>时间</TableHead>
+                                <TableHead>{tc("time")}</TableHead>
                                 <TableHead>测量值</TableHead>
                                 <TableHead className="text-right">X均值</TableHead>
                                 <TableHead className="text-right">极差R</TableHead>
-                                <TableHead>状态</TableHead>
+                                <TableHead>{tc("status")}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -765,7 +765,7 @@ export default function SPCPage() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div className="space-y-2">
-                      <Label>开始日期</Label>
+                      <Label>{tc("startDate")}</Label>
                       <Input
                         type="date"
                         value={paretoStartDate}
@@ -775,7 +775,7 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>结束日期</Label>
+                      <Label>{tc("endDate")}</Label>
                       <Input
                         type="date"
                         value={paretoEndDate}
@@ -924,7 +924,7 @@ export default function SPCPage() {
                             <TableHeader>
                               <TableRow>
                                 <TableHead>不良类型</TableHead>
-                                <TableHead className="text-right">数量</TableHead>
+                                <TableHead className="text-right">{tc("quantity")}</TableHead>
                                 <TableHead className="text-right">占比</TableHead>
                                 <TableHead className="text-right">累计占比</TableHead>
                                 <TableHead>分类</TableHead>
@@ -989,7 +989,7 @@ export default function SPCPage() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div className="space-y-2">
-                      <Label>开始日期</Label>
+                      <Label>{tc("startDate")}</Label>
                       <Input
                         type="date"
                         value={pChartStartDate}
@@ -999,7 +999,7 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>结束日期</Label>
+                      <Label>{tc("endDate")}</Label>
                       <Input
                         type="date"
                         value={pChartEndDate}
@@ -1196,7 +1196,7 @@ export default function SPCPage() {
                                 <TableHead className="text-right">检验数</TableHead>
                                 <TableHead className="text-right">不良数</TableHead>
                                 <TableHead className="text-right">不良率</TableHead>
-                                <TableHead>状态</TableHead>
+                                <TableHead>{tc("status")}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>

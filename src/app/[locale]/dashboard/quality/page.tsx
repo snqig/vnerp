@@ -19,6 +19,8 @@ import {
   Target,
   AlertCircle,
   Zap,
+  ClipboardCheck,
+  Calendar,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -207,6 +209,7 @@ function LineChart({
 
 // 水平条形图组件
 function HorizontalBarChart({ data }: { data: { defect_type: string; count: number }[] }) {
+  const tc = useTranslations('Common');
   if (data.length === 0) return null;
   const maxCount = Math.max(...data.map((d) => d.count), 1);
 
@@ -226,7 +229,7 @@ function HorizontalBarChart({ data }: { data: { defect_type: string; count: numb
               }}
             />
             <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
-              {d.count} 次
+              {d.count}
             </span>
           </div>
         </div>
@@ -615,79 +618,74 @@ export default function QualityDashboard() {
               <BarChart3 className="h-4 w-4 text-cyan-400" />
               <span className="text-sm font-medium text-white/80">{t('inspectionTypeDistribution')}</span>
             </div>
-            <div className="p-4">
-              {data.byType.length === 0 ? (
-                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
-                ) : (
-                  <div className="space-y-2">
-
             {/* 检验类型分布 */}
             <div className="p-4">
-              {data.inspectionTypeDistribution.length === 0 ? (
+              {data.processQuality.length === 0 ? (
                 <p className="text-white/40 text-center py-8">{tc('noData')}</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('productName')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('inspectionCount')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('passCount')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('passRate')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('status')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.processQuality.map((p, i) => {
-                      const rate =
-                        p.inspect_count > 0 ? Math.round((p.passed / p.inspect_count) * 100) : 0;
-                      return (
-                        <tr
-                          key={i}
-                          className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                        >
-                          <td className="py-2 px-3 text-white/80">{p.product_name}</td>
-                          <td className="py-2 px-3 text-white/60">{p.inspect_count}</td>
-                          <td className="py-2 px-3 text-white/60">{p.passed}</td>
-                          <td className="py-2 px-3">
-                            <div className="flex items-center gap-2">
-                              <div className="bg-white/10 rounded-full h-2 w-24 relative overflow-hidden">
-                                <div
-                                  className="h-full rounded-full transition-all"
-                                  style={{
-                                    width: `${rate}%`,
-                                    background:
-                                      rate >= 95
-                                        ? 'linear-gradient(90deg, #10b981, #34d399)'
-                                        : rate >= 80
-                                          ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
-                                          : 'linear-gradient(90deg, #ef4444, #f87171)',
-                                  }}
-                                />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('productName')}</th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('inspectionCount')}</th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('passCount')}</th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('passRate')}</th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('status')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.processQuality.map((p, i) => {
+                        const rate =
+                          p.inspect_count > 0 ? Math.round((p.passed / p.inspect_count) * 100) : 0;
+                        return (
+                          <tr
+                            key={i}
+                            className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                          >
+                            <td className="py-2 px-3 text-white/80">{p.product_name}</td>
+                            <td className="py-2 px-3 text-white/60">{p.inspect_count}</td>
+                            <td className="py-2 px-3 text-white/60">{p.passed}</td>
+                            <td className="py-2 px-3">
+                              <div className="flex items-center gap-2">
+                                <div className="bg-white/10 rounded-full h-2 w-24 relative overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all"
+                                    style={{
+                                      width: `${rate}%`,
+                                      background:
+                                        rate >= 95
+                                          ? 'linear-gradient(90deg, #10b981, #34d399)'
+                                          : rate >= 80
+                                            ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+                                            : 'linear-gradient(90deg, #ef4444, #f87171)',
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-xs text-white/60 w-10">{rate}%</span>
                               </div>
-                              <span className="text-xs text-white/60 w-10">{rate}%</span>
-                            </div>
-                          </td>
-                          <td className="py-2 px-3">
-                            <span
-                              className={`px-2 py-0.5 rounded text-xs ${
-                                rate >= 95
-                                  ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                  : rate >= 80
-                                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                              }`}
-                            >
-                              {rate >= 95 ? tc('excellent') : rate >= 80 ? tc('good') : tc('needImprovement')}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                            </td>
+                            <td className="py-2 px-3">
+                              <span
+                                className={`px-2 py-0.5 rounded text-xs ${
+                                  rate >= 95
+                                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                    : rate >= 80
+                                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                }`}
+                              >
+                                {rate >= 95 ? tc('excellent') : rate >= 80 ? tc('good') : tc('needImprovement')}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

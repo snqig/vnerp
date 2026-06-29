@@ -75,8 +75,11 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { LucideIcon } from 'lucide-react';
+import { logger } from '@/lib/logger';
+import { mockWarehouseInbounds, mockWarehouses, mockSuppliers, USE_MOCK, mockApiListResponse } from '@/lib/mock-data';
 
 // 接口定义（符合 inv_production_inbound 表结构）
 interface InboundItem {
@@ -203,33 +206,33 @@ interface ScanResult {
 }
 
 // 状态配置
-const statusConfig: Record<string, { label: string; color: string; icon: LucideIcon }> = {
+const statusConfig: Record<string, { labelKey: string; color: string; icon: LucideIcon }> = {
   draft: {
-    label: tc('draft'),
+    labelKey: 'draft',
     color:
       'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-800',
     icon: Clock,
   },
   pending: {
-    label: tc('pending'),
+    labelKey: 'pending',
     color:
       'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800',
     icon: AlertCircle,
   },
   approved: {
-    label: tc('approved'),
+    labelKey: 'approved',
     color:
       'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800',
     icon: CheckCircle2,
   },
   rejected: {
-    label: tc('rejected'),
+    labelKey: 'rejected',
     color:
       'bg-red-100 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-800',
     icon: X,
   },
   completed: {
-    label: tc('completed'),
+    labelKey: 'completed',
     color:
       'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900 dark:text-purple-200 dark:border-purple-800',
     icon: CheckCircle2,
@@ -357,7 +360,15 @@ export default function InboundManagementPage() {
 
   // 获取入库单列表
   const fetchInboundRecords = useCallback(async () => {
+    logger.info({ module: 'Warehouse', action: 'fetchInboundRecords' }, '开始获取入库单列表', { searchQuery, statusFilter });
     try {
+      if (USE_MOCK) {
+        logger.info({ module: 'Warehouse', action: 'fetchInboundRecords' }, '使用 mock 数据');
+        const records = mockWarehouseInbounds;
+        setInboundRecords(records);
+        return;
+      }
+
       const params = new URLSearchParams();
       if (searchQuery) params.append('keyword', searchQuery);
       if (statusFilter !== 'all') params.append('status', statusFilter);
@@ -372,13 +383,13 @@ export default function InboundManagementPage() {
 
       if (result.success) {
         const records = result.data?.list || result.data || [];
-        console.log('[DEBUG] 设置入库记录数量:', records.length);
+        logger.info({ module: 'Warehouse', action: 'fetchInboundRecords' }, '入库单列表获取成功', { count: records.length });
         setInboundRecords(records);
       } else {
-        console.log('[DEBUG] API返回失败:', result.message);
+        logger.warn({ module: 'Warehouse', action: 'fetchInboundRecords' }, 'API返回失败', { message: result.message });
       }
     } catch (error) {
-      console.error('获取入库单列表失败:', error);
+      logger.error({ module: 'Warehouse', action: 'fetchInboundRecords' }, '获取入库单列表失败', { error: (error as Error).message });
     }
   }, [searchQuery, statusFilter, authFetch]);
 
@@ -531,7 +542,7 @@ export default function InboundManagementPage() {
       console.error('生成二维码失败:', error);
       toast.error(t('qrCodeGenerateFailed'));
     }
-  };
+  }, [t]);
 
   const handleCutting = useCallback(async () => {
     if (!currentLabel) {
@@ -547,27 +558,21 @@ export default function InboundManagementPage() {
       return;
     }
 
-    const widths = cuttingForm.cutWidths.split('+').map(Number);
-    const hasInvalid = widths.some((w) => isNaN(w) || w <= 0);
+    try {
+      const widths = cuttingForm.cutWidths.split('+').map(Number);
+      const hasInvalid = widths.some((w) => isNaN(w) || w <= 0);
 
-    const spec = currentLabel.specification || currentLabel.materialSpec || '';
-    const parsedWidth = parseSpecWidth(spec);
-    if (parsedWidth !== null) {
-      const totalCutWidth = widths.reduce((sum, w) => sum + w, 0);
-      if (totalCutWidth > parsedWidth) {
-        toast.error(t('specParseFailed'));
-        return;
+      const spec = currentLabel.specification || currentLabel.materialSpec || '';
+      const specWidth = parseSpecWidth(spec);
+      if (specWidth !== null) {
+        const totalCutWidth = widths.reduce((sum, w) => sum + w, 0);
+        if (totalCutWidth > specWidth) {
+          toast.error(t('specParseFailed'));
+          return;
+        }
       }
 
-      const widths = cuttingForm.cutWidths
-        .split('+')
-        .map((w) => parseFloat(w.trim()))
-        .filter((w) => !isNaN(w) && w > 0);
-      const totalWidth = widths.reduce((s, w) => s + w, 0);
-      if (totalWidth > specWidth) {
-        toast.error(t('cutWidthExceeds', { total: totalWidth, spec: specWidth }));
-        return;
-      }
+      const materialName = currentLabel.materialName || currentLabel.material_name || currentLabel.item?.material_name || '';
 
       const recordId = currentLabel.record?.id || currentLabel.id;
       const itemIdx = currentLabel.item?.idx ?? currentLabel.itemIdx ?? 0;
@@ -614,7 +619,7 @@ export default function InboundManagementPage() {
               `${currentLabel.order_no || currentLabel.labelNo}-C${idx + 1}`,
             orderNo: currentLabel.order_no || currentLabel.orderNo || currentLabel.labelNo || '',
             materialName: nl.isRemainder
-              ? `余料${currentLabel.material_name || currentLabel.materialName || ''}`
+              ? `${t('remainderMaterial')}${currentLabel.material_name || currentLabel.materialName || ''}`
               : currentLabel.material_name || currentLabel.materialName || '',
             specification:
               nl.newSpec ||
@@ -643,7 +648,7 @@ export default function InboundManagementPage() {
       console.error('分切失败:', error);
       toast.error(t('cutFailed'));
     }
-  };
+  }, [currentLabel, cuttingForm, user, t]);
 
   const handleQRCodeView = useCallback(async (label: PrintLabel) => {
     if (!label.id) {
@@ -825,23 +830,23 @@ export default function InboundManagementPage() {
 
   // 状态选项
   const statusOptions = [
-    { value: 'all', label: '全部状态' },
+    { value: 'all', label: tc('all') },
     { value: 'draft', label: tc('draft') },
     { value: 'pending', label: tc('pending') },
     { value: 'approved', label: tc('approved') },
-    { value: 'rejected', label: '已拒绝' },
+    { value: 'rejected', label: tc('rejected') },
   ];
 
   // 日期范围选项
   const dateRangeOptions = [
-    { value: 'all', label: '全部时间' },
-    { value: 'today', label: '今日' },
-    { value: 'week', label: '本周' },
-    { value: 'month', label: '本月' },
+    { value: 'all', label: tc('all') },
+    { value: 'today', label: tc('today') },
+    { value: 'week', label: tc('thisWeek') },
+    { value: 'month', label: tc('thisMonth') },
   ];
 
   return (
-    <MainLayout title="入库管理">
+    <MainLayout title={t('inboundManagement')}>
       <div className="space-y-6">
         {/* 操作按钮 */}
         <motion.div
@@ -855,23 +860,23 @@ export default function InboundManagementPage() {
             className="gap-2 bg-green-600 hover:bg-green-700"
           >
             <Plus className="w-4 h-4" />
-            新增
+            {tc('add')}
           </Button>
           <Button onClick={() => setIsMixedAddDialogOpen(true)} variant="outline" className="gap-2">
             <Beaker className="w-4 h-4" />
-            混合料新增
+            {t('mixedMaterialAdd')}
           </Button>
           <Button onClick={() => setIsGenerateDialogOpen(true)} variant="outline" className="gap-2">
             <Barcode className="w-4 h-4" />
-            生成标签
+            {t('generateLabel')}
           </Button>
           <Button onClick={() => setIsCuttingDialogOpen(true)} variant="outline" className="gap-2">
             <Scissors className="w-4 h-4" />
-            物料分切
+            {t('materialCutting')}
           </Button>
           <Button onClick={() => setIsQRScanDialogOpen(true)} variant="outline" className="gap-2">
             <ScanLine className="w-4 h-4" />
-            二维码查询
+            {t('qrCodeQuery')}
           </Button>
           <div className="w-px h-8 bg-slate-200 dark:bg-slate-600 mx-2" />
           <Button
@@ -910,16 +915,16 @@ export default function InboundManagementPage() {
             className="gap-2 bg-blue-600 hover:bg-blue-700"
           >
             <Printer className="w-4 h-4" />
-            打印二维码
+            {t('printQRCode')}
           </Button>
           <div className="w-px h-8 bg-slate-200 dark:bg-slate-600 mx-2" />
           <Button onClick={handleRefresh} variant="outline" className="gap-2" disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            刷新
+            {tc('refresh')}
           </Button>
           <Button onClick={() => setSearchQuery('')} variant="outline" className="gap-2">
             <RotateCcw className="w-4 h-4" />
-            重置
+            {tc('reset')}
           </Button>
         </motion.div>
 
@@ -934,11 +939,11 @@ export default function InboundManagementPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">今日入库</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">{t('todayInbound')}</p>
                     <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-1">
                       {totalInboundToday.toLocaleString()}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">单位：单</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('unitOrders')}</p>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/60 flex items-center justify-center">
                     <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -957,11 +962,11 @@ export default function InboundManagementPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">本月累计入库</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">{t('monthInboundTotal')}</p>
                     <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">
                       {totalInboundMonth.toLocaleString()}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">单位：单</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('unitOrders')}</p>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/60 flex items-center justify-center">
                     <Boxes className="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -980,14 +985,14 @@ export default function InboundManagementPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">待审核</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">{tc("pending")}</p>
                     <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">
                       {
                         inboundRecords.filter((r) => r.status === 'draft' || r.status === 'pending')
                           .length
                       }
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">单位：单</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('unitOrders')}</p>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/60 flex items-center justify-center">
                     <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
@@ -1006,13 +1011,13 @@ export default function InboundManagementPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">已生成标签</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">{t('labelsGenerated')}</p>
                     <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-1">
                       {inboundRecords
                         .filter((r) => r.status === 'approved' || r.status === 'completed')
                         .reduce((sum, r) => sum + (r.items?.length || 0), 0)}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">单位：个</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('unitLabels')}</p>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/60 flex items-center justify-center">
                     <QrCode className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -1034,15 +1039,15 @@ export default function InboundManagementPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <ArrowDownLeft className="h-5 w-5" />
-                  入库记录
+                  {t('inboundRecords')}
                 </CardTitle>
                 {selectedRecords.length > 0 && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">
-                      已选 {selectedRecords.length} 条
+                      {t('selectedCount', { count: selectedRecords.length })}
                     </span>
                     <Button size="sm" variant="outline" onClick={() => setSelectedRecords([])}>
-                      取消选择
+                      {t('cancelSelect')}
                     </Button>
                     <Button
                       size="sm"
@@ -1078,16 +1083,16 @@ export default function InboundManagementPage() {
                       }}
                     >
                       <Printer className="w-3 h-3" />
-                      打印选中二维码
+                      {t('printSelectedQRCode')}
                     </Button>
                   </div>
                 )}
               </div>
-              <CardDescription>管理所有入库记录</CardDescription>
+              <CardDescription>{t('manageInboundRecords')}</CardDescription>
             </CardHeader>
             <CardContent>
               {inboundRecords.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">暂无入库记录</div>
+                <div className="text-center py-8 text-gray-500">{t('noInboundRecords')}</div>
               ) : (
                 <div className="space-y-3">
                   {/* 全选行 */}
@@ -1107,8 +1112,8 @@ export default function InboundManagementPage() {
                     />
                     <span className="text-sm text-muted-foreground">
                       {selectedRecords.length === inboundRecords.length && inboundRecords.length > 0
-                        ? '取消全选'
-                        : '全选'}
+                        ? t('cancelSelectAll')
+                        : t('selectAll')}
                     </span>
                   </div>
                   {inboundRecords.map((record) => {
@@ -1140,23 +1145,23 @@ export default function InboundManagementPage() {
                         </div>
                         <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-4 items-center">
                           <div>
-                            <p className="text-xs text-gray-500">入库单号</p>
+                            <p className="text-xs text-gray-500">{t('inboundNo')}</p>
                             <p className="font-medium text-sm">{record.order_no}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">物料</p>
+                            <p className="text-xs text-gray-500">{tc("material")}</p>
                             <p className="font-medium text-sm">{materialSummary}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">规格/数量</p>
+                            <p className="text-xs text-gray-500">{t('specQty')}</p>
                             <p className="text-sm">{specQty}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-gray-500">供应商</p>
+                            <p className="text-xs text-gray-500">{tc("supplier")}</p>
                             <p className="text-sm">{record.supplier_name || '-'}</p>
                           </div>
                           <div>
-                            <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
+                            <Badge className={statusInfo.color}>{tc(statusInfo.labelKey)}</Badge>
                           </div>
                         </div>
                         <div className="flex gap-2 ml-4">
@@ -1187,7 +1192,7 @@ export default function InboundManagementPage() {
                               }}
                             >
                               <QrCode className="w-3 h-3" />
-                              打印二维码
+                              {t('printQRCode')}
                             </Button>
                           )}
                           {(record.status === 'draft' || record.status === 'pending') && (
@@ -1219,7 +1224,7 @@ export default function InboundManagementPage() {
                                 }}
                               >
                                 <Edit className="w-3 h-3 mr-1" />
-                                编辑
+                                {tc('edit')}
                               </Button>
                               <Button
                                 size="sm"
@@ -1230,7 +1235,7 @@ export default function InboundManagementPage() {
                                 }}
                               >
                                 <CheckCircle2 className="w-3 h-3 mr-1" />
-                                审核
+                                {tc('audit')}
                               </Button>
                             </>
                           )}
@@ -1238,7 +1243,7 @@ export default function InboundManagementPage() {
                             size="sm"
                             variant="outline"
                             onClick={async () => {
-                              if (!confirm('确定要删除此入库记录吗？')) return;
+                              if (!confirm(t('confirmDeleteInbound'))) return;
                               try {
                                 const response = await authFetch(
                                   `/api/warehouse/inbound?id=${record.id}`,
@@ -1249,10 +1254,7 @@ export default function InboundManagementPage() {
                                 const result = await response.json();
                                 if (result.success) {
                                   toast.success(t('deleteSuccess'));
-                                  if (confirmDelete
-                                  ) {
-                                    confirmDelete.resolve();
-                                  }
+                                  await fetchInboundRecords();
                                 } else {
                                   toast.error(result.message || t('deleteFailed'));
                                 }
@@ -1262,7 +1264,7 @@ export default function InboundManagementPage() {
                             }}
                           >
                             <Trash2 className="w-3 h-3 mr-1" />
-                            删除
+                            {tc('delete')}
                           </Button>
                         </div>
                       </div>
@@ -1286,24 +1288,24 @@ export default function InboundManagementPage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <QrCode className="h-5 w-5" />
-                    标签管理
+                    {t('labelManagement')}
                   </CardTitle>
                   <CardDescription>
-                    管理入库原料的二维码标签（基于已审核入库单自动生成）
+                    {t('labelManagementDesc')}
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   {selectedLabels.size > 0 && (
                     <>
                       <span className="text-sm text-muted-foreground">
-                        已选 {selectedLabels.size} 个标签
+                        {t('selectedLabelsCount', { count: selectedLabels.size })}
                       </span>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => setSelectedLabels(new Set())}
                       >
-                        取消选择
+                        {t('cancelSelect')}
                       </Button>
                       <Button
                         size="sm"
@@ -1334,13 +1336,13 @@ export default function InboundManagementPage() {
                         }}
                       >
                         <Printer className="w-3 h-3" />
-                        打印选中标签
+                        {t('printSelectedLabels')}
                       </Button>
                     </>
                   )}
                   <Button variant="outline" onClick={() => handlePrintLabels()}>
                     <Printer className="w-4 h-4 mr-2" />
-                    打印全部标签
+                    {t('printAllLabels')}
                   </Button>
                 </div>
               </div>
@@ -1349,7 +1351,7 @@ export default function InboundManagementPage() {
               {inboundRecords.filter((r) => r.status === 'approved' || r.status === 'completed')
                 .length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
-                  暂无已审核的入库记录，审核后将自动生成标签
+                  {t('noApprovedRecordsForLabels')}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1379,7 +1381,7 @@ export default function InboundManagementPage() {
                           }}
                         />
                         <span className="text-sm text-muted-foreground">
-                          {allSelected ? '取消全选' : '全选标签'}
+                          {allSelected ? t('cancelSelectAllLabels') : t('selectAllLabels')}
                         </span>
                       </div>
                     );
@@ -1429,29 +1431,29 @@ export default function InboundManagementPage() {
                               <p className="text-sm text-gray-600">{label.materialName}</p>
                             </div>
                           </div>
-                          <Badge className="bg-green-100 text-green-700">已入库</Badge>
+                          <Badge className="bg-green-100 text-green-700">{tc("stockedIn")}</Badge>
                         </div>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-gray-500">入库单号：</span>
+                            <span className="text-gray-500">{t('inboundNo')}：</span>
                             <span className="font-medium">{label.orderNo}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-500">规格：</span>
+                            <span className="text-gray-500">{tc('specification')}：</span>
                             <span>{label.specification || '-'}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-500">数量/单位：</span>
+                            <span className="text-gray-500">{t('qtyUnit')}：</span>
                             <span>
                               {label.item?.quantity || 0} {label.item?.unit || ''}
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-500">供应商：</span>
+                            <span className="text-gray-500">{tc('supplier')}：</span>
                             <span>{label.supplier || '-'}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-500">入库时间：</span>
+                            <span className="text-gray-500">{t('inboundTime')}：</span>
                             <span>
                               {label.inboundTime
                                 ? new Date(label.inboundTime).toLocaleString('zh-CN')
@@ -1467,7 +1469,7 @@ export default function InboundManagementPage() {
                             className="flex-1 min-w-[80px]"
                           >
                             <QrCode className="w-3 h-3 mr-1" />
-                            二维码
+                            {t('qrCode')}
                           </Button>
                           <Button
                             size="sm"
@@ -1479,7 +1481,7 @@ export default function InboundManagementPage() {
                             }}
                           >
                             <Printer className="w-3 h-3 mr-1" />
-                            打印
+                            {tc('print')}
                           </Button>
                           {isCuttableMaterial(label.materialName) && (
                             <Button
@@ -1503,17 +1505,17 @@ export default function InboundManagementPage() {
                               className="flex-1 min-w-[80px] text-orange-600 border-orange-200 hover:bg-orange-50"
                             >
                               <Scissors className="w-3 h-3 mr-1" />
-                              分切
+                              {t('cut')}
                             </Button>
                           )}
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleQRScan(label.qrCode)}
+                            onClick={() => handleQRCodeView(label)}
                             className="flex-1 min-w-[80px]"
                           >
                             <Eye className="w-3 h-3 mr-1" />
-                            详情
+                            {tc('details')}
                           </Button>
                         </div>
                       </motion.div>
@@ -1530,10 +1532,10 @@ export default function InboundManagementPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Scissors className="h-5 w-5" />
-                物料分切
+                {t('materialCutting')}
               </DialogTitle>
               <DialogDescription>
-                将卷材按宽幅分切，仅PET/PC/PVC等薄膜材料支持分切
+                {t('cuttingDesc')}
               </DialogDescription>
             </DialogHeader>
             {currentLabel &&
@@ -1546,43 +1548,43 @@ export default function InboundManagementPage() {
                     <div className="bg-slate-50 dark:bg-gray-800 rounded-lg p-4 space-y-2">
                       <div className="flex items-center gap-2 mb-2">
                         <Package className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium">源标签信息</span>
+                        <span className="font-medium">{t('sourceLabelInfo')}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
-                          <span className="text-gray-500">标签编号：</span>
+                          <span className="text-gray-500">{t('labelNo')}：</span>
                           <span className="font-medium">
                             {currentLabel.order_no || currentLabel.labelNo}-
                             {(currentLabel.item?.idx ?? currentLabel.itemIdx ?? 0) + 1}
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-500">物料名称：</span>
+                          <span className="text-gray-500">{tc('materialName')}：</span>
                           <span className="font-medium">
                             {currentLabel.material_name || currentLabel.materialName}
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-500">原始规格：</span>
+                          <span className="text-gray-500">{t('originalSpec')}：</span>
                           <span className="font-medium">
                             {currentLabel.material_spec || currentLabel.specification || '-'}
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-500">原始宽幅：</span>
+                          <span className="text-gray-500">{t('originalWidth')}：</span>
                           <span className="font-medium">
-                            {specWidth ? `${specWidth}mm` : '未解析'}
+                            {specWidth ? `${specWidth}mm` : t('notParsed')}
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-500">数量：</span>
+                          <span className="text-gray-500">{tc('quantity')}：</span>
                           <span className="font-medium">
                             {currentLabel.quantity || currentLabel.item?.quantity || 0}{' '}
                             {currentLabel.unit || currentLabel.item?.unit || ''}
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-500">供应商：</span>
+                          <span className="text-gray-500">{tc('supplier')}：</span>
                           <span className="font-medium">
                             {currentLabel.supplier_name || currentLabel.supplier || '-'}
                           </span>
@@ -1591,16 +1593,16 @@ export default function InboundManagementPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>分切宽幅（mm）</Label>
+                      <Label>{t('cutWidthMM')}</Label>
                       <Input
-                        placeholder="用+号分隔，例如：300+400+300"
+                        placeholder={t('cutWidthPlaceholder')}
                         value={cuttingForm.cutWidths}
                         onChange={(e) =>
                           setCuttingForm((prev) => ({ ...prev, cutWidths: e.target.value }))
                         }
                       />
                       <p className="text-xs text-gray-500">
-                        多个宽度用+号分隔，分切后宽幅总和不能超过原始宽幅
+                        {t('cutWidthHint')}
                       </p>
                     </div>
 
@@ -1619,11 +1621,11 @@ export default function InboundManagementPage() {
                             className={`rounded-lg p-4 space-y-3 ${isValid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}
                           >
                             <div className="flex items-center justify-between">
-                              <span className="font-medium text-sm">分切预览</span>
+                              <span className="font-medium text-sm">{t('cutPreview')}</span>
                               {isValid ? (
-                                <Badge className="bg-green-100 text-green-700">有效</Badge>
+                                <Badge className="bg-green-100 text-green-700">{tc('valid')}</Badge>
                               ) : (
-                                <Badge className="bg-red-100 text-red-700">宽幅超出</Badge>
+                                <Badge className="bg-red-100 text-red-700">{t('widthExceeded')}</Badge>
                               )}
                             </div>
                             <div className="space-y-1">
@@ -1648,10 +1650,10 @@ export default function InboundManagementPage() {
                                     className="flex items-center justify-between text-sm bg-card rounded px-3 py-2"
                                   >
                                     <span>
-                                      分切{i + 1}：{w}mm
+                                      {t('cutNum', { num: i + 1 })}：{w}mm
                                     </span>
                                     <span className="text-gray-600">
-                                      规格：{cutSpec} / 数量：{cutQty}{' '}
+                                      {tc('specification')}：{cutSpec} / {tc('quantity')}：{cutQty}{' '}
                                       {currentLabel.unit || currentLabel.item?.unit || ''}
                                     </span>
                                   </div>
@@ -1675,9 +1677,9 @@ export default function InboundManagementPage() {
                                       : 0;
                                   return (
                                     <div className="flex items-center justify-between text-sm bg-yellow-50 rounded px-3 py-2 border border-yellow-200">
-                                      <span>余料：{remainWidth}mm</span>
+                                      <span>{t('remainderMaterial')}：{remainWidth}mm</span>
                                       <span className="text-yellow-700">
-                                        规格：{remSpec} / 数量：{remQty}{' '}
+                                        {tc('specification')}：{remSpec} / {tc('quantity')}：{remQty}{' '}
                                         {currentLabel.unit || currentLabel.item?.unit || ''}
                                       </span>
                                     </div>
@@ -1685,12 +1687,12 @@ export default function InboundManagementPage() {
                                 })()}
                             </div>
                             <div className="text-xs text-gray-500 flex justify-between">
-                              <span>原始宽幅：{specWidth}mm</span>
+                              <span>{t('originalWidth')}：{specWidth}mm</span>
                               <span>
-                                分切合计：{totalWidth}mm{' '}
+                                {t('cutTotal')}：{totalWidth}mm{' '}
                                 {remainWidth >= 0
-                                  ? `| 余料：${remainWidth}mm`
-                                  : `| 超出：${Math.abs(remainWidth)}mm`}
+                                  ? `| ${t('remainderMaterial')}：${remainWidth}mm`
+                                  : `| ${t('exceeded')}：${Math.abs(remainWidth)}mm`}
                               </span>
                             </div>
                           </div>
@@ -1698,13 +1700,13 @@ export default function InboundManagementPage() {
                       })()}
 
                     <div className="space-y-2">
-                      <Label>操作人</Label>
+                      <Label>{t('operator')}</Label>
                       <Input value={cuttingForm.operatorName} disabled />
                     </div>
                     <div className="space-y-2">
-                      <Label>备注</Label>
+                      <Label>{tc("remark")}</Label>
                       <Textarea
-                        placeholder="分切备注信息"
+                        placeholder={t('cuttingRemarkPlaceholder')}
                         value={cuttingForm.remark}
                         onChange={(e) =>
                           setCuttingForm((prev) => ({ ...prev, remark: e.target.value }))
@@ -1716,11 +1718,11 @@ export default function InboundManagementPage() {
               })()}
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCuttingDialogOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
               <Button onClick={handleCutting} className="bg-blue-600 hover:bg-blue-700">
                 <Scissors className="w-4 h-4 mr-1" />
-                确认分切
+                {t('confirmCut')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1732,10 +1734,10 @@ export default function InboundManagementPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Scissors className="h-5 w-5 text-orange-600" />
-                分切完成 - 二维码标签
+                {t('cuttingComplete')} - {t('qrCodeLabel')}
               </DialogTitle>
               <DialogDescription>
-                分切成功！共生成 {printLabels.length} 个新标签，可预览或打印二维码标签
+                {t('cuttingSuccessDesc', { count: printLabels.length })}
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
@@ -1761,20 +1763,20 @@ export default function InboundManagementPage() {
                         <Badge
                           className={`${isRemainder ? 'bg-yellow-100 text-yellow-700' : 'bg-orange-100 text-orange-700'} text-xs shrink-0 ml-2`}
                         >
-                          {isRemainder ? '余料' : '分切'}
+                          {isRemainder ? t('remainderMaterial') : t('cut')}
                         </Badge>
                       </div>
                       <div className="space-y-1 text-xs text-gray-600">
                         <div className="flex justify-between">
-                          <span>源标签：</span>
+                          <span>{t('sourceLabel')}：</span>
                           <span className="font-medium">{label.sourceLabelNo}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>入库单号：</span>
+                          <span>{t('inboundNo')}：</span>
                           <span className="font-medium">{label.orderNo}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>{isRemainder ? '余料宽幅：' : '分切宽幅：'}</span>
+                          <span>{isRemainder ? t('remainderWidth') : t('cutWidth')}：</span>
                           <span
                             className={`font-medium ${isRemainder ? 'text-yellow-700' : 'text-orange-700'}`}
                           >
@@ -1782,17 +1784,17 @@ export default function InboundManagementPage() {
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span>规格：</span>
+                          <span>{tc('specification')}：</span>
                           <span>{label.specification || '-'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>数量/单位：</span>
+                          <span>{t('qtyUnit')}：</span>
                           <span className="font-medium">
                             {label.quantity} {label.unit}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span>供应商：</span>
+                          <span>{tc('supplier')}：</span>
                           <span>{label.supplier || '-'}</span>
                         </div>
                       </div>
@@ -1803,7 +1805,7 @@ export default function InboundManagementPage() {
             </div>
             <DialogFooter className="flex gap-2">
               <Button variant="outline" onClick={() => setIsCuttingResultOpen(false)}>
-                关闭
+                {tc('close')}
               </Button>
               <Button
                 variant="outline"
@@ -1886,7 +1888,7 @@ export default function InboundManagementPage() {
                 }}
               >
                 <Eye className="w-4 h-4" />
-                预览
+                {tc('preview')}
               </Button>
               <Button
                 className="gap-2 bg-blue-600 hover:bg-blue-700"
@@ -1969,7 +1971,7 @@ export default function InboundManagementPage() {
                 }}
               >
                 <Printer className="w-4 h-4" />
-                打印
+                {tc('print')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1979,8 +1981,8 @@ export default function InboundManagementPage() {
         <Dialog open={isQRCodeDialogOpen} onOpenChange={setIsQRCodeDialogOpen}>
           <DialogContent className="sm:max-w-md" resizable>
             <DialogHeader>
-              <DialogTitle>二维码标签</DialogTitle>
-              <DialogDescription>扫描二维码查看物料信息</DialogDescription>
+              <DialogTitle>{t('qrCodeLabel')}</DialogTitle>
+              <DialogDescription>{t('scanQRCodeDesc')}</DialogDescription>
             </DialogHeader>
             <div className="py-4 flex flex-col items-center">
               {qrCodeDataUrl && (
@@ -1988,10 +1990,10 @@ export default function InboundManagementPage() {
                   <img src={qrCodeDataUrl} alt="QR Code" />
                 </div>
               )}
-              <p className="text-center text-sm text-gray-600">扫描上方二维码查看物料详细信息</p>
+              <p className="text-center text-sm text-gray-600">{t('scanQRCodeDetail')}</p>
             </div>
             <DialogFooter>
-              <Button onClick={() => setIsQRCodeDialogOpen(false)}>关闭</Button>
+              <Button onClick={() => setIsQRCodeDialogOpen(false)}>{tc("close")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -2002,9 +2004,9 @@ export default function InboundManagementPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Printer className="h-5 w-5" />
-                二维码标签打印预览
+                {t('qrCodeLabelPrintPreview')}
               </DialogTitle>
-              <DialogDescription>共 {printLabels.length} 个标签待打印</DialogDescription>
+              <DialogDescription>{t('labelsToPrint', { count: printLabels.length })}</DialogDescription>
             </DialogHeader>
             <div id="print-area" className="py-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -2026,31 +2028,31 @@ export default function InboundManagementPage() {
                           </p>
                         </div>
                         <Badge className="bg-green-100 text-green-700 text-xs shrink-0 ml-2">
-                          已入库
+                          {tc('stockedIn')}
                         </Badge>
                       </div>
                       <div className="space-y-1 text-xs text-gray-600">
                         <div className="flex justify-between">
-                          <span>入库单号：</span>
+                          <span>{t('inboundNo')}：</span>
                           <span className="font-medium">{label.orderNo}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>规格：</span>
+                          <span>{tc('specification')}：</span>
                           <span>{label.specification || '-'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>数量/单位：</span>
+                          <span>{t('qtyUnit')}：</span>
                           <span className="font-medium">
                             {label.quantity || label.item?.quantity || 0}{' '}
                             {label.unit || label.item?.unit || ''}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span>供应商：</span>
+                          <span>{tc('supplier')}：</span>
                           <span>{label.supplier || '-'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>入库时间：</span>
+                          <span>{t('inboundTime')}：</span>
                           <span>
                             {label.inboundTime
                               ? new Date(label.inboundTime).toLocaleString('zh-CN')
@@ -2065,7 +2067,7 @@ export default function InboundManagementPage() {
             </div>
             <DialogFooter className="flex gap-2">
               <Button variant="outline" onClick={() => setIsPrintPreviewOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
               <Button
                 className="gap-2 bg-blue-600 hover:bg-blue-700"
@@ -2091,7 +2093,7 @@ export default function InboundManagementPage() {
                           <div class="label-no">${label.labelNo}</div>
                           <div class="material-name">${label.materialName}</div>
                         </div>
-                        <div class="status-badge">已入库</div>
+                        <div class="status-badge">{tc("stockedIn")}</div>
                       </div>
                       <div class="label-info">
                         <div class="info-row"><span class="info-label">入库单号：</span><span class="info-value">${label.orderNo}</span></div>
@@ -2149,7 +2151,7 @@ export default function InboundManagementPage() {
                 }}
               >
                 <Printer className="w-4 h-4" />
-                打印
+                {tc('print')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2159,8 +2161,8 @@ export default function InboundManagementPage() {
         <Dialog open={isQRScanDialogOpen} onOpenChange={setIsQRScanDialogOpen}>
           <DialogContent className="sm:max-w-md" resizable>
             <DialogHeader>
-              <DialogTitle>扫码查询结果</DialogTitle>
-              <DialogDescription>物料详细信息</DialogDescription>
+              <DialogTitle>{t('scanQueryResult')}</DialogTitle>
+              <DialogDescription>{t('materialDetailInfo')}</DialogDescription>
             </DialogHeader>
             <div className="py-4">
               {scanResult ? (
@@ -2176,19 +2178,19 @@ export default function InboundManagementPage() {
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-500">规格：</span>
+                      <span className="text-gray-500">{tc('specification')}：</span>
                       <span>{scanResult.specification}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">供应商：</span>
+                      <span className="text-gray-500">{tc('supplier')}：</span>
                       <span>{scanResult.supplier}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">入库时间：</span>
+                      <span className="text-gray-500">{t('inboundTime')}：</span>
                       <span>{scanResult.inboundTime}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-500">状态：</span>
+                      <span className="text-gray-500">{tc('status')}：</span>
                       <Badge
                         className={
                           scanResult.status === 'IN'
@@ -2196,7 +2198,7 @@ export default function InboundManagementPage() {
                             : 'bg-orange-100 text-orange-700'
                         }
                       >
-                        {scanResult.status === 'IN' ? '已入库' : '已出库'}
+                        {scanResult.status === 'IN' ? tc('stockedIn') : tc('stockedOut')}
                       </Badge>
                     </div>
                   </div>
@@ -2204,12 +2206,12 @@ export default function InboundManagementPage() {
               ) : (
                 <div className="text-center py-8">
                   <QrCode className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">请扫码查询</p>
+                  <p className="text-gray-500">{t('pleaseScanQuery')}</p>
                 </div>
               )}
             </div>
             <DialogFooter>
-              <Button onClick={() => setIsQRScanDialogOpen(false)}>关闭</Button>
+              <Button onClick={() => setIsQRScanDialogOpen(false)}>{tc("close")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -2218,23 +2220,23 @@ export default function InboundManagementPage() {
         <Dialog open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
           <DialogContent className="sm:max-w-md" resizable>
             <DialogHeader>
-              <DialogTitle>生成标签</DialogTitle>
-              <DialogDescription>为入库原料生成二维码标签</DialogDescription>
+              <DialogTitle>{t('generateLabel')}</DialogTitle>
+              <DialogDescription>{t('generateLabelDesc')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="labelMaterialName">物料名称</Label>
-                <Input id="labelMaterialName" placeholder="输入物料名称" />
+                <Label htmlFor="labelMaterialName">{tc('materialName')}</Label>
+                <Input id="labelMaterialName" placeholder={t('enterMaterialName')} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="labelSpecification">规格</Label>
-                <Input id="labelSpecification" placeholder="例如：100M×1.5M" />
+                <Label htmlFor="labelSpecification">{tc("specification")}</Label>
+                <Input id="labelSpecification" placeholder={t('specExample')} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="labelSupplier">供应商</Label>
+                <Label htmlFor="labelSupplier">{tc("supplier")}</Label>
                 <Select value={labelSupplier} onValueChange={setLabelSupplier}>
                   <SelectTrigger id="labelSupplier">
-                    <SelectValue placeholder="选择供应商" />
+                    <SelectValue placeholder={t('selectSupplier')} />
                   </SelectTrigger>
                   <SelectContent>
                     {suppliers
@@ -2250,9 +2252,9 @@ export default function InboundManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsGenerateDialogOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={() => setIsGenerateDialogOpen(false)}>生成</Button>
+              <Button onClick={() => setIsGenerateDialogOpen(false)}>{t('generate')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -2261,85 +2263,85 @@ export default function InboundManagementPage() {
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>新增入库单</DialogTitle>
-              <DialogDescription>录入原料入库信息</DialogDescription>
+              <DialogTitle>{t('addInboundOrder')}</DialogTitle>
+              <DialogDescription>{t('enterInboundInfo')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="add-materialCode">物料编码</Label>
+                  <Label htmlFor="add-materialCode">{tc('materialCode')}</Label>
                   <Input
                     id="add-materialCode"
                     value={formData.materialCode}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, materialCode: e.target.value }))
                     }
-                    placeholder="输入物料编码"
+                    placeholder={t('enterMaterialCode')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="add-materialName">物料名称</Label>
+                  <Label htmlFor="add-materialName">{tc('materialName')}</Label>
                   <Input
                     id="add-materialName"
                     value={formData.materialName}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, materialName: e.target.value }))
                     }
-                    placeholder="输入物料名称"
+                    placeholder={t('enterMaterialName')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="add-specification">规格</Label>
+                  <Label htmlFor="add-specification">{tc("specification")}</Label>
                   <Input
                     id="add-specification"
                     value={formData.specification}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, specification: e.target.value }))
                     }
-                    placeholder="如 100M×1.5M"
+                    placeholder={t('specExample2')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="add-quantity">数量</Label>
+                  <Label htmlFor="add-quantity">{tc("quantity")}</Label>
                   <Input
                     id="add-quantity"
                     type="number"
                     value={formData.quantity}
                     onChange={(e) => setFormData((prev) => ({ ...prev, quantity: e.target.value }))}
-                    placeholder="输入数量"
+                    placeholder={t('enterQuantity')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="add-unit">单位</Label>
+                  <Label htmlFor="add-unit">{tc("unit")}</Label>
                   <Select
                     value={formData.unit}
                     onValueChange={(value) => setFormData((prev) => ({ ...prev, unit: value }))}
                   >
                     <SelectTrigger id="add-unit">
-                      <SelectValue placeholder="选择单位" />
+                      <SelectValue placeholder={t('selectUnit')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="卷">卷</SelectItem>
-                      <SelectItem value="张">张</SelectItem>
-                      <SelectItem value="个">个</SelectItem>
-                      <SelectItem value="箱">箱</SelectItem>
-                      <SelectItem value="kg">kg</SelectItem>
-                      <SelectItem value="㎡">㎡</SelectItem>
+                      <SelectItem value="卷">{t('unitRoll')}</SelectItem>
+                      <SelectItem value="张">{t('unitSheet')}</SelectItem>
+                      <SelectItem value="个">{t('unitPiece')}</SelectItem>
+                      <SelectItem value="箱">{t('unitBox')}</SelectItem>
+                      <SelectItem value="kg">{t('unitKg')}</SelectItem>
+                      <SelectItem value="㎡">{t('unitSqm')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="add-supplier">供应商</Label>
+                  <Label htmlFor="add-supplier">{tc("supplier")}</Label>
                   <Select
                     value={formData.supplier}
                     onValueChange={(value) => setFormData((prev) => ({ ...prev, supplier: value }))}
                   >
                     <SelectTrigger id="add-supplier">
-                      <SelectValue placeholder="选择供应商" />
+                      <SelectValue placeholder={t('selectSupplier')} />
                     </SelectTrigger>
                     <SelectContent>
                       {suppliers
@@ -2355,7 +2357,7 @@ export default function InboundManagementPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="add-warehouse">仓库</Label>
+                  <Label htmlFor="add-warehouse">{tc("warehouse")}</Label>
                   <Select
                     value={formData.warehouse}
                     onValueChange={(value) =>
@@ -2363,7 +2365,7 @@ export default function InboundManagementPage() {
                     }
                   >
                     <SelectTrigger id="add-warehouse">
-                      <SelectValue placeholder="选择仓库" />
+                      <SelectValue placeholder={t('selectWarehouse')} />
                     </SelectTrigger>
                     <SelectContent>
                       {warehouseCategories
@@ -2377,7 +2379,7 @@ export default function InboundManagementPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="add-purchaseOrderNo">采购单号</Label>
+                  <Label htmlFor="add-purchaseOrderNo">{t('purchaseOrderNo')}</Label>
                   <div className="relative">
                     <Input
                       id="add-purchaseOrderNo"
@@ -2389,7 +2391,7 @@ export default function InboundManagementPage() {
                       onBlur={() => {
                         setTimeout(() => setPoDropdownVisible(false), 200);
                       }}
-                      placeholder="输入采购单号搜索"
+                      placeholder={t('searchPurchaseOrderNo')}
                       autoComplete="off"
                     />
                     {poSearchLoading && (
@@ -2413,13 +2415,13 @@ export default function InboundManagementPage() {
                             </div>
                             <div className="flex items-center gap-3 mt-1">
                               <span className="text-xs text-gray-500">
-                                供应商: {po.supplier_name || '-'}
+                                {tc('supplier')}: {po.supplier_name || '-'}
                               </span>
                               <span className="text-xs text-gray-500">
-                                数量: {po.total_quantity || 0}
+                                {tc('quantity')}: {po.total_quantity || 0}
                               </span>
                               <span className="text-xs text-gray-500">
-                                金额: ¥{Number(po.grand_total || 0).toFixed(2)}
+                                {tc('amount')}: ¥{Number(po.grand_total || 0).toFixed(2)}
                               </span>
                             </div>
                             {po.lines && po.lines.length > 0 && (
@@ -2430,7 +2432,7 @@ export default function InboundManagementPage() {
                                     {line.order_qty ? ` ×${line.order_qty}${line.unit || ''}` : ''}
                                   </span>
                                 ))}
-                                {po.lines.length > 2 && <span>...等{po.lines.length}项</span>}
+                                {po.lines.length > 2 && <span>{t('andMoreItems', { count: po.lines.length })}</span>}
                               </div>
                             )}
                           </div>
@@ -2442,21 +2444,21 @@ export default function InboundManagementPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="add-batchNo">批次号</Label>
+                  <Label htmlFor="add-batchNo">{tc("batchNo")}</Label>
                   <Input
                     id="add-batchNo"
                     value={formData.batchNo}
                     onChange={(e) => setFormData((prev) => ({ ...prev, batchNo: e.target.value }))}
-                    placeholder="输入批次号"
+                    placeholder={t('enterBatchNo')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="add-remark">备注</Label>
+                  <Label htmlFor="add-remark">{tc("remark")}</Label>
                   <Input
                     id="add-remark"
                     value={formData.remark}
                     onChange={(e) => setFormData((prev) => ({ ...prev, remark: e.target.value }))}
-                    placeholder="备注信息"
+                    placeholder={t('remarkPlaceholder')}
                   />
                 </div>
               </div>
@@ -2486,7 +2488,7 @@ export default function InboundManagementPage() {
                   });
                 }}
               >
-                取消
+                {tc('cancel')}
               </Button>
               <Button
                 onClick={async () => {
@@ -2546,7 +2548,7 @@ export default function InboundManagementPage() {
                   }
                 }}
               >
-                确认入库
+                {t('confirmInbound')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2556,93 +2558,93 @@ export default function InboundManagementPage() {
         <Dialog open={isMixedAddDialogOpen} onOpenChange={setIsMixedAddDialogOpen}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>混合料新增</DialogTitle>
-              <DialogDescription>录入混合料入库信息</DialogDescription>
+              <DialogTitle>{t('mixedMaterialAdd')}</DialogTitle>
+              <DialogDescription>{t('enterMixedInboundInfo')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="mixed-materialCode">物料编码</Label>
+                  <Label htmlFor="mixed-materialCode">{tc('materialCode')}</Label>
                   <Input
                     id="mixed-materialCode"
                     value={formData.materialCode}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, materialCode: e.target.value }))
                     }
-                    placeholder="输入物料编码"
+                    placeholder={t('enterMaterialCode')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="mixed-materialName">物料名称</Label>
+                  <Label htmlFor="mixed-materialName">{tc('materialName')}</Label>
                   <Input
                     id="mixed-materialName"
                     value={formData.materialName}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, materialName: e.target.value }))
                     }
-                    placeholder="输入物料名称"
+                    placeholder={t('enterMaterialName')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="mixed-specification">规格</Label>
+                  <Label htmlFor="mixed-specification">{tc("specification")}</Label>
                   <Input
                     id="mixed-specification"
                     value={formData.specification}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, specification: e.target.value }))
                     }
-                    placeholder="如 100M×1.5M"
+                    placeholder={t('specExample2')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="mixed-quantity">数量</Label>
+                  <Label htmlFor="mixed-quantity">{tc("quantity")}</Label>
                   <Input
                     id="mixed-quantity"
                     type="number"
                     value={formData.quantity}
                     onChange={(e) => setFormData((prev) => ({ ...prev, quantity: e.target.value }))}
-                    placeholder="输入数量"
+                    placeholder={t('enterQuantity')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="mixed-colorCode">色号</Label>
+                  <Label htmlFor="mixed-colorCode">{t('colorCode')}</Label>
                   <Input
                     id="mixed-colorCode"
                     value={formData.colorCode}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, colorCode: e.target.value }))
                     }
-                    placeholder="输入色号"
+                    placeholder={t('enterColorCode')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="mixed-machineNo">机台号</Label>
+                  <Label htmlFor="mixed-machineNo">{t('machineNo')}</Label>
                   <Input
                     id="mixed-machineNo"
                     value={formData.machineNo}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, machineNo: e.target.value }))
                     }
-                    placeholder="输入机台号"
+                    placeholder={t('enterMachineNo')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="mixed-width">幅宽</Label>
+                  <Label htmlFor="mixed-width">{t('width')}</Label>
                   <Input
                     id="mixed-width"
                     value={formData.width}
                     onChange={(e) => setFormData((prev) => ({ ...prev, width: e.target.value }))}
-                    placeholder="输入幅宽"
+                    placeholder={t('enterWidth')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="mixed-warehouse">仓库</Label>
+                  <Label htmlFor="mixed-warehouse">{tc("warehouse")}</Label>
                   <Select
                     value={formData.warehouse}
                     onValueChange={(value) =>
@@ -2650,7 +2652,7 @@ export default function InboundManagementPage() {
                     }
                   >
                     <SelectTrigger id="mixed-warehouse">
-                      <SelectValue placeholder="选择仓库" />
+                      <SelectValue placeholder={t('selectWarehouse')} />
                     </SelectTrigger>
                     <SelectContent>
                       {warehouseCategories
@@ -2665,24 +2667,24 @@ export default function InboundManagementPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="mixed-mixedMaterialRemark">混合料说明</Label>
+                <Label htmlFor="mixed-mixedMaterialRemark">{t('mixedMaterialRemark')}</Label>
                 <Textarea
                   id="mixed-mixedMaterialRemark"
                   value={formData.mixedMaterialRemark}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, mixedMaterialRemark: e.target.value }))
                   }
-                  placeholder="描述混合料的配比和工艺要求"
+                  placeholder={t('mixedMaterialRemarkPlaceholder')}
                   rows={3}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="mixed-remark">备注</Label>
+                <Label htmlFor="mixed-remark">{tc("remark")}</Label>
                 <Input
                   id="mixed-remark"
                   value={formData.remark}
                   onChange={(e) => setFormData((prev) => ({ ...prev, remark: e.target.value }))}
-                  placeholder="备注信息"
+                  placeholder={t('remarkPlaceholder')}
                 />
               </div>
             </div>
@@ -2711,7 +2713,7 @@ export default function InboundManagementPage() {
                   });
                 }}
               >
-                取消
+                {tc('cancel')}
               </Button>
               <Button
                 onClick={async () => {
@@ -2776,7 +2778,7 @@ export default function InboundManagementPage() {
                   }
                 }}
               >
-                确认入库
+                {t('confirmInbound')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2786,26 +2788,26 @@ export default function InboundManagementPage() {
         <Dialog open={isAuditDialogOpen} onOpenChange={setIsAuditDialogOpen}>
           <DialogContent className="sm:max-w-md" resizable>
             <DialogHeader>
-              <DialogTitle>审核入库单</DialogTitle>
-              <DialogDescription>确认审核入库单：{currentRecord?.order_no}</DialogDescription>
+              <DialogTitle>{t('auditInboundOrder')}</DialogTitle>
+              <DialogDescription>{t('confirmAuditOrder', { orderNo: currentRecord?.order_no || '' })}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               {currentRecord && (
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">物料：</span>
+                    <span className="text-gray-500">{tc('material')}：</span>
                     <span>{currentRecord.items?.[0]?.material_name || '-'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">规格：</span>
+                    <span className="text-gray-500">{tc('specification')}：</span>
                     <span>{currentRecord.items?.[0]?.material_spec || '-'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">数量：</span>
-                    <span>{currentRecord.total_quantity} 件</span>
+                    <span className="text-gray-500">{tc('quantity')}：</span>
+                    <span>{currentRecord.total_quantity} {t('pieces')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">供应商：</span>
+                    <span className="text-gray-500">{tc('supplier')}：</span>
                     <span>{currentRecord.supplier_name}</span>
                   </div>
                 </div>
@@ -2813,7 +2815,7 @@ export default function InboundManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAuditDialogOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -2837,7 +2839,7 @@ export default function InboundManagementPage() {
                   }
                 }}
               >
-                拒绝
+                {tc('reject')}
               </Button>
               <Button
                 onClick={async () => {
@@ -2860,7 +2862,7 @@ export default function InboundManagementPage() {
                   }
                 }}
               >
-                审核通过
+                {tc('approve')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -2870,13 +2872,13 @@ export default function InboundManagementPage() {
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>编辑入库单</DialogTitle>
-              <DialogDescription>修改入库单信息</DialogDescription>
+              <DialogTitle>{t('editInboundOrder')}</DialogTitle>
+              <DialogDescription>{t('editInboundOrderDesc')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>物料编码</Label>
+                  <Label>{tc('materialCode')}</Label>
                   <Input
                     value={formData.materialCode}
                     onChange={(e) =>
@@ -2885,7 +2887,7 @@ export default function InboundManagementPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>物料名称</Label>
+                  <Label>{tc('materialName')}</Label>
                   <Input
                     value={formData.materialName}
                     onChange={(e) =>
@@ -2896,7 +2898,7 @@ export default function InboundManagementPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>规格</Label>
+                  <Label>{tc("specification")}</Label>
                   <Input
                     value={formData.specification}
                     onChange={(e) =>
@@ -2905,7 +2907,7 @@ export default function InboundManagementPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>数量</Label>
+                  <Label>{tc("quantity")}</Label>
                   <Input
                     type="number"
                     value={formData.quantity}
@@ -2915,13 +2917,13 @@ export default function InboundManagementPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>供应商</Label>
+                  <Label>{tc("supplier")}</Label>
                   <Select
                     value={formData.supplier}
                     onValueChange={(value) => setFormData((prev) => ({ ...prev, supplier: value }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择供应商" />
+                      <SelectValue placeholder={t('selectSupplier')} />
                     </SelectTrigger>
                     <SelectContent>
                       {suppliers
@@ -2935,7 +2937,7 @@ export default function InboundManagementPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>仓库</Label>
+                  <Label>{tc("warehouse")}</Label>
                   <Select
                     value={formData.warehouse}
                     onValueChange={(value) =>
@@ -2943,7 +2945,7 @@ export default function InboundManagementPage() {
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="选择仓库" />
+                      <SelectValue placeholder={t('selectWarehouse')} />
                     </SelectTrigger>
                     <SelectContent>
                       {warehouseCategories
@@ -2958,7 +2960,7 @@ export default function InboundManagementPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Input
                   value={formData.remark}
                   onChange={(e) => setFormData((prev) => ({ ...prev, remark: e.target.value }))}
@@ -2967,7 +2969,7 @@ export default function InboundManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                取消
+                {tc('cancel')}
               </Button>
               <Button
                 onClick={async () => {
@@ -2994,7 +2996,7 @@ export default function InboundManagementPage() {
                   }
                 }}
               >
-                保存
+                {tc('save')}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -60,6 +60,18 @@ interface OutsourceOrder {
 }
 
 export default function OutsourceOrderPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   const t = useTranslations('Outsource');
   const tc = useTranslations('Common');
 
@@ -93,7 +105,7 @@ export default function OutsourceOrderPage() {
         orderNo: searchNo,
         status: searchStatus,
       });
-      const res = await fetch('/api/outsource/order?' + params);
+      const res = await authFetch('/api/outsource/order?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -106,7 +118,7 @@ export default function OutsourceOrderPage() {
 
   const fetchSuppliers = async () => {
     try {
-      const res = await fetch('/api/purchase/suppliers?pageSize=100');
+      const res = await authFetch('/api/purchase/suppliers?pageSize=100');
       const result = await res.json();
       if (result.success) setSuppliers(result.data?.list || result.data || []);
     } catch (e) {
@@ -123,7 +135,7 @@ export default function OutsourceOrderPage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/outsource/order', {
+      const res = await authFetch('/api/outsource/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -145,7 +157,7 @@ export default function OutsourceOrderPage() {
   const handleCancel = async (id: number) => {
     if (!confirm(t('confirmCancelOrder'))) return;
     try {
-      const res = await fetch('/api/outsource/order', {
+      const res = await authFetch('/api/outsource/order', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action: 'cancel' }),
@@ -163,7 +175,7 @@ export default function OutsourceOrderPage() {
   const handleDelete = async (id: number) => {
     if (!confirm(tc('confirmDelete'))) return;
     try {
-      const res = await fetch('/api/outsource/order?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/outsource/order?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: tc('deleteSuccess') });

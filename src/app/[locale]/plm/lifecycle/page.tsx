@@ -54,6 +54,18 @@ interface LifecycleRecord {
 const stageOrder = ['concept', 'design', 'prototype', 'pilot', 'mass', 'eol'];
 
 export default function ProductLifecyclePage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   const t = useTranslations('Engineering');
   const tc = useTranslations('Common');
 
@@ -115,7 +127,7 @@ export default function ProductLifecyclePage() {
       const params = new URLSearchParams({ page: String(page), pageSize: '20' });
       if (searchName) params.set('productName', searchName);
       if (searchStage) params.set('lifecycleStage', searchStage);
-      const res = await fetch('/api/plm/lifecycle?' + params);
+      const res = await authFetch('/api/plm/lifecycle?' + params);
       const data = await res.json();
       if (data.code === 200) {
         setRecords(data.data.list || []);
@@ -140,7 +152,7 @@ export default function ProductLifecyclePage() {
       const url = editRecord ? '/api/plm/lifecycle' : '/api/plm/lifecycle';
       const method = editRecord ? 'PUT' : 'POST';
       const body = editRecord ? { id: editRecord.id, ...form } : form;
-      const res = await fetch(url, {
+      const res = await authFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -161,7 +173,7 @@ export default function ProductLifecyclePage() {
   const handleDelete = async (id: number) => {
     if (!confirm(tc('confirmDelete'))) return;
     try {
-      const res = await fetch('/api/plm/lifecycle?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/plm/lifecycle?id=' + id, { method: 'DELETE' });
       const data = await res.json();
       if (data.code === 200) {
         toast({ title: tc('deleteSuccess') });

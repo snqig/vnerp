@@ -496,15 +496,15 @@ export default function UserManagementPage() {
 
   const handleSave = async () => {
     if (!editItem.username) {
-      toast({ title: '用户名不能为空', variant: 'destructive' });
+      toast({ title: tc('usernameRequired'), variant: 'destructive' });
       return;
     }
     if (!editItem.id && !editItem.password) {
-      toast({ title: '密码不能为空', variant: 'destructive' });
+      toast({ title: tc('passwordRequired'), variant: 'destructive' });
       return;
     }
-    if (!editItem.real_name) {
-      toast({ title: '姓名不能为空', variant: 'destructive' });
+    if (!editItem.name) {
+      toast({ title: tc('nameRequired'), variant: 'destructive' });
       return;
     }
 
@@ -528,31 +528,31 @@ export default function UserManagementPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editItem.id ? '更新成功' : '创建成功' });
+        toast({ title: editItem.id ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
         try {
           await authFetch('/api/auth/cache/clear', { method: 'POST' });
         } catch (e) {}
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('operationFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '保存失败', variant: 'destructive' });
+      toast({ title: tc('saveFailed'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/system/user?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('operationFailed'), variant: 'destructive' });
     }
   };
 
@@ -576,11 +576,11 @@ export default function UserManagementPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">用户管理</h1>
+          <h1 className="text-2xl font-bold">{t("userManagement")}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索用户名"
+                placeholder={tc("searchUsername")}
                 value={searchUser}
                 onChange={(e) => setSearchUser(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -591,7 +591,7 @@ export default function UserManagementPage() {
             </div>
             <Button size="sm" onClick={openAddDialog}>
               <Plus className="h-3 w-3 mr-1" />
-              新增用户
+              {t("addUser")}
             </Button>
           </div>
         </div>
@@ -600,15 +600,15 @@ export default function UserManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">用户名</TableHead>
-                  <TableHead className="text-xs">姓名</TableHead>
-                  <TableHead className="text-xs">邮箱</TableHead>
-                  <TableHead className="text-xs">手机</TableHead>
-                  <TableHead className="text-xs">部门</TableHead>
-                  <TableHead className="text-xs">角色</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">首次登录</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("username")}</TableHead>
+                  <TableHead className="text-xs">{tc("name")}</TableHead>
+                  <TableHead className="text-xs">{tc("email")}</TableHead>
+                  <TableHead className="text-xs">{tc("phone")}</TableHead>
+                  <TableHead className="text-xs">{tc("department")}</TableHead>
+                  <TableHead className="text-xs">{tc("role")}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("firstLogin")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -713,7 +713,7 @@ export default function UserManagementPage() {
                   value={editItem.username || ''}
                   onChange={(e) => setEditItem({ ...editItem, username: e.target.value })}
                   disabled={!!editItem.id}
-                  placeholder="请输入用户名"
+                  placeholder={tc("enterUsername")}
                 />
               </div>
               <div>
@@ -744,11 +744,11 @@ export default function UserManagementPage() {
                 {nameWarning && <p className="text-xs text-amber-600 mt-1">{nameWarning}</p>}
               </div>
               <div>
-                <Label>邮箱</Label>
+                <Label>{tc("email")}</Label>
                 <Input
                   value={editItem.email || ''}
                   onChange={(e) => setEditItem({ ...editItem, email: e.target.value })}
-                  placeholder="请输入邮箱"
+                  placeholder={tc("enterEmail")}
                 />
               </div>
               <div>
@@ -756,11 +756,11 @@ export default function UserManagementPage() {
                 <Input
                   value={editItem.phone || ''}
                   onChange={(e) => setEditItem({ ...editItem, phone: e.target.value })}
-                  placeholder="请输入手机号"
+                  placeholder={tc("enterPhone")}
                 />
               </div>
               <div>
-                <Label>部门</Label>
+                <Label>{tc("department")}</Label>
                 <Select
                   value={editItem.department_id ? String(editItem.department_id) : ''}
                   onValueChange={(v) =>
@@ -780,7 +780,7 @@ export default function UserManagementPage() {
                 </Select>
               </div>
               <div>
-                <Label>状态</Label>
+                <Label>{tc("status")}</Label>
                 <Select
                   value={String(editItem.status ?? 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, status: Number(v) })}
@@ -789,8 +789,8 @@ export default function UserManagementPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">启用</SelectItem>
-                    <SelectItem value="0">禁用</SelectItem>
+                    <SelectItem value="1">{tc("enable")}</SelectItem>
+                    <SelectItem value="0">{tc("disable")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -856,7 +856,7 @@ export default function UserManagementPage() {
               >
                 取消
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

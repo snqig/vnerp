@@ -38,11 +38,11 @@ interface CostItem {
 }
 
 const costTypeMap: Record<string, string> = {
-  material: '材料成本',
-  labor: '人工成本',
-  overhead: '制造费用',
-  outsource: '委外成本',
-  other: '其他费用',
+  material: 'materialCost',
+  labor: 'laborCost',
+  overhead: 'overheadCost',
+  outsource: 'outsourceCost',
+  other: 'otherCost',
 };
 
 export default function CostPage() {
@@ -117,12 +117,12 @@ export default function CostPage() {
     <MainLayout>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">成本管理</h2>
+          <h2 className="text-2xl font-bold">{t('costManagement')}</h2>
           <div className="flex items-center gap-2">
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="搜索单号/描述"
+                placeholder={t('searchNoOrDesc')}
                 value={keyword}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 h-9"
@@ -136,18 +136,19 @@ export default function CostPage() {
               }}
             >
               <SelectTrigger className="w-32 h-9">
-                <SelectValue placeholder="成本类型" />
+                <SelectValue placeholder={t('costType')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部</SelectItem>
-                <SelectItem value="material">材料成本</SelectItem>
-                <SelectItem value="labor">人工成本</SelectItem>
-                <SelectItem value="overhead">制造费用</SelectItem>
-                <SelectItem value="outsource">委外成本</SelectItem>
+                <SelectItem value="all">{tc("all")}</SelectItem>
+                <SelectItem value="material">{t('materialCost')}</SelectItem>
+                <SelectItem value="labor">{t('laborCost')}</SelectItem>
+                <SelectItem value="overhead">{t('overheadCost')}</SelectItem>
+                <SelectItem value="outsource">{t('outsourceCost')}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" onClick={fetchData}>
               <RefreshCw className="h-4 w-4" />
+              {tc('refresh')}
             </Button>
           </div>
         </div>
@@ -155,31 +156,31 @@ export default function CostPage() {
         <div className="grid grid-cols-5 gap-4">
           <Card>
             <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">材料成本</div>
+              <div className="text-sm text-muted-foreground">{t('materialCost')}</div>
               <div className="text-2xl font-bold">¥{formatAmount(summary.material)}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">人工成本</div>
+              <div className="text-sm text-muted-foreground">{t('laborCost')}</div>
               <div className="text-2xl font-bold">¥{formatAmount(summary.labor)}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">制造费用</div>
+              <div className="text-sm text-muted-foreground">{t('overheadCost')}</div>
               <div className="text-2xl font-bold">¥{formatAmount(summary.overhead)}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">委外成本</div>
+              <div className="text-sm text-muted-foreground">{t('outsourceCost')}</div>
               <div className="text-2xl font-bold">¥{formatAmount(summary.outsource)}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
-              <div className="text-sm text-muted-foreground">总成本</div>
+              <div className="text-sm text-muted-foreground">{t('totalCost')}</div>
               <div className="text-2xl font-bold text-red-600">¥{formatAmount(summary.total)}</div>
             </CardContent>
           </Card>
@@ -190,20 +191,20 @@ export default function CostPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>成本单号</TableHead>
-                  <TableHead>成本类型</TableHead>
-                  <TableHead>来源单号</TableHead>
-                  <TableHead>部门</TableHead>
-                  <TableHead className="text-right">金额</TableHead>
-                  <TableHead>日期</TableHead>
-                  <TableHead>描述</TableHead>
+                  <TableHead>{t('costNo')}</TableHead>
+                  <TableHead>{t('costType')}</TableHead>
+                  <TableHead>{t('sourceNo')}</TableHead>
+                  <TableHead>{tc("department")}</TableHead>
+                  <TableHead className="text-right">{tc("amount")}</TableHead>
+                  <TableHead>{tc("date")}</TableHead>
+                  <TableHead>{t("description")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {list.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {t('noData')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -211,7 +212,7 @@ export default function CostPage() {
                     <TableRow key={c.id}>
                       <TableCell className="font-mono text-sm">{c.cost_no}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{costTypeMap[c.cost_type] || c.cost_type}</Badge>
+                        <Badge variant="outline">{t(costTypeMap[c.cost_type]) || c.cost_type}</Badge>
                       </TableCell>
                       <TableCell className="font-mono text-sm">{c.source_no}</TableCell>
                       <TableCell>{c.department}</TableCell>
@@ -227,7 +228,7 @@ export default function CostPage() {
         </Card>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>共 {total} 条记录</span>
+          <span>{tc('totalRecords', { total })}</span>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -235,7 +236,7 @@ export default function CostPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {t('previousPage')}
             </Button>
             <Button
               variant="outline"
@@ -243,7 +244,7 @@ export default function CostPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {t('nextPage')}
             </Button>
           </div>
         </div>

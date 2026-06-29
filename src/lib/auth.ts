@@ -25,8 +25,11 @@ export interface UserInfo {
 
 // 数据权限范围
 export interface DataScope {
-  type: 'all' | 'dept' | 'self' | 'dept_and_self';
+  type: 'all' | 'dept' | 'self' | 'dept_and_self' | 'custom';
   deptIds?: number[];
+  warehouseIds?: number[];
+  customerIds?: number[];
+  supplierIds?: number[];
 }
 
 // 从请求中提取Token
@@ -94,7 +97,8 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
       self: 1,
       dept: 2,
       dept_and_self: 3,
-      all: 4,
+      custom: 4,
+      all: 5,
     };
 
     const minPriority = Math.min(...dataScopes.map((s) => scopePriority[s] || 0));
@@ -110,9 +114,33 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
       };
     } else if (mostRestrictive === 'dept') {
       dataScope = { type: 'dept', deptIds: user.department_id ? [user.department_id] : [] };
+    } else if (mostRestrictive === 'custom') {
+      dataScope = { type: 'custom', deptIds: user.department_id ? [user.department_id] : [] };
     } else {
       dataScope = { type: 'self' };
     }
+  }
+
+  // 查询角色的仓库、客户、供应商数据权限
+  const roleIds = (roles as any[]).map((r: any) => r.id).filter(Boolean);
+  if (roleIds.length > 0) {
+    const placeholders = roleIds.map(() => '?').join(',');
+    const scopeRows: any = await query(
+      `SELECT role_id, scope_type, target_ids FROM sys_data_scope WHERE role_id IN (${placeholders})`,
+      roleIds
+    );
+    const warehouseIds: number[] = [];
+    const customerIds: number[] = [];
+    const supplierIds: number[] = [];
+    for (const row of scopeRows as any[]) {
+      const ids = (row.target_ids || '').split(',').map(Number).filter((n: number) => !isNaN(n) && n > 0);
+      if (row.scope_type === 'warehouse') warehouseIds.push(...ids);
+      if (row.scope_type === 'customer') customerIds.push(...ids);
+      if (row.scope_type === 'supplier') supplierIds.push(...ids);
+    }
+    if (warehouseIds.length > 0) dataScope.warehouseIds = [...new Set(warehouseIds)];
+    if (customerIds.length > 0) dataScope.customerIds = [...new Set(customerIds)];
+    if (supplierIds.length > 0) dataScope.supplierIds = [...new Set(supplierIds)];
   }
 
   // 查询用户权限
@@ -155,7 +183,12 @@ export function buildDataScopeSql(
   userInfo: UserInfo,
   tableAlias: string = 't',
   deptField: string = 'department_id',
-  userField: string = 'create_by'
+  userField: string = 'create_by',
+  options?: {
+    warehouseField?: string;
+    customerField?: string;
+    supplierField?: string;
+  }
 ): { sql: string; params: any[] } {
   const { dataScope, userId, departmentId } = userInfo;
 
@@ -163,28 +196,50 @@ export function buildDataScopeSql(
     return { sql: '', params: [] };
   }
 
+  const conditions: string[] = [];
+  const params: any[] = [];
+
+  // 部门/本人维度
   if (dataScope.type === 'self') {
-    return {
-      sql: ` AND ${tableAlias}.${userField} = ?`,
-      params: [userId],
-    };
+    conditions.push(`${tableAlias}.${userField} = ?`);
+    params.push(userId);
+  } else if (dataScope.type === 'dept') {
+    conditions.push(`${tableAlias}.${deptField} = ?`);
+    params.push(departmentId);
+  } else if (dataScope.type === 'dept_and_self') {
+    conditions.push(`(${tableAlias}.${deptField} = ? OR ${tableAlias}.${userField} = ?)`);
+    params.push(departmentId, userId);
   }
 
-  if (dataScope.type === 'dept') {
-    return {
-      sql: ` AND ${tableAlias}.${deptField} = ?`,
-      params: [departmentId],
-    };
+  // 仓库维度
+  if (dataScope.warehouseIds && dataScope.warehouseIds.length > 0 && options?.warehouseField) {
+    const whPlaceholders = dataScope.warehouseIds.map(() => '?').join(',');
+    conditions.push(`${tableAlias}.${options.warehouseField} IN (${whPlaceholders})`);
+    params.push(...dataScope.warehouseIds);
   }
 
-  if (dataScope.type === 'dept_and_self') {
-    return {
-      sql: ` AND (${tableAlias}.${deptField} = ? OR ${tableAlias}.${userField} = ?)`,
-      params: [departmentId, userId],
-    };
+  // 客户维度
+  if (dataScope.customerIds && dataScope.customerIds.length > 0 && options?.customerField) {
+    const custPlaceholders = dataScope.customerIds.map(() => '?').join(',');
+    conditions.push(`${tableAlias}.${options.customerField} IN (${custPlaceholders})`);
+    params.push(...dataScope.customerIds);
   }
 
-  return { sql: '', params: [] };
+  // 供应商维度
+  if (dataScope.supplierIds && dataScope.supplierIds.length > 0 && options?.supplierField) {
+    const supPlaceholders = dataScope.supplierIds.map(() => '?').join(',');
+    conditions.push(`${tableAlias}.${options.supplierField} IN (${supPlaceholders})`);
+    params.push(...dataScope.supplierIds);
+  }
+
+  if (conditions.length === 0) {
+    return { sql: '', params: [] };
+  }
+
+  return {
+    sql: ` AND ${conditions.join(' AND ')}`,
+    params,
+  };
 }
 
 // 验证资源访问权限（防止横向越权）

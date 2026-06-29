@@ -75,29 +75,29 @@ interface LabTestRecord {
 }
 
 const testTypeMap: Record<string, string> = {
-  color: '色差测试',
-  adhesion: '附着力测试',
-  wear: '耐磨测试',
-  tensile: '拉伸测试',
-  thickness: '厚度测试',
-  other: '其他测试',
+  color: 'colorTest',
+  adhesion: 'adhesionTest',
+  wear: 'wearTest',
+  tensile: 'tensileTest',
+  thickness: 'thicknessTest',
+  other: 'otherTest',
 };
 const conclusionMap: Record<
   string,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  pass: { label: '合格', variant: 'default' },
-  fail: { label: '不合格', variant: 'destructive' },
-  conditional: { label: '有条件合格', variant: 'secondary' },
-  pending: { label: '待判定', variant: 'outline' },
+  pass: { label: 'qualified', variant: 'default' },
+  fail: { label: 'unqualified', variant: 'destructive' },
+  conditional: { label: 'conditionalPass', variant: 'secondary' },
+  pending: { label: 'pendingJudgment', variant: 'outline' },
 };
 const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '待测试', variant: 'outline' },
-  2: { label: '测试中', variant: 'secondary' },
-  3: { label: '已完成', variant: 'default' },
+  1: { label: 'pendingTest', variant: 'outline' },
+  2: { label: 'testing', variant: 'secondary' },
+  3: { label: 'completed', variant: 'default' },
 };
 
 export default function LabTestPage() {
@@ -149,33 +149,33 @@ export default function LabTestPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: editItem.id ? '更新成功' : '创建成功' });
+        toast({ title: editItem.id ? tc('updateSuccess') : tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除此测试记录？')) return;
+    if (!confirm(t('confirmDeleteTest'))) return;
     try {
       const res = await fetch('/api/quality/lab-test?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
   return (
-    <MainLayout title="实验室测试管理">
+    <MainLayout title={t('labTestManagement')}>
       <div className="p-6 space-y-6">
         <Card>
           <CardContent className="pt-6">
@@ -184,7 +184,7 @@ export default function LabTestPage() {
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索产品名称"
+                    placeholder={tc("searchProductName")}
                     className="pl-8 w-60"
                     value={searchProduct}
                     onChange={(e) => setSearchProduct(e.target.value)}
@@ -192,19 +192,19 @@ export default function LabTestPage() {
                 </div>
                 <Select value={searchType} onValueChange={setSearchType}>
                   <SelectTrigger className="w-40">
-                    <SelectValue placeholder="测试类型" />
+                    <SelectValue placeholder={t('testType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部类型</SelectItem>
+                    <SelectItem value="all">{tc('allTypes')}</SelectItem>
                     {Object.entries(testTypeMap).map(([k, v]) => (
                       <SelectItem key={k} value={k}>
-                        {v}
+                        {t(v)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={fetchData}>
-                  查询
+                  {tc('query')}
                 </Button>
               </div>
               <Button
@@ -214,7 +214,7 @@ export default function LabTestPage() {
                 }}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                新建测试
+                {t('newTest')}
               </Button>
               <TableExportToolbar
                 selectedCount={selectedIds.length}
@@ -225,41 +225,41 @@ export default function LabTestPage() {
                 onExportPDF={() =>
                   exportTableToPDF(
                     sortedData,
-                    '实验室测试报告',
+                    t('labTestReport'),
                     [
-                      { key: 'test_no', header: '测试编号' },
-                      { key: 'product_name', header: '产品名称' },
-                      { key: 'batch_no', header: '批次号' },
-                      { key: 'test_type', header: '测试类型' },
-                      { key: 'conclusion', header: '结论' },
+                      { key: 'test_no', header: t('testNo') },
+                      { key: 'product_name', header: tc('productName') },
+                      { key: 'batch_no', header: tc('batchNo') },
+                      { key: 'test_type', header: t('testType') },
+                      { key: 'conclusion', header: t('conclusion') },
                       { key: 'status', header: tc('status') },
                     ],
-                    '实验室测试报告'
+                    t('labTestReport')
                   )
                 }
                 onExportXLS={() =>
-                  exportTableToXLS(sortedData, '实验室测试报告', [
-                    { key: 'test_no', header: '测试编号' },
-                    { key: 'product_name', header: '产品名称' },
-                    { key: 'batch_no', header: '批次号' },
-                    { key: 'test_type', header: '测试类型' },
-                    { key: 'conclusion', header: '结论' },
+                  exportTableToXLS(sortedData, t('labTestReport'), [
+                    { key: 'test_no', header: t('testNo') },
+                    { key: 'product_name', header: tc('productName') },
+                    { key: 'batch_no', header: tc('batchNo') },
+                    { key: 'test_type', header: t('testType') },
+                    { key: 'conclusion', header: t('conclusion') },
                     { key: 'status', header: tc('status') },
                   ])
                 }
                 onExportWORD={() =>
                   exportTableToWORD(
                     sortedData,
-                    '实验室测试报告',
+                    t('labTestReport'),
                     [
-                      { key: 'test_no', header: '测试编号' },
-                      { key: 'product_name', header: '产品名称' },
-                      { key: 'batch_no', header: '批次号' },
-                      { key: 'test_type', header: '测试类型' },
-                      { key: 'conclusion', header: '结论' },
+                      { key: 'test_no', header: t('testNo') },
+                      { key: 'product_name', header: tc('productName') },
+                      { key: 'batch_no', header: tc('batchNo') },
+                      { key: 'test_type', header: t('testType') },
+                      { key: 'conclusion', header: t('conclusion') },
                       { key: 'status', header: tc('status') },
                     ],
-                    '实验室测试报告'
+                    t('labTestReport')
                   )
                 }
               />
@@ -280,14 +280,14 @@ export default function LabTestPage() {
                       }
                     />
                   </TableHead>
-                  <TableHead className="w-12 text-center">序号</TableHead>
+                  <TableHead className="w-12 text-center">{tc("serialNo")}</TableHead>
                   <SortableTableHeader
                     field="test_no"
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    测试编号
+                    {t('testNo')}
                   </SortableTableHeader>
                   <SortableTableHeader
                     field="product_name"
@@ -295,20 +295,20 @@ export default function LabTestPage() {
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    产品名称
+                    {tc('productName')}
                   </SortableTableHeader>
-                  <TableHead>批次号</TableHead>
-                  <TableHead>测试类型</TableHead>
-                  <TableHead>测试项目</TableHead>
-                  <TableHead>测试人</TableHead>
-                  <TableHead>测试日期</TableHead>
+                  <TableHead>{tc('batchNo')}</TableHead>
+                  <TableHead>{t('testType')}</TableHead>
+                  <TableHead>{t('testItem')}</TableHead>
+                  <TableHead>{t('tester')}</TableHead>
+                  <TableHead>{t('testDate')}</TableHead>
                   <SortableTableHeader
                     field="conclusion"
                     sortField={sortField}
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    结论
+                    {t('conclusion')}
                   </SortableTableHeader>
                   <SortableTableHeader
                     field="status"
@@ -316,9 +316,9 @@ export default function LabTestPage() {
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    状态
+                    {tc('status')}
                   </SortableTableHeader>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -343,18 +343,18 @@ export default function LabTestPage() {
                     <TableCell className="font-mono text-sm">{item.test_no}</TableCell>
                     <TableCell>{item.product_name}</TableCell>
                     <TableCell>{item.batch_no || '-'}</TableCell>
-                    <TableCell>{testTypeMap[item.test_type] || item.test_type}</TableCell>
+                    <TableCell>{t(testTypeMap[item.test_type] || item.test_type)}</TableCell>
                     <TableCell className="max-w-32 truncate">{item.test_items || '-'}</TableCell>
                     <TableCell>{item.tester || '-'}</TableCell>
                     <TableCell>{item.test_date?.substring(0, 10) || '-'}</TableCell>
                     <TableCell>
                       <Badge variant={conclusionMap[item.conclusion]?.variant || 'outline'}>
-                        {conclusionMap[item.conclusion]?.label || '待判定'}
+                        {t(conclusionMap[item.conclusion]?.label || 'pendingJudgment')}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusMap[item.status]?.variant || 'outline'}>
-                        {statusMap[item.status]?.label || tc('unknown')}
+                        {t(statusMap[item.status]?.label || tc('unknown'))}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -385,7 +385,7 @@ export default function LabTestPage() {
                 {sortedData.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -393,7 +393,7 @@ export default function LabTestPage() {
             </Table>
 
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">共 {total} 条</span>
+              <span className="text-sm text-muted-foreground">{tc('totalRecords', { count: total })}</span>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -401,7 +401,7 @@ export default function LabTestPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  上一页
+                  {tc('prevPage')}
                 </Button>
                 <Button
                   variant="outline"
@@ -409,7 +409,7 @@ export default function LabTestPage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  下一页
+                  {tc('nextPage')}
                 </Button>
               </div>
             </div>
@@ -419,32 +419,32 @@ export default function LabTestPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? '编辑测试记录' : '新建测试记录'}</DialogTitle>
+              <DialogTitle>{editItem.id ? t('editTestRecord') : t('newTestRecord')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div>
-                <Label>产品编码</Label>
+                <Label>{tc('productCode')}</Label>
                 <Input
                   value={editItem.product_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, product_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>产品名称 *</Label>
+                <Label>{tc('productName')} *</Label>
                 <Input
                   value={editItem.product_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, product_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>批次号</Label>
+                <Label>{tc('batchNo')}</Label>
                 <Input
                   value={editItem.batch_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, batch_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>测试类型</Label>
+                <Label>{t('testType')}</Label>
                 <Select
                   value={editItem.test_type || 'color'}
                   onValueChange={(v) => setEditItem({ ...editItem, test_type: v })}
@@ -455,42 +455,42 @@ export default function LabTestPage() {
                   <SelectContent>
                     {Object.entries(testTypeMap).map(([k, v]) => (
                       <SelectItem key={k} value={k}>
-                        {v}
+                        {t(v)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>测试项目</Label>
+                <Label>{t('testItem')}</Label>
                 <Input
                   value={editItem.test_items || ''}
                   onChange={(e) => setEditItem({ ...editItem, test_items: e.target.value })}
                 />
               </div>
               <div>
-                <Label>测试标准</Label>
+                <Label>{t('testStandard')}</Label>
                 <Input
                   value={editItem.test_standard || ''}
                   onChange={(e) => setEditItem({ ...editItem, test_standard: e.target.value })}
                 />
               </div>
               <div>
-                <Label>测试设备</Label>
+                <Label>{t('testEquipment')}</Label>
                 <Input
                   value={editItem.test_equipment || ''}
                   onChange={(e) => setEditItem({ ...editItem, test_equipment: e.target.value })}
                 />
               </div>
               <div>
-                <Label>测试人</Label>
+                <Label>{t('tester')}</Label>
                 <Input
                   value={editItem.tester || ''}
                   onChange={(e) => setEditItem({ ...editItem, tester: e.target.value })}
                 />
               </div>
               <div>
-                <Label>测试日期</Label>
+                <Label>{t('testDate')}</Label>
                 <Input
                   type="date"
                   value={editItem.test_date || ''}
@@ -498,7 +498,7 @@ export default function LabTestPage() {
                 />
               </div>
               <div>
-                <Label>结论</Label>
+                <Label>{t('conclusion')}</Label>
                 <Select
                   value={editItem.conclusion || 'pending'}
                   onValueChange={(v) => setEditItem({ ...editItem, conclusion: v })}
@@ -509,14 +509,14 @@ export default function LabTestPage() {
                   <SelectContent>
                     {Object.entries(conclusionMap).map(([k, v]) => (
                       <SelectItem key={k} value={k}>
-                        {v.label}
+                        {t(v.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="col-span-2">
-                <Label>结果摘要</Label>
+                <Label>{t('resultSummary')}</Label>
                 <Textarea
                   rows={3}
                   value={editItem.result_summary || ''}
@@ -524,7 +524,7 @@ export default function LabTestPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>详细数据(JSON)</Label>
+                <Label>{t('detailDataJSON')}</Label>
                 <Textarea
                   rows={3}
                   value={editItem.detail_data || ''}
@@ -532,7 +532,7 @@ export default function LabTestPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   rows={2}
                   value={editItem.remark || ''}
@@ -542,9 +542,9 @@ export default function LabTestPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

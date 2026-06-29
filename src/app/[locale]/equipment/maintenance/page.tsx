@@ -361,8 +361,8 @@ export default function EquipmentMaintenancePage() {
                         <TableHead>保养周期</TableHead>
                         <TableHead>计划日期</TableHead>
                         <TableHead>保养内容</TableHead>
-                        <TableHead>状态</TableHead>
-                        <TableHead className="text-right">操作</TableHead>
+                        <TableHead>{tc("status")}</TableHead>
+                        <TableHead className="text-right">{tc("actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -493,7 +493,7 @@ export default function EquipmentMaintenancePage() {
                         <TableHead>停机时长</TableHead>
                         <TableHead>费用</TableHead>
                         <TableHead>结果</TableHead>
-                        <TableHead className="text-right">操作</TableHead>
+                        <TableHead className="text-right">{tc("actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -696,11 +696,11 @@ export default function EquipmentMaintenancePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>备注</Label>
+                  <Label>{tc("remark")}</Label>
                   <Input
                     value={form.remark || ''}
                     onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                    placeholder=tc("remark")
+                    placeholder={tc("remark")}
                   />
                 </div>
               </>
@@ -832,11 +832,11 @@ export default function EquipmentMaintenancePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>备注</Label>
+                  <Label>{tc("remark")}</Label>
                   <Input
                     value={form.remark || ''}
                     onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                    placeholder=tc("remark")
+                    placeholder={tc("remark")}
                   />
                 </div>
               </>

@@ -214,7 +214,6 @@ export default function SupplierEvalPage() {
       remark: '',
     },
   ];
-  const tc = useTranslations('Common');
 
   const { companyName } = useCompanyName();
   const { toast } = useToast();
@@ -261,7 +260,7 @@ export default function SupplierEvalPage() {
         setTotal(data.data.total || 0);
       }
     } catch {
-      toast({ title: '获取数据失败', variant: 'destructive' });
+      toast({ title: tc('fetchDataFail'), variant: 'destructive' });
     }
   };
 
@@ -278,7 +277,7 @@ export default function SupplierEvalPage() {
         setDetailOpen(true);
       }
     } catch {
-      toast({ title: '获取详情失败', variant: 'destructive' });
+      toast({ title: tc('fetchDetailFail'), variant: 'destructive' });
     }
   };
 
@@ -298,7 +297,7 @@ export default function SupplierEvalPage() {
 
   const handleSave = async () => {
     if (!form.supplier_name) {
-      toast({ title: '请输入供应商名称', variant: 'destructive' });
+      toast({ title: t('enterSupplierName'), variant: 'destructive' });
       return;
     }
     try {
@@ -312,7 +311,7 @@ export default function SupplierEvalPage() {
       });
       const data = await res.json();
       if (data.code === 200) {
-        toast({ title: editRecord ? '更新成功' : '创建成功' });
+        toast({ title: editRecord ? t('updateSuccess') : t('createSuccess') });
         setDialogOpen(false);
         fetchData();
       } else {
@@ -324,16 +323,16 @@ export default function SupplierEvalPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确认删除？')) return;
+    if (!confirm(t('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/srm/evaluation?id=' + id, { method: 'DELETE' });
       const data = await res.json();
       if (data.code === 200) {
-        toast({ title: '删除成功' });
+        toast({ title: t('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: t('deleteFail'), variant: 'destructive' });
     }
   };
 
@@ -390,12 +389,12 @@ export default function SupplierEvalPage() {
     const recordsToPrint =
       selectedIds.length > 0 ? records.filter((r) => selectedIds.includes(r.id!)) : records;
     if (recordsToPrint.length === 0) {
-      toast({ title: '没有可打印的数据', variant: 'destructive' });
+      toast({ title: t('noPrintData'), variant: 'destructive' });
       return;
     }
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast({ title: '无法打开打印窗口', variant: 'destructive' });
+      toast({ title: t('cannotOpenPrintWindow'), variant: 'destructive' });
       return;
     }
     const rows = recordsToPrint
@@ -414,7 +413,7 @@ export default function SupplierEvalPage() {
     </tr>`
       )
       .join('');
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>供应商评估列表</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${t('evaluationManagement')}</title>
       <style>
         @page { size: A4; margin: 15mm; }
         body { font-family: "Microsoft YaHei", Arial, sans-serif; padding: 20px; color: #333; }
@@ -427,10 +426,10 @@ export default function SupplierEvalPage() {
         @media print { body { padding: 0; } }
       </style></head>
       <body>
-        <h1>供应商评估列表</h1>
-        <div class="info">打印时间：${new Date().toLocaleString('zh-CN')} | 共 ${recordsToPrint.length} 条</div>
+        <h1>${t('evaluationManagement')}</h1>
+        <div class="info">${tc('printTime')}: ${new Date().toLocaleString('zh-CN')} | ${tc('total', { count: recordsToPrint.length })}</div>
         <table>
-          <thead><tr><th>评估编号</th><th>供应商</th><th>评估周期</th><th>质量分</th><th>交付分</th><th>价格分</th><th>服务分</th><th>综合分</th><th>等级</th><th>状态</th></tr></thead>
+          <thead><tr><th>${t('evalNo')}</th><th>${tc('supplier')}</th><th>${t('evalPeriod')}</th><th>${t('qualityScore')}</th><th>${t('deliveryScore')}</th><th>${t('priceScore')}</th><th>${t('serviceScore')}</th><th>${t('totalScore')}</th><th>${t('level')}</th><th>${tc('status')}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
         <div class="footer">${companyName}</div>
@@ -444,19 +443,19 @@ export default function SupplierEvalPage() {
     const recordsToExport =
       selectedIds.length > 0 ? records.filter((r) => selectedIds.includes(r.id!)) : records;
     if (recordsToExport.length === 0) {
-      toast({ title: '没有可导出的数据', variant: 'destructive' });
+      toast({ title: t('noExportData'), variant: 'destructive' });
       return;
     }
     const headers = [
-      '评估编号',
-      '供应商名称',
-      '评估周期',
-      '质量分',
-      '交付分',
-      '价格分',
-      '服务分',
-      '综合分',
-      '等级',
+      t('evalNo'),
+      tc('supplier'),
+      t('evalPeriod'),
+      t('qualityScore'),
+      t('deliveryScore'),
+      t('priceScore'),
+      t('serviceScore'),
+      t('totalScore'),
+      t('level'),
       tc('status'),
     ];
     const rows = recordsToExport.map((r) => [
@@ -477,22 +476,22 @@ export default function SupplierEvalPage() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `供应商评估列表_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `${t('evaluationManagement')}_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    toast({ title: 'XLS导出成功' });
+    toast({ title: t('xlsExportSuccess') });
   };
 
   const handleExportPDF = () => {
     const recordsToExport =
       selectedIds.length > 0 ? records.filter((r) => selectedIds.includes(r.id!)) : records;
     if (recordsToExport.length === 0) {
-      toast({ title: '没有可导出的数据', variant: 'destructive' });
+      toast({ title: t('noExportData'), variant: 'destructive' });
       return;
     }
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      toast({ title: '无法打开导出窗口', variant: 'destructive' });
+      toast({ title: t('cannotOpenExportWindow'), variant: 'destructive' });
       return;
     }
     const rows = recordsToExport
@@ -511,7 +510,7 @@ export default function SupplierEvalPage() {
     </tr>`
       )
       .join('');
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>供应商评估列表</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${t('evaluationManagement')}</title>
       <style>
         @page { size: A4; margin: 15mm; }
         body { font-family: "Microsoft YaHei", Arial, sans-serif; padding: 20px; color: #333; }
@@ -524,10 +523,10 @@ export default function SupplierEvalPage() {
         @media print { body { padding: 0; } }
       </style></head>
       <body>
-        <h1>供应商评估列表</h1>
-        <div class="info">导出时间：${new Date().toLocaleString('zh-CN')} | 共 ${recordsToExport.length} 条</div>
+        <h1>${t('evaluationManagement')}</h1>
+        <div class="info">${tc('exportTime')}: ${new Date().toLocaleString('zh-CN')} | ${tc('total', { count: recordsToExport.length })}</div>
         <table>
-          <thead><tr><th>评估编号</th><th>供应商</th><th>评估周期</th><th>质量分</th><th>交付分</th><th>价格分</th><th>服务分</th><th>综合分</th><th>等级</th><th>状态</th></tr></thead>
+          <thead><tr><th>${t('evalNo')}</th><th>${tc('supplier')}</th><th>${t('evalPeriod')}</th><th>${t('qualityScore')}</th><th>${t('deliveryScore')}</th><th>${t('priceScore')}</th><th>${t('serviceScore')}</th><th>${t('totalScore')}</th><th>${t('level')}</th><th>${tc('status')}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
         <div class="footer">${companyName}</div>
@@ -535,7 +534,7 @@ export default function SupplierEvalPage() {
       </body></html>`;
     printWindow.document.write(html);
     printWindow.document.close();
-    toast({ title: 'PDF导出成功，请在打印对话框中选择"另存为PDF"' });
+    toast({ title: t('pdfExportSuccess') });
   };
 
   return (
@@ -544,32 +543,32 @@ export default function SupplierEvalPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Award className="h-6 w-6" />
-            供应商评估管理
+            {t('evaluationManagement')}
           </h1>
           <div className="flex items-center gap-2">
             <Button onClick={openCreate}>
               <Plus className="h-4 w-4 mr-1" />
-              新建评估
+              {t('createEvaluation')}
             </Button>
             <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1">
               <Printer className="h-4 w-4" />
-              打印
+              {t('print')}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1">
                   <Download className="h-4 w-4" />
-                  导出
+                  {t('export')}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={handleExportXLS}>
                   <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  导出 XLS
+                  {t('exportXLS')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportPDF}>
                   <FileText className="h-4 w-4 mr-2" />
-                  导出 PDF
+                  {t('exportPDF')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -580,7 +579,7 @@ export default function SupplierEvalPage() {
           <CardContent className="p-4">
             <div className="flex gap-3 mb-4">
               <Input
-                placeholder="搜索供应商名称"
+                placeholder={t('searchSupplierName')}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="w-48"
@@ -588,7 +587,7 @@ export default function SupplierEvalPage() {
               />
               <Select value={searchLevel} onValueChange={(v) => setSearchLevel(v)}>
                 <SelectTrigger className="w-32">
-                  <SelectValue placeholder="供应商等级" />
+                  <SelectValue placeholder={t('supplierLevel')} />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(levelMap).map(([k, v]) => (
@@ -600,7 +599,7 @@ export default function SupplierEvalPage() {
               </Select>
               <Button variant="outline" onClick={fetchData}>
                 <Search className="h-4 w-4 mr-1" />
-                搜索
+                {tc('search')}
               </Button>
             </div>
 
@@ -613,17 +612,17 @@ export default function SupplierEvalPage() {
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
-                  <TableHead>评估编号</TableHead>
-                  <TableHead>供应商名称</TableHead>
-                  <TableHead>评估周期</TableHead>
-                  <TableHead>质量分</TableHead>
-                  <TableHead>交付分</TableHead>
-                  <TableHead>价格分</TableHead>
-                  <TableHead>服务分</TableHead>
-                  <TableHead>综合分</TableHead>
-                  <TableHead>等级</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{t('evalNo')}</TableHead>
+                  <TableHead>{tc('supplier')}</TableHead>
+                  <TableHead>{t('evalPeriod')}</TableHead>
+                  <TableHead>{t('qualityScore')}</TableHead>
+                  <TableHead>{t('deliveryScore')}</TableHead>
+                  <TableHead>{t('priceScore')}</TableHead>
+                  <TableHead>{t('serviceScore')}</TableHead>
+                  <TableHead>{t('totalScore')}</TableHead>
+                  <TableHead>{t('level')}</TableHead>
+                  <TableHead>{tc("status")}</TableHead>
+                  <TableHead>{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -671,14 +670,14 @@ export default function SupplierEvalPage() {
                 {records.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {t('noData')}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
             <div className="flex justify-between items-center mt-4 text-sm">
-              <span>共 {total} 条</span>
+              <span>{tc('total', { count: total })}</span>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -686,7 +685,7 @@ export default function SupplierEvalPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  上一页
+                  {tc('prevPage')}
                 </Button>
                 <Button
                   size="sm"
@@ -694,7 +693,7 @@ export default function SupplierEvalPage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  下一页
+                  {tc('nextPage')}
                 </Button>
               </div>
             </div>
@@ -704,51 +703,51 @@ export default function SupplierEvalPage() {
         <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
           <DialogContent className="max-w-3xl" resizable>
             <DialogHeader>
-              <DialogTitle>供应商评估详情</DialogTitle>
+              <DialogTitle>{t('evaluationDetail')}</DialogTitle>
             </DialogHeader>
             {detailRecord && (
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-3 text-sm">
                   <div>
-                    评估编号: <span className="font-mono">{detailRecord.eval_no}</span>
+                    {t('evalNo')}: <span className="font-mono">{detailRecord.eval_no}</span>
                   </div>
-                  <div>供应商: {detailRecord.supplier_name}</div>
+                  <div>{tc('supplier')}: {detailRecord.supplier_name}</div>
                   <div>
-                    评估周期: {periodMap[detailRecord.eval_period] || detailRecord.eval_period}
+                    {t('evalPeriod')}: {periodMap[detailRecord.eval_period] || detailRecord.eval_period}
                   </div>
-                  <div>来料合格率: {detailRecord.quality_rate ?? '-'}%</div>
-                  <div>准时交付率: {detailRecord.on_time_rate ?? '-'}%</div>
-                  <div>订单数量: {detailRecord.order_count}</div>
+                  <div>{t('qualityRate')}: {detailRecord.quality_rate ?? '-'}%</div>
+                  <div>{t('onTimeRate')}: {detailRecord.on_time_rate ?? '-'}%</div>
+                  <div>{t('orderCount')}: {detailRecord.order_count}</div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
                   <Card>
                     <CardContent className="p-3 text-center">
-                      <p className="text-xs text-muted-foreground">质量评分</p>
+                      <p className="text-xs text-muted-foreground">{t('qualityScore')}</p>
                       <p className="text-xl font-bold">{detailRecord.quality_score ?? '-'}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-3 text-center">
-                      <p className="text-xs text-muted-foreground">交付评分</p>
+                      <p className="text-xs text-muted-foreground">{t('deliveryScore')}</p>
                       <p className="text-xl font-bold">{detailRecord.delivery_score ?? '-'}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-3 text-center">
-                      <p className="text-xs text-muted-foreground">价格评分</p>
+                      <p className="text-xs text-muted-foreground">{t('priceScore')}</p>
                       <p className="text-xl font-bold">{detailRecord.price_score ?? '-'}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-3 text-center">
-                      <p className="text-xs text-muted-foreground">服务评分</p>
+                      <p className="text-xs text-muted-foreground">{t('serviceScore')}</p>
                       <p className="text-xl font-bold">{detailRecord.service_score ?? '-'}</p>
                     </CardContent>
                   </Card>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-lg">
-                    综合评分: <strong>{detailRecord.total_score ?? '-'}</strong>
+                    {t('totalScore')}: <strong>{detailRecord.total_score ?? '-'}</strong>
                   </span>
                   <Badge
                     variant={levelMap[detailRecord.supplier_level]?.variant || 'outline'}
@@ -761,12 +760,12 @@ export default function SupplierEvalPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>类别</TableHead>
-                        <TableHead>评估项目</TableHead>
-                        <TableHead>权重%</TableHead>
-                        <TableHead>评分</TableHead>
-                        <TableHead>实际值</TableHead>
-                        <TableHead>目标值</TableHead>
+                        <TableHead>{t('category')}</TableHead>
+                        <TableHead>{t('itemName')}</TableHead>
+                        <TableHead>{t('weight')}</TableHead>
+                        <TableHead>{t('score')}</TableHead>
+                        <TableHead>{t('actualValue')}</TableHead>
+                        <TableHead>{t('targetValue')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -795,19 +794,19 @@ export default function SupplierEvalPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>{editRecord ? '编辑供应商评估' : '新建供应商评估'}</DialogTitle>
+              <DialogTitle>{editRecord ? t('editEvaluation') : t('createEvaluation')}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-3 py-2">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <Label>供应商名称 *</Label>
+                  <Label>{tc('supplier')} *</Label>
                   <Input
                     value={form.supplier_name || ''}
                     onChange={(e) => setForm({ ...form, supplier_name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>评估周期</Label>
+                  <Label>{t('evalPeriod')}</Label>
                   <Select
                     value={form.eval_period || 'quarter'}
                     onValueChange={(v) => setForm({ ...form, eval_period: v })}
@@ -825,7 +824,7 @@ export default function SupplierEvalPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>评估人</Label>
+                  <Label>{t('evaluator')}</Label>
                   <Input
                     value={form.evaluator || ''}
                     onChange={(e) => setForm({ ...form, evaluator: e.target.value })}
@@ -834,7 +833,7 @@ export default function SupplierEvalPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>周期开始</Label>
+                  <Label>{t('periodStart')}</Label>
                   <Input
                     type="date"
                     value={form.period_start || ''}
@@ -842,7 +841,7 @@ export default function SupplierEvalPage() {
                   />
                 </div>
                 <div>
-                  <Label>周期结束</Label>
+                  <Label>{t('periodEnd')}</Label>
                   <Input
                     type="date"
                     value={form.period_end || ''}
@@ -852,7 +851,7 @@ export default function SupplierEvalPage() {
               </div>
               <div className="grid grid-cols-4 gap-3">
                 <div>
-                  <Label>质量评分(0-100)</Label>
+                  <Label>{t('qualityScore')}(0-100)</Label>
                   <Input
                     type="number"
                     value={form.quality_score || 0}
@@ -861,7 +860,7 @@ export default function SupplierEvalPage() {
                   />
                 </div>
                 <div>
-                  <Label>交付评分(0-100)</Label>
+                  <Label>{t('deliveryScore')}(0-100)</Label>
                   <Input
                     type="number"
                     value={form.delivery_score || 0}
@@ -870,7 +869,7 @@ export default function SupplierEvalPage() {
                   />
                 </div>
                 <div>
-                  <Label>价格评分(0-100)</Label>
+                  <Label>{t('priceScore')}(0-100)</Label>
                   <Input
                     type="number"
                     value={form.price_score || 0}
@@ -879,7 +878,7 @@ export default function SupplierEvalPage() {
                   />
                 </div>
                 <div>
-                  <Label>服务评分(0-100)</Label>
+                  <Label>{t('serviceScore')}(0-100)</Label>
                   <Input
                     type="number"
                     value={form.service_score || 0}
@@ -890,7 +889,7 @@ export default function SupplierEvalPage() {
               </div>
               <div className="grid grid-cols-4 gap-3">
                 <div>
-                  <Label>来料合格率%</Label>
+                  <Label>{t('qualityRate')}%</Label>
                   <Input
                     type="number"
                     value={form.quality_rate || 0}
@@ -898,7 +897,7 @@ export default function SupplierEvalPage() {
                   />
                 </div>
                 <div>
-                  <Label>准时交付率%</Label>
+                  <Label>{t('onTimeRate')}%</Label>
                   <Input
                     type="number"
                     value={form.on_time_rate || 0}
@@ -906,7 +905,7 @@ export default function SupplierEvalPage() {
                   />
                 </div>
                 <div>
-                  <Label>订单数量</Label>
+                  <Label>{t('orderCount')}</Label>
                   <Input
                     type="number"
                     value={form.order_count || 0}
@@ -914,7 +913,7 @@ export default function SupplierEvalPage() {
                   />
                 </div>
                 <div>
-                  <Label>不良次数</Label>
+                  <Label>{t('defectCount')}</Label>
                   <Input
                     type="number"
                     value={form.defect_count || 0}
@@ -924,7 +923,7 @@ export default function SupplierEvalPage() {
               </div>
               <div className="flex items-center gap-4 p-3 bg-muted rounded">
                 <span>
-                  综合评分: <strong className="text-lg">{form.total_score || 0}</strong>
+                  {t('totalScore')}: <strong className="text-lg">{form.total_score || 0}</strong>
                 </span>
                 <Badge
                   variant={levelMap[form.supplier_level || 'C']?.variant || 'outline'}
@@ -933,21 +932,21 @@ export default function SupplierEvalPage() {
                   {levelMap[form.supplier_level || 'C']?.label || 'C'}
                 </Badge>
                 <span className="text-xs text-muted-foreground">
-                  (质量35% + 交付30% + 价格20% + 服务15%)
+                  ({t('quality')}35% + {t('delivery')}30% + {t('price')}20% + {t('service')}15%)
                 </span>
               </div>
 
               <div className="border-t pt-3">
-                <Label className="text-base font-semibold">评估明细项</Label>
+                <Label className="text-base font-semibold">{t('evalItemDetail')}</Label>
                 <Table className="mt-2">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>类别</TableHead>
-                      <TableHead>项目名称</TableHead>
-                      <TableHead>权重%</TableHead>
-                      <TableHead>评分</TableHead>
-                      <TableHead>实际值</TableHead>
-                      <TableHead>目标值</TableHead>
+                      <TableHead>{t('category')}</TableHead>
+                      <TableHead>{t('itemName')}</TableHead>
+                      <TableHead>{t('weight')}</TableHead>
+                      <TableHead>{t('score')}</TableHead>
+                      <TableHead>{t('actualValue')}</TableHead>
+                      <TableHead>{t('targetValue')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1002,7 +1001,7 @@ export default function SupplierEvalPage() {
               </div>
 
               <div>
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -1014,7 +1013,7 @@ export default function SupplierEvalPage() {
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 取消
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

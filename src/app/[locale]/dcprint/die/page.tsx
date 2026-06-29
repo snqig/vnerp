@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -56,6 +56,18 @@ const statusMap: Record<
 };
 
 export default function DieManagementPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -77,7 +89,7 @@ export default function DieManagementPage() {
         dieCode: searchCode,
         dieName: searchName,
       });
-      const res = await fetch('/api/prepress/die?' + params);
+      const res = await authFetch('/api/prepress/die?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -94,7 +106,7 @@ export default function DieManagementPage() {
   const handleSave = async () => {
     try {
       const method = editItem.id ? 'PUT' : 'POST';
-      const res = await fetch('/api/prepress/die', {
+      const res = await authFetch('/api/prepress/die', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -114,7 +126,7 @@ export default function DieManagementPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
     try {
-      const res = await fetch('/api/prepress/die?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/prepress/die?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });
@@ -133,13 +145,13 @@ export default function DieManagementPage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder=tc("code")
+                placeholder={tc("code")}
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
                 className="w-28 h-8 text-sm"
               />
               <Input
-                placeholder=tc("name")
+                placeholder={tc("name")}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="w-28 h-8 text-sm"
@@ -167,14 +179,14 @@ export default function DieManagementPage() {
                 <TableRow>
                   <TableHead className="text-xs">刀具编码</TableHead>
                   <TableHead className="text-xs">刀具名称</TableHead>
-                  <TableHead className="text-xs">类型</TableHead>
+                  <TableHead className="text-xs">{tc("type")}</TableHead>
                   <TableHead className="text-xs">尺寸规格</TableHead>
-                  <TableHead className="text-xs">产品</TableHead>
+                  <TableHead className="text-xs">{tc("product")}</TableHead>
                   <TableHead className="text-xs">最大次数</TableHead>
                   <TableHead className="text-xs">已用</TableHead>
                   <TableHead className="text-xs">剩余</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -281,7 +293,7 @@ export default function DieManagementPage() {
                 />
               </div>
               <div>
-                <Label>类型</Label>
+                <Label>{tc("type")}</Label>
                 <Select
                   value={String(editItem.die_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, die_type: Number(v) })}
@@ -326,7 +338,7 @@ export default function DieManagementPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 取消
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

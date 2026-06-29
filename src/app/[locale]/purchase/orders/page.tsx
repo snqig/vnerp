@@ -64,6 +64,8 @@ import { useToastContext } from '@/components/ui/toast';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import ApiClient from '@/lib/api-client';
+import { logger } from '@/lib/logger';
+import { mockPurchaseOrders, mockSuppliers, USE_MOCK } from '@/lib/mock-data';
 
 interface PurchaseOrder {
   id: number;
@@ -132,6 +134,18 @@ const formatDate = (dateStr: string | null | undefined) => {
 };
 
 export default function PurchaseOrdersPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Purchase');
   const tc = useTranslations('Common');
@@ -147,11 +161,11 @@ export default function PurchaseOrdersPage() {
     className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
   },
   40: {
-    label: '部分到货',
+    label: t('partialReceived'),
     className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200',
   },
   50: {
-    label: '已完成',
+    label: t('completed'),
     className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
   },
   90: { label: tc('closed'), className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' },
@@ -159,7 +173,7 @@ export default function PurchaseOrdersPage() {
 
   const getStatusBadge = (status: number) => {
   const config = STATUS_MAP[status] || {
-    label: `未知(${status})`,
+    label: `${tc('unknown')}(${status})`,
     className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
   };
   return <Badge className={config.className}>{config.label}</Badge>;
@@ -196,8 +210,24 @@ export default function PurchaseOrdersPage() {
 
   const fetchOrders = useCallback(
     async (searchKeyword?: string) => {
+      logger.info({ module: 'Purchase', action: 'fetchOrders' }, '开始获取采购单列表', { page, pageSize, statusFilter, searchKeyword });
       try {
         setLoading(true);
+
+        if (USE_MOCK) {
+          logger.info({ module: 'Purchase', action: 'fetchOrders' }, '使用 mock 数据');
+          const filtered = searchKeyword
+            ? mockPurchaseOrders.filter(o => o.po_no?.includes(searchKeyword) || o.supplier_name?.includes(searchKeyword))
+            : mockPurchaseOrders;
+          const statusFiltered = statusFilter !== 'all'
+            ? filtered.filter(o => String(o.status) === statusFilter)
+            : filtered;
+          setOrders(statusFiltered);
+          setTotal(statusFiltered.length);
+          setSelectedOrders([]);
+          return;
+        }
+
         const data = await ApiClient.get('/api/purchase/orders', {
           page,
           pageSize,
@@ -210,30 +240,35 @@ export default function PurchaseOrdersPage() {
         setOrders(ordersList);
           setTotal(data.pagination?.total || 0);
           setSelectedOrders([]);
+          logger.info({ module: 'Purchase', action: 'fetchOrders' }, '采购单列表获取成功', { count: ordersList.length });
         } else {
-          toast({
-            title: '错误',
-            description: data.message || '获取采购单列表失败',
-            variant: 'destructive',
-          });
+          logger.warn({ module: 'Purchase', action: 'fetchOrders' }, 'API返回失败', { message: data.message });
         }
       } catch (error) {
-        toast({ title: '错误', description: '获取采购单列表失败', variant: 'destructive' });
+        logger.error({ module: 'Purchase', action: 'fetchOrders' }, '获取采购单列表失败', { error: (error as Error).message });
       } finally {
         setLoading(false);
       }
     },
-    [page, pageSize, statusFilter, toast]
+    [page, pageSize, statusFilter]
   );
 
   const fetchSuppliers = useCallback(async () => {
+    logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, '开始获取供应商列表');
     try {
+      if (USE_MOCK) {
+        logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, '使用 mock 数据');
+        setSuppliers(mockSuppliers);
+        return;
+      }
+
       const data = await ApiClient.get('/api/purchase/suppliers');
       if (data.success) {
         setSuppliers(data.data?.list || data.data || []);
+        logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, '供应商列表获取成功', { count: (data.data?.list || []).length });
       }
     } catch (error) {
-      console.error('获取供应商列表失败:', error);
+      logger.error({ module: 'Purchase', action: 'fetchSuppliers' }, '获取供应商列表失败', { error: (error as Error).message });
     }
   }, []);
 
@@ -316,18 +351,18 @@ export default function PurchaseOrdersPage() {
   };
 
   const handleDelete = async (order: PurchaseOrder) => {
-    if (!confirm(`确定要删除采购单 ${order.po_no} 吗？`)) return;
+    if (!confirm(tc('confirmDeletePrefix', { name: order.po_no }))) return;
 
     try {
       const data = await ApiClient.delete('/api/purchase/orders', { id: order.id });
       if (data.success) {
-        toast({ title: '成功', description: '删除成功' });
+        toast({ title: tc('success'), description: tc('deleteSuccess') });
         fetchOrders();
       } else {
-        toast({ title: '错误', description: data.message || '删除失败', variant: 'destructive' });
+        toast({ title: tc('error'), description: data.message || tc('deleteFailed'), variant: 'destructive' });
       }
     } catch (error) {
-      toast({ title: '错误', description: '删除失败', variant: 'destructive' });
+      toast({ title: tc('error'), description: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -338,7 +373,7 @@ export default function PurchaseOrdersPage() {
     const orderNumbers = selectedOrderInfo.map((o) => o.po_no).join(', ');
 
     if (
-      !confirm(`确定要删除选中的 ${selectedOrders.length} 个采购单吗？\n采购单号: ${orderNumbers}`)
+      !confirm(tc('confirmBatchDelete', { count: selectedOrders.length, orderNumbers }))
     )
       return;
 
@@ -376,17 +411,17 @@ export default function PurchaseOrdersPage() {
     try {
       const data = await ApiClient.put('/api/purchase/orders', { id: orderId, action });
       if (data.success) {
-        toast({ title: '成功', description: '状态更新成功' });
+        toast({ title: tc('success'), description: tc('statusUpdateSuccess') });
         fetchOrders();
       } else {
         toast({
-          title: '错误',
-          description: data.message || '状态更新失败',
+          title: tc('error'),
+          description: data.message || tc('statusUpdateFailed'),
           variant: 'destructive',
         });
       }
     } catch (error) {
-      toast({ title: '错误', description: '状态更新失败', variant: 'destructive' });
+      toast({ title: tc('error'), description: tc('statusUpdateFailed'), variant: 'destructive' });
     }
   };
 
@@ -400,19 +435,19 @@ export default function PurchaseOrdersPage() {
       10: tc('draft'),
       20: tc('pending'),
       30: tc('approved'),
-      40: '部分到货',
-      50: '已完成',
+      40: t('partialReceived'),
+      50: t('completed'),
       90: tc('closed'),
     };
     const data = orders.map((o) => ({
-      采购单号: o.po_no,
-      供应商: o.supplier_name,
-      下单日期: formatDate(o.order_date),
-      期望到货: formatDate(o.delivery_date),
-      总数量: o.total_quantity,
-      金额: Number(o.grand_total || o.total_amount || 0).toFixed(2),
-      状态: statusMap[o.status] || `未知(${o.status})`,
-      备注: o.remark || '',
+      [t('poNo')]: o.po_no,
+      [t('supplier')]: o.supplier_name,
+      [t('orderDate')]: formatDate(o.order_date),
+      [t('expectedDelivery')]: formatDate(o.delivery_date),
+      [t('totalQty')]: o.total_quantity,
+      [t('totalAmount')]: Number(o.grand_total || o.total_amount || 0).toFixed(2),
+      [tc('status')]: statusMap[o.status] || `${tc('unknown')}(${o.status})`,
+      [tc('remark')]: o.remark || '',
     }));
 
     if (format === 'xls' || format === 'excel') {
@@ -559,7 +594,7 @@ export default function PurchaseOrdersPage() {
       selectedOrders.length > 0 ? orders.filter((o) => selectedOrders.includes(o.id)) : orders;
 
     if (dataToPrint.length === 0) {
-      toast({ title: '提示', description: '没有数据可打印', variant: 'destructive' });
+      toast({ title: tc('info'), description: tc('noDataToPrint'), variant: 'destructive' });
       return;
     }
 
@@ -567,16 +602,16 @@ export default function PurchaseOrdersPage() {
       10: tc('draft'),
       20: tc('pending'),
       30: tc('approved'),
-      40: '部分到货',
-      50: '已完成',
+      40: t('partialReceived'),
+      50: t('completed'),
       90: tc('closed'),
     };
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       toast({
-        title: '错误',
-        description: '无法打开打印窗口，请检查浏览器弹窗设置',
+        title: tc('error'),
+        description: tc('printWindowBlocked'),
         variant: 'destructive',
       });
       return;
@@ -612,11 +647,11 @@ export default function PurchaseOrdersPage() {
             <span class="order-info">供应商：${o.supplier_name} | 下单日期：${formatDate(o.order_date)} | 期望到货：${formatDate(o.delivery_date)} | 状态：${statusLabels[o.status] || tc('unknown')}</span>
           </div>
           <table>
-            <thead><tr><th>序号</th><th>物料编码</th><th>物料名称</th><th>规格型号</th><th>数量</th><th>单位</th><th>单价</th><th>金额</th><th>已收数量</th></tr></thead>
+            <thead><tr><th>{tc("serialNo")}</th><th>物料编码</th><th>物料名称</th><th>规格型号</th><th>{tc("quantity")}</th><th>{tc("unit")}</th><th>单价</th><th>{tc("amount")}</th><th>已收数量</th></tr></thead>
             <tbody>${lineRows}</tbody>
             <tfoot>
               <tr>
-                <td colspan="4" style="text-align:right;font-weight:bold;">合计</td>
+                <td colspan="4" style="text-align:right;font-weight:bold;">{tc("total")}</td>
                 <td class="num" style="font-weight:bold;">${o.total_quantity || 0}</td>
                 <td></td>
                 <td></td>
@@ -692,14 +727,14 @@ export default function PurchaseOrdersPage() {
   };
 
   return (
-    <MainLayout title="采购订单">
+    <MainLayout title={t('purchaseOrder')}>
       <div className="space-y-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               <div className="flex flex-1 gap-4 items-center w-full md:w-auto">
                 <SearchInput
-                  placeholder="搜索采购单号/供应商/日期/物料..."
+                  placeholder={t('searchOrderPlaceholder')}
                   value={keyword}
                   onChange={setKeyword}
                   onSearch={(kw) => {
@@ -716,16 +751,16 @@ export default function PurchaseOrdersPage() {
                   }}
                 >
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="订单状态" />
+                    <SelectValue placeholder={tc('orderStatus')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
-                    <SelectItem value="10">草稿</SelectItem>
-                    <SelectItem value="20">待审批</SelectItem>
-                    <SelectItem value="30">已审批</SelectItem>
-                    <SelectItem value="40">部分到货</SelectItem>
-                    <SelectItem value="50">已完成</SelectItem>
-                    <SelectItem value="90">已关闭</SelectItem>
+                    <SelectItem value="all">{tc('allStatus')}</SelectItem>
+                    <SelectItem value="10">{tc("draft")}</SelectItem>
+                    <SelectItem value="20">{tc('pending')}</SelectItem>
+                    <SelectItem value="30">{tc('approved')}</SelectItem>
+                    <SelectItem value="40">{t('partialReceived')}</SelectItem>
+                    <SelectItem value="50">{tc("completed")}</SelectItem>
+                    <SelectItem value="90">{tc("closed")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" size="icon" onClick={handleSearch}>
@@ -735,34 +770,34 @@ export default function PurchaseOrdersPage() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handlePrintList}>
                   <Printer className="h-4 w-4 mr-2" />
-                  打印{selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
+                  {tc('print')}{selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
                 </Button>
                 {selectedOrders.length > 0 && (
                   <Button variant="destructive" onClick={handleBatchDelete}>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    删除({selectedOrders.length})
+                    {tc('delete')}({selectedOrders.length})
                   </Button>
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline">
                       <Download className="h-4 w-4 mr-2" />
-                      导出
+                      {tc('export')}
                       <ChevronDown className="h-3 w-3 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => handleExport('pdf')}>
                       <FileDown className="h-4 w-4 mr-2" />
-                      导出为 PDF
+                      {t('exportToPDF')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleExport('xls')}>
                       <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      导出为 Excel
+                      {t('exportToExcel')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleExport('word')}>
                       <FileText className="h-4 w-4 mr-2" />
-                      导出为 Word
+                      {t('exportToWord')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -770,18 +805,18 @@ export default function PurchaseOrdersPage() {
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
-                      新建采购单
+                      {t('newPurchaseOrder')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" resizable>
                     <DialogHeader>
-                      <DialogTitle>新建采购订单</DialogTitle>
-                      <DialogDescription>创建采购订单</DialogDescription>
+                      <DialogTitle>{t('createPurchaseOrder')}</DialogTitle>
+                      <DialogDescription>{tc('create')}</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>供应商 *</Label>
+                          <Label>{t('supplier')} *</Label>
                           <Select
                             value={newOrder.supplier_id}
                             onValueChange={(v) =>
@@ -789,7 +824,7 @@ export default function PurchaseOrdersPage() {
                             }
                           >
                             <SelectTrigger className="w-full">
-                              <SelectValue placeholder="选择供应商" />
+                              <SelectValue placeholder={tc('select') + t('supplier')} />
                             </SelectTrigger>
                             <SelectContent>
                               {suppliers
@@ -803,7 +838,7 @@ export default function PurchaseOrdersPage() {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>期望到货日期</Label>
+                          <Label>{t('expectedDate')}</Label>
                           <Input
                             type="date"
                             value={newOrder.delivery_date}
@@ -815,17 +850,17 @@ export default function PurchaseOrdersPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label>采购明细</Label>
+                        <Label>{t('purchaseDetails')}</Label>
                         <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead className="min-w-[140px]">物料编码</TableHead>
-                                <TableHead className="min-w-[140px]">物料名称</TableHead>
-                                <TableHead className="min-w-[100px]">数量</TableHead>
-                                <TableHead className="min-w-[80px]">单位</TableHead>
-                                <TableHead className="min-w-[100px]">单价</TableHead>
-                                <TableHead className="min-w-[100px]">金额</TableHead>
+                                <TableHead className="min-w-[140px]">{t('materialCode')}</TableHead>
+                                <TableHead className="min-w-[140px]">{t('materialName')}</TableHead>
+                                <TableHead className="min-w-[100px]">{tc("quantity")}</TableHead>
+                                <TableHead className="min-w-[80px]">{tc("unit")}</TableHead>
+                                <TableHead className="min-w-[100px]">{t('unitPrice')}</TableHead>
+                                <TableHead className="min-w-[100px]">{tc("amount")}</TableHead>
                                 <TableHead className="w-[60px]"></TableHead>
                               </TableRow>
                             </TableHeader>
@@ -838,7 +873,7 @@ export default function PurchaseOrdersPage() {
                                       onChange={(e) =>
                                         updateItem(item.id, 'material_code', e.target.value)
                                       }
-                                      placeholder="物料编码"
+                                      placeholder={t('materialCode')}
                                     />
                                   </TableCell>
                                   <TableCell>
@@ -847,7 +882,7 @@ export default function PurchaseOrdersPage() {
                                       onChange={(e) =>
                                         updateItem(item.id, 'material_name', e.target.value)
                                       }
-                                      placeholder="物料名称"
+                                      placeholder={t('materialName')}
                                     />
                                   </TableCell>
                                   <TableCell>
@@ -906,14 +941,14 @@ export default function PurchaseOrdersPage() {
                         </div>
                         <Button variant="outline" size="sm" onClick={addItem}>
                           <Plus className="h-4 w-4 mr-1" />
-                          添加物料
+                          {t('addMaterial')}
                         </Button>
                       </div>
 
                       <div className="space-y-2">
-                        <Label>备注</Label>
+                        <Label>{tc("remark")}</Label>
                         <Input
-                          placeholder="采购备注..."
+                          placeholder={tc('pleaseInput') + tc('remark')}
                           value={newOrder.remark}
                           onChange={(e) =>
                             setNewOrder((prev) => ({ ...prev, remark: e.target.value }))
@@ -923,11 +958,11 @@ export default function PurchaseOrdersPage() {
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                        取消
+                        {tc('cancel')}
                       </Button>
                       <Button onClick={handleCreateOrder} loading={loading}>
                         <ShoppingCart className="h-4 w-4 mr-2" />
-                        创建采购单
+                        {t('createPurchaseOrder')}
                       </Button>
                     </div>
                   </DialogContent>
@@ -939,16 +974,16 @@ export default function PurchaseOrdersPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>采购订单列表</CardTitle>
-            <CardDescription>共 {total} 条采购记录</CardDescription>
+            <CardTitle>{t('purchaseOrders')}</CardTitle>
+            <CardDescription>{tc('totalRecords', { total })} {tc('purchase')}{tc('record')}</CardDescription>
           </CardHeader>
           <CardContent>
             {loading && orders.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">加载中...</div>
+              <div className="text-center py-8 text-gray-500">{tc('loading')}</div>
             ) : orders.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>暂无采购订单</p>
+                <p>{t('noPurchaseOrders')}</p>
               </div>
             ) : (
               <Table>
@@ -966,7 +1001,7 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('po_no')}
                     >
                       <span className="inline-flex items-center">
-                        采购单号{getSortIcon('po_no')}
+                        {t('poNo')}{getSortIcon('po_no')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -974,7 +1009,7 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('supplier_name')}
                     >
                       <span className="inline-flex items-center">
-                        供应商{getSortIcon('supplier_name')}
+                        {t('supplier')}{getSortIcon('supplier_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -982,7 +1017,7 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('order_date')}
                     >
                       <span className="inline-flex items-center">
-                        下单日期{getSortIcon('order_date')}
+                        {t('orderDate')}{getSortIcon('order_date')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -990,7 +1025,7 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('delivery_date')}
                     >
                       <span className="inline-flex items-center">
-                        期望到货{getSortIcon('delivery_date')}
+                        {t('expectedDelivery')}{getSortIcon('delivery_date')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -998,7 +1033,7 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('total_quantity')}
                     >
                       <span className="inline-flex items-center justify-end">
-                        总数量{getSortIcon('total_quantity')}
+                        {t('totalQty')}{getSortIcon('total_quantity')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1006,16 +1041,16 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('grand_total')}
                     >
                       <span className="inline-flex items-center justify-end">
-                        金额{getSortIcon('grand_total')}
+                        {tc('amount')}{getSortIcon('grand_total')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted/50"
                       onClick={() => handleSort('status')}
                     >
-                      <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
+                      <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
                     </TableHead>
-                    <TableHead className="text-right">操作</TableHead>
+                    <TableHead className="text-right">{tc("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1064,14 +1099,14 @@ export default function PurchaseOrdersPage() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleViewDetail(order)}>
                                   <Eye className="h-4 w-4 mr-2" />
-                                  查看详情
+                                  {t('viewDetail')}
                                 </DropdownMenuItem>
                                 {order.status === 10 && (
                                   <DropdownMenuItem
                                     onClick={() => handleStatusChange(order.id, 'submit')}
                                   >
                                     <Send className="h-4 w-4 mr-2" />
-                                    提交审批
+                                    {t('submitApproval')}
                                   </DropdownMenuItem>
                                 )}
                                 {order.status === 20 && (
@@ -1079,7 +1114,7 @@ export default function PurchaseOrdersPage() {
                                     onClick={() => handleStatusChange(order.id, 'approve')}
                                   >
                                     <FileText className="h-4 w-4 mr-2" />
-                                    审批通过
+                                    {t('approve')}
                                   </DropdownMenuItem>
                                 )}
                                 {order.status < 30 && (
@@ -1088,7 +1123,7 @@ export default function PurchaseOrdersPage() {
                                     onClick={() => handleDelete(order)}
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
-                                    删除
+                                    {tc('delete')}
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -1103,28 +1138,28 @@ export default function PurchaseOrdersPage() {
                                   <TableHeader>
                                     <TableRow className="bg-slate-100/50 dark:bg-slate-700/50 hover:bg-slate-100/50 dark:hover:bg-slate-700/50">
                                       <TableHead className="pl-8 text-xs font-normal text-muted-foreground">
-                                        物料编码
+                                        {t('materialCode')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground">
-                                        物料名称
+                                        {t('materialName')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground">
-                                        规格型号
+                                        {t('specification')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                        数量
+                                        {tc('quantity')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground">
-                                        单位
+                                        {tc('unit')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                        单价
+                                        {t('unitPrice')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground text-right">
-                                        金额
+                                        {tc('amount')}
                                       </TableHead>
                                       <TableHead className="text-xs font-normal text-muted-foreground">
-                                        已收数量
+                                        {t('receivedQty')}
                                       </TableHead>
                                     </TableRow>
                                   </TableHeader>
@@ -1171,7 +1206,7 @@ export default function PurchaseOrdersPage() {
                                           colSpan={8}
                                           className="text-center py-3 text-muted-foreground text-sm"
                                         >
-                                          暂无明细数据
+                                          {t('noDetailData')}
                                         </TableCell>
                                       </TableRow>
                                     )}
@@ -1203,7 +1238,7 @@ export default function PurchaseOrdersPage() {
                     <p className="font-mono">{selectedOrder.po_no}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">供应商</Label>
+                    <Label className="text-muted-foreground">{tc("supplier")}</Label>
                     <p>{selectedOrder.supplier_name}</p>
                   </div>
                   <div>
@@ -1215,11 +1250,11 @@ export default function PurchaseOrdersPage() {
                     <p>{formatDate(selectedOrder.delivery_date)}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">总数量</Label>
+                    <Label className="text-muted-foreground">{tc("totalQuantity")}</Label>
                     <p>{selectedOrder.total_quantity}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">金额</Label>
+                    <Label className="text-muted-foreground">{tc("amount")}</Label>
                     <p className="font-medium">
                       ¥
                       {Number(
@@ -1228,12 +1263,12 @@ export default function PurchaseOrdersPage() {
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">状态</Label>
+                    <Label className="text-muted-foreground">{tc("status")}</Label>
                     <p>{getStatusBadge(selectedOrder.status)}</p>
                   </div>
                   {selectedOrder.remark && (
                     <div className="col-span-2">
-                      <Label className="text-muted-foreground">备注</Label>
+                      <Label className="text-muted-foreground">{tc("remark")}</Label>
                       <p>{selectedOrder.remark}</p>
                     </div>
                   )}
@@ -1246,10 +1281,10 @@ export default function PurchaseOrdersPage() {
                         <TableRow>
                           <TableHead>物料编码</TableHead>
                           <TableHead>物料名称</TableHead>
-                          <TableHead>数量</TableHead>
-                          <TableHead>单位</TableHead>
+                          <TableHead>{tc("quantity")}</TableHead>
+                          <TableHead>{tc("unit")}</TableHead>
                           <TableHead>单价</TableHead>
-                          <TableHead>金额</TableHead>
+                          <TableHead>{tc("amount")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

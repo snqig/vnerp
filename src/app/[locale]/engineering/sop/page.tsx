@@ -55,6 +55,18 @@ interface SOPRecord {
 }
 
 export default function SOPManagementPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   const t = useTranslations('Engineering');
   const tc = useTranslations('Common');
 
@@ -99,7 +111,7 @@ export default function SOPManagementPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('/api/upload/sop', { method: 'POST', body: formData });
+      const res = await authFetch('/api/upload/sop', { method: 'POST', body: formData });
       const result = await res.json();
       if (result.success) {
         setEditItem({ ...editItem, file_url: result.data.url });
@@ -133,7 +145,7 @@ export default function SOPManagementPage() {
         productName: searchProduct,
         sopType: searchType,
       });
-      const res = await fetch('/api/engineering/sop?' + params);
+      const res = await authFetch('/api/engineering/sop?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -151,7 +163,7 @@ export default function SOPManagementPage() {
   const handleSave = async () => {
     try {
       const method = editItem.id ? 'PUT' : 'POST';
-      const res = await fetch('/api/engineering/sop', {
+      const res = await authFetch('/api/engineering/sop', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -172,7 +184,7 @@ export default function SOPManagementPage() {
   const handleDelete = async (id: number) => {
     if (!confirm(tc('confirmDelete'))) return;
     try {
-      const res = await fetch('/api/engineering/sop?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/engineering/sop?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: tc('deleteSuccess') });

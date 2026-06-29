@@ -143,24 +143,6 @@ interface AutoScheduleResult {
 }
 
 // ============================================================
-// 辅助函数
-// ============================================================
-
-const getWorkshopBadge = (workshop: string) => {
-  const workshopMap: Record<string, { label: string; className: string }> = {
-    die_cut: { label: t('workshopDieCutShort'), className: 'bg-purple-100 text-purple-700' },
-    trademark: { label: t('workshopTrademarkShort'), className: 'bg-indigo-100 text-indigo-700' },
-    printing: { label: t('workshopPrintingShort'), className: 'bg-pink-100 text-pink-700' },
-    packaging: { label: t('workshopPackagingShort'), className: 'bg-teal-100 text-teal-700' },
-  };
-  const config = workshopMap[workshop] || {
-    label: workshop,
-    className: 'bg-gray-100 text-gray-700',
-  };
-  return <Badge className={config.className}>{config.label}</Badge>;
-};
-
-// ============================================================
 // 主组件
 // ============================================================
 
@@ -168,6 +150,20 @@ export default function ProductionSchedulePage() {
   // 翻译钩子
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
+
+  const getWorkshopBadge = (workshop: string) => {
+    const workshopMap: Record<string, { label: string; className: string }> = {
+      die_cut: { label: t('workshopDieCutShort'), className: 'bg-purple-100 text-purple-700' },
+      trademark: { label: t('workshopTrademarkShort'), className: 'bg-indigo-100 text-indigo-700' },
+      printing: { label: t('workshopPrintingShort'), className: 'bg-pink-100 text-pink-700' },
+      packaging: { label: t('workshopPackagingShort'), className: 'bg-teal-100 text-teal-700' },
+    };
+    const config = workshopMap[workshop] || {
+      label: workshop,
+      className: 'bg-gray-100 text-gray-700',
+    };
+    return <Badge className={config.className}>{config.label}</Badge>;
+  };
 
   const getStatusBadge = (status: number) => {
     const statusMap: Record<number, { label: string; className: string }> = {

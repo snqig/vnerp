@@ -100,6 +100,18 @@ const actionMap: Record<string, string> = {
 };
 
 export default function ScreenPlatePage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -125,7 +137,7 @@ export default function ScreenPlatePage() {
       const params = new URLSearchParams({ page: String(page), pageSize: '20' });
       if (searchCode) params.set('plateCode', searchCode);
       if (searchStatus) params.set('status', searchStatus);
-      const res = await fetch('/api/screen-plates?' + params);
+      const res = await authFetch('/api/screen-plates?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -142,7 +154,7 @@ export default function ScreenPlatePage() {
 
   const fetchHistory = async (plateId: number) => {
     try {
-      const res = await fetch(`/api/screen-plates/history?plateId=${plateId}`);
+      const res = await authFetch(`/api/screen-plates/history?plateId=${plateId}`);
       const result = await res.json();
       if (result.success) {
         setHistoryList(result.data || []);
@@ -155,7 +167,7 @@ export default function ScreenPlatePage() {
   const handleSave = async () => {
     try {
       const method = editItem.id ? 'PUT' : 'POST';
-      const res = await fetch('/api/screen-plates', {
+      const res = await authFetch('/api/screen-plates', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...editItem, operatorName: '系统' }),
@@ -176,7 +188,7 @@ export default function ScreenPlatePage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
     try {
-      const res = await fetch('/api/screen-plates?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/screen-plates?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });
@@ -199,7 +211,7 @@ export default function ScreenPlatePage() {
       return;
     }
     try {
-      const res = await fetch('/api/screen-plates/history', {
+      const res = await authFetch('/api/screen-plates/history', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -236,17 +248,17 @@ export default function ScreenPlatePage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder=tc("code")
+                placeholder={tc("code")}
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
                 className="w-28 h-8 text-sm"
               />
               <Select value={searchStatus} onValueChange={setSearchStatus}>
                 <SelectTrigger className="w-24 h-8 text-sm">
-                  <SelectValue placeholder=tc("status") />
+                  <SelectValue placeholder={tc("status")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全部</SelectItem>
+                  <SelectItem value="">{tc("all")}</SelectItem>
                   {Object.entries(statusMap).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
                       {v.label}
@@ -278,15 +290,15 @@ export default function ScreenPlatePage() {
                 <TableRow>
                   <TableHead className="text-xs">网版编码</TableHead>
                   <TableHead className="text-xs">网版名称</TableHead>
-                  <TableHead className="text-xs">类型</TableHead>
+                  <TableHead className="text-xs">{tc("type")}</TableHead>
                   <TableHead className="text-xs">目数</TableHead>
-                  <TableHead className="text-xs">尺寸</TableHead>
-                  <TableHead className="text-xs">客户</TableHead>
+                  <TableHead className="text-xs">{tc("size")}</TableHead>
+                  <TableHead className="text-xs">{tc("customer")}</TableHead>
                   <TableHead className="text-xs">已用/最大</TableHead>
                   <TableHead className="text-xs">再生次数</TableHead>
                   <TableHead className="text-xs">张力</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -329,7 +341,7 @@ export default function ScreenPlatePage() {
                               setEditItem(item);
                               setShowDialog(true);
                             }}
-                            title=tc("edit")
+                            title={tc("edit")}
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -347,7 +359,7 @@ export default function ScreenPlatePage() {
                             variant="ghost"
                             className="h-6 w-6 p-0 text-red-600"
                             onClick={() => handleDelete(item.id)}
-                            title=tc("delete")
+                            title={tc("delete")}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -411,7 +423,7 @@ export default function ScreenPlatePage() {
                 />
               </div>
               <div>
-                <Label>类型</Label>
+                <Label>{tc("type")}</Label>
                 <Select
                   value={String(editItem.plate_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, plate_type: Number(v) })}
@@ -442,7 +454,7 @@ export default function ScreenPlatePage() {
                 />
               </div>
               <div>
-                <Label>尺寸</Label>
+                <Label>{tc("size")}</Label>
                 <Input
                   value={editItem.size || ''}
                   onChange={(e) => setEditItem({ ...editItem, size: e.target.value })}
@@ -476,7 +488,7 @@ export default function ScreenPlatePage() {
                 />
               </div>
               <div>
-                <Label>状态</Label>
+                <Label>{tc("status")}</Label>
                 <Select
                   value={String(editItem.status ?? 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, status: Number(v) })}
@@ -501,7 +513,7 @@ export default function ScreenPlatePage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -512,7 +524,7 @@ export default function ScreenPlatePage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 取消
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -534,9 +546,9 @@ export default function ScreenPlatePage() {
                       <TableHead className="text-xs">操作类型</TableHead>
                       <TableHead className="text-xs">张力值</TableHead>
                       <TableHead className="text-xs">寿命增加</TableHead>
-                      <TableHead className="text-xs">备注</TableHead>
+                      <TableHead className="text-xs">{tc("remark")}</TableHead>
                       <TableHead className="text-xs">操作人</TableHead>
-                      <TableHead className="text-xs">时间</TableHead>
+                      <TableHead className="text-xs">{tc("time")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -572,7 +584,7 @@ export default function ScreenPlatePage() {
                     <Label>操作类型</Label>
                     <Select value={lifeAction} onValueChange={setLifeAction}>
                       <SelectTrigger>
-                        <SelectValue placeholder="请选择" />
+                        <SelectValue placeholder={tc("pleaseSelect")} />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(actionMap).map(([k, v]) => (
@@ -600,7 +612,7 @@ export default function ScreenPlatePage() {
                     />
                   </div>
                   <div>
-                    <Label>备注</Label>
+                    <Label>{tc("remark")}</Label>
                     <Textarea value={lifeRemark} onChange={(e) => setLifeRemark(e.target.value)} />
                   </div>
                   <Button onClick={handleAddLifeRecord}>

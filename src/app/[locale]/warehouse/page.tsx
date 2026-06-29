@@ -31,6 +31,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Search, Plus, RefreshCw, Package, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface BatchInventory {
   id: number;

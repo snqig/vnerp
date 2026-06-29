@@ -49,6 +49,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 // 仓库数据类型
 interface Warehouse {
@@ -222,9 +223,7 @@ export default function WarehouseSetupPage() {
       } catch (err) {
         toast.error(t('deleteFailed'));
       }
-    };
-
-    confirmDelete(deleteWarehouse);
+    }
   };
 
   const handleSave = async () => {
@@ -327,7 +326,7 @@ export default function WarehouseSetupPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">总容量</p>
+                  <p className="text-sm text-muted-foreground">{tc("totalCapacity")}</p>
                   <p className="text-2xl font-bold">
                     {(warehouses.reduce((sum, w) => sum + w.capacity, 0) / 1000).toFixed(1)}k
                   </p>
@@ -366,9 +365,9 @@ export default function WarehouseSetupPage() {
                   <TableHead>仓库类型</TableHead>
                   <TableHead>纳入计算</TableHead>
                   <TableHead>容量使用</TableHead>
-                  <TableHead>负责人</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
+                  <TableHead>{tc("responsiblePerson")}</TableHead>
+                  <TableHead>{tc("status")}</TableHead>
+                  <TableHead className="text-right">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -498,7 +497,7 @@ export default function WarehouseSetupPage() {
                 </Label>
                 <Input
                   id="name"
-                  placeholder="请输入仓库名称"
+                  placeholder={tc("enterWarehouseName")}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
@@ -544,7 +543,7 @@ export default function WarehouseSetupPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="manager">负责人</Label>
+                <Label htmlFor="manager">{tc("responsiblePerson")}</Label>
                 <Input
                   id="manager"
                   placeholder="请输入负责人姓名"
@@ -553,7 +552,7 @@ export default function WarehouseSetupPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contact">联系电话</Label>
+                <Label htmlFor="contact">{tc("phone")}</Label>
                 <Input
                   id="contact"
                   placeholder="请输入联系电话"
@@ -566,7 +565,7 @@ export default function WarehouseSetupPage() {
                 <Input
                   id="capacity"
                   type="number"
-                  placeholder="请输入仓库容量"
+                  placeholder={tc("enterWarehouseCapacity")}
                   value={formData.capacity}
                   onChange={(e) =>
                     setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })
@@ -598,7 +597,7 @@ export default function WarehouseSetupPage() {
                 </p>
               </div>
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="remark">备注</Label>
+                <Label htmlFor="remark">{tc("remark")}</Label>
                 <Input
                   id="remark"
                   placeholder="请输入备注信息"

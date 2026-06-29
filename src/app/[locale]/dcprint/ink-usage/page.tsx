@@ -58,6 +58,18 @@ interface Ink {
 }
 
 export default function InkUsagePage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -75,7 +87,7 @@ export default function InkUsagePage() {
 
   const fetchInks = async () => {
     try {
-      const res = await fetch('/api/base-inks');
+      const res = await authFetch('/api/base-inks');
       const result = await res.json();
       if (result.success) {
         setInkList(result.data.list || result.data || []);
@@ -91,7 +103,7 @@ export default function InkUsagePage() {
       if (plateId) params.set('plateId', plateId);
       if (startDate) params.set('startDate', startDate);
       if (endDate) params.set('endDate', endDate);
-      const res = await fetch('/api/ink-usages?' + params);
+      const res = await authFetch('/api/ink-usages?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -111,7 +123,7 @@ export default function InkUsagePage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/ink-usages', {
+      const res = await authFetch('/api/ink-usages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -136,7 +148,7 @@ export default function InkUsagePage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
     try {
-      const res = await fetch('/api/ink-usages?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/ink-usages?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });
@@ -205,10 +217,10 @@ export default function InkUsagePage() {
                   <TableHead className="text-xs">油墨编码</TableHead>
                   <TableHead className="text-xs">油墨名称</TableHead>
                   <TableHead className="text-xs">耗用数量</TableHead>
-                  <TableHead className="text-xs">单位</TableHead>
+                  <TableHead className="text-xs">{tc("unit")}</TableHead>
                   <TableHead className="text-xs">操作人</TableHead>
-                  <TableHead className="text-xs">备注</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("remark")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -345,7 +357,7 @@ export default function InkUsagePage() {
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -356,7 +368,7 @@ export default function InkUsagePage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 取消
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -126,6 +126,18 @@ const PAYMENT_METHODS: Record<string, string> = {
 };
 
 export default function FinancePage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Finance');
   const tc = useTranslations('Common');
@@ -191,7 +203,7 @@ export default function FinancePage() {
       if (keyword) params.set('keyword', keyword);
       if (statusFilter !== 'all') params.set('status', statusFilter);
       params.set('pageSize', '50');
-      const res = await fetch(`/api/finance/receivable?${params}`);
+      const res = await authFetch(`/api/finance/receivable?${params}`);
       const data = await res.json();
       if (data.success) {
         setReceivables(data.data?.list || []);
@@ -213,7 +225,7 @@ export default function FinancePage() {
       if (keyword) params.set('keyword', keyword);
       if (statusFilter !== 'all') params.set('status', statusFilter);
       params.set('pageSize', '50');
-      const res = await fetch(`/api/finance/payable?${params}`);
+      const res = await authFetch(`/api/finance/payable?${params}`);
       const data = await res.json();
       if (data.success) {
         setPayables(data.data?.list || []);
@@ -231,7 +243,7 @@ export default function FinancePage() {
   const fetchReceipts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/finance/receipt?pageSize=50');
+      const res = await authFetch('/api/finance/receipt?pageSize=50');
       const data = await res.json();
       if (data.success) {
         setReceipts(data.data?.list || []);
@@ -246,7 +258,7 @@ export default function FinancePage() {
   const fetchPayments = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/finance/payment?pageSize=50');
+      const res = await authFetch('/api/finance/payment?pageSize=50');
       const data = await res.json();
       if (data.success) {
         setPayments(data.data?.list || []);
@@ -260,7 +272,7 @@ export default function FinancePage() {
 
   const fetchCustomers = async () => {
     try {
-      const res = await fetch('/api/customers?pageSize=100');
+      const res = await authFetch('/api/customers?pageSize=100');
       const data = await res.json();
       if (data.success) {
         setCustomers(data.data?.list || data.data || []);
@@ -272,7 +284,7 @@ export default function FinancePage() {
 
   const fetchSuppliers = async () => {
     try {
-      const res = await fetch('/api/purchase/suppliers?pageSize=100');
+      const res = await authFetch('/api/purchase/suppliers?pageSize=100');
       const data = await res.json();
       if (data.success) {
         setSuppliers(data.data?.list || data.data || []);
@@ -300,7 +312,7 @@ export default function FinancePage() {
       return;
     }
     try {
-      const res = await fetch('/api/finance/receivable', {
+      const res = await authFetch('/api/finance/receivable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -331,7 +343,7 @@ export default function FinancePage() {
       return;
     }
     try {
-      const res = await fetch('/api/finance/payable', {
+      const res = await authFetch('/api/finance/payable', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -362,7 +374,7 @@ export default function FinancePage() {
       return;
     }
     try {
-      const res = await fetch('/api/finance/receipt', {
+      const res = await authFetch('/api/finance/receipt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -400,7 +412,7 @@ export default function FinancePage() {
       return;
     }
     try {
-      const res = await fetch('/api/finance/payment', {
+      const res = await authFetch('/api/finance/payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -435,7 +447,7 @@ export default function FinancePage() {
   const handleDeleteReceivable = async (id: number) => {
     if (!confirm('确定删除此应收单？')) return;
     try {
-      const res = await fetch(`/api/finance/receivable?id=${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/finance/receivable?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         toast.success('删除成功');
@@ -451,7 +463,7 @@ export default function FinancePage() {
   const handleDeletePayable = async (id: number) => {
     if (!confirm('确定删除此应付单？')) return;
     try {
-      const res = await fetch(`/api/finance/payable?id=${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/finance/payable?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         toast.success('删除成功');
@@ -470,7 +482,7 @@ export default function FinancePage() {
         type === 'receivable'
           ? `/api/finance/receivable?id=${id}`
           : `/api/finance/payable?id=${id}`;
-      const res = await fetch(url);
+      const res = await authFetch(url);
       const data = await res.json();
       if (data.success) {
         setDetailData(data.data);
@@ -649,8 +661,8 @@ export default function FinancePage() {
                       <TableHead>已收金额</TableHead>
                       <TableHead>未收余额</TableHead>
                       <TableHead>到期日期</TableHead>
-                      <TableHead>状态</TableHead>
-                      <TableHead>操作</TableHead>
+                      <TableHead>{tc("status")}</TableHead>
+                      <TableHead>{tc("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -723,8 +735,8 @@ export default function FinancePage() {
                       <TableHead>已付金额</TableHead>
                       <TableHead>未付余额</TableHead>
                       <TableHead>到期日期</TableHead>
-                      <TableHead>状态</TableHead>
-                      <TableHead>操作</TableHead>
+                      <TableHead>{tc("status")}</TableHead>
+                      <TableHead>{tc("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -793,7 +805,7 @@ export default function FinancePage() {
                       <TableHead>收款金额</TableHead>
                       <TableHead>付款方式</TableHead>
                       <TableHead>收款日期</TableHead>
-                      <TableHead>备注</TableHead>
+                      <TableHead>{tc("remark")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -836,7 +848,7 @@ export default function FinancePage() {
                       <TableHead>付款金额</TableHead>
                       <TableHead>付款方式</TableHead>
                       <TableHead>付款日期</TableHead>
-                      <TableHead>备注</TableHead>
+                      <TableHead>{tc("remark")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -901,7 +913,7 @@ export default function FinancePage() {
                   onChange={(e) =>
                     setReceivableForm((prev) => ({ ...prev, amount: e.target.value }))
                   }
-                  placeholder="请输入金额"
+                  placeholder={tc("enterAmount")}
                 />
               </div>
               <div>
@@ -925,7 +937,7 @@ export default function FinancePage() {
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   value={receivableForm.remark}
                   onChange={(e) =>
@@ -976,7 +988,7 @@ export default function FinancePage() {
                   step="0.01"
                   value={payableForm.amount}
                   onChange={(e) => setPayableForm((prev) => ({ ...prev, amount: e.target.value }))}
-                  placeholder="请输入金额"
+                  placeholder={tc("enterAmount")}
                 />
               </div>
               <div>
@@ -1000,7 +1012,7 @@ export default function FinancePage() {
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   value={payableForm.remark}
                   onChange={(e) => setPayableForm((prev) => ({ ...prev, remark: e.target.value }))}
@@ -1051,7 +1063,7 @@ export default function FinancePage() {
                   step="0.01"
                   value={receiptForm.amount}
                   onChange={(e) => setReceiptForm((prev) => ({ ...prev, amount: e.target.value }))}
-                  placeholder="请输入金额"
+                  placeholder={tc("enterAmount")}
                 />
               </div>
               <div>
@@ -1083,7 +1095,7 @@ export default function FinancePage() {
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   value={receiptForm.remark}
                   onChange={(e) => setReceiptForm((prev) => ({ ...prev, remark: e.target.value }))}
@@ -1134,7 +1146,7 @@ export default function FinancePage() {
                   step="0.01"
                   value={paymentForm.amount}
                   onChange={(e) => setPaymentForm((prev) => ({ ...prev, amount: e.target.value }))}
-                  placeholder="请输入金额"
+                  placeholder={tc("enterAmount")}
                 />
               </div>
               <div>
@@ -1166,7 +1178,7 @@ export default function FinancePage() {
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   value={paymentForm.remark}
                   onChange={(e) => setPaymentForm((prev) => ({ ...prev, remark: e.target.value }))}
@@ -1278,9 +1290,9 @@ export default function FinancePage() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>收款单号</TableHead>
-                          <TableHead>金额</TableHead>
+                          <TableHead>{tc("amount")}</TableHead>
                           <TableHead>方式</TableHead>
-                          <TableHead>日期</TableHead>
+                          <TableHead>{tc("date")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1305,9 +1317,9 @@ export default function FinancePage() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>付款单号</TableHead>
-                          <TableHead>金额</TableHead>
+                          <TableHead>{tc("amount")}</TableHead>
                           <TableHead>方式</TableHead>
-                          <TableHead>日期</TableHead>
+                          <TableHead>{tc("date")}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

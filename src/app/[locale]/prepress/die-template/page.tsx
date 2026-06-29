@@ -167,6 +167,7 @@ interface UsageLog {
 export default function DieTemplatePage() {
   const t = useTranslations('Common');
   const tc = useTranslations('Common');
+  const td = useTranslations('DieTemplate');
 
   const TYPE_MAP: Record<number, { label: string; color: string }> = {
     1: { label: t('dieMold'), color: 'bg-blue-100 text-blue-800' },
@@ -282,7 +283,7 @@ export default function DieTemplatePage() {
         setDashboardStats(data.data?.dashboardStats || {});
       }
     } catch (e) {
-      toast({ title: '获取刀模/网版列表失败', variant: 'destructive' });
+      toast({ title: 'td("fetchListFailed")', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -296,7 +297,7 @@ export default function DieTemplatePage() {
         setMaintenanceList(data.data?.list || []);
       }
     } catch (e) {
-      toast({ title: '获取保养记录失败', variant: 'destructive' });
+      toast({ title: 'td("fetchMaintenanceFailed")', variant: 'destructive' });
     }
   }, []);
 
@@ -308,7 +309,7 @@ export default function DieTemplatePage() {
         setUsageLogList(data.data?.list || []);
       }
     } catch (e) {
-      toast({ title: '获取使用记录失败', variant: 'destructive' });
+      toast({ title: 'td("fetchUsageFailed")', variant: 'destructive' });
     }
   }, []);
 
@@ -368,14 +369,14 @@ export default function DieTemplatePage() {
   };
 
   const exportColumns = [
-    { key: 'template_code', header: '编号' },
+    { key: 'template_code', header: td('code') },
     { key: 'template_name', header: tc('name') },
-    { key: 'asset_type_label', header: '资产类型' },
-    { key: 'specification', header: '规格' },
-    { key: 'usage_info', header: '累计/最大' },
-    { key: 'usage_rate', header: '使用率' },
-    { key: 'lifecycle_status', header: '生命周期' },
-    { key: 'storage_location', header: '存放位置' },
+    { key: 'asset_type_label', header: td('assetType') },
+    { key: 'specification', header: td('specification') },
+    { key: 'usage_info', header: td('cumulativeMax') },
+    { key: 'usage_rate', header: td('usageRate') },
+    { key: 'lifecycle_status', header: td('lifeCycle') },
+    { key: 'storage_location', header: td('storageLocation') },
   ];
 
   const getExportData = () =>
@@ -393,7 +394,7 @@ export default function DieTemplatePage() {
 
   const handleCreate = async () => {
     if (!form.template_code || !form.template_name) {
-      toast({ title: '请填写编号和名称', variant: 'destructive' });
+      toast({ title: 'td("fillCodeAndName")', variant: 'destructive' });
       return;
     }
     try {
@@ -423,15 +424,15 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '创建成功' });
+        toast({ title: 'td("createSuccess")' });
         setDialogOpen(false);
         resetForm();
         fetchList();
       } else {
-        toast({ title: data.message || '创建失败', variant: 'destructive' });
+        toast({ title: data.message || td("createFailed"), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '创建失败', variant: 'destructive' });
+      toast({ title: td("createFailed"), variant: 'destructive' });
     }
   };
 
@@ -463,27 +464,27 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '更新成功' });
+        toast({ title: 'td("updateSuccess")' });
         setDialogOpen(false);
         setEditing(false);
         resetForm();
         fetchList();
       } else {
-        toast({ title: data.message || '更新失败', variant: 'destructive' });
+        toast({ title: data.message || td("updateFailed"), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '更新失败', variant: 'destructive' });
+      toast({ title: td("updateFailed"), variant: 'destructive' });
     }
   };
 
   const handleDeductUsage = async () => {
     if (!selectedItem || !usageAmount) {
-      toast({ title: '请输入使用次数', variant: 'destructive' });
+      toast({ title: 'td("inputUsageCount")', variant: 'destructive' });
       return;
     }
     const deductCount = parseInt(usageAmount);
     if (deductCount <= 0) {
-      toast({ title: '使用次数必须大于0', variant: 'destructive' });
+      toast({ title: 'td("usageCountMustGreaterThan0")', variant: 'destructive' });
       return;
     }
     try {
@@ -497,15 +498,15 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: `已记录${deductCount}次使用，累计${data.data?.cumulative_after || 0}次` });
+        toast({ title: td("recordSuccess", {count: deductCount, cumulative: data.data?.cumulative_after || 0}) });
         setUsageDialogOpen(false);
         setUsageAmount('');
         fetchList();
       } else {
-        toast({ title: data.message || '记录失败', variant: 'destructive' });
+        toast({ title: data.message || td("recordFailed"), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '记录失败', variant: 'destructive' });
+      toast({ title: td("recordFailed"), variant: 'destructive' });
     }
   };
 
@@ -526,21 +527,21 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '保养记录创建成功' });
+        toast({ title: td("maintenanceRecordCreated") });
         setMaintenanceDialogOpen(false);
         resetMaintenanceForm();
         fetchList();
         if (activeTab === 'maintenance') fetchMaintenanceList();
       } else {
-        toast({ title: data.message || '保养创建失败', variant: 'destructive' });
+        toast({ title: data.message || td("maintenanceCreateFailed"), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '保养创建失败', variant: 'destructive' });
+      toast({ title: td("maintenanceCreateFailed"), variant: 'destructive' });
     }
   };
 
   const handleCompleteMaintenance = async (record: MaintenanceRecord) => {
-    if (!confirm('确定完成此保养？')) return;
+    if (!confirm(td("confirmCompleteMaintenance"))) return;
     try {
       const res = await authFetch('/api/prepress/die-maintenance', {
         method: 'PUT',
@@ -552,7 +553,7 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '保养完成' });
+        toast({ title: 'td("maintenanceCompleted")' });
         fetchMaintenanceList();
         fetchList();
       } else {
@@ -564,8 +565,8 @@ export default function DieTemplatePage() {
   };
 
   const handleLock = async (item: DieTemplate) => {
-    const action = item.status === 3 ? '解锁' : '锁定';
-    if (!confirm(`确定${action}此${TYPE_MAP[item.template_type]?.label || '模板'}？`)) return;
+    const action = item.status === 3 ? td("unlock") : td("lock");
+    if (!confirm(`${action}${td("this")}${TYPE_MAP[item.template_type]?.label || td("template")}`)) return;
     try {
       const newStatus = item.status === 3 ? (item.current_usage >= item.warning_usage ? 2 : 1) : 3;
       const res = await authFetch('/api/prepress/die-template', {
@@ -586,18 +587,18 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: `${action}成功` });
+        toast({ title: td(item.status === 3 ? "unlockSuccess" : "lockSuccess") });
         fetchList();
       } else {
-        toast({ title: data.message || `${action}失败`, variant: 'destructive' });
+        toast({ title: data.message || td(item.status === 3 ? "unlockFailed" : "lockFailed"), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: `${action}失败`, variant: 'destructive' });
+      toast({ title: td(item.status === 3 ? "unlockFailed" : "lockFailed"), variant: 'destructive' });
     }
   };
 
   const handleScrap = async (item: DieTemplate) => {
-    if (!confirm('确定报废此模板？报废后不可恢复！')) return;
+    if (!confirm(td("confirmScrap"))) return;
     try {
       const res = await authFetch('/api/prepress/die-template', {
         method: 'PUT',
@@ -618,29 +619,29 @@ export default function DieTemplatePage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '报废成功' });
+        toast({ title: 'td("scrapSuccess")' });
         fetchList();
       } else {
-        toast({ title: data.message || '报废失败', variant: 'destructive' });
+        toast({ title: data.message || td("scrapFailed"), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '报废失败', variant: 'destructive' });
+      toast({ title: td("scrapFailed"), variant: 'destructive' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除此记录？')) return;
+    if (!confirm(td("confirmDelete"))) return;
     try {
       const res = await authFetch(`/api/prepress/die-template?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
-        toast({ title: '删除成功' });
+        toast({ title: 'td("deleteSuccess")' });
         fetchList();
       } else {
-        toast({ title: data.message || '删除失败', variant: 'destructive' });
+        toast({ title: data.message || td("deleteFailed"), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: td("deleteFailed"), variant: 'destructive' });
     }
   };
 
@@ -714,17 +715,17 @@ export default function DieTemplatePage() {
   const getStatusCardTitle = () => {
     switch (statusCardType) {
       case 'available':
-        return '可用刀模/网版';
+        return td("availableDieTemplates");
       case 'maintenance_needed':
-        return '需保养刀模/网版';
+        return td("maintenanceNeededDieTemplates");
       case 're_rule_needed':
-        return '需重做刀模/网版';
+        return td("reRuleNeededDieTemplates");
       case 'scrap':
-        return '已报废刀模/网版';
+        return td("scrapDieTemplates");
       case 'maintenance_due':
-        return '待保养刀模/网版';
+        return td("maintenanceDueDieTemplates");
       default:
-        return '全部刀模/网版';
+        return td("allDieTemplates");
     }
   };
 
@@ -807,7 +808,7 @@ export default function DieTemplatePage() {
   };
 
   return (
-    <MainLayout title="刀模/网版寿命管理">
+    <MainLayout title={td("title")}>
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-6">
           <Card
@@ -815,7 +816,7 @@ export default function DieTemplatePage() {
             onClick={() => handleStatusCardClick('all')}
           >
             <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">总数</div>
+              <div className="text-sm text-muted-foreground">{td("totalCount")}</div>
               <div className="text-2xl font-bold">{dashboardStats.total_count || 0}</div>
             </CardContent>
           </Card>
@@ -824,7 +825,7 @@ export default function DieTemplatePage() {
             onClick={() => handleStatusCardClick('available')}
           >
             <CardContent className="pt-4">
-              <div className="text-sm text-green-600">可用</div>
+              <div className="text-sm text-green-600">{td("available")}</div>
               <div className="text-2xl font-bold text-green-600">
                 {dashboardStats.available_count || 0}
               </div>
@@ -835,7 +836,7 @@ export default function DieTemplatePage() {
             onClick={() => handleStatusCardClick('maintenance_needed')}
           >
             <CardContent className="pt-4">
-              <div className="text-sm text-yellow-600">需保养</div>
+              <div className="text-sm text-yellow-600">{td("maintenanceNeeded")}</div>
               <div className="text-2xl font-bold text-yellow-600">
                 {dashboardStats.warning_count || 0}
               </div>
@@ -846,7 +847,7 @@ export default function DieTemplatePage() {
             onClick={() => handleStatusCardClick('re_rule_needed')}
           >
             <CardContent className="pt-4">
-              <div className="text-sm text-orange-600">需重做</div>
+              <div className="text-sm text-orange-600">{td("reRuleNeeded")}</div>
               <div className="text-2xl font-bold text-orange-600">
                 {dashboardStats.locked_count || 0}
               </div>
@@ -857,7 +858,7 @@ export default function DieTemplatePage() {
             onClick={() => handleStatusCardClick('scrap')}
           >
             <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">已报废</div>
+              <div className="text-sm text-muted-foreground">{td("scrap")}</div>
               <div className="text-2xl font-bold text-muted-foreground">
                 {dashboardStats.scrap_count || 0}
               </div>
@@ -868,7 +869,7 @@ export default function DieTemplatePage() {
             onClick={() => handleStatusCardClick('maintenance_due')}
           >
             <CardContent className="pt-4">
-              <div className="text-sm text-blue-600">待保养</div>
+              <div className="text-sm text-blue-600">{td("maintenanceDue")}</div>
               <div className="text-2xl font-bold text-blue-600">
                 {dashboardStats.maintenance_due_count || 0}
               </div>
@@ -881,24 +882,24 @@ export default function DieTemplatePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
                 <AlertTriangle className="h-5 w-5" />
-                寿命预警 ({warningList.length})
+                {td("lifeWarning")} ({warningList.length})
               </CardTitle>
               <CardDescription className="text-yellow-600 dark:text-yellow-300">
-                以下刀模/网版已达到预警使用次数，请注意及时保养或更换！
+                {td("warningDesc")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>编号</TableHead>
-                    <TableHead>名称</TableHead>
-                    <TableHead>类型</TableHead>
-                    <TableHead>累计/最大</TableHead>
-                    <TableHead>使用率</TableHead>
-                    <TableHead>生命周期状态</TableHead>
-                    <TableHead>距上次保养</TableHead>
-                    <TableHead>操作</TableHead>
+                    <TableHead>{td("codeRequired")}</TableHead>
+                    <TableHead>{td("name")}</TableHead>
+                    <TableHead>{td("type")}</TableHead>
+                    <TableHead>{td("cumulativeMax")}</TableHead>
+                    <TableHead>{td("usageRate")}</TableHead>
+                    <TableHead>{td("lifeCycle")}</TableHead>
+                    <TableHead>{td("sinceLastMaintenance")}</TableHead>
+                    <TableHead>{td("operation")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -965,7 +966,7 @@ export default function DieTemplatePage() {
                             }}
                           >
                             <Wrench className="h-3 w-3 mr-1" />
-                            保养
+                            {td("maintenance")}
                           </Button>
                           <Button
                             size="sm"
@@ -976,7 +977,7 @@ export default function DieTemplatePage() {
                             }}
                           >
                             <Activity className="h-3 w-3 mr-1" />
-                            记录
+                            {td("recordUsage")}
                           </Button>
                         </div>
                       </TableCell>
@@ -992,14 +993,14 @@ export default function DieTemplatePage() {
           <CardHeader>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 shrink-0">
-                <CardTitle>刀模/网版管理</CardTitle>
-                <CardDescription className="mt-1">管理刀模和丝网版的使用寿命、预警、保养和生命周期</CardDescription>
+                <CardTitle>{td("dieTemplateManage")}</CardTitle>
+                <CardDescription className="mt-1">{td("manageDesc")}</CardDescription>
               </div>
               <div className="flex gap-2">
                 <div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索编号/名称/二维码..."
+                    placeholder={td("searchPlaceholder")}
                     className="pl-10"
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
@@ -1008,54 +1009,54 @@ export default function DieTemplatePage() {
                 </div>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="w-28">
-                    <SelectValue placeholder=tc("type") />
+                    <SelectValue placeholder={tc("type")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部类型</SelectItem>
-                    <SelectItem value="1">刀模</SelectItem>
-                    <SelectItem value="2">丝网版</SelectItem>
+                    <SelectItem value="all">{td("allTypes")}</SelectItem>
+                    <SelectItem value="1">{td("dieMold")}</SelectItem>
+                    <SelectItem value="2">{td("screenPlate")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={dieStatusFilter} onValueChange={setDieStatusFilter}>
                   <SelectTrigger className="w-32">
-                    <SelectValue placeholder="生命周期" />
+                    <SelectValue placeholder={td("lifeCycle")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
-                    <SelectItem value="available">可用</SelectItem>
-                    <SelectItem value="in_use">使用中</SelectItem>
-                    <SelectItem value="maintenance_needed">需保养</SelectItem>
-                    <SelectItem value="re_rule_needed">需重做</SelectItem>
-                    <SelectItem value="scrap">已报废</SelectItem>
+                    <SelectItem value="all">{td("allStatus")}</SelectItem>
+                    <SelectItem value="available">{td("available")}</SelectItem>
+                    <SelectItem value="in_use">{td("inUse")}</SelectItem>
+                    <SelectItem value="maintenance_needed">{td("maintenanceNeeded")}</SelectItem>
+                    <SelectItem value="re_rule_needed">{td("reRuleNeeded")}</SelectItem>
+                    <SelectItem value="scrap">{td("scrap")}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={fetchList}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  刷新
+                  {td("refresh")}
                 </Button>
                 <TableExportToolbar
                   selectedCount={selectedIds.size}
                   totalCount={sortedList.length}
                   onSelectAll={toggleSelectAll}
                   onDeselectAll={() => setSelectedIds(new Set())}
-                  onPrint={() => printTable(getExportData(), exportColumns, '刀模/网版列表')}
+                  onPrint={() => printTable(getExportData(), exportColumns, td("dieTemplateList"))}
                   onExportPDF={() =>
                     exportTableToPDF(
                       getExportData(),
-                      '刀模/网版列表',
+                      td("dieTemplateList"),
                       exportColumns,
-                      '刀模/网版列表'
+                      td("dieTemplateList")
                     )
                   }
                   onExportXLS={() =>
-                    exportTableToXLS(getExportData(), '刀模/网版列表', exportColumns)
+                    exportTableToXLS(getExportData(), td("dieTemplateList"), exportColumns)
                   }
                   onExportWORD={() =>
                     exportTableToWORD(
                       getExportData(),
-                      '刀模/网版列表',
+                      td("dieTemplateList"),
                       exportColumns,
-                      '刀模/网版列表'
+                      td("dieTemplateList")
                     )
                   }
                 />
@@ -1067,7 +1068,7 @@ export default function DieTemplatePage() {
                   }}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  新增
+                  {td("add")}
                 </Button>
               </div>
             </div>
@@ -1075,18 +1076,18 @@ export default function DieTemplatePage() {
           <CardContent>
             <div className="mb-6">
               <AnimatedTabs
-                tabs={[{ label: '资产列表' }, { label: '保养记录' }, { label: '使用记录' }]}
+                tabs={[{ label: td("assetList") }, { label: td("maintenanceRecord") }, { label: td("usageRecord") }]}
                 activeTab={
                   activeTab === 'list'
-                    ? '资产列表'
+                    ? td("assetList")
                     : activeTab === 'maintenance'
-                      ? '保养记录'
-                      : '使用记录'
+                      ? td("maintenanceRecord")
+                      : td("usageRecord")
                 }
                 onTabChange={(label) => {
-                  if (label === '资产列表') setActiveTab('list');
-                  else if (label === '保养记录') setActiveTab('maintenance');
-                  else if (label === '使用记录') setActiveTab('usage');
+                  if (label === td("assetList")) setActiveTab('list');
+                  else if (label === td("maintenanceRecord")) setActiveTab('maintenance');
+                  else if (label === td("usageRecord")) setActiveTab('usage');
                 }}
               />
             </div>
@@ -1101,13 +1102,13 @@ export default function DieTemplatePage() {
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
-                    <TableHead className="w-[60px]">序号</TableHead>
+                    <TableHead className="w-[60px]">{td("serialNo")}</TableHead>
                     <TableHead
                       className="cursor-pointer select-none"
                       onClick={() => handleSort('template_code')}
                     >
                       <span className="inline-flex items-center">
-                        编号{getSortIcon('template_code')}
+                        {td("code")}{getSortIcon('template_code')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1115,24 +1116,24 @@ export default function DieTemplatePage() {
                       onClick={() => handleSort('template_name')}
                     >
                       <span className="inline-flex items-center">
-                        名称{getSortIcon('template_name')}
+                        {td("name")}{getSortIcon('template_name')}
                       </span>
                     </TableHead>
-                    <TableHead>资产类型</TableHead>
-                    <TableHead>规格</TableHead>
-                    <TableHead>累计/最大</TableHead>
-                    <TableHead>使用率</TableHead>
-                    <TableHead>生命周期</TableHead>
-                    <TableHead>保养进度</TableHead>
-                    <TableHead>存放位置</TableHead>
-                    <TableHead>操作</TableHead>
+                    <TableHead>{td("assetType")}</TableHead>
+                    <TableHead>{td("specification")}</TableHead>
+                    <TableHead>{td("cumulativeMax")}</TableHead>
+                    <TableHead>{td("usageRate")}</TableHead>
+                    <TableHead>{td("lifeCycle")}</TableHead>
+                    <TableHead>{td("maintenanceProgress")}</TableHead>
+                    <TableHead>{td("storageLocation")}</TableHead>
+                    <TableHead>{td("operation")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedList.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                        暂无刀模/网版记录
+                        td("noDieTemplateRecords")
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -1215,7 +1216,7 @@ export default function DieTemplatePage() {
                                 style={{ width: `${getMaintenanceProgress(item)}%` }}
                               />
                             </div>
-                            <span className="text-xs">{item.maintenance_count || 0}次</span>
+                            <span className="text-xs">{item.maintenance_count || 0}{td("times")}</span>
                           </div>
                         </TableCell>
                         <TableCell>{item.storage_location || '-'}</TableCell>
@@ -1241,7 +1242,7 @@ export default function DieTemplatePage() {
                                 setSelectedItem(item);
                                 setUsageDialogOpen(true);
                               }}
-                              title="记录使用"
+                              title={td("recordUsage")}
                             >
                               <Activity className="h-4 w-4" />
                             </Button>
@@ -1252,7 +1253,7 @@ export default function DieTemplatePage() {
                                 setSelectedItem(item);
                                 setMaintenanceDialogOpen(true);
                               }}
-                              title="保养"
+                              title={td("maintenance")}
                             >
                               <Wrench className="h-4 w-4" />
                             </Button>
@@ -1260,7 +1261,7 @@ export default function DieTemplatePage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleLock(item)}
-                              title={item.status === 3 ? '解锁' : '锁定'}
+                              title={item.status === 3 ? td("unlock") : td("lock")}
                             >
                               {item.status === 3 ? (
                                 <Unlock className="h-4 w-4" />
@@ -1273,7 +1274,7 @@ export default function DieTemplatePage() {
                               size="sm"
                               className="text-red-500"
                               onClick={() => handleScrap(item)}
-                              title="报废"
+                              title={td("scrapAction")}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -1289,32 +1290,32 @@ export default function DieTemplatePage() {
             {activeTab === 'maintenance' && (
               <>
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium">保养记录</h3>
+                  <h3 className="text-lg font-medium">{td("maintenanceRecords")}</h3>
                   <Button variant="outline" onClick={fetchMaintenanceList}>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    刷新
+                    {td("refresh")}
                   </Button>
                 </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>保养单号</TableHead>
-                      <TableHead>刀模编码</TableHead>
-                      <TableHead>名称</TableHead>
-                      <TableHead>保养类型</TableHead>
-                      <TableHead>保养前次数</TableHead>
-                      <TableHead>保养后次数</TableHead>
-                      <TableHead>费用</TableHead>
-                      <TableHead>保养人员</TableHead>
-                      <TableHead>状态</TableHead>
-                      <TableHead>操作</TableHead>
+                      <TableHead>{td("maintenanceNo")}</TableHead>
+                      <TableHead>{td("dieCode")}</TableHead>
+                      <TableHead>{td("name")}</TableHead>
+                      <TableHead>{td("maintenanceType")}</TableHead>
+                      <TableHead>{td("beforeMaintenance")}</TableHead>
+                      <TableHead>{td("afterMaintenance")}</TableHead>
+                      <TableHead>{td("cost")}</TableHead>
+                      <TableHead>{td("maintenancePerson")}</TableHead>
+                      <TableHead>{td("status")}</TableHead>
+                      <TableHead>{td("operation")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {maintenanceList.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                          暂无保养记录
+                          td("noMaintenanceRecords")
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -1354,7 +1355,7 @@ export default function DieTemplatePage() {
                                 variant="outline"
                                 onClick={() => handleCompleteMaintenance(record)}
                               >
-                                完成保养
+                                td("completeMaintenance")
                               </Button>
                             )}
                           </TableCell>
@@ -1369,30 +1370,30 @@ export default function DieTemplatePage() {
             {activeTab === 'usage' && (
               <>
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium">使用记录</h3>
+                  <h3 className="text-lg font-medium">{td("usageRecords")}</h3>
                   <Button variant="outline" onClick={fetchUsageLogs}>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    刷新
+                    {td("refresh")}
                   </Button>
                 </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>刀模编码</TableHead>
-                      <TableHead>名称</TableHead>
-                      <TableHead>工单号</TableHead>
-                      <TableHead>工序</TableHead>
-                      <TableHead>本次次数</TableHead>
-                      <TableHead>累计次数</TableHead>
-                      <TableHead>操作员</TableHead>
-                      <TableHead>使用日期</TableHead>
+                      <TableHead>{td("dieCode")}</TableHead>
+                      <TableHead>{td("name")}</TableHead>
+                      <TableHead>{td("workOrderNo")}</TableHead>
+                      <TableHead>{td("process")}</TableHead>
+                      <TableHead>{td("thisTime")}</TableHead>
+                      <TableHead>{td("cumulativeCount")}</TableHead>
+                      <TableHead>{td("operator")}</TableHead>
+                      <TableHead>{td("usageDate")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {usageLogList.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                          暂无使用记录
+                          td("noUsageRecords")
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -1419,38 +1420,38 @@ export default function DieTemplatePage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>{editing ? '编辑刀模/网版' : '新增刀模/网版'}</DialogTitle>
+              <DialogTitle>{editing ? td("editDieTemplate") : td("addDieTemplate")}</DialogTitle>
               <DialogDescription>
-                {editing ? '修改刀模/网版信息' : '创建新的刀模/网版记录'}
+                {editing ? td("editDesc") : td("createDesc")}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>
-                    编号 <span className="text-red-500">*</span>
+                    {td("codeRequired")} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     value={form.template_code}
                     onChange={(e) => setForm({ ...form, template_code: e.target.value })}
                     disabled={editing}
-                    placeholder="如 DM-001"
+                    placeholder={td("codePlaceholder")}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>
-                    名称 <span className="text-red-500">*</span>
+                    {td("nameRequired")} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     value={form.template_name}
                     onChange={(e) => setForm({ ...form, template_name: e.target.value })}
-                    placeholder="刀模/网版名称"
+                    placeholder={td("namePlaceholder")}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>传统类型</Label>
+                  <Label>{td("traditionalType")}</Label>
                   <Select
                     value={form.template_type}
                     onValueChange={(v) =>
@@ -1465,13 +1466,13 @@ export default function DieTemplatePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">刀模</SelectItem>
-                      <SelectItem value="2">丝网版</SelectItem>
+                      <SelectItem value="1">{td("dieMold")}</SelectItem>
+                      <SelectItem value="2">{td("screenPlate")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>资产类型</Label>
+                  <Label>{td("assetTypeLabel")}</Label>
                   <Select
                     value={form.asset_type}
                     onValueChange={(v) => setForm({ ...form, asset_type: v })}
@@ -1480,14 +1481,14 @@ export default function DieTemplatePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="die">刀模</SelectItem>
-                      <SelectItem value="flexo_plate">柔印版</SelectItem>
-                      <SelectItem value="screen_mesh">丝网版</SelectItem>
+                      <SelectItem value="die">{td("dieMold")}</SelectItem>
+                      <SelectItem value="flexo_plate">{td("flexoPlate")}</SelectItem>
+                      <SelectItem value="screen_mesh">{td("screenPlate")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>布局类型</Label>
+                  <Label>{td("layoutType")}</Label>
                   <Select
                     value={form.layout_type}
                     onValueChange={(v) => setForm({ ...form, layout_type: v })}
@@ -1496,15 +1497,15 @@ export default function DieTemplatePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="single_row">单排</SelectItem>
-                      <SelectItem value="multi_row">多排</SelectItem>
+                      <SelectItem value="single_row">{td("singleRow")}</SelectItem>
+                      <SelectItem value="multi_row">{td("multiRow")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>单次出件数</Label>
+                  <Label>{td("piecesPerImpression")}</Label>
                   <Input
                     type="number"
                     value={form.pieces_per_impression}
@@ -1513,30 +1514,30 @@ export default function DieTemplatePage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>规格</Label>
+                  <Label>{td("specification")}</Label>
                   <Input
                     value={form.specification}
                     onChange={(e) => setForm({ ...form, specification: e.target.value })}
-                    placeholder="如 300x200mm"
+                    placeholder={td("specPlaceholder")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>材质</Label>
+                  <Label>{td("material")}</Label>
                   <Input
                     value={form.material}
                     onChange={(e) => setForm({ ...form, material: e.target.value })}
-                    placeholder="材质"
+                    placeholder={td("materialPlaceholder")}
                   />
                 </div>
               </div>
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-3 flex items-center gap-2">
                   <Activity className="h-4 w-4" />
-                  寿命参数
+                  {td("lifeParams")}
                 </h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>最大使用次数</Label>
+                    <Label>{td("maxUsage")}</Label>
                     <Input
                       type="number"
                       value={form.max_impressions || form.max_usage}
@@ -1547,11 +1548,11 @@ export default function DieTemplatePage() {
                           max_usage: e.target.value,
                         })
                       }
-                      placeholder="如 50000"
+                      placeholder={td("maxUsagePlaceholder")}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>已使用次数</Label>
+                    <Label>{td("usedCount")}</Label>
                     <Input
                       type="number"
                       value={form.cumulative_impressions || form.current_usage}
@@ -1562,16 +1563,16 @@ export default function DieTemplatePage() {
                           current_usage: e.target.value,
                         })
                       }
-                      placeholder="0"
+                      placeholder={td("usedCountPlaceholder")}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>预警比例(%)</Label>
+                    <Label>{td("warningThreshold")}</Label>
                     <Input
                       type="number"
                       value={form.warning_threshold}
                       onChange={(e) => setForm({ ...form, warning_threshold: e.target.value })}
-                      placeholder="80"
+                      placeholder={td("warningThresholdPlaceholder")}
                     />
                   </div>
                 </div>
@@ -1579,56 +1580,56 @@ export default function DieTemplatePage() {
               <div className="border-t pt-4">
                 <h4 className="font-medium mb-3 flex items-center gap-2">
                   <WrenchIcon className="h-4 w-4" />
-                  保养参数
+                  {td("maintenanceParams")}
                 </h4>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>保养间隔次数</Label>
+                    <Label>{td("maintenanceInterval")}</Label>
                     <Input
                       type="number"
                       value={form.maintenance_interval}
                       onChange={(e) => setForm({ ...form, maintenance_interval: e.target.value })}
-                      placeholder="8000"
+                      placeholder={td("maintenanceIntervalPlaceholder")}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>单价(元)</Label>
+                    <Label>{td("unitPrice")}</Label>
                     <Input
                       type="number"
                       value={form.unit_price}
                       onChange={(e) => setForm({ ...form, unit_price: e.target.value })}
-                      placeholder="0"
+                      placeholder={td("usedCountPlaceholder")}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>存放位置</Label>
+                    <Label>{td("storageLocationLabel")}</Label>
                     <Input
                       value={form.storage_location}
                       onChange={(e) => setForm({ ...form, storage_location: e.target.value })}
-                      placeholder="A区-01架"
+                      placeholder={td("storagePlaceholder")}
                     />
                   </div>
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>备注</Label>
+                <Label>{td("remark")}</Label>
                 <Textarea
                   value={form.remark}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                  placeholder="备注信息"
+                  placeholder={td("remarkPlaceholder")}
                   rows={2}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                取消
+                {tc("cancel")}
               </Button>
               <Button
                 onClick={editing ? handleUpdate : handleCreate}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {editing ? tc('save') : '创建'}
+                {editing ? tc("save") : td("create")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1637,28 +1638,28 @@ export default function DieTemplatePage() {
         <Dialog open={usageDialogOpen} onOpenChange={setUsageDialogOpen}>
           <DialogContent className="max-w-md" resizable>
             <DialogHeader>
-              <DialogTitle>记录使用</DialogTitle>
+              <DialogTitle>{td("recordUsageTitle")}</DialogTitle>
               <DialogDescription>
                 {selectedItem &&
-                  `为 ${selectedItem.template_name} (${selectedItem.template_code}) 记录使用次数`}
+                  `${td("for")} ${selectedItem.template_name} (${selectedItem.template_code}) ${td("recordUsageTitle")}`}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               {selectedItem && (
                 <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">当前累计</span>
+                    <span className="text-muted-foreground">{td("currentCumulative")}</span>
                     <span className="font-medium">
                       {selectedItem.cumulative_impressions || selectedItem.current_usage} /{' '}
                       {selectedItem.max_impressions || selectedItem.max_usage}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">使用率</span>
+                    <span className="text-muted-foreground">{td("usageRateLabel")}</span>
                     <span className="font-medium">{getUsagePercent(selectedItem)}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">生命周期</span>
+                    <span className="text-muted-foreground">{td("lifeCycleLabel")}</span>
                     <Badge
                       className={
                         (DIE_STATUS_MAP[selectedItem.die_status] || STATUS_MAP[selectedItem.status])
@@ -1673,22 +1674,22 @@ export default function DieTemplatePage() {
               )}
               <div className="space-y-2">
                 <Label>
-                  本次使用次数 <span className="text-red-500">*</span>
+                  {td("thisUsageCount")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   type="number"
                   value={usageAmount}
                   onChange={(e) => setUsageAmount(e.target.value)}
-                  placeholder="输入使用次数"
+                  placeholder={td("thisUsageCountPlaceholder")}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setUsageDialogOpen(false)}>
-                取消
+                {tc("cancel")}
               </Button>
               <Button onClick={handleDeductUsage} className="bg-blue-600 hover:bg-blue-700">
-                确认记录
+                {td("confirmRecord")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1697,39 +1698,39 @@ export default function DieTemplatePage() {
         <Dialog open={maintenanceDialogOpen} onOpenChange={setMaintenanceDialogOpen}>
           <DialogContent className="max-w-md" resizable>
             <DialogHeader>
-              <DialogTitle>创建保养记录</DialogTitle>
+              <DialogTitle>{td("createMaintenanceRecord")}</DialogTitle>
               <DialogDescription>
                 {selectedItem &&
-                  `为 ${selectedItem.template_name} (${selectedItem.template_code}) 创建保养记录`}
+                  `${td("for")} ${selectedItem.template_name} (${selectedItem.template_code}) ${td("createMaintenanceRecord")}`}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               {selectedItem && (
                 <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">累计使用</span>
+                    <span className="text-muted-foreground">{td("cumulativeUsage")}</span>
                     <span className="font-medium">
                       {selectedItem.cumulative_impressions || selectedItem.current_usage} /{' '}
                       {selectedItem.max_impressions || selectedItem.max_usage}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">已保养次数</span>
-                    <span className="font-medium">{selectedItem.maintenance_count || 0}次</span>
+                    <span className="text-muted-foreground">{td("maintenanceCount")}</span>
+                    <span className="font-medium">{selectedItem.maintenance_count || 0}{td("times")}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">距上次保养</span>
+                    <span className="text-muted-foreground">{td("sinceLastMaintenance")}</span>
                     <span className="font-medium">
                       {(selectedItem.cumulative_impressions || 0) -
                         (selectedItem.last_maintenance_impressions || 0)}
-                      次
+                      {td("times")}
                     </span>
                   </div>
                 </div>
               )}
               <div className="space-y-2">
                 <Label>
-                  保养类型 <span className="text-red-500">*</span>
+                  {td("maintenanceType")} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={maintenanceForm.maintenance_type}
@@ -1741,44 +1742,44 @@ export default function DieTemplatePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="routine">常规保养</SelectItem>
-                    <SelectItem value="grinding">磨刃/修版</SelectItem>
-                    <SelectItem value="re_rule">重做/翻新</SelectItem>
-                    <SelectItem value="replace">更换</SelectItem>
+                    <SelectItem value="routine">{td("routineMaintenance")}</SelectItem>
+                    <SelectItem value="grinding">{td("grinding")}</SelectItem>
+                    <SelectItem value="re_rule">{td("reRule")}</SelectItem>
+                    <SelectItem value="replace">{td("replace")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>保养费用(元)</Label>
+                  <Label>{td("maintenanceCost")}</Label>
                   <Input
                     type="number"
                     value={maintenanceForm.cost}
                     onChange={(e) =>
                       setMaintenanceForm({ ...maintenanceForm, cost: e.target.value })
                     }
-                    placeholder="0"
+                    placeholder={td("usedCountPlaceholder")}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>保养人员</Label>
+                  <Label>{td("maintenancePerson")}</Label>
                   <Input
                     value={maintenanceForm.technician_name}
                     onChange={(e) =>
                       setMaintenanceForm({ ...maintenanceForm, technician_name: e.target.value })
                     }
-                    placeholder="保养人员姓名"
+                    placeholder={td("maintenancePersonName")}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>备注</Label>
+                <Label>{td("remark")}</Label>
                 <Textarea
                   value={maintenanceForm.remark}
                   onChange={(e) =>
                     setMaintenanceForm({ ...maintenanceForm, remark: e.target.value })
                   }
-                  placeholder="保养备注"
+                  placeholder={td("maintenanceRemark")}
                   rows={2}
                 />
               </div>
@@ -1796,16 +1797,16 @@ export default function DieTemplatePage() {
                   className="rounded"
                 />
                 <Label htmlFor="complete_immediately" className="text-sm">
-                  立即完成保养
+                  {td("completeImmediately")}
                 </Label>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setMaintenanceDialogOpen(false)}>
-                取消
+                {tc("cancel")}
               </Button>
               <Button onClick={handleMaintenance} className="bg-blue-600 hover:bg-blue-700">
-                创建保养
+                {td("createMaintenance")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1814,21 +1815,21 @@ export default function DieTemplatePage() {
         <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>刀模/网版详情</DialogTitle>
+              <DialogTitle>{td("dieTemplateDetail")}</DialogTitle>
             </DialogHeader>
             {detailData && (
               <div className="space-y-4 py-4">
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-muted-foreground">编号：</span>
+                    <span className="text-muted-foreground">{td("codeRequired")}：</span>
                     {detailData.template_code}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">名称：</span>
+                    <span className="text-muted-foreground">{td("nameRequired")}：</span>
                     {detailData.template_name}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">资产类型：</span>
+                    <span className="text-muted-foreground">{td("assetType")}：</span>
                     <Badge
                       className={
                         (
@@ -1842,7 +1843,7 @@ export default function DieTemplatePage() {
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">生命周期：</span>
+                    <span className="text-muted-foreground">{td("lifeCycle")}：</span>
                     <Badge
                       className={
                         (DIE_STATUS_MAP[detailData.die_status] || STATUS_MAP[detailData.status])
@@ -1854,27 +1855,27 @@ export default function DieTemplatePage() {
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">规格：</span>
+                    <span className="text-muted-foreground">{td("specification")}：</span>
                     {detailData.specification || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">材质：</span>
+                    <span className="text-muted-foreground">{td("material")}：</span>
                     {detailData.material || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">布局：</span>
-                    {detailData.layout_type === 'multi_row' ? '多排' : '单排'}
+                    <span className="text-muted-foreground">{td("layoutType")}：</span>
+                    {detailData.layout_type === 'multi_row' ? td("layoutMulti") : td("layoutSingle")}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">单次出件：</span>
+                    <span className="text-muted-foreground">{td("piecesPerImpression")}：</span>
                     {detailData.pieces_per_impression || 1}
                   </div>
                 </div>
                 <div className="border-t pt-3">
-                  <h4 className="font-medium mb-2">寿命信息</h4>
+                  <h4 className="font-medium mb-2">{td("lifeInfo")}</h4>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">使用率</span>
+                      <span className="text-sm text-muted-foreground">{td("usageRateLabel")}</span>
                       <span className="text-sm font-medium">{getUsagePercent(detailData)}%</span>
                     </div>
                     <div className="w-full h-3 bg-muted rounded-full overflow-hidden">
@@ -1885,33 +1886,33 @@ export default function DieTemplatePage() {
                     </div>
                     <div className="text-xs text-gray-400">
                       {detailData.cumulative_impressions || detailData.current_usage} /{' '}
-                      {detailData.max_impressions || detailData.max_usage} 次
+                      {detailData.max_impressions || detailData.max_usage} {td("times")}
                     </div>
                   </div>
                 </div>
                 <div className="border-t pt-3">
-                  <h4 className="font-medium mb-2">保养信息</h4>
+                  <h4 className="font-medium mb-2">{td("maintenanceInfo")}</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <span className="text-muted-foreground">已保养：</span>
-                      {detailData.maintenance_count || 0}次
+                      <span className="text-muted-foreground">{td("maintenanceCount")}：</span>
+                      {detailData.maintenance_count || 0}{td("times")}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">间隔：</span>
-                      {detailData.maintenance_interval || '-'}次
+                      <span className="text-muted-foreground">{td("maintenanceIntervalLabel")}：</span>
+                      {detailData.maintenance_interval || '-'}{td("times")}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">上次保养：</span>
+                      <span className="text-muted-foreground">{td("lastMaintenance")}：</span>
                       {detailData.last_maintenance_date || '-'}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">最后使用：</span>
+                      <span className="text-muted-foreground">{td("lastUsed")}：</span>
                       {detailData.last_used_date || '-'}
                     </div>
                   </div>
                   <div className="mt-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">保养进度</span>
+                      <span className="text-sm text-muted-foreground">{td("maintenanceProgressLabel")}</span>
                       <span className="text-sm">{getMaintenanceProgress(detailData)}%</span>
                     </div>
                     <div className="w-full h-2 bg-muted rounded-full overflow-hidden mt-1">
@@ -1924,25 +1925,25 @@ export default function DieTemplatePage() {
                 </div>
                 <div className="border-t pt-3 grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="text-muted-foreground">单价：</span>¥
+                    <span className="text-muted-foreground">{td("unitPriceLabel")}：</span>¥
                     {detailData.unit_price || 0}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">存放位置：</span>
+                    <span className="text-muted-foreground">{td("storageLocation")}：</span>
                     {detailData.storage_location || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">购买日期：</span>
+                    <span className="text-muted-foreground">{td("purchaseDate")}：</span>
                     {detailData.purchase_date || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">二维码：</span>
+                    <span className="text-muted-foreground">{td("qrCode")}：</span>
                     {detailData.qr_code || '-'}
                   </div>
                 </div>
                 {detailData.remark && (
                   <div className="border-t pt-3 text-sm">
-                    <span className="text-muted-foreground">备注：</span>
+                    <span className="text-muted-foreground">{td("detailRemark")}：</span>
                     {detailData.remark}
                   </div>
                 )}
@@ -1954,25 +1955,25 @@ export default function DieTemplatePage() {
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" resizable>
             <DialogHeader>
               <DialogTitle>{getStatusCardTitle()}</DialogTitle>
-              <DialogDescription>共 {statusCardList.length} 条记录</DialogDescription>
+              <DialogDescription>{td('totalRecords', { count: statusCardList.length })}</DialogDescription>
             </DialogHeader>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>编号</TableHead>
-                  <TableHead>名称</TableHead>
-                  <TableHead>资产类型</TableHead>
-                  <TableHead>累计/最大使用率</TableHead>
-                  <TableHead>生命周期</TableHead>
-                  <TableHead>保养进度</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{td("codeRequired")}</TableHead>
+                  <TableHead>{td("name")}</TableHead>
+                  <TableHead>{td("assetType")}</TableHead>
+                  <TableHead>{td("cumulativeMax")}{td("usageRate")}</TableHead>
+                  <TableHead>{td("lifeCycle")}</TableHead>
+                  <TableHead>{td("maintenanceProgress")}</TableHead>
+                  <TableHead>{td("operation")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {statusCardList.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      暂无记录
+                      td("noRecords")
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -2039,7 +2040,7 @@ export default function DieTemplatePage() {
                               onClick={() => handleCardMaintenance(item)}
                             >
                               <Wrench className="h-3 w-3 mr-1" />
-                              保养
+                              {td("maintenance")}
                             </Button>
                           )}
                           {(statusCardType === 're_rule_needed' ||
@@ -2051,7 +2052,7 @@ export default function DieTemplatePage() {
                               onClick={() => handleCardReRule(item)}
                             >
                               <RotateCcw className="h-3 w-3 mr-1" />
-                              重做
+                              {td("redo")}
                             </Button>
                           )}
                           <Button
@@ -2063,7 +2064,7 @@ export default function DieTemplatePage() {
                             }}
                           >
                             <Eye className="h-3 w-3 mr-1" />
-                            详情
+                            {td("detail")}
                           </Button>
                         </div>
                       </TableCell>
@@ -2074,7 +2075,7 @@ export default function DieTemplatePage() {
             </Table>
             <DialogFooter>
               <Button variant="outline" onClick={() => setStatusCardDialogOpen(false)}>
-                关闭
+                {td("close")}
               </Button>
             </DialogFooter>
           </DialogContent>

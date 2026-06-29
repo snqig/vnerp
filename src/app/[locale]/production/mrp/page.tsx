@@ -869,7 +869,7 @@ export default function MRPPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>仓库</Label>
+                      <Label>{tc("warehouse")}</Label>
                       <Select value={bucketWarehouseId} onValueChange={setBucketWarehouseId}>
                         <SelectTrigger>
                           <SelectValue placeholder="选择仓库" />

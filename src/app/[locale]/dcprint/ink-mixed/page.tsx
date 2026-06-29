@@ -67,6 +67,18 @@ const statusMap: Record<
 };
 
 export default function InkMixedPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -88,7 +100,7 @@ export default function InkMixedPage() {
         recordNo: searchNo,
         colorName: searchColor,
       });
-      const res = await fetch('/api/dcprint/ink-mixed?' + params);
+      const res = await authFetch('/api/dcprint/ink-mixed?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -106,7 +118,7 @@ export default function InkMixedPage() {
   const handleSave = async () => {
     try {
       const method = editItem.id ? 'PUT' : 'POST';
-      const res = await fetch('/api/dcprint/ink-mixed', {
+      const res = await authFetch('/api/dcprint/ink-mixed', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -127,7 +139,7 @@ export default function InkMixedPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除此记录？')) return;
     try {
-      const res = await fetch('/api/dcprint/ink-mixed?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/dcprint/ink-mixed?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });
@@ -140,7 +152,7 @@ export default function InkMixedPage() {
 
   const handleStatusChange = async (id: number, status: number) => {
     try {
-      const res = await fetch('/api/dcprint/ink-mixed', {
+      const res = await authFetch('/api/dcprint/ink-mixed', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
@@ -163,7 +175,7 @@ export default function InkMixedPage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={tc("searchOrderNo")}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -200,13 +212,13 @@ export default function InkMixedPage() {
                   <TableHead className="text-xs">原油墨</TableHead>
                   <TableHead className="text-xs">调色比例</TableHead>
                   <TableHead className="text-xs">色彩名称</TableHead>
-                  <TableHead className="text-xs">客户</TableHead>
-                  <TableHead className="text-xs">数量</TableHead>
+                  <TableHead className="text-xs">{tc("customer")}</TableHead>
+                  <TableHead className="text-xs">{tc("quantity")}</TableHead>
                   <TableHead className="text-xs">操作员</TableHead>
                   <TableHead className="text-xs">调色时间</TableHead>
                   <TableHead className="text-xs">过期时间</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -392,7 +404,7 @@ export default function InkMixedPage() {
                 />
               </div>
               <div>
-                <Label>数量</Label>
+                <Label>{tc("quantity")}</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -401,7 +413,7 @@ export default function InkMixedPage() {
                 />
               </div>
               <div>
-                <Label>单位</Label>
+                <Label>{tc("unit")}</Label>
                 <Select
                   value={editItem.unit || 'kg'}
                   onValueChange={(v) => setEditItem({ ...editItem, unit: v })}
@@ -426,7 +438,7 @@ export default function InkMixedPage() {
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Input
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -437,7 +449,7 @@ export default function InkMixedPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 取消
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

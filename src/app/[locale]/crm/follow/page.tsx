@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -49,6 +49,18 @@ interface FollowRecord {
 }
 
 export default function CustomerFollowPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   const t = useTranslations('Crm');
   const tc = useTranslations('Common');
 
@@ -97,14 +109,14 @@ export default function CustomerFollowPage() {
       const params = new URLSearchParams({ page: String(page), pageSize: '20' });
       if (searchName) params.set('customerName', searchName);
       if (searchType) params.set('followType', searchType);
-      const res = await fetch('/api/crm/follow?' + params);
+      const res = await authFetch('/api/crm/follow?' + params);
       const data = await res.json();
       if (data.code === 200) {
         setRecords(data.data.list || []);
         setTotal(data.data.total || 0);
       }
     } catch {
-      toast({ title: '获取数据失败', variant: 'destructive' });
+      toast({ title: tc('fetchFailed'), variant: 'destructive' });
     }
     setLoading(false);
   };
@@ -115,20 +127,20 @@ export default function CustomerFollowPage() {
 
   const handleSave = async () => {
     if (!form.customer_name) {
-      toast({ title: '请输入客户名称', variant: 'destructive' });
+      toast({ title: t('enterCustomerName'), variant: 'destructive' });
       return;
     }
     try {
       const method = editRecord ? 'PUT' : 'POST';
       const body = editRecord ? { id: editRecord.id, ...form } : form;
-      const res = await fetch('/api/crm/follow', {
+      const res = await authFetch('/api/crm/follow', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       const data = await res.json();
       if (data.code === 200) {
-        toast({ title: editRecord ? '更新成功' : '创建成功' });
+        toast({ title: editRecord ? tc('updateSuccess') : tc('createSuccess') });
         setDialogOpen(false);
         fetchData();
       } else {
@@ -140,16 +152,16 @@ export default function CustomerFollowPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确认删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
-      const res = await fetch('/api/crm/follow?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/crm/follow?id=' + id, { method: 'DELETE' });
       const data = await res.json();
       if (data.code === 200) {
-        toast({ title: '删除成功' });
+        toast({ title: tc('deleteSuccess') });
         fetchData();
       }
     } catch {
-      toast({ title: '删除失败', variant: 'destructive' });
+      toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -181,11 +193,11 @@ export default function CustomerFollowPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Phone className="h-6 w-6" />
-            客户跟进记录
+            {t('followRecords')}
           </h1>
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4 mr-1" />
-            新建跟进
+            {t('newFollow')}
           </Button>
         </div>
 
@@ -193,7 +205,7 @@ export default function CustomerFollowPage() {
           <CardContent className="p-4">
             <div className="flex gap-3 mb-4">
               <Input
-                placeholder="搜索客户名称"
+                placeholder={t('searchCustomerPlaceholder')}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="w-48"
@@ -201,7 +213,7 @@ export default function CustomerFollowPage() {
               />
               <Select value={searchType} onValueChange={(v) => setSearchType(v)}>
                 <SelectTrigger className="w-32">
-                  <SelectValue placeholder="跟进方式" />
+                  <SelectValue placeholder={t('followType')} />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(followTypeMap).map(([k, v]) => (
@@ -213,22 +225,22 @@ export default function CustomerFollowPage() {
               </Select>
               <Button variant="outline" onClick={fetchData}>
                 <Search className="h-4 w-4 mr-1" />
-                搜索
+                {tc('search')}
               </Button>
             </div>
 
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>客户名称</TableHead>
-                  <TableHead>跟进方式</TableHead>
-                  <TableHead>跟进内容</TableHead>
-                  <TableHead>联系人</TableHead>
-                  <TableHead>业务员</TableHead>
-                  <TableHead>下次跟进</TableHead>
-                  <TableHead>商机</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{t('customerName')}</TableHead>
+                  <TableHead>{t('followType')}</TableHead>
+                  <TableHead>{t('followContent')}</TableHead>
+                  <TableHead>{t('contactPerson')}</TableHead>
+                  <TableHead>{t('salesman')}</TableHead>
+                  <TableHead>{t('nextFollow')}</TableHead>
+                  <TableHead>{t('opportunity')}</TableHead>
+                  <TableHead>{tc("status")}</TableHead>
+                  <TableHead>{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -265,14 +277,14 @@ export default function CustomerFollowPage() {
                 {records.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {tc('noData')}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
             <div className="flex justify-between items-center mt-4 text-sm">
-              <span>共 {total} 条</span>
+              <span>{tc('totalRecords', { total })}</span>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -280,7 +292,7 @@ export default function CustomerFollowPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  上一页
+                  {tc('prevPage')}
                 </Button>
                 <Button
                   size="sm"
@@ -288,7 +300,7 @@ export default function CustomerFollowPage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  下一页
+                  {tc('nextPage')}
                 </Button>
               </div>
             </div>
@@ -298,19 +310,19 @@ export default function CustomerFollowPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editRecord ? '编辑跟进记录' : '新建跟进记录'}</DialogTitle>
+              <DialogTitle>{editRecord ? t('editFollowRecord') : t('newFollowRecord')}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-3 py-2">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>客户名称 *</Label>
+                  <Label>{t('customerNameRequired')}</Label>
                   <Input
                     value={form.customer_name || ''}
                     onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>跟进方式</Label>
+                  <Label>{t('followType')}</Label>
                   <Select
                     value={form.follow_type || 'phone'}
                     onValueChange={(v) => setForm({ ...form, follow_type: v })}
@@ -330,14 +342,14 @@ export default function CustomerFollowPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>联系人</Label>
+                  <Label>{t('contactPerson')}</Label>
                   <Input
                     value={form.contact_name || ''}
                     onChange={(e) => setForm({ ...form, contact_name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>业务员</Label>
+                  <Label>{t('salesman')}</Label>
                   <Input
                     value={form.salesman_name || ''}
                     onChange={(e) => setForm({ ...form, salesman_name: e.target.value })}
@@ -345,7 +357,7 @@ export default function CustomerFollowPage() {
                 </div>
               </div>
               <div>
-                <Label>跟进内容</Label>
+                <Label>{t('followContent')}</Label>
                 <Textarea
                   value={form.follow_content || ''}
                   onChange={(e) => setForm({ ...form, follow_content: e.target.value })}
@@ -354,7 +366,7 @@ export default function CustomerFollowPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>下次跟进日期</Label>
+                  <Label>{t('nextFollowDate')}</Label>
                   <Input
                     type="date"
                     value={form.next_follow_date || ''}
@@ -362,7 +374,7 @@ export default function CustomerFollowPage() {
                   />
                 </div>
                 <div>
-                  <Label>状态</Label>
+                  <Label>{tc("status")}</Label>
                   <Select
                     value={String(form.status || 1)}
                     onValueChange={(v) => setForm({ ...form, status: Number(v) })}
@@ -371,22 +383,22 @@ export default function CustomerFollowPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">待跟进</SelectItem>
-                      <SelectItem value="2">已跟进</SelectItem>
-                      <SelectItem value="3">已转化</SelectItem>
+                      <SelectItem value="1">{t('pendingFollow')}</SelectItem>
+                      <SelectItem value="2">{t('followed')}</SelectItem>
+                      <SelectItem value="3">{t('converted')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div>
-                <Label>商机描述</Label>
+                <Label>{t('opportunityDesc')}</Label>
                 <Input
                   value={form.opportunity || ''}
                   onChange={(e) => setForm({ ...form, opportunity: e.target.value })}
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -396,9 +408,9 @@ export default function CustomerFollowPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                取消
+                {tc("cancel")}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

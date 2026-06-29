@@ -407,7 +407,7 @@ export default function CreateBOMPage() {
                             <Input
                               value={line.material_code}
                               onChange={(e) => updateLine(index, 'material_code', e.target.value)}
-                              placeholder=tc("code")
+                              placeholder={tc("code")}
                               className="w-32"
                             />
                             <Button
@@ -424,7 +424,7 @@ export default function CreateBOMPage() {
                           <Input
                             value={line.material_name}
                             onChange={(e) => updateLine(index, 'material_name', e.target.value)}
-                            placeholder=tc("name")
+                            placeholder={tc("name")}
                           />
                         </TableCell>
                         <TableCell>
@@ -496,7 +496,7 @@ export default function CreateBOMPage() {
                             onValueChange={(value) => updateLine(index, 'material_type', value)}
                           >
                             <SelectTrigger className="w-32">
-                              <SelectValue placeholder=tc("type") />
+                              <SelectValue placeholder={tc("type")} />
                             </SelectTrigger>
                             <SelectContent>
                               {materialTypes.map((type) => (

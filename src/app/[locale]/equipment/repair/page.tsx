@@ -47,6 +47,18 @@ interface Item {
 const typeMap: Record<number, string> = { 1: '预防性维修', 2: '故障维修', 3: '紧急维修' };
 
 export default function EquipmentRepairPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Equipment');
   const tc = useTranslations('Common');
@@ -76,7 +88,7 @@ export default function EquipmentRepairPage() {
         pageSize: '20',
         repairNo: searchNo,
       });
-      const res = await fetch('/api/equipment/repair?' + params);
+      const res = await authFetch('/api/equipment/repair?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -92,7 +104,7 @@ export default function EquipmentRepairPage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch('/api/equipment/repair', {
+      const res = await authFetch('/api/equipment/repair', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -111,7 +123,7 @@ export default function EquipmentRepairPage() {
   };
   const handleStatusChange = async (id: number, status: number) => {
     try {
-      const res = await fetch('/api/equipment/repair', {
+      const res = await authFetch('/api/equipment/repair', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
@@ -128,7 +140,7 @@ export default function EquipmentRepairPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
     try {
-      const res = await fetch('/api/equipment/repair?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/equipment/repair?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });
@@ -147,7 +159,7 @@ export default function EquipmentRepairPage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={tc("searchOrderNo")}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -180,8 +192,8 @@ export default function EquipmentRepairPage() {
                   <TableHead className="text-xs">故障描述</TableHead>
                   <TableHead className="text-xs">维修类型</TableHead>
                   <TableHead className="text-xs">维修人</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -344,7 +356,7 @@ export default function EquipmentRepairPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 取消
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

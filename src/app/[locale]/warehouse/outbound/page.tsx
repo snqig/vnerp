@@ -106,62 +106,54 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
+import { logger } from '@/lib/logger';
+import { mockOutboundRecords, mockWarehouses, USE_MOCK } from '@/lib/mock-data';
 
 // 状态类型
 const statusOptions = [
   {
     value: 'all',
-    label: tc('all'),
+    labelKey: 'all',
     color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
   },
   {
     value: 'draft',
-    label: tc('draft'),
+    labelKey: 'draft',
     color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
   },
   {
     value: 'pending',
-    label: tc('pending'),
+    labelKey: 'pending',
     color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200',
   },
   {
     value: 'approved',
-    label: tc('approved'),
+    labelKey: 'approved',
     color: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
   },
   {
     value: 'rejected',
-    label: tc('rejected'),
+    labelKey: 'rejected',
     color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200',
   },
   {
     value: 'completed',
-    label: tc('completed'),
+    labelKey: 'completed',
     color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
   },
 ];
 
 // 出库类型选项
 const outboundTypeOptions = [
-  { value: 'production', label: '生产出库' },
-  { value: 'sales', label: '销售出库' },
-  { value: 'return', label: '退货出库' },
-  { value: 'other', label: '其他出库' },
+  { value: 'production', labelKey: 'productionOutbound' },
+  { value: 'sales', labelKey: 'salesOutbound' },
+  { value: 'return', labelKey: 'returnOutbound' },
+  { value: 'other', labelKey: 'otherOutbound' },
 ];
 
-// 常用单位选项
-const unitOptions = [
-  { value: 'M', label: 'M (米)' },
-  { value: 'KG', label: 'KG (千克)' },
-  { value: '卷', label: '卷' },
-  { value: '支', label: '支' },
-  { value: '张', label: '张' },
-  { value: '桶', label: '桶' },
-  { value: '箱', label: '箱' },
-  { value: 'PCS', label: 'PCS (个)' },
-  { value: '套', label: '套' },
-  { value: '件', label: '件' },
-];
+// 常用单位选项 (将在组件内使用 useMemo 定义以支持国际化)
+// 单位选项映射到 Warehouse 命名空间的翻译键
 
 // 基础信息数据（物料主数据）
 const materials = [
@@ -329,46 +321,46 @@ const initialOutboundRecords: OutboundRecord[] = [
 
 const statusConfig: Record<
   string,
-  { label: string; color: string; icon: React.ComponentType<any> }
+  { labelKey: string; color: string; icon: React.ComponentType<any> }
 > = {
   completed: {
-    label: '已完成',
+    labelKey: 'completed',
     color:
       'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800',
     icon: CheckCircle2,
   },
   pending: {
-    label: '待出库',
+    labelKey: 'pending',
     color:
       'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-800',
     icon: Clock,
   },
   in_transit: {
-    label: '运输中',
+    labelKey: 'inTransit',
     color:
       'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800',
     icon: Truck,
   },
   cancelled: {
-    label: '已取消',
+    labelKey: 'cancelled',
     color:
       'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
     icon: AlertCircle,
   },
   draft: {
-    label: tc('draft'),
+    labelKey: 'draft',
     color:
       'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
     icon: FileText,
   },
   approved: {
-    label: tc('approved'),
+    labelKey: 'approved',
     color:
       'bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-800',
     icon: CheckCircle2,
   },
   rejected: {
-    label: tc('rejected'),
+    labelKey: 'rejected',
     color:
       'bg-red-100 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-800',
     icon: X,
@@ -379,6 +371,20 @@ export default function OutboundManagementPage() {
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
+
+  // 单位选项（支持国际化）
+  const unitOptions = useMemo(() => [
+    { value: 'M', label: t('unitM') },
+    { value: 'KG', label: t('unitKG') },
+    { value: '卷', label: t('unitRoll') },
+    { value: '支', label: t('unitPiece') },
+    { value: '张', label: t('unitSheet') },
+    { value: '桶', label: t('unitBarrel') },
+    { value: '箱', label: t('unitBox') },
+    { value: 'PCS', label: t('unitPCS') },
+    { value: '套', label: t('unitSet') },
+    { value: '件', label: t('unitItem') },
+  ], [t]);
 
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -442,7 +448,14 @@ export default function OutboundManagementPage() {
 
   // 获取出库单列表
   const fetchOutboundRecords = useCallback(async () => {
+    logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '开始获取出库单列表');
     try {
+      if (USE_MOCK) {
+        logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '使用 mock 出库数据');
+        setOutboundRecords(mockOutboundRecords);
+        return;
+      }
+
       const params = new URLSearchParams();
       if (searchQuery) params.append('keyword', searchQuery);
       if (statusFilter !== 'all') params.append('status', statusFilter);
@@ -453,15 +466,20 @@ export default function OutboundManagementPage() {
       const result = await response.json();
       if (result.success) {
         setOutboundRecords(result.data?.list || result.data || []);
+        logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '出库单列表获取成功', { count: (result.data?.list || result.data || []).length });
       }
     } catch (error) {
-      console.error('获取出库单列表失败:', error);
+      logger.error({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '获取出库单列表失败', { error: (error as Error).message });
     }
   }, [searchQuery, statusFilter]);
 
   // 获取仓库列表
   const fetchWarehouses = useCallback(async () => {
     try {
+      if (USE_MOCK) {
+        setWarehouses(mockWarehouses);
+        return;
+      }
       const response = await authFetch('/api/warehouse?all=true');
       const result = await response.json();
       if (result.success) {
@@ -837,13 +855,13 @@ export default function OutboundManagementPage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between"
         >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200">
-              <ArrowUpRight className="w-6 h-6 text-white" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1677ff' }}>
+              <ArrowUpRight className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">出库管理</h1>
-              <p className="text-slate-500">原材料出库登记、查询与统计</p>
+              <h1 className="text-lg font-semibold" style={{ color: '#1f2329' }}>{t('outboundManagement')}</h1>
+              <p className="text-sm" style={{ color: '#86909c' }}>{t('outboundDesc')}</p>
             </div>
           </div>
         </motion.div>
@@ -853,24 +871,25 @@ export default function OutboundManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="flex flex-wrap items-center gap-3 bg-card p-4 rounded-xl shadow-sm border"
+          className="flex flex-wrap items-center gap-3 rounded-lg p-4 border"
+          style={{ backgroundColor: '#ffffff', borderColor: '#eeeeee', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
         >
-          <Button onClick={handleAdd} className="gap-2 bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleAdd} className="gap-2" style={{ backgroundColor: '#1677ff', borderColor: '#1677ff' }}>
             <Plus className="w-4 h-4" />
-            新增
+            {tc('add')}
           </Button>
-          <Button onClick={handlePrint} variant="outline" className="gap-2">
+          <Button onClick={handlePrint} variant="outline" className="gap-2" style={{ color: '#4e5969', borderColor: '#dcdfe6' }}>
             <Printer className="w-4 h-4" />
-            打印
+            {tc('print')}
           </Button>
-          <div className="w-px h-8 bg-slate-200 dark:bg-slate-600 mx-2" />
-          <Button onClick={handleRefresh} variant="outline" className="gap-2" disabled={isLoading}>
+          <div className="w-px h-8 mx-2" style={{ backgroundColor: '#eeeeee' }} />
+          <Button onClick={handleRefresh} variant="outline" className="gap-2" disabled={isLoading} style={{ color: '#4e5969', borderColor: '#dcdfe6' }}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            刷新
+            {t('refresh')}
           </Button>
-          <Button onClick={handleReset} variant="outline" className="gap-2">
+          <Button onClick={handleReset} variant="outline" className="gap-2" style={{ color: '#4e5969', borderColor: '#dcdfe6' }}>
             <RotateCcw className="w-4 h-4" />
-            重置
+            {t('reset')}
           </Button>
         </motion.div>
 
@@ -879,19 +898,20 @@ export default function OutboundManagementPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex flex-wrap items-center gap-4 bg-card p-4 rounded-xl shadow-sm border"
+          className="flex flex-wrap items-center gap-4 rounded-lg p-4 border"
+          style={{ backgroundColor: '#ffffff', borderColor: '#eeeeee', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
         >
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-500" />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">状态：</span>
+            <Filter className="w-4 h-4" style={{ color: '#86909c' }} />
+            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>{t('statusFilter')}：</span>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-32">
-                <SelectValue placeholder="选择状态" />
+                <SelectValue placeholder={t('selectStatus')} />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {tc(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -899,10 +919,10 @@ export default function OutboundManagementPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Search className="w-4 h-4 text-slate-500" />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">关键字：</span>
+            <Search className="w-4 h-4" style={{ color: '#86909c' }} />
+            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>{tc('keyword')}：</span>
             <Input
-              placeholder="搜索品名、单号、备注..."
+              placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-64"
@@ -910,24 +930,24 @@ export default function OutboundManagementPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-slate-500" />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">时间：</span>
+            <Calendar className="w-4 h-4" style={{ color: '#86909c' }} />
+            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>{tc('time')}：</span>
             <Select value={dateRange} onValueChange={setDateRange}>
               <SelectTrigger className="w-32">
-                <SelectValue placeholder="时间范围" />
+                <SelectValue placeholder={t('timeRange')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部</SelectItem>
-                <SelectItem value="today">今日</SelectItem>
-                <SelectItem value="week">本周</SelectItem>
-                <SelectItem value="month">本月</SelectItem>
+                <SelectItem value="all">{tc("all")}</SelectItem>
+                <SelectItem value="today">{tc('today')}</SelectItem>
+                <SelectItem value="week">{tc('thisWeek')}</SelectItem>
+                <SelectItem value="month">{tc('thisMonth')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {selectedRecords.length > 0 && (
             <Badge variant="secondary" className="ml-auto">
-              已选择 {selectedRecords.length} 条记录
+              {t('selectedRecordsCount', { count: selectedRecords.length })}
             </Badge>
           )}
         </motion.div>
@@ -939,18 +959,18 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="border-0 shadow-md bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40">
-              <CardContent className="p-6">
+            <Card className="border rounded-lg" style={{ borderColor: '#eeeeee', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">今日出库</p>
-                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                    <p className="text-sm" style={{ color: '#86909c' }}>{t('todayOutbound')}</p>
+                    <p className="text-xl font-semibold mt-1" style={{ color: '#1677ff' }}>
                       {totalOutboundToday.toLocaleString()}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">单位：件/M</p>
+                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>{t('unitPiecesM')}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/60 flex items-center justify-center">
-                    <TrendingDown className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f5f7fa' }}>
+                    <TrendingDown className="w-5 h-5" style={{ color: '#1677ff' }} />
                   </div>
                 </div>
               </CardContent>
@@ -962,18 +982,18 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="border-0 shadow-md bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-900/40 dark:to-violet-900/40">
-              <CardContent className="p-6">
+            <Card className="border rounded-lg" style={{ borderColor: '#eeeeee', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">本月累计出库</p>
-                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-1">
+                    <p className="text-sm" style={{ color: '#86909c' }}>{t('monthOutboundTotal')}</p>
+                    <p className="text-xl font-semibold mt-1" style={{ color: '#52c41a' }}>
                       {totalOutboundMonth.toLocaleString()}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">单位：件/M</p>
+                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>{t('unitPiecesM')}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/60 flex items-center justify-center">
-                    <Boxes className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f5f7fa' }}>
+                    <Boxes className="w-5 h-5" style={{ color: '#52c41a' }} />
                   </div>
                 </div>
               </CardContent>
@@ -985,22 +1005,22 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="border-0 shadow-md bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/40 dark:to-orange-900/40">
-              <CardContent className="p-6">
+            <Card className="border rounded-lg" style={{ borderColor: '#eeeeee', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">待审核</p>
-                    <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">
+                    <p className="text-sm" style={{ color: '#86909c' }}>{tc("pending")}</p>
+                    <p className="text-xl font-semibold mt-1" style={{ color: '#faad14' }}>
                       {
                         outboundRecords.filter(
                           (r) => r.auditStatus === 'draft' || r.auditStatus === 'pending'
                         ).length
                       }
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">笔待处理</p>
+                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>{t('pendingCount')}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/60 flex items-center justify-center">
-                    <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f5f7fa' }}>
+                    <Clock className="w-5 h-5" style={{ color: '#faad14' }} />
                   </div>
                 </div>
               </CardContent>
@@ -1012,18 +1032,18 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="border-0 shadow-md bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/40 dark:to-pink-900/40">
-              <CardContent className="p-6">
+            <Card className="border rounded-lg" style={{ borderColor: '#eeeeee', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+              <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">出库单总数</p>
-                    <p className="text-3xl font-bold text-red-600 dark:text-red-400 mt-1">
+                    <p className="text-sm" style={{ color: '#86909c' }}>{t('outboundTotal')}</p>
+                    <p className="text-xl font-semibold mt-1" style={{ color: '#1f2329' }}>
                       {outboundRecords.length}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">本月累计</p>
+                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>{t('monthTotal')}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-900/60 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-red-600 dark:text-red-400" />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f5f7fa' }}>
+                    <FileText className="w-5 h-5" style={{ color: '#4e5969' }} />
                   </div>
                 </div>
               </CardContent>
@@ -1037,12 +1057,12 @@ export default function OutboundManagementPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="border shadow-sm dark:border-slate-700">
-            <CardHeader className="flex flex-row items-center justify-between border-b dark:border-slate-700">
-              <CardTitle>出库记录</CardTitle>
+          <Card className="border rounded-lg" style={{ borderColor: '#eeeeee', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            <CardHeader className="flex flex-row items-center justify-between border-b" style={{ borderColor: '#eeeeee' }}>
+              <CardTitle className="text-base font-semibold" style={{ color: '#1f2329' }}>{t('outboundRecords')}</CardTitle>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-500 dark:text-slate-400">
-                  共 {filteredRecords.length} 条记录
+                <span className="text-sm" style={{ color: '#86909c' }}>
+                  {t('totalRecordsCount', { count: filteredRecords.length })}
                 </span>
               </div>
             </CardHeader>
@@ -1060,18 +1080,18 @@ export default function OutboundManagementPage() {
                           onCheckedChange={toggleSelectAll}
                         />
                       </TableHead>
-                      <TableHead>出库单号</TableHead>
-                      <TableHead>日期</TableHead>
-                      <TableHead>物料名称</TableHead>
-                      <TableHead>规格</TableHead>
-                      <TableHead>数量</TableHead>
-                      <TableHead>单位</TableHead>
-                      <TableHead>仓库</TableHead>
-                      <TableHead>批次号</TableHead>
-                      <TableHead>类型</TableHead>
-                      <TableHead>状态</TableHead>
-                      <TableHead>操作员</TableHead>
-                      <TableHead className="text-right">操作</TableHead>
+                      <TableHead>{t('outboundNo')}</TableHead>
+                      <TableHead>{tc("date")}</TableHead>
+                      <TableHead>{tc("materialName")}</TableHead>
+                      <TableHead>{tc("specification")}</TableHead>
+                      <TableHead>{tc("quantity")}</TableHead>
+                      <TableHead>{tc("unit")}</TableHead>
+                      <TableHead>{tc("warehouse")}</TableHead>
+                      <TableHead>{tc("batchNo")}</TableHead>
+                      <TableHead>{tc("type")}</TableHead>
+                      <TableHead>{tc("status")}</TableHead>
+                      <TableHead>{t('operator')}</TableHead>
+                      <TableHead className="text-right">{tc("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1109,7 +1129,7 @@ export default function OutboundManagementPage() {
                           <TableCell>
                             <div className="flex items-center gap-1">
                               <StatusIcon className="w-4 h-4" />
-                              <span>{statusConfig[record.status]?.label || record.status}</span>
+                              <span>{tc(statusConfig[record.status]?.labelKey || 'unknown') || record.status}</span>
                             </div>
                           </TableCell>
                           <TableCell>{record.operator}</TableCell>
@@ -1123,27 +1143,27 @@ export default function OutboundManagementPage() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleEdit(record)}>
                                   <Edit className="mr-2 h-4 w-4" />
-                                  编辑
+                                  {tc('edit')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleDelete(record)}>
                                   <Trash2 className="mr-2 h-4 w-4" />
-                                  删除
+                                  {tc('delete')}
                                 </DropdownMenuItem>
                                 {record.auditStatus !== 'approved' && (
                                   <DropdownMenuItem onClick={() => handleAudit(record, 'approve')}>
                                     <Check className="mr-2 h-4 w-4" />
-                                    审核
+                                    {t('audit')}
                                   </DropdownMenuItem>
                                 )}
                                 {record.auditStatus === 'approved' && (
                                   <DropdownMenuItem onClick={() => handleAudit(record, 'reject')}>
                                     <RotateCcw className="mr-2 h-4 w-4" />
-                                    撤审
+                                    {t('unaudit')}
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuItem onClick={() => handleFifoPreview(record)}>
                                   <Layers className="mr-2 h-4 w-4" />
-                                  FIFO分配
+                                  {t('fifoAllocation')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -1156,10 +1176,10 @@ export default function OutboundManagementPage() {
               </div>
               {filteredRecords.length === 0 && (
                 <div className="text-center py-12">
-                  <div className="mx-auto w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                    <List className="w-8 h-8 text-slate-400" />
+                  <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: '#f5f7fa' }}>
+                    <List className="w-8 h-8" style={{ color: '#86909c' }} />
                   </div>
-                  <p className="text-slate-500">暂无出库记录</p>
+                  <p className="text-sm" style={{ color: '#86909c' }}>{t('noOutboundRecords')}</p>
                 </div>
               )}
             </CardContent>
@@ -1169,76 +1189,76 @@ export default function OutboundManagementPage() {
 
       {/* 新增出库单对话框 */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-md" resizable>
+        <DialogContent className="sm:max-w-[650px]" resizable>
           <DialogHeader>
-            <DialogTitle>新增出库单</DialogTitle>
-            <DialogDescription>填写出库单信息，带 * 为必填项</DialogDescription>
+            <DialogTitle>{t('addOutboundOrder')}</DialogTitle>
+            <DialogDescription>{t('fillOutboundInfo')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="materialName">物料名称 *</Label>
+              <Label htmlFor="materialName">{t('materialName')} *</Label>
               <Input
                 id="materialName"
                 value={formData.materialName}
                 onChange={(e) => setFormData({ ...formData, materialName: e.target.value })}
-                placeholder="请输入物料名称"
+                placeholder={tc("enterMaterialName")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="materialCode">物料编码</Label>
+              <Label htmlFor="materialCode">{t('materialCode')}</Label>
               <Input
                 id="materialCode"
                 value={formData.materialCode}
                 onChange={(e) => setFormData({ ...formData, materialCode: e.target.value })}
-                placeholder="请输入物料编码"
+                placeholder={tc("enterMaterialCode")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="specification">规格</Label>
+              <Label htmlFor="specification">{tc("specification")}</Label>
               <Input
                 id="specification"
                 value={formData.specification}
                 onChange={(e) => setFormData({ ...formData, specification: e.target.value })}
-                placeholder="请输入规格"
+                placeholder={t('enterSpec')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="width">宽度</Label>
+              <Label htmlFor="width">{t('width')}</Label>
               <Input
                 id="width"
                 type="number"
                 value={formData.width}
                 onChange={(e) => setFormData({ ...formData, width: e.target.value })}
-                placeholder="请输入宽度"
+                placeholder={t('enterWidth')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="batchNo">批号</Label>
+              <Label htmlFor="batchNo">{t('batchNo')}</Label>
               <Input
                 id="batchNo"
                 value={formData.batchNo}
                 onChange={(e) => setFormData({ ...formData, batchNo: e.target.value })}
-                placeholder="请输入批号"
+                placeholder={t('enterBatchNo')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="quantity">数量 *</Label>
+              <Label htmlFor="quantity">{t('quantity')} *</Label>
               <Input
                 id="quantity"
                 type="number"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                placeholder="请输入数量"
+                placeholder={tc("enterQuantity")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="unit">单位 *</Label>
+              <Label htmlFor="unit">{t('unit')} *</Label>
               <Select
                 value={formData.unit}
                 onValueChange={(value) => setFormData({ ...formData, unit: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="选择单位" />
+                  <SelectValue placeholder={t('selectUnit')} />
                 </SelectTrigger>
                 <SelectContent>
                   {unitOptions.map((option) => (
@@ -1250,13 +1270,13 @@ export default function OutboundManagementPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="warehouse">仓库 *</Label>
+              <Label htmlFor="warehouse">{t('warehouse')} *</Label>
               <Select
                 value={formData.warehouse}
                 onValueChange={(value) => setFormData({ ...formData, warehouse: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="选择仓库" />
+                  <SelectValue placeholder={t('selectWarehouse')} />
                 </SelectTrigger>
                 <SelectContent>
                   {warehouses.map((warehouse) => (
@@ -1268,30 +1288,30 @@ export default function OutboundManagementPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="outboundType">出库类型 *</Label>
+              <Label htmlFor="outboundType">{t('outboundType')}</Label>
               <Select
                 value={formData.outboundType}
                 onValueChange={(value) => setFormData({ ...formData, outboundType: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="选择出库类型" />
+                  <SelectValue placeholder={t('selectOutboundType')} />
                 </SelectTrigger>
                 <SelectContent>
                   {outboundTypeOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {tc(option.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="remark">备注</Label>
+              <Label htmlFor="remark">{tc("remark")}</Label>
               <Input
                 id="remark"
                 value={formData.remark}
                 onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                placeholder="请输入备注"
+                placeholder={tc("enterRemark")}
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -1302,15 +1322,15 @@ export default function OutboundManagementPage() {
                   setFormData({ ...formData, isRawMaterial: checked as boolean })
                 }
               />
-              <Label htmlFor="isRawMaterial">是否原材料</Label>
+              <Label htmlFor="isRawMaterial">{t('isRawMaterial')}</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-              保存
+              {tc('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1318,76 +1338,76 @@ export default function OutboundManagementPage() {
 
       {/* 编辑出库单对话框 */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-md" resizable>
+        <DialogContent className="sm:max-w-[650px]" resizable>
           <DialogHeader>
-            <DialogTitle>编辑出库单</DialogTitle>
-            <DialogDescription>修改出库单信息，带 * 为必填项</DialogDescription>
+            <DialogTitle>{t('editOutboundOrder')}</DialogTitle>
+            <DialogDescription>{t('modifyOutboundInfo')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="materialName">物料名称 *</Label>
+              <Label htmlFor="materialName">{t('materialName')} *</Label>
               <Input
                 id="materialName"
                 value={formData.materialName}
                 onChange={(e) => setFormData({ ...formData, materialName: e.target.value })}
-                placeholder="请输入物料名称"
+                placeholder={tc("enterMaterialName")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="materialCode">物料编码</Label>
+              <Label htmlFor="materialCode">{t('materialCode')}</Label>
               <Input
                 id="materialCode"
                 value={formData.materialCode}
                 onChange={(e) => setFormData({ ...formData, materialCode: e.target.value })}
-                placeholder="请输入物料编码"
+                placeholder={tc("enterMaterialCode")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="specification">规格</Label>
+              <Label htmlFor="specification">{tc("specification")}</Label>
               <Input
                 id="specification"
                 value={formData.specification}
                 onChange={(e) => setFormData({ ...formData, specification: e.target.value })}
-                placeholder="请输入规格"
+                placeholder={t('enterSpec')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="width">宽度</Label>
+              <Label htmlFor="width">{t('width')}</Label>
               <Input
                 id="width"
                 type="number"
                 value={formData.width}
                 onChange={(e) => setFormData({ ...formData, width: e.target.value })}
-                placeholder="请输入宽度"
+                placeholder={t('enterWidth')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="batchNo">批号</Label>
+              <Label htmlFor="batchNo">{t('batchNo')}</Label>
               <Input
                 id="batchNo"
                 value={formData.batchNo}
                 onChange={(e) => setFormData({ ...formData, batchNo: e.target.value })}
-                placeholder="请输入批号"
+                placeholder={t('enterBatchNo')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="quantity">数量 *</Label>
+              <Label htmlFor="quantity">{t('quantity')} *</Label>
               <Input
                 id="quantity"
                 type="number"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                placeholder="请输入数量"
+                placeholder={tc("enterQuantity")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="unit">单位 *</Label>
+              <Label htmlFor="unit">{t('unit')} *</Label>
               <Select
                 value={formData.unit}
                 onValueChange={(value) => setFormData({ ...formData, unit: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="选择单位" />
+                  <SelectValue placeholder={t('selectUnit')} />
                 </SelectTrigger>
                 <SelectContent>
                   {unitOptions.map((option) => (
@@ -1399,13 +1419,13 @@ export default function OutboundManagementPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="warehouse">仓库 *</Label>
+              <Label htmlFor="warehouse">{t('warehouse')} *</Label>
               <Select
                 value={formData.warehouse}
                 onValueChange={(value) => setFormData({ ...formData, warehouse: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="选择仓库" />
+                  <SelectValue placeholder={t('selectWarehouse')} />
                 </SelectTrigger>
                 <SelectContent>
                   {warehouses.map((warehouse) => (
@@ -1417,30 +1437,30 @@ export default function OutboundManagementPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="outboundType">出库类型 *</Label>
+              <Label htmlFor="outboundType">{t('outboundType')}</Label>
               <Select
                 value={formData.outboundType}
                 onValueChange={(value) => setFormData({ ...formData, outboundType: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="选择出库类型" />
+                  <SelectValue placeholder={t('selectOutboundType')} />
                 </SelectTrigger>
                 <SelectContent>
                   {outboundTypeOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {tc(option.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="remark">备注</Label>
+              <Label htmlFor="remark">{tc("remark")}</Label>
               <Input
                 id="remark"
                 value={formData.remark}
                 onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                placeholder="请输入备注"
+                placeholder={tc("enterRemark")}
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -1451,15 +1471,15 @@ export default function OutboundManagementPage() {
                   setFormData({ ...formData, isRawMaterial: checked as boolean })
                 }
               />
-              <Label htmlFor="isRawMaterial">是否原材料</Label>
+              <Label htmlFor="isRawMaterial">{t('isRawMaterial')}</Label>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
-            <Button onClick={handleUpdate} className="bg-blue-600 hover:bg-blue-700">
-              更新
+            <Button onClick={handleUpdate} style={{ backgroundColor: '#1677ff', borderColor: '#1677ff' }}>
+              {tc('update')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1467,19 +1487,19 @@ export default function OutboundManagementPage() {
 
       {/* 删除出库单对话框 */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md" resizable>
+        <DialogContent className="sm:max-w-[650px]" resizable>
           <DialogHeader>
-            <DialogTitle>删除出库单</DialogTitle>
+            <DialogTitle>{t('deleteOutboundOrder')}</DialogTitle>
             <DialogDescription>
-              确定要删除出库单 {currentRecord?.id} 吗？此操作不可撤销。
+              {t('confirmDeleteOutbound', { id: currentRecord?.id })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
-              删除
+              {tc('delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1487,30 +1507,30 @@ export default function OutboundManagementPage() {
 
       {/* 审核出库单对话框 */}
       <Dialog open={isAuditDialogOpen} onOpenChange={setIsAuditDialogOpen}>
-        <DialogContent className="sm:max-w-md" resizable>
+        <DialogContent className="sm:max-w-[650px]" resizable>
           <DialogHeader>
             <DialogTitle>
-              {currentRecord?.auditAction === 'approve' ? '审核出库单' : '撤审出库单'}
+              {currentRecord?.auditAction === 'approve' ? t('auditOutboundOrder') : t('unauditOutboundOrder')}
             </DialogTitle>
             <DialogDescription>
               {currentRecord?.auditAction === 'approve'
-                ? `确定要审核通过出库单 ${currentRecord?.id} 吗？`
-                : `确定要撤销审核出库单 ${currentRecord?.id} 吗？`}
+                ? t('confirmApproveOutbound', { id: currentRecord?.id })
+                : t('confirmUnauditOutbound', { id: currentRecord?.id })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAuditDialogOpen(false)}>
-              取消
+              {tc('cancel')}
             </Button>
             <Button
               onClick={confirmAudit}
-              className={
+              style={
                 currentRecord?.auditAction === 'approve'
-                  ? 'bg-green-600 hover:bg-green-700'
-                  : 'bg-yellow-600 hover:bg-yellow-700'
+                  ? { backgroundColor: '#52c41a', borderColor: '#52c41a' }
+                  : { backgroundColor: '#faad14', borderColor: '#faad14' }
               }
             >
-              {currentRecord?.auditAction === 'approve' ? '审核通过' : '撤销审核'}
+              {currentRecord?.auditAction === 'approve' ? t('auditApprove') : t('auditReject')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1521,32 +1541,31 @@ export default function OutboundManagementPage() {
         <DialogContent className="sm:max-w-2xl max-h-[80vh]" resizable>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Layers className="w-5 h-5 text-blue-600" />
-              FIFO先进先出分配方案
+              <Layers className="w-5 h-5" style={{ color: '#1677ff' }} />
+              {t('fifoAllocationTitle')}
             </DialogTitle>
             <DialogDescription>
-              出库单 {currentRecord?.id} - {currentRecord?.materialName} | 需出库数量:{' '}
-              {currentRecord?.quantity || currentRecord?.qty}
+              {t('fifoAllocationDesc', { id: currentRecord?.id, materialName: currentRecord?.materialName, quantity: currentRecord?.quantity || currentRecord?.qty })}
             </DialogDescription>
           </DialogHeader>
 
           {fifoLoading ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
-              <span className="ml-3 text-slate-600">正在计算FIFO分配方案...</span>
+              <span className="ml-3" style={{ color: '#86909c' }}>{t('calculatingFifo')}</span>
             </div>
           ) : fifoAllocation ? (
             <div className="space-y-4">
               {/* 汇总信息 */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-blue-50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-blue-600">需要出库</p>
+                  <p className="text-xs" style={{ color: '#1677ff' }}>{t('requiredOutbound')}</p>
                   <p className="text-xl font-bold text-blue-700">
                     {fifoAllocation.required_qty || currentRecord?.quantity || currentRecord?.qty}
                   </p>
                 </div>
                 <div className="bg-green-50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-green-600">可用库存</p>
+                  <p className="text-xs" style={{ color: '#52c41a' }}>{t('availableStock')}</p>
                   <p className="text-xl font-bold text-green-700">
                     {fifoAllocation.total_available?.toFixed(3) || '0'}
                   </p>
@@ -1557,12 +1576,12 @@ export default function OutboundManagementPage() {
                   <p
                     className={`text-xs ${fifoAllocation.shortage > 0 ? 'text-red-600' : 'text-emerald-600'}`}
                   >
-                    {fifoAllocation.shortage > 0 ? '缺少' : tc('status')}
+                    {fifoAllocation.shortage > 0 ? t('shortage') : tc('status')}
                   </p>
                   <p
                     className={`text-xl font-bold ${fifoAllocation.shortage > 0 ? 'text-red-700' : 'text-emerald-700'}`}
                   >
-                    {fifoAllocation.shortage > 0 ? fifoAllocation.shortage.toFixed(3) : '充足'}
+                    {fifoAllocation.shortage > 0 ? fifoAllocation.shortage.toFixed(3) : t('sufficient')}
                   </p>
                 </div>
               </div>
@@ -1570,9 +1589,8 @@ export default function OutboundManagementPage() {
               {fifoAllocation.shortage > 0 && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 text-red-600" />
-                  <span className="text-sm text-red-700">
-                    库存不足！缺少 {fifoAllocation.shortage.toFixed(3)}{' '}
-                    件，无法完成出库。请先补货或减少出库数量。
+                  <span className="text-sm" style={{ color: '#f5222d' }}>
+                    {t('stockInsufficient', { shortage: fifoAllocation.shortage.toFixed(3) })}
                   </span>
                 </div>
               )}
@@ -1580,19 +1598,19 @@ export default function OutboundManagementPage() {
               {/* 分配明细表 */}
               {fifoAllocation.allocation_plan && fifoAllocation.allocation_plan.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    分配明细（按入库日期从早到晚）
+                  <h4 className="text-sm font-medium mb-2" style={{ color: '#4e5969' }}>
+                    {t('allocationDetails')}
                   </h4>
                   <div className="border rounded-lg overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">批次号</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">入库日期</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">可用数量</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">分配数量</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">单价</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">分配金额</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">{tc("batchNo")}</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">{t('inboundDate')}</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">{t('availableQty')}</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">{t('allocatedQty')}</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">{t('unitPrice')}</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">{t('allocatedAmount')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1621,23 +1639,23 @@ export default function OutboundManagementPage() {
                 fifoAllocation.batches.length > 0 &&
                 !fifoAllocation.allocation_plan?.length && (
                   <div>
-                    <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      可用批次（按入库日期排序）
+                    <h4 className="text-sm font-medium mb-2" style={{ color: '#4e5969' }}>
+                      {t('availableBatches')}
                     </h4>
                     <div className="border rounded-lg overflow-hidden">
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">批次号</TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">{tc("batchNo")}</TableHead>
                             <TableHead className="bg-slate-50 dark:bg-slate-800">
-                              入库日期
+                              {t('inboundDate')}
                             </TableHead>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">总数量</TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">{tc("totalQuantity")}</TableHead>
                             <TableHead className="bg-slate-50 dark:bg-slate-800">
-                              可用数量
+                              {t('availableQty')}
                             </TableHead>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">单价</TableHead>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">状态</TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">{t('unitPrice')}</TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">{tc("status")}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1655,7 +1673,7 @@ export default function OutboundManagementPage() {
                                   variant="outline"
                                   className="bg-green-50 text-green-700 border-green-200"
                                 >
-                                  正常
+                                  {tc('normal')}
                                 </Badge>
                               </TableCell>
                             </TableRow>
@@ -1671,20 +1689,20 @@ export default function OutboundManagementPage() {
                   fifoAllocation.allocation_plan.length === 0) && (
                   <div className="text-center py-8">
                     <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
-                    <p className="text-slate-600">该物料暂无可用批次库存</p>
-                    <p className="text-sm text-slate-400 mt-1">请先进行入库操作</p>
+                    <p style={{ color: '#4e5969' }}>{t('noAvailableBatch')}</p>
+                    <p className="text-sm mt-1" style={{ color: '#86909c' }}>{t('pleaseInboundFirst')}</p>
                   </div>
                 )}
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-slate-500">无法获取分配方案</p>
+              <p className="text-sm" style={{ color: '#86909c' }}>{t('cannotGetAllocation')}</p>
             </div>
           )}
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsFifoDialogOpen(false)}>
-              关闭
+              {tc('close')}
             </Button>
             {fifoAllocation &&
               fifoAllocation.can_fulfill &&
@@ -1697,12 +1715,12 @@ export default function OutboundManagementPage() {
                   {fifoConfirming ? (
                     <>
                       <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      确认中...
+                      {t('confirming')}
                     </>
                   ) : (
                     <>
                       <Check className="w-4 h-4 mr-2" />
-                      确认FIFO出库
+                      {t('confirmFifoOutbound')}
                     </>
                   )}
                 </Button>

@@ -186,6 +186,11 @@ function AutoScroll({
   );
 }
 
+const COLORS = [
+  '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e',
+  '#f97316', '#eab308', '#22c55e', '#14b8a6', '#6366f1'
+];
+
 export default function WarehouseDashboard() {
   // 翻译钩子
   const t = useTranslations('Dashboard');
@@ -559,6 +564,7 @@ export default function WarehouseDashboard() {
                 <div className="space-y-2">
                   {data.categoryDistribution.map((c, i) => {
                     const total = data.categoryDistribution.reduce((a, b) => a + b.count, 0);
+                    const maxCount = Math.max(...data.categoryDistribution.map(d => d.count), 1);
                     const pct = total > 0 ? Math.round((c.count / total) * 100) : 0;
                     return (
                       <div key={i} className="flex items-center gap-3">

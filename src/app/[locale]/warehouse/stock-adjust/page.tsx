@@ -32,6 +32,7 @@ import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTranslations } from 'next-intl';
 import {
   TableExportToolbar,
   printTable,
@@ -51,21 +52,22 @@ interface Item {
   operator_name: string;
   remark: string;
 }
-const statusMap: Record<
-  number,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
-> = {
-  1: { label: tc('pending'), variant: 'outline' },
-  2: { label: tc('approved'), variant: 'default' },
-  3: { label: '已完成', variant: 'secondary' },
-  4: { label: '已取消', variant: 'destructive' },
-};
-const typeMap: Record<number, string> = { 1: '盘盈', 2: '盘亏', 3: '其他调整' };
 
 export default function StockAdjustPage() {
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
+
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
+    1: { label: tc('pending'), variant: 'outline' },
+    2: { label: tc('approved'), variant: 'default' },
+    3: { label: t('completed'), variant: 'secondary' },
+    4: { label: t('cancelled'), variant: 'destructive' },
+  };
+  const typeMap: Record<number, string> = { 1: t('surplus'), 2: t('deficit'), 3: t('otherAdjust') };
 
   const authFetch = async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -90,21 +92,21 @@ export default function StockAdjustPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const exportColumns = [
-    { key: '调整单号', header: '调整单号' },
-    { key: '仓库', header: '仓库' },
-    { key: '调整日期', header: '调整日期' },
-    { key: '调整类型', header: '调整类型' },
-    { key: '操作人', header: '操作人' },
+    { key: t('adjustNo'), header: t('adjustNo') },
+    { key: t('warehouse'), header: t('warehouse') },
+    { key: t('adjustDate'), header: t('adjustDate') },
+    { key: t('adjustType'), header: t('adjustType') },
+    { key: t('operator'), header: t('operator') },
     { key: tc('status'), header: tc('status') },
   ];
   const getExportData = () =>
     list.map((item) => ({
-      调整单号: item.adjust_no,
-      仓库: item.warehouse_name || '-',
-      调整日期: item.adjust_date || '-',
-      调整类型: typeMap[item.adjust_type] || '-',
-      操作人: item.operator_name || '-',
-      状态: statusMap[item.status]?.label || '-',
+      [t('adjustNo')]: item.adjust_no,
+      [t('warehouse')]: item.warehouse_name || '-',
+      [t('adjustDate')]: item.adjust_date || '-',
+      [t('adjustType')]: typeMap[item.adjust_type] || '-',
+      [t('operator')]: item.operator_name || '-',
+      [tc('status')]: statusMap[item.status]?.label || '-',
     }));
 
   const fetchData = async () => {
@@ -148,14 +150,14 @@ export default function StockAdjustPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '创建成功' });
+        toast({ title: tc('createSuccess') });
         setShowDialog(false);
         fetchData();
       } else {
-        toast({ title: '失败', description: result.message, variant: 'destructive' });
+        toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
   const handleStatusChange = async (id: number, status: number) => {
@@ -166,24 +168,24 @@ export default function StockAdjustPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '更新成功' });
+        toast({ title: tc('updateSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
-    if (!confirm('确定删除？')) return;
+    if (!confirm(tc('confirmDelete'))) return;
     try {
       const res = await authFetch('/api/warehouse/stock-adjust?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '删除成功' });
+        toast({ title: t('adjustDeleteSuccess') });
         fetchData();
       }
     } catch (e) {
-      toast({ title: '失败', variant: 'destructive' });
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
@@ -191,11 +193,11 @@ export default function StockAdjustPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">库存调整</h1>
+          <h1 className="text-2xl font-bold">{t('stockAdjustTitle')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder="搜索单号"
+                placeholder={tc("searchOrderNo")}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -209,13 +211,13 @@ export default function StockAdjustPage() {
               totalCount={list.length}
               onSelectAll={() => setSelectedIds(new Set(list.map((i) => i.id)))}
               onDeselectAll={() => setSelectedIds(new Set())}
-              onPrint={() => printTable(getExportData(), exportColumns, '库存调整')}
+              onPrint={() => printTable(getExportData(), exportColumns, t('stockAdjustTitle'))}
               onExportPDF={() =>
-                exportTableToPDF(getExportData(), '库存调整', exportColumns, '库存调整')
+                exportTableToPDF(getExportData(), t('stockAdjustTitle'), exportColumns, t('stockAdjustTitle'))
               }
-              onExportXLS={() => exportTableToXLS(getExportData(), '库存调整', exportColumns)}
+              onExportXLS={() => exportTableToXLS(getExportData(), t('stockAdjustTitle'), exportColumns)}
               onExportWORD={() =>
-                exportTableToWORD(getExportData(), '库存调整', exportColumns, '库存调整')
+                exportTableToWORD(getExportData(), t('stockAdjustTitle'), exportColumns, t('stockAdjustTitle'))
               }
             />
             <Button
@@ -226,7 +228,7 @@ export default function StockAdjustPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增调整
+              {t('addAdjust')}
             </Button>
           </div>
         </div>
@@ -244,13 +246,13 @@ export default function StockAdjustPage() {
                       }}
                     />
                   </TableHead>
-                  <TableHead className="text-xs">调整单号</TableHead>
-                  <TableHead className="text-xs">仓库</TableHead>
-                  <TableHead className="text-xs">调整日期</TableHead>
-                  <TableHead className="text-xs">调整类型</TableHead>
-                  <TableHead className="text-xs">操作人</TableHead>
-                  <TableHead className="text-xs">状态</TableHead>
-                  <TableHead className="text-xs">操作</TableHead>
+                  <TableHead className="text-xs">{t('adjustNo')}</TableHead>
+                  <TableHead className="text-xs">{tc("warehouse")}</TableHead>
+                  <TableHead className="text-xs">{t('adjustDate')}</TableHead>
+                  <TableHead className="text-xs">{t('adjustType')}</TableHead>
+                  <TableHead className="text-xs">{t('operator')}</TableHead>
+                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -288,7 +290,7 @@ export default function StockAdjustPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              审核
+                              {tc('audit')}
                             </Button>
                           )}
                           {item.status === 2 && (
@@ -298,7 +300,7 @@ export default function StockAdjustPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 3)}
                             >
-                              完成
+                              {t('complete')}
                             </Button>
                           )}
                           <Button
@@ -328,7 +330,7 @@ export default function StockAdjustPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                      暂无调整记录
+                      {t('noStockAdjustRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -337,7 +339,7 @@ export default function StockAdjustPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{t('totalRecordsCount', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -345,7 +347,7 @@ export default function StockAdjustPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('previousPage')}
             </Button>
             <Button
               size="sm"
@@ -353,18 +355,18 @@ export default function StockAdjustPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增调整单</DialogTitle>
+              <DialogTitle>{t('addAdjustOrder')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>仓库</Label>
+                <Label>{tc("warehouse")}</Label>
                 <Select
                   value={String(editItem.warehouse_id || '')}
                   onValueChange={(v) => {
@@ -377,7 +379,7 @@ export default function StockAdjustPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择仓库" />
+                    <SelectValue placeholder={t('warehousePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w) => (
@@ -389,7 +391,7 @@ export default function StockAdjustPage() {
                 </Select>
               </div>
               <div>
-                <Label>调整日期</Label>
+                <Label>{t('adjustDateLabel')}</Label>
                 <Input
                   type="date"
                   value={editItem.adjust_date || ''}
@@ -397,7 +399,7 @@ export default function StockAdjustPage() {
                 />
               </div>
               <div>
-                <Label>调整类型</Label>
+                <Label>{t('adjustTypeLabel')}</Label>
                 <Select
                   value={String(editItem.adjust_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, adjust_type: Number(v) })}
@@ -406,21 +408,21 @@ export default function StockAdjustPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">盘盈</SelectItem>
-                    <SelectItem value="2">盘亏</SelectItem>
-                    <SelectItem value="3">其他调整</SelectItem>
+                    <SelectItem value="1">{t('surplus')}</SelectItem>
+                    <SelectItem value="2">{t('deficit')}</SelectItem>
+                    <SelectItem value="3">{t('otherAdjust')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>操作人</Label>
+                <Label>{t('operator')}</Label>
                 <UserSelect
                   value={editItem.operator_name || ''}
                   onChange={(v) => setEditItem({ ...editItem, operator_name: v })}
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Input
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -429,9 +431,9 @@ export default function StockAdjustPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

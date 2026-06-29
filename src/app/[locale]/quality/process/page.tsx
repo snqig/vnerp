@@ -69,6 +69,8 @@ import {
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { useTranslations } from 'next-intl';
+import { logger } from '@/lib/logger';
+import { USE_MOCK } from '@/lib/mock-data';
 
 // 品质检验数据类型
 interface QualityProcess {
@@ -117,13 +119,13 @@ interface InspectRecord {
 }
 
 // 检验项目
-const inspectItems = [
-  { id: 'size', name: '尺寸检验', required: true },
-  { id: 'color', name: '颜色检验', required: true },
-  { id: 'adhesion', name: '粘性检验', required: true },
-  { id: 'appearance', name: '外观检验', required: true },
-  { id: 'printing', name: '印刷质量', required: true },
-  { id: 'packaging', name: '包装检验', required: false },
+const getInspectItems = (t: (key: string) => string) => [
+  { id: 'size', name: t('sizeCheck'), required: true },
+  { id: 'color', name: t('colorCheck'), required: true },
+  { id: 'adhesion', name: t('adhesionCheck'), required: true },
+  { id: 'appearance', name: t('appearanceCheck'), required: true },
+  { id: 'printing', name: t('printingQuality'), required: true },
+  { id: 'packaging', name: t('packagingCheck'), required: false },
 ];
 
 
@@ -377,23 +379,25 @@ export default function QualityProcessPage() {
   const t = useTranslations('Quality');
   const tc = useTranslations('Common');
 
+  const inspectItems = getInspectItems(t);
+
   // 获取状态标签
   const getStatusBadge = (status: number) => {
     const statusMap: Record<number, { label: string; className: string }> = {
       0: {
-        label: '待排产',
+        label: t('pendingProduction'),
         className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
       },
       1: {
-        label: '待检验',
+        label: t('pendingInspection'),
         className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
       },
       2: {
-        label: '检验中',
+        label: t('inspecting'),
         className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
       },
       3: {
-        label: '已检验',
+        label: t('inspected'),
         className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
       },
     };
@@ -433,12 +437,26 @@ export default function QualityProcessPage() {
   };
 
   const fetchProcesses = async () => {
+    logger.info({ module: 'Quality', action: 'fetchProcesses' }, '开始获取品质过程检验数据');
     try {
       setLoading(true);
+
+      if (USE_MOCK) {
+        logger.info({ module: 'Quality', action: 'fetchProcesses' }, '使用 mock 数据');
+        setProcesses(mockQualityProcesses);
+        setStats({
+          pending: mockQualityProcesses.filter((p) => p.burdening_status === 1).length,
+          inspecting: mockQualityProcesses.filter((p) => p.burdening_status === 2).length,
+          passed: mockQualityProcesses.filter((p) => p.burdening_status === 3).length,
+          today: mockQualityProcesses.length,
+          week: mockQualityProcesses.length,
+        });
+        return;
+      }
+
       const res = await authFetch('/api/quality/process');
       const data = await res.json();
       if (data.success) {
-        // 统一处理API返回的数据结构，可能是直接数组或包含list的对象
         const rawData = data.data;
         const rawList = Array.isArray(rawData) ? rawData : (rawData?.list || []);
         const list = rawList.map((item: any) => ({
@@ -473,9 +491,10 @@ export default function QualityProcessPage() {
           today: list.length,
           week: list.length,
         });
+        logger.info({ module: 'Quality', action: 'fetchProcesses' }, '品质过程检验数据获取成功', { count: list.length });
       }
     } catch (error) {
-      console.error('获取质量过程数据失败:', error);
+      logger.error({ module: 'Quality', action: 'fetchProcesses' }, '获取品质过程检验数据失败', { error: (error as Error).message });
     } finally {
       setLoading(false);
     }
@@ -691,13 +710,13 @@ export default function QualityProcessPage() {
   };
 
   return (
-    <MainLayout title="品质检验">
+    <MainLayout title={t('processInspection')}>
       <div className="space-y-6">
         {/* 统计卡片 */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">待检验</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('pendingInspection')}</CardTitle>
               <Clock className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
@@ -707,7 +726,7 @@ export default function QualityProcessPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">检验中</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('inspecting')}</CardTitle>
               <ClipboardCheck className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
@@ -717,7 +736,7 @@ export default function QualityProcessPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">已检验</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('inspected')}</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -727,7 +746,7 @@ export default function QualityProcessPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">今日检验</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('todayInspection')}</CardTitle>
               <Calendar className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
@@ -737,7 +756,7 @@ export default function QualityProcessPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">本周检验</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('weekInspection')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-indigo-600" />
             </CardHeader>
             <CardContent>
@@ -753,7 +772,7 @@ export default function QualityProcessPage() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="搜索流程卡号、工单号、产品..."
+                  placeholder={t('searchCardNoWorkOrderProduct')}
                   className="pl-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -762,11 +781,11 @@ export default function QualityProcessPage() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handleGenerateReport}>
                   <FileText className="h-4 w-4 mr-2" />
-                  检验报告
+                  {t('inspectionReport')}
                 </Button>
                 <Button variant="outline" onClick={handlePrint}>
                   <Printer className="h-4 w-4 mr-2" />
-                  打印
+                  {tc('print')}
                 </Button>
                 <TableExportToolbar
                   selectedCount={selectedIds.length}
@@ -777,24 +796,24 @@ export default function QualityProcessPage() {
                   onExportPDF={() =>
                     exportTableToPDF(
                       filteredProcesses,
-                      '过程检验报告',
+                      t('processInspectionReport'),
                       [
-                        { key: 'card_no', header: '流程卡号' },
-                        { key: 'product_name', header: '产品名称' },
-                        { key: 'product_code', header: '产品编码' },
-                        { key: 'material_spec', header: '规格' },
+                        { key: 'card_no', header: t('cardNo') },
+                        { key: 'product_name', header: tc('productName') },
+                        { key: 'product_code', header: tc('productCode') },
+                        { key: 'material_spec', header: tc('specification') },
                         { key: 'quantity', header: tc('quantity') },
                         { key: 'status', header: tc('status') },
                       ],
-                      '过程检验报告'
+                      t('processInspectionReport')
                     )
                   }
                   onExportXLS={() =>
-                    exportTableToXLS(filteredProcesses, '过程检验报告', [
-                      { key: 'card_no', header: '流程卡号' },
-                      { key: 'product_name', header: '产品名称' },
-                      { key: 'product_code', header: '产品编码' },
-                      { key: 'material_spec', header: '规格' },
+                    exportTableToXLS(filteredProcesses, t('processInspectionReport'), [
+                      { key: 'card_no', header: t('cardNo') },
+                      { key: 'product_name', header: tc('productName') },
+                      { key: 'product_code', header: tc('productCode') },
+                      { key: 'material_spec', header: tc('specification') },
                       { key: 'quantity', header: tc('quantity') },
                       { key: 'status', header: tc('status') },
                     ])
@@ -802,16 +821,16 @@ export default function QualityProcessPage() {
                   onExportWORD={() =>
                     exportTableToWORD(
                       filteredProcesses,
-                      '过程检验报告',
+                      t('processInspectionReport'),
                       [
-                        { key: 'card_no', header: '流程卡号' },
-                        { key: 'product_name', header: '产品名称' },
-                        { key: 'product_code', header: '产品编码' },
-                        { key: 'material_spec', header: '规格' },
+                        { key: 'card_no', header: t('cardNo') },
+                        { key: 'product_name', header: tc('productName') },
+                        { key: 'product_code', header: tc('productCode') },
+                        { key: 'material_spec', header: tc('specification') },
                         { key: 'quantity', header: tc('quantity') },
                         { key: 'status', header: tc('status') },
                       ],
-                      '过程检验报告'
+                      t('processInspectionReport')
                     )
                   }
                 />
@@ -823,10 +842,10 @@ export default function QualityProcessPage() {
         {/* 检验列表 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="all">全部 ({processes.length})</TabsTrigger>
-            <TabsTrigger value="pending">待检验 ({stats.pending})</TabsTrigger>
-            <TabsTrigger value="inspecting">检验中 ({stats.inspecting})</TabsTrigger>
-            <TabsTrigger value="passed">已检验 ({stats.passed})</TabsTrigger>
+            <TabsTrigger value="all">{tc('all')} ({processes.length})</TabsTrigger>
+            <TabsTrigger value="pending">{t('pendingInspection')} ({stats.pending})</TabsTrigger>
+            <TabsTrigger value="inspecting">{t('inspecting')} ({stats.inspecting})</TabsTrigger>
+            <TabsTrigger value="passed">{t('inspected')} ({stats.passed})</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-4">
@@ -850,14 +869,14 @@ export default function QualityProcessPage() {
                           }}
                         />
                       </TableHead>
-                      <TableHead className="w-12 text-center">序号</TableHead>
+                      <TableHead className="w-12 text-center">{tc("serialNo")}</TableHead>
                       <SortableTableHeader
                         field="card_no"
                         sortField={sortField}
                         sortDirection={sortDirection}
                         onSort={handleSort}
                       >
-                        流程卡号
+                        {t('cardNo')}
                       </SortableTableHeader>
                       <SortableTableHeader
                         field="product_name"
@@ -865,21 +884,21 @@ export default function QualityProcessPage() {
                         sortDirection={sortDirection}
                         onSort={handleSort}
                       >
-                        产品信息
+                        {t('productInfo')}
                       </SortableTableHeader>
-                      <TableHead>客户</TableHead>
-                      <TableHead>规格要求</TableHead>
-                      <TableHead>数量</TableHead>
-                      <TableHead>质量主管</TableHead>
+                      <TableHead>{tc("customer")}</TableHead>
+                      <TableHead>{t('specificationRequirement')}</TableHead>
+                      <TableHead>{tc("quantity")}</TableHead>
+                      <TableHead>{t('qualityManager')}</TableHead>
                       <SortableTableHeader
                         field="status"
                         sortField={sortField}
                         sortDirection={sortDirection}
                         onSort={handleSort}
                       >
-                        状态
+                        {tc('status')}
                       </SortableTableHeader>
-                      <TableHead>操作</TableHead>
+                      <TableHead>{tc("actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -929,8 +948,8 @@ export default function QualityProcessPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col text-sm">
-                            <span>尺寸: {process.finished_size}</span>
-                            <span>公差: {process.tolerance}</span>
+                            <span>{t('size')}: {process.finished_size}</span>
+                            <span>{t('tolerance')}: {process.tolerance}</span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -950,7 +969,7 @@ export default function QualityProcessPage() {
                             {(process.burdening_status === 1 || process.burdening_status === 2) && (
                               <Button size="sm" onClick={() => handleStartInspect(process)}>
                                 <ClipboardCheck className="h-4 w-4 mr-1" />
-                                检验
+                                {t('inspect')}
                               </Button>
                             )}
                             <DropdownMenu>
@@ -962,15 +981,15 @@ export default function QualityProcessPage() {
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleViewDetail(process)}>
                                   <Eye className="h-4 w-4 mr-2" />
-                                  查看详情
+                                  {t('viewDetail')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleViewQRCode(process)}>
                                   <QrCode className="h-4 w-4 mr-2" />
-                                  查看二维码
+                                  {t('viewQRCode')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleViewRecords(process)}>
                                   <FileText className="h-4 w-4 mr-2" />
-                                  检验记录
+                                  {t('inspectionRecords')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -993,39 +1012,39 @@ export default function QualityProcessPage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    品质检验详情: {selectedProcess.card_no}
+                    {t('processInspectionDetail')}: {selectedProcess.card_no}
                     {getStatusBadge(selectedProcess.burdening_status)}
                   </DialogTitle>
-                  <DialogDescription>查看品质检验详细信息</DialogDescription>
+                  <DialogDescription>{t('viewProcessInspectionDetail')}</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
                   {/* 基本信息 */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">流程信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('processInfo')}</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">流程卡号:</span>
+                        <span className="text-muted-foreground">{t('cardNo')}:</span>
                         <span>{selectedProcess.card_no}</span>
-                        <span className="text-muted-foreground">工单号:</span>
+                        <span className="text-muted-foreground">{t('workOrderNo')}:</span>
                         <span>{selectedProcess.work_order_no}</span>
-                        <span className="text-muted-foreground">主标编号:</span>
+                        <span className="text-muted-foreground">{t('mainLabelNo')}:</span>
                         <span>{selectedProcess.main_label_no}</span>
-                        <span className="text-muted-foreground">排产日期:</span>
+                        <span className="text-muted-foreground">{t('workOrderDate')}:</span>
                         <span>{selectedProcess.work_order_date}</span>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">产品信息</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">{t('productInfo')}</h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">产品名称:</span>
+                        <span className="text-muted-foreground">{tc('productName')}:</span>
                         <span>{selectedProcess.product_name}</span>
-                        <span className="text-muted-foreground">物料规格:</span>
+                        <span className="text-muted-foreground">{t('materialSpec')}:</span>
                         <span>{selectedProcess.material_spec}</span>
-                        <span className="text-muted-foreground">印刷方式:</span>
+                        <span className="text-muted-foreground">{t('printType')}:</span>
                         <span>{selectedProcess.print_type}</span>
-                        <span className="text-muted-foreground">计划数量:</span>
+                        <span className="text-muted-foreground">{t('planQty')}:</span>
                         <span>{(selectedProcess.plan_qty ?? 0).toLocaleString()}</span>
                       </div>
                     </div>
@@ -1033,18 +1052,18 @@ export default function QualityProcessPage() {
 
                   {/* 规格要求 */}
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">规格要求</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">{t('specificationRequirement')}</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="space-y-2">
-                        <span className="text-muted-foreground">成品尺寸:</span>
+                        <span className="text-muted-foreground">{t('finishedSize')}:</span>
                         <span>{selectedProcess.finished_size}</span>
                       </div>
                       <div className="space-y-2">
-                        <span className="text-muted-foreground">公差要求:</span>
+                        <span className="text-muted-foreground">{t('toleranceRequirement')}:</span>
                         <span>{selectedProcess.tolerance}</span>
                       </div>
                       <div className="space-y-2">
-                        <span className="text-muted-foreground">质量主管:</span>
+                        <span className="text-muted-foreground">{t('qualityManager')}:</span>
                         <span>{selectedProcess.quality_manager}</span>
                       </div>
                     </div>
@@ -1052,7 +1071,7 @@ export default function QualityProcessPage() {
 
                   {/* 工艺流程 */}
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">工艺流程</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">{t('processFlow')}</h4>
                     <div className="flex items-center gap-2 flex-wrap">
                       {selectedProcess.process_flow1?.split('-').map((step, index, arr) => (
                         <div key={index} className="flex items-center">
@@ -1074,7 +1093,7 @@ export default function QualityProcessPage() {
                   {/* 操作按钮 */}
                   <div className="flex justify-end gap-2 pt-4 border-t">
                     <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
-                      关闭
+                      {tc('close')}
                     </Button>
                     {(selectedProcess.burdening_status === 1 ||
                       selectedProcess.burdening_status === 2) && (
@@ -1085,7 +1104,7 @@ export default function QualityProcessPage() {
                         }}
                       >
                         <ClipboardCheck className="h-4 w-4 mr-2" />
-                        开始检验
+                        {t('startInspection')}
                       </Button>
                     )}
                   </div>
@@ -1103,9 +1122,9 @@ export default function QualityProcessPage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Award className="h-5 w-5" />
-                    品质检验: {selectedProcess.card_no}
+                    {t('processInspection')}: {selectedProcess.card_no}
                   </DialogTitle>
-                  <DialogDescription>记录品质检验结果</DialogDescription>
+                  <DialogDescription>{t('recordInspectionResult')}</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
@@ -1113,21 +1132,21 @@ export default function QualityProcessPage() {
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">产品:</span>
+                        <span className="text-muted-foreground">{tc('product')}:</span>
                         <span className="ml-2 font-medium">{selectedProcess.product_name}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">客户:</span>
+                        <span className="text-muted-foreground">{tc('customer')}:</span>
                         <span className="ml-2">{selectedProcess.customer_name}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">规格:</span>
+                        <span className="text-muted-foreground">{tc('specification')}:</span>
                         <span className="ml-2">
                           {selectedProcess.finished_size} ({selectedProcess.tolerance})
                         </span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">计划数量:</span>
+                        <span className="text-muted-foreground">{t('planQty')}:</span>
                         <span className="ml-2">
                           {(selectedProcess.plan_qty ?? 0).toLocaleString()}
                         </span>
@@ -1137,7 +1156,7 @@ export default function QualityProcessPage() {
 
                   {/* 检验项目 */}
                   <div className="space-y-3">
-                    <Label>检验项目</Label>
+                    <Label>{t('inspectionItems')}</Label>
                     <div className="grid grid-cols-2 gap-3">
                       {inspectItems.map((item) => (
                         <div key={item.id} className="flex items-center space-x-2">
@@ -1160,31 +1179,31 @@ export default function QualityProcessPage() {
 
                   {/* 检验结果 */}
                   <div className="space-y-3">
-                    <Label>检验结果</Label>
+                    <Label>{t('inspectionResult')}</Label>
                     <Select
                       value={inspectForm.result}
                       onValueChange={(value) => setInspectForm({ ...inspectForm, result: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="选择检验结果" />
+                        <SelectValue placeholder={t('selectInspectionResult')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="pass">
                           <div className="flex items-center">
                             <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                            合格
+                            {tc('qualified')}
                           </div>
                         </SelectItem>
                         <SelectItem value="fail">
                           <div className="flex items-center">
                             <XCircle className="h-4 w-4 mr-2 text-red-600" />
-                            不合格
+                            {tc('unqualified')}
                           </div>
                         </SelectItem>
                         <SelectItem value="concession">
                           <div className="flex items-center">
                             <AlertTriangle className="h-4 w-4 mr-2 text-orange-600" />
-                            让步接收
+                            {t('concessionAccept')}
                           </div>
                         </SelectItem>
                       </SelectContent>
@@ -1194,7 +1213,7 @@ export default function QualityProcessPage() {
                   {/* 数量 */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <Label>合格数量</Label>
+                      <Label>{t('qualifiedQty')}</Label>
                       <Input
                         type="number"
                         value={inspectForm.qualifiedQty}
@@ -1207,7 +1226,7 @@ export default function QualityProcessPage() {
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label>不良数量</Label>
+                      <Label>{t('defectQty')}</Label>
                       <Input
                         type="number"
                         value={inspectForm.defectQty}
@@ -1224,7 +1243,7 @@ export default function QualityProcessPage() {
                   {/* 不良类型 */}
                   {inspectForm.defectQty > 0 && (
                     <div className="space-y-3">
-                      <Label>不良类型</Label>
+                      <Label>{t('defectType')}</Label>
                       <Select
                         value={inspectForm.defectType}
                         onValueChange={(value) =>
@@ -1232,15 +1251,15 @@ export default function QualityProcessPage() {
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="选择不良类型" />
+                          <SelectValue placeholder={t('selectDefectType')} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="size">尺寸不良</SelectItem>
-                          <SelectItem value="color">颜色不良</SelectItem>
-                          <SelectItem value="adhesion">粘性不良</SelectItem>
-                          <SelectItem value="appearance">外观不良</SelectItem>
-                          <SelectItem value="printing">印刷不良</SelectItem>
-                          <SelectItem value="other">其他</SelectItem>
+                          <SelectItem value="size">{t('sizeDefect')}</SelectItem>
+                          <SelectItem value="color">{t('colorDefect')}</SelectItem>
+                          <SelectItem value="adhesion">{t('adhesionDefect')}</SelectItem>
+                          <SelectItem value="appearance">{t('appearanceDefect')}</SelectItem>
+                          <SelectItem value="printing">{t('printingDefect')}</SelectItem>
+                          <SelectItem value="other">{tc('other')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1248,9 +1267,9 @@ export default function QualityProcessPage() {
 
                   {/* 检验员 */}
                   <div className="space-y-3">
-                    <Label>检验员</Label>
+                    <Label>{t('inspector')}</Label>
                     <Input
-                      placeholder="输入检验员姓名"
+                      placeholder={t('enterInspectorName')}
                       value={inspectForm.inspector}
                       onChange={(e) =>
                         setInspectForm({ ...inspectForm, inspector: e.target.value })
@@ -1260,9 +1279,9 @@ export default function QualityProcessPage() {
 
                   {/* 备注 */}
                   <div className="space-y-3">
-                    <Label>备注</Label>
+                    <Label>{tc("remark")}</Label>
                     <Textarea
-                      placeholder="输入检验备注..."
+                      placeholder={t('enterInspectionRemark')}
                       value={inspectForm.remark}
                       onChange={(e) => setInspectForm({ ...inspectForm, remark: e.target.value })}
                       rows={3}
@@ -1272,10 +1291,10 @@ export default function QualityProcessPage() {
                   {/* 操作按钮 */}
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => setIsInspectOpen(false)}>
-                      取消
+                      {tc('cancel')}
                     </Button>
                     <Button onClick={handleSubmitInspect} disabled={loading}>
-                      {loading ? '提交中...' : '提交检验'}
+                      {loading ? tc('submitting') : t('submitInspection')}
                     </Button>
                   </div>
                 </div>
@@ -1290,17 +1309,17 @@ export default function QualityProcessPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                品质检验报告
+                {t('processInspectionReport')}
               </DialogTitle>
-              <DialogDescription>查看品质检验汇总报告</DialogDescription>
+              <DialogDescription>{t('viewProcessInspectionSummary')}</DialogDescription>
             </DialogHeader>
 
             <div ref={printRef} className="space-y-6 py-4">
               {/* 报告标题 */}
               <div className="text-center border-b pb-4">
-                <h1 className="text-2xl font-bold">品质检验报告</h1>
+                <h1 className="text-2xl font-bold">{t('processInspectionReport')}</h1>
                 <p className="text-muted-foreground mt-2">
-                  生成时间: {format(new Date(), 'yyyy-MM-dd HH:mm:ss')}
+                  {t('generatedTime')}: {format(new Date(), 'yyyy-MM-dd HH:mm:ss')}
                 </p>
               </div>
 
@@ -1309,47 +1328,47 @@ export default function QualityProcessPage() {
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-blue-600">{stats.pending}</div>
-                    <div className="text-sm text-muted-foreground">待检验</div>
+                    <div className="text-sm text-muted-foreground">{t('pendingInspection')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-orange-600">{stats.inspecting}</div>
-                    <div className="text-sm text-muted-foreground">检验中</div>
+                    <div className="text-sm text-muted-foreground">{t('inspecting')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-green-600">{stats.passed}</div>
-                    <div className="text-sm text-muted-foreground">已检验</div>
+                    <div className="text-sm text-muted-foreground">{t('inspected')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-purple-600">{stats.today}</div>
-                    <div className="text-sm text-muted-foreground">今日检验</div>
+                    <div className="text-sm text-muted-foreground">{t('todayInspection')}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-indigo-600">{stats.week}</div>
-                    <div className="text-sm text-muted-foreground">本周检验</div>
+                    <div className="text-sm text-muted-foreground">{t('weekInspection')}</div>
                   </CardContent>
                 </Card>
               </div>
 
               {/* 检验列表 */}
               <div>
-                <h3 className="font-semibold mb-4">检验明细</h3>
+                <h3 className="font-semibold mb-4">{t('inspectionDetails')}</h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>流程卡号</TableHead>
-                      <TableHead>产品名称</TableHead>
-                      <TableHead>客户</TableHead>
-                      <TableHead>规格</TableHead>
-                      <TableHead>数量</TableHead>
-                      <TableHead>状态</TableHead>
+                      <TableHead>{t('cardNo')}</TableHead>
+                      <TableHead>{tc('productName')}</TableHead>
+                      <TableHead>{tc("customer")}</TableHead>
+                      <TableHead>{tc("specification")}</TableHead>
+                      <TableHead>{tc("quantity")}</TableHead>
+                      <TableHead>{tc("status")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1371,26 +1390,26 @@ export default function QualityProcessPage() {
               <div className="grid grid-cols-3 gap-8 pt-8 border-t mt-8">
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">检验员签字</div>
+                  <div className="text-sm text-muted-foreground">{t('inspectorSignature')}</div>
                 </div>
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">质量主管签字</div>
+                  <div className="text-sm text-muted-foreground">{t('qualityManagerSignature')}</div>
                 </div>
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">审核签字</div>
+                  <div className="text-sm text-muted-foreground">{t('auditorSignature')}</div>
                 </div>
               </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button variant="outline" onClick={() => setIsReportOpen(false)}>
-                关闭
+                {tc('close')}
               </Button>
               <Button onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-2" />
-                打印报告
+                {t('printReport')}
               </Button>
             </div>
           </DialogContent>
@@ -1402,9 +1421,9 @@ export default function QualityProcessPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <QrCode className="h-5 w-5" />
-                流程卡二维码
+                {t('cardQRCode')}
               </DialogTitle>
-              <DialogDescription>扫描二维码查看流程卡信息</DialogDescription>
+              <DialogDescription>{t('scanQRCodeToViewCard')}</DialogDescription>
             </DialogHeader>
 
             {selectedProcess && (
@@ -1419,7 +1438,7 @@ export default function QualityProcessPage() {
                     />
                   ) : (
                     <div className="w-64 h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <span className="text-muted-foreground">生成中...</span>
+                      <span className="text-muted-foreground">{t('generating')}</span>
                     </div>
                   )}
                 </div>
@@ -1427,19 +1446,19 @@ export default function QualityProcessPage() {
                 {/* 流程卡信息 */}
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">流程卡号:</span>
+                    <span className="text-muted-foreground">{t('cardNo')}:</span>
                     <span className="font-medium">{selectedProcess.card_no}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">产品名称:</span>
+                    <span className="text-muted-foreground">{tc('productName')}:</span>
                     <span>{selectedProcess.product_name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">客户:</span>
+                    <span className="text-muted-foreground">{tc('customer')}:</span>
                     <span>{selectedProcess.customer_name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">数量:</span>
+                    <span className="text-muted-foreground">{tc('quantity')}:</span>
                     <span>{(selectedProcess.plan_qty ?? 0).toLocaleString()}</span>
                   </div>
                 </div>
@@ -1447,11 +1466,11 @@ export default function QualityProcessPage() {
                 {/* 操作按钮 */}
                 <div className="flex justify-center gap-2">
                   <Button variant="outline" onClick={() => setIsQRCodeOpen(false)}>
-                    关闭
+                    {tc('close')}
                   </Button>
                   <Button onClick={handleDownloadQRCode}>
                     <Printer className="h-4 w-4 mr-2" />
-                    下载二维码
+                    {t('downloadQRCode')}
                   </Button>
                 </div>
               </div>
@@ -1465,7 +1484,7 @@ export default function QualityProcessPage() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <ClipboardCheck className="h-5 w-5" />
-                检验记录
+                {t('inspectionRecords')}
               </DialogTitle>
               <DialogDescription>
                 {selectedProcess && `${selectedProcess.card_no} - ${selectedProcess.product_name}`}
@@ -1477,12 +1496,12 @@ export default function QualityProcessPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>检验编号</TableHead>
-                    <TableHead>检验类型</TableHead>
-                    <TableHead>检验结果</TableHead>
-                    <TableHead>检验员</TableHead>
-                    <TableHead>检验时间</TableHead>
-                    <TableHead>备注</TableHead>
+                    <TableHead>{t('inspectionNo')}</TableHead>
+                    <TableHead>{t('inspectionType')}</TableHead>
+                    <TableHead>{t('inspectionResult')}</TableHead>
+                    <TableHead>{t('inspector')}</TableHead>
+                    <TableHead>{t('inspectionTime')}</TableHead>
+                    <TableHead>{tc("remark")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1512,7 +1531,7 @@ export default function QualityProcessPage() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                        暂无检验记录
+                        {t('noInspectionRecords')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -1525,21 +1544,21 @@ export default function QualityProcessPage() {
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <div className="text-2xl font-bold text-green-600">
-                        {inspectRecords.filter((r) => r.result === '合格').length}
+                        {inspectRecords.filter((r) => r.result === tc('qualified')).length}
                       </div>
-                      <div className="text-sm text-muted-foreground">合格项</div>
+                      <div className="text-sm text-muted-foreground">{t('qualifiedItems')}</div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-red-600">
-                        {inspectRecords.filter((r) => r.result === '不合格').length}
+                        {inspectRecords.filter((r) => r.result === tc('unqualified')).length}
                       </div>
-                      <div className="text-sm text-muted-foreground">不合格项</div>
+                      <div className="text-sm text-muted-foreground">{t('unqualifiedItems')}</div>
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-blue-600">
                         {inspectRecords.length}
                       </div>
-                      <div className="text-sm text-muted-foreground">总检验项</div>
+                      <div className="text-sm text-muted-foreground">{t('totalInspectionItems')}</div>
                     </div>
                   </div>
                 </div>
@@ -1548,11 +1567,11 @@ export default function QualityProcessPage() {
 
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button variant="outline" onClick={() => setIsRecordsOpen(false)}>
-                关闭
+                {tc('close')}
               </Button>
               <Button variant="outline" onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-2" />
-                打印记录
+                {t('printRecords')}
               </Button>
             </div>
           </DialogContent>

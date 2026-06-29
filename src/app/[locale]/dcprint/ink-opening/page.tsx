@@ -94,6 +94,18 @@ const EXPIRE_HOURS_OPTIONS = [
 ];
 
 export default function InkOpeningPage() {
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
+};
+
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -140,7 +152,7 @@ export default function InkOpeningPage() {
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (inkTypeFilter !== 'all') params.set('ink_type', inkTypeFilter);
       params.set('pageSize', '50');
-      const res = await fetch(`/api/dcprint/ink-opening?${params}`);
+      const res = await authFetch(`/api/dcprint/ink-opening?${params}`);
       const data = await res.json();
       if (data.success) {
         setRecords(data.data?.list || []);
@@ -156,7 +168,7 @@ export default function InkOpeningPage() {
 
   const fetchMaterials = async () => {
     try {
-      const res = await fetch('/api/inventory/materials?category=ink&pageSize=100');
+      const res = await authFetch('/api/inventory/materials?category=ink&pageSize=100');
       const data = await res.json();
       if (data.success) {
         setMaterials(data.data?.list || data.data || []);
@@ -177,7 +189,7 @@ export default function InkOpeningPage() {
       return;
     }
     try {
-      const res = await fetch('/api/dcprint/ink-opening', {
+      const res = await authFetch('/api/dcprint/ink-opening', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -222,7 +234,7 @@ export default function InkOpeningPage() {
 
   const handleStatusChange = async (id: number, status: number) => {
     try {
-      const res = await fetch('/api/dcprint/ink-opening', {
+      const res = await authFetch('/api/dcprint/ink-opening', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
@@ -242,7 +254,7 @@ export default function InkOpeningPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除此记录？')) return;
     try {
-      const res = await fetch(`/api/dcprint/ink-opening?id=${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/dcprint/ink-opening?id=${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         toast({ title: '删除成功' });
@@ -339,7 +351,7 @@ export default function InkOpeningPage() {
                     <TableHead>油墨类型</TableHead>
                     <TableHead>开罐时间</TableHead>
                     <TableHead>过期时间</TableHead>
-                    <TableHead>操作</TableHead>
+                    <TableHead>{tc("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -399,7 +411,7 @@ export default function InkOpeningPage() {
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-28">
-                    <SelectValue placeholder=tc("status") />
+                    <SelectValue placeholder={tc("status")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部状态</SelectItem>
@@ -443,8 +455,8 @@ export default function InkOpeningPage() {
                   <TableHead>过期时间</TableHead>
                   <TableHead>剩余时间</TableHead>
                   <TableHead>剩余数量</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{tc("status")}</TableHead>
+                  <TableHead>{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -602,7 +614,7 @@ export default function InkOpeningPage() {
                   <Input
                     value={form.batch_no}
                     onChange={(e) => setForm((prev) => ({ ...prev, batch_no: e.target.value }))}
-                    placeholder="批次号"
+                    placeholder={tc("batchNo")}
                   />
                 </div>
               </div>
@@ -650,7 +662,7 @@ export default function InkOpeningPage() {
                   />
                 </div>
                 <div>
-                  <Label>单位</Label>
+                  <Label>{tc("unit")}</Label>
                   <Select
                     value={form.unit}
                     onValueChange={(v) => setForm((prev) => ({ ...prev, unit: v }))}
@@ -674,7 +686,7 @@ export default function InkOpeningPage() {
                 />
               </div>
               <div>
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   value={form.remark}
                   onChange={(e) => setForm((prev) => ({ ...prev, remark: e.target.value }))}

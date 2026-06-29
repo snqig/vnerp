@@ -72,6 +72,18 @@ interface ContractReviewRecord {
 }
 
 export default function ContractReviewPage() {
+  const authFetch = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return fetch(url, { ...options, headers });
+  };
+
   const t = useTranslations('Business');
   const tc = useTranslations('Common');
 
@@ -106,7 +118,6 @@ export default function ContractReviewPage() {
     { key: 'sample_status_label', header: t('sampleStatus') },
     { key: 'status_label', header: t('reviewStatus') },
   ];
-  const tc = useTranslations('Common');
 
   const { toast } = useToast();
   const [list, setList] = useState<ContractReviewRecord[]>([]);
@@ -133,7 +144,7 @@ export default function ContractReviewPage() {
         productName: searchProduct,
         status: searchStatus,
       });
-      const res = await fetch('/api/business/contract-review?' + params);
+      const res = await authFetch('/api/business/contract-review?' + params);
       const result = await res.json();
       if (result.success) {
         setList(result.data.list || []);
@@ -191,7 +202,7 @@ export default function ContractReviewPage() {
   const handleSave = async () => {
     try {
       const method = editItem.id ? 'PUT' : 'POST';
-      const res = await fetch('/api/business/contract-review', {
+      const res = await authFetch('/api/business/contract-review', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -211,7 +222,7 @@ export default function ContractReviewPage() {
 
   const handleSaveReview = async () => {
     try {
-      const res = await fetch('/api/business/contract-review', {
+      const res = await authFetch('/api/business/contract-review', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editItem),
@@ -231,7 +242,7 @@ export default function ContractReviewPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除此评审记录？')) return;
     try {
-      const res = await fetch('/api/business/contract-review?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/business/contract-review?id=' + id, { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });
@@ -254,7 +265,7 @@ export default function ContractReviewPage() {
     try {
       const formData = new FormData();
       formData.append('file', uploadFile);
-      const res = await fetch('/api/upload/contract', { method: 'POST', body: formData });
+      const res = await authFetch('/api/upload/contract', { method: 'POST', body: formData });
       const result = await res.json();
       if (result.success) {
         setAttachments((prev) => [...prev, { name: uploadFile.name, url: result.data.url }]);
@@ -293,7 +304,7 @@ export default function ContractReviewPage() {
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="搜索产品名称"
+                    placeholder={tc("searchProductName")}
                     className="pl-8 w-48"
                     value={searchProduct}
                     onChange={(e) => setSearchProduct(e.target.value)}
@@ -313,7 +324,7 @@ export default function ContractReviewPage() {
                   </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={fetchData}>
-                  查询
+                  {tc('query')}
                 </Button>
               </div>
               <div className="flex items-center gap-2">
@@ -334,7 +345,7 @@ export default function ContractReviewPage() {
                   }}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  新建评审
+                  {t('newReview')}
                 </Button>
               </div>
             </div>
@@ -348,16 +359,16 @@ export default function ContractReviewPage() {
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
-                  <TableHead>评审编号</TableHead>
-                  <TableHead>订单号</TableHead>
-                  <TableHead>客户名称</TableHead>
-                  <TableHead>产品名称</TableHead>
-                  <TableHead>数量</TableHead>
-                  <TableHead>金额</TableHead>
-                  <TableHead>交期</TableHead>
-                  <TableHead>样品状态</TableHead>
-                  <TableHead>评审状态</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead>{t('reviewNo')}</TableHead>
+                  <TableHead>{tc('orderNo')}</TableHead>
+                  <TableHead>{tc('customerName')}</TableHead>
+                  <TableHead>{tc('productName')}</TableHead>
+                  <TableHead>{tc("quantity")}</TableHead>
+                  <TableHead>{tc("amount")}</TableHead>
+                  <TableHead>{t('deliveryDate')}</TableHead>
+                  <TableHead>{t('sampleStatus')}</TableHead>
+                  <TableHead>{t('reviewStatus')}</TableHead>
+                  <TableHead>{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -481,7 +492,7 @@ export default function ContractReviewPage() {
                 />
               </div>
               <div>
-                <Label>数量</Label>
+                <Label>{tc("quantity")}</Label>
                 <Input
                   type="number"
                   value={editItem.quantity || 0}
@@ -489,7 +500,7 @@ export default function ContractReviewPage() {
                 />
               </div>
               <div>
-                <Label>金额</Label>
+                <Label>{tc("amount")}</Label>
                 <Input
                   type="number"
                   value={editItem.amount || 0}
@@ -533,7 +544,7 @@ export default function ContractReviewPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>备注</Label>
+                <Label>{tc("remark")}</Label>
                 <Textarea
                   rows={2}
                   value={editItem.remark || ''}
@@ -545,7 +556,7 @@ export default function ContractReviewPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 取消
               </Button>
-              <Button onClick={handleSave}>保存</Button>
+              <Button onClick={handleSave}>{tc("save")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
