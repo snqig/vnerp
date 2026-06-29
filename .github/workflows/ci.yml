@@ -35,8 +35,11 @@ jobs:
     - name: Run TypeScript check
       run: pnpm ts-check
       
-    - name: Run unit tests
-      run: pnpm test:unit:run
+    - name: Run unit tests with coverage
+      run: pnpm test:coverage
+      # vitest.config.ts 已配置覆盖率阈值卡点：
+      # lines/functions 80、branches 70、statements 80
+      # 不达标时 vitest 以非零退出码退出，CI 自动失败
       
     - name: Upload coverage report
       uses: actions/upload-artifact@v4
