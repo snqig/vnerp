@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   poweredByHeader: false,
   compress: true,
+  output: 'standalone',
   images: {
     remotePatterns: [
       {
