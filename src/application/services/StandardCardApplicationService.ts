@@ -9,6 +9,7 @@ import {
   StandardCardObsoletedEvent,
 } from '@/domain/standard-card/events/StandardCardEvents';
 import { getEventBus, EventBus } from '@/infrastructure/event-bus/EventBus';
+import { secureLog } from '@/lib/logger';
 
 export interface CreateStandardCardDTO {
   name: string;
@@ -134,7 +135,14 @@ export class StandardCardApplicationService {
       customerId: dto.customerId,
       userId: dto.userId,
     });
-    this.eventBus.publish(event);
+    // 1.5.1 publish 现在会抛错，fire-and-forget 模式需 .catch 避免 unhandled rejection
+    this.eventBus.publish(event).catch((err: unknown) => {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      secureLog('error', 'Standard card event publish failed', {
+        eventType: event.eventType,
+        error: errorMessage,
+      });
+    });
 
     return savedCard;
   }
@@ -226,7 +234,14 @@ export class StandardCardApplicationService {
       version: card.version,
       userId,
     });
-    this.eventBus.publish(event);
+    // 1.5.1 publish 现在会抛错，fire-and-forget 模式需 .catch 避免 unhandled rejection
+    this.eventBus.publish(event).catch((err: unknown) => {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      secureLog('error', 'Standard card event publish failed', {
+        eventType: event.eventType,
+        error: errorMessage,
+      });
+    });
 
     return card;
   }
@@ -252,7 +267,14 @@ export class StandardCardApplicationService {
       userId,
       approvalLevel: 'tech_manager',
     });
-    this.eventBus.publish(event);
+    // 1.5.1 publish 现在会抛错，fire-and-forget 模式需 .catch 避免 unhandled rejection
+    this.eventBus.publish(event).catch((err: unknown) => {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      secureLog('error', 'Standard card event publish failed', {
+        eventType: event.eventType,
+        error: errorMessage,
+      });
+    });
 
     return card;
   }
@@ -288,7 +310,14 @@ export class StandardCardApplicationService {
       materialId: card.materialId,
       userId,
     });
-    this.eventBus.publish(event);
+    // 1.5.1 publish 现在会抛错，fire-and-forget 模式需 .catch 避免 unhandled rejection
+    this.eventBus.publish(event).catch((err: unknown) => {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      secureLog('error', 'Standard card event publish failed', {
+        eventType: event.eventType,
+        error: errorMessage,
+      });
+    });
 
     return card;
   }
@@ -314,7 +343,14 @@ export class StandardCardApplicationService {
       reason,
       userId,
     });
-    this.eventBus.publish(event);
+    // 1.5.1 publish 现在会抛错，fire-and-forget 模式需 .catch 避免 unhandled rejection
+    this.eventBus.publish(event).catch((err: unknown) => {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      secureLog('error', 'Standard card event publish failed', {
+        eventType: event.eventType,
+        error: errorMessage,
+      });
+    });
 
     return card;
   }

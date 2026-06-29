@@ -7,7 +7,7 @@ import {
   InvalidTransitionError,
 } from '@/domain/shared/DomainTypes';
 import { EventBus } from '@/infrastructure/event-bus/EventBus';
-import { DomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutbox';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { query, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 
@@ -72,7 +72,7 @@ export class InboundApplicationService {
       );
 
       const events = order.getDomainEvents();
-      await DomainEventOutbox.saveEvents(conn, 'InboundOrder', id, events);
+      await getDomainEventOutbox().saveEvents(conn, 'InboundOrder', id, events);
     });
 
     order.clearDomainEvents();
@@ -144,7 +144,7 @@ export class InboundApplicationService {
     if (events.length === 0) return;
 
     await transaction(async (conn) => {
-      await DomainEventOutbox.saveEvents(conn, 'InboundOrder', aggregateId, events);
+      await getDomainEventOutbox().saveEvents(conn, 'InboundOrder', aggregateId, events);
     });
 
     order.clearDomainEvents();
@@ -154,22 +154,23 @@ export class InboundApplicationService {
   private publishOutboxEventsAsync(aggregateId: number): void {
     setImmediate(async () => {
       try {
-        const pendingEvents = await DomainEventOutbox.fetchPendingEvents();
+        const pendingEvents = await getDomainEventOutbox().fetchPendingEvents();
         for (const eventRow of pendingEvents) {
-          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'InboundOrder')
+          if (eventRow.aggregateId !== aggregateId && eventRow.aggregateType !== 'InboundOrder')
             continue;
           try {
             const event = JSON.parse(eventRow.payload);
             const domainEvent = { ...event, occurredAt: new Date(event.occurredAt) };
             await this.eventBus.publish(domainEvent);
-            await DomainEventOutbox.markAsProcessed(eventRow.id);
-          } catch (error: any) {
+            await getDomainEventOutbox().markAsProcessed(eventRow.id);
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             secureLog('error', 'Outbox event publish failed', {
               eventId: eventRow.id,
-              eventType: eventRow.event_type,
-              error: error.message,
+              eventType: eventRow.eventType,
+              error: errorMessage,
             });
-            await DomainEventOutbox.markAsFailed(eventRow.id, error.message);
+            await getDomainEventOutbox().markAsFailed(eventRow.id, errorMessage);
           }
         }
       } catch (error) {

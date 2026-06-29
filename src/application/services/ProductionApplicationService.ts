@@ -2,7 +2,7 @@ import { IWorkOrderRepository } from '@/domain/production/repositories/IWorkOrde
 import { WorkOrder, WorkOrderProps } from '@/domain/production/aggregates/WorkOrder';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { EventBus } from '@/infrastructure/event-bus/EventBus';
-import { DomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutbox';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 
@@ -57,7 +57,7 @@ export class ProductionApplicationService {
         [wo.status.toDbCode(), id, WorkOrderStatusVO.from(previousStatus).toDbCode()]
       );
       if (result.affectedRows === 0) throw new VersionConflictError();
-      await DomainEventOutbox.saveEvents(conn, 'WorkOrder', id, wo.getDomainEvents());
+      await getDomainEventOutbox().saveEvents(conn, 'WorkOrder', id, wo.getDomainEvents());
     });
 
     wo.clearDomainEvents();
@@ -116,7 +116,7 @@ export class ProductionApplicationService {
         );
       }
 
-      await DomainEventOutbox.saveEvents(conn, 'WorkOrder', id, wo.getDomainEvents());
+      await getDomainEventOutbox().saveEvents(conn, 'WorkOrder', id, wo.getDomainEvents());
     });
 
     wo.clearDomainEvents();
@@ -159,7 +159,7 @@ export class ProductionApplicationService {
         );
       }
 
-      await DomainEventOutbox.saveEvents(conn, 'WorkOrder', id, wo.getDomainEvents());
+      await getDomainEventOutbox().saveEvents(conn, 'WorkOrder', id, wo.getDomainEvents());
     });
 
     wo.clearDomainEvents();
@@ -187,7 +187,7 @@ export class ProductionApplicationService {
     const events = wo.getDomainEvents();
     if (events.length === 0) return;
     await transaction(async (conn) => {
-      await DomainEventOutbox.saveEvents(conn, 'WorkOrder', aggregateId, events);
+      await getDomainEventOutbox().saveEvents(conn, 'WorkOrder', aggregateId, events);
     });
     wo.clearDomainEvents();
     this.publishOutboxEventsAsync(aggregateId);
@@ -196,20 +196,21 @@ export class ProductionApplicationService {
   private publishOutboxEventsAsync(aggregateId: number): void {
     setImmediate(async () => {
       try {
-        const pendingEvents = await DomainEventOutbox.fetchPendingEvents();
+        const pendingEvents = await getDomainEventOutbox().fetchPendingEvents();
         for (const eventRow of pendingEvents) {
-          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'WorkOrder')
+          if (eventRow.aggregateId !== aggregateId && eventRow.aggregateType !== 'WorkOrder')
             continue;
           try {
             const event = JSON.parse(eventRow.payload);
             await this.eventBus.publish({ ...event, occurredAt: new Date(event.occurredAt) });
-            await DomainEventOutbox.markAsProcessed(eventRow.id);
-          } catch (error: any) {
+            await getDomainEventOutbox().markAsProcessed(eventRow.id);
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             secureLog('error', 'Outbox event publish failed', {
               eventId: eventRow.id,
-              error: error.message,
+              error: errorMessage,
             });
-            await DomainEventOutbox.markAsFailed(eventRow.id, error.message);
+            await getDomainEventOutbox().markAsFailed(eventRow.id, errorMessage);
           }
         }
       } catch (error) {

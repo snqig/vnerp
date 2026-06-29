@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { withAuthAndErrorHandler } from '@/lib/api-auth';
 import { OutboxPoller } from '@/infrastructure/event-bus/OutboxPoller';
-import { DomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutbox';
+import { getDomainEventOutbox, getEventBusType } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
+import type { EventOutboxRecord } from '@/infrastructure/event-bus/types/IDomainEventOutboxRepository';
 
 export const GET = withAuthAndErrorHandler(
   async (request: NextRequest) => {
@@ -10,18 +11,20 @@ export const GET = withAuthAndErrorHandler(
     const action = searchParams.get('action');
 
     if (action === 'status') {
-      const pendingEvents = await DomainEventOutbox.fetchPendingEvents(10);
+      const eventBusType = getEventBusType();
+      const pendingEvents = await getDomainEventOutbox().fetchPendingEvents(10);
       return successResponse({
+        eventBusType,
         pollerRunning: OutboxPoller.isRunning(),
         pendingCount: pendingEvents.length,
-        samplePending: pendingEvents.slice(0, 5).map((e: any) => ({
+        samplePending: pendingEvents.slice(0, 5).map((e: EventOutboxRecord) => ({
           id: e.id,
-          eventType: e.event_type,
-          aggregateType: e.aggregate_type,
-          aggregateId: e.aggregate_id,
+          eventType: e.eventType,
+          aggregateType: e.aggregateType,
+          aggregateId: e.aggregateId,
           status: e.status,
-          retryCount: e.retry_count,
-          createdAt: e.created_at,
+          retryCount: e.retryCount,
+          createdAt: e.createdAt,
         })),
       });
     }

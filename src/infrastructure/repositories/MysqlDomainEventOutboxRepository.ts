@@ -1,0 +1,145 @@
+import { execute, query, getPool } from '@/lib/db';
+import type { PoolConnection } from 'mysql2/promise';
+import type { DomainEvent } from '@/domain/shared/DomainTypes';
+import type {
+  IDomainEventOutboxRepository,
+  EventOutboxRecord,
+} from '@/infrastructure/event-bus/types/IDomainEventOutboxRepository';
+import { secureLog } from '@/lib/logger';
+
+/**
+ * MySQL 实现的领域事件持久化仓储
+ *
+ * 与原 DomainEventOutbox.ts 静态方法行为对齐，新增：
+ * - markAsDeadLetter 方法（1.5 任务使用）
+ * - fetchPendingEvents 加入 next_execute_at 过滤（1.4 任务指数退避使用）
+ * - 返回值类型严格化为 EventOutboxRecord
+ *
+ * 兼容性：原 DomainEventOutbox 静态类保持运行，本类供 1.6 任务依赖注入切换使用。
+ */
+export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepository {
+  /**
+   * 在外部事务连接内保存事件
+   * 与原 DomainEventOutbox.saveEvents 行为完全一致，保证向后兼容
+   */
+  async saveEvents(
+    conn: PoolConnection,
+    aggregateType: string,
+    aggregateId: number,
+    events: DomainEvent[]
+  ): Promise<void> {
+    for (const event of events) {
+      await conn.execute(
+        `INSERT INTO domain_event_outbox (event_type, aggregate_type, aggregate_id, payload, status, created_at)
+         VALUES (?, ?, ?, ?, 'pending', NOW())`,
+        [event.eventType, aggregateType, aggregateId, JSON.stringify(event)]
+      );
+    }
+  }
+
+  /**
+   * 查询待执行事件
+   * 加入 next_execute_at 过滤：仅返回到期或无延迟的事件（1.4 指数退避）
+   * 原实现未过滤 next_execute_at，本实现向后兼容（NULL 视为立即可执行）
+   */
+  async fetchPendingEvents(limit: number = 50): Promise<EventOutboxRecord[]> {
+    const rows: any[] = await query(
+      `SELECT id, event_type, aggregate_type, aggregate_id, payload, status,
+              retry_count, error_message, next_execute_at, created_at, processed_at
+       FROM domain_event_outbox
+       WHERE status = 'pending'
+         AND (next_execute_at IS NULL OR next_execute_at <= NOW())
+       ORDER BY created_at ASC
+       LIMIT ?`,
+      [limit]
+    );
+    return rows.map(this.toRecord);
+  }
+
+  async markAsProcessed(id: number): Promise<void> {
+    await execute(
+      `UPDATE domain_event_outbox SET status = 'processed', processed_at = NOW() WHERE id = ?`,
+      [id]
+    );
+  }
+
+  /**
+   * 标记失败（指数退避：1s/3s/9s）
+   * 与 DomainEventOutbox.markAsFailed 行为对齐：状态保持 pending，设置 next_execute_at
+   * 通过 JOIN 子查询读取原 retry_count，避免同 SET 内赋值对 CASE 求值的影响
+   */
+  async markAsFailed(id: number, error: string): Promise<void> {
+    const errorMessage = error.substring(0, 500);
+    await execute(
+      `UPDATE domain_event_outbox o
+       JOIN (SELECT retry_count AS old_retry FROM domain_event_outbox WHERE id = ?) t
+       SET o.status = 'pending',
+           o.error_message = ?,
+           o.retry_count = t.old_retry + 1,
+           o.next_execute_at = CASE
+             WHEN t.old_retry + 1 = 1 THEN DATE_ADD(NOW(), INTERVAL 1 SECOND)
+             WHEN t.old_retry + 1 = 2 THEN DATE_ADD(NOW(), INTERVAL 3 SECOND)
+             WHEN t.old_retry + 1 = 3 THEN DATE_ADD(NOW(), INTERVAL 9 SECOND)
+             ELSE DATE_ADD(NOW(), INTERVAL 9 SECOND)
+           END
+       WHERE o.id = ?`,
+      [id, errorMessage, id]
+    );
+  }
+
+  /**
+   * 标记死信（1.5 任务实现）
+   * 完整错误栈写入 error_message（截断 2000 字符，覆盖大多数错误栈且远小于 TEXT 上限）
+   */
+  async markAsDeadLetter(id: number, error: string): Promise<void> {
+    await execute(
+      `UPDATE domain_event_outbox
+       SET status = 'dead_letter', error_message = ?
+       WHERE id = ?`,
+      [error.substring(0, 2000), id]
+    );
+    secureLog('error', 'Event marked as dead letter', { eventId: id, error: error.substring(0, 200) });
+  }
+
+  /**
+   * 重置失败事件为待处理（手动重试入口）
+   * 1.4 改造：清理 next_execute_at，让事件立即可被消费
+   * id=0 批量重置所有 retry_count < 3 的事件
+   */
+  async markForRetry(id: number): Promise<void> {
+    if (id === 0) {
+      await execute(
+        `UPDATE domain_event_outbox
+         SET status = 'pending', error_message = NULL, next_execute_at = NULL
+         WHERE status = 'pending' AND retry_count > 0 AND retry_count < 3`
+      );
+      return;
+    }
+    await execute(
+      `UPDATE domain_event_outbox
+       SET status = 'pending', error_message = NULL, next_execute_at = NULL
+       WHERE id = ? AND retry_count < 3`,
+      [id]
+    );
+  }
+
+  // 将数据库行映射为 EventOutboxRecord
+  private toRecord(row: any): EventOutboxRecord {
+    return {
+      id: row.id,
+      eventType: row.event_type,
+      aggregateType: row.aggregate_type,
+      aggregateId: row.aggregate_id,
+      payload: typeof row.payload === 'string' ? row.payload : JSON.stringify(row.payload),
+      status: row.status,
+      retryCount: row.retry_count || 0,
+      errorMessage: row.error_message,
+      nextExecuteAt: row.next_execute_at ? new Date(row.next_execute_at) : null,
+      createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+      processedAt: row.processed_at ? new Date(row.processed_at) : null,
+    };
+  }
+}
+
+// getPool 仅用于显式标记依赖（实际查询通过 query/execute 间接使用）
+void getPool;

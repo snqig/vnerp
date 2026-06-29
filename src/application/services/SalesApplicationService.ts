@@ -3,7 +3,7 @@ import { SalesOrder, SalesOrderProps } from '@/domain/sales/aggregates/SalesOrde
 import { SalesOrderStatus } from '@/domain/sales/value-objects/SalesOrderStatus';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { EventBus } from '@/infrastructure/event-bus/EventBus';
-import { DomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutbox';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction, query } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import { InventoryValidationService } from '@/application/services/InventoryValidationService';
@@ -57,7 +57,7 @@ export class SalesApplicationService {
         [order.status.toDbCode(), auditBy, id, SalesOrderStatus.from(previousStatus).toDbCode()]
       );
       if (result.affectedRows === 0) throw new VersionConflictError();
-      await DomainEventOutbox.saveEvents(conn, 'SalesOrder', id, order.getDomainEvents());
+      await getDomainEventOutbox().saveEvents(conn, 'SalesOrder', id, order.getDomainEvents());
     });
 
     order.clearDomainEvents();
@@ -102,7 +102,7 @@ export class SalesApplicationService {
         }
       }
 
-      await DomainEventOutbox.saveEvents(conn, 'SalesOrder', id, order.getDomainEvents());
+      await getDomainEventOutbox().saveEvents(conn, 'SalesOrder', id, order.getDomainEvents());
     });
 
     order.clearDomainEvents();
@@ -130,7 +130,7 @@ export class SalesApplicationService {
     const events = order.getDomainEvents();
     if (events.length === 0) return;
     await transaction(async (conn) => {
-      await DomainEventOutbox.saveEvents(conn, 'SalesOrder', aggregateId, events);
+      await getDomainEventOutbox().saveEvents(conn, 'SalesOrder', aggregateId, events);
     });
     order.clearDomainEvents();
     this.publishOutboxEventsAsync(aggregateId);
@@ -139,20 +139,21 @@ export class SalesApplicationService {
   private publishOutboxEventsAsync(aggregateId: number): void {
     setImmediate(async () => {
       try {
-        const pendingEvents = await DomainEventOutbox.fetchPendingEvents();
+        const pendingEvents = await getDomainEventOutbox().fetchPendingEvents();
         for (const eventRow of pendingEvents) {
-          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'SalesOrder')
+          if (eventRow.aggregateId !== aggregateId && eventRow.aggregateType !== 'SalesOrder')
             continue;
           try {
             const event = JSON.parse(eventRow.payload);
             await this.eventBus.publish({ ...event, occurredAt: new Date(event.occurredAt) });
-            await DomainEventOutbox.markAsProcessed(eventRow.id);
-          } catch (error: any) {
+            await getDomainEventOutbox().markAsProcessed(eventRow.id);
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             secureLog('error', 'Outbox event publish failed', {
               eventId: eventRow.id,
-              error: error.message,
+              error: errorMessage,
             });
-            await DomainEventOutbox.markAsFailed(eventRow.id, error.message);
+            await getDomainEventOutbox().markAsFailed(eventRow.id, errorMessage);
           }
         }
       } catch (error) {

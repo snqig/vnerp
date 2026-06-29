@@ -3,7 +3,7 @@ import { PurchaseOrder, PurchaseOrderProps } from '@/domain/purchase/aggregates/
 import { PurchaseOrderStatus } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { EventBus } from '@/infrastructure/event-bus/EventBus';
-import { DomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutbox';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 
@@ -73,7 +73,7 @@ export class PurchaseApplicationService {
       }
 
       const events = order.getDomainEvents();
-      await DomainEventOutbox.saveEvents(conn, 'PurchaseOrder', id, events);
+      await getDomainEventOutbox().saveEvents(conn, 'PurchaseOrder', id, events);
     });
 
     order.clearDomainEvents();
@@ -108,7 +108,7 @@ export class PurchaseApplicationService {
       }
 
       const events = order.getDomainEvents();
-      await DomainEventOutbox.saveEvents(conn, 'PurchaseOrder', id, events);
+      await getDomainEventOutbox().saveEvents(conn, 'PurchaseOrder', id, events);
     });
 
     order.clearDomainEvents();
@@ -148,7 +148,7 @@ export class PurchaseApplicationService {
     if (events.length === 0) return;
 
     await transaction(async (conn) => {
-      await DomainEventOutbox.saveEvents(conn, 'PurchaseOrder', aggregateId, events);
+      await getDomainEventOutbox().saveEvents(conn, 'PurchaseOrder', aggregateId, events);
     });
 
     order.clearDomainEvents();
@@ -158,22 +158,23 @@ export class PurchaseApplicationService {
   private publishOutboxEventsAsync(aggregateId: number): void {
     setImmediate(async () => {
       try {
-        const pendingEvents = await DomainEventOutbox.fetchPendingEvents();
+        const pendingEvents = await getDomainEventOutbox().fetchPendingEvents();
         for (const eventRow of pendingEvents) {
-          if (eventRow.aggregate_id !== aggregateId && eventRow.aggregate_type !== 'PurchaseOrder')
+          if (eventRow.aggregateId !== aggregateId && eventRow.aggregateType !== 'PurchaseOrder')
             continue;
           try {
             const event = JSON.parse(eventRow.payload);
             const domainEvent = { ...event, occurredAt: new Date(event.occurredAt) };
             await this.eventBus.publish(domainEvent);
-            await DomainEventOutbox.markAsProcessed(eventRow.id);
-          } catch (error: any) {
+            await getDomainEventOutbox().markAsProcessed(eventRow.id);
+          } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             secureLog('error', 'Outbox event publish failed', {
               eventId: eventRow.id,
-              eventType: eventRow.event_type,
-              error: error.message,
+              eventType: eventRow.eventType,
+              error: errorMessage,
             });
-            await DomainEventOutbox.markAsFailed(eventRow.id, error.message);
+            await getDomainEventOutbox().markAsFailed(eventRow.id, errorMessage);
           }
         }
       } catch (error) {

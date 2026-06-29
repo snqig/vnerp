@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { execute } from '@/lib/db';
 
 export function sanitizeInput(input: string): string {
@@ -117,6 +117,30 @@ export function withErrorHandler<T extends (...args: any[]) => Promise<NextRespo
       return errorResponse(message, 500, 500);
     }
   }) as T;
+}
+
+// 带认证和错误处理的包装器
+export function withAuthAndErrorHandler(
+  handler: (request: NextRequest, context: { params: Promise<Record<string, string>> }) => Promise<NextResponse>,
+  errorMessage = '操作失败'
+) {
+  return async (request: NextRequest, context: { params: Promise<Record<string, string>> }): Promise<NextResponse> => {
+    try {
+      // 从请求中获取认证信息
+      const authHeader = request.headers.get('authorization');
+      const token = authHeader?.replace('Bearer ', '');
+      
+      if (!token) {
+        return commonErrors.unauthorized('未授权，请先登录');
+      }
+      
+      return await handler(request, context);
+    } catch (error) {
+      console.error('[API Error]:', error);
+      const message = error instanceof Error ? error.message : errorMessage;
+      return errorResponse(message, 500, 500);
+    }
+  };
 }
 
 // 验证请求体

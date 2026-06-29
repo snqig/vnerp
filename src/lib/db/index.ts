@@ -267,4 +267,6 @@ export const db = {
 
 // Drizzle ORM 实例：基于现有 mysql2 连接池，加载 schema 提供类型安全查询构建器
 // 新代码可使用 drizzleDb 查询构建器替代 raw SQL；旧代码继续使用 query/execute 保持兼容
-export const drizzleDb = drizzle({ pool: getPool(), schema, mode: 'default' });
+// 注意：drizzle-orm 0.45.x 的 drizzle() 仅识别 `client` 或 `connection`，传入 `pool` 会被忽略
+// 导致内部走 createPool(undefined)，在 mysql2 ConnectionConfig 构造时抛出 isServer undefined 错误
+export const drizzleDb = drizzle({ client: getPool(), schema, mode: 'default' });
