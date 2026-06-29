@@ -1,224 +1,144 @@
-import { NextRequest } from 'next/server';
+/**
+ * 统一日志工具
+ * 用于核心业务逻辑关键分支的详细日志打印
+ * 
+ * 日志级别：
+ * - debug: 开发调试信息（仅开发环境输出）
+ * - info: 关键业务流程节点
+ * - warn: 异常但可恢复的情况
+ * - error: 需要关注的错误
+ */
 
-// 敏感字段列表
-const SENSITIVE_FIELDS = [
-  'password',
-  'passwd',
-  'pwd',
-  'token',
-  'secret',
-  'key',
-  'authorization',
-  'cookie',
-  'creditCard',
-  'cardNo',
-  'idCard',
-  'phone',
-  'mobile',
-  'email',
-  'address',
-];
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-// 敏感数据脱敏规则
-const MASK_RULES: Record<string, (value: string) => string> = {
-  password: () => '********',
-  passwd: () => '********',
-  pwd: () => '********',
-  token: (v) => v.substring(0, 10) + '...',
-  secret: () => '********',
-  key: (v) => v.substring(0, 4) + '****',
-  authorization: (v) => v.substring(0, 15) + '...',
-  cookie: () => '********',
-  creditCard: (v) => v.replace(/(\d{4})\d+(\d{4})/, '$1****$2'),
-  cardNo: (v) => v.replace(/(\d{4})\d+(\d{4})/, '$1****$2'),
-  idCard: (v) => v.replace(/(\d{6})\d{8}(\d{4})/, '$1********$2'),
-  phone: (v) => v.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
-  mobile: (v) => v.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
-  email: (v) => {
-    const [local, domain] = v.split('@');
-    return local.substring(0, 2) + '***@' + domain;
-  },
+const LOG_COLORS: Record<LogLevel, string> = {
+  debug: '\x1b[36m', // cyan
+  info: '\x1b[32m',  // green
+  warn: '\x1b[33m',  // yellow
+  error: '\x1b[31m', // red
 };
+const RESET = '\x1b[0m';
 
-/**
- * 脱敏对象中的敏感字段
- * @param obj 原始对象
- * @returns 脱敏后的对象
- */
-export function maskSensitiveData<T>(obj: T): T {
-  if (!obj || typeof obj !== 'object') {
-    return obj;
+interface LogContext {
+  module: string;    // 模块名（如 inventory, freeze, cost）
+  action: string;    // 操作名（如 freeze_stock, calculate_cost）
+  userId?: number;   // 操作用户
+  traceId?: string;  // 追踪ID
+  [key: string]: any;
+}
+
+class AppLogger {
+  private isDev = process.env.NODE_ENV === 'development';
+
+  private formatMessage(level: LogLevel, context: LogContext, message: string, data?: any): string {
+    const timestamp = new Date().toISOString();
+    const prefix = `${LOG_COLORS[level]}[${timestamp}] [${level.toUpperCase()}] [${context.module}:${context.action}]${RESET}`;
+    const userStr = context.userId ? ` [user:${context.userId}]` : '';
+    const traceStr = context.traceId ? ` [trace:${context.traceId}]` : '';
+    const dataStr = data ? `\n  数据: ${JSON.stringify(data, null, 2)}` : '';
+    return `${prefix}${userStr}${traceStr} ${message}${dataStr}`;
   }
 
-  if (Array.isArray(obj)) {
-    return obj.map((item) => maskSensitiveData(item)) as unknown as T;
+  debug(context: LogContext, message: string, data?: any) {
+    if (!this.isDev) return;
+    console.log(this.formatMessage('debug', context, message, data));
   }
 
-  const masked: Record<string, any> = {};
-  for (const [key, value] of Object.entries(obj)) {
-    const lowerKey = key.toLowerCase();
+  info(context: LogContext, message: string, data?: any) {
+    console.log(this.formatMessage('info', context, message, data));
+  }
 
-    // 检查是否为敏感字段
-    const sensitiveField = SENSITIVE_FIELDS.find((f) => lowerKey.includes(f.toLowerCase()));
+  warn(context: LogContext, message: string, data?: any) {
+    console.warn(this.formatMessage('warn', context, message, data));
+  }
 
-    if (sensitiveField && typeof value === 'string') {
-      // 应用脱敏规则
-      const rule = MASK_RULES[sensitiveField];
-      masked[key] = rule ? rule(value) : '********';
-    } else if (typeof value === 'object' && value !== null) {
-      // 递归处理嵌套对象
-      masked[key] = maskSensitiveData(value);
+  error(context: LogContext, message: string, data?: any) {
+    console.error(this.formatMessage('error', context, message, data));
+  }
+
+  /**
+   * 记录业务流程开始
+   */
+  stepStart(context: LogContext, step: string, params?: any) {
+    this.info(context, `▶ 开始: ${step}`, params);
+  }
+
+  /**
+   * 记录业务流程完成
+   */
+  stepEnd(context: LogContext, step: string, result?: any) {
+    this.info(context, `✔ 完成: ${step}`, result);
+  }
+
+  /**
+   * 记录业务流程中的分支决策
+   */
+  branch(context: LogContext, branchName: string, condition: string, taken: boolean, data?: any) {
+    this.info(context, `⑂ 分支[${branchName}]: 条件="${condition}" → ${taken ? '✓ 命中' : '✗ 未命中'}`, data);
+  }
+
+  /**
+   * 记录数据库操作
+   */
+  db(context: LogContext, operation: string, table: string, data?: any) {
+    this.debug(context, `💾 DB[${operation}]: ${table}`, data);
+  }
+
+  /**
+   * 记录权限检查
+   */
+  permission(context: LogContext, permission: string, granted: boolean) {
+    if (granted) {
+      this.debug(context, `🔑 权限[${permission}]: ✓ 通过`);
     } else {
-      masked[key] = value;
+      this.warn(context, `🔑 权限[${permission}]: ✗ 拒绝`);
     }
   }
+}
 
-  return masked as T;
+export const logger = new AppLogger();
+
+/**
+ * 安全日志函数（兼容旧代码）
+ * 提供简单的函数式调用接口
+ */
+export function secureLog(level: LogLevel, message: string, data?: any) {
+  const ctx: LogContext = { module: 'app', action: 'secure' };
+  logger[level](ctx, message, data);
 }
 
 /**
- * 脱敏SQL查询参数
- * @param params 查询参数数组
- * @returns 脱敏后的参数
+ * 生成追踪ID
  */
-export function maskSqlParams(params: any[]): any[] {
-  return params.map((param) => {
-    if (typeof param === 'string' && param.length > 20) {
-      // 可能是敏感数据，进行脱敏
-      return param.substring(0, 10) + '...';
-    }
-    return param;
-  });
+export function generateTraceId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /**
- * 脱敏URL中的敏感信息
- * @param url URL字符串
- * @returns 脱敏后的URL
+ * 敏感数据脱敏
  */
-export function maskUrl(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    // 脱敏查询参数
-    for (const [key, value] of urlObj.searchParams) {
+export function maskSensitiveData(data: any): any {
+  if (!data || typeof data !== 'object') return data;
+  
+  const sensitiveKeys = ['password', 'pwd', 'token', 'secret', 'apiKey', 'api_key', 'authorization', 'creditCard', 'idCard', 'phone', 'email'];
+  
+  const mask = (obj: any): any => {
+    if (!obj || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(mask);
+    
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
       const lowerKey = key.toLowerCase();
-      if (SENSITIVE_FIELDS.some((f) => lowerKey.includes(f))) {
-        urlObj.searchParams.set(key, '********');
+      if (sensitiveKeys.some(k => lowerKey.includes(k))) {
+        result[key] = '***MASKED***';
+      } else if (typeof value === 'object' && value !== null) {
+        result[key] = mask(value);
+      } else {
+        result[key] = value;
       }
     }
-    return urlObj.toString();
-  } catch {
-    return url;
-  }
-}
-
-/**
- * 脱敏请求头
- * @param headers 请求头对象
- * @returns 脱敏后的请求头
- */
-export function maskHeaders(headers: Record<string, string>): Record<string, string> {
-  const masked: Record<string, string> = {};
-  for (const [key, value] of Object.entries(headers)) {
-    const lowerKey = key.toLowerCase();
-    if (lowerKey === 'authorization' || lowerKey === 'cookie') {
-      masked[key] = value.substring(0, 10) + '...';
-    } else {
-      masked[key] = value;
-    }
-  }
-  return masked;
-}
-
-/**
- * 安全日志记录
- * @param level 日志级别
- * @param message 日志消息
- * @param data 附加数据
- */
-export function secureLog(
-  level: 'debug' | 'info' | 'warn' | 'error',
-  message: string,
-  data?: Record<string, any>
-) {
-  const timestamp = new Date().toISOString();
-  const maskedData = data ? maskSensitiveData(data) : undefined;
-
-  const logEntry = {
-    timestamp,
-    level: level.toUpperCase(),
-    message,
-    ...maskedData,
+    return result;
   };
-
-  // 根据级别输出日志
-  switch (level) {
-    case 'debug':
-      if (process.env.DEBUG === 'true') {
-        console.debug('[DEBUG]', logEntry);
-      }
-      break;
-    case 'info':
-      console.info('[INFO]', logEntry);
-      break;
-    case 'warn':
-      console.warn('[WARN]', logEntry);
-      break;
-    case 'error':
-      console.error('[ERROR]', logEntry);
-      break;
-  }
-}
-
-/**
- * 记录API访问日志
- * @param request 请求对象
- * @param response 响应对象
- * @param userId 用户ID
- * @param executionTime 执行时间
- */
-export async function logApiAccess(
-  request: NextRequest,
-  response: Response,
-  userId?: number,
-  executionTime?: number
-) {
-  try {
-    const url = maskUrl(request.url);
-    const headers: Record<string, string> = {};
-    request.headers.forEach((value, key) => {
-      headers[key] = value;
-    });
-
-    const logData = {
-      userId,
-      method: request.method,
-      url,
-      headers: maskHeaders(headers),
-      statusCode: response.status,
-      executionTime,
-      ip: (request as any).ip || request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-    };
-
-    secureLog('info', 'API Access', logData);
-  } catch (error) {
-    console.error('Failed to log API access:', error);
-  }
-}
-
-/**
- * 数据库查询日志（脱敏版）
- * @param sql SQL语句
- * @param params 查询参数
- * @param duration 执行时间
- */
-export function logDbQuery(sql: string, params?: any[], duration?: number) {
-  const maskedParams = params ? maskSqlParams(params) : undefined;
-
-  secureLog('debug', 'DB Query', {
-    sql: sql.substring(0, 200), // 限制长度
-    params: maskedParams,
-    duration: duration ? `${duration}ms` : undefined,
-  });
+  
+  return mask(data);
 }

@@ -20,6 +20,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Printer, ZoomIn, ZoomOut } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { logger } from '@/lib/logger';
 
 export interface LabelData {
   id?: string;
@@ -53,6 +55,8 @@ const SingleLabel: React.FC<{
   data: LabelData;
   template: LabelTemplate;
 }> = ({ data, template }) => {
+  const t = useTranslations('QRCode');
+  const tc = useTranslations('Common');
   const widthUnit = template.unit === 'mm' ? 'mm' : 'in';
   const style: React.CSSProperties = {
     width: `${template.width}${widthUnit}`,
@@ -78,7 +82,7 @@ const SingleLabel: React.FC<{
           paddingBottom: '4px',
         }}
       >
-        <span style={{ fontWeight: 'bold', fontSize: '11px' }}>物料标签</span>
+        <span style={{ fontWeight: 'bold', fontSize: '11px' }}>{t('labelMaterial')}</span>
         <span style={{ fontSize: '8px', color: '#666' }}>{data.labelNo}</span>
       </div>
       <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
@@ -96,7 +100,7 @@ const SingleLabel: React.FC<{
           }}
         >
           <div className="text-center">
-            <div>二维码</div>
+            <div>{tc('qrCode')}</div>
             <div style={{ wordBreak: 'break-all', fontSize: '6px', marginTop: '2px' }}>
               {data.qrCode || 'QR'}
             </div>
@@ -106,28 +110,28 @@ const SingleLabel: React.FC<{
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {data.materialCode && (
             <div>
-              <span style={{ fontWeight: 'bold' }}>物料代号:</span> {data.materialCode}
+              <span style={{ fontWeight: 'bold' }}>{t('materialCode')}:</span> {data.materialCode}
             </div>
           )}
           {data.materialName && (
             <div>
-              <span style={{ fontWeight: 'bold' }}>物料名称:</span> {data.materialName}
+              <span style={{ fontWeight: 'bold' }}>{t('materialName')}:</span> {data.materialName}
             </div>
           )}
           {data.batchNo && (
             <div>
-              <span style={{ fontWeight: 'bold' }}>批次:</span> {data.batchNo}
+              <span style={{ fontWeight: 'bold' }}>{tc('batch')}:</span> {data.batchNo}
             </div>
           )}
           {data.quantity && (
             <div>
-              <span style={{ fontWeight: 'bold' }}>数量:</span> {data.quantity}
+              <span style={{ fontWeight: 'bold' }}>{tc('quantity')}:</span> {data.quantity}
               {data.unit || ''}
             </div>
           )}
           {data.warehouseName && (
             <div>
-              <span style={{ fontWeight: 'bold' }}>仓库:</span> {data.warehouseName}
+              <span style={{ fontWeight: 'bold' }}>{tc('warehouse')}:</span> {data.warehouseName}
             </div>
           )}
         </div>
@@ -141,6 +145,8 @@ export const LabelPrintPreview: React.FC<{
   onClose?: () => void;
   defaultTemplate?: string;
 }> = ({ labels, onClose, defaultTemplate = '60x40' }) => {
+  const t = useTranslations('QRCode');
+  const tc = useTranslations('Common');
   const [selectedTemplate, setSelectedTemplate] = useState<LabelTemplate>(
     PRESET_TEMPLATES[defaultTemplate] || PRESET_TEMPLATES['60x40']
   );
@@ -150,21 +156,45 @@ export const LabelPrintPreview: React.FC<{
 
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
-    documentTitle: '物料标签打印',
+    documentTitle: t('labelMaterialPrint'),
   });
 
   const printLabels = React.useMemo(() => {
+    const ctx = { module: 'qrcode', action: 'build_print_labels' };
+    logger.debug(ctx, '构建打印标签列表', {
+      labelsCount: labels.length,
+      copies,
+    });
     return labels.flatMap((label) => new Array(copies).fill(label));
   }, [labels, copies]);
+
+  const onPrintClick = () => {
+    const ctx = { module: 'qrcode', action: 'preview_print' };
+    logger.stepStart(ctx, 'handlePrint', {
+      templateId: selectedTemplate.id,
+      labelsCount: labels.length,
+      copies,
+      zoom,
+    });
+    try {
+      handlePrint();
+      logger.stepEnd(ctx, 'handlePrint', { status: 'triggered' });
+    } catch (error) {
+      logger.error(ctx, '触发打印异常', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  };
 
   return (
     <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
       <DialogHeader>
         <DialogTitle className="flex items-center justify-between">
-          <span>标签打印预览</span>
+          <span>{t('labelPrintPreview')}</span>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Label>模板</Label>
+              <Label>{t('template')}</Label>
               <Select
                 value={selectedTemplate.id}
                 onValueChange={(v) =>
@@ -175,16 +205,16 @@ export const LabelPrintPreview: React.FC<{
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.values(PRESET_TEMPLATES).map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
+                  {Object.values(PRESET_TEMPLATES).map((tpl) => (
+                    <SelectItem key={tpl.id} value={tpl.id}>
+                      {tpl.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-center gap-2">
-              <Label>份数</Label>
+              <Label>{t('copies')}</Label>
               <Input
                 type="number"
                 min="1"
@@ -236,15 +266,15 @@ export const LabelPrintPreview: React.FC<{
 
       <div className="flex items-center justify-between pt-4 border-t">
         <div className="text-sm text-muted-foreground">
-          共 {labels.length} 个标签 × {copies} 份 = {printLabels.length} 个
+          {t('totalLabelsCount', { labels: labels.length, copies, total: printLabels.length })}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onClose}>
-            取消
+            {tc('cancel')}
           </Button>
-          <Button onClick={handlePrint} className="flex items-center gap-2">
+          <Button onClick={onPrintClick} className="flex items-center gap-2">
             <Printer className="h-4 w-4" />
-            打印
+            {tc('print')}
           </Button>
         </div>
       </div>
@@ -257,13 +287,14 @@ export const LabelPrintTrigger: React.FC<{
   children?: React.ReactNode;
   defaultTemplate?: string;
 }> = ({ labels, children, defaultTemplate = '60x40' }) => {
+  const tc = useTranslations('Common');
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children || (
           <Button className="flex items-center gap-2">
-            <Printer className="h-4 w-4" /> 打印
+            <Printer className="h-4 w-4" /> {tc('print')}
           </Button>
         )}
       </DialogTrigger>
