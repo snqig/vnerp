@@ -43,3 +43,18 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+
+# 调试脚本与测试截图（根目录）
+/test-*.js
+/test-*.ps1
+/test-*.py
+/debug-*.ps1
+/scan-*.js
+/patch-*.js
+/fix_*.py
+/test_*.png
+/sample-*.png
+/orders-*.png
+
+# 数据库备份
+/backups/
