@@ -393,7 +393,7 @@ describe('FIFO分配算法', () => {
       };
 
       vi.mocked(transaction).mockImplementation(async (fn) => {
-        return fn(mockConn);
+        return fn(mockConn as any);
       });
 
       const result = await executeFIFOWithTransaction(
@@ -423,7 +423,7 @@ describe('FIFO分配算法', () => {
       vi.mocked(query).mockResolvedValue([[]]);
 
       vi.mocked(transaction).mockImplementation(async (fn) => {
-        return fn(mockConn);
+        return fn(mockConn as any);
       });
 
       const result = await executeFIFOWithTransaction(

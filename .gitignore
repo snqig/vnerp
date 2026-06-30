@@ -7,6 +7,11 @@
 # !.eslintrc.js
 # !.prettierrc.js
 
+# 保留工程治理相关配置（需纳入版本控制）
+!.github/
+!.husky/
+!.trae/
+
 # 明确排除 IDE/工具/Agent 相关目录（与项目无关，不同步）
 .agentic-tools-mcp/
 .agents/
@@ -86,6 +91,17 @@ i18n-missing.json
 
 # 数据库备份
 /backups/
+*.bak
+
+# 基线报告（CI 生成，不需跟踪）
+docs/baseline/
+
+# 临时脚本目录
+scripts/temp/
+
+# 密钥文件
+*.pem
+*.key
 
 # 测试运行产物（E2E 截图目录、Playwright 结果目录）
 /test-screenshots/

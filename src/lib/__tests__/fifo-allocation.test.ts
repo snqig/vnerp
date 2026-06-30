@@ -167,26 +167,24 @@ describe('FIFO Allocation Logic', () => {
     });
 
     it('should use FOR UPDATE in batch query SQL', async () => {
-      const queryMock = vi
-        .fn()
-        .mockResolvedValue([
-          [
-            {
-              id: 1,
-              batch_no: 'B001',
-              material_id: 1,
-              material_code: 'M001',
-              material_name: '物料',
-              available_qty: '100',
-              unit_price: '10',
-              inbound_date: '2026-01-01',
-              unit: '个',
-              expire_date: null,
-              opened_at: null,
-              version: 1,
-            },
-          ],
-        ]);
+      const queryMock = vi.fn().mockResolvedValue([
+        [
+          {
+            id: 1,
+            batch_no: 'B001',
+            material_id: 1,
+            material_code: 'M001',
+            material_name: '物料',
+            available_qty: '100',
+            unit_price: '10',
+            inbound_date: '2026-01-01',
+            unit: '个',
+            expire_date: null,
+            opened_at: null,
+            version: 1,
+          },
+        ],
+      ]);
       const conn = {
         query: queryMock,
         execute: vi.fn(),
@@ -216,6 +214,7 @@ describe('FIFO Allocation Logic', () => {
         total_available: 100,
         allocated_qty: 50,
         shortage: 0,
+        shortage_percentage: 0,
         allocations: [
           {
             batch_id: 1,
@@ -267,6 +266,7 @@ describe('FIFO Allocation Logic', () => {
         total_available: 100,
         allocated_qty: 30,
         shortage: 0,
+        shortage_percentage: 0,
         allocations: [
           {
             batch_id: 5,
@@ -327,20 +327,18 @@ describe('FIFO Allocation Logic', () => {
 
     it('should throw error when available quantity is insufficient', async () => {
       const conn = {
-        query: vi
-          .fn()
-          .mockResolvedValue([
-            [
-              {
-                id: 1,
-                batch_no: 'B001',
-                available_qty: '5',
-                quantity: '10',
-                unit_price: '20',
-                version: 1,
-              },
-            ],
-          ]),
+        query: vi.fn().mockResolvedValue([
+          [
+            {
+              id: 1,
+              batch_no: 'B001',
+              available_qty: '5',
+              quantity: '10',
+              unit_price: '20',
+              version: 1,
+            },
+          ],
+        ]),
         execute: vi.fn(),
       };
 
@@ -364,20 +362,18 @@ describe('FIFO Allocation Logic', () => {
     });
 
     it('should use SELECT FOR UPDATE to lock the batch row', async () => {
-      const queryMock = vi
-        .fn()
-        .mockResolvedValue([
-          [
-            {
-              id: 1,
-              batch_no: 'B001',
-              available_qty: '100',
-              quantity: '100',
-              unit_price: '20',
-              version: 1,
-            },
-          ],
-        ]);
+      const queryMock = vi.fn().mockResolvedValue([
+        [
+          {
+            id: 1,
+            batch_no: 'B001',
+            available_qty: '100',
+            quantity: '100',
+            unit_price: '20',
+            version: 1,
+          },
+        ],
+      ]);
       const conn = {
         query: queryMock,
         execute: vi

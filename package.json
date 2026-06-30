@@ -25,7 +25,8 @@
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "setup:db": "node scripts/setup-db.mjs"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,js,jsx}": [
@@ -81,6 +82,7 @@
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.34.4",
     "input-otp": "^1.4.2",
+    "ioredis": "^5.11.1",
     "jose": "^6.2.2",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.468.0",
@@ -107,6 +109,8 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.1.0",
+    "@commitlint/config-conventional": "^21.1.0",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",

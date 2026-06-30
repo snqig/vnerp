@@ -46,20 +46,21 @@ vi.mock('next/navigation', () => ({
   useLocale: () => 'zh-CN',
 }));
 
-// 模拟 localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+// 模拟 localStorage / sessionStorage（仅 jsdom 环境有 window；node 环境跳过）
+if (typeof window !== 'undefined') {
+  const localStorageMock = {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+  };
+  Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
-// 模拟 sessionStorage
-const sessionStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
-Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock });
+  const sessionStorageMock = {
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+  };
+  Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock });
+}
