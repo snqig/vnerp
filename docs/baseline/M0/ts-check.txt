@@ -1,0 +1,1 @@
+﻿tests/unit/infrastructure/event-bus/event-bus-publish.test.ts(22,5): error TS2353: Object literal may only specify known properties, and 'aggregateType' does not exist in type 'DomainEvent'.

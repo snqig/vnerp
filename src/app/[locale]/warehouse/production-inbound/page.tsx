@@ -147,7 +147,7 @@ export default function ProductionInboundPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <PageHeader
-          title="生产入库"
+          title={t('productionInbound')}
           actions={
             <>
               <div className="flex items-center gap-2">
@@ -250,7 +250,7 @@ export default function ProductionInboundPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">共 {total} 条</span>
+          <span className="text-sm text-muted-foreground">{tc('total', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -258,7 +258,7 @@ export default function ProductionInboundPage() {
               disabled={page <= 1}
               onClick={() => setPage(page - 1)}
             >
-              上一页
+              {tc('previousPage')}
             </Button>
             <Button
               size="sm"
@@ -266,14 +266,14 @@ export default function ProductionInboundPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage(page + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>新增生产入库单</DialogTitle>
+              <DialogTitle>{t('addInboundOrder')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -290,7 +290,7 @@ export default function ProductionInboundPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择仓库" />
+                    <SelectValue placeholder={t('selectWarehouse')} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w) => (

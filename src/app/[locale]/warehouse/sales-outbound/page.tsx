@@ -282,7 +282,7 @@ export default function SalesOutboundPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -290,7 +290,7 @@ export default function SalesOutboundPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('previousPage')}
             </Button>
             <Button
               size="sm"
@@ -298,7 +298,7 @@ export default function SalesOutboundPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
@@ -355,7 +355,7 @@ export default function SalesOutboundPage() {
                   onValueChange={(v) => setEditItem({ ...editItem, customer_name: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择客户" />
+                    <SelectValue placeholder={t('selectCustomer')} />
                   </SelectTrigger>
                   <SelectContent>
                     {customers.map((c) => (

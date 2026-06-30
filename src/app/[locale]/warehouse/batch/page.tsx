@@ -130,7 +130,7 @@ export default function BatchPage() {
 
   const handleCreate = async () => {
     if (!form.material_id || !form.warehouse_id || !form.batch_no || !form.quantity) {
-      toast({ title: '请填写必填字段', variant: 'destructive' });
+      toast({ title: tc('required'), variant: 'destructive' });
       return;
     }
     try {
@@ -152,15 +152,15 @@ export default function BatchPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: '批次创建成功' });
+        toast({ title: t('batchCreateSuccess') });
         setCreateOpen(false);
         setForm({ material_id: '', warehouse_id: '', batch_no: '', serial_no: '', quantity: '', unit_price: '', cost_price: '', production_date: '', expiry_date: '', supplier_name: '', remark: '' });
         fetchData();
       } else {
-        toast({ title: result.message || '创建失败', variant: 'destructive' });
+        toast({ title: result.message || tc('createFailed'), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '创建失败', variant: 'destructive' });
+      toast({ title: tc('createFailed'), variant: 'destructive' });
     }
   };
 
@@ -172,13 +172,13 @@ export default function BatchPage() {
       });
       const result = await res.json();
       if (result.success) {
-        toast({ title: action === 'freeze' ? '批次已冻结' : '批次已解冻' });
+        toast({ title: action === 'freeze' ? t('batchFrozen') : t('batchUnfrozen') });
         fetchData();
       } else {
-        toast({ title: result.message || '操作失败', variant: 'destructive' });
+        toast({ title: result.message || tc('operationFailed'), variant: 'destructive' });
       }
     } catch (e) {
-      toast({ title: '操作失败', variant: 'destructive' });
+      toast({ title: tc('operationFailed'), variant: 'destructive' });
     }
   };
 
@@ -187,9 +187,9 @@ export default function BatchPage() {
     const now = new Date();
     const expiry = new Date(expiryDate);
     const diffDays = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return { label: '已过期', color: 'text-red-600 dark:text-red-400' };
-    if (diffDays <= 30) return { label: `即将过期(${diffDays}天)`, color: 'text-orange-600 dark:text-orange-400' };
-    if (diffDays <= 90) return { label: `保质期${diffDays}天`, color: 'text-yellow-600 dark:text-yellow-400' };
+    if (diffDays < 0) return { label: t('expired'), color: 'text-red-600 dark:text-red-400' };
+    if (diffDays <= 30) return { label: t('expireSoon', { days: diffDays }), color: 'text-orange-600 dark:text-orange-400' };
+    if (diffDays <= 90) return { label: t('shelfLife', { days: diffDays }), color: 'text-yellow-600 dark:text-yellow-400' };
     return null;
   };
 

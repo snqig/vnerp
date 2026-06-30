@@ -1,0 +1,3204 @@
+{
+  "scannedFiles": 16,
+  "totalFindings": 267,
+  "matched": 144,
+  "unmatched": 123,
+  "unmatchedTexts": [
+    "汇总卡片",
+    "搜索栏",
+    "批次列表",
+    "分页",
+    "批次详情对话框",
+    "创建批次对话框",
+    "确定重新计算该物料的成本",
+    "成本核算管理",
+    "移动加权平均法成本核算",
+    "支持成本重算和成本分析",
+    "库存总成本",
+    "核算方法",
+    "移动加权平均",
+    "平均成本价",
+    "暂无成本数据",
+    "个仓库",
+    "种物料",
+    "成本详情对话框",
+    "成本详情",
+    "物料在各仓库的成本分布和变动历史",
+    "各仓库成本",
+    "成本变动历史",
+    "最近入库记录",
+    "页面加载失败",
+    "请稍后重试",
+    "响应错误",
+    "开始获取入库单列表",
+    "正在获取入库记录",
+    "响应状态",
+    "返回结果",
+    "入库单列表获取成功",
+    "返回失败",
+    "获取入库单列表失败",
+    "获取仓库分类列表失败",
+    "获取供应商列表失败",
+    "搜索采购单失败",
+    "获取标签列表失败",
+    "系统管理员",
+    "操作按钮",
+    "统计卡片",
+    "全选行",
+    "新增标签列表",
+    "分切对话框",
+    "分切结果",
+    "二维码标签预览",
+    "余料宽幅",
+    "分切标签预览",
+    "分切标签打印",
+    "二维码查看对话框",
+    "打印预览对话框",
+    "扫码查询对话框",
+    "生成标签对话框",
+    "新增入库单对话框",
+    "混合料新增对话框",
+    "审核对话框",
+    "编辑入库单对话框",
+    "获取到数据",
+    "请求异常",
+    "热缩套管",
+    "恒翌达",
+    "绝缘胶带",
+    "华通材料",
+    "铜芯线",
+    "江南电缆",
+    "铝箔屏蔽带",
+    "尼龙扎带",
+    "热熔胶棒",
+    "张三",
+    "生产车间领用",
+    "李四",
+    "客户订单发货",
+    "月度生产计划领用",
+    "开始获取出库单列表",
+    "出库数据",
+    "出库单列表获取成功",
+    "获取出库单列表失败",
+    "当前用户",
+    "保存出库单失败",
+    "更新出库单失败",
+    "删除出库单失败",
+    "审核出库单失败",
+    "先进先出出库",
+    "页面标题",
+    "功能按钮栏",
+    "查询筛选栏",
+    "出库记录表格",
+    "新增出库单对话框",
+    "编辑出库单对话框",
+    "删除出库单对话框",
+    "审核出库单对话框",
+    "先进先出分配对话框",
+    "汇总信息",
+    "分配明细表",
+    "可用批次列表",
+    "确定删除",
+    "编辑对话框",
+    "删除确认对话框"
+  ],
+  "findings": [
+    {
+      "file": "src\\app\\[locale]\\warehouse\\batch\\page.tsx",
+      "line": 225,
+      "col": 13,
+      "text": "汇总卡片",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\batch\\page.tsx",
+      "line": 262,
+      "col": 13,
+      "text": "搜索栏",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\batch\\page.tsx",
+      "line": 288,
+      "col": 13,
+      "text": "批次列表",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\batch\\page.tsx",
+      "line": 379,
+      "col": 13,
+      "text": "分页",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\batch\\page.tsx",
+      "line": 393,
+      "col": 11,
+      "text": "批次详情对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\batch\\page.tsx",
+      "line": 429,
+      "col": 11,
+      "text": "创建批次对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 87,
+      "col": 19,
+      "text": "确定重新计算该物料的成本",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 114,
+      "col": 15,
+      "text": "成本核算管理",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 117,
+      "col": 15,
+      "text": "移动加权平均法成本核算",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 117,
+      "col": 27,
+      "text": "支持成本重算和成本分析",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 122,
+      "col": 13,
+      "text": "刷新",
+      "matched": true,
+      "recommendKeys": [
+        "Common.refresh",
+        "Common.refresh",
+        "Warehouse.refresh",
+        "Warehouse.refresh"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 126,
+      "col": 13,
+      "text": "汇总卡片",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 133,
+      "col": 66,
+      "text": "库存总成本",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 144,
+      "col": 66,
+      "text": "物料种类",
+      "matched": true,
+      "recommendKeys": [
+        "Dashboard.materialTypes",
+        "Dashboard.materialTypes",
+        "Warehouse.materialTypes",
+        "Warehouse.materialTypes"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 155,
+      "col": 66,
+      "text": "核算方法",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 156,
+      "col": 55,
+      "text": "移动加权平均",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 168,
+      "col": 30,
+      "text": "物料编码",
+      "matched": true,
+      "recommendKeys": [
+        "Common.materialCode",
+        "Common.materialCode",
+        "Orders.materialCode",
+        "Orders.materialCode",
+        "Warehouse.materialCode",
+        "Warehouse.materialCode",
+        "Production.materialCode",
+        "Production.materialCode",
+        "QRCode.materialCode",
+        "QRCode.materialCode",
+        "Purchase.materialCode",
+        "Purchase.materialCode"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 169,
+      "col": 30,
+      "text": "物料名称",
+      "matched": true,
+      "recommendKeys": [
+        "Common.materialName",
+        "Common.materialName",
+        "Orders.materialName",
+        "Orders.materialName",
+        "Warehouse.materialName",
+        "Warehouse.materialName",
+        "Warehouse.searchPlaceholder",
+        "Warehouse.materialNameRequired",
+        "Warehouse.labelMaterialName",
+        "Warehouse.labelMaterialName",
+        "Warehouse.materialNameLabel",
+        "Warehouse.materialNameCol",
+        "Warehouse.materialNameCol",
+        "Production.materialName",
+        "Production.materialName",
+        "QRCode.materialName",
+        "QRCode.materialName",
+        "QRCode.defaultMaterialName",
+        "QRCode.defaultMaterialName",
+        "Purchase.materialName",
+        "Purchase.materialName"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 173,
+      "col": 30,
+      "text": "平均成本价",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 174,
+      "col": 30,
+      "text": "库存金额",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.stockValue",
+        "Warehouse.stockValue"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 175,
+      "col": 30,
+      "text": "仓库数",
+      "matched": true,
+      "recommendKeys": [
+        "Dashboard.warehouseCount",
+        "Warehouse.noWarehouseData"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 189,
+      "col": 23,
+      "text": "暂无成本数据",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 207,
+      "col": 93,
+      "text": "个仓库",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 213,
+      "col": 29,
+      "text": "详情",
+      "matched": true,
+      "recommendKeys": [
+        "Common.detail",
+        "Common.detail",
+        "Warehouse.detail",
+        "Warehouse.detail"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 217,
+      "col": 29,
+      "text": "重算",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.costRecalculated",
+        "Warehouse.recalculateFailed"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 230,
+      "col": 69,
+      "text": "种物料",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 233,
+      "col": 15,
+      "text": "上一页",
+      "matched": true,
+      "recommendKeys": [
+        "Common.prevPage",
+        "Common.prevPage",
+        "Orders.prevPage",
+        "Orders.prevPage",
+        "Finance.previousPage",
+        "Finance.previousPage"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 236,
+      "col": 15,
+      "text": "下一页",
+      "matched": true,
+      "recommendKeys": [
+        "Common.nextPage",
+        "Common.nextPage",
+        "Orders.nextPage",
+        "Orders.nextPage",
+        "Finance.nextPage",
+        "Finance.nextPage"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 242,
+      "col": 11,
+      "text": "成本详情对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 246,
+      "col": 26,
+      "text": "成本详情",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 247,
+      "col": 32,
+      "text": "物料在各仓库的成本分布和变动历史",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 251,
+      "col": 19,
+      "text": "各仓库成本",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 253,
+      "col": 50,
+      "text": "各仓库成本",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 259,
+      "col": 54,
+      "text": "成本价",
+      "matched": true,
+      "recommendKeys": [
+        "Orders.costPrice",
+        "Orders.costPrice"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 260,
+      "col": 54,
+      "text": "库存金额",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.stockValue",
+        "Warehouse.stockValue"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 266,
+      "col": 78,
+      "text": "仓库",
+      "matched": true,
+      "recommendKeys": [
+        "Common.warehouse",
+        "Common.warehouse",
+        "Warehouse.warehouse",
+        "Warehouse.warehouse",
+        "Warehouse.warehouseShort",
+        "Warehouse.warehouseShort",
+        "Warehouse.warehouseDeleteSuccess",
+        "Warehouse.warehouseCol",
+        "Warehouse.warehouseCol",
+        "Production.warehouse",
+        "Production.warehouse"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 276,
+      "col": 19,
+      "text": "成本变动历史",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 278,
+      "col": 50,
+      "text": "最近入库记录",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 285,
+      "col": 54,
+      "text": "单价",
+      "matched": true,
+      "recommendKeys": [
+        "Orders.unitPrice",
+        "Orders.unitPrice",
+        "Orders.placeholderUnitPrice",
+        "Orders.placeholderUnitPrice",
+        "Warehouse.unitPrice",
+        "Warehouse.unitPrice",
+        "Purchase.unitPrice",
+        "Purchase.unitPrice",
+        "Outsource.unitPrice"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\cost\\page.tsx",
+      "line": 302,
+      "col": 27,
+      "text": "暂无入库记录",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.noInboundRecords",
+        "Warehouse.noInboundRecords"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\error.tsx",
+      "line": 20,
+      "col": 85,
+      "text": "页面加载失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\error.tsx",
+      "line": 21,
+      "col": 82,
+      "text": "请稍后重试",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\error.tsx",
+      "line": 29,
+      "col": 11,
+      "text": "重试",
+      "matched": true,
+      "recommendKeys": [
+        "Hr.saveRetry",
+        "Hr.updateRetry",
+        "Hr.deleteRetry"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\cutting\\page.tsx",
+      "line": 148,
+      "col": 32,
+      "text": "响应错误",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\cutting\\page.tsx",
+      "line": 339,
+      "col": 17,
+      "text": "分页",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 363,
+      "col": 74,
+      "text": "开始获取入库单列表",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 366,
+      "col": 78,
+      "text": "使用",
+      "matched": true,
+      "recommendKeys": [
+        "Common.used",
+        "QRCode.used",
+        "Common.inUse",
+        "Dcprint.inUse",
+        "Auth.welcome",
+        "Dashboard.warehouseSpaceUsage",
+        "Dashboard.dieUsageAlert",
+        "Warehouse.capacityUsage",
+        "Dcprint.inkUsage",
+        "Dcprint.dieUsage"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 366,
+      "col": 86,
+      "text": "数据",
+      "matched": true,
+      "recommendKeys": [
+        "Orders.noBomData",
+        "Orders.noBomDataForProduct"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 378,
+      "col": 28,
+      "text": "正在获取入库记录",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 380,
+      "col": 28,
+      "text": "响应状态",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 382,
+      "col": 31,
+      "text": "返回结果",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 386,
+      "col": 78,
+      "text": "入库单列表获取成功",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 389,
+      "col": 81,
+      "text": "返回失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 392,
+      "col": 77,
+      "text": "获取入库单列表失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 413,
+      "col": 22,
+      "text": "获取仓库列表失败",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.fetchWarehouseFailed",
+        "Warehouse.fetchWarehouseFailed"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 426,
+      "col": 22,
+      "text": "获取仓库分类列表失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 440,
+      "col": 22,
+      "text": "获取供应商列表失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 466,
+      "col": 22,
+      "text": "搜索采购单失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 516,
+      "col": 22,
+      "text": "获取标签列表失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 542,
+      "col": 22,
+      "text": "生成二维码失败",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.qrCodeGenerateFailed",
+        "Warehouse.qrCodeGenerateFailed"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 583,
+      "col": 74,
+      "text": "系统管理员",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 648,
+      "col": 22,
+      "text": "分切失败",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.cutFailed",
+        "Warehouse.cutFailed"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 669,
+      "col": 22,
+      "text": "扫码查询失败",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.scanQueryFailed",
+        "Warehouse.scanQueryFailed"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 747,
+      "col": 81,
+      "text": "物料标签打印",
+      "matched": true,
+      "recommendKeys": [
+        "QRCode.labelMaterialPrint",
+        "QRCode.labelMaterialPrint"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 771,
+      "col": 22,
+      "text": "数量",
+      "matched": true,
+      "recommendKeys": [
+        "Common.quantity",
+        "Common.quantity",
+        "Dashboard.quantity",
+        "Dashboard.quantity",
+        "Orders.quantity",
+        "Orders.quantity",
+        "Warehouse.quantity",
+        "Warehouse.qtyUnit",
+        "Production.tooltipQuantity",
+        "Production.tooltipQuantity",
+        "Business.quantity",
+        "Business.quantity"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 772,
+      "col": 22,
+      "text": "供应商",
+      "matched": true,
+      "recommendKeys": [
+        "Common.supplier",
+        "Common.supplier",
+        "Dashboard.topSuppliers",
+        "Warehouse.supplier",
+        "Warehouse.supplier",
+        "Warehouse.labelSupplier",
+        "Warehouse.labelSupplier",
+        "Purchase.supplier",
+        "Purchase.supplier",
+        "Purchase.searchOrderPlaceholder"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 773,
+      "col": 22,
+      "text": "入库时间",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.inboundTime",
+        "Warehouse.inboundTime"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 778,
+      "col": 21,
+      "text": "已入库",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.statusReceived",
+        "Warehouse.statusReceived",
+        "Warehouse.inQty",
+        "Warehouse.inQty",
+        "Warehouse.received",
+        "Warehouse.received",
+        "Outsource.received",
+        "Outsource.received"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 799,
+      "col": 22,
+      "text": "打印失败",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.printFailed",
+        "Warehouse.printFailed",
+        "QRCode.printFailed",
+        "QRCode.printFailed"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 851,
+      "col": 13,
+      "text": "操作按钮",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 931,
+      "col": 13,
+      "text": "统计卡片",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1031,
+      "col": 13,
+      "text": "入库记录列表",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.inboundSimpleRecords",
+        "Warehouse.inboundSimpleRecords"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1098,
+      "col": 23,
+      "text": "全选行",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1279,
+      "col": 13,
+      "text": "标签管理",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.labelManagement",
+        "Warehouse.labelManagement",
+        "Dcprint.labels",
+        "Dcprint.labels"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1279,
+      "col": 20,
+      "text": "新增标签列表",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1358,
+      "col": 23,
+      "text": "全选标签",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.selectAllLabels",
+        "Warehouse.selectAllLabels"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1529,
+      "col": 13,
+      "text": "分切对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1731,
+      "col": 13,
+      "text": "分切结果",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1731,
+      "col": 20,
+      "text": "二维码标签预览",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1731,
+      "col": 28,
+      "text": "打印对话框",
+      "matched": true,
+      "recommendKeys": [
+        "Srm.pdfExportSuccess"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1836,
+      "col": 154,
+      "text": "余料",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.remainder",
+        "Warehouse.remainder",
+        "Warehouse.remainderLabel",
+        "Warehouse.remainderLabel"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1836,
+      "col": 161,
+      "text": "分切",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.cutN",
+        "Warehouse.cutLabel",
+        "Warehouse.cutLabel",
+        "Production.processSlitting",
+        "Production.processSlitting"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1839,
+      "col": 72,
+      "text": "源标签",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.sourceLabel",
+        "Warehouse.sourceLabel"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1840,
+      "col": 72,
+      "text": "入库单号",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.orderNo",
+        "Warehouse.orderNo",
+        "Warehouse.inboundOrderNo",
+        "Warehouse.inboundOrderNo",
+        "Warehouse.inboundNo",
+        "Warehouse.inboundNo"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1841,
+      "col": 83,
+      "text": "余料宽幅",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1841,
+      "col": 93,
+      "text": "分切宽幅",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.cutWidthMM"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1842,
+      "col": 72,
+      "text": "规格",
+      "matched": true,
+      "recommendKeys": [
+        "Common.specification",
+        "Common.specification",
+        "Orders.spec",
+        "Orders.spec",
+        "Orders.placeholderSpec",
+        "Orders.placeholderSpec",
+        "Warehouse.materialSpec",
+        "Warehouse.materialSpec",
+        "Warehouse.specification",
+        "Warehouse.specification",
+        "Warehouse.specN",
+        "Warehouse.specN",
+        "Warehouse.labelSpecification",
+        "Warehouse.labelSpecification",
+        "Warehouse.spec",
+        "Warehouse.spec"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1843,
+      "col": 72,
+      "text": "数量",
+      "matched": true,
+      "recommendKeys": [
+        "Common.quantity",
+        "Common.quantity",
+        "Dashboard.quantity",
+        "Dashboard.quantity",
+        "Orders.quantity",
+        "Orders.quantity",
+        "Warehouse.quantity",
+        "Warehouse.qtyUnit",
+        "Production.tooltipQuantity",
+        "Production.tooltipQuantity",
+        "Business.quantity",
+        "Business.quantity"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1843,
+      "col": 75,
+      "text": "单位",
+      "matched": true,
+      "recommendKeys": [
+        "Common.unit",
+        "Common.unit",
+        "Orders.unit",
+        "Orders.unit",
+        "Orders.placeholderUnit",
+        "Orders.placeholderUnit",
+        "Warehouse.qtyUnit",
+        "Warehouse.unit",
+        "Warehouse.unit",
+        "Production.unit",
+        "Production.unit",
+        "Outsource.unit",
+        "Outsource.unit"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1844,
+      "col": 72,
+      "text": "供应商",
+      "matched": true,
+      "recommendKeys": [
+        "Common.supplier",
+        "Common.supplier",
+        "Dashboard.topSuppliers",
+        "Warehouse.supplier",
+        "Warehouse.supplier",
+        "Warehouse.labelSupplier",
+        "Warehouse.labelSupplier",
+        "Purchase.supplier",
+        "Purchase.supplier",
+        "Purchase.searchOrderPlaceholder"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1857,
+      "col": 10,
+      "text": "分切标签预览",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1880,
+      "col": 7,
+      "text": "分切标签预览",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1918,
+      "col": 154,
+      "text": "余料",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.remainder",
+        "Warehouse.remainder",
+        "Warehouse.remainderLabel",
+        "Warehouse.remainderLabel"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1918,
+      "col": 161,
+      "text": "分切",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.cutN",
+        "Warehouse.cutLabel",
+        "Warehouse.cutLabel",
+        "Production.processSlitting",
+        "Production.processSlitting"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1921,
+      "col": 72,
+      "text": "源标签",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.sourceLabel",
+        "Warehouse.sourceLabel"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1922,
+      "col": 72,
+      "text": "入库单号",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.orderNo",
+        "Warehouse.orderNo",
+        "Warehouse.inboundOrderNo",
+        "Warehouse.inboundOrderNo",
+        "Warehouse.inboundNo",
+        "Warehouse.inboundNo"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1923,
+      "col": 83,
+      "text": "余料宽幅",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1923,
+      "col": 93,
+      "text": "分切宽幅",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.cutWidthMM"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1924,
+      "col": 72,
+      "text": "规格",
+      "matched": true,
+      "recommendKeys": [
+        "Common.specification",
+        "Common.specification",
+        "Orders.spec",
+        "Orders.spec",
+        "Orders.placeholderSpec",
+        "Orders.placeholderSpec",
+        "Warehouse.materialSpec",
+        "Warehouse.materialSpec",
+        "Warehouse.specification",
+        "Warehouse.specification",
+        "Warehouse.specN",
+        "Warehouse.specN",
+        "Warehouse.labelSpecification",
+        "Warehouse.labelSpecification",
+        "Warehouse.spec",
+        "Warehouse.spec"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1925,
+      "col": 72,
+      "text": "数量",
+      "matched": true,
+      "recommendKeys": [
+        "Common.quantity",
+        "Common.quantity",
+        "Dashboard.quantity",
+        "Dashboard.quantity",
+        "Orders.quantity",
+        "Orders.quantity",
+        "Warehouse.quantity",
+        "Warehouse.qtyUnit",
+        "Production.tooltipQuantity",
+        "Production.tooltipQuantity",
+        "Business.quantity",
+        "Business.quantity"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1925,
+      "col": 75,
+      "text": "单位",
+      "matched": true,
+      "recommendKeys": [
+        "Common.unit",
+        "Common.unit",
+        "Orders.unit",
+        "Orders.unit",
+        "Orders.placeholderUnit",
+        "Orders.placeholderUnit",
+        "Warehouse.qtyUnit",
+        "Warehouse.unit",
+        "Warehouse.unit",
+        "Production.unit",
+        "Production.unit",
+        "Outsource.unit",
+        "Outsource.unit"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1926,
+      "col": 72,
+      "text": "供应商",
+      "matched": true,
+      "recommendKeys": [
+        "Common.supplier",
+        "Common.supplier",
+        "Dashboard.topSuppliers",
+        "Warehouse.supplier",
+        "Warehouse.supplier",
+        "Warehouse.labelSupplier",
+        "Warehouse.labelSupplier",
+        "Purchase.supplier",
+        "Purchase.supplier",
+        "Purchase.searchOrderPlaceholder"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1939,
+      "col": 10,
+      "text": "分切标签打印",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 1980,
+      "col": 13,
+      "text": "二维码查看对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2001,
+      "col": 13,
+      "text": "打印预览对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2099,
+      "col": 72,
+      "text": "入库单号",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.orderNo",
+        "Warehouse.orderNo",
+        "Warehouse.inboundOrderNo",
+        "Warehouse.inboundOrderNo",
+        "Warehouse.inboundNo",
+        "Warehouse.inboundNo"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2100,
+      "col": 72,
+      "text": "规格",
+      "matched": true,
+      "recommendKeys": [
+        "Common.specification",
+        "Common.specification",
+        "Orders.spec",
+        "Orders.spec",
+        "Orders.placeholderSpec",
+        "Orders.placeholderSpec",
+        "Warehouse.materialSpec",
+        "Warehouse.materialSpec",
+        "Warehouse.specification",
+        "Warehouse.specification",
+        "Warehouse.specN",
+        "Warehouse.specN",
+        "Warehouse.labelSpecification",
+        "Warehouse.labelSpecification",
+        "Warehouse.spec",
+        "Warehouse.spec"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2101,
+      "col": 72,
+      "text": "数量",
+      "matched": true,
+      "recommendKeys": [
+        "Common.quantity",
+        "Common.quantity",
+        "Dashboard.quantity",
+        "Dashboard.quantity",
+        "Orders.quantity",
+        "Orders.quantity",
+        "Warehouse.quantity",
+        "Warehouse.qtyUnit",
+        "Production.tooltipQuantity",
+        "Production.tooltipQuantity",
+        "Business.quantity",
+        "Business.quantity"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2101,
+      "col": 75,
+      "text": "单位",
+      "matched": true,
+      "recommendKeys": [
+        "Common.unit",
+        "Common.unit",
+        "Orders.unit",
+        "Orders.unit",
+        "Orders.placeholderUnit",
+        "Orders.placeholderUnit",
+        "Warehouse.qtyUnit",
+        "Warehouse.unit",
+        "Warehouse.unit",
+        "Production.unit",
+        "Production.unit",
+        "Outsource.unit",
+        "Outsource.unit"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2102,
+      "col": 72,
+      "text": "供应商",
+      "matched": true,
+      "recommendKeys": [
+        "Common.supplier",
+        "Common.supplier",
+        "Dashboard.topSuppliers",
+        "Warehouse.supplier",
+        "Warehouse.supplier",
+        "Warehouse.labelSupplier",
+        "Warehouse.labelSupplier",
+        "Purchase.supplier",
+        "Purchase.supplier",
+        "Purchase.searchOrderPlaceholder"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2103,
+      "col": 72,
+      "text": "入库时间",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.inboundTime",
+        "Warehouse.inboundTime"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2116,
+      "col": 10,
+      "text": "二维码标签打印",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.printPreview",
+        "Warehouse.qrCodeLabelPrintPreview"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2160,
+      "col": 13,
+      "text": "扫码查询对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2219,
+      "col": 13,
+      "text": "生成标签对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2262,
+      "col": 13,
+      "text": "新增入库单对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2557,
+      "col": 13,
+      "text": "混合料新增对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2787,
+      "col": 13,
+      "text": "审核对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound\\page.tsx",
+      "line": 2871,
+      "col": 13,
+      "text": "编辑入库单对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound-simple\\page.tsx",
+      "line": 49,
+      "col": 24,
+      "text": "获取到数据",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound-simple\\page.tsx",
+      "line": 52,
+      "col": 27,
+      "text": "返回失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\inbound-simple\\page.tsx",
+      "line": 56,
+      "col": 22,
+      "text": "请求异常",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\loading.tsx",
+      "line": 8,
+      "col": 61,
+      "text": "加载中",
+      "matched": true,
+      "recommendKeys": [
+        "Common.loading",
+        "Orders.loading",
+        "Warehouse.loading"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 162,
+      "col": 16,
+      "text": "原材料",
+      "matched": true,
+      "recommendKeys": [
+        "Common.rawMaterial",
+        "Common.rawMaterial",
+        "Orders.materialTypeRaw",
+        "Orders.materialTypeRaw",
+        "Production.rawMaterial",
+        "Production.rawMaterial"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 163,
+      "col": 16,
+      "text": "热缩套管",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 167,
+      "col": 16,
+      "text": "恒翌达",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 172,
+      "col": 16,
+      "text": "原材料",
+      "matched": true,
+      "recommendKeys": [
+        "Common.rawMaterial",
+        "Common.rawMaterial",
+        "Orders.materialTypeRaw",
+        "Orders.materialTypeRaw",
+        "Production.rawMaterial",
+        "Production.rawMaterial"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 177,
+      "col": 16,
+      "text": "恒翌达",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 182,
+      "col": 16,
+      "text": "原材料",
+      "matched": true,
+      "recommendKeys": [
+        "Common.rawMaterial",
+        "Common.rawMaterial",
+        "Orders.materialTypeRaw",
+        "Orders.materialTypeRaw",
+        "Production.rawMaterial",
+        "Production.rawMaterial"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 183,
+      "col": 16,
+      "text": "热缩套管",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 187,
+      "col": 16,
+      "text": "恒翌达",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 192,
+      "col": 16,
+      "text": "原材料",
+      "matched": true,
+      "recommendKeys": [
+        "Common.rawMaterial",
+        "Common.rawMaterial",
+        "Orders.materialTypeRaw",
+        "Orders.materialTypeRaw",
+        "Production.rawMaterial",
+        "Production.rawMaterial"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 193,
+      "col": 15,
+      "text": "绝缘胶带",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 197,
+      "col": 16,
+      "text": "华通材料",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 202,
+      "col": 16,
+      "text": "原材料",
+      "matched": true,
+      "recommendKeys": [
+        "Common.rawMaterial",
+        "Common.rawMaterial",
+        "Orders.materialTypeRaw",
+        "Orders.materialTypeRaw",
+        "Production.rawMaterial",
+        "Production.rawMaterial"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 203,
+      "col": 12,
+      "text": "铜芯线",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 207,
+      "col": 16,
+      "text": "江南电缆",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 212,
+      "col": 16,
+      "text": "原材料",
+      "matched": true,
+      "recommendKeys": [
+        "Common.rawMaterial",
+        "Common.rawMaterial",
+        "Orders.materialTypeRaw",
+        "Orders.materialTypeRaw",
+        "Production.rawMaterial",
+        "Production.rawMaterial"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 213,
+      "col": 12,
+      "text": "铝箔屏蔽带",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 217,
+      "col": 16,
+      "text": "华通材料",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 222,
+      "col": 16,
+      "text": "原材料",
+      "matched": true,
+      "recommendKeys": [
+        "Common.rawMaterial",
+        "Common.rawMaterial",
+        "Orders.materialTypeRaw",
+        "Orders.materialTypeRaw",
+        "Production.rawMaterial",
+        "Production.rawMaterial"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 223,
+      "col": 12,
+      "text": "尼龙扎带",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 227,
+      "col": 16,
+      "text": "恒翌达",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 232,
+      "col": 16,
+      "text": "原材料",
+      "matched": true,
+      "recommendKeys": [
+        "Common.rawMaterial",
+        "Common.rawMaterial",
+        "Orders.materialTypeRaw",
+        "Orders.materialTypeRaw",
+        "Production.rawMaterial",
+        "Production.rawMaterial"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 233,
+      "col": 12,
+      "text": "热熔胶棒",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 237,
+      "col": 16,
+      "text": "华通材料",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 247,
+      "col": 24,
+      "text": "热缩套管",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 251,
+      "col": 17,
+      "text": "原材料仓",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.rawMaterialWarehouse",
+        "Warehouse.rawMaterialWarehouse"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 253,
+      "col": 16,
+      "text": "张三",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 256,
+      "col": 12,
+      "text": "生产出库",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.productionOutbound",
+        "Warehouse.productionOutbound"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 257,
+      "col": 14,
+      "text": "生产车间领用",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 270,
+      "col": 17,
+      "text": "原材料仓",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.rawMaterialWarehouse",
+        "Warehouse.rawMaterialWarehouse"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 272,
+      "col": 16,
+      "text": "张三",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 275,
+      "col": 12,
+      "text": "生产出库",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.productionOutbound",
+        "Warehouse.productionOutbound"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 276,
+      "col": 14,
+      "text": "生产车间领用",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 285,
+      "col": 24,
+      "text": "热缩套管",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 289,
+      "col": 17,
+      "text": "原材料仓",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.rawMaterialWarehouse",
+        "Warehouse.rawMaterialWarehouse"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 291,
+      "col": 16,
+      "text": "李四",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 294,
+      "col": 12,
+      "text": "销售出库",
+      "matched": true,
+      "recommendKeys": [
+        "Nav.warehouse_sales_outbound",
+        "Nav.warehouse_sales_outbound",
+        "Warehouse.salesOutbound",
+        "Warehouse.salesOutbound",
+        "Warehouse.salesOutboundTitle",
+        "Warehouse.salesOutboundTitle"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 295,
+      "col": 14,
+      "text": "客户订单发货",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 304,
+      "col": 24,
+      "text": "热缩套管",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 308,
+      "col": 17,
+      "text": "原材料仓",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.rawMaterialWarehouse",
+        "Warehouse.rawMaterialWarehouse"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 310,
+      "col": 16,
+      "text": "张三",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 313,
+      "col": 12,
+      "text": "生产出库",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.productionOutbound",
+        "Warehouse.productionOutbound"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 314,
+      "col": 14,
+      "text": "月度生产计划领用",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 451,
+      "col": 75,
+      "text": "开始获取出库单列表",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 454,
+      "col": 79,
+      "text": "使用",
+      "matched": true,
+      "recommendKeys": [
+        "Common.used",
+        "QRCode.used",
+        "Common.inUse",
+        "Dcprint.inUse",
+        "Auth.welcome",
+        "Dashboard.warehouseSpaceUsage",
+        "Dashboard.dieUsageAlert",
+        "Warehouse.capacityUsage",
+        "Dcprint.inkUsage",
+        "Dcprint.dieUsage"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 454,
+      "col": 87,
+      "text": "出库数据",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 469,
+      "col": 79,
+      "text": "出库单列表获取成功",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 472,
+      "col": 78,
+      "text": "获取出库单列表失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 489,
+      "col": 22,
+      "text": "获取仓库列表失败",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.fetchWarehouseFailed",
+        "Warehouse.fetchWarehouseFailed"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 502,
+      "col": 22,
+      "text": "获取仓库分类列表失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 566,
+      "col": 26,
+      "text": "生产出库",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.productionOutbound",
+        "Warehouse.productionOutbound"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 568,
+      "col": 30,
+      "text": "销售出库",
+      "matched": true,
+      "recommendKeys": [
+        "Nav.warehouse_sales_outbound",
+        "Nav.warehouse_sales_outbound",
+        "Warehouse.salesOutbound",
+        "Warehouse.salesOutbound",
+        "Warehouse.salesOutboundTitle",
+        "Warehouse.salesOutboundTitle"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 570,
+      "col": 32,
+      "text": "退货出库",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.returnOutbound",
+        "Warehouse.returnOutbound"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 611,
+      "col": 24,
+      "text": "当前用户",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 628,
+      "col": 22,
+      "text": "保存出库单失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 667,
+      "col": 24,
+      "text": "当前用户",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 684,
+      "col": 22,
+      "text": "更新出库单失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 712,
+      "col": 22,
+      "text": "删除出库单失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 735,
+      "col": 25,
+      "text": "当前用户",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 748,
+      "col": 22,
+      "text": "审核出库单失败",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 782,
+      "col": 22,
+      "text": "获取",
+      "matched": true,
+      "recommendKeys": [
+        "Orders.fetchBomFailed",
+        "Orders.fetchBomDetailFailed",
+        "Orders.fetchBomDataFailed",
+        "Warehouse.fifoFetchFailed"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 782,
+      "col": 28,
+      "text": "分配方案失败",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.fifoFetchFailed"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 799,
+      "col": 26,
+      "text": "当前用户",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 800,
+      "col": 24,
+      "text": "先进先出出库",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 852,
+      "col": 13,
+      "text": "页面标题",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 869,
+      "col": 13,
+      "text": "功能按钮栏",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 896,
+      "col": 13,
+      "text": "查询筛选栏",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 955,
+      "col": 13,
+      "text": "统计卡片",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 1054,
+      "col": 13,
+      "text": "出库记录表格",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 1190,
+      "col": 11,
+      "text": "新增出库单对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 1339,
+      "col": 11,
+      "text": "编辑出库单对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 1488,
+      "col": 11,
+      "text": "删除出库单对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 1508,
+      "col": 11,
+      "text": "审核出库单对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 1539,
+      "col": 15,
+      "text": "先进先出分配对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 1559,
+      "col": 19,
+      "text": "汇总信息",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 1598,
+      "col": 19,
+      "text": "分配明细表",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\outbound\\page.tsx",
+      "line": 1637,
+      "col": 19,
+      "text": "可用批次列表",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 107,
+      "col": 25,
+      "text": "创建成功",
+      "matched": true,
+      "recommendKeys": [
+        "Common.createSuccess",
+        "Common.createSuccess",
+        "Orders.bomCreateSuccess",
+        "Warehouse.createSuccess",
+        "Warehouse.createSuccess",
+        "Warehouse.createSalesOutboundSuccess",
+        "Warehouse.createSalesOutboundSuccess",
+        "Warehouse.stockAdjustCreateSuccess",
+        "Warehouse.stockAdjustCreateSuccess",
+        "Srm.createSuccess",
+        "Srm.createSuccess"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 111,
+      "col": 25,
+      "text": "失败",
+      "matched": true,
+      "recommendKeys": [
+        "Common.failed",
+        "Common.failed",
+        "QRCode.fail",
+        "QRCode.fail"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 114,
+      "col": 23,
+      "text": "失败",
+      "matched": true,
+      "recommendKeys": [
+        "Common.failed",
+        "Common.failed",
+        "QRCode.fail",
+        "QRCode.fail"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 125,
+      "col": 25,
+      "text": "更新成功",
+      "matched": true,
+      "recommendKeys": [
+        "Common.updateSuccess",
+        "Common.updateSuccess",
+        "Warehouse.updateSuccess",
+        "Warehouse.updateSuccess",
+        "Warehouse.updateInboundSuccess",
+        "Warehouse.updateInboundSuccess",
+        "Warehouse.updateSalesOutboundSuccess",
+        "Warehouse.updateSalesOutboundSuccess",
+        "Warehouse.stockAdjustUpdateSuccess",
+        "Warehouse.stockAdjustUpdateSuccess",
+        "Srm.updateSuccess",
+        "Srm.updateSuccess"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 129,
+      "col": 23,
+      "text": "失败",
+      "matched": true,
+      "recommendKeys": [
+        "Common.failed",
+        "Common.failed",
+        "QRCode.fail",
+        "QRCode.fail"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 133,
+      "col": 19,
+      "text": "确定删除",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 138,
+      "col": 25,
+      "text": "删除成功",
+      "matched": true,
+      "recommendKeys": [
+        "Common.deleteSuccess",
+        "Common.deleteSuccess",
+        "Orders.deleteBomSuccess",
+        "Warehouse.deleteSuccess",
+        "Warehouse.deleteSuccess",
+        "Warehouse.deleteInboundSuccess",
+        "Warehouse.deleteInboundSuccess",
+        "Warehouse.checkDeleteSuccess",
+        "Warehouse.checkDeleteSuccess",
+        "Warehouse.adjustDeleteSuccess",
+        "Warehouse.adjustDeleteSuccess",
+        "Warehouse.deleteSalesOutboundSuccess",
+        "Warehouse.deleteSalesOutboundSuccess",
+        "Warehouse.stockAdjustDeleteSuccess",
+        "Warehouse.stockAdjustDeleteSuccess",
+        "Srm.deleteSuccess",
+        "Srm.deleteSuccess",
+        "Crm.deleteSuccess",
+        "Crm.deleteSuccess",
+        "Hr.salaryDeleteSuccess",
+        "Hr.salaryDeleteSuccess"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 142,
+      "col": 23,
+      "text": "失败",
+      "matched": true,
+      "recommendKeys": [
+        "Common.failed",
+        "Common.failed",
+        "QRCode.fail",
+        "QRCode.fail"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 172,
+      "col": 17,
+      "text": "新增入库",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.addInbound",
+        "Warehouse.addInbound",
+        "Warehouse.addInboundAction",
+        "Warehouse.addInboundAction",
+        "Warehouse.addInboundRecord",
+        "Warehouse.addInboundRecord"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 182,
+      "col": 50,
+      "text": "入库单号",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.orderNo",
+        "Warehouse.orderNo",
+        "Warehouse.inboundOrderNo",
+        "Warehouse.inboundOrderNo",
+        "Warehouse.inboundNo",
+        "Warehouse.inboundNo"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 183,
+      "col": 50,
+      "text": "工单号",
+      "matched": true,
+      "recommendKeys": [
+        "Common.workOrderNo",
+        "Common.workOrderNo",
+        "Dashboard.workOrderNo",
+        "Dashboard.workOrderNo",
+        "Warehouse.workOrderNo",
+        "Warehouse.workOrderNo",
+        "Production.searchSchedulePlaceholder",
+        "Production.searchReportPlaceholder",
+        "QRCode.workOrderNo",
+        "QRCode.workOrderNo"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 185,
+      "col": 50,
+      "text": "入库日期",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.inboundDate",
+        "Warehouse.inboundDate",
+        "Warehouse.inboundDateCol",
+        "Warehouse.inboundDateCol"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 186,
+      "col": 50,
+      "text": "质检状态",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.qcStatus",
+        "Warehouse.qcStatus",
+        "Outsource.qcStatus",
+        "Outsource.qcStatus"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 187,
+      "col": 50,
+      "text": "操作人",
+      "matched": true,
+      "recommendKeys": [
+        "Common.operator",
+        "Common.operator",
+        "Warehouse.operator",
+        "Warehouse.operator",
+        "Warehouse.operatorCol",
+        "Warehouse.operatorCol",
+        "Warehouse.operatorName",
+        "Warehouse.operatorName",
+        "QRCode.operator",
+        "QRCode.operator",
+        "Outsource.operatorName",
+        "Outsource.operatorName"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 215,
+      "col": 29,
+      "text": "确认入库",
+      "matched": true,
+      "recommendKeys": [
+        "Common.confirmInbound",
+        "Common.confirmInbound",
+        "Warehouse.confirmInbound",
+        "Warehouse.confirmInbound",
+        "Warehouse.confirmInboundAction",
+        "Warehouse.confirmInboundAction"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 244,
+      "col": 23,
+      "text": "暂无记录",
+      "matched": true,
+      "recommendKeys": [
+        "Common.noRecords",
+        "Common.noRecords",
+        "Warehouse.noRecords",
+        "Warehouse.noRecords",
+        "Warehouse.noSalesOutboundRecords",
+        "Warehouse.noSalesOutboundRecords"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 261,
+      "col": 15,
+      "text": "上一页",
+      "matched": true,
+      "recommendKeys": [
+        "Common.prevPage",
+        "Common.prevPage",
+        "Orders.prevPage",
+        "Orders.prevPage",
+        "Finance.previousPage",
+        "Finance.previousPage"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 269,
+      "col": 15,
+      "text": "下一页",
+      "matched": true,
+      "recommendKeys": [
+        "Common.nextPage",
+        "Common.nextPage",
+        "Orders.nextPage",
+        "Orders.nextPage",
+        "Finance.nextPage",
+        "Finance.nextPage"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 276,
+      "col": 28,
+      "text": "新增生产入库单",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.addInboundOrderTitle",
+        "Warehouse.addInboundOrderTitle",
+        "Warehouse.addProductionInbound",
+        "Warehouse.addProductionInbound"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 305,
+      "col": 24,
+      "text": "入库日期",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.inboundDate",
+        "Warehouse.inboundDate",
+        "Warehouse.inboundDateCol",
+        "Warehouse.inboundDateCol"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 313,
+      "col": 24,
+      "text": "工单号",
+      "matched": true,
+      "recommendKeys": [
+        "Common.workOrderNo",
+        "Common.workOrderNo",
+        "Dashboard.workOrderNo",
+        "Dashboard.workOrderNo",
+        "Warehouse.workOrderNo",
+        "Warehouse.workOrderNo",
+        "Production.searchSchedulePlaceholder",
+        "Production.searchReportPlaceholder",
+        "QRCode.workOrderNo",
+        "QRCode.workOrderNo"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 320,
+      "col": 24,
+      "text": "操作人",
+      "matched": true,
+      "recommendKeys": [
+        "Common.operator",
+        "Common.operator",
+        "Warehouse.operator",
+        "Warehouse.operator",
+        "Warehouse.operatorCol",
+        "Warehouse.operatorCol",
+        "Warehouse.operatorName",
+        "Warehouse.operatorName",
+        "QRCode.operator",
+        "QRCode.operator",
+        "Outsource.operatorName",
+        "Outsource.operatorName"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\production-inbound\\page.tsx",
+      "line": 329,
+      "col": 17,
+      "text": "取消",
+      "matched": true,
+      "recommendKeys": [
+        "Common.cancel",
+        "Common.cancel",
+        "Warehouse.cancel",
+        "Warehouse.cancel",
+        "Warehouse.cancelCheck",
+        "Warehouse.cancelCheck",
+        "Warehouse.cancelTransfer",
+        "Warehouse.cancelTransfer"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 142,
+      "col": 25,
+      "text": "失败",
+      "matched": true,
+      "recommendKeys": [
+        "Common.failed",
+        "Common.failed",
+        "QRCode.fail",
+        "QRCode.fail"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 156,
+      "col": 25,
+      "text": "更新成功",
+      "matched": true,
+      "recommendKeys": [
+        "Common.updateSuccess",
+        "Common.updateSuccess",
+        "Warehouse.updateSuccess",
+        "Warehouse.updateSuccess",
+        "Warehouse.updateInboundSuccess",
+        "Warehouse.updateInboundSuccess",
+        "Warehouse.updateSalesOutboundSuccess",
+        "Warehouse.updateSalesOutboundSuccess",
+        "Warehouse.stockAdjustUpdateSuccess",
+        "Warehouse.stockAdjustUpdateSuccess",
+        "Srm.updateSuccess",
+        "Srm.updateSuccess"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 164,
+      "col": 19,
+      "text": "确定删除",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 169,
+      "col": 25,
+      "text": "删除成功",
+      "matched": true,
+      "recommendKeys": [
+        "Common.deleteSuccess",
+        "Common.deleteSuccess",
+        "Orders.deleteBomSuccess",
+        "Warehouse.deleteSuccess",
+        "Warehouse.deleteSuccess",
+        "Warehouse.deleteInboundSuccess",
+        "Warehouse.deleteInboundSuccess",
+        "Warehouse.checkDeleteSuccess",
+        "Warehouse.checkDeleteSuccess",
+        "Warehouse.adjustDeleteSuccess",
+        "Warehouse.adjustDeleteSuccess",
+        "Warehouse.deleteSalesOutboundSuccess",
+        "Warehouse.deleteSalesOutboundSuccess",
+        "Warehouse.stockAdjustDeleteSuccess",
+        "Warehouse.stockAdjustDeleteSuccess",
+        "Srm.deleteSuccess",
+        "Srm.deleteSuccess",
+        "Crm.deleteSuccess",
+        "Crm.deleteSuccess",
+        "Hr.salaryDeleteSuccess",
+        "Hr.salaryDeleteSuccess"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 181,
+      "col": 46,
+      "text": "销售出库",
+      "matched": true,
+      "recommendKeys": [
+        "Nav.warehouse_sales_outbound",
+        "Nav.warehouse_sales_outbound",
+        "Warehouse.salesOutbound",
+        "Warehouse.salesOutbound",
+        "Warehouse.salesOutboundTitle",
+        "Warehouse.salesOutboundTitle"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 202,
+      "col": 15,
+      "text": "新增出库",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.addSalesOutbound",
+        "Warehouse.addSalesOutbound"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 211,
+      "col": 50,
+      "text": "出库单号",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.outboundNo",
+        "Warehouse.outboundNo"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 212,
+      "col": 50,
+      "text": "销售订单",
+      "matched": true,
+      "recommendKeys": [
+        "Nav.orders_sales",
+        "Nav.orders_sales",
+        "Orders.salesOrder",
+        "Orders.salesOrder",
+        "Orders.salesOrderTitle",
+        "Orders.salesOrderTitle",
+        "Warehouse.salesOrder",
+        "Warehouse.salesOrder",
+        "Production.salesOrder",
+        "Production.salesOrder",
+        "Sales.order",
+        "Sales.order"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 215,
+      "col": 50,
+      "text": "出库日期",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.outboundDate",
+        "Warehouse.outboundDate"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 216,
+      "col": 50,
+      "text": "发货人",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.deliveryPerson",
+        "Warehouse.deliveryPerson"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 246,
+      "col": 31,
+      "text": "确认出库",
+      "matched": true,
+      "recommendKeys": [
+        "Common.confirmIssue",
+        "Common.confirmIssue",
+        "Common.confirmOutbound",
+        "Common.confirmOutbound",
+        "Warehouse.confirmOutbound",
+        "Warehouse.confirmOutbound"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 293,
+      "col": 15,
+      "text": "上一页",
+      "matched": true,
+      "recommendKeys": [
+        "Common.prevPage",
+        "Common.prevPage",
+        "Orders.prevPage",
+        "Orders.prevPage",
+        "Finance.previousPage",
+        "Finance.previousPage"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 301,
+      "col": 15,
+      "text": "下一页",
+      "matched": true,
+      "recommendKeys": [
+        "Common.nextPage",
+        "Common.nextPage",
+        "Orders.nextPage",
+        "Orders.nextPage",
+        "Finance.nextPage",
+        "Finance.nextPage"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 337,
+      "col": 24,
+      "text": "出库日期",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.outboundDate",
+        "Warehouse.outboundDate"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\sales-outbound\\page.tsx",
+      "line": 352,
+      "col": 24,
+      "text": "客户名称",
+      "matched": true,
+      "recommendKeys": [
+        "Common.customerName",
+        "Common.customerName",
+        "Orders.customerName",
+        "Orders.customerName",
+        "Warehouse.customerName",
+        "Warehouse.customerName",
+        "Sales.customerName",
+        "Sales.customerName",
+        "Finance.customerName",
+        "Finance.customerName",
+        "Crm.customerName",
+        "Crm.customerName",
+        "Engineering.customerName",
+        "Engineering.customerName",
+        "Business.customerName",
+        "Business.customerName"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 262,
+      "col": 13,
+      "text": "页面标题",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 277,
+      "col": 13,
+      "text": "统计卡片",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 342,
+      "col": 13,
+      "text": "仓库列表",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.warehouseList",
+        "Warehouse.warehouseList"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 377,
+      "col": 23,
+      "text": "加载中",
+      "matched": true,
+      "recommendKeys": [
+        "Common.loading",
+        "Orders.loading",
+        "Warehouse.loading"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 383,
+      "col": 23,
+      "text": "暂无仓库数据",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.noWarehouseData",
+        "Warehouse.noWarehouseData"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 438,
+      "col": 29,
+      "text": "启用",
+      "matched": true,
+      "recommendKeys": [
+        "Common.enabled",
+        "Common.enabled",
+        "Warehouse.active",
+        "Warehouse.active"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 442,
+      "col": 29,
+      "text": "停用",
+      "matched": true,
+      "recommendKeys": [
+        "Orders.disable",
+        "Orders.disable",
+        "Orders.changeTypeDisable",
+        "Orders.changeTypeDisable",
+        "Warehouse.inactive",
+        "Warehouse.inactive"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 456,
+      "col": 31,
+      "text": "编辑",
+      "matched": true,
+      "recommendKeys": [
+        "Common.edit",
+        "Common.edit",
+        "Warehouse.edit",
+        "Warehouse.edit",
+        "Hr.manageAttendanceDesc",
+        "Engineering.editSop"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 463,
+      "col": 31,
+      "text": "删除",
+      "matched": true,
+      "recommendKeys": [
+        "Common.delete",
+        "Common.delete",
+        "Warehouse.delete",
+        "Warehouse.delete",
+        "Purchase.delete",
+        "Purchase.delete"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 476,
+      "col": 13,
+      "text": "新增",
+      "matched": true,
+      "recommendKeys": [
+        "Common.add",
+        "Common.add",
+        "Warehouse.addNew",
+        "Warehouse.addNew"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 476,
+      "col": 16,
+      "text": "编辑对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 480,
+      "col": 49,
+      "text": "编辑仓库",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.editWarehouse",
+        "Warehouse.editWarehouse"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 480,
+      "col": 58,
+      "text": "新增仓库",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.addWarehouse",
+        "Warehouse.addWarehouse",
+        "Warehouse.addWarehouseTitle",
+        "Warehouse.addWarehouseTitle"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 485,
+      "col": 19,
+      "text": "仓库编码",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.warehouseCode",
+        "Warehouse.warehouseCode",
+        "Warehouse.code",
+        "Warehouse.code",
+        "Warehouse.codeRequired"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 496,
+      "col": 19,
+      "text": "仓库名称",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.warehouseName",
+        "Warehouse.warehouseName",
+        "Warehouse.name",
+        "Warehouse.name",
+        "Warehouse.nameRequired",
+        "QRCode.warehouseName",
+        "QRCode.warehouseName",
+        "Outsource.warehouseName",
+        "Outsource.warehouseName"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 596,
+      "col": 19,
+      "text": "开启后",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.includeInCalcDesc"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 596,
+      "col": 23,
+      "text": "该仓库的库存将参与",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.includeInCalcDesc"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 596,
+      "col": 35,
+      "text": "需求计算",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.includeInCalcDesc"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 611,
+      "col": 17,
+      "text": "取消",
+      "matched": true,
+      "recommendKeys": [
+        "Common.cancel",
+        "Common.cancel",
+        "Warehouse.cancel",
+        "Warehouse.cancel",
+        "Warehouse.cancelCheck",
+        "Warehouse.cancelCheck",
+        "Warehouse.cancelTransfer",
+        "Warehouse.cancelTransfer"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 614,
+      "col": 51,
+      "text": "创建",
+      "matched": true,
+      "recommendKeys": [
+        "Orders.createBom",
+        "Warehouse.create",
+        "Warehouse.create"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 620,
+      "col": 13,
+      "text": "删除确认对话框",
+      "matched": false,
+      "recommendKeys": []
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 628,
+      "col": 17,
+      "text": "确定要删除仓库",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.confirmDeleteWarehouse"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 634,
+      "col": 17,
+      "text": "取消",
+      "matched": true,
+      "recommendKeys": [
+        "Common.cancel",
+        "Common.cancel",
+        "Warehouse.cancel",
+        "Warehouse.cancel",
+        "Warehouse.cancelCheck",
+        "Warehouse.cancelCheck",
+        "Warehouse.cancelTransfer",
+        "Warehouse.cancelTransfer"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\setup\\page.tsx",
+      "line": 637,
+      "col": 17,
+      "text": "确认删除",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.confirmDeleteTitle",
+        "Warehouse.confirmDeleteTitle",
+        "Warehouse.confirmDelete",
+        "Warehouse.confirmDelete",
+        "Srm.confirmDelete",
+        "Crm.confirmDelete"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\stocktaking\\page.tsx",
+      "line": 97,
+      "col": 7,
+      "text": "定期盘点",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.periodic",
+        "Warehouse.periodic"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\stocktaking\\page.tsx",
+      "line": 98,
+      "col": 7,
+      "text": "不定期盘点",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.irregular",
+        "Warehouse.irregular"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\stocktaking\\page.tsx",
+      "line": 99,
+      "col": 7,
+      "text": "循环盘点",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.cyclic",
+        "Warehouse.cyclic"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\stocktaking\\page.tsx",
+      "line": 100,
+      "col": 7,
+      "text": "抽盘",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.spotCheck",
+        "Warehouse.spotCheck"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\stocktaking\\page.tsx",
+      "line": 104,
+      "col": 7,
+      "text": "整料",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.whole",
+        "Warehouse.whole"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\stocktaking\\page.tsx",
+      "line": 105,
+      "col": 7,
+      "text": "小料",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.small",
+        "Warehouse.small"
+      ]
+    },
+    {
+      "file": "src\\app\\[locale]\\warehouse\\stocktaking\\page.tsx",
+      "line": 106,
+      "col": 7,
+      "text": "余料",
+      "matched": true,
+      "recommendKeys": [
+        "Warehouse.remainder",
+        "Warehouse.remainder",
+        "Warehouse.remainderLabel",
+        "Warehouse.remainderLabel"
+      ]
+    }
+  ]
+}

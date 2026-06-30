@@ -31,6 +31,8 @@
     "close": "关闭",
     "yes": "是",
     "no": "否",
+    "active": "启用",
+    "inactive": "停用",
     "all": "全部",
     "select": "请选择",
     "pleaseInput": "请输入",
@@ -73,6 +75,7 @@
     "confirmDeleteRequest": "确定要删除这条记录吗？",
     "prevPage": "上一页",
     "nextPage": "下一页",
+    "previousPage": "上一页",
     "createSuccess": "创建成功",
     "updateSuccess": "更新成功",
     "none": "无",
@@ -1546,7 +1549,14 @@
     "checkItems": "盘点项",
     "scan": "扫描",
     "approve": "审核通过",
-    "reject": "驳回"
+    "reject": "驳回",
+    "batchCreateSuccess": "批次创建成功",
+    "batchFrozen": "批次已冻结",
+    "batchUnfrozen": "批次已解冻",
+    "expired": "已过期",
+    "expireSoon": "即将过期({days}天)",
+    "shelfLife": "保质期{days}天",
+    "warehouseCodePlaceholderExample": "如：WH001"
   },
   "Production": {
     "title": "生产管理",

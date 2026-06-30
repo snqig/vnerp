@@ -71,18 +71,18 @@ interface Warehouse {
 
 // 仓库类型选项
 const warehouseTypes = [
-  { value: 'raw', label: '原料仓库', icon: Package },
-  { value: 'finished', label: '成品仓库', icon: Archive },
-  { value: 'semi', label: '半成品仓库', icon: Building2 },
-  { value: 'scrap', label: '废品仓库', icon: AlertCircle },
-  { value: 'other', label: '其他仓库', icon: Warehouse },
+  { value: 'raw', labelKey: 'raw', icon: Package },
+  { value: 'finished', labelKey: 'finished', icon: Archive },
+  { value: 'semi', labelKey: 'semi', icon: Building2 },
+  { value: 'scrap', labelKey: 'scrap', icon: AlertCircle },
+  { value: 'other', labelKey: 'other', icon: Warehouse },
 ];
 
 // 仓库性质选项
 const warehouseNatures = [
-  { value: 'own', label: '自有' },
-  { value: 'rented', label: '租赁' },
-  { value: 'virtual', label: '虚拟' },
+  { value: 'own', labelKey: 'own' },
+  { value: 'rented', labelKey: 'rented' },
+  { value: 'virtual', labelKey: 'virtual' },
 ];
 
 export default function WarehouseSetupPage() {
@@ -163,13 +163,13 @@ export default function WarehouseSetupPage() {
   // 获取仓库类型标签
   const getTypeLabel = (type: string) => {
     const typeInfo = warehouseTypes.find((t) => t.value === type);
-    return typeInfo?.label || type;
+    return typeInfo ? t(typeInfo.labelKey) : type;
   };
 
   // 获取仓库性质标签
   const getNatureLabel = (nature: string) => {
     const natureInfo = warehouseNatures.find((n) => n.value === nature);
-    return natureInfo?.label || nature;
+    return natureInfo ? t(natureInfo.labelKey) : nature;
   };
 
   // 打开新增对话框
@@ -257,20 +257,20 @@ export default function WarehouseSetupPage() {
   };
 
   return (
-    <MainLayout title="仓库设置">
+    <MainLayout title={t('warehouseSetup')}>
       <div className="space-y-6">
         {/* 页面标题 */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Warehouse className="h-6 w-6 text-primary" />
-              仓库设置
+              {t('warehouseSetup')}
             </h1>
-            <p className="text-muted-foreground mt-1">管理仓库基础信息、容量和属性设置</p>
+            <p className="text-muted-foreground mt-1">{t('warehouseSetupDesc')}</p>
           </div>
           <Button onClick={handleAdd} className="btn-dashboard-primary">
             <Plus className="h-4 w-4 mr-2" />
-            新增仓库
+            {t('addWarehouse')}
           </Button>
         </div>
 
@@ -280,7 +280,7 @@ export default function WarehouseSetupPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">仓库总数</p>
+                  <p className="text-sm text-muted-foreground">{t('totalWarehouses')}</p>
                   <p className="text-2xl font-bold">{warehouses.length}</p>
                 </div>
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -294,7 +294,7 @@ export default function WarehouseSetupPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">启用中</p>
+                  <p className="text-sm text-muted-foreground">{t('activeWarehouses')}</p>
                   <p className="text-2xl font-bold">
                     {warehouses.filter((w) => w.status === 'active').length}
                   </p>
@@ -310,7 +310,7 @@ export default function WarehouseSetupPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">纳入计算</p>
+                  <p className="text-sm text-muted-foreground">{t('includedInCalc')}</p>
                   <p className="text-2xl font-bold">
                     {warehouses.filter((w) => w.includeInCalculation).length}
                   </p>
@@ -343,11 +343,11 @@ export default function WarehouseSetupPage() {
         <Card className="card-dashboard">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">仓库列表</CardTitle>
+              <CardTitle className="text-lg">{t('warehouseList')}</CardTitle>
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="搜索仓库编码、名称、负责人..."
+                  placeholder={t('searchWarehousePlaceholder')}
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   className="pl-10"
@@ -359,12 +359,12 @@ export default function WarehouseSetupPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>仓库编码</TableHead>
-                  <TableHead>仓库名称</TableHead>
-                  <TableHead>仓库性质</TableHead>
-                  <TableHead>仓库类型</TableHead>
-                  <TableHead>纳入计算</TableHead>
-                  <TableHead>容量使用</TableHead>
+                  <TableHead>{t('code')}</TableHead>
+                  <TableHead>{t('name')}</TableHead>
+                  <TableHead>{t('nature')}</TableHead>
+                  <TableHead>{t('typeLabel')}</TableHead>
+                  <TableHead>{t('includedInCalc')}</TableHead>
+                  <TableHead>{t('capacityUsage')}</TableHead>
                   <TableHead>{tc("responsiblePerson")}</TableHead>
                   <TableHead>{tc("status")}</TableHead>
                   <TableHead className="text-right">{tc("actions")}</TableHead>
@@ -435,11 +435,11 @@ export default function WarehouseSetupPage() {
                       <TableCell>
                         {warehouse.status === 'active' ? (
                           <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
-                            启用
+                            {tc('active')}
                           </Badge>
                         ) : (
                           <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">
-                            停用
+                            {tc('inactive')}
                           </Badge>
                         )}
                       </TableCell>
@@ -486,7 +486,7 @@ export default function WarehouseSetupPage() {
                 </Label>
                 <Input
                   id="code"
-                  placeholder="如：WH001"
+                  placeholder={t('warehouseCodePlaceholderExample')}
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                 />
@@ -503,7 +503,7 @@ export default function WarehouseSetupPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="nature">仓库性质</Label>
+                <Label htmlFor="nature">{t('nature')}</Label>
                 <Select
                   value={formData.nature}
                   onValueChange={(value) =>
@@ -511,19 +511,19 @@ export default function WarehouseSetupPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择仓库性质" />
+                    <SelectValue placeholder={t('selectNature')} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouseNatures.map((nature) => (
                       <SelectItem key={nature.value} value={nature.value}>
-                        {nature.label}
+                        {t(nature.labelKey)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="type">仓库类型</Label>
+                <Label htmlFor="type">{t('typeLabel')}</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(value) =>
@@ -531,12 +531,12 @@ export default function WarehouseSetupPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择仓库类型" />
+                    <SelectValue placeholder={t('selectType')} />
                   </SelectTrigger>
                   <SelectContent>
                     {warehouseTypes.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                        {t(type.labelKey)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -546,7 +546,7 @@ export default function WarehouseSetupPage() {
                 <Label htmlFor="manager">{tc("responsiblePerson")}</Label>
                 <Input
                   id="manager"
-                  placeholder="请输入负责人姓名"
+                  placeholder={t('managerPlaceholder')}
                   value={formData.manager}
                   onChange={(e) => setFormData({ ...formData, manager: e.target.value })}
                 />
@@ -555,13 +555,13 @@ export default function WarehouseSetupPage() {
                 <Label htmlFor="contact">{tc("phone")}</Label>
                 <Input
                   id="contact"
-                  placeholder="请输入联系电话"
+                  placeholder={t('contactPlaceholder')}
                   value={formData.contact}
                   onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="capacity">容量（件）</Label>
+                <Label htmlFor="capacity">{t('capacityLabel')}</Label>
                 <Input
                   id="capacity"
                   type="number"
@@ -573,17 +573,17 @@ export default function WarehouseSetupPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="address">仓库位置</Label>
+                <Label htmlFor="address">{t('addressLabel')}</Label>
                 <Input
                   id="address"
-                  placeholder="如：A栋1层"
+                  placeholder={t('addressPlaceholder')}
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 />
               </div>
               <div className="col-span-2 space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="includeInCalculation">纳入需求计算</Label>
+                  <Label htmlFor="includeInCalculation">{t('includeInCalculation')}</Label>
                   <Switch
                     id="includeInCalculation"
                     checked={formData.includeInCalculation}
@@ -600,7 +600,7 @@ export default function WarehouseSetupPage() {
                 <Label htmlFor="remark">{tc("remark")}</Label>
                 <Input
                   id="remark"
-                  placeholder="请输入备注信息"
+                  placeholder={t('remarkPlaceholder')}
                   value={formData.remark}
                   onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
                 />
@@ -621,13 +621,13 @@ export default function WarehouseSetupPage() {
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>确认删除</DialogTitle>
+              <DialogTitle>{t('confirmDeleteTitle')}</DialogTitle>
             </DialogHeader>
             <div className="py-4">
               <p className="text-muted-foreground">
                 确定要删除仓库 <strong>{warehouseToDelete?.name}</strong> 吗？
               </p>
-              <p className="text-sm text-red-500 mt-2">此操作不可恢复，请谨慎操作。</p>
+              <p className="text-sm text-red-500 mt-2">{t('irreversibleWarning')}</p>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>

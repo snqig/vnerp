@@ -31,6 +31,8 @@
     "close": "Close",
     "yes": "Yes",
     "no": "No",
+    "active": "Active",
+    "inactive": "Inactive",
     "all": "All",
     "select": "Select",
     "pleaseInput": "Please input",
@@ -70,6 +72,7 @@
     "confirmDeleteRequest": "Are you sure to delete this record?",
     "prevPage": "Previous",
     "nextPage": "Next",
+    "previousPage": "Previous",
     "createSuccess": "Created successfully",
     "updateSuccess": "Updated successfully",
     "none": "None",
@@ -1553,7 +1556,14 @@
     "checkItems": "Check Items",
     "scan": "Scan",
     "approve": "Approve",
-    "reject": "Reject"
+    "reject": "Reject",
+    "batchCreateSuccess": "Batch created successfully",
+    "batchFrozen": "Batch frozen",
+    "batchUnfrozen": "Batch unfrozen",
+    "expired": "Expired",
+    "expireSoon": "Expiring soon ({days}d)",
+    "shelfLife": "Shelf life {days}d",
+    "warehouseCodePlaceholderExample": "e.g. WH001"
   },
   "Production": {
     "title": "Production Management",
