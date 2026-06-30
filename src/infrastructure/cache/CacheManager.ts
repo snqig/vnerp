@@ -1,3 +1,6 @@
+import { secureLog } from '@/lib/logger';
+import { RedisCacheManager } from './RedisCacheManager';
+
 export interface CacheManager {
   get<T>(key: string): Promise<T | null>;
   set<T>(key: string, value: T, ttlSeconds?: number): Promise<void>;
@@ -11,7 +14,7 @@ interface CacheEntry<T> {
 }
 
 export class InMemoryCacheManager implements CacheManager {
-  private cache: Map<string, CacheEntry<any>> = new Map();
+  private cache: Map<string, CacheEntry<unknown>> = new Map();
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor() {
@@ -65,11 +68,43 @@ export class InMemoryCacheManager implements CacheManager {
   }
 }
 
-let globalCache: InMemoryCacheManager | null = null;
+let globalCache: CacheManager | null = null;
 
-export function getCacheManager(): InMemoryCacheManager {
+/**
+ * 缓存管理器工厂：根据 REDIS_URL env 自动选择实现
+ * - REDIS_URL 存在 → RedisCacheManager（多实例共享）
+ * - 未配置或连接失败 → InMemoryCacheManager（单实例降级，仅开发环境友好）
+ *
+ * 注意：Redis 连接为异步过程，构造时若 Redis 不可达，RedisCacheManager 内部
+ * 会记录 error 日志但不会抛出，调用方读到 null 时应感知是降级状态。
+ */
+export function getCacheManager(): CacheManager {
   if (!globalCache) {
-    globalCache = new InMemoryCacheManager();
+    const redisUrl = process.env.REDIS_URL;
+    if (redisUrl) {
+      try {
+        globalCache = new RedisCacheManager(redisUrl);
+        secureLog('info', 'CacheManager: 使用 RedisCacheManager', { redisUrl });
+      } catch (err) {
+        const e = err as Error;
+        secureLog('error', 'CacheManager: RedisCacheManager 初始化失败，降级到内存', {
+          message: e.message,
+          stack: e.stack,
+        });
+        globalCache = new InMemoryCacheManager();
+      }
+    } else {
+      secureLog('info', 'CacheManager: 使用 InMemoryCacheManager（未配置 REDIS_URL）');
+      globalCache = new InMemoryCacheManager();
+    }
   }
-  return globalCache;
+  // 此时 globalCache 必已初始化（所有分支都赋值）
+  return globalCache as CacheManager;
+}
+
+/**
+ * 重置全局缓存管理器（仅用于测试）
+ */
+export function resetCacheManagerForTest(): void {
+  globalCache = null;
 }
