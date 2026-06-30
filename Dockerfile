@@ -1,7 +1,7 @@
 # 多阶段构建：Next.js 生产镜像（standalone 输出）
 # 基于 pnpm，需 next.config.ts 中 output: 'standalone'
 
-FROM node:20-alpine AS base
+FROM node:26-alpine AS base
 RUN apk add --no-cache libc6-compat
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 
