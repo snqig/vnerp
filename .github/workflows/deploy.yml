@@ -1,0 +1,53 @@
+# 生产环境自动部署
+# 触发：Docker 镜像发布成功后自动执行，或手动触发
+# 方式：SSH 登录服务器，拉取最新镜像并滚动重启
+#
+# 前置配置（GitHub Secrets）：
+#   DEPLOY_HOST       - 部署服务器 IP/域名
+#   DEPLOY_USER       - SSH 登录用户
+#   DEPLOY_SSH_KEY    - SSH 私钥（需加入服务器 authorized_keys）
+#   DEPLOY_PATH       - 服务器上项目路径（如 /opt/vnerp）
+#   DEPLOY_PORT       - SSH 端口（默认 22，可选）
+name: Deploy to Production
+
+on:
+  workflow_run:
+    workflows: ['Docker Publish']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # 仅在镜像发布成功时部署；手动触发也执行
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    environment: production
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            echo "==> 拉取最新代码与镜像"
+            git pull --ff-only origin main
+            docker compose -f docker-compose.prod.yml pull app
+
+            echo "==> 滚动重启应用"
+            docker compose -f docker-compose.prod.yml up -d --no-deps app
+
+            echo "==> 清理旧镜像"
+            docker image prune -f --filter "until=24h"
+
+            echo "==> 健康检查"
+            sleep 5
+            curl -fsS http://localhost:5000/api/health || (echo "健康检查失败" && exit 1)
+
+            echo "==> 部署完成"
