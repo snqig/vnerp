@@ -19,6 +19,37 @@ const SECRET_KEY = JWT_SECRET || 'dev-only-secret-key';
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
 
+interface LoginUserRow {
+  id: number;
+  username: string;
+  password: string;
+  real_name: string;
+  avatar: string | null;
+  email: string | null;
+  phone: string | null;
+  department_id: number | null;
+  status: number;
+  first_login: number;
+  login_fail_count: number;
+  lock_time: string | Date | null;
+  pwd_update_time?: string | Date | null;
+}
+
+interface UserRoleRow {
+  id: number;
+  role_code: string;
+  role_name: string;
+  data_scope: string;
+}
+
+interface PermissionRow {
+  permission: string;
+}
+
+interface ConfigRow {
+  config_value: string;
+}
+
 async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
   return await bcrypt.compare(password, hashedPassword);
 }
@@ -47,7 +78,9 @@ export async function POST(request: NextRequest) {
     });
 
     if (!rateResult.allowed) {
-      logger.branch(ctx, '限流检查', '请求频率超限', true, { retryAfterMs: rateResult.retryAfterMs });
+      logger.branch(ctx, '限流检查', '请求频率超限', true, {
+        retryAfterMs: rateResult.retryAfterMs,
+      });
       return NextResponse.json(
         {
           success: false,
@@ -78,15 +111,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let users: any;
+    let users: LoginUserRow[];
     try {
-      users = await query(
+      users = await query<LoginUserRow>(
         'SELECT id, username, password, real_name, avatar, email, phone, department_id, status, first_login, login_fail_count, lock_time FROM sys_user WHERE username = ? AND deleted = 0',
         [username]
       );
-    } catch (e: any) {
-      if (e.code === 'ER_BAD_FIELD_ERROR') {
-        users = await query(
+    } catch (e: unknown) {
+      if ((e as { code?: string }).code === 'ER_BAD_FIELD_ERROR') {
+        users = await query<LoginUserRow>(
           'SELECT id, username, password, real_name, avatar, email, phone, department_id, status, 1 as first_login, 0 as login_fail_count, NULL as lock_time FROM sys_user WHERE username = ? AND deleted = 0',
           [username]
         );
@@ -151,7 +184,10 @@ export async function POST(request: NextRequest) {
       logger.branch(ctx, '密码验证', '密码正确', false, { userId: user.id });
       const failCount = (user.login_fail_count || 0) + 1;
       if (failCount >= MAX_LOGIN_ATTEMPTS) {
-        logger.branch(ctx, '锁定判断', '失败次数>=最大尝试', true, { failCount, MAX_LOGIN_ATTEMPTS });
+        logger.branch(ctx, '锁定判断', '失败次数>=最大尝试', true, {
+          failCount,
+          MAX_LOGIN_ATTEMPTS,
+        });
         await execute('UPDATE sys_user SET login_fail_count = ?, lock_time = NOW() WHERE id = ?', [
           failCount,
           user.id,
@@ -190,7 +226,7 @@ export async function POST(request: NextRequest) {
     let isAbnormalLogin = false;
     logger.branch(ctx, '密码验证', '密码正确', true, { userId: user.id });
     try {
-      const lastLogin: any = await query(
+      const lastLogin = await query<{ last_login_ip: string }>(
         'SELECT last_login_ip FROM sys_user WHERE id = ? AND last_login_ip IS NOT NULL',
         [user.id]
       );
@@ -215,11 +251,12 @@ export async function POST(request: NextRequest) {
       // 忽略异地登录检查错误
     }
 
-    await execute('UPDATE sys_user SET login_fail_count = 0, lock_time = NULL, last_login_ip = ?, last_login_time = NOW() WHERE id = ?', [
-      getClientIP(request), user.id,
-    ]);
+    await execute(
+      'UPDATE sys_user SET login_fail_count = 0, lock_time = NULL, last_login_ip = ?, last_login_time = NOW() WHERE id = ?',
+      [getClientIP(request), user.id]
+    );
 
-    const userRoles = await query(
+    const userRoles = await query<UserRoleRow>(
       `SELECT r.id, r.role_code, r.role_name, r.data_scope
        FROM sys_user_role ur
        JOIN sys_role r ON ur.role_id = r.id
@@ -230,9 +267,10 @@ export async function POST(request: NextRequest) {
     let departmentName: string | null = null;
     if (user.department_id) {
       try {
-        const deptResult: any = await query('SELECT dept_name FROM sys_department WHERE id = ?', [
-          user.department_id,
-        ]);
+        const deptResult = await query<{ dept_name: string }>(
+          'SELECT dept_name FROM sys_department WHERE id = ?',
+          [user.department_id]
+        );
         if (deptResult.length > 0) {
           departmentName = deptResult[0].dept_name;
         }
@@ -243,9 +281,9 @@ export async function POST(request: NextRequest) {
 
     let permissions: string[] = [];
     if (userRoles.length > 0) {
-      const roleIds = (userRoles as any[]).map((r) => r.id);
+      const roleIds = userRoles.map((r) => r.id);
       const placeholders = roleIds.map(() => '?').join(',');
-      const perms = await query(
+      const perms = await query<PermissionRow>(
         `SELECT DISTINCT m.permission
          FROM sys_menu m
          JOIN sys_role_menu rm ON m.id = rm.menu_id
@@ -253,14 +291,14 @@ export async function POST(request: NextRequest) {
          AND m.permission IS NOT NULL AND m.permission != ''`,
         roleIds
       );
-      permissions = (perms as any[]).map((p) => p.permission).filter(Boolean);
+      permissions = perms.map((p) => p.permission).filter(Boolean);
     }
 
     const token = await new SignJWT({
       userId: user.id,
       username: user.username,
       realName: user.real_name,
-      roles: (userRoles as any[]).map((r) => r.role_code),
+      roles: userRoles.map((r) => r.role_code),
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
@@ -276,7 +314,7 @@ export async function POST(request: NextRequest) {
       phone: user.phone,
       departmentId: user.department_id,
       departmentName,
-      roles: (userRoles as any[]).map((r) => ({
+      roles: userRoles.map((r) => ({
         id: r.id,
         role_code: r.role_code,
         role_name: r.role_name,
@@ -288,10 +326,11 @@ export async function POST(request: NextRequest) {
 
     // 检查密码是否过期
     try {
-      const pwdExpireConfigs: any = await query(
+      const pwdExpireConfigs = await query<ConfigRow>(
         "SELECT config_value FROM sys_config WHERE config_key = 'system.password_expire_days'"
       );
-      const expireDays = pwdExpireConfigs.length > 0 ? parseInt(pwdExpireConfigs[0].config_value) || 0 : 0;
+      const expireDays =
+        pwdExpireConfigs.length > 0 ? parseInt(pwdExpireConfigs[0].config_value) || 0 : 0;
       if (expireDays > 0 && user.pwd_update_time) {
         const pwdUpdateTime = new Date(user.pwd_update_time);
         const now = new Date();
@@ -306,10 +345,14 @@ export async function POST(request: NextRequest) {
 
     // 检查是否强制修改初始密码
     try {
-      const forceChangeConfig: any = await query(
+      const forceChangeConfig = await query<ConfigRow>(
         "SELECT config_value FROM sys_config WHERE config_key = 'system.force_change_password'"
       );
-      if (forceChangeConfig.length > 0 && forceChangeConfig[0].config_value === 'true' && Number(user.first_login || 0) === 1) {
+      if (
+        forceChangeConfig.length > 0 &&
+        forceChangeConfig[0].config_value === 'true' &&
+        Number(user.first_login || 0) === 1
+      ) {
         userInfo.passwordExpired = true;
       }
     } catch (e) {
@@ -321,7 +364,7 @@ export async function POST(request: NextRequest) {
     // 生成 refresh token
     const refreshToken = crypto.randomUUID();
     const refreshExpiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7天
-    storeRefreshToken(refreshToken, user.id, refreshExpiresAt);
+    await storeRefreshToken(refreshToken, user.id, refreshExpiresAt);
 
     return NextResponse.json({
       success: true,
@@ -354,7 +397,7 @@ async function logLogin(username: string, request: NextRequest, success: boolean
       [username, ip, '', parseBrowser(userAgent), parseOS(userAgent), success ? 1 : 0, message]
     );
   } catch (e) {
-    console.error('记录登录日志失败:', e);
+    console.error(tc('text_a8sfx1'), e);
   }
 }
 

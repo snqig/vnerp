@@ -21,6 +21,11 @@ export interface UserInfo {
   permissions: string[];
   departmentId?: number;
   dataScope?: DataScope;
+  /**
+   * JWT 签发时间（毫秒），由 verifyToken 从 payload.iat 填充。
+   * 用于用户级 token 撤销判断（修改密码后让旧 token 立即失效）。
+   */
+  iat?: number;
 }
 
 // 数据权限范围
@@ -30,6 +35,35 @@ export interface DataScope {
   warehouseIds?: number[];
   customerIds?: number[];
   supplierIds?: number[];
+}
+
+// 数据库行类型
+interface UserRow {
+  id: number;
+  username: string;
+  real_name: string;
+  department_id: number | null;
+}
+
+interface RoleRow {
+  id?: number;
+  role_code: string;
+  data_scope: string;
+}
+
+interface DataScopeRow {
+  role_id: number;
+  scope_type: string;
+  target_ids: string;
+}
+
+interface PermissionRow {
+  permission: string;
+}
+
+interface ResourceRow {
+  create_by: number;
+  department_id?: number;
 }
 
 // 从请求中提取Token
@@ -47,9 +81,11 @@ export async function verifyToken(token: string): Promise<UserInfo | null> {
     const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
 
     const userId = payload.userId as number;
+    // jose 将 iat 解析为秒级 number
+    const iatMs = typeof payload.iat === 'number' ? payload.iat * 1000 : undefined;
     const fullUserInfo = await getUserInfo(userId);
     if (fullUserInfo) {
-      return fullUserInfo;
+      return { ...fullUserInfo, iat: iatMs };
     }
 
     return {
@@ -58,6 +94,7 @@ export async function verifyToken(token: string): Promise<UserInfo | null> {
       realName: payload.realName as string,
       roles: payload.roles as string[],
       permissions: [],
+      iat: iatMs,
     };
   } catch (error) {
     return null;
@@ -67,28 +104,28 @@ export async function verifyToken(token: string): Promise<UserInfo | null> {
 // 获取用户完整信息（包括权限和数据范围）
 export async function getUserInfo(userId: number): Promise<UserInfo | null> {
   // 查询用户基本信息
-  const users = await query(
+  const users = await query<UserRow>(
     `SELECT id, username, real_name, department_id FROM sys_user 
      WHERE id = ? AND deleted = 0 AND status = 1`,
     [userId]
   );
 
-  if (!users || (users as any[]).length === 0) {
+  if (!users || users.length === 0) {
     return null;
   }
 
-  const user = (users as any[])[0];
+  const user = users[0];
 
   // 查询用户角色
-  const roles = await query(
+  const roles = await query<RoleRow>(
     `SELECT r.role_code, r.data_scope FROM sys_role r
      JOIN sys_user_role ur ON r.id = ur.role_id
      WHERE ur.user_id = ? AND r.status = 1`,
     [userId]
   );
 
-  const roleCodes = (roles as any[]).map((r) => r.role_code);
-  const dataScopes = (roles as any[]).map((r) => r.data_scope).filter(Boolean);
+  const roleCodes = roles.map((r) => r.role_code);
+  const dataScopes = roles.map((r) => r.data_scope).filter(Boolean);
 
   // 确定数据权限范围（最小权限原则：取最严格的范围）
   let dataScope: DataScope = { type: 'self' };
@@ -122,18 +159,21 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
   }
 
   // 查询角色的仓库、客户、供应商数据权限
-  const roleIds = (roles as any[]).map((r: any) => r.id).filter(Boolean);
+  const roleIds = roles.map((r) => r.id).filter((id): id is number => Boolean(id));
   if (roleIds.length > 0) {
     const placeholders = roleIds.map(() => '?').join(',');
-    const scopeRows: any = await query(
+    const scopeRows = await query<DataScopeRow>(
       `SELECT role_id, scope_type, target_ids FROM sys_data_scope WHERE role_id IN (${placeholders})`,
       roleIds
     );
     const warehouseIds: number[] = [];
     const customerIds: number[] = [];
     const supplierIds: number[] = [];
-    for (const row of scopeRows as any[]) {
-      const ids = (row.target_ids || '').split(',').map(Number).filter((n: number) => !isNaN(n) && n > 0);
+    for (const row of scopeRows) {
+      const ids = (row.target_ids || '')
+        .split(',')
+        .map(Number)
+        .filter((n: number) => !isNaN(n) && n > 0);
       if (row.scope_type === 'warehouse') warehouseIds.push(...ids);
       if (row.scope_type === 'customer') customerIds.push(...ids);
       if (row.scope_type === 'supplier') supplierIds.push(...ids);
@@ -144,7 +184,7 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
   }
 
   // 查询用户权限
-  const permissions = await query(
+  const permissions = await query<PermissionRow>(
     `SELECT DISTINCT m.permission FROM sys_menu m
      JOIN sys_role_menu rm ON m.id = rm.menu_id
      JOIN sys_user_role ur ON rm.role_id = ur.role_id
@@ -157,8 +197,8 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
     username: user.username,
     realName: user.real_name,
     roles: roleCodes,
-    permissions: (permissions as any[]).map((p) => p.permission),
-    departmentId: user.department_id,
+    permissions: permissions.map((p) => p.permission),
+    departmentId: user.department_id ?? undefined,
     dataScope,
   };
 }
@@ -189,7 +229,7 @@ export function buildDataScopeSql(
     customerField?: string;
     supplierField?: string;
   }
-): { sql: string; params: any[] } {
+): { sql: string; params: unknown[] } {
   const { dataScope, userId, departmentId } = userInfo;
 
   if (!dataScope || dataScope.type === 'all') {
@@ -197,7 +237,7 @@ export function buildDataScopeSql(
   }
 
   const conditions: string[] = [];
-  const params: any[] = [];
+  const params: unknown[] = [];
 
   // 部门/本人维度
   if (dataScope.type === 'self') {
@@ -249,7 +289,7 @@ export async function validateResourceAccess(
   resourceId: string | number
 ): Promise<boolean> {
   let sql = '';
-  let params: any[] = [];
+  let params: unknown[] = [];
 
   switch (resourceType) {
     case 'order':
@@ -272,12 +312,12 @@ export async function validateResourceAccess(
       return false;
   }
 
-  const results = await query(sql, params);
-  if (!results || (results as any[]).length === 0) {
+  const results = await query<ResourceRow>(sql, params);
+  if (!results || results.length === 0) {
     return false;
   }
 
-  const resource = (results as any[])[0];
+  const resource = results[0];
 
   // 管理员可以访问所有资源
   if (userInfo.roles.includes('admin')) {

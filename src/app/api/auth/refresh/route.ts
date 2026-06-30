@@ -6,6 +6,17 @@ import { query } from '@/lib/db';
 
 const SECRET_KEY = process.env.JWT_SECRET || 'dev-only-secret-key';
 
+interface RefreshUserRow {
+  id: number;
+  username: string;
+  real_name: string;
+  status: number;
+}
+
+interface RefreshRoleRow {
+  role_code: string;
+}
+
 export const POST = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
   const { refreshToken, userId } = body;
@@ -15,12 +26,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   // 验证 refresh token
-  if (!verifyRefreshToken(refreshToken, userId)) {
+  if (!(await verifyRefreshToken(refreshToken, userId))) {
     return errorResponse('refresh token 无效或已过期', 401);
   }
 
   // 查询用户信息
-  const users: any = await query(
+  const users = await query<RefreshUserRow>(
     `SELECT id, username, real_name, status FROM sys_user WHERE id = ? AND deleted = 0 AND status = 1`,
     [userId]
   );
@@ -32,7 +43,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const user = users[0];
 
   // 查询用户角色
-  const roles: any = await query(
+  const roles = await query<RefreshRoleRow>(
     `SELECT r.role_code FROM sys_role r
      JOIN sys_user_role ur ON r.id = ur.role_id
      WHERE ur.user_id = ? AND r.status = 1`,
@@ -44,7 +55,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     userId: user.id,
     username: user.username,
     realName: user.real_name,
-    roles: roles.map((r: any) => r.role_code),
+    roles: roles.map((r) => r.role_code),
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -54,13 +65,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   // 生成新的 refresh token
   const newRefreshToken = crypto.randomUUID();
   const refreshExpiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7天
-  storeRefreshToken(newRefreshToken, userId, refreshExpiresAt);
+  await storeRefreshToken(newRefreshToken, userId, refreshExpiresAt);
 
   // 删除旧的 refresh token
-  removeRefreshToken(refreshToken);
+  await removeRefreshToken(refreshToken);
 
-  return successResponse({
-    token: newToken,
-    refreshToken: newRefreshToken,
-  }, 'Token 刷新成功');
+  return successResponse(
+    {
+      token: newToken,
+      refreshToken: newRefreshToken,
+    },
+    'Token 刷新成功'
+  );
 });

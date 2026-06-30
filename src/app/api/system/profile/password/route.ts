@@ -1,10 +1,8 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-} from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
 import { query, execute } from '@/lib/db';
+import { revokeAllUserTokens } from '@/lib/token-blacklist';
 import bcrypt from 'bcryptjs';
 
 /**
@@ -31,7 +29,7 @@ export const PUT = withAuthAndErrorHandler(
       return errorResponse('密码必须包含字母和数字', 400, 400);
     }
 
-    const users: any = await query(
+    const users = await query<{ password: string }>(
       'SELECT password FROM sys_user WHERE id = ? AND deleted = 0',
       [userInfo.userId]
     );
@@ -51,7 +49,12 @@ export const PUT = withAuthAndErrorHandler(
       [hashedPassword, userInfo.userId]
     );
 
-    return successResponse(null, '密码修改成功');
+    // 修改密码后撤销该用户所有更早签发的 token（当前请求的 token 保留，可正常返回响应）
+    // beforeTs = 当前 token iat + 1ms，确保当前 token 不被撤销，但其他设备的旧 token 立即失效
+    const beforeTs = userInfo.iat ? userInfo.iat + 1 : Date.now();
+    await revokeAllUserTokens(userInfo.userId, beforeTs);
+
+    return successResponse(null, '密码修改成功，其他设备的登录状态已失效');
   },
   { permission: '' }
 );

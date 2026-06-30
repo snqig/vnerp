@@ -8,7 +8,7 @@ import {
   UserInfo,
 } from './auth';
 import { errorResponse } from './api-response';
-import { isTokenRevoked } from './token-blacklist';
+import { isTokenRevoked, isUserTokensRevoked } from './token-blacklist';
 
 export type { UserInfo } from './auth';
 
@@ -36,8 +36,13 @@ export function withAuth(
 
     // 2.5 检查Token是否已被撤销（黑名单）
     const tokenKey = `token:${tokenPayload.userId}:${token.slice(-20)}`;
-    if (isTokenRevoked(tokenKey)) {
+    if (await isTokenRevoked(tokenKey)) {
       return errorResponse('认证令牌已失效，请重新登录', 401);
+    }
+
+    // 2.6 检查用户级 token 撤销（修改密码/账号锁定后旧 token 立即失效）
+    if (tokenPayload.iat && (await isUserTokensRevoked(tokenPayload.userId, tokenPayload.iat))) {
+      return errorResponse('登录状态已失效（账号已变更），请重新登录', 401);
     }
 
     // 3. 获取用户完整信息
@@ -95,8 +100,13 @@ export function withAuthAndErrorHandler(
 
       // 2.5 检查Token是否已被撤销（黑名单）
       const tokenKey = `token:${tokenPayload.userId}:${token.slice(-20)}`;
-      if (isTokenRevoked(tokenKey)) {
+      if (await isTokenRevoked(tokenKey)) {
         return errorResponse('认证令牌已失效，请重新登录', 401);
+      }
+
+      // 2.6 检查用户级 token 撤销
+      if (tokenPayload.iat && (await isUserTokensRevoked(tokenPayload.userId, tokenPayload.iat))) {
+        return errorResponse('登录状态已失效（账号已变更），请重新登录', 401);
       }
 
       // 3. 获取用户完整信息

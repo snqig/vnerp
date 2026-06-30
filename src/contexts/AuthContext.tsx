@@ -10,6 +10,12 @@ import {
   ReactNode,
 } from 'react';
 
+interface Role {
+  id?: number;
+  role_code: string;
+  role_name?: string;
+}
+
 interface User {
   id: number;
   username: string;
@@ -19,7 +25,7 @@ interface User {
   phone?: string;
   departmentId?: number;
   departmentName?: string;
-  roles: any[];
+  roles: Role[];
   permissions: string[];
 }
 
@@ -49,7 +55,7 @@ interface AuthContextType extends AuthState {
     rememberMe?: boolean
   ) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
-  register: (data: any) => Promise<any>;
+  register: (data: Record<string, unknown>) => Promise<unknown>;
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (perms: string[]) => boolean;
   hasRole: (roleCode: string) => boolean;
@@ -94,8 +100,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (clearOnAuthError) {
               localStorage.removeItem('token');
               localStorage.removeItem('user');
+              localStorage.removeItem('refreshToken');
+              localStorage.removeItem('userId');
               sessionStorage.removeItem('token');
               sessionStorage.removeItem('user');
+              sessionStorage.removeItem('refreshToken');
+              sessionStorage.removeItem('userId');
               menusLoadedRef.current = false;
               menusCountRef.current = 0;
               setState({
@@ -134,8 +144,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isLoading: false,
           }));
         }
-      } catch (error: any) {
-        if (error.name === 'AbortError') {
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') {
           return;
         }
         console.error('获取菜单失败:', error);
@@ -197,6 +207,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const storage = rememberMe ? localStorage : sessionStorage;
           storage.setItem('token', result.data.token);
           storage.setItem('user', JSON.stringify(result.data.user));
+          // 存 refreshToken + userId 供 authFetch 无感刷新使用
+          storage.setItem('refreshToken', result.data.refreshToken);
+          storage.setItem('userId', String(result.data.user.id));
 
           menusLoadedRef.current = false;
           menusCountRef.current = 0;
@@ -225,8 +238,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userId');
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('userId');
     menusLoadedRef.current = false;
     menusCountRef.current = 0;
     authChecked.current = false;
@@ -242,7 +259,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (data: any) => {
+  const register = useCallback(async (data: Record<string, unknown>) => {
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -258,7 +275,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasPermission = useCallback(
     (permission: string): boolean => {
       const { permissions, user } = state;
-      if (user?.roles?.some((r: any) => r.role_code === 'super_admin')) {
+      if (user?.roles?.some((r) => r.role_code === 'super_admin')) {
         return true;
       }
       return permissions.includes(permission) || permissions.includes('*');
@@ -275,7 +292,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hasRole = useCallback(
     (roleCode: string): boolean => {
-      return state.user?.roles?.some((r: any) => r.role_code === roleCode) || false;
+      return state.user?.roles?.some((r) => r.role_code === roleCode) || false;
     },
     [state.user]
   );

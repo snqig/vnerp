@@ -1,8 +1,103 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { extractToken, verifyToken, hasRole, UserInfo } from '@/lib/auth';
+import { secureLog } from '@/lib/logger';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+interface CountRow {
+  cnt: number;
+}
+
+/**
+ * 安全开关：仅当显式设置 ALLOW_SETUP_API=true 时接口可用
+ * 生产环境默认禁用，避免建表接口被恶意调用导致数据被清空/重建
+ */
+function isSetupApiEnabled(): boolean {
+  return process.env.ALLOW_SETUP_API === 'true';
+}
+
+/**
+ * 鉴权与权限校验：记录每个失败原因的详细日志
+ * @returns 校验通过返回 UserInfo，失败返回 NextResponse（错误响应）
+ */
+async function authenticateAndAuthorize(request: NextRequest): Promise<UserInfo | NextResponse> {
+  // 1. env 开关
+  if (!isSetupApiEnabled()) {
+    secureLog('warn', tc('text_f6zh62'), {
+      method: request.method,
+      url: request.url,
+      reason: 'api_disabled',
+    });
+    return errorResponse('Not Found', 404, 404);
+  }
+
+  // 2. 提取 token
+  const token = extractToken(request);
+  if (!token) {
+    secureLog('warn', tc('text_t1jvqo'), {
+      method: request.method,
+      reason: 'no_token',
+    });
+    return errorResponse(tc('text_jbxt8a'), 401, 401);
+  }
+
+  // 3. 验证 token
+  const userInfo = await verifyToken(token);
+  if (!userInfo) {
+    secureLog('warn', tc('text_99wleb'), {
+      reason: 'invalid_token',
+      tokenSuffix: token.slice(-8),
+    });
+    return errorResponse(tc('text_invqv5'), 401, 401);
+  }
+
+  // 4. 校验 admin 角色（建表属高危操作，仅 admin 可执行）
+  const isAdmin = hasRole(userInfo, 'admin') || hasRole(userInfo, 'super_admin');
+  if (!isAdmin) {
+    secureLog('warn', tc('text_d3i6i5'), {
+      userId: userInfo.userId,
+      username: userInfo.username,
+      roles: userInfo.roles,
+      reason: 'not_admin',
+    });
+    return errorResponse(tc('text_u042xf'), 403, 403);
+  }
+
+  secureLog('info', tc('text_v2015y'), {
+    userId: userInfo.userId,
+    username: userInfo.username,
+  });
+  return userInfo;
+}
+
+/**
+ * GET 保留向后兼容，但仅返回提示信息，不执行建表
+ * 避免搜索引擎抓取或浏览器预探触发建表
+ */
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  secureLog('info', 'setup/create-tables: GET 请求（已弃用，请改用 POST）', {
+    url: request.url,
+  });
+  return errorResponse(
+    'Method Not Allowed: 请使用 POST 方法调用，并设置 ALLOW_SETUP_API=true',
+    405,
+    405
+  );
+}
+
+export const POST = withErrorHandler(async (request: NextRequest) => {
+  // 鉴权
+  const authResult = await authenticateAndAuthorize(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+  const userInfo = authResult as UserInfo;
+
+  secureLog('info', 'setup/create-tables: 开始执行建表', {
+    userId: userInfo.userId,
+    username: userInfo.username,
+  });
+
   const results: string[] = [];
 
   // 1. mdm_product
@@ -128,15 +223,105 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   results.push('crm_customer_analysis created');
 
   // Insert test data - mdm_product
-  const pc: any = await query('SELECT COUNT(*) as cnt FROM mdm_product');
+  const pc = await query<CountRow>('SELECT COUNT(*) as cnt FROM mdm_product');
   if (pc[0]?.cnt === 0) {
     const products = [
-      ['P001', 'PET薄膜标签', 'PET标签', '100mm×50mm', '件', 1, '薄膜标签', 1, '越南达昌', 0.85, 1.20, 1000, 5000, 500],
-      ['P002', 'PVC薄膜标签', 'PVC标签', '80mm×40mm', '件', 1, '薄膜标签', 2, '胡志明印刷', 0.65, 0.95, 2000, 8000, 800],
-      ['P003', '不干胶标签', '胶标签', '120mm×60mm', '件', 2, '不干胶标签', 1, '越南达昌', 0.45, 0.75, 3000, 10000, 1000],
-      ['P004', '丝印面板', '面板', '200mm×150mm', '件', 3, '丝印产品', 3, '河内电子', 2.50, 4.00, 500, 2000, 200],
-      ['P005', 'UV油墨标签', 'UV标签', '90mm×45mm', '件', 1, '薄膜标签', 1, '越南达昌', 0.95, 1.50, 1500, 6000, 600],
-      ['P006', '模切标签', '模切', '150mm×80mm', '件', 2, '不干胶标签', 2, '胡志明印刷', 0.55, 0.90, 2000, 8000, 800],
+      [
+        'P001',
+        'PET薄膜标签',
+        'PET标签',
+        '100mm×50mm',
+        '件',
+        1,
+        '薄膜标签',
+        1,
+        '越南达昌',
+        0.85,
+        1.2,
+        1000,
+        5000,
+        500,
+      ],
+      [
+        'P002',
+        'PVC薄膜标签',
+        'PVC标签',
+        '80mm×40mm',
+        '件',
+        1,
+        '薄膜标签',
+        2,
+        '胡志明印刷',
+        0.65,
+        0.95,
+        2000,
+        8000,
+        800,
+      ],
+      [
+        'P003',
+        '不干胶标签',
+        '胶标签',
+        '120mm×60mm',
+        '件',
+        2,
+        '不干胶标签',
+        1,
+        '越南达昌',
+        0.45,
+        0.75,
+        3000,
+        10000,
+        1000,
+      ],
+      [
+        'P004',
+        '丝印面板',
+        '面板',
+        '200mm×150mm',
+        '件',
+        3,
+        '丝印产品',
+        3,
+        '河内电子',
+        2.5,
+        4.0,
+        500,
+        2000,
+        200,
+      ],
+      [
+        'P005',
+        'UV油墨标签',
+        'UV标签',
+        '90mm×45mm',
+        '件',
+        1,
+        '薄膜标签',
+        1,
+        '越南达昌',
+        0.95,
+        1.5,
+        1500,
+        6000,
+        600,
+      ],
+      [
+        'P006',
+        '模切标签',
+        '模切',
+        '150mm×80mm',
+        '件',
+        2,
+        '不干胶标签',
+        2,
+        '胡志明印刷',
+        0.55,
+        0.9,
+        2000,
+        8000,
+        800,
+      ],
     ];
     for (const p of products) {
       await execute(
@@ -148,14 +333,134 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // Insert test data - biz_contract_review
-  const crc: any = await query('SELECT COUNT(*) as cnt FROM biz_contract_review');
+  const crc = await query<CountRow>('SELECT COUNT(*) as cnt FROM biz_contract_review');
   if (crc[0]?.cnt === 0) {
     const reviews = [
-      ['CR20260601001', 1, 'ORD001', 1, '越南达昌', 1, 'P001', 'PET薄膜标签', 5000, 6000, '2026-06-15', 'approved', '满足要求', '产能充足', '物料齐备', '可行', '同意', '同意', '同意', '同意', '同意', '2026-06-01', 2],
-      ['CR20260601002', 2, 'ORD002', 2, '胡志明印刷', 2, 'P002', 'PVC薄膜标签', 8000, 7600, '2026-06-20', 'approved', '标准要求', '需加班', '部分缺料', '可行', '同意', '同意', '需确认', '需采购', '同意', '2026-06-01', 1],
-      ['CR20260602001', 3, 'ORD003', 1, '越南达昌', 3, 'P003', '不干胶标签', 10000, 7500, '2026-06-25', 'pending', '常规质量', '产能紧张', '物料齐备', '需评估', null, null, null, null, null, '2026-06-02', 0],
-      ['CR20260602002', null, null, 3, '河内电子', 4, 'P004', '丝印面板', 2000, 8000, '2026-07-01', 'pending', '高精度要求', null, null, null, null, null, null, null, null, '2026-06-02', 0],
-      ['CR20260603001', 4, 'ORD004', 2, '胡志明印刷', 5, 'P005', 'UV油墨标签', 6000, 9000, '2026-06-30', 'approved', 'UV固化要求', '产能充足', '物料齐备', '可行', '同意', '同意', '同意', '同意', '同意', '2026-06-03', 2],
+      [
+        'CR20260601001',
+        1,
+        'ORD001',
+        1,
+        '越南达昌',
+        1,
+        'P001',
+        'PET薄膜标签',
+        5000,
+        6000,
+        '2026-06-15',
+        'approved',
+        '满足要求',
+        '产能充足',
+        '物料齐备',
+        '可行',
+        '同意',
+        '同意',
+        '同意',
+        '同意',
+        '同意',
+        '2026-06-01',
+        2,
+      ],
+      [
+        'CR20260601002',
+        2,
+        'ORD002',
+        2,
+        '胡志明印刷',
+        2,
+        'P002',
+        'PVC薄膜标签',
+        8000,
+        7600,
+        '2026-06-20',
+        'approved',
+        '标准要求',
+        '需加班',
+        '部分缺料',
+        '可行',
+        '同意',
+        '同意',
+        '需确认',
+        '需采购',
+        '同意',
+        '2026-06-01',
+        1,
+      ],
+      [
+        'CR20260602001',
+        3,
+        'ORD003',
+        1,
+        '越南达昌',
+        3,
+        'P003',
+        '不干胶标签',
+        10000,
+        7500,
+        '2026-06-25',
+        'pending',
+        '常规质量',
+        '产能紧张',
+        '物料齐备',
+        '需评估',
+        null,
+        null,
+        null,
+        null,
+        null,
+        '2026-06-02',
+        0,
+      ],
+      [
+        'CR20260602002',
+        null,
+        null,
+        3,
+        '河内电子',
+        4,
+        'P004',
+        '丝印面板',
+        2000,
+        8000,
+        '2026-07-01',
+        'pending',
+        '高精度要求',
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        '2026-06-02',
+        0,
+      ],
+      [
+        'CR20260603001',
+        4,
+        'ORD004',
+        2,
+        '胡志明印刷',
+        5,
+        'P005',
+        'UV油墨标签',
+        6000,
+        9000,
+        '2026-06-30',
+        'approved',
+        'UV固化要求',
+        '产能充足',
+        '物料齐备',
+        '可行',
+        '同意',
+        '同意',
+        '同意',
+        '同意',
+        '同意',
+        '2026-06-03',
+        2,
+      ],
     ];
     for (const r of reviews) {
       await execute(
@@ -167,16 +472,93 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // Insert test data - crm_follow_record
-  const frc: any = await query('SELECT COUNT(*) as cnt FROM crm_follow_record');
+  const frc = await query<CountRow>('SELECT COUNT(*) as cnt FROM crm_follow_record');
   if (frc[0]?.cnt === 0) {
     const follows = [
-      [1, '越南达昌', 'visit', '实地拜访客户，讨论Q3订单计划', '阮文强', '陈经理', '2026-06-15', 'Q3大单机会', 1, '客户预算充足'],
-      [1, '越南达昌', 'phone', '电话确认样品交付时间', '阮文强', '陈经理', '2026-06-08', '样品确认', 1, ''],
-      [2, '胡志明印刷', 'email', '发送最新产品目录和报价单', '黎氏花', '王经理', '2026-06-12', 'PVC标签需求', 1, '价格敏感'],
-      [2, '胡志明印刷', 'visit', '拜访客户工厂，了解生产需求', '黎氏花', '王经理', '2026-06-20', '扩产需求', 1, '需跟进报价'],
-      [3, '河内电子', 'phone', '电话沟通丝印面板技术要求', '范文东', '李经理', '2026-06-10', '高精度面板', 1, '技术要求高'],
-      [3, '河内电子', 'visit', '技术交流会议，确认丝印工艺方案', '范文东', '李经理', '2026-06-18', '技术合作', 1, ''],
-      [1, '越南达昌', 'phone', '回访客户满意度，反馈良好', '阮文强', '陈经理', '2026-06-25', '续签机会', 1, '满意度高'],
+      [
+        1,
+        '越南达昌',
+        'visit',
+        '实地拜访客户，讨论Q3订单计划',
+        '阮文强',
+        '陈经理',
+        '2026-06-15',
+        'Q3大单机会',
+        1,
+        '客户预算充足',
+      ],
+      [
+        1,
+        '越南达昌',
+        'phone',
+        '电话确认样品交付时间',
+        '阮文强',
+        '陈经理',
+        '2026-06-08',
+        '样品确认',
+        1,
+        '',
+      ],
+      [
+        2,
+        '胡志明印刷',
+        'email',
+        '发送最新产品目录和报价单',
+        '黎氏花',
+        '王经理',
+        '2026-06-12',
+        'PVC标签需求',
+        1,
+        '价格敏感',
+      ],
+      [
+        2,
+        '胡志明印刷',
+        'visit',
+        '拜访客户工厂，了解生产需求',
+        '黎氏花',
+        '王经理',
+        '2026-06-20',
+        '扩产需求',
+        1,
+        '需跟进报价',
+      ],
+      [
+        3,
+        '河内电子',
+        'phone',
+        '电话沟通丝印面板技术要求',
+        '范文东',
+        '李经理',
+        '2026-06-10',
+        '高精度面板',
+        1,
+        '技术要求高',
+      ],
+      [
+        3,
+        '河内电子',
+        'visit',
+        '技术交流会议，确认丝印工艺方案',
+        '范文东',
+        '李经理',
+        '2026-06-18',
+        '技术合作',
+        1,
+        '',
+      ],
+      [
+        1,
+        '越南达昌',
+        'phone',
+        '回访客户满意度，反馈良好',
+        '阮文强',
+        '陈经理',
+        '2026-06-25',
+        '续签机会',
+        1,
+        '满意度高',
+      ],
     ];
     for (const f of follows) {
       await execute(
@@ -188,15 +570,111 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // Insert test data - crm_customer_analysis
-  const cac: any = await query('SELECT COUNT(*) as cnt FROM crm_customer_analysis');
+  const cac = await query<CountRow>('SELECT COUNT(*) as cnt FROM crm_customer_analysis');
   if (cac[0]?.cnt === 0) {
     const analyses = [
-      [1, '越南达昌', 'month', '2026-05-01', '2026-05-31', 15, 180000, 14, 0, 0, 95.5, 4.5, 'A', 12.5, '核心客户'],
-      [2, '胡志明印刷', 'month', '2026-05-01', '2026-05-31', 8, 76000, 8, 1, 0, 87.5, 3.8, 'B', 5.2, '需提升服务'],
-      [3, '河内电子', 'month', '2026-05-01', '2026-05-31', 3, 24000, 3, 0, 1, 66.7, 3.2, 'C', -8.3, '投诉需关注'],
-      [1, '越南达昌', 'quarter', '2026-04-01', '2026-06-30', 42, 520000, 40, 0, 0, 95.2, 4.6, 'A', 15.8, '季度增长稳定'],
-      [2, '胡志明印刷', 'quarter', '2026-04-01', '2026-06-30', 22, 210000, 21, 2, 1, 86.4, 3.9, 'B', 8.3, ''],
-      [3, '河内电子', 'quarter', '2026-04-01', '2026-06-30', 9, 72000, 8, 1, 2, 77.8, 3.4, 'C', -3.2, '需改善'],
+      [
+        1,
+        '越南达昌',
+        'month',
+        '2026-05-01',
+        '2026-05-31',
+        15,
+        180000,
+        14,
+        0,
+        0,
+        95.5,
+        4.5,
+        'A',
+        12.5,
+        '核心客户',
+      ],
+      [
+        2,
+        '胡志明印刷',
+        'month',
+        '2026-05-01',
+        '2026-05-31',
+        8,
+        76000,
+        8,
+        1,
+        0,
+        87.5,
+        3.8,
+        'B',
+        5.2,
+        '需提升服务',
+      ],
+      [
+        3,
+        '河内电子',
+        'month',
+        '2026-05-01',
+        '2026-05-31',
+        3,
+        24000,
+        3,
+        0,
+        1,
+        66.7,
+        3.2,
+        'C',
+        -8.3,
+        '投诉需关注',
+      ],
+      [
+        1,
+        '越南达昌',
+        'quarter',
+        '2026-04-01',
+        '2026-06-30',
+        42,
+        520000,
+        40,
+        0,
+        0,
+        95.2,
+        4.6,
+        'A',
+        15.8,
+        '季度增长稳定',
+      ],
+      [
+        2,
+        '胡志明印刷',
+        'quarter',
+        '2026-04-01',
+        '2026-06-30',
+        22,
+        210000,
+        21,
+        2,
+        1,
+        86.4,
+        3.9,
+        'B',
+        8.3,
+        '',
+      ],
+      [
+        3,
+        '河内电子',
+        'quarter',
+        '2026-04-01',
+        '2026-06-30',
+        9,
+        72000,
+        8,
+        1,
+        2,
+        77.8,
+        3.4,
+        'C',
+        -3.2,
+        '需改善',
+      ],
     ];
     for (const a of analyses) {
       await execute(
@@ -208,15 +686,85 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // Insert test data - BOM
-  const bomCount: any = await query('SELECT COUNT(*) as cnt FROM bom_header');
+  const bomCount = await query<CountRow>('SELECT COUNT(*) as cnt FROM bom_header');
   if (bomCount[0]?.cnt === 0) {
     // BOM headers
     const bomHeaders = [
-      ['BOM20260601A1B', 1, 'P001', 'PET薄膜标签', '100mm×50mm', 'V1.0', 1, 30, '件', 1, 2, 1.70, '标准BOM'],
-      ['BOM20260602C3D', 2, 'P002', 'PVC薄膜标签', '80mm×40mm', 'V1.0', 1, 30, '件', 1, 3, 1.30, '标准BOM'],
-      ['BOM20260603E5F', 3, 'P003', '不干胶标签', '120mm×60mm', 'V1.0', 1, 30, '件', 1, 2, 0.90, '标准BOM'],
-      ['BOM20260603G7H', 4, 'P004', '丝印面板', '200mm×150mm', 'V1.0', 1, 10, '件', 1, 3, 5.00, '丝印BOM'],
-      ['BOM20260603I9J', 5, 'P005', 'UV油墨标签', '90mm×45mm', 'V2.0', 0, 10, '件', 1, 2, 1.90, '升级版BOM'],
+      [
+        'BOM20260601A1B',
+        1,
+        'P001',
+        'PET薄膜标签',
+        '100mm×50mm',
+        'V1.0',
+        1,
+        30,
+        '件',
+        1,
+        2,
+        1.7,
+        '标准BOM',
+      ],
+      [
+        'BOM20260602C3D',
+        2,
+        'P002',
+        'PVC薄膜标签',
+        '80mm×40mm',
+        'V1.0',
+        1,
+        30,
+        '件',
+        1,
+        3,
+        1.3,
+        '标准BOM',
+      ],
+      [
+        'BOM20260603E5F',
+        3,
+        'P003',
+        '不干胶标签',
+        '120mm×60mm',
+        'V1.0',
+        1,
+        30,
+        '件',
+        1,
+        2,
+        0.9,
+        '标准BOM',
+      ],
+      [
+        'BOM20260603G7H',
+        4,
+        'P004',
+        '丝印面板',
+        '200mm×150mm',
+        'V1.0',
+        1,
+        10,
+        '件',
+        1,
+        3,
+        5.0,
+        '丝印BOM',
+      ],
+      [
+        'BOM20260603I9J',
+        5,
+        'P005',
+        'UV油墨标签',
+        '90mm×45mm',
+        'V2.0',
+        0,
+        10,
+        '件',
+        1,
+        2,
+        1.9,
+        '升级版BOM',
+      ],
     ];
     for (const h of bomHeaders) {
       await execute(
@@ -227,18 +775,18 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     // BOM lines - matching actual table columns: material_unit, usage_qty (not unit, consumption_qty)
     const bomLines = [
-      [1, 1, 1, 'M001', 'PET薄膜材料', '100mm×50mm', '件', 1.0, 5, 0.50, 0.525, ''],
-      [1, 2, 2, 'M002', '胶水', '通用型', 'kg', 0.01, 2, 50.00, 0.51, ''],
+      [1, 1, 1, 'M001', 'PET薄膜材料', '100mm×50mm', '件', 1.0, 5, 0.5, 0.525, ''],
+      [1, 2, 2, 'M002', '胶水', '通用型', 'kg', 0.01, 2, 50.0, 0.51, ''],
       [2, 1, 3, 'M003', 'PVC薄膜材料', '80mm×40mm', '件', 1.0, 5, 0.35, 0.3675, ''],
-      [2, 2, 4, 'M004', '油墨-彩色', '标准色', 'kg', 0.005, 3, 80.00, 0.412, ''],
-      [2, 3, 2, 'M002', '胶水', '通用型', 'kg', 0.01, 2, 50.00, 0.51, ''],
+      [2, 2, 4, 'M004', '油墨-彩色', '标准色', 'kg', 0.005, 3, 80.0, 0.412, ''],
+      [2, 3, 2, 'M002', '胶水', '通用型', 'kg', 0.01, 2, 50.0, 0.51, ''],
       [3, 1, 5, 'M005', '不干胶底纸', '120mm×60mm', '件', 1.0, 3, 0.25, 0.2575, ''],
-      [3, 2, 6, 'M006', '面材', '120mm×60mm', '件', 1.0, 3, 0.30, 0.309, ''],
-      [4, 1, 7, 'M007', 'PC面板', '200mm×150mm', '件', 1.0, 5, 1.50, 1.575, ''],
-      [4, 2, 4, 'M004', '油墨-丝印', '丝印专用', 'kg', 0.02, 5, 80.00, 1.68, ''],
-      [4, 3, 8, 'M008', '保护膜', '200mm×150mm', '件', 1.0, 3, 0.80, 0.824, ''],
-      [5, 1, 9, 'M009', 'UV薄膜材料', '90mm×45mm', '件', 1.0, 5, 0.60, 0.63, ''],
-      [5, 2, 10, 'M010', 'UV油墨', 'UV固化型', 'kg', 0.008, 5, 120.00, 1.008, ''],
+      [3, 2, 6, 'M006', '面材', '120mm×60mm', '件', 1.0, 3, 0.3, 0.309, ''],
+      [4, 1, 7, 'M007', 'PC面板', '200mm×150mm', '件', 1.0, 5, 1.5, 1.575, ''],
+      [4, 2, 4, 'M004', '油墨-丝印', '丝印专用', 'kg', 0.02, 5, 80.0, 1.68, ''],
+      [4, 3, 8, 'M008', '保护膜', '200mm×150mm', '件', 1.0, 3, 0.8, 0.824, ''],
+      [5, 1, 9, 'M009', 'UV薄膜材料', '90mm×45mm', '件', 1.0, 5, 0.6, 0.63, ''],
+      [5, 2, 10, 'M010', 'UV油墨', 'UV固化型', 'kg', 0.008, 5, 120.0, 1.008, ''],
     ];
     for (const l of bomLines) {
       await execute(
@@ -263,7 +811,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     // bom_version_history - skip if actual table structure differs from expected
     try {
-      const bvhCols: any = await query(`SHOW COLUMNS FROM bom_version_history LIKE 'version'`);
+      const bvhCols = await query<unknown>(`SHOW COLUMNS FROM bom_version_history LIKE 'version'`);
       if (bvhCols.length > 0) {
         for (let i = 1; i <= 5; i++) {
           await execute(
@@ -272,8 +820,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
           );
         }
       }
-    } catch (e: any) {
-      results.push('bom_version_history insert skipped: ' + (e.message || ''));
+    } catch (e: unknown) {
+      results.push('bom_version_history insert skipped: ' + (e instanceof Error ? e.message : ''));
     }
 
     results.push('bom: 5 headers + 12 lines + version history');
@@ -717,14 +1265,89 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   // ===== 插入测试数据 =====
 
   // prd_schedule 测试数据
-  const scCnt: any = await query('SELECT COUNT(*) as cnt FROM prd_schedule');
+  const scCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM prd_schedule');
   if (scCnt[0]?.cnt === 0) {
     const schedules = [
-      ['PS20260601001', 1, 'ORD001', 1, 'P001', 'PET薄膜标签', '印刷车间', 5000, '2026-06-05', '2026-06-10', 8, '张调度', 2, ''],
-      ['PS20260601002', 2, 'ORD002', 2, 'P002', 'PVC薄膜标签', '印刷车间', 8000, '2026-06-08', '2026-06-15', 6, '张调度', 1, '常规排产'],
-      ['PS20260602001', 3, 'ORD003', 3, 'P003', '不干胶标签', '模切车间', 10000, '2026-06-10', '2026-06-18', 5, '李调度', 0, ''],
-      ['PS20260602002', null, null, 4, 'P004', '丝印面板', '丝印车间', 2000, '2026-06-12', '2026-06-20', 7, '张调度', 0, '高精度'],
-      ['PS20260603001', 4, 'ORD004', 5, 'P005', 'UV油墨标签', '印刷车间', 6000, '2026-06-15', '2026-06-22', 4, '李调度', 2, ''],
+      [
+        'PS20260601001',
+        1,
+        'ORD001',
+        1,
+        'P001',
+        'PET薄膜标签',
+        '印刷车间',
+        5000,
+        '2026-06-05',
+        '2026-06-10',
+        8,
+        '张调度',
+        2,
+        '',
+      ],
+      [
+        'PS20260601002',
+        2,
+        'ORD002',
+        2,
+        'P002',
+        'PVC薄膜标签',
+        '印刷车间',
+        8000,
+        '2026-06-08',
+        '2026-06-15',
+        6,
+        '张调度',
+        1,
+        '常规排产',
+      ],
+      [
+        'PS20260602001',
+        3,
+        'ORD003',
+        3,
+        'P003',
+        '不干胶标签',
+        '模切车间',
+        10000,
+        '2026-06-10',
+        '2026-06-18',
+        5,
+        '李调度',
+        0,
+        '',
+      ],
+      [
+        'PS20260602002',
+        null,
+        null,
+        4,
+        'P004',
+        '丝印面板',
+        '丝印车间',
+        2000,
+        '2026-06-12',
+        '2026-06-20',
+        7,
+        '张调度',
+        0,
+        '高精度',
+      ],
+      [
+        'PS20260603001',
+        4,
+        'ORD004',
+        5,
+        'P005',
+        'UV油墨标签',
+        '印刷车间',
+        6000,
+        '2026-06-15',
+        '2026-06-22',
+        4,
+        '李调度',
+        2,
+        '',
+      ],
     ];
     for (const s of schedules) {
       await execute(
@@ -736,7 +1359,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // prd_material_issue 测试数据
-  const miCnt: any = await query('SELECT COUNT(*) as cnt FROM prd_material_issue');
+  const miCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM prd_material_issue');
   if (miCnt[0]?.cnt === 0) {
     const issues = [
       ['MI20260601001', 1, 'WO001', 1, '2026-06-05', 'normal', '王操作', 2, ''],
@@ -754,7 +1377,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // prd_material_return 测试数据
-  const mrCnt: any = await query('SELECT COUNT(*) as cnt FROM prd_material_return');
+  const mrCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM prd_material_return');
   if (mrCnt[0]?.cnt === 0) {
     const returns = [
       ['MR20260601001', 1, 'WO001', 1, '2026-06-06', '王操作', 2, '余料退回'],
@@ -771,14 +1394,74 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // prd_product_label 测试数据
-  const plCnt: any = await query('SELECT COUNT(*) as cnt FROM prd_product_label');
+  const plCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM prd_product_label');
   if (plCnt[0]?.cnt === 0) {
     const labels = [
-      ['LB20260601001', 1, 'WO001', 1, 'P001', 'PET薄膜标签', 5000, '件', 'B20260601', 'qualified', ''],
-      ['LB20260601002', 2, 'WO002', 2, 'P002', 'PVC薄膜标签', 8000, '件', 'B20260602', 'qualified', ''],
-      ['LB20260602001', 3, 'WO003', 3, 'P003', '不干胶标签', 10000, '件', 'B20260603', 'pending', '待检'],
-      ['LB20260602002', 4, 'WO004', 4, 'P004', '丝印面板', 2000, '件', 'B20260604', 'qualified', ''],
-      ['LB20260603001', 5, 'WO005', 5, 'P005', 'UV油墨标签', 6000, '件', 'B20260605', 'unqualified', '色差'],
+      [
+        'LB20260601001',
+        1,
+        'WO001',
+        1,
+        'P001',
+        'PET薄膜标签',
+        5000,
+        '件',
+        'B20260601',
+        'qualified',
+        '',
+      ],
+      [
+        'LB20260601002',
+        2,
+        'WO002',
+        2,
+        'P002',
+        'PVC薄膜标签',
+        8000,
+        '件',
+        'B20260602',
+        'qualified',
+        '',
+      ],
+      [
+        'LB20260602001',
+        3,
+        'WO003',
+        3,
+        'P003',
+        '不干胶标签',
+        10000,
+        '件',
+        'B20260603',
+        'pending',
+        '待检',
+      ],
+      [
+        'LB20260602002',
+        4,
+        'WO004',
+        4,
+        'P004',
+        '丝印面板',
+        2000,
+        '件',
+        'B20260604',
+        'qualified',
+        '',
+      ],
+      [
+        'LB20260603001',
+        5,
+        'WO005',
+        5,
+        'P005',
+        'UV油墨标签',
+        6000,
+        '件',
+        'B20260605',
+        'unqualified',
+        '色差',
+      ],
     ];
     for (const l of labels) {
       await execute(
@@ -790,13 +1473,81 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // ink_opening_record 测试数据
-  const ioCnt: any = await query('SELECT COUNT(*) as cnt FROM ink_opening_record');
+  const ioCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM ink_opening_record');
   if (ioCnt[0]?.cnt === 0) {
     const openings = [
-      ['INK001', 1, 'INK-C001', 'UV油墨-青色', 'B20260601', null, 'uv', '2026-06-01 08:00:00', 168, '2026-06-08 08:00:00', 5.0, 'kg', 1, '陈师傅', 1, ''],
-      ['INK002', 2, 'INK-C002', 'UV油墨-品红', 'B20260602', null, 'uv', '2026-06-01 09:00:00', 168, '2026-06-08 09:00:00', 3.5, 'kg', 1, '陈师傅', 1, ''],
-      ['INK003', 3, 'INK-C003', '丝印油墨-白色', 'B20260603', null, 'solvent', '2026-06-02 10:00:00', 72, '2026-06-05 10:00:00', 8.0, 'kg', 1, '李师傅', 1, ''],
-      ['INK004', 4, 'INK-C004', '水性油墨-黑色', 'B20260604', null, 'water', '2026-05-20 08:00:00', 48, '2026-05-22 08:00:00', 10.0, 'kg', 1, '李师傅', 2, '已过期'],
+      [
+        'INK001',
+        1,
+        'INK-C001',
+        'UV油墨-青色',
+        'B20260601',
+        null,
+        'uv',
+        '2026-06-01 08:00:00',
+        168,
+        '2026-06-08 08:00:00',
+        5.0,
+        'kg',
+        1,
+        '陈师傅',
+        1,
+        '',
+      ],
+      [
+        'INK002',
+        2,
+        'INK-C002',
+        'UV油墨-品红',
+        'B20260602',
+        null,
+        'uv',
+        '2026-06-01 09:00:00',
+        168,
+        '2026-06-08 09:00:00',
+        3.5,
+        'kg',
+        1,
+        '陈师傅',
+        1,
+        '',
+      ],
+      [
+        'INK003',
+        3,
+        'INK-C003',
+        '丝印油墨-白色',
+        'B20260603',
+        null,
+        'solvent',
+        '2026-06-02 10:00:00',
+        72,
+        '2026-06-05 10:00:00',
+        8.0,
+        'kg',
+        1,
+        '李师傅',
+        1,
+        '',
+      ],
+      [
+        'INK004',
+        4,
+        'INK-C004',
+        '水性油墨-黑色',
+        'B20260604',
+        null,
+        'water',
+        '2026-05-20 08:00:00',
+        48,
+        '2026-05-22 08:00:00',
+        10.0,
+        'kg',
+        1,
+        '李师傅',
+        2,
+        '已过期',
+      ],
     ];
     for (const o of openings) {
       await execute(
@@ -808,12 +1559,48 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // ink_mixed_batch 测试数据
-  const imCnt: any = await query('SELECT COUNT(*) as cnt FROM ink_mixed_batch');
+  const imCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM ink_mixed_batch');
   if (imCnt[0]?.cnt === 0) {
     const mixings = [
-      ['IM20260601001', 'F001', 'PET标签专色蓝', 2.5, 'kg', '2026-06-01', '2026-06-08', 1, '陈师傅', 2, ''],
-      ['IM20260601002', 'F002', 'PVC标签专色红', 3.0, 'kg', '2026-06-01', '2026-06-08', 1, '陈师傅', 2, ''],
-      ['IM20260602001', 'F003', '丝印白色调配', 5.0, 'kg', '2026-06-02', '2026-06-09', 1, '李师傅', 1, ''],
+      [
+        'IM20260601001',
+        'F001',
+        'PET标签专色蓝',
+        2.5,
+        'kg',
+        '2026-06-01',
+        '2026-06-08',
+        1,
+        '陈师傅',
+        2,
+        '',
+      ],
+      [
+        'IM20260601002',
+        'F002',
+        'PVC标签专色红',
+        3.0,
+        'kg',
+        '2026-06-01',
+        '2026-06-08',
+        1,
+        '陈师傅',
+        2,
+        '',
+      ],
+      [
+        'IM20260602001',
+        'F003',
+        '丝印白色调配',
+        5.0,
+        'kg',
+        '2026-06-02',
+        '2026-06-09',
+        1,
+        '李师傅',
+        1,
+        '',
+      ],
     ];
     for (const m of mixings) {
       await execute(
@@ -825,12 +1612,72 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // ink_mixed_record 测试数据 (调墨记录 - 前端使用此表)
-  const imrCnt: any = await query('SELECT COUNT(*) as cnt FROM ink_mixed_record');
+  const imrCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM ink_mixed_record');
   if (imrCnt[0]?.cnt === 0) {
     const mixedRecords = [
-      ['IMR20260601001', 1, 'INK-C001', 'UV油墨-青色', '1:0.5:0.3', 'PET标签专色蓝', 'BLUE-001', null, null, '2026-06-01 10:00:00', 1, '陈师傅', 2.5, 'kg', null, null, 2, '2026-06-08 10:00:00', ''],
-      ['IMR20260601002', 2, 'INK-C002', 'UV油墨-品红', '1:0.3:0.2', 'PVC标签专色红', 'RED-001', null, null, '2026-06-01 14:00:00', 1, '陈师傅', 3.0, 'kg', null, null, 2, '2026-06-08 14:00:00', ''],
-      ['IMR20260602001', 3, 'INK-C003', '丝印油墨-白色', '1:0.1', '丝印白色调配', 'WHITE-001', null, null, '2026-06-02 09:00:00', 1, '李师傅', 5.0, 'kg', null, null, 1, '2026-06-09 09:00:00', ''],
+      [
+        'IMR20260601001',
+        1,
+        'INK-C001',
+        'UV油墨-青色',
+        '1:0.5:0.3',
+        'PET标签专色蓝',
+        'BLUE-001',
+        null,
+        null,
+        '2026-06-01 10:00:00',
+        1,
+        '陈师傅',
+        2.5,
+        'kg',
+        null,
+        null,
+        2,
+        '2026-06-08 10:00:00',
+        '',
+      ],
+      [
+        'IMR20260601002',
+        2,
+        'INK-C002',
+        'UV油墨-品红',
+        '1:0.3:0.2',
+        'PVC标签专色红',
+        'RED-001',
+        null,
+        null,
+        '2026-06-01 14:00:00',
+        1,
+        '陈师傅',
+        3.0,
+        'kg',
+        null,
+        null,
+        2,
+        '2026-06-08 14:00:00',
+        '',
+      ],
+      [
+        'IMR20260602001',
+        3,
+        'INK-C003',
+        '丝印油墨-白色',
+        '1:0.1',
+        '丝印白色调配',
+        'WHITE-001',
+        null,
+        null,
+        '2026-06-02 09:00:00',
+        1,
+        '李师傅',
+        5.0,
+        'kg',
+        null,
+        null,
+        1,
+        '2026-06-09 09:00:00',
+        '',
+      ],
     ];
     for (const mr of mixedRecords) {
       await execute(
@@ -842,11 +1689,33 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // eqp_scrap 测试数据
-  const esCnt: any = await query('SELECT COUNT(*) as cnt FROM eqp_scrap');
+  const esCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM eqp_scrap');
   if (esCnt[0]?.cnt === 0) {
     const scraps = [
-      ['ES20260601001', 1, 'EQ001', '旧式印刷机A', '2026-06-01', '设备老化，维修成本过高', 500000, 50000, '张总', ''],
-      ['ES20260602001', 2, 'EQ002', '切纸机B', '2026-06-02', '精度不达标', 80000, 10000, '张总', ''],
+      [
+        'ES20260601001',
+        1,
+        'EQ001',
+        '旧式印刷机A',
+        '2026-06-01',
+        '设备老化，维修成本过高',
+        500000,
+        50000,
+        '张总',
+        '',
+      ],
+      [
+        'ES20260602001',
+        2,
+        'EQ002',
+        '切纸机B',
+        '2026-06-02',
+        '精度不达标',
+        80000,
+        10000,
+        '张总',
+        '',
+      ],
     ];
     for (const s of scraps) {
       await execute(
@@ -858,12 +1727,42 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // eqp_repair 测试数据
-  const erCnt: any = await query('SELECT COUNT(*) as cnt FROM eqp_repair');
+  const erCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM eqp_repair');
   if (erCnt[0]?.cnt === 0) {
     const repairs = [
-      ['ER20260601001', 3, 'EQ003', 'UV印刷机C', '2026-06-01', 'UV灯管故障，需更换', 'corrective', '赵师傅', ''],
-      ['ER20260602001', 4, 'EQ004', '模切机D', '2026-06-02', '模具磨损', 'preventive', '钱师傅', '定期维护'],
-      ['ER20260603001', 5, 'EQ005', '复卷机E', '2026-06-03', '传动带松动', 'corrective', '赵师傅', ''],
+      [
+        'ER20260601001',
+        3,
+        'EQ003',
+        'UV印刷机C',
+        '2026-06-01',
+        'UV灯管故障，需更换',
+        'corrective',
+        '赵师傅',
+        '',
+      ],
+      [
+        'ER20260602001',
+        4,
+        'EQ004',
+        '模切机D',
+        '2026-06-02',
+        '模具磨损',
+        'preventive',
+        '钱师傅',
+        '定期维护',
+      ],
+      [
+        'ER20260603001',
+        5,
+        'EQ005',
+        '复卷机E',
+        '2026-06-03',
+        '传动带松动',
+        'corrective',
+        '赵师傅',
+        '',
+      ],
     ];
     for (const r of repairs) {
       await execute(
@@ -875,12 +1774,48 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // eqp_calibration 测试数据
-  const ecCnt: any = await query('SELECT COUNT(*) as cnt FROM eqp_calibration');
+  const ecCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM eqp_calibration');
   if (ecCnt[0]?.cnt === 0) {
     const calibrations = [
-      ['EC20260601001', 6, 'EQ006', '色差仪F', '2026-06-01', '2026-12-01', '国家计量院', 'qualified', 'CERT20260601', 500, ''],
-      ['EC20260602001', 7, 'EQ007', '厚度仪G', '2026-06-02', '2026-12-02', '省计量所', 'qualified', 'CERT20260602', 300, ''],
-      ['EC20260603001', 8, 'EQ008', '电子秤H', '2026-06-03', '2026-09-03', '市计量站', 'unqualified', 'CERT20260603', 200, '需重新校准'],
+      [
+        'EC20260601001',
+        6,
+        'EQ006',
+        '色差仪F',
+        '2026-06-01',
+        '2026-12-01',
+        '国家计量院',
+        'qualified',
+        'CERT20260601',
+        500,
+        '',
+      ],
+      [
+        'EC20260602001',
+        7,
+        'EQ007',
+        '厚度仪G',
+        '2026-06-02',
+        '2026-12-02',
+        '省计量所',
+        'qualified',
+        'CERT20260602',
+        300,
+        '',
+      ],
+      [
+        'EC20260603001',
+        8,
+        'EQ008',
+        '电子秤H',
+        '2026-06-03',
+        '2026-09-03',
+        '市计量站',
+        'unqualified',
+        'CERT20260603',
+        200,
+        '需重新校准',
+      ],
     ];
     for (const c of calibrations) {
       await execute(
@@ -892,12 +1827,75 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // srm_supplier_eval 测试数据
-  const seCnt: any = await query('SELECT COUNT(*) as cnt FROM srm_supplier_eval');
+  const seCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM srm_supplier_eval');
   if (seCnt[0]?.cnt === 0) {
     const evals = [
-      ['SE20260601001', 1, '越南材料公司', 'month', '2026-05-01', '2026-05-31', 92, 88, 85, 90, 88.8, 96.5, 92.0, 12, 1, 'A', 2, '李评估', '2026-06-01', ''],
-      ['SE20260601002', 2, '胡志明油墨厂', 'month', '2026-05-01', '2026-05-31', 85, 78, 90, 82, 83.8, 90.0, 85.0, 8, 2, 'B', 1, '李评估', '2026-06-01', '交付需改善'],
-      ['SE20260602001', 3, '河内设备商', 'month', '2026-05-01', '2026-05-31', 70, 65, 80, 75, 72.5, 82.0, 70.0, 3, 3, 'C', 0, '王评估', '2026-06-02', '需重点跟进'],
+      [
+        'SE20260601001',
+        1,
+        '越南材料公司',
+        'month',
+        '2026-05-01',
+        '2026-05-31',
+        92,
+        88,
+        85,
+        90,
+        88.8,
+        96.5,
+        92.0,
+        12,
+        1,
+        'A',
+        2,
+        '李评估',
+        '2026-06-01',
+        '',
+      ],
+      [
+        'SE20260601002',
+        2,
+        '胡志明油墨厂',
+        'month',
+        '2026-05-01',
+        '2026-05-31',
+        85,
+        78,
+        90,
+        82,
+        83.8,
+        90.0,
+        85.0,
+        8,
+        2,
+        'B',
+        1,
+        '李评估',
+        '2026-06-01',
+        '交付需改善',
+      ],
+      [
+        'SE20260602001',
+        3,
+        '河内设备商',
+        'month',
+        '2026-05-01',
+        '2026-05-31',
+        70,
+        65,
+        80,
+        75,
+        72.5,
+        82.0,
+        70.0,
+        3,
+        3,
+        'C',
+        0,
+        '王评估',
+        '2026-06-02',
+        '需重点跟进',
+      ],
     ];
     for (const e of evals) {
       await execute(
@@ -909,12 +1907,66 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // outsource_order 测试数据
-  const ooCnt: any = await query('SELECT COUNT(*) as cnt FROM outsource_order');
+  const ooCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM outsource_order');
   if (ooCnt[0]?.cnt === 0) {
     const oorders = [
-      ['OO20260601001', 1, 'WO001', 1, '越南材料公司', 1, 'P001', 'PET薄膜标签', 2000, '件', 0.50, 1000, '2026-06-15', 'process', '丝印工序', 2, ''],
-      ['OO20260601002', 2, 'WO002', 2, '胡志明油墨厂', 2, 'P002', 'PVC薄膜标签', 3000, '件', 0.35, 1050, '2026-06-18', 'process', '模切工序', 1, ''],
-      ['OO20260602001', 3, 'WO003', 1, '越南材料公司', 3, 'P003', '不干胶标签', 5000, '件', 0.25, 1250, '2026-06-20', 'process', '覆膜工序', 0, ''],
+      [
+        'OO20260601001',
+        1,
+        'WO001',
+        1,
+        '越南材料公司',
+        1,
+        'P001',
+        'PET薄膜标签',
+        2000,
+        '件',
+        0.5,
+        1000,
+        '2026-06-15',
+        'process',
+        '丝印工序',
+        2,
+        '',
+      ],
+      [
+        'OO20260601002',
+        2,
+        'WO002',
+        2,
+        '胡志明油墨厂',
+        2,
+        'P002',
+        'PVC薄膜标签',
+        3000,
+        '件',
+        0.35,
+        1050,
+        '2026-06-18',
+        'process',
+        '模切工序',
+        1,
+        '',
+      ],
+      [
+        'OO20260602001',
+        3,
+        'WO003',
+        1,
+        '越南材料公司',
+        3,
+        'P003',
+        '不干胶标签',
+        5000,
+        '件',
+        0.25,
+        1250,
+        '2026-06-20',
+        'process',
+        '覆膜工序',
+        0,
+        '',
+      ],
     ];
     for (const o of oorders) {
       await execute(
@@ -926,7 +1978,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // outsource_issue 测试数据
-  const oiCnt: any = await query('SELECT COUNT(*) as cnt FROM outsource_issue');
+  const oiCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM outsource_issue');
   if (oiCnt[0]?.cnt === 0) {
     const oissues = [
       ['OIS20260601001', 1, 'OO20260601001', 1, '2026-06-05', 2, '王操作', ''],
@@ -942,11 +1994,37 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // outsource_receive 测试数据
-  const orCnt: any = await query('SELECT COUNT(*) as cnt FROM outsource_receive');
+  const orCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM outsource_receive');
   if (orCnt[0]?.cnt === 0) {
     const oreceives = [
-      ['ORC20260615001', 1, 'OO20260601001', 1, '2026-06-15', 2000, 1980, 20, 'qualified', 2, '王操作', ''],
-      ['ORC20260618001', 2, 'OO20260601002', 1, '2026-06-18', 3000, 2950, 50, 'partial', 1, '李操作', '部分不良'],
+      [
+        'ORC20260615001',
+        1,
+        'OO20260601001',
+        1,
+        '2026-06-15',
+        2000,
+        1980,
+        20,
+        'qualified',
+        2,
+        '王操作',
+        '',
+      ],
+      [
+        'ORC20260618001',
+        2,
+        'OO20260601002',
+        1,
+        '2026-06-18',
+        3000,
+        2950,
+        50,
+        'partial',
+        1,
+        '李操作',
+        '部分不良',
+      ],
     ];
     for (const r of oreceives) {
       await execute(
@@ -958,11 +2036,41 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // outsource_settlement 测试数据
-  const osCnt: any = await query('SELECT COUNT(*) as cnt FROM outsource_settlement');
+  const osCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM outsource_settlement');
   if (osCnt[0]?.cnt === 0) {
     const osettlements = [
-      ['OS20260620001', 1, 'OO20260601001', 1, '越南材料公司', '2026-06-20', 1980, 0.50, 990, 20, 970, 'paid', 2, ''],
-      ['OS20260625001', 2, 'OO20260601002', 2, '胡志明油墨厂', '2026-06-25', 2950, 0.35, 1032.5, 50, 982.5, 'unpaid', 1, ''],
+      [
+        'OS20260620001',
+        1,
+        'OO20260601001',
+        1,
+        '越南材料公司',
+        '2026-06-20',
+        1980,
+        0.5,
+        990,
+        20,
+        970,
+        'paid',
+        2,
+        '',
+      ],
+      [
+        'OS20260625001',
+        2,
+        'OO20260601002',
+        2,
+        '胡志明油墨厂',
+        '2026-06-25',
+        2950,
+        0.35,
+        1032.5,
+        50,
+        982.5,
+        'unpaid',
+        1,
+        '',
+      ],
     ];
     for (const s of osettlements) {
       await execute(
@@ -974,15 +2082,87 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // fin_cost_record 测试数据
-  const fcCnt: any = await query('SELECT COUNT(*) as cnt FROM fin_cost_record');
+  const fcCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM fin_cost_record');
   if (fcCnt[0]?.cnt === 0) {
     const costs = [
-      ['FC20260601001', 'material', '原材料', '2026-06-01', 25000, 'ORD001', 'PET薄膜标签', '印刷车间', 'PET材料采购', 1, ''],
-      ['FC20260601002', 'material', '原材料', '2026-06-01', 18000, 'ORD002', 'PVC薄膜标签', '印刷车间', 'PVC材料采购', 1, ''],
-      ['FC20260602001', 'labor', '人工', '2026-06-02', 15000, null, '', '印刷车间', '6月工资', 1, ''],
-      ['FC20260602002', 'overhead', '制造费用', '2026-06-02', 8000, null, '', '全厂', '电费分摊', 1, ''],
-      ['FC20260603001', 'material', '原材料', '2026-06-03', 12000, 'ORD003', '不干胶标签', '模切车间', '不干胶材料采购', 1, ''],
-      ['FC20260603002', 'outsource', '委外费用', '2026-06-03', 990, 'OO20260601001', 'PET薄膜标签', '外协', '委外丝印', 1, ''],
+      [
+        'FC20260601001',
+        'material',
+        '原材料',
+        '2026-06-01',
+        25000,
+        'ORD001',
+        'PET薄膜标签',
+        '印刷车间',
+        'PET材料采购',
+        1,
+        '',
+      ],
+      [
+        'FC20260601002',
+        'material',
+        '原材料',
+        '2026-06-01',
+        18000,
+        'ORD002',
+        'PVC薄膜标签',
+        '印刷车间',
+        'PVC材料采购',
+        1,
+        '',
+      ],
+      [
+        'FC20260602001',
+        'labor',
+        '人工',
+        '2026-06-02',
+        15000,
+        null,
+        '',
+        '印刷车间',
+        '6月工资',
+        1,
+        '',
+      ],
+      [
+        'FC20260602002',
+        'overhead',
+        '制造费用',
+        '2026-06-02',
+        8000,
+        null,
+        '',
+        '全厂',
+        '电费分摊',
+        1,
+        '',
+      ],
+      [
+        'FC20260603001',
+        'material',
+        '原材料',
+        '2026-06-03',
+        12000,
+        'ORD003',
+        '不干胶标签',
+        '模切车间',
+        '不干胶材料采购',
+        1,
+        '',
+      ],
+      [
+        'FC20260603002',
+        'outsource',
+        '委外费用',
+        '2026-06-03',
+        990,
+        'OO20260601001',
+        'PET薄膜标签',
+        '外协',
+        '委外丝印',
+        1,
+        '',
+      ],
     ];
     for (const c of costs) {
       await execute(
@@ -994,12 +2174,51 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   // purchase_request 测试数据 - 使用实际表名 pur_request
-  const prCnt: any = await query('SELECT COUNT(*) as cnt FROM pur_request');
+  const prCnt = await query<CountRow>('SELECT COUNT(*) as cnt FROM pur_request');
   if (prCnt[0]?.cnt === 0) {
     const requests = [
-      ['PR20260601001', '2026-06-01', 'material', '印刷车间', '张采购', 25000, 'CNY', 2, 1, '2026-06-10', '越南材料公司', '库存不足，需补货'],
-      ['PR20260601002', '2026-06-01', 'material', '印刷车间', '张采购', 5000, 'CNY', 1, 2, '2026-06-12', '胡志明油墨厂', '生产需求'],
-      ['PR20260602001', '2026-06-02', 'material', '模切车间', '李采购', 4000, 'CNY', 0, 1, '2026-06-15', '', 'UV油墨库存预警'],
+      [
+        'PR20260601001',
+        '2026-06-01',
+        'material',
+        '印刷车间',
+        '张采购',
+        25000,
+        'CNY',
+        2,
+        1,
+        '2026-06-10',
+        '越南材料公司',
+        '库存不足，需补货',
+      ],
+      [
+        'PR20260601002',
+        '2026-06-01',
+        'material',
+        '印刷车间',
+        '张采购',
+        5000,
+        'CNY',
+        1,
+        2,
+        '2026-06-12',
+        '胡志明油墨厂',
+        '生产需求',
+      ],
+      [
+        'PR20260602001',
+        '2026-06-02',
+        'material',
+        '模切车间',
+        '李采购',
+        4000,
+        'CNY',
+        0,
+        1,
+        '2026-06-15',
+        '',
+        'UV油墨库存预警',
+      ],
     ];
     for (const r of requests) {
       await execute(
@@ -1010,5 +2229,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     results.push('pur_request: 3 records');
   }
 
+  secureLog('info', 'setup/create-tables: 建表完成', {
+    userId: userInfo.userId,
+    username: userInfo.username,
+    tableCount: results.length,
+  });
   return successResponse(results, 'Tables created successfully');
 });

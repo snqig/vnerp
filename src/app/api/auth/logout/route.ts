@@ -11,14 +11,14 @@ export const POST = withAuthAndErrorHandler(
     if (token) {
       // 将当前 token 加入黑名单（过期时间设为 24h 后，与 JWT 过期时间一致）
       const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
-      revokeToken(`token:${userInfo.userId}:${token.slice(-20)}`, expiresAt);
+      await revokeToken(`token:${userInfo.userId}:${token.slice(-20)}`, expiresAt);
     }
 
     // 删除 refresh token（如果请求体中提供）
     try {
       const body = await request.json();
       if (body.refreshToken) {
-        removeRefreshToken(body.refreshToken);
+        await removeRefreshToken(body.refreshToken);
       }
     } catch {
       // 请求体可能为空，忽略
