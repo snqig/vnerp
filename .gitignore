@@ -86,3 +86,19 @@ i18n-missing.json
 
 # 数据库备份
 /backups/
+
+# 测试运行产物（E2E 截图目录、Playwright 结果目录）
+/test-screenshots/
+/test-results/
+/test-results.json
+/playwright-report/
+
+# i18n 检查脚本输出目录（截图、result.json）
+/scripts/i18n-check/
+
+# 临时覆盖率/调试脚本
+/scripts/tmp-cov.js
+
+# AI 智能体实验目录（与 ERP 核心业务无关）
+/agency-agents/
+agency-agents
