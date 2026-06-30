@@ -143,6 +143,8 @@ function SortableMenuItem({
       <div ref={setNodeRef} style={style} className="mb-1">
         <button
           onClick={onToggle}
+          aria-expanded={expanded}
+          aria-label={`${getMenuName(menu)} ${expanded ? 'collapse' : 'expand'}`}
           className={cn(
             'w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group',
             active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
@@ -151,20 +153,25 @@ function SortableMenuItem({
         >
           <div className="flex items-center gap-3 flex-1">
             {!collapsed && (
-              <div
+              <button
                 {...attributes}
                 {...listeners}
-                className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Drag to reorder"
+                className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-0"
                 onClick={(e) => e.stopPropagation()}
               >
-                <GripVertical className="w-3 h-3 text-muted-foreground" />
-              </div>
+                <GripVertical className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+              </button>
             )}
             {getIcon(menu.icon)}
             {!collapsed && <span>{getMenuName(menu)}</span>}
           </div>
           {!collapsed &&
-            (expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
+            (expanded ? (
+              <ChevronDown className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <ChevronRight className="w-4 h-4" aria-hidden="true" />
+            ))}
         </button>
         {expanded && !collapsed && (
           <div className="mt-1 ml-4">
@@ -188,14 +195,15 @@ function SortableMenuItem({
         title={collapsed ? getMenuName(menu) : undefined}
       >
         {!collapsed && (
-          <div
+          <button
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="Drag to reorder"
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-0"
             onClick={(e) => e.preventDefault()}
           >
-            <GripVertical className="w-3 h-3 text-muted-foreground" />
-          </div>
+            <GripVertical className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+          </button>
         )}
         {getIcon(menu.icon)}
         {!collapsed && <span>{getMenuName(menu)}</span>}
@@ -207,6 +215,9 @@ function SortableMenuItem({
 interface SidebarProps {
   navigationMode?: NavigationMode;
 }
+
+// 模块级缓存已警告过的翻译缺失键，避免重复打印（不触发重渲染）
+const warnedKeys = new Set<string>();
 
 export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   const pathname = usePathname();
@@ -232,14 +243,19 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
         if (translated && translated !== menu.code && translated.trim() !== '') {
           return translated;
         } else {
-          console.warn(`[i18n:Nav] ⚠ 菜单翻译缺失: code="${menu.code}", 原始名称="${menu.name}", 回退到数据库名称`);
+          // 只在首次缺失时打印一次警告
+          if (!warnedKeys.has(menu.code)) {
+            warnedKeys.add(menu.code);
+            console.warn(`[i18n:Nav] ⚠ 菜单翻译缺失: code="${menu.code}", 原始名称="${menu.name}"`);
+          }
         }
       } catch {
-        // 翻译键不存在，使用原始名称
-        console.warn(`[i18n:Nav] ⚠ 菜单翻译异常: code="${menu.code}", 回退到数据库名称="${menu.name}"`);
+        // 只在首次异常时打印一次警告
+        if (!warnedKeys.has(menu.code)) {
+          warnedKeys.add(menu.code);
+          console.warn(`[i18n:Nav] ⚠️ 菜单翻译异常: code="${menu.code}"`);
+        }
       }
-    } else {
-      console.warn(`[i18n:Nav] ⚠ 菜单缺少code字段: name="${menu.name}", 无法查找翻译`);
     }
     return menu.name;
   };
@@ -468,6 +484,8 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
         <div key={menu.id} className="mb-1">
           <button
             onClick={() => toggleMenu(menu.code)}
+            aria-expanded={isExpanded}
+            aria-label={`${getMenuName(menu)} ${isExpanded ? 'collapse' : 'expand'}`}
             className={cn(
               'w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-colors',
               active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent'
@@ -480,9 +498,9 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
             </div>
             {!collapsed &&
               (isExpanded ? (
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-4 h-4" aria-hidden="true" />
               ) : (
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4" aria-hidden="true" />
               ))}
           </button>
           {isExpanded && !collapsed && (

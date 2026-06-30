@@ -6,9 +6,9 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProviderComponent } from '@/components/ui/toast';
 import { SnowAdminThemeProvider } from '@/hooks/useSnowAdminTheme';
 import SystemConfigInitializer from '@/components/SystemConfigInitializer';
+import { HtmlLangSetter } from '@/components/HtmlLangSetter';
 import { query } from '@/lib/db';
 
-// 公司名称缓存
 let cachedCompanyName: string | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_TTL = 5 * 60 * 1000;
@@ -19,7 +19,7 @@ async function getCompanyName(): Promise<string> {
     return cachedCompanyName;
   }
   try {
-    const rows: any = await query(
+    const rows = await query<{ config_value: string }[]>(
       `SELECT config_value FROM sys_config WHERE config_key IN ('company_name', 'company_short_name') ORDER BY FIELD(config_key, 'company_name', 'company_short_name') LIMIT 1`
     );
     if (Array.isArray(rows) && rows.length > 0 && rows[0]?.config_value) {
@@ -47,7 +47,6 @@ export default async function LocaleLayout({
   const { locale: rawLocale } = await params;
   const locale = (locales as readonly string[]).includes(rawLocale) ? rawLocale as Locale : 'zh-CN';
 
-  // 验证 locale 是否有效
   if (!locales.includes(locale)) {
     notFound();
   }
@@ -56,26 +55,16 @@ export default async function LocaleLayout({
   const companyName = await getCompanyName();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
-        <title>{`${companyName} | VNERP`}</title>
-      </head>
-      <body className="antialiased bg-background text-foreground" suppressHydrationWarning>
-        <IntlProvider locale={locale} messages={messages}>
-          <SnowAdminThemeProvider>
-            <AuthProvider>
-              <SystemConfigInitializer />
-              <ToastProviderComponent>{children}</ToastProviderComponent>
-            </AuthProvider>
-          </SnowAdminThemeProvider>
-        </IntlProvider>
-      </body>
-    </html>
+    <>
+      <HtmlLangSetter locale={locale} />
+      <IntlProvider locale={locale} messages={messages}>
+        <SnowAdminThemeProvider>
+          <AuthProvider>
+            <SystemConfigInitializer />
+            <ToastProviderComponent>{children}</ToastProviderComponent>
+          </AuthProvider>
+        </SnowAdminThemeProvider>
+      </IntlProvider>
+    </>
   );
 }
