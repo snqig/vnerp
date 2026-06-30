@@ -3,7 +3,7 @@
  * 使用 Vitest 测试框架
  */
 
-import { defineConfig } from 'vitest/config';
+import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
@@ -17,6 +17,8 @@ export default defineConfig({
       'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
       'tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
     ],
+    // 排除 Playwright E2E 用例（用 @playwright/test 的 test.describe，会被 vitest 误抓报错）
+    exclude: [...configDefaults.exclude, 'tests/**/*.spec.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],

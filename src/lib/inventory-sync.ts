@@ -117,7 +117,7 @@ export async function adjustInventory(
     const result = await transaction(async (conn) => {
       // 1. 获取当前库存
       let selectSql = `
-        SELECT id, quantity, locked_qty, available_qty
+        SELECT id, quantity, locked_qty, available_qty, version
         FROM inv_inventory
         WHERE material_id = ? AND warehouse_id = ? AND deleted = 0
       `;
@@ -143,6 +143,15 @@ export async function adjustInventory(
           throw new Error('库存记录不存在，无法出库');
         }
 
+        secureLog('info', 'adjustInventory 创建新库存记录', {
+          operation: 'adjustInventory',
+          materialId,
+          warehouseId,
+          batchNo,
+          initialQty: quantity,
+          businessNo,
+        });
+
         const [insertResult]: any = await conn.execute(
           `INSERT INTO inv_inventory (
             material_id, warehouse_id, batch_no, quantity, locked_qty, available_qty
@@ -159,6 +168,22 @@ export async function adjustInventory(
         beforeQty = parseFloat(inv.quantity || '0');
         beforeLockedQty = parseFloat(inv.locked_qty || '0');
         beforeAvailableQty = parseFloat(inv.available_qty || '0');
+        const currentVersion = parseInt(inv.version || '1', 10);
+
+        // 读取到的库存状态（用于排查并发问题）
+        secureLog('debug', 'adjustInventory 读取当前库存', {
+          operation: 'adjustInventory',
+          materialId,
+          warehouseId,
+          batchNo,
+          inventoryId,
+          currentVersion,
+          beforeQty,
+          beforeLockedQty,
+          beforeAvailableQty,
+          adjustQty: quantity,
+          businessNo,
+        });
 
         // 计算新库存
         const newQty = beforeQty + quantity;
@@ -171,15 +196,53 @@ export async function adjustInventory(
           throw new Error(`可用库存不足: 当前可用 ${beforeAvailableQty}, 调整 ${quantity}`);
         }
 
-        // 更新库存
-        await conn.execute(
+        // 更新库存（乐观锁：带 version 条件，自增 version）
+        secureLog('debug', 'adjustInventory 执行 UPDATE', {
+          operation: 'adjustInventory',
+          inventoryId,
+          expectedVersion: currentVersion,
+          beforeQty,
+          newQty,
+          beforeAvailableQty,
+          newAvailableQty,
+          businessNo,
+        });
+
+        const [updateResult]: any = await conn.execute(
           `UPDATE inv_inventory SET
             quantity = ?,
             available_qty = ?,
+            version = version + 1,
             update_time = NOW()
-          WHERE id = ?`,
-          [newQty, newAvailableQty, inventoryId]
+          WHERE id = ? AND version = ?`,
+          [newQty, newAvailableQty, inventoryId, currentVersion]
         );
+
+        secureLog('debug', 'adjustInventory UPDATE 结果', {
+          operation: 'adjustInventory',
+          inventoryId,
+          affectedRows: updateResult.affectedRows,
+          expectedVersion: currentVersion,
+          newVersion: currentVersion + 1,
+          businessNo,
+        });
+
+        // 乐观锁冲突检测：affectedRows=0 表示 version 已被其他事务修改
+        if (updateResult.affectedRows === 0) {
+          secureLog('warn', '乐观锁并发冲突', {
+            operation: 'adjustInventory',
+            materialId,
+            warehouseId,
+            batchNo,
+            inventoryId,
+            expectedVersion: currentVersion,
+            beforeQty,
+            beforeAvailableQty,
+            adjustQty: quantity,
+            businessNo,
+          });
+          throw new Error('并发冲突: 库存已被其他事务修改，请重试');
+        }
       }
 
       // 2. 记录库存流水（不可修改、不可删除）
@@ -283,7 +346,7 @@ export async function lockInventory(
 
     await transaction(async (conn) => {
       const [rows]: any = await conn.execute(
-        `SELECT id, quantity, locked_qty, available_qty
+        `SELECT id, quantity, locked_qty, available_qty, version
          FROM inv_inventory
          WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
         [materialId, warehouseId]
@@ -296,21 +359,72 @@ export async function lockInventory(
       const inv = rows[0];
       const currentLocked = parseFloat(inv.locked_qty || '0');
       const currentAvailable = parseFloat(inv.available_qty || '0');
+      const currentVersion = parseInt(inv.version || '1', 10);
       const newLocked = currentLocked + lockQty;
       const newAvailable = currentAvailable - lockQty;
+
+      // 读取到的库存状态（用于排查并发问题）
+      secureLog('debug', 'lockInventory 读取当前库存', {
+        operation: 'lockInventory',
+        materialId,
+        warehouseId,
+        inventoryId: inv.id,
+        currentVersion,
+        currentLocked,
+        currentAvailable,
+        lockQty,
+        newLocked,
+        newAvailable,
+        businessNo,
+      });
 
       if (newAvailable < 0) {
         throw new Error(`可用库存不足，无法锁定: 可用 ${currentAvailable}, 需锁定 ${lockQty}`);
       }
 
-      await conn.execute(
+      // 更新库存（乐观锁：带 version 条件，自增 version）
+      secureLog('debug', 'lockInventory 执行 UPDATE', {
+        operation: 'lockInventory',
+        inventoryId: inv.id,
+        expectedVersion: currentVersion,
+        newLocked,
+        newAvailable,
+        businessNo,
+      });
+
+      const [lockUpdateResult]: any = await conn.execute(
         `UPDATE inv_inventory SET
           locked_qty = ?,
           available_qty = ?,
+          version = version + 1,
           update_time = NOW()
-        WHERE id = ?`,
-        [newLocked, newAvailable, inv.id]
+        WHERE id = ? AND version = ?`,
+        [newLocked, newAvailable, inv.id, currentVersion]
       );
+
+      secureLog('debug', 'lockInventory UPDATE 结果', {
+        operation: 'lockInventory',
+        inventoryId: inv.id,
+        affectedRows: lockUpdateResult.affectedRows,
+        expectedVersion: currentVersion,
+        newVersion: currentVersion + 1,
+        businessNo,
+      });
+
+      if (lockUpdateResult.affectedRows === 0) {
+        secureLog('warn', '乐观锁并发冲突', {
+          operation: 'lockInventory',
+          materialId,
+          warehouseId,
+          inventoryId: inv.id,
+          expectedVersion: currentVersion,
+          currentLocked,
+          currentAvailable,
+          lockQty,
+          businessNo,
+        });
+        throw new Error('并发冲突: 库存已被其他事务修改，请重试');
+      }
 
       // 记录锁定流水
       await conn.execute(
@@ -338,6 +452,13 @@ export async function lockInventory(
       message: `库存锁定成功: ${lockQty}`,
     };
   } catch (error: any) {
+    secureLog('error', '库存锁定失败', {
+      error: error.message,
+      materialId,
+      warehouseId,
+      lockQty,
+      businessNo,
+    });
     return {
       success: false,
       message: `库存锁定失败: ${error.message}`,
@@ -358,7 +479,7 @@ export async function unlockInventory(
   try {
     await transaction(async (conn) => {
       const [rows]: any = await conn.execute(
-        `SELECT id, quantity, locked_qty, available_qty
+        `SELECT id, quantity, locked_qty, available_qty, version
          FROM inv_inventory
          WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
         [materialId, warehouseId]
@@ -371,17 +492,68 @@ export async function unlockInventory(
       const inv = rows[0];
       const currentLocked = parseFloat(inv.locked_qty || '0');
       const currentAvailable = parseFloat(inv.available_qty || '0');
+      const currentVersion = parseInt(inv.version || '1', 10);
       const newLocked = Math.max(0, currentLocked - unlockQty);
       const newAvailable = currentAvailable + (currentLocked - newLocked);
 
-      await conn.execute(
+      // 读取到的库存状态（用于排查并发问题）
+      secureLog('debug', 'unlockInventory 读取当前库存', {
+        operation: 'unlockInventory',
+        materialId,
+        warehouseId,
+        inventoryId: inv.id,
+        currentVersion,
+        currentLocked,
+        currentAvailable,
+        unlockQty,
+        newLocked,
+        newAvailable,
+        businessNo,
+      });
+
+      // 更新库存（乐观锁：带 version 条件，自增 version）
+      secureLog('debug', 'unlockInventory 执行 UPDATE', {
+        operation: 'unlockInventory',
+        inventoryId: inv.id,
+        expectedVersion: currentVersion,
+        newLocked,
+        newAvailable,
+        businessNo,
+      });
+
+      const [unlockUpdateResult]: any = await conn.execute(
         `UPDATE inv_inventory SET
           locked_qty = ?,
           available_qty = ?,
+          version = version + 1,
           update_time = NOW()
-        WHERE id = ?`,
-        [newLocked, newAvailable, inv.id]
+        WHERE id = ? AND version = ?`,
+        [newLocked, newAvailable, inv.id, currentVersion]
       );
+
+      secureLog('debug', 'unlockInventory UPDATE 结果', {
+        operation: 'unlockInventory',
+        inventoryId: inv.id,
+        affectedRows: unlockUpdateResult.affectedRows,
+        expectedVersion: currentVersion,
+        newVersion: currentVersion + 1,
+        businessNo,
+      });
+
+      if (unlockUpdateResult.affectedRows === 0) {
+        secureLog('warn', '乐观锁并发冲突', {
+          operation: 'unlockInventory',
+          materialId,
+          warehouseId,
+          inventoryId: inv.id,
+          expectedVersion: currentVersion,
+          currentLocked,
+          currentAvailable,
+          unlockQty,
+          businessNo,
+        });
+        throw new Error('并发冲突: 库存已被其他事务修改，请重试');
+      }
 
       // 记录解锁流水
       await conn.execute(
@@ -409,6 +581,13 @@ export async function unlockInventory(
       message: `库存解锁成功: ${unlockQty}`,
     };
   } catch (error: any) {
+    secureLog('error', '库存解锁失败', {
+      error: error.message,
+      materialId,
+      warehouseId,
+      unlockQty,
+      businessNo,
+    });
     return {
       success: false,
       message: `库存解锁失败: ${error.message}`,

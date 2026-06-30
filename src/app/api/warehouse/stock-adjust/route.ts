@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { secureLog } from '@/lib/logger';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
@@ -73,12 +74,50 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
 export const PUT = withErrorHandler(async (request: NextRequest) => {
   const body = await request.json();
-  const { id, status, remark } = body;
-  if (status !== undefined)
-    await execute('UPDATE inv_stock_adjust SET status = ? WHERE id = ? AND deleted = 0', [
-      status,
+  const { id, status, remark, expectedStatus } = body;
+
+  // 状态变更采用乐观锁：前端传入 expectedStatus（当前状态），UPDATE 带 status 条件
+  // 防止多人同时审批同一调整单导致重复扣减库存
+  if (status !== undefined) {
+    if (expectedStatus === undefined) {
+      return errorResponse('缺少 expectedStatus 参数（当前状态）', 400, 400);
+    }
+
+    secureLog('debug', 'stock-adjust 状态变更（乐观锁）', {
+      operation: 'updateStockAdjustStatus',
       id,
-    ]);
+      targetStatus: status,
+      expectedStatus,
+    });
+
+    const result: any = await execute(
+      'UPDATE inv_stock_adjust SET status = ?, update_time = NOW() WHERE id = ? AND deleted = 0 AND status = ?',
+      [status, id, expectedStatus]
+    );
+
+    secureLog('debug', 'stock-adjust UPDATE 结果', {
+      operation: 'updateStockAdjustStatus',
+      id,
+      affectedRows: result.affectedRows,
+      expectedStatus,
+      targetStatus: status,
+    });
+
+    if (result.affectedRows === 0) {
+      secureLog('warn', '乐观锁并发冲突', {
+        operation: 'updateStockAdjustStatus',
+        id,
+        expectedStatus,
+        targetStatus: status,
+      });
+      return errorResponse(
+        '并发冲突: 调整单状态已被其他操作变更，请刷新后重试',
+        409,
+        409
+      );
+    }
+  }
+
   if (remark !== undefined)
     await execute('UPDATE inv_stock_adjust SET remark = ? WHERE id = ? AND deleted = 0', [
       remark,

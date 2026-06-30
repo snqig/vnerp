@@ -19,9 +19,8 @@ vi.mock('@/lib/logger', () => ({
 function makeEvent(eventType: string = 'test.event'): DomainEvent {
   return {
     eventType,
-    aggregateType: 'TestAggregate',
-    aggregateId: 1,
     occurredAt: new Date(),
+    payload: { aggregateType: 'TestAggregate', aggregateId: 1 },
   };
 }
 

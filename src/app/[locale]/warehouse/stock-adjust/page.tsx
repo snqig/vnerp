@@ -160,16 +160,26 @@ export default function StockAdjustPage() {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
-  const handleStatusChange = async (id: number, status: number) => {
+  const handleStatusChange = async (id: number, status: number, expectedStatus: number) => {
     try {
       const res = await authFetch('/api/warehouse/stock-adjust', {
         method: 'PUT',
-        body: JSON.stringify({ id, status }),
+        body: JSON.stringify({ id, status, expectedStatus }),
       });
       const result = await res.json();
       if (result.success) {
         toast({ title: tc('updateSuccess') });
         fetchData();
+      } else if (res.status === 409) {
+        // 乐观锁冲突：状态已被其他操作变更
+        toast({
+          title: tc('failed'),
+          description: result.message || '并发冲突，请刷新后重试',
+          variant: 'destructive',
+        });
+        fetchData();
+      } else {
+        toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
     } catch (e) {
       toast({ title: tc('failed'), variant: 'destructive' });
@@ -288,7 +298,7 @@ export default function StockAdjustPage() {
                               size="sm"
                               variant="ghost"
                               className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 2)}
+                              onClick={() => handleStatusChange(item.id, 2, item.status)}
                             >
                               {tc('audit')}
                             </Button>
@@ -298,7 +308,7 @@ export default function StockAdjustPage() {
                               size="sm"
                               variant="ghost"
                               className="h-6 text-xs px-2"
-                              onClick={() => handleStatusChange(item.id, 3)}
+                              onClick={() => handleStatusChange(item.id, 3, item.status)}
                             >
                               {t('complete')}
                             </Button>
@@ -339,7 +349,7 @@ export default function StockAdjustPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{t('totalRecordsCount', { count: total })}</span>
+          <span className="text-sm text-gray-500">{tc('total', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"

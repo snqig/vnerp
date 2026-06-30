@@ -527,4 +527,97 @@ describe('inventory-sync', () => {
       expect(result.list[0].operation_type_label).toBe('未知');
     });
   });
+
+  // ============================================================
+  // 乐观锁并发冲突测试（P0 并发保护）
+  // ============================================================
+  describe('乐观锁并发冲突保护', () => {
+    it('adjustInventory 检测到 version 不匹配时返回并发冲突失败', async () => {
+      // SELECT 返回 version=1
+      mockConn.execute.mockResolvedValueOnce([
+        [{ id: 1, quantity: '100', locked_qty: '0', available_qty: '100', version: 1 }],
+        [],
+      ] as any);
+      // UPDATE 因 version 已被其他事务改为 2，affectedRows=0
+      mockConn.execute.mockResolvedValueOnce([{ affectedRows: 0 }, []] as any);
+
+      const result = await adjustInventory({
+        materialId: 101,
+        warehouseId: 1,
+        batchNo: 'B001',
+        quantity: 50,
+        operationType: 'inbound',
+        businessType: '采购入库',
+        businessNo: 'IN001',
+        operatorId: 1,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('并发冲突');
+      // 验证 UPDATE 带 version 条件
+      expect(mockConn.execute).toHaveBeenCalledWith(
+        expect.stringContaining('AND version = ?'),
+        expect.arrayContaining([1])
+      );
+    });
+
+    it('lockInventory 检测到 version 不匹配时返回并发冲突失败', async () => {
+      // checkInventoryAvailability 先调用 query 检查库存
+      vi.mocked(query).mockResolvedValueOnce([
+        { quantity: 100, locked_qty: 0, available_qty: 100 },
+      ] as any);
+      // 事务内 SELECT
+      mockConn.execute.mockResolvedValueOnce([
+        [{ id: 1, quantity: '100', locked_qty: '0', available_qty: '100', version: 1 }],
+        [],
+      ] as any);
+      // UPDATE 因 version 不匹配，affectedRows=0
+      mockConn.execute.mockResolvedValueOnce([{ affectedRows: 0 }, []] as any);
+
+      const result = await lockInventory(101, 1, 30, 'LOCK001', 1);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('并发冲突');
+    });
+
+    it('unlockInventory 检测到 version 不匹配时返回并发冲突失败', async () => {
+      mockConn.execute.mockResolvedValueOnce([
+        [{ id: 1, quantity: '100', locked_qty: '30', available_qty: '70', version: 1 }],
+        [],
+      ] as any);
+      mockConn.execute.mockResolvedValueOnce([{ affectedRows: 0 }, []] as any);
+
+      const result = await unlockInventory(101, 1, 30, 'UNLOCK001', 1);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('并发冲突');
+    });
+
+    it('adjustInventory version 匹配时正常更新并自增 version', async () => {
+      mockConn.execute.mockResolvedValueOnce([
+        [{ id: 1, quantity: '100', locked_qty: '0', available_qty: '100', version: 1 }],
+        [],
+      ] as any);
+      mockConn.execute.mockResolvedValueOnce([{ affectedRows: 1 }, []] as any);
+      mockConn.execute.mockResolvedValueOnce([{ affectedRows: 1 }, []] as any);
+
+      const result = await adjustInventory({
+        materialId: 101,
+        warehouseId: 1,
+        batchNo: 'B001',
+        quantity: 50,
+        operationType: 'inbound',
+        businessType: '采购入库',
+        businessNo: 'IN002',
+        operatorId: 1,
+      });
+
+      expect(result.success).toBe(true);
+      // 验证 UPDATE 包含 version = version + 1
+      expect(mockConn.execute).toHaveBeenCalledWith(
+        expect.stringContaining('version = version + 1'),
+        expect.arrayContaining([1])
+      );
+    });
+  });
 });
