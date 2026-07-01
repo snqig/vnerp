@@ -18,6 +18,12 @@ export class StandardCardNotificationHandler implements EventHandler {
       case 'StandardCardObsoleted':
         await this.handleObsoleted(event);
         break;
+      case 'StandardCardRejected':
+        await this.handleRejected(event);
+        break;
+      case 'StandardCardNewVersionCreated':
+        await this.handleNewVersionCreated(event);
+        break;
       case 'StandardCardCreated':
         await this.handleCreated(event);
         break;
@@ -88,6 +94,46 @@ export class StandardCardNotificationHandler implements EventHandler {
     await getCacheManager().delete(`standard_card_list`);
   }
 
+  private async handleRejected(event: DomainEvent): Promise<void> {
+    const { standardCardId, code, version, reason, userId } = event.payload as {
+      standardCardId: number;
+      code: string;
+      version: string;
+      reason: string;
+      userId: number;
+    };
+    console.log(`[StandardCardNotification] 标准卡已驳回: ${code} V${version}`);
+
+    await db.insert('sys_notification', {
+      title: '标准卡审核被驳回',
+      content: `标准卡 ${code} V${version} 被驳回，原因：${reason}，请修改后重新提交`,
+      type: 'standard_card_rejected',
+      source_type: 'standard_card',
+      source_id: standardCardId,
+      receive_user: userId,
+      is_read: 0,
+    } as any);
+
+    await getCacheManager().delete(`standard_card_${standardCardId}`);
+    await getCacheManager().delete(`standard_card_list`);
+  }
+
+  private async handleNewVersionCreated(event: DomainEvent): Promise<void> {
+    const { parentStandardCardId, parentVersion, newVersion, code } = event.payload as {
+      parentStandardCardId: number;
+      parentVersion: string;
+      newVersion: string;
+      code: string;
+      userId: number;
+    };
+    console.log(
+      `[StandardCardNotification] 标准卡新版本创建: ${code} V${newVersion} (基于 V${parentVersion})`
+    );
+
+    await getCacheManager().delete(`standard_card_${parentStandardCardId}`);
+    await getCacheManager().delete(`standard_card_list`);
+  }
+
   private getProcessManagerUserId(): number {
     return 2;
   }
@@ -103,6 +149,8 @@ export class StandardCardNotificationHandler implements EventHandler {
       'StandardCardApproved',
       'StandardCardConfirmed',
       'StandardCardObsoleted',
+      'StandardCardRejected',
+      'StandardCardNewVersionCreated',
     ].includes(eventType);
   }
 }
