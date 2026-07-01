@@ -1,30 +1,34 @@
 import { db } from '@/lib/db';
 import { StandardCard, StandardCardProps } from '@/domain/standard-card/aggregates/StandardCard';
 import { StandardCardStatus } from '@/domain/standard-card/value-objects/StandardCardStatus';
-import { StandardCardType, getTypePrefix } from '@/domain/standard-card/value-objects/StandardCardType';
-import { IStandardCardRepository, StandardCardFilters } from '@/domain/standard-card/repositories/IStandardCardRepository';
+import {
+  StandardCardType,
+  getTypePrefix,
+} from '@/domain/standard-card/value-objects/StandardCardType';
+import {
+  IStandardCardRepository,
+  StandardCardFilters,
+} from '@/domain/standard-card/repositories/IStandardCardRepository';
 
 export class MysqlStandardCardRepository implements IStandardCardRepository {
   async findById(id: number): Promise<StandardCard | null> {
-    const rows = await db.query(
-      'SELECT * FROM prd_standard_card WHERE id = ? AND deleted = 0',
-      [id]
-    );
+    const rows = await db.query('SELECT * FROM prd_standard_card WHERE id = ? AND deleted = 0', [
+      id,
+    ]);
     if (rows.length === 0) return null;
     return this.mapToEntity(rows[0]);
   }
 
   async findByCode(code: string): Promise<StandardCard | null> {
-    const rows = await db.query(
-      'SELECT * FROM prd_standard_card WHERE code = ? AND deleted = 0',
-      [code]
-    );
+    const rows = await db.query('SELECT * FROM prd_standard_card WHERE code = ? AND deleted = 0', [
+      code,
+    ]);
     if (rows.length === 0) return null;
     return this.mapToEntity(rows[0]);
   }
 
   async findByMaterialId(materialId: number, includeObsolete = false): Promise<StandardCard[]> {
-    let params: any[] = [materialId];
+    const params: any[] = [materialId];
     let sql = 'SELECT * FROM prd_standard_card WHERE material_id = ?';
     if (!includeObsolete) {
       sql += ' AND is_obsolete = 0';
@@ -179,16 +183,15 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
         props.inkRequirement,
         props.toolingRequirement,
         props.processRequirement,
-        card.id
+        card.id,
       ]
     );
   }
 
   async delete(id: number): Promise<void> {
-    await db.execute(
-      'UPDATE prd_standard_card SET deleted = 1, update_time = NOW() WHERE id = ?',
-      [id]
-    );
+    await db.execute('UPDATE prd_standard_card SET deleted = 1, update_time = NOW() WHERE id = ?', [
+      id,
+    ]);
   }
 
   async exists(code: string): Promise<boolean> {
@@ -259,17 +262,15 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
 
 export class ColorStandardItemRepository {
   async findByStandardCardId(standardCardId: number): Promise<any[]> {
-    return await db.query(
-      'SELECT * FROM prd_color_standard_item WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    return await db.query('SELECT * FROM prd_color_standard_item WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
   }
 
   async saveBatch(standardCardId: number, items: any[]): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_color_standard_item WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_color_standard_item WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
     for (const item of items) {
       await db.insert('prd_color_standard_item', {
         standard_card_id: standardCardId,
@@ -285,10 +286,9 @@ export class ColorStandardItemRepository {
   }
 
   async deleteByStandardCardId(standardCardId: number): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_color_standard_item WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_color_standard_item WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
   }
 }
 
@@ -301,10 +301,9 @@ export class ProcessStandardItemRepository {
   }
 
   async saveBatch(standardCardId: number, items: any[]): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_process_standard_item WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_process_standard_item WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
     for (const item of items) {
       await db.insert('prd_process_standard_item', {
         standard_card_id: standardCardId,
@@ -324,26 +323,23 @@ export class ProcessStandardItemRepository {
   }
 
   async deleteByStandardCardId(standardCardId: number): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_process_standard_item WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_process_standard_item WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
   }
 }
 
 export class QualityStandardItemRepository {
   async findByStandardCardId(standardCardId: number): Promise<any[]> {
-    return await db.query(
-      'SELECT * FROM prd_quality_standard_item WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    return await db.query('SELECT * FROM prd_quality_standard_item WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
   }
 
   async saveBatch(standardCardId: number, items: any[]): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_quality_standard_item WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_quality_standard_item WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
     for (const item of items) {
       await db.insert('prd_quality_standard_item', {
         standard_card_id: standardCardId,
@@ -359,10 +355,9 @@ export class QualityStandardItemRepository {
   }
 
   async deleteByStandardCardId(standardCardId: number): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_quality_standard_item WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_quality_standard_item WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
   }
 }
 
@@ -378,10 +373,9 @@ export class StandardCardMaterialRepository {
   }
 
   async saveBatch(standardCardId: number, materials: any[]): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_standard_card_material WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_standard_card_material WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
     for (const m of materials) {
       await db.insert('prd_standard_card_material', {
         standard_card_id: standardCardId,
@@ -395,10 +389,9 @@ export class StandardCardMaterialRepository {
   }
 
   async deleteByStandardCardId(standardCardId: number): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_standard_card_material WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_standard_card_material WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
   }
 }
 
@@ -414,10 +407,9 @@ export class StandardCardInkRepository {
   }
 
   async saveBatch(standardCardId: number, inks: any[]): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_standard_card_ink WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_standard_card_ink WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
     for (const ink of inks) {
       await db.insert('prd_standard_card_ink', {
         standard_card_id: standardCardId,
@@ -430,26 +422,23 @@ export class StandardCardInkRepository {
   }
 
   async deleteByStandardCardId(standardCardId: number): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_standard_card_ink WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_standard_card_ink WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
   }
 }
 
 export class StandardCardToolingRepository {
   async findByStandardCardId(standardCardId: number): Promise<any[]> {
-    return await db.query(
-      'SELECT * FROM prd_standard_card_tooling WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    return await db.query('SELECT * FROM prd_standard_card_tooling WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
   }
 
   async saveBatch(standardCardId: number, toolings: any[]): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_standard_card_tooling WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_standard_card_tooling WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
     for (const t of toolings) {
       await db.insert('prd_standard_card_tooling', {
         standard_card_id: standardCardId,
@@ -461,19 +450,17 @@ export class StandardCardToolingRepository {
   }
 
   async deleteByStandardCardId(standardCardId: number): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_standard_card_tooling WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_standard_card_tooling WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
   }
 }
 
 export class StandardCardAttachmentRepository {
   async findByStandardCardId(standardCardId: number): Promise<any[]> {
-    return await db.query(
-      'SELECT * FROM prd_standard_card_attachment WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    return await db.query('SELECT * FROM prd_standard_card_attachment WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
   }
 
   async save(standardCardId: number, attachment: any): Promise<number> {
@@ -494,10 +481,9 @@ export class StandardCardAttachmentRepository {
   }
 
   async deleteByStandardCardId(standardCardId: number): Promise<void> {
-    await db.execute(
-      'DELETE FROM prd_standard_card_attachment WHERE standard_card_id = ?',
-      [standardCardId]
-    );
+    await db.execute('DELETE FROM prd_standard_card_attachment WHERE standard_card_id = ?', [
+      standardCardId,
+    ]);
   }
 }
 

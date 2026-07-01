@@ -88,6 +88,7 @@ i18n-missing.json
 /test_*.png
 /sample-*.png
 /orders-*.png
+/debug-*.png
 
 # 数据库备份
 /backups/
