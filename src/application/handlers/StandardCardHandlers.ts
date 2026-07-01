@@ -2,6 +2,7 @@ import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { DomainEvent } from '@/domain/standard-card/events/StandardCardEvents';
 import { db } from '@/lib/db';
 import { getCacheManager } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 export class StandardCardNotificationHandler implements EventHandler {
   async handle(event: DomainEvent): Promise<void> {
@@ -35,37 +36,68 @@ export class StandardCardNotificationHandler implements EventHandler {
   }
 
   private async handleSubmitted(event: DomainEvent): Promise<void> {
-    const { standardCardId, code, version, userId } = event.payload;
-    console.log(`[StandardCardNotification] 标准卡提交审核: ${code} V${version}`);
+    const { standardCardId, code, version, userId } = event.payload as {
+      standardCardId: number;
+      code: string;
+      version: string;
+      userId: number;
+    };
+    const ctx = { module: 'standard-card', action: 'handleSubmitted', userId, standardCardId };
+    logger.stepStart(ctx, '通知流程开始', { code, version });
 
-    await db.insert('sys_notification', {
-      title: '标准卡待审核',
-      content: `标准卡 ${code} V${version} 已提交，请尽快审核`,
-      type: 'standard_card_audit',
-      source_type: 'standard_card',
-      source_id: standardCardId,
-      receive_user: this.getProcessManagerUserId(),
-      is_read: 0,
-    } as any);
+    try {
+      await db.insert('sys_notification', {
+        title: '标准卡待审核',
+        content: `标准卡 ${code} V${version} 已提交，请尽快审核`,
+        type: 'standard_card_audit',
+        source_type: 'standard_card',
+        source_id: standardCardId,
+        receive_user: this.getProcessManagerUserId(),
+        is_read: 0,
+      } as any);
+      logger.db(ctx, 'insert', 'sys_notification', { source_id: standardCardId });
 
-    await getCacheManager().delete(`standard_card_list`);
+      await getCacheManager().delete(`standard_card_list`);
+      logger.stepEnd(ctx, '通知流程完成');
+    } catch (err) {
+      logger.error(ctx, '通知流程异常', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
+    }
   }
 
   private async handleApproved(event: DomainEvent): Promise<void> {
-    const { standardCardId, code, version, userId, approvalLevel } = event.payload;
-    console.log(`[StandardCardNotification] 标准卡已批准: ${code} V${version}`);
+    const { standardCardId, code, version, userId, approvalLevel } = event.payload as {
+      standardCardId: number;
+      code: string;
+      version: string;
+      userId: number;
+      approvalLevel: string;
+    };
+    const ctx = { module: 'standard-card', action: 'handleApproved', userId, standardCardId };
+    logger.stepStart(ctx, '审批通知流程开始', { code, version, approvalLevel });
 
-    await db.insert('sys_notification', {
-      title: '标准卡待总经理审批',
-      content: `标准卡 ${code} V${version} 已通过技术主管审核，请总经理审批`,
-      type: 'standard_card_approve',
-      source_type: 'standard_card',
-      source_id: standardCardId,
-      receive_user: this.getGeneralManagerUserId(),
-      is_read: 0,
-    } as any);
+    try {
+      await db.insert('sys_notification', {
+        title: '标准卡待总经理审批',
+        content: `标准卡 ${code} V${version} 已通过技术主管审核，请总经理审批`,
+        type: 'standard_card_approve',
+        source_type: 'standard_card',
+        source_id: standardCardId,
+        receive_user: this.getGeneralManagerUserId(),
+        is_read: 0,
+      } as any);
+      logger.db(ctx, 'insert', 'sys_notification', { source_id: standardCardId });
 
-    await getCacheManager().delete(`standard_card_${standardCardId}`);
+      await getCacheManager().delete(`standard_card_${standardCardId}`);
+      logger.stepEnd(ctx, '审批通知流程完成');
+    } catch (err) {
+      logger.error(ctx, '审批通知流程异常', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
+    }
   }
 
   private async handleConfirmed(event: DomainEvent): Promise<void> {

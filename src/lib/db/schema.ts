@@ -9,6 +9,7 @@ import {
   serial,
   json,
 } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
 
 // ==================== 基础主数据 ====================
 
@@ -25,8 +26,8 @@ export const customers = mysqlTable('customers', {
   creditUsed: decimal('credit_used', { precision: 15, scale: 2 }).default('0'), // 已用信用
   status: varchar('status', { length: 20 }).default('active'), // 状态
   remarks: text('remarks'), // 备注
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 产品档案
@@ -40,8 +41,8 @@ export const products = mysqlTable('products', {
   bomVersion: varchar('bom_version', { length: 20 }).default('V1.0'), // BOM版本
   customerId: int('customer_id').references(() => customers.id), // 所属客户
   status: varchar('status', { length: 20 }).default('active'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 物料（原料/辅料）
@@ -54,8 +55,8 @@ export const materials = mysqlTable('materials', {
   category: varchar('category', { length: 50 }), // 分类：原料/油墨/网版等
   safetyStock: decimal('safety_stock', { precision: 15, scale: 4 }).default('0'), // 安全库存
   status: varchar('status', { length: 20 }).default('active'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 供应商
@@ -67,8 +68,8 @@ export const suppliers = mysqlTable('suppliers', {
   phone: varchar('phone', { length: 50 }),
   address: varchar('address', { length: 500 }),
   status: varchar('status', { length: 20 }).default('active'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 设备档案
@@ -83,8 +84,8 @@ export const equipments = mysqlTable('equipments', {
   lastMaintenance: datetime('last_maintenance'), // 上次保养
   nextMaintenance: datetime('next_maintenance'), // 下次保养
   status: varchar('status', { length: 20 }).default('active'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 员工档案
@@ -96,8 +97,8 @@ export const employees = mysqlTable('employees', {
   position: varchar('position', { length: 50 }), // 职位
   phone: varchar('phone', { length: 50 }),
   status: varchar('status', { length: 20 }).default('active'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ==================== 仓库管理 ====================
@@ -110,7 +111,7 @@ export const warehouses = mysqlTable('warehouses', {
   type: varchar('type', { length: 20 }).notNull(), // 原料仓/成品仓/板房仓/油墨仓
   manager: varchar('manager', { length: 50 }),
   status: varchar('status', { length: 20 }).default('active'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 库位
@@ -125,7 +126,7 @@ export const locations = mysqlTable('locations', {
   shelf: varchar('shelf', { length: 50 }), // 货架
   layer: varchar('layer', { length: 50 }), // 层
   status: varchar('status', { length: 20 }).default('active'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 批次库存
@@ -155,8 +156,8 @@ export const inventoryBatches = mysqlTable('inventory_batches', {
   // 新增：批次追踪字段
   inspectionStatus: varchar('inspection_status', { length: 20 }).default('pending'), // pending/pass/fail
   quarantineStatus: varchar('quarantine_status', { length: 20 }).default('none'), // none/quarantined/released
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 库存事务记录
@@ -175,9 +176,9 @@ export const inventoryTransactions = mysqlTable('inventory_transactions', {
   sourceType: varchar('source_type', { length: 50 }),
   sourceNo: varchar('source_no', { length: 50 }),
   operatorId: int('operator_id').references(() => employees.id),
-  operatedAt: datetime('operated_at').default('CURRENT_TIMESTAMP'),
+  operatedAt: datetime('operated_at').default(sql`CURRENT_TIMESTAMP`),
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ==================== 订单管理 ====================
@@ -195,8 +196,8 @@ export const salesOrders = mysqlTable('sales_orders', {
   totalAmount: decimal('total_amount', { precision: 15, scale: 2 }).default('0'),
   remarks: text('remarks'),
   createdBy: int('created_by'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 销售订单明细
@@ -215,7 +216,7 @@ export const salesOrderItems = mysqlTable('sales_order_items', {
   deliveryDate: datetime('delivery_date'),
   status: varchar('status', { length: 20 }).default('pending'), // 待产/生产中/完成
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // BOM配方
@@ -228,8 +229,8 @@ export const boms = mysqlTable('boms', {
   status: varchar('status', { length: 20 }).default('active'),
   effectiveDate: datetime('effective_date'),
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // BOM明细
@@ -246,7 +247,7 @@ export const bomItems = mysqlTable('bom_items', {
   lossRate: decimal('loss_rate', { precision: 5, scale: 2 }).default('0'), // 损耗率
   sequence: int('sequence').default(0), // 工序顺序
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ==================== 生产管理 ====================
@@ -274,8 +275,8 @@ export const workOrders = mysqlTable('work_orders', {
   workshop: varchar('workshop', { length: 50 }),
   remarks: text('remarks'),
   createdBy: int('created_by'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 工序路线
@@ -288,7 +289,7 @@ export const processes = mysqlTable('processes', {
   standardTime: decimal('standard_time', { precision: 10, scale: 2 }), // 标准工时（分钟）
   setupTime: decimal('setup_time', { precision: 10, scale: 2 }), // 准备时间
   status: varchar('status', { length: 20 }).default('active'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 工单工序
@@ -307,7 +308,7 @@ export const workOrderProcesses = mysqlTable('work_order_processes', {
   status: varchar('status', { length: 20 }).default('pending'), // 待工/进行中/完成
   startTime: datetime('start_time'),
   endTime: datetime('end_time'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 生产报工记录
@@ -335,8 +336,8 @@ export const productionReports = mysqlTable('production_reports', {
   efficiency: decimal('efficiency', { precision: 5, scale: 2 }), // 效率%
   status: varchar('status', { length: 20 }).default('normal'), // 正常/预警
   remarks: text('remarks'),
-  reportedAt: datetime('reported_at').default('CURRENT_TIMESTAMP'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  reportedAt: datetime('reported_at').default(sql`CURRENT_TIMESTAMP`),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ==================== 品质管理 ====================
@@ -351,7 +352,7 @@ export const inspectionStandards = mysqlTable('inspection_standards', {
   materialId: int('material_id').references(() => materials.id),
   inspectionItems: json('inspection_items'), // 检验项目JSON
   status: varchar('status', { length: 20 }).default('active'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 检验记录
@@ -369,10 +370,10 @@ export const inspectionRecords = mysqlTable('inspection_records', {
   failQty: int('fail_qty'), // 不合格数
   result: varchar('result', { length: 20 }), // 合格/不合格/待判定
   inspectorId: int('inspector_id').references(() => employees.id),
-  inspectedAt: datetime('inspected_at').default('CURRENT_TIMESTAMP'),
+  inspectedAt: datetime('inspected_at').default(sql`CURRENT_TIMESTAMP`),
   inspectionData: json('inspection_data'), // 检验数据JSON
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 不良品记录
@@ -387,7 +388,7 @@ export const defectRecords = mysqlTable('defect_records', {
   handlerId: int('handler_id').references(() => employees.id),
   handledAt: datetime('handled_at'),
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ==================== 采购管理 ====================
@@ -401,7 +402,7 @@ export const purchaseRequests = mysqlTable('purchase_requests', {
   requestDate: datetime('request_date').notNull(),
   status: varchar('status', { length: 20 }).default('draft'), // 草稿/提交/采购中/完成
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 采购申请明细
@@ -418,7 +419,7 @@ export const purchaseRequestItems = mysqlTable('purchase_request_items', {
   requiredDate: datetime('required_date'),
   status: varchar('status', { length: 20 }).default('pending'),
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 采购订单
@@ -434,8 +435,8 @@ export const purchaseOrders = mysqlTable('purchase_orders', {
   totalAmount: decimal('total_amount', { precision: 15, scale: 2 }).default('0'),
   remarks: text('remarks'),
   createdBy: int('created_by'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 采购订单明细
@@ -454,7 +455,7 @@ export const purchaseOrderItems = mysqlTable('purchase_order_items', {
   amount: decimal('amount', { precision: 15, scale: 4 }),
   status: varchar('status', { length: 20 }).default('pending'),
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ==================== 委外管理 ====================
@@ -480,8 +481,8 @@ export const outsourceOrders = mysqlTable('outsource_orders', {
   amount: decimal('amount', { precision: 15, scale: 2 }),
   paymentStatus: varchar('payment_status', { length: 20 }).default('unpaid'), // 未付款/已付款/锁定
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ==================== 车辆派送 ====================
@@ -496,7 +497,7 @@ export const vehicles = mysqlTable('vehicles', {
   driver: varchar('driver', { length: 50 }),
   driverPhone: varchar('driver_phone', { length: 20 }),
   status: varchar('status', { length: 20 }).default('available'), // 可用/出车中/维修
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 派车单
@@ -514,8 +515,8 @@ export const deliveryOrders = mysqlTable('delivery_orders', {
   totalWeight: decimal('total_weight', { precision: 10, scale: 2 }),
   totalVolume: decimal('total_volume', { precision: 10, scale: 2 }),
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 派车明细
@@ -533,7 +534,7 @@ export const deliveryItems = mysqlTable('delivery_items', {
   confirmedAt: datetime('confirmed_at'),
   status: varchar('status', { length: 20 }).default('pending'), // 待装/已装/已送达
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 电子回单
@@ -548,7 +549,7 @@ export const deliveryReceipts = mysqlTable('delivery_receipts', {
   signature: text('signature'), // 签名图片URL
   photos: json('photos'), // 照片URL数组
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ==================== 打样管理 ====================
@@ -572,8 +573,8 @@ export const sampleRequests = mysqlTable('sample_requests', {
   qrCode: varchar('qr_code', { length: 100 }).unique(), // 打样二维码
   remarks: text('remarks'),
   requesterId: int('requester_id').references(() => employees.id),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // ==================== 设备保养 ====================
@@ -590,7 +591,7 @@ export const maintenancePlans = mysqlTable('maintenance_plans', {
   executorId: int('executor_id').references(() => employees.id),
   executedAt: datetime('executed_at'),
   remarks: text('remarks'),
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 类型导出
@@ -651,8 +652,8 @@ export const materialLabels = mysqlTable('material_labels', {
   isCut: boolean('is_cut').default(false), // 是否已分切
   parentLabelId: int('parent_label_id'), // 父标签ID（分切来源）
   status: varchar('status', { length: 20 }).default('active'), // active/frozen/disabled
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 分切记录表
@@ -669,10 +670,10 @@ export const cuttingRecords = mysqlTable('cutting_records', {
   remainWidth: decimal('remain_width', { precision: 18, scale: 2 }), // 剩余宽幅
   operatorId: int('operator_id').references(() => employees.id), // 操作员ID
   operatorName: varchar('operator_name', { length: 50 }), // 操作员名称
-  cutTime: datetime('cut_time').default('CURRENT_TIMESTAMP'), // 分切时间
+  cutTime: datetime('cut_time').default(sql`CURRENT_TIMESTAMP`), // 分切时间
   remark: text('remark'), // 备注
   status: varchar('status', { length: 20 }).default('active'), // active/cancelled
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 分切明细表
@@ -687,7 +688,7 @@ export const cuttingDetails = mysqlTable('cutting_details', {
   newLabelNo: varchar('new_label_no', { length: 50 }).notNull(), // 新标签编号
   cutWidth: decimal('cut_width', { precision: 18, scale: 2 }), // 分切宽幅
   sequence: int('sequence').default(0), // 分切序号
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 生产流程卡表
@@ -708,8 +709,8 @@ export const processCards = mysqlTable('process_cards', {
   lockStatus: varchar('lock_status', { length: 20 }).default('unlocked'), // 锁住状态
   createUserId: int('create_user_id').references(() => employees.id), // 创建人ID
   createUserName: varchar('create_user_name', { length: 50 }), // 创建人名称
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
-  updatedAt: datetime('updated_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: datetime('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 流程卡物料关联表
@@ -731,7 +732,7 @@ export const processCardMaterials = mysqlTable('process_card_materials', {
   quantity: decimal('quantity', { precision: 18, scale: 4 }).default('0'), // 用量
   unit: varchar('unit', { length: 20 }), // 单位
   remark: text('remark'), // 备注
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 物料追溯记录表
@@ -746,9 +747,9 @@ export const traceRecords = mysqlTable('trace_records', {
   traceType: varchar('trace_type', { length: 20 }).default('forward'), // 追溯类型：forward/backward
   operatorId: int('operator_id').references(() => employees.id), // 操作员ID
   operatorName: varchar('operator_name', { length: 50 }), // 操作员名称
-  traceTime: datetime('trace_time').default('CURRENT_TIMESTAMP'), // 追溯时间
+  traceTime: datetime('trace_time').default(sql`CURRENT_TIMESTAMP`), // 追溯时间
   remark: text('remark'), // 备注
-  createdAt: datetime('created_at').default('CURRENT_TIMESTAMP'),
+  createdAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 扫码操作日志表
@@ -762,7 +763,7 @@ export const scanLogs = mysqlTable('scan_logs', {
   message: text('message'), // 结果消息
   operatorId: int('operator_id').references(() => employees.id), // 操作员ID
   operatorName: varchar('operator_name', { length: 50 }), // 操作员名称
-  scanTime: datetime('scan_time').default('CURRENT_TIMESTAMP'), // 扫码时间
+  scanTime: datetime('scan_time').default(sql`CURRENT_TIMESTAMP`), // 扫码时间
   ipAddress: varchar('ip_address', { length: 50 }), // IP地址
 });
 
@@ -792,8 +793,8 @@ export const invInboundOrders = mysqlTable('inv_inbound_order', {
   qcStatus: varchar('qc_status', { length: 20 }).default('pending'),
   remark: varchar('remark', { length: 500 }),
   deleted: boolean('deleted').default(false),
-  createTime: datetime('create_time').default('CURRENT_TIMESTAMP'),
-  updateTime: datetime('update_time').default('CURRENT_TIMESTAMP'),
+  createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
 });
 
 // 入库单明细
@@ -810,7 +811,7 @@ export const invInboundItems = mysqlTable('inv_inbound_item', {
   totalPrice: decimal('total_price', { precision: 15, scale: 4 }),
   warehouseLocation: varchar('warehouse_location', { length: 50 }),
   produceDate: datetime('produce_date'),
-  createTime: datetime('create_time').default('CURRENT_TIMESTAMP'),
+  createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
 });
 
 type InvInboundOrder = typeof invInboundOrders.$inferSelect;
