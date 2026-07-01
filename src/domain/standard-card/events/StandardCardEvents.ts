@@ -1,9 +1,7 @@
-export interface DomainEvent {
-  eventId: string;
-  eventType: string;
-  occurredAt: Date;
-  payload: any;
-}
+// 统一使用 shared 层的 DomainEvent 接口，避免与本文件事件类形状冲突
+import { DomainEvent } from '@/domain/shared/DomainTypes';
+// re-export 保持现有调用方（StandardCardHandlers.ts）import 路径兼容
+export type { DomainEvent };
 
 export class StandardCardCreatedEvent implements DomainEvent {
   readonly eventId: string;
@@ -141,6 +139,56 @@ export class StandardCardLinkedToWorkOrderEvent implements DomainEvent {
 
   constructor(props: { standardCardId: number; workOrderId: number; workOrderNo: string }) {
     this.eventId = `sc_linked_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.occurredAt = new Date();
+    this.payload = props;
+  }
+}
+
+export class StandardCardRejectedEvent implements DomainEvent {
+  readonly eventId: string;
+  readonly eventType = 'StandardCardRejected';
+  readonly occurredAt: Date;
+  readonly payload: {
+    standardCardId: number;
+    code: string;
+    version: string;
+    reason: string;
+    userId: number;
+  };
+
+  constructor(props: {
+    standardCardId: number;
+    code: string;
+    version: string;
+    reason: string;
+    userId: number;
+  }) {
+    this.eventId = `sc_rejected_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.occurredAt = new Date();
+    this.payload = props;
+  }
+}
+
+export class StandardCardNewVersionCreatedEvent implements DomainEvent {
+  readonly eventId: string;
+  readonly eventType = 'StandardCardNewVersionCreated';
+  readonly occurredAt: Date;
+  readonly payload: {
+    parentStandardCardId: number;
+    parentVersion: string;
+    newVersion: string;
+    code: string;
+    userId: number;
+  };
+
+  constructor(props: {
+    parentStandardCardId: number;
+    parentVersion: string;
+    newVersion: string;
+    code: string;
+    userId: number;
+  }) {
+    this.eventId = `sc_new_version_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     this.occurredAt = new Date();
     this.payload = props;
   }

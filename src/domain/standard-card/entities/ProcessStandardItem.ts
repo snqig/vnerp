@@ -46,6 +46,10 @@ export class ProcessStandardItem {
     this.remark = props.remark;
   }
 
+  setStandardCardId(id: number): void {
+    (this as any).standardCardId = id;
+  }
+
   private validate(props: ProcessStandardItemProps): void {
     if (!props.processName || props.processName.trim() === '') {
       throw new Error('工序名称不能为空');

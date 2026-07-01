@@ -1,13 +1,7 @@
 import { StandardCard } from '@/domain/standard-card/aggregates/StandardCard';
 import { StandardCardType } from '@/domain/standard-card/value-objects/StandardCardType';
 import { StandardCardStatus } from '@/domain/standard-card/value-objects/StandardCardStatus';
-import {
-  StandardCardCreatedEvent,
-  StandardCardSubmittedEvent,
-  StandardCardApprovedEvent,
-  StandardCardConfirmedEvent,
-  StandardCardObsoletedEvent,
-} from '@/domain/standard-card/events/StandardCardEvents';
+import { StandardCardCreatedEvent } from '@/domain/standard-card/events/StandardCardEvents';
 import { getEventBus, EventBus } from '@/infrastructure/event-bus/EventBus';
 import { secureLog } from '@/lib/logger';
 
@@ -66,7 +60,7 @@ export class StandardCardApplicationService {
     const seq = await repo.getNextSequence(dto.type);
     const code = `${dto.type.substring(0, 3).toUpperCase()}${seq}`;
 
-    const card = new StandardCard({
+    const card = StandardCard.create({
       code,
       version: '1.0',
       name: dto.name,
@@ -123,7 +117,7 @@ export class StandardCardApplicationService {
 
     const cardProps = card.toProps();
     cardProps.id = id;
-    const savedCard = new StandardCard(cardProps);
+    const savedCard = StandardCard.create(cardProps);
 
     const event = new StandardCardCreatedEvent({
       standardCardId: id,
@@ -160,7 +154,7 @@ export class StandardCardApplicationService {
       throw new Error('已确认的标准卡不能修改');
     }
 
-    const updatedCard = new StandardCard({
+    const updatedCard = StandardCard.create({
       ...card.toProps(),
       name: dto.name,
       type: dto.type,
@@ -227,21 +221,7 @@ export class StandardCardApplicationService {
     card.submit(userId);
     await repo.update(card);
     await this.saveVersionLogs(card);
-
-    const event = new StandardCardSubmittedEvent({
-      standardCardId: id,
-      code: card.code,
-      version: card.version,
-      userId,
-    });
-    // 1.5.1 publish 现在会抛错，fire-and-forget 模式需 .catch 避免 unhandled rejection
-    this.eventBus.publish(event).catch((err: unknown) => {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      secureLog('error', 'Standard card event publish failed', {
-        eventType: event.eventType,
-        error: errorMessage,
-      });
-    });
+    await this.publishDomainEvents(card);
 
     return card;
   }
@@ -259,22 +239,7 @@ export class StandardCardApplicationService {
     card.approve(userId);
     await repo.update(card);
     await this.saveVersionLogs(card);
-
-    const event = new StandardCardApprovedEvent({
-      standardCardId: id,
-      code: card.code,
-      version: card.version,
-      userId,
-      approvalLevel: 'tech_manager',
-    });
-    // 1.5.1 publish 现在会抛错，fire-and-forget 模式需 .catch 避免 unhandled rejection
-    this.eventBus.publish(event).catch((err: unknown) => {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      secureLog('error', 'Standard card event publish failed', {
-        eventType: event.eventType,
-        error: errorMessage,
-      });
-    });
+    await this.publishDomainEvents(card);
 
     return card;
   }
@@ -302,22 +267,7 @@ export class StandardCardApplicationService {
 
     card.confirm(userId);
     await repo.update(card);
-
-    const event = new StandardCardConfirmedEvent({
-      standardCardId: id,
-      code: card.code,
-      version: card.version,
-      materialId: card.materialId,
-      userId,
-    });
-    // 1.5.1 publish 现在会抛错，fire-and-forget 模式需 .catch 避免 unhandled rejection
-    this.eventBus.publish(event).catch((err: unknown) => {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      secureLog('error', 'Standard card event publish failed', {
-        eventType: event.eventType,
-        error: errorMessage,
-      });
-    });
+    await this.publishDomainEvents(card);
 
     return card;
   }
@@ -335,22 +285,7 @@ export class StandardCardApplicationService {
     card.obsolete(userId, reason);
     await repo.update(card);
     await this.saveVersionLogs(card);
-
-    const event = new StandardCardObsoletedEvent({
-      standardCardId: id,
-      code: card.code,
-      version: card.version,
-      reason,
-      userId,
-    });
-    // 1.5.1 publish 现在会抛错，fire-and-forget 模式需 .catch 避免 unhandled rejection
-    this.eventBus.publish(event).catch((err: unknown) => {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      secureLog('error', 'Standard card event publish failed', {
-        eventType: event.eventType,
-        error: errorMessage,
-      });
-    });
+    await this.publishDomainEvents(card);
 
     return card;
   }
@@ -368,6 +303,7 @@ export class StandardCardApplicationService {
     const newCard = card.createNewVersion(StandardCard.generateVersion(card.version), userId);
     const newId = await repo.save(newCard);
     (newCard as any).id = newId;
+    await this.publishDomainEvents(newCard);
 
     const {
       ColorStandardItemRepository,
@@ -641,6 +577,20 @@ export class StandardCardApplicationService {
         changeType: log.changeType,
         changeContent: log.changeContent,
         changedBy: log.changedBy,
+      });
+    }
+  }
+
+  private async publishDomainEvents(card: StandardCard): Promise<void> {
+    const events = card.getDomainEvents();
+    card.clearDomainEvents();
+    for (const event of events) {
+      this.eventBus.publish(event).catch((err: unknown) => {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        secureLog('error', 'Standard card event publish failed', {
+          eventType: event.eventType,
+          error: errorMessage,
+        });
       });
     }
   }

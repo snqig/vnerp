@@ -20,7 +20,7 @@ describe('P0-1: 端到端业务流程闭环测试', () => {
   beforeAll(async () => {
     const [custResult]: any = await execute(
       `INSERT INTO crm_customer (customer_code, customer_name, customer_type, status, deleted)
-       VALUES ('TEST-CUST-001', '测试客户-端到端', 'enterprise', 1, 0)`
+       VALUES ('TEST-CUST-001', '测试客户-端到端', 1, 1, 0)`
     );
     testCustomerId = custResult.insertId;
 

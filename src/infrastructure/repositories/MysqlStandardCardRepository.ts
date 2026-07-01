@@ -253,7 +253,7 @@ export class MysqlStandardCardRepository implements IStandardCardRepository {
       updateTime: row.update_time ? new Date(row.update_time) : undefined,
       remark: row.remark,
     };
-    return new StandardCard(props);
+    return StandardCard.reconstitute(props);
   }
 }
 

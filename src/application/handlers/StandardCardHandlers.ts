@@ -110,9 +110,12 @@ export class StandardCardNotificationHandler implements EventHandler {
 export class StandardCardWorkOrderLinkHandler implements EventHandler {
   async handle(event: DomainEvent): Promise<void> {
     if (event.eventType === 'StandardCardConfirmed') {
-      const { materialId } = event.payload;
+      const { materialId, standardCardId } = event.payload as {
+        materialId: number;
+        standardCardId: number;
+      };
       if (materialId) {
-        await this.updateWorkOrdersWithNewStandardCard(materialId, event.payload.standardCardId);
+        await this.updateWorkOrdersWithNewStandardCard(materialId, standardCardId);
       }
     }
   }

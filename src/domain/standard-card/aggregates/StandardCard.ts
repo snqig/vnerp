@@ -1,5 +1,5 @@
 import { StandardCardStatus, canTransition } from '../value-objects/StandardCardStatus';
-import { StandardCardType, getTypePrefix } from '../value-objects/StandardCardType';
+import { StandardCardType } from '../value-objects/StandardCardType';
 import { ColorStandardItem } from '../entities/ColorStandardItem';
 import { ProcessStandardItem } from '../entities/ProcessStandardItem';
 import { QualityStandardItem } from '../entities/QualityStandardItem';
@@ -8,7 +8,15 @@ import { StandardCardInk } from '../entities/StandardCardInk';
 import { StandardCardTooling } from '../entities/StandardCardTooling';
 import { StandardCardAttachment } from '../entities/StandardCardAttachment';
 import { VersionChangeLog } from '../entities/VersionChangeLog';
-import { DomainError } from '@/domain/shared/DomainTypes';
+import { DomainError, DomainEvent } from '@/domain/shared/DomainTypes';
+import {
+  StandardCardSubmittedEvent,
+  StandardCardApprovedEvent,
+  StandardCardRejectedEvent,
+  StandardCardConfirmedEvent,
+  StandardCardObsoletedEvent,
+  StandardCardNewVersionCreatedEvent,
+} from '../events/StandardCardEvents';
 
 export interface StandardCardProps {
   id?: number;
@@ -40,7 +48,7 @@ export interface StandardCardProps {
   createUser?: number;
   createUserName?: string;
   auditUser?: number;
-  auditUserName?: number;
+  auditUserName?: string;
   approveUser?: number;
   approveUserName?: string;
   confirmUser?: number;
@@ -101,7 +109,9 @@ export class StandardCard {
     changedBy: number;
   }[] = [];
 
-  constructor(props: StandardCardProps) {
+  private _domainEvents: DomainEvent[] = [];
+
+  private constructor(props: StandardCardProps) {
     this.validateCreation(props);
     this.id = props.id;
     this._code = props.code;
@@ -148,6 +158,14 @@ export class StandardCard {
     if (!props.type) {
       throw new DomainError('标准卡类型不能为空');
     }
+  }
+
+  static create(props: StandardCardProps): StandardCard {
+    return new StandardCard(props);
+  }
+
+  static reconstitute(props: StandardCardProps): StandardCard {
+    return new StandardCard(props);
   }
 
   get code(): string {
@@ -223,12 +241,28 @@ export class StandardCard {
     return [...this._versionLogsNew];
   }
 
+  getDomainEvents(): DomainEvent[] {
+    return [...this._domainEvents];
+  }
+
+  clearDomainEvents(): void {
+    this._domainEvents = [];
+  }
+
   submit(userId: number): void {
     if (this._status !== StandardCardStatus.DRAFT) {
       throw new DomainError('只有草稿状态的标准卡才能提交审核');
     }
     this._status = StandardCardStatus.AUDITING;
     this.addVersionLog('create', '提交审核', userId);
+    this._domainEvents.push(
+      new StandardCardSubmittedEvent({
+        standardCardId: this.id!,
+        code: this._code,
+        version: this._version,
+        userId,
+      })
+    );
   }
 
   approve(userId: number): void {
@@ -238,6 +272,15 @@ export class StandardCard {
     this._status = StandardCardStatus.APPROVED;
     this._auditUser = userId;
     this.addVersionLog('update', '技术主管审核通过', userId);
+    this._domainEvents.push(
+      new StandardCardApprovedEvent({
+        standardCardId: this.id!,
+        code: this._code,
+        version: this._version,
+        userId,
+        approvalLevel: 'tech_manager',
+      })
+    );
   }
 
   reject(userId: number, reason: string): void {
@@ -247,6 +290,15 @@ export class StandardCard {
     this._status = StandardCardStatus.DRAFT;
     this._auditUser = undefined;
     this.addVersionLog('update', `审核驳回: ${reason}`, userId);
+    this._domainEvents.push(
+      new StandardCardRejectedEvent({
+        standardCardId: this.id!,
+        code: this._code,
+        version: this._version,
+        reason,
+        userId,
+      })
+    );
   }
 
   confirm(userId: number): void {
@@ -262,6 +314,15 @@ export class StandardCard {
       this._expiryDate.setFullYear(this._expiryDate.getFullYear() + 1);
     }
     this.addVersionLog('update', '客户确认', userId);
+    this._domainEvents.push(
+      new StandardCardConfirmedEvent({
+        standardCardId: this.id!,
+        code: this._code,
+        version: this._version,
+        materialId: this._materialId,
+        userId,
+      })
+    );
   }
 
   obsolete(userId: number, reason: string): void {
@@ -275,13 +336,22 @@ export class StandardCard {
     this._obsoleteAt = new Date();
     this._isCurrent = false;
     this.addVersionLog('obsolete', `作废原因: ${reason}`, userId);
+    this._domainEvents.push(
+      new StandardCardObsoletedEvent({
+        standardCardId: this.id!,
+        code: this._code,
+        version: this._version,
+        reason,
+        userId,
+      })
+    );
   }
 
   createNewVersion(newVersion: string, userId: number): StandardCard {
     if (!this._isLocked) {
       throw new DomainError('只有已确认的标准卡才能创建新版本');
     }
-    const newCard = new StandardCard({
+    const newCard = StandardCard.create({
       ...this.toProps(),
       id: undefined,
       code: this._code,
@@ -301,6 +371,15 @@ export class StandardCard {
       updateTime: undefined,
     });
     newCard.addVersionLog('create', `基于版本 ${this._version} 创建新版本`, userId);
+    newCard._domainEvents.push(
+      new StandardCardNewVersionCreatedEvent({
+        parentStandardCardId: this.id!,
+        parentVersion: this._version,
+        newVersion,
+        code: this._code,
+        userId,
+      })
+    );
     return newCard;
   }
 
@@ -308,7 +387,7 @@ export class StandardCard {
     this._colorItems = items;
     this._colorItems.forEach((item) => {
       if (!item.standardCardId && this.id) {
-        (item as any).standardCardId = this.id;
+        item.setStandardCardId(this.id);
       }
     });
   }
@@ -317,7 +396,7 @@ export class StandardCard {
     this._processItems = items;
     this._processItems.forEach((item) => {
       if (!item.standardCardId && this.id) {
-        (item as any).standardCardId = this.id;
+        item.setStandardCardId(this.id);
       }
     });
   }
@@ -326,7 +405,7 @@ export class StandardCard {
     this._qualityItems = items;
     this._qualityItems.forEach((item) => {
       if (!item.standardCardId && this.id) {
-        (item as any).standardCardId = this.id;
+        item.setStandardCardId(this.id);
       }
     });
   }
@@ -452,14 +531,6 @@ export class StandardCard {
       updateTime: this._updateTime,
       remark: this._remark,
     };
-  }
-
-  static generateCode(type: StandardCardType): string {
-    const prefix = getTypePrefix(type);
-    const date = new Date();
-    const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
-    const seq = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-    return `${prefix}${dateStr}${seq}`;
   }
 
   static generateVersion(currentVersion?: string): string {

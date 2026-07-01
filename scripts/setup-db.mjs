@@ -137,6 +137,16 @@ async function run() {
 
     const schemaStats = await executeStatements(conn, schemaSql, 'schema');
 
+    // 3.1 执行迁移文件（database/migrations/ 目录下按文件名排序）
+    const migrationsDir = path.join(projectRoot, 'database', 'migrations');
+    if (fs.existsSync(migrationsDir)) {
+      const migrationFiles = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
+      for (const file of migrationFiles) {
+        const migrationSql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+        await executeStatements(conn, migrationSql, `migration:${file}`);
+      }
+    }
+
     // 4. 可选：导入种子数据
     if (withSeed) {
       const seedPath = path.join(projectRoot, 'database', 'seeds', 'vnerp-seed-data.sql');
