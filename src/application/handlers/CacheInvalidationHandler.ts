@@ -12,11 +12,17 @@ export class CacheInvalidationHandler implements EventHandler<DomainEvent> {
       'outbound.confirmed': ['dashboard:overview', 'dashboard:inventory'],
       'quality.inspection.completed': ['dashboard:quality'],
       'production.schedule.created': ['dashboard:production'],
+      StandardCardConfirmed: ['bom:expansion:*'],
+      StandardCardObsoleted: ['bom:expansion:*'],
     };
 
     const keysToDelete = invalidationMap[event.eventType] || [];
     for (const key of keysToDelete) {
-      await cache.delete(key);
+      if (key.includes('*')) {
+        await cache.deletePattern(key);
+      } else {
+        await cache.delete(key);
+      }
     }
   }
 }

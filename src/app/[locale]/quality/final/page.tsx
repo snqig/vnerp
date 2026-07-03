@@ -1,9 +1,11 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -28,7 +30,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -72,18 +73,6 @@ import { zhCN } from 'date-fns/locale';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
 import { mockQualityFinal, USE_MOCK } from '@/lib/mock-data';
-
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
 
 // 终检数据类型
 interface FinalInspect {
@@ -136,8 +125,6 @@ const getFinalInspectItems = (t: (key: string) => string) => [
   { id: 'label', name: t('labelCheck'), required: true },
 ];
 
-
-
 export default function QualityFinalPage() {
   // 翻译钩子
   const t = useTranslations('Quality');
@@ -172,8 +159,7 @@ export default function QualityFinalPage() {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
-  const [finals, setFinals] = useState<FinalInspect[]>([]);
-  const [stats, setStats] = useState<FinalStats>({
+  const [stats, setStats] = useState({
     pending: 0,
     inspecting: 0,
     passed: 0,
@@ -189,6 +175,7 @@ export default function QualityFinalPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [finals, setFinals] = useState<FinalInspect[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
 

@@ -1,41 +1,26 @@
 import { CacheManager, getCacheManager } from '@/infrastructure/cache/CacheManager';
+import { CacheGuard } from '@/infrastructure/cache/CacheGuard';
 import { query } from '@/lib/db';
 
 export class DashboardDataService {
   private cache: CacheManager;
+  private cacheGuard: CacheGuard;
 
   constructor() {
     this.cache = getCacheManager();
+    this.cacheGuard = new CacheGuard(this.cache);
   }
 
   async getOverview() {
-    const cacheKey = 'dashboard:overview';
-    const cached = await this.cache.get<any>(cacheKey);
-    if (cached) return cached;
-
-    const data = await this.computeOverview();
-    await this.cache.set(cacheKey, data, 300);
-    return data;
+    return this.cacheGuard.getOrLoad('dashboard:overview', 300, () => this.computeOverview());
   }
 
   async getProductionStats() {
-    const cacheKey = 'dashboard:production';
-    const cached = await this.cache.get<any>(cacheKey);
-    if (cached) return cached;
-
-    const data = await this.computeProductionStats();
-    await this.cache.set(cacheKey, data, 180);
-    return data;
+    return this.cacheGuard.getOrLoad('dashboard:production', 180, () => this.computeProductionStats());
   }
 
   async getOrderTrend(days: number = 30) {
-    const cacheKey = `dashboard:trend:${days}`;
-    const cached = await this.cache.get<any>(cacheKey);
-    if (cached) return cached;
-
-    const data = await this.computeOrderTrend(days);
-    await this.cache.set(cacheKey, data, 600);
-    return data;
+    return this.cacheGuard.getOrLoad(`dashboard:trend:${days}`, 600, () => this.computeOrderTrend(days));
   }
 
   async invalidateCache(eventType: string): Promise<void> {

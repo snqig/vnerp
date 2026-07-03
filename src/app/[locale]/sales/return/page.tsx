@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -131,18 +132,6 @@ export default function ReturnPage() {
   const [detailData, setDetailData] = useState<ReturnOrder | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [total, setTotal] = useState(0);
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);

@@ -848,7 +848,7 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--foreground);
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s;
   cursor: pointer;
   text-decoration: none;
 }
@@ -878,7 +878,7 @@
   border-radius: 6px;
   font-size: 13px;
   color: var(--sidebar-foreground);
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s;
   cursor: pointer;
   text-decoration: none;
 }

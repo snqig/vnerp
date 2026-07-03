@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
@@ -11,16 +12,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, Lock, Camera, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return fetch(url, { ...options, headers });
-};
 
 export default function ProfilePage() {
   const t = useTranslations('System');

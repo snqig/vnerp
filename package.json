@@ -26,7 +26,17 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
-    "setup:db": "node scripts/setup-db.mjs"
+    "setup:db": "node scripts/setup-db.mjs",
+    "cleanup:events": "node scripts/cleanup-event-processed.mjs",
+    "init": "node scripts/init-project.js",
+    "init:full": "node scripts/init-project.js --full",
+    "migrate": "npx tsx scripts/migrate.ts up",
+    "migrate:down": "npx tsx scripts/migrate.ts down",
+    "migrate:status": "npx tsx scripts/migrate.ts status",
+    "migrate:create": "npx tsx scripts/migrate.ts create",
+    "backup": "npx tsx scripts/backup-database.ts",
+    "backup:list": "npx tsx scripts/backup-database.ts list",
+    "backup:restore": "npx tsx scripts/backup-database.ts restore"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,js,jsx}": [
@@ -128,6 +138,7 @@
     "jsdom": "^29.1.0",
     "lint-staged": "^15.5.2",
     "only-allow": "^1.2.2",
+    "opencc-js": "1.0.5",
     "postcss": "^8.5.8",
     "prettier": "^3.5.3",
     "shadcn": "latest",

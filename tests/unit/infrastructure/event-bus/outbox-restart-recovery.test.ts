@@ -21,26 +21,27 @@ const {
   mockMarkAsProcessed,
   mockMarkAsFailed,
   mockMarkAsDeadLetter,
-  mockFetchPendingEvents,
+  mockClaimPendingEvents,
   mockRegisterEventHandlers,
 } = vi.hoisted(() => ({
   mockMarkAsProcessed: vi.fn(),
   mockMarkAsFailed: vi.fn(),
   mockMarkAsDeadLetter: vi.fn(),
-  mockFetchPendingEvents: vi.fn(),
+  mockClaimPendingEvents: vi.fn(),
   mockRegisterEventHandlers: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/event-bus/DomainEventOutbox', () => ({
-  DomainEventOutbox: {
-    fetchPendingEvents: mockFetchPendingEvents,
+vi.mock('@/infrastructure/event-bus/DomainEventOutboxFactory', () => ({
+  getDomainEventOutbox: () => ({
+    claimPendingEvents: mockClaimPendingEvents,
     markAsProcessed: mockMarkAsProcessed,
     markAsFailed: mockMarkAsFailed,
     markAsDeadLetter: mockMarkAsDeadLetter,
-  },
+    reclaimStaleDispatching: vi.fn(async () => 0),
+  }),
 }));
 
-vi.mock('@/infrastructure/config/EventRegistry', () => ({
+vi.mock('@/application/EventRegistry', () => ({
   registerEventHandlers: mockRegisterEventHandlers,
 }));
 
@@ -55,7 +56,7 @@ describe('1.7.3 Outbox 重启恢复场景', () => {
     mockMarkAsProcessed.mockReset();
     mockMarkAsFailed.mockReset();
     mockMarkAsDeadLetter.mockReset();
-    mockFetchPendingEvents.mockReset();
+    mockClaimPendingEvents.mockReset();
     mockRegisterEventHandlers.mockReset();
 
     mockMarkAsProcessed.mockResolvedValue(undefined);
@@ -80,34 +81,34 @@ describe('1.7.3 Outbox 重启恢复场景', () => {
     const pendingRows = [
       {
         id: 1001,
-        event_type: 'restart.success',
-        aggregate_type: 'SalesOrder',
-        aggregate_id: 10,
+        eventType: 'restart.success',
+        aggregateType: 'SalesOrder',
+        aggregateId: 10,
         payload: JSON.stringify({ eventType: 'restart.success' }),
-        created_at: new Date('2026-06-29T10:00:00Z'),
-        retry_count: 0,
+        createdAt: new Date('2026-06-29T10:00:00Z'),
+        retryCount: 0,
       },
       {
         id: 1002,
-        event_type: 'restart.success',
-        aggregate_type: 'SalesOrder',
-        aggregate_id: 11,
+        eventType: 'restart.success',
+        aggregateType: 'SalesOrder',
+        aggregateId: 11,
         payload: JSON.stringify({ eventType: 'restart.success' }),
-        created_at: new Date('2026-06-29T10:00:01Z'),
-        retry_count: 0,
+        createdAt: new Date('2026-06-29T10:00:01Z'),
+        retryCount: 0,
       },
       {
         id: 1003,
-        event_type: 'restart.retry',
-        aggregate_type: 'SalesOrder',
-        aggregate_id: 12,
+        eventType: 'restart.retry',
+        aggregateType: 'SalesOrder',
+        aggregateId: 12,
         payload: JSON.stringify({ eventType: 'restart.retry' }),
-        created_at: new Date('2026-06-29T09:50:00Z'),
-        retry_count: 2, // 已重试 2 次，本次失败后应触发 markAsFailed（retry_count=3，下次 poll 触发死信）
+        createdAt: new Date('2026-06-29T09:50:00Z'),
+        retryCount: 2, // 已重试 2 次，本次失败后应触发 markAsFailed（retry_count=3，下次 poll 触发死信）
       },
     ];
 
-    mockFetchPendingEvents.mockResolvedValueOnce(pendingRows);
+    mockClaimPendingEvents.mockResolvedValueOnce(pendingRows);
 
     // 模拟进程重启后首次 poll
     const result = await OutboxPoller.poll();
@@ -137,15 +138,15 @@ describe('1.7.3 Outbox 重启恢复场景', () => {
     });
     mockRegisterEventHandlers.mockReturnValue(bus);
 
-    mockFetchPendingEvents.mockResolvedValueOnce([
+    mockClaimPendingEvents.mockResolvedValueOnce([
       {
         id: 2001,
-        event_type: 'restart.dead',
-        aggregate_type: 'SalesOrder',
-        aggregate_id: 20,
+        eventType: 'restart.dead',
+        aggregateType: 'SalesOrder',
+        aggregateId: 20,
         payload: JSON.stringify({ eventType: 'restart.dead' }),
-        created_at: new Date('2026-06-29T09:00:00Z'),
-        retry_count: 3, // 已达上限，本次失败应直接死信
+        createdAt: new Date('2026-06-29T09:00:00Z'),
+        retryCount: 3, // 已达上限，本次失败应直接死信
       },
     ]);
 
@@ -162,7 +163,7 @@ describe('1.7.3 Outbox 重启恢复场景', () => {
 
   it('重启后无遗留事件 → poll 返回空结果', async () => {
     mockRegisterEventHandlers.mockReturnValue(new InMemoryEventBus());
-    mockFetchPendingEvents.mockResolvedValueOnce([]);
+    mockClaimPendingEvents.mockResolvedValueOnce([]);
 
     const result = await OutboxPoller.poll();
 

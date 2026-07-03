@@ -1,4 +1,6 @@
 'use client';
+
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,18 +42,6 @@ import {
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
 
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
-
 interface Item {
   id: number;
   handle_no: string;
@@ -70,7 +60,6 @@ const typeMap: Record<number, string> = {
   4: 'return',
   5: 'scrap',
 };
-
 
 export default function UnqualifiedPage() {
   // 翻译钩子

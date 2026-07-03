@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import QRCode from 'qrcode';
@@ -385,18 +386,6 @@ export default function OutboundManagementPage() {
     { value: '套', label: t('unitSet') },
     { value: '件', label: t('unitItem') },
   ], [t]);
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const [activeTab, setActiveTab] = useState('records');
   const [searchQuery, setSearchQuery] = useState('');

@@ -153,15 +153,15 @@ function SortableMenuItem({
         >
           <div className="flex items-center gap-3 flex-1">
             {!collapsed && (
-              <button
+              <span
                 {...attributes}
                 {...listeners}
                 aria-label="Drag to reorder"
-                className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-0"
+                className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded opacity-0 group-hover:opacity-100 transition-opacity inline-flex"
                 onClick={(e) => e.stopPropagation()}
               >
                 <GripVertical className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
-              </button>
+              </span>
             )}
             {getIcon(menu.icon)}
             {!collapsed && <span>{getMenuName(menu)}</span>}
@@ -195,15 +195,15 @@ function SortableMenuItem({
         title={collapsed ? getMenuName(menu) : undefined}
       >
         {!collapsed && (
-          <button
+          <span
             {...attributes}
             {...listeners}
             aria-label="Drag to reorder"
-            className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-0"
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded opacity-0 group-hover:opacity-100 transition-opacity inline-flex"
             onClick={(e) => e.preventDefault()}
           >
             <GripVertical className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
-          </button>
+          </span>
         )}
         {getIcon(menu.icon)}
         {!collapsed && <span>{getMenuName(menu)}</span>}
@@ -543,8 +543,9 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
         size="icon"
         className="fixed top-4 left-4 z-50 lg:hidden"
         onClick={() => setCollapsed(!collapsed)}
+        aria-label={collapsed ? 'Open menu' : 'Close menu'}
       >
-        {collapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
+        {collapsed ? <Menu className="w-5 h-5" aria-hidden="true" /> : <X className="w-5 h-5" aria-hidden="true" />}
       </Button>
 
       {/* 侧边栏 */}
@@ -657,7 +658,7 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
             <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border bg-background">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
-                  <Users className="w-4 h-4 text-muted-foreground" />
+                  <Users className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                 </div>
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
@@ -688,11 +689,12 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
               size="icon"
               className="absolute -right-3 top-20 hidden lg:flex w-6 h-6 rounded-full bg-background border border-border shadow-sm"
               onClick={() => setCollapsed(!collapsed)}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {collapsed ? (
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="w-3 h-3" aria-hidden="true" />
               ) : (
-                <ChevronDown className="w-3 h-3 rotate-90" />
+                <ChevronDown className="w-3 h-3 rotate-90" aria-hidden="true" />
               )}
             </Button>
           </>
@@ -701,9 +703,10 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
 
       {/* 移动端遮罩 */}
       {!collapsed && (
-        <div
+        <button
           className="fixed inset-0 bg-black/50 z-30 lg:hidden"
           onClick={() => setCollapsed(true)}
+          aria-label="Close menu"
         />
       )}
     </>

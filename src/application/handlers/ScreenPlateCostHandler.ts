@@ -231,30 +231,16 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
   }
 
   private async updateWorkOrderCost(workOrderId: number, plateCost: number): Promise<void> {
-    await transaction(async (conn) => {
-      const [existingCost]: any[] = await conn.execute(
-        `SELECT id FROM work_order_costs WHERE work_order_id = ?`,
-        [workOrderId]
-      );
-
-      if (existingCost.length > 0) {
-        await conn.execute(
-          `UPDATE work_order_costs 
-           SET manufacturing_cost = manufacturing_cost + ?,
-               total_cost = material_cost + labor_cost + manufacturing_cost + ?,
-               calculate_time = NOW(),
-               status = 1
-           WHERE work_order_id = ?`,
-          [plateCost, plateCost, workOrderId]
-        );
-      } else {
-        await conn.execute(
-          `INSERT INTO work_order_costs (
-            work_order_id, manufacturing_cost, total_cost, status, calculate_time
-          ) VALUES (?, ?, ?, 1, NOW())`,
-          [workOrderId, plateCost, plateCost]
-        );
-      }
-    });
+    await execute(
+      `INSERT INTO work_order_costs (
+        work_order_id, material_cost, labor_cost, manufacturing_cost, total_cost, status, calculate_time
+      ) VALUES (?, 0, 0, ?, ?, 1, NOW())
+      ON DUPLICATE KEY UPDATE
+        manufacturing_cost = manufacturing_cost + VALUES(manufacturing_cost),
+        total_cost = material_cost + labor_cost + manufacturing_cost,
+        calculate_time = NOW(),
+        status = 1`,
+      [workOrderId, plateCost, plateCost]
+    );
   }
 }

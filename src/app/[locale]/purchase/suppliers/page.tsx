@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -137,18 +138,6 @@ export default function SuppliersPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const handleSort = (field: string) => {
     if (sortField === field) {

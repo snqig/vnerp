@@ -2,15 +2,12 @@ import { IPurchaseOrderRepository } from '@/domain/purchase/repositories/IPurcha
 import { PurchaseOrder, PurchaseOrderProps } from '@/domain/purchase/aggregates/PurchaseOrder';
 import { PurchaseOrderStatus } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
-import { EventBus } from '@/infrastructure/event-bus/EventBus';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
-import { secureLog } from '@/lib/logger';
 
 export class PurchaseApplicationService {
   constructor(
-    private readonly orderRepo: IPurchaseOrderRepository,
-    private readonly eventBus: EventBus
+    private readonly orderRepo: IPurchaseOrderRepository
   ) {}
 
   async getOrderById(id: number): Promise<PurchaseOrder> {
@@ -77,7 +74,6 @@ export class PurchaseApplicationService {
     });
 
     order.clearDomainEvents();
-    this.publishOutboxEventsAsync(id);
 
     return { id, status: 'approved' };
   }
@@ -112,7 +108,6 @@ export class PurchaseApplicationService {
     });
 
     order.clearDomainEvents();
-    this.publishOutboxEventsAsync(id);
 
     return { id, status: order.status.value };
   }
@@ -152,34 +147,5 @@ export class PurchaseApplicationService {
     });
 
     order.clearDomainEvents();
-    this.publishOutboxEventsAsync(aggregateId);
-  }
-
-  private publishOutboxEventsAsync(aggregateId: number): void {
-    setImmediate(async () => {
-      try {
-        const pendingEvents = await getDomainEventOutbox().fetchPendingEvents();
-        for (const eventRow of pendingEvents) {
-          if (eventRow.aggregateId !== aggregateId && eventRow.aggregateType !== 'PurchaseOrder')
-            continue;
-          try {
-            const event = JSON.parse(eventRow.payload);
-            const domainEvent = { ...event, occurredAt: new Date(event.occurredAt) };
-            await this.eventBus.publish(domainEvent);
-            await getDomainEventOutbox().markAsProcessed(eventRow.id);
-          } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            secureLog('error', 'Outbox event publish failed', {
-              eventId: eventRow.id,
-              eventType: eventRow.eventType,
-              error: errorMessage,
-            });
-            await getDomainEventOutbox().markAsFailed(eventRow.id, errorMessage);
-          }
-        }
-      } catch (error) {
-        secureLog('error', 'Outbox processing failed', { aggregateId, error: String(error) });
-      }
-    });
   }
 }

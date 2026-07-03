@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useMemo, Fragment } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
@@ -45,18 +46,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useDebounce } from '@/hooks/use-debounce';
 import { SearchInput } from '@/components/ui/search-input';
 import { useCompanyName } from '@/hooks/useCompanyName';
-
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
 
 interface PurchaseRequest {
   id: number;

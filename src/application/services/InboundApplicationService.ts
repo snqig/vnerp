@@ -6,15 +6,12 @@ import {
   VersionConflictError,
   InvalidTransitionError,
 } from '@/domain/shared/DomainTypes';
-import { EventBus } from '@/infrastructure/event-bus/EventBus';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { query, transaction } from '@/lib/db';
-import { secureLog } from '@/lib/logger';
 
 export class InboundApplicationService {
   constructor(
-    private readonly orderRepo: IInboundOrderRepository,
-    private readonly eventBus: EventBus
+    private readonly orderRepo: IInboundOrderRepository
   ) {}
 
   async getOrderById(id: number): Promise<InboundOrder> {
@@ -76,7 +73,6 @@ export class InboundApplicationService {
     });
 
     order.clearDomainEvents();
-    this.publishOutboxEventsAsync(id);
 
     return { id, status: 'completed' };
   }
@@ -148,34 +144,5 @@ export class InboundApplicationService {
     });
 
     order.clearDomainEvents();
-    this.publishOutboxEventsAsync(aggregateId);
-  }
-
-  private publishOutboxEventsAsync(aggregateId: number): void {
-    setImmediate(async () => {
-      try {
-        const pendingEvents = await getDomainEventOutbox().fetchPendingEvents();
-        for (const eventRow of pendingEvents) {
-          if (eventRow.aggregateId !== aggregateId && eventRow.aggregateType !== 'InboundOrder')
-            continue;
-          try {
-            const event = JSON.parse(eventRow.payload);
-            const domainEvent = { ...event, occurredAt: new Date(event.occurredAt) };
-            await this.eventBus.publish(domainEvent);
-            await getDomainEventOutbox().markAsProcessed(eventRow.id);
-          } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            secureLog('error', 'Outbox event publish failed', {
-              eventId: eventRow.id,
-              eventType: eventRow.eventType,
-              error: errorMessage,
-            });
-            await getDomainEventOutbox().markAsFailed(eventRow.id, errorMessage);
-          }
-        }
-      } catch (error) {
-        secureLog('error', 'Outbox processing failed', { aggregateId, error: String(error) });
-      }
-    });
   }
 }

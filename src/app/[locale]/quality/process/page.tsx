@@ -1,9 +1,11 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -28,7 +30,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
@@ -127,8 +128,6 @@ const getInspectItems = (t: (key: string) => string) => [
   { id: 'printing', name: t('printingQuality'), required: true },
   { id: 'packaging', name: t('packagingCheck'), required: false },
 ];
-
-
 
 // 模拟品质检验数据
 const mockQualityProcesses: QualityProcess[] = [
@@ -423,18 +422,6 @@ export default function QualityProcessPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const fetchProcesses = async () => {
     logger.info({ module: 'Quality', action: 'fetchProcesses' }, '开始获取品质过程检验数据');
@@ -1386,7 +1373,6 @@ export default function QualityProcessPage() {
                 </Table>
               </div>
 
-              {/* 签名区域 */}
               <div className="grid grid-cols-3 gap-8 pt-8 border-t mt-8">
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>

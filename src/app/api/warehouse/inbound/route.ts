@@ -9,14 +9,14 @@ import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { InboundApplicationService } from '@/application/services/InboundApplicationService';
 import { MysqlInboundOrderRepository } from '@/infrastructure/repositories/MysqlInboundOrderRepository';
-import { registerEventHandlers } from '@/infrastructure/config/EventRegistry';
+import { registerEventHandlers } from '@/application/EventRegistry';
 import { createInboundOrderSchema, updateInboundOrderSchema } from '@/lib/validations/inbound';
 import { ZodError } from 'zod/v4';
 
 function getInboundService(): InboundApplicationService {
-  const eventBus = registerEventHandlers();
+  registerEventHandlers();
   const orderRepo = new MysqlInboundOrderRepository();
-  return new InboundApplicationService(orderRepo, eventBus);
+  return new InboundApplicationService(orderRepo);
 }
 
 export const GET = withAuthAndErrorHandler(

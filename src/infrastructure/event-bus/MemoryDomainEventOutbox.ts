@@ -33,6 +33,10 @@ export class MemoryDomainEventOutbox implements IDomainEventOutboxRepository {
     return [];
   }
 
+  async claimPendingEvents(_limit?: number): Promise<EventOutboxRecord[]> {
+    return [];
+  }
+
   async markAsProcessed(_id: number): Promise<void> {
     // no-op
   }
@@ -47,5 +51,9 @@ export class MemoryDomainEventOutbox implements IDomainEventOutboxRepository {
 
   async markForRetry(_id: number): Promise<void> {
     // no-op
+  }
+
+  async reclaimStaleDispatching(_timeoutMinutes: number): Promise<number> {
+    return 0;
   }
 }

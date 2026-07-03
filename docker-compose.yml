@@ -22,15 +22,18 @@ services:
       --default-authentication-plugin=mysql_native_password
       --max-connections=200
       --innodb-buffer-pool-size=256M
+      --slow-query-log=1
+      --slow-query-log-file=/var/log/mysql/slow.log
+      --long-query-time=2
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD:-vnerp2026}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     networks:
       - vnerp-network
 
-  # Redis (optional, for caching and token blacklist)
   redis:
     image: redis:7-alpine
     container_name: vnerp-redis
@@ -45,6 +48,46 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    networks:
+      - vnerp-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: vnerp-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-vnerp2026}
+      DB_NAME: ${DB_NAME:-vnerp}
+      JWT_SECRET: ${JWT_SECRET:-vnerp-dev-secret-key-change-in-production}
+      DEBUG_DB: "true"
+      CORS_ALLOW_ORIGIN: "*"
+      REDIS_URL: redis://redis:6379
+      PORT: 5000
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "5000:5000"
+    volumes:
+      - app_logs:/app/logs
+      - app_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:5000/api/health', res => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     networks:
       - vnerp-network
 
@@ -52,6 +95,10 @@ volumes:
   mysql_data:
     driver: local
   redis_data:
+    driver: local
+  app_logs:
+    driver: local
+  app_uploads:
     driver: local
 
 networks:

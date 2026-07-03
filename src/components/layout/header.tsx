@@ -282,7 +282,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
                         <button className={cn('snow-top-nav-item', isTopActive && 'active')}>
                           {getIcon(menu.icon)}
                           <span>{getMenuName(menu)}</span>
-                          <ChevronDown className="w-3 h-3 ml-1" />
+                          <ChevronDown className="w-3 h-3 ml-1" aria-hidden="true" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-48">
@@ -325,8 +325,8 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+              <Bell className="h-4 w-4" aria-hidden="true" />
               {unreadCount > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]">
                   {unreadCount > 99 ? '99+' : unreadCount}
@@ -378,8 +378,8 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <User className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="rounded-full" aria-label="User menu">
+              <User className="h-4 w-4" aria-hidden="true" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -391,16 +391,16 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handlePersonalSettings}>
-              <Settings className="mr-2 h-4 w-4" />
+              <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
               {ts('config')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleSwitchWarehouse}>
-              <Warehouse className="mr-2 h-4 w-4" />
+              <Warehouse className="mr-2 h-4 w-4" aria-hidden="true" />
               {tc('switchWarehouse')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
               {ta('logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>

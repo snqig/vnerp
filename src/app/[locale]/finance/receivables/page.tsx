@@ -1,10 +1,11 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -41,17 +42,6 @@ interface Receivable {
 }
 
 export default function ReceivablesPage() {
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
 
   // 翻译钩子
   const t = useTranslations('Finance');
@@ -171,7 +161,7 @@ const authFetch = async (url: string, options: RequestInit = {}) => {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          setSelectedRec(rec);
+                  <TableCell>{getStatusBadge(rec.status)}</TableCell>
                           setShowReceipt(true);
                         }}
                       >

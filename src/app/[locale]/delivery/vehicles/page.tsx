@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
 import { useRouter } from '@/i18n/navigation';
 import { MainLayout } from '@/components/layout';
@@ -43,17 +44,6 @@ interface Vehicle {
 }
 
 export default function VehiclesPage() {
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
 
   const t = useTranslations('Delivery');
   const tc = useTranslations('Common');

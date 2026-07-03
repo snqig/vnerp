@@ -181,31 +181,16 @@ export class InkCostHandler implements EventHandler<WorkOrderCompletedEvent> {
   }
 
   private async updateWorkOrderCost(workOrderId: number, inkCost: number): Promise<void> {
-    await transaction(async (conn) => {
-      // 获取或创建工单成本记录
-      const [existingCost]: any[] = await conn.execute(
-        `SELECT id, material_cost FROM work_order_costs WHERE work_order_id = ?`,
-        [workOrderId]
-      );
-
-      if (existingCost.length > 0) {
-        await conn.execute(
-          `UPDATE work_order_costs 
-           SET material_cost = material_cost + ?,
-               total_cost = material_cost + labor_cost + manufacturing_cost + ?,
-               calculate_time = NOW(),
-               status = 1
-           WHERE work_order_id = ?`,
-          [inkCost, inkCost, workOrderId]
-        );
-      } else {
-        await conn.execute(
-          `INSERT INTO work_order_costs (
-            work_order_id, material_cost, total_cost, status, calculate_time
-          ) VALUES (?, ?, ?, 1, NOW())`,
-          [workOrderId, inkCost, inkCost]
-        );
-      }
-    });
+    await execute(
+      `INSERT INTO work_order_costs (
+        work_order_id, material_cost, labor_cost, manufacturing_cost, total_cost, status, calculate_time
+      ) VALUES (?, ?, 0, 0, ?, 1, NOW())
+      ON DUPLICATE KEY UPDATE
+        material_cost = material_cost + VALUES(material_cost),
+        total_cost = material_cost + labor_cost + manufacturing_cost,
+        calculate_time = NOW(),
+        status = 1`,
+      [workOrderId, inkCost, inkCost]
+    );
   }
 }

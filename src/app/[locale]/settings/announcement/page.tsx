@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
@@ -20,16 +21,6 @@ import {
 } from '@/components/ui/table';
 import { Megaphone, Plus, RefreshCw, Eye, Send, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return fetch(url, { ...options, headers });
-};
 
 interface Announcement {
   id: number;

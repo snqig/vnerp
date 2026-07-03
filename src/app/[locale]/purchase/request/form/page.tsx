@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from '@/i18n/navigation';
@@ -27,18 +28,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { MaterialPicker } from '@/components/ui/material-picker';
-
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
 
 const generateOrderNo = () => {
   const now = new Date();

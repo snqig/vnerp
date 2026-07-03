@@ -34,10 +34,6 @@ export class ColorStandardItem {
     this.remark = props.remark;
   }
 
-  setStandardCardId(id: number): void {
-    (this as any).standardCardId = id;
-  }
-
   private validate(props: ColorStandardItemProps): void {
     if (!props.colorName || props.colorName.trim() === '') {
       throw new Error('颜色名称不能为空');

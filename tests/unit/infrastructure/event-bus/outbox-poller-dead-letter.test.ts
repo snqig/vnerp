@@ -15,26 +15,27 @@ const {
   mockMarkAsProcessed,
   mockMarkAsFailed,
   mockMarkAsDeadLetter,
-  mockFetchPendingEvents,
+  mockClaimPendingEvents,
   mockRegisterEventHandlers,
 } = vi.hoisted(() => ({
   mockMarkAsProcessed: vi.fn(),
   mockMarkAsFailed: vi.fn(),
   mockMarkAsDeadLetter: vi.fn(),
-  mockFetchPendingEvents: vi.fn(),
+  mockClaimPendingEvents: vi.fn(),
   mockRegisterEventHandlers: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/event-bus/DomainEventOutbox', () => ({
-  DomainEventOutbox: {
-    fetchPendingEvents: mockFetchPendingEvents,
+vi.mock('@/infrastructure/event-bus/DomainEventOutboxFactory', () => ({
+  getDomainEventOutbox: () => ({
+    claimPendingEvents: mockClaimPendingEvents,
     markAsProcessed: mockMarkAsProcessed,
     markAsFailed: mockMarkAsFailed,
     markAsDeadLetter: mockMarkAsDeadLetter,
-  },
+    reclaimStaleDispatching: vi.fn(async () => 0),
+  }),
 }));
 
-vi.mock('@/infrastructure/config/EventRegistry', () => ({
+vi.mock('@/application/EventRegistry', () => ({
   registerEventHandlers: mockRegisterEventHandlers,
 }));
 
@@ -56,14 +57,14 @@ describe('1.5 端到端：OutboxPoller 失败重试 + 死信标记', () => {
     mockMarkAsProcessed.mockReset();
     mockMarkAsFailed.mockReset();
     mockMarkAsDeadLetter.mockReset();
-    mockFetchPendingEvents.mockReset();
+    mockClaimPendingEvents.mockReset();
     mockRegisterEventHandlers.mockReset();
 
     // 默认实现：返回空数组 + 异步 resolve
     mockMarkAsProcessed.mockResolvedValue(undefined);
     mockMarkAsFailed.mockResolvedValue(undefined);
     mockMarkAsDeadLetter.mockResolvedValue(undefined);
-    mockFetchPendingEvents.mockResolvedValue([]);
+    mockClaimPendingEvents.mockResolvedValue([]);
   });
 
   it('retry_count 0→1→2→3 时依次触发 markAsFailed，retry_count=3 时触发 markAsDeadLetter', async () => {
@@ -77,18 +78,18 @@ describe('1.5 端到端：OutboxPoller 失败重试 + 死信标记', () => {
 
     const eventBase = {
       id: 100,
-      event_type: 'test.dead.letter',
-      aggregate_type: 'TestAggregate',
-      aggregate_id: 1,
+      eventType: 'test.dead.letter',
+      aggregateType: 'TestAggregate',
+      aggregateId: 1,
       payload: JSON.stringify({ data: 'test' }),
-      created_at: new Date(),
+      createdAt: new Date(),
     };
 
-    mockFetchPendingEvents
-      .mockResolvedValueOnce([{ ...eventBase, retry_count: 0 }])
-      .mockResolvedValueOnce([{ ...eventBase, retry_count: 1 }])
-      .mockResolvedValueOnce([{ ...eventBase, retry_count: 2 }])
-      .mockResolvedValueOnce([{ ...eventBase, retry_count: 3 }]);
+    mockClaimPendingEvents
+      .mockResolvedValueOnce([{ ...eventBase, retryCount: 0 }])
+      .mockResolvedValueOnce([{ ...eventBase, retryCount: 1 }])
+      .mockResolvedValueOnce([{ ...eventBase, retryCount: 2 }])
+      .mockResolvedValueOnce([{ ...eventBase, retryCount: 3 }]);
 
     // 第 1 次 poll：retry_count=0 → markAsFailed
     const r1 = await OutboxPoller.poll();
@@ -139,15 +140,15 @@ describe('1.5 端到端：OutboxPoller 失败重试 + 死信标记', () => {
     };
     mockRegisterEventHandlers.mockReturnValue(makeEventBus('test.success', successHandler));
 
-    mockFetchPendingEvents.mockResolvedValueOnce([
+    mockClaimPendingEvents.mockResolvedValueOnce([
       {
         id: 200,
-        event_type: 'test.success',
-        aggregate_type: 'TestAggregate',
-        aggregate_id: 2,
+        eventType: 'test.success',
+        aggregateType: 'TestAggregate',
+        aggregateId: 2,
         payload: JSON.stringify({ data: 'ok' }),
-        created_at: new Date(),
-        retry_count: 0,
+        createdAt: new Date(),
+        retryCount: 0,
       },
     ]);
 

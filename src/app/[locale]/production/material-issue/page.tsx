@@ -1,4 +1,6 @@
 'use client';
+
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
@@ -57,17 +59,6 @@ const STATUS_CONFIG: Record<
 const TYPE_MAP: Record<number, string> = { 1: 'normalIssue', 2: 'supplementaryIssue', 3: 'overIssue' };
 
 export default function MaterialIssuePage() {
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
 
   // 翻译钩子
   const t = useTranslations('Production');

@@ -48,10 +48,6 @@ export class QualityStandardItem {
     this.remark = props.remark;
   }
 
-  setStandardCardId(id: number): void {
-    (this as any).standardCardId = id;
-  }
-
   private validate(props: QualityStandardItemProps): void {
     if (!props.inspectionItem || props.inspectionItem.trim() === '') {
       throw new Error('检验项目不能为空');

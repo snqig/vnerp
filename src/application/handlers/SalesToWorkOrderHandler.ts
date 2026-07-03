@@ -142,19 +142,18 @@ export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedE
         [woId, `由销售订单 ${orderNo} 自动创建`]
       );
 
+      await getDomainEventOutbox().saveEvents(conn, 'WorkOrder', woId, [
+        new WorkOrderCreatedEvent({
+          workOrderId: woId,
+          workOrderNo,
+          productId: materialId,
+          productName: materialName,
+          plannedQty: requiredQty,
+        }),
+      ]);
+
       return woId;
     });
-
-    const eventBus = getEventBus();
-    await eventBus.publish(
-      new WorkOrderCreatedEvent({
-        workOrderId,
-        workOrderNo,
-        productId: materialId,
-        productName: materialName,
-        plannedQty: requiredQty,
-      })
-    );
 
     return {
       workOrderId,

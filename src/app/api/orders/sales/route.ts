@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { query, execute, queryOne } from '@/lib/db';
+import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
@@ -7,11 +7,10 @@ import {
   paginatedResponse,
 } from '@/lib/api-response';
 import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
-import { getEventBus } from '@/infrastructure/event-bus/EventBus';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import {
   SalesOrderApprovedEvent,
   SalesOrderSubmittedEvent,
-  SalesOrderShippedEvent,
 } from '@/domain/sales/events/SalesOrderEvents';
 import { secureLog } from '@/lib/logger';
 
@@ -157,31 +156,24 @@ export const PUT = withAuthAndErrorHandler(async (request: NextRequest, user: Us
     return errorResponse('订单不存在', 404, 404);
   }
 
-  const eventBus = getEventBus();
-
   switch (action) {
     case 'submit':
       if (order.status !== 1) {
         return errorResponse('只有草稿状态的订单可以提交', 400, 400);
       }
 
-      await execute('UPDATE sal_order SET status = 2, update_time = NOW() WHERE id = ?', [id]);
-
-      // 1.5.1 publish 失败不阻断 API 响应（业务 UPDATE 已成功，事件失败由 outbox 重试）
-      try {
-        await eventBus.publish(
+      await transaction(async (conn) => {
+        await conn.execute(
+          'UPDATE sal_order SET status = 2, update_time = NOW() WHERE id = ?',
+          [id]
+        );
+        await getDomainEventOutbox().saveEvents(conn, 'SalesOrder', id, [
           new SalesOrderSubmittedEvent({
             orderId: order.id,
             orderNo: order.order_no,
-          })
-        );
-      } catch (publishError: unknown) {
-        const errorMessage = publishError instanceof Error ? publishError.message : String(publishError);
-        secureLog('error', 'Sales order submitted event publish failed', {
-          orderId: id,
-          error: errorMessage,
-        });
-      }
+          }),
+        ]);
+      });
 
       secureLog('info', 'Sales order submitted', { orderId: id, orderNo: order.order_no });
 
@@ -192,19 +184,17 @@ export const PUT = withAuthAndErrorHandler(async (request: NextRequest, user: Us
         return errorResponse('只有已提交的订单可以审核', 400, 400);
       }
 
-      await execute(
-        'UPDATE sal_order SET status = 3, audit_by = ?, audit_time = NOW(), update_time = NOW() WHERE id = ?',
-        [user.userId, id]
-      );
-
       const lines: any[] = await query(
         'SELECT * FROM sal_order_item WHERE order_id = ? AND deleted = 0',
         [id]
       );
 
-      // 1.5.1 publish 失败不阻断 API 响应（业务 UPDATE 已成功，事件失败由 outbox 重试）
-      try {
-        await eventBus.publish(
+      await transaction(async (conn) => {
+        await conn.execute(
+          'UPDATE sal_order SET status = 3, audit_by = ?, audit_time = NOW(), update_time = NOW() WHERE id = ?',
+          [user.userId, id]
+        );
+        await getDomainEventOutbox().saveEvents(conn, 'SalesOrder', id, [
           new SalesOrderApprovedEvent({
             orderId: order.id,
             orderNo: order.order_no,
@@ -219,15 +209,9 @@ export const PUT = withAuthAndErrorHandler(async (request: NextRequest, user: Us
               remainingQty: l.quantity,
             })),
             totalAmount: parseFloat(order.total_amount),
-          })
-        );
-      } catch (publishError: unknown) {
-        const errorMessage = publishError instanceof Error ? publishError.message : String(publishError);
-        secureLog('error', 'Sales order approved event publish failed', {
-          orderId: id,
-          error: errorMessage,
-        });
-      }
+          }),
+        ]);
+      });
 
       secureLog('info', 'Sales order approved, work order creation triggered', {
         orderId: id,

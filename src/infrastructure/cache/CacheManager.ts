@@ -108,3 +108,14 @@ export function getCacheManager(): CacheManager {
 export function resetCacheManagerForTest(): void {
   globalCache = null;
 }
+
+/**
+ * 获取 Redis 原始客户端（用于 Stream 等需要直接操作 Redis 的场景）
+ * @returns Redis 客户端实例，未使用 Redis 时返回 null
+ */
+export function getRedisClientIfAvailable(): import('ioredis').default | null {
+  if (globalCache && globalCache instanceof RedisCacheManager) {
+    return (globalCache as RedisCacheManager).rawClient();
+  }
+  return null;
+}

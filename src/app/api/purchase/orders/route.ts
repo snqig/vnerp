@@ -11,13 +11,13 @@ import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { PurchaseApplicationService } from '@/application/services/PurchaseApplicationService';
 import { MysqlPurchaseOrderRepository } from '@/infrastructure/repositories/MysqlPurchaseOrderRepository';
-import { registerEventHandlers } from '@/infrastructure/config/EventRegistry';
+import { registerEventHandlers } from '@/application/EventRegistry';
 import { PurchaseOrderStatus } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 
 function getPurchaseService(): PurchaseApplicationService {
-  const eventBus = registerEventHandlers();
+  registerEventHandlers();
   const orderRepo = new MysqlPurchaseOrderRepository();
-  return new PurchaseApplicationService(orderRepo, eventBus);
+  return new PurchaseApplicationService(orderRepo);
 }
 
 export const GET = withAuthAndErrorHandler(

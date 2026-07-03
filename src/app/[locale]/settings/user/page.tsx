@@ -1,4 +1,6 @@
 'use client';
+
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -90,18 +92,6 @@ export default function UserManagementPage() {
   const [departments, setDepartments] = useState<Dept[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [nameWarning, setNameWarning] = useState('');
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const fetchData = async () => {
     try {
@@ -503,7 +493,7 @@ export default function UserManagementPage() {
       toast({ title: tc('passwordRequired'), variant: 'destructive' });
       return;
     }
-    if (!editItem.name) {
+    if (!editItem.real_name) {
       toast({ title: tc('nameRequired'), variant: 'destructive' });
       return;
     }
@@ -513,7 +503,7 @@ export default function UserManagementPage() {
       const body: UserFormData = {
         id: editItem.id,
         username: editItem.username,
-        real_name: editItem.real_name,
+        real_name: editItem.real_name || '',
         email: editItem.email || '',
         phone: editItem.phone || '',
         department_id: editItem.department_id || null,

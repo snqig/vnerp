@@ -1,8 +1,10 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -14,7 +16,6 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -66,21 +67,11 @@ interface MaterialLabel {
 
 // 是否徽章 - 需要在组件内部使用翻译
 export default function MaterialLabelsPage() {
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
 
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
+  const { user } = useAuth();
 
   // 是否徽章
   const getYesNoBadge = (value: number) => {
@@ -120,9 +111,8 @@ const authFetch = async (url: string, options: RequestInit = {}) => {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
-  const { user } = useAuth();
-  const [labels, setLabels] = useState<MaterialLabel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [labels, setLabels] = useState<MaterialLabel[]>([]);
   const [keyword, setKeyword] = useState('');
   const [isMainMaterial, setIsMainMaterial] = useState('all');
   const [isCut, setIsCut] = useState('all');

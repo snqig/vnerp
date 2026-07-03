@@ -1,8 +1,10 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -11,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -81,17 +82,7 @@ export default function DashboardPage() {
   });
   const [loading, setLoading] = useState(true);
 
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
+  const s = data.stats;
 
   const fetchDashboard = async () => {
     try {
@@ -138,8 +129,6 @@ export default function DashboardPage() {
     const cfg = map[status] || { label: tc('unknown'), variant: 'secondary' as const };
     return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
   };
-
-  const s = data.stats;
 
   return (
     <MainLayout title={t('title')}>
@@ -322,7 +311,7 @@ export default function DashboardPage() {
                       ))}
                     </TableBody>
                   </Table>
-                )}
+                  )}
               </CardContent>
             </Card>
           </TabsContent>

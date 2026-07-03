@@ -392,12 +392,12 @@ async function logLogin(username: string, request: NextRequest, success: boolean
     const ip = getClientIP(request);
     const userAgent = request.headers.get('user-agent') || '';
     await execute(
-      `INSERT INTO sys_login_log (user_name, ipaddr, login_location, browser, os, status, msg)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [username, ip, '', parseBrowser(userAgent), parseOS(userAgent), success ? 1 : 0, message]
+      `INSERT INTO sys_login_log (username, ip_address, user_agent, login_status, fail_reason)
+       VALUES (?, ?, ?, ?, ?)`,
+      [username, ip, userAgent, success ? 1 : 0, success ? '' : message]
     );
   } catch (e) {
-    console.error(tc('text_a8sfx1'), e);
+    console.error('[auth:login] logLogin error:', e);
   }
 }
 

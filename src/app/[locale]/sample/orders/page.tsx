@@ -1,7 +1,9 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +21,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
@@ -54,18 +55,6 @@ import {
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { useTranslations } from 'next-intl';
-
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
 
 interface SampleOrder {
   id: number;
@@ -695,7 +684,7 @@ export default function SampleOrdersPage() {
                         </td>
                         <td className="p-4 font-mono text-sm">{order.order_no}</td>
                         <td className="p-4">{formatDate(order.notify_date)}</td>
-                        <td className="p-4">{order.customer_name}</td>
+                        <td className="p-4">{getStatusBadge(order.delivery_status)}</td>
                         <td className="p-4 font-medium">{order.product_name}</td>
                         <td className="p-4 font-mono text-xs">{order.material_no}</td>
                         <td className="p-4">{order.version}</td>

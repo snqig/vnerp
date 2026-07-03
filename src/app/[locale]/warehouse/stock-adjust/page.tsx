@@ -1,4 +1,6 @@
 'use client';
+
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -68,18 +70,6 @@ export default function StockAdjustPage() {
     4: { label: t('cancelled'), variant: 'destructive' },
   };
   const typeMap: Record<number, string> = { 1: t('surplus'), 2: t('deficit'), 3: t('otherAdjust') };
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const { toast } = useToast();
   const [list, setList] = useState<Item[]>([]);

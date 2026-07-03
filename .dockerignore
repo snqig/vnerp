@@ -1,18 +1,72 @@
+# 依赖
 node_modules
+.pnpm-store
+
+# Next.js 构建输出
 .next
+out
+build
+
+# 版本控制
 .git
 .gitignore
-*.md
+.gitattributes
+.github
+
+# 环境变量
 .env
 .env.*
 !.env.example
+!.env.production.example
+
+# IDE / 编辑器
 .vscode
 .idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 测试相关
 coverage
 playwright-report
 test-results
+tests/
+
+# 文档（生产镜像不需要）
+*.md
+docs/
+
+# 备份和日志
 backups
 *.log
+logs/
+
+# 临时文件
 *.tmp
+*.bak
+*.swp
+
+# Docker 自身文件
 Dockerfile
 docker-compose*.yml
+.dockerignore
+
+# 脚本（运行时不需要，构建阶段可能需要，根据实际调整）
+# scripts/
+
+# 数据库相关（构建阶段不需要）
+database/
+
+# 配置文件（开发相关）
+playwright.config.ts
+vitest.config.ts
+tsconfig.json
+eslint.config.js
+.prettierrc
+.prettierignore
+.husky
+.commitlintrc.json
+
+# 本地数据
+uploads/

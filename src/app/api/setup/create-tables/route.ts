@@ -23,7 +23,7 @@ function isSetupApiEnabled(): boolean {
 async function authenticateAndAuthorize(request: NextRequest): Promise<UserInfo | NextResponse> {
   // 1. env 开关
   if (!isSetupApiEnabled()) {
-    secureLog('warn', tc('text_f6zh62'), {
+    secureLog('warn', 'Setup API is disabled', {
       method: request.method,
       url: request.url,
       reason: 'api_disabled',
@@ -34,36 +34,36 @@ async function authenticateAndAuthorize(request: NextRequest): Promise<UserInfo 
   // 2. 提取 token
   const token = extractToken(request);
   if (!token) {
-    secureLog('warn', tc('text_t1jvqo'), {
+    secureLog('warn', 'No token provided', {
       method: request.method,
       reason: 'no_token',
     });
-    return errorResponse(tc('text_jbxt8a'), 401, 401);
+    return errorResponse('Unauthorized', 401, 401);
   }
 
   // 3. 验证 token
   const userInfo = await verifyToken(token);
   if (!userInfo) {
-    secureLog('warn', tc('text_99wleb'), {
+    secureLog('warn', 'Invalid token', {
       reason: 'invalid_token',
       tokenSuffix: token.slice(-8),
     });
-    return errorResponse(tc('text_invqv5'), 401, 401);
+    return errorResponse('Unauthorized', 401, 401);
   }
 
   // 4. 校验 admin 角色（建表属高危操作，仅 admin 可执行）
   const isAdmin = hasRole(userInfo, 'admin') || hasRole(userInfo, 'super_admin');
   if (!isAdmin) {
-    secureLog('warn', tc('text_d3i6i5'), {
+    secureLog('warn', 'Admin role required', {
       userId: userInfo.userId,
       username: userInfo.username,
       roles: userInfo.roles,
       reason: 'not_admin',
     });
-    return errorResponse(tc('text_u042xf'), 403, 403);
+    return errorResponse('Forbidden', 403, 403);
   }
 
-  secureLog('info', tc('text_v2015y'), {
+  secureLog('info', 'Setup API authentication successful', {
     userId: userInfo.userId,
     username: userInfo.username,
   });

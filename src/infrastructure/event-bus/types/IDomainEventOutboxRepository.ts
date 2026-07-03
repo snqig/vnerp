@@ -20,7 +20,7 @@ export interface EventOutboxRecord {
   aggregateType: string | null;
   aggregateId: number | null;
   payload: string; // JSON 字符串，由消费方自行 JSON.parse
-  status: 'pending' | 'processed' | 'failed' | 'dead_letter';
+  status: 'pending' | 'dispatching' | 'processed' | 'failed' | 'dead_letter';
   retryCount: number;
   errorMessage: string | null;
   nextExecuteAt: Date | null;
@@ -50,6 +50,17 @@ export interface IDomainEventOutboxRepository {
   fetchPendingEvents(limit?: number): Promise<EventOutboxRecord[]>;
 
   /**
+   * 原子 claim 待执行事件（多实例安全）
+   *
+   * 使用 SELECT FOR UPDATE SKIP LOCKED 选取 pending 事件，
+   * 同事务内将其状态改为 dispatching（claimed_at=NOW()）。
+   * 其他实例并发调用时 SKIP LOCKED 跳过已锁定的行，避免重复消费。
+   *
+   * @param limit 单次最大 claim 条数
+   */
+  claimPendingEvents(limit?: number): Promise<EventOutboxRecord[]>;
+
+  /**
    * 标记事件为已处理
    */
   markAsProcessed(id: number): Promise<void>;
@@ -73,4 +84,16 @@ export interface IDomainEventOutboxRepository {
    * @param id 事件 ID（传 0 表示批量重置所有符合条件的失败事件）
    */
   markForRetry(id: number): Promise<void>;
+
+  /**
+   * 回收卡在 'dispatching' 状态的事件（崩溃恢复）
+   *
+   * OutboxPoller 在 claimPendingEvents 后崩溃会导致事件卡在 'dispatching'，
+   * claimPendingEvents 只选取 'pending'，这些事件永远不会被重新消费。
+   * 此方法将超过 timeout 分钟的 dispatching 事件重置为 pending。
+   *
+   * @param timeoutMinutes dispatching 超时阈值（分钟）
+   * @returns 重置的事件数量
+   */
+  reclaimStaleDispatching(timeoutMinutes: number): Promise<number>;
 }

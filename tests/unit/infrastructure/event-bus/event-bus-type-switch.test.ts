@@ -128,6 +128,10 @@ describe('1.6 MemoryDomainEventOutbox 行为（no-op）', () => {
     await expect(outbox.markForRetry(0)).resolves.toBeUndefined();
     await expect(outbox.markForRetry(1)).resolves.toBeUndefined();
   });
+
+  it('reclaimStaleDispatching 返回 0（no-op）', async () => {
+    await expect(outbox.reclaimStaleDispatching(10)).resolves.toBe(0);
+  });
 });
 
 describe('1.6 OutboxPoller 自动启动（AppInitializer）', () => {

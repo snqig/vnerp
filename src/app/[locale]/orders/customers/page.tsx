@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
@@ -29,7 +30,6 @@ import {
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { SearchInput } from '@/components/ui/search-input';
 import {
   Select,
@@ -134,18 +134,6 @@ export default function CustomersPage() {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   // 从数据库加载客户数据
   useEffect(() => {
@@ -377,7 +365,6 @@ export default function CustomersPage() {
     );
   };
 
-  // 获取跟进状态标签
   const getFollowUpStatusBadge = (status: number) => {
     const key = FOLLOW_UP_STATUS_LABEL_KEYS[status] || 'statusPotential';
     const color = followUpStatusColors[status] || followUpStatusColors[1];
@@ -830,7 +817,7 @@ export default function CustomersPage() {
                         <TableCell className="text-center">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -991,12 +978,10 @@ export default function CustomersPage() {
                     </div>
                   </div>
                 </div>
-                {selectedCustomer.remark && (
                   <div className="border-t pt-4">
                     <span className="text-sm text-muted-foreground">{tc('remark')}</span>
                     <p className="font-medium mt-1">{selectedCustomer.remark}</p>
                   </div>
-                )}
               </div>
             )}
           </DialogContent>

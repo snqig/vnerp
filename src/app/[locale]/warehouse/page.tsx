@@ -1,7 +1,9 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,7 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -57,18 +58,6 @@ export default function WarehousePage() {
   // 翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const [batches, setBatches] = useState<BatchInventory[]>([]);
   const [loading, setLoading] = useState(false);
@@ -241,8 +230,6 @@ export default function WarehousePage() {
 
   const getQcStatusBadge = (status: number) => {
     switch (status) {
-      case 1:
-        return <Badge className="bg-green-500">{t('qualified')}</Badge>;
       case 0:
         return <Badge variant="destructive">{t('unqualified')}</Badge>;
       case 2:
@@ -610,7 +597,6 @@ export default function WarehousePage() {
               </TableBody>
             </Table>
           </div>
-
           <div className="flex justify-between items-center mt-4">
             <div className="text-sm text-gray-500">
               {t('recordCount', { count: total })}，{t('pageOf', { page, pages: Math.ceil(total / pageSize) })}

@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
@@ -141,8 +142,6 @@ interface MRPRunResult {
   purchase_requests?: { request_no: string; item_count: number }[];
 }
 
-
-
 function flattenBOMTree(
   node: BOMNode,
   result: (BOMNode & { indent: number })[] = [],
@@ -175,18 +174,6 @@ export default function MRPPage() {
   };
 
   const [activeTab, setActiveTab] = useState('mrp-run');
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);

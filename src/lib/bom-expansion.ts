@@ -1,4 +1,20 @@
 import { query } from './db';
+import { getCacheManager } from '@/infrastructure/cache/CacheManager';
+import { CacheGuard } from '@/infrastructure/cache/CacheGuard';
+
+const BOM_CACHE_TTL_SECONDS = 600;
+
+let bomCacheGuard: CacheGuard | null = null;
+function getBomCacheGuard(): CacheGuard {
+  if (!bomCacheGuard) {
+    bomCacheGuard = new CacheGuard(getCacheManager());
+  }
+  return bomCacheGuard;
+}
+
+function bomCacheKey(productId: number, quantity: number): string {
+  return `bom:expansion:${productId}:${quantity}`;
+}
 
 /**
  * BOM展开配置
@@ -83,40 +99,6 @@ interface BomLine {
   lossRate: number; // 损耗率（百分比）
   bomId: number;
 }
-
-/**
- * 缓存管理器
- */
-class BomExpansionCache {
-  private cache = new Map<string, BomExpansionResult>();
-  private maxCacheSize = 100;
-
-  getKey(productId: number, quantity: number): string {
-    return `${productId}:${quantity}`;
-  }
-
-  get(productId: number, quantity: number): BomExpansionResult | null {
-    return this.cache.get(this.getKey(productId, quantity)) || null;
-  }
-
-  set(productId: number, quantity: number, result: BomExpansionResult): void {
-    // LRU缓存策略
-    if (this.cache.size >= this.maxCacheSize) {
-      const firstKey = this.cache.keys().next().value;
-      if (firstKey) {
-        this.cache.delete(firstKey);
-      }
-    }
-    this.cache.set(this.getKey(productId, quantity), result);
-  }
-
-  clear(): void {
-    this.cache.clear();
-  }
-}
-
-// 全局缓存实例
-const expansionCache = new BomExpansionCache();
 
 /**
  * 获取产品的BOM明细
@@ -336,82 +318,79 @@ export async function expandBom(
     enableCache: config.enableCache !== false,
   };
 
-  // 检查缓存
-  if (finalConfig.enableCache) {
-    const cached = expansionCache.get(productId, quantity);
-    if (cached) {
-      return cached;
+  const computeResult = async (): Promise<BomExpansionResult> => {
+    // 获取产品信息
+    const productSql = `
+      SELECT
+        id,
+        code,
+        name,
+        specification
+      FROM products
+      WHERE id = ?
+    `;
+    const productRows = await query<{
+      id: number;
+      code: string;
+      name: string;
+      specification?: string;
+    }>(productSql, [productId]);
+
+    if (productRows.length === 0) {
+      throw new Error(`产品不存在：ID ${productId}`);
     }
+
+    const product = productRows[0];
+    const warnings: string[] = [];
+    const visitedNodes = new Set<string>();
+
+    // 递归展开BOM
+    const items = await expandBomRecursive(
+      productId,
+      product.code,
+      product.name,
+      product.specification,
+      quantity,
+      0, // 初始累计损耗率为0
+      0, // 初始层级为0
+      [], // 初始父级路径为空
+      finalConfig,
+      visitedNodes,
+      warnings
+    );
+
+    // 合并相同物料
+    const mergedItems = mergeMaterials(items);
+
+    // 统计信息
+    const statistics = {
+      totalMaterials: mergedItems.length,
+      maxDepth: Math.max(...mergedItems.map(i => i.level), 0),
+      leafMaterials: mergedItems.filter(i => i.isLeaf).length,
+      intermediateMaterials: mergedItems.filter(i => !i.isLeaf).length,
+    };
+
+    return {
+      productId: product.id,
+      productCode: product.code,
+      productName: product.name,
+      productSpec: product.specification,
+      requiredQuantity: quantity,
+      items: mergedItems,
+      statistics,
+      circularReferenceWarnings: warnings.length > 0 ? warnings : undefined,
+    };
+  };
+
+  if (!finalConfig.enableCache) {
+    return computeResult();
   }
 
-  // 获取产品信息
-  const productSql = `
-    SELECT 
-      id,
-      code,
-      name,
-      specification
-    FROM products
-    WHERE id = ?
-  `;
-  const productRows = await query<{
-    id: number;
-    code: string;
-    name: string;
-    specification?: string;
-  }>(productSql, [productId]);
-
-  if (productRows.length === 0) {
-    throw new Error(`产品不存在：ID ${productId}`);
-  }
-
-  const product = productRows[0];
-  const warnings: string[] = [];
-  const visitedNodes = new Set<string>();
-
-  // 递归展开BOM
-  const items = await expandBomRecursive(
-    productId,
-    product.code,
-    product.name,
-    product.specification,
-    quantity,
-    0, // 初始累计损耗率为0
-    0, // 初始层级为0
-    [], // 初始父级路径为空
-    finalConfig,
-    visitedNodes,
-    warnings
+  return getBomCacheGuard().getOrLoad(
+    bomCacheKey(productId, quantity),
+    BOM_CACHE_TTL_SECONDS,
+    computeResult
   );
-
-  // 合并相同物料
-  const mergedItems = mergeMaterials(items);
-
-  // 统计信息
-  const statistics = {
-    totalMaterials: mergedItems.length,
-    maxDepth: Math.max(...mergedItems.map(i => i.level), 0),
-    leafMaterials: mergedItems.filter(i => i.isLeaf).length,
-    intermediateMaterials: mergedItems.filter(i => !i.isLeaf).length,
-  };
-
-  const result: BomExpansionResult = {
-    productId: product.id,
-    productCode: product.code,
-    productName: product.name,
-    productSpec: product.specification,
-    requiredQuantity: quantity,
-    items: mergedItems,
-    statistics,
-    circularReferenceWarnings: warnings.length > 0 ? warnings : undefined,
-  };
-
-  // 缓存结果
-  if (finalConfig.enableCache) {
-    expansionCache.set(productId, quantity, result);
-  }
-
-  return result;
 }
 
 /**
@@ -499,8 +478,8 @@ export function mergeExpansionResults(results: BomExpansionResult[]): {
 /**
  * 清除缓存
  */
-export function clearBomExpansionCache(): void {
-  expansionCache.clear();
+export async function clearBomExpansionCache(): Promise<void> {
+  await getCacheManager().deletePattern('bom:expansion:*');
 }
 
 /**

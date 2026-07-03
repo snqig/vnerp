@@ -84,7 +84,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   // 清除缓存操作
   if (action === 'clearCache') {
-    clearBomExpansionCache();
+    await clearBomExpansionCache();
     return successResponse(null, '缓存已清除');
   }
 

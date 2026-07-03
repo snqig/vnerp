@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useState, useCallback, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
@@ -50,18 +51,6 @@ import {
 } from '@/components/ui/table-export-toolbar';
 import { formatDate } from '@/lib/date-utils';
 import { useTranslations } from 'next-intl';
-
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
 
 interface SampleOrder {
   id: number;
@@ -198,13 +187,12 @@ export default function SampleManagementPage() {
   };
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(page),
-        pageSize: String(pageSize),
-        keyword: debouncedKeyword,
-      });
+      setLoading(true);
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
+      if (debouncedKeyword) params.set('keyword', debouncedKeyword);
       if (statusFilter !== 'all') params.set('deliveryStatus', statusFilter);
       const res = await authFetch(`/api/sample/orders?${params}`);
       const result = await res.json();

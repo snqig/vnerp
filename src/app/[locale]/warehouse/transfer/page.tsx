@@ -1,5 +1,6 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -108,18 +109,6 @@ export default function TransferPage() {
     2: { label: t('outbound'), variant: 'default' },
     3: { label: t('inbound'), variant: 'default' },
     4: { label: t('cancelled'), variant: 'destructive' },
-  };
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
   };
 
   const { toast } = useToast();
@@ -954,7 +943,7 @@ export default function TransferPage() {
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto" resizable>
             <DialogHeader>
-              <DialogTitle>{t('transferDetailTitle', { transferNo: currentTransfer?.transfer_no })}</DialogTitle>
+              <DialogTitle>{t('transferDetailTitle', { transferNo: currentTransfer?.transfer_no || '' })}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {currentTransfer && (

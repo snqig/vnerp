@@ -1,10 +1,12 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
 import { formatDate } from '@/lib/date-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -30,7 +32,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -240,18 +241,6 @@ export default function ProductionSchedulePage() {
       status: string;
     }>
   >([]);
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   // 编辑表单状态
   const [editForm, setEditForm] = useState({
@@ -956,7 +945,7 @@ export default function ProductionSchedulePage() {
                     </div>
                   );
                 })}
-              </div>
+            </div>
             </CardContent>
           </Card>
         )}
@@ -1013,7 +1002,7 @@ export default function ProductionSchedulePage() {
                     </div>
                   ))}
                 </div>
-                <ScrollArea className="flex-1">
+                <ScrollArea>
                   <div style={{ width: ganttTimelineWidth, minWidth: '100%' }}>
                     <div
                       className="flex border-b border-border bg-muted/50"
@@ -1138,7 +1127,7 @@ export default function ProductionSchedulePage() {
                                               {t('timeConflict')}
                                             </div>
                                           )}
-                                        </div>
+                                      </div>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>

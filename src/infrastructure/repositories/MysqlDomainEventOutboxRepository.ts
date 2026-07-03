@@ -56,9 +56,58 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
     return rows.map(this.toRecord);
   }
 
+  /**
+   * 原子 claim 待执行事件（多实例安全）
+   *
+   * 使用 SELECT FOR UPDATE SKIP LOCKED 在事务内选取 pending 事件，
+   * 同事务内将其状态改为 dispatching 并记录 claimed_at。
+   * MySQL 8.0+ 的 SKIP LOCKED 跳过已被其他事务锁定的行，避免重复消费。
+   */
+  async claimPendingEvents(limit: number = 50): Promise<EventOutboxRecord[]> {
+    const conn = await getPool().getConnection();
+    try {
+      await conn.beginTransaction();
+
+      const [rows]: [any[], any] = await conn.query(
+        `SELECT id, event_type, aggregate_type, aggregate_id, payload, status,
+                retry_count, error_message, next_execute_at, created_at, processed_at
+         FROM domain_event_outbox
+         WHERE status = 'pending'
+           AND (next_execute_at IS NULL OR next_execute_at <= NOW())
+         ORDER BY created_at ASC
+         LIMIT ?
+         FOR UPDATE SKIP LOCKED`,
+        [limit]
+      );
+
+      if (rows.length === 0) {
+        await conn.commit();
+        return [];
+      }
+
+      const ids = rows.map((r) => r.id);
+      await conn.query(
+        `UPDATE domain_event_outbox
+         SET status = 'dispatching', claimed_at = NOW()
+         WHERE id IN (?)`,
+        [ids]
+      );
+
+      await conn.commit();
+      return rows.map(this.toRecord);
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+  }
+
   async markAsProcessed(id: number): Promise<void> {
     await execute(
-      `UPDATE domain_event_outbox SET status = 'processed', processed_at = NOW() WHERE id = ?`,
+      `UPDATE domain_event_outbox
+       SET status = 'processed', processed_at = NOW(), dispatched_at = NOW()
+       WHERE id = ?`,
       [id]
     );
   }
@@ -121,6 +170,31 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
        WHERE id = ? AND retry_count < 3`,
       [id]
     );
+  }
+
+  /**
+   * 回收卡在 'dispatching' 状态的事件（崩溃恢复）
+   *
+   * OutboxPoller 在 claimPendingEvents 后崩溃会导致事件卡在 'dispatching'。
+   * 此方法将超过 timeout 分钟的 dispatching 事件重置为 pending，使其可被重新消费。
+   * 幂等操作：多实例并发调用不会冲突，UPDATE 是行级原子的。
+   */
+  async reclaimStaleDispatching(timeoutMinutes: number): Promise<number> {
+    const result = await execute(
+      `UPDATE domain_event_outbox
+       SET status = 'pending', claimed_at = NULL
+       WHERE status = 'dispatching'
+         AND claimed_at < DATE_SUB(NOW(), INTERVAL ? MINUTE)`,
+      [timeoutMinutes]
+    );
+    const reset = result.affectedRows;
+    if (reset > 0) {
+      secureLog('warn', 'MysqlDomainEventOutbox: reclaimed stale dispatching events', {
+        count: reset,
+        timeoutMinutes,
+      });
+    }
+    return reset;
   }
 
   // 将数据库行映射为 EventOutboxRecord

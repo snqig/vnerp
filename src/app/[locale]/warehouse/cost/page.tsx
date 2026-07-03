@@ -1,4 +1,6 @@
 'use client';
+
+import { authFetch } from '@/lib/auth-fetch';
 import { useTranslations } from 'next-intl';;
 import { useEffect, useState, useCallback } from 'react';
 import { MainLayout } from '@/components/layout';
@@ -14,16 +16,6 @@ import {
 } from '@/components/ui/dialog';
 import { Calculator, RefreshCw, Eye, TrendingUp, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return fetch(url, { ...options, headers });
-};
 
 interface CostItem {
   material_id: number;

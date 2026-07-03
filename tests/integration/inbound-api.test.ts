@@ -28,7 +28,7 @@ vi.mock('@/infrastructure/repositories/MysqlInboundOrderRepository', () => ({
   MysqlInboundOrderRepository: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/config/EventRegistry', () => ({
+vi.mock('@/application/EventRegistry', () => ({
   registerEventHandlers: vi.fn(() => ({})),
 }));
 

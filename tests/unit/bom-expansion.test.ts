@@ -12,6 +12,37 @@ vi.mock('@/lib/db', () => ({
   transaction: vi.fn(),
 }));
 
+// Mock CacheManager — 使用进程内 Map 避免测试环境连 Redis
+const mockCacheStore = new Map<string, unknown>();
+const mockCacheManager = {
+  get: async (key: string) => mockCacheStore.get(key) ?? null,
+  set: async (key: string, value: unknown, _ttl?: number) => { mockCacheStore.set(key, value); },
+  delete: async (key: string) => { mockCacheStore.delete(key); },
+  deletePattern: async (pattern: string) => {
+    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+    for (const key of [...mockCacheStore.keys()]) {
+      if (regex.test(key)) mockCacheStore.delete(key);
+    }
+  },
+};
+vi.mock('@/infrastructure/cache/CacheManager', () => ({
+  getCacheManager: () => mockCacheManager,
+}));
+
+// Mock CacheGuard — 复用 mockCacheManager，验证 cache→loader→cache 流程
+vi.mock('@/infrastructure/cache/CacheGuard', () => ({
+  CacheGuard: class {
+    constructor(private cache: typeof mockCacheManager) {}
+    async getOrLoad<T>(key: string, _ttl: number, loader: () => Promise<T>): Promise<T> {
+      const cached = await this.cache.get<T>(key);
+      if (cached !== null) return cached;
+      const value = await loader();
+      await this.cache.set(key, value, _ttl);
+      return value;
+    }
+  },
+}));
+
 import { query } from '@/lib/db';
 import {
   expandBom,
@@ -23,9 +54,9 @@ import {
 } from '@/lib/bom-expansion';
 
 describe('BOM展开计算', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    clearBomExpansionCache();
+    await clearBomExpansionCache();
   });
 
   afterEach(() => {
@@ -342,7 +373,7 @@ describe('BOM展开计算', () => {
       vi.mocked(query).mockResolvedValue([]);
 
       await expandBom(1, 10, { enableCache: true });
-      clearBomExpansionCache();
+      await clearBomExpansionCache();
 
       vi.clearAllMocks();
       vi.mocked(query).mockResolvedValueOnce([

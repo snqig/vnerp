@@ -15,31 +15,39 @@ const {
   mockMarkAsProcessed,
   mockMarkAsFailed,
   mockMarkAsDeadLetter,
-  mockFetchPendingEvents,
+  mockClaimPendingEvents,
   mockRegisterEventHandlers,
 } = vi.hoisted(() => ({
   mockMarkAsProcessed: vi.fn(),
   mockMarkAsFailed: vi.fn(),
   mockMarkAsDeadLetter: vi.fn(),
-  mockFetchPendingEvents: vi.fn(),
+  mockClaimPendingEvents: vi.fn(),
   mockRegisterEventHandlers: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/event-bus/DomainEventOutbox', () => ({
-  DomainEventOutbox: {
-    fetchPendingEvents: mockFetchPendingEvents,
+vi.mock('@/infrastructure/event-bus/DomainEventOutboxFactory', () => ({
+  getDomainEventOutbox: () => ({
+    claimPendingEvents: mockClaimPendingEvents,
     markAsProcessed: mockMarkAsProcessed,
     markAsFailed: mockMarkAsFailed,
     markAsDeadLetter: mockMarkAsDeadLetter,
-  },
+    reclaimStaleDispatching: vi.fn(async () => 0),
+  }),
 }));
 
-vi.mock('@/infrastructure/config/EventRegistry', () => ({
+vi.mock('@/application/EventRegistry', () => ({
   registerEventHandlers: mockRegisterEventHandlers,
 }));
 
 vi.mock('@/lib/logger', () => ({
   secureLog: vi.fn(),
+}));
+
+vi.mock('@/infrastructure/event-bus/IdempotencyGuard', () => ({
+  IdempotencyGuard: {
+    reclaimStaleProcessing: vi.fn(async () => 0),
+    cleanupOlderThan: vi.fn(async () => 0),
+  },
 }));
 
 import { OutboxPoller } from '@/infrastructure/event-bus/OutboxPoller';
@@ -53,12 +61,12 @@ function makeEventBus(eventType: string, handler: EventHandler): InMemoryEventBu
 function makePendingRow(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     id: 1,
-    event_type: 'test.lifecycle',
-    aggregate_type: 'TestAggregate',
-    aggregate_id: 1,
+    eventType: 'test.lifecycle',
+    aggregateType: 'TestAggregate',
+    aggregateId: 1,
     payload: JSON.stringify({ data: 'test' }),
-    created_at: new Date(),
-    retry_count: 0,
+    createdAt: new Date(),
+    retryCount: 0,
     ...overrides,
   };
 }
@@ -68,13 +76,13 @@ describe('1.7.2 OutboxPoller 生命周期与并发防重入', () => {
     mockMarkAsProcessed.mockReset();
     mockMarkAsFailed.mockReset();
     mockMarkAsDeadLetter.mockReset();
-    mockFetchPendingEvents.mockReset();
+    mockClaimPendingEvents.mockReset();
     mockRegisterEventHandlers.mockReset();
 
     mockMarkAsProcessed.mockResolvedValue(undefined);
     mockMarkAsFailed.mockResolvedValue(undefined);
     mockMarkAsDeadLetter.mockResolvedValue(undefined);
-    mockFetchPendingEvents.mockResolvedValue([]);
+    mockClaimPendingEvents.mockResolvedValue([]);
 
     OutboxPoller.stop();
   });
@@ -86,7 +94,7 @@ describe('1.7.2 OutboxPoller 生命周期与并发防重入', () => {
   it('处理成功 → markAsProcessed，processed=1', async () => {
     const successHandler: EventHandler = { handle: vi.fn().mockResolvedValue(undefined) };
     mockRegisterEventHandlers.mockReturnValue(makeEventBus('test.lifecycle', successHandler));
-    mockFetchPendingEvents.mockResolvedValueOnce([makePendingRow()]);
+    mockClaimPendingEvents.mockResolvedValueOnce([makePendingRow()]);
 
     const result = await OutboxPoller.poll();
 
@@ -103,7 +111,7 @@ describe('1.7.2 OutboxPoller 生命周期与并发防重入', () => {
       handle: vi.fn().mockRejectedValue(new Error('Handler failed')),
     };
     mockRegisterEventHandlers.mockReturnValue(makeEventBus('test.lifecycle', failingHandler));
-    mockFetchPendingEvents.mockResolvedValueOnce([makePendingRow({ retry_count: 1 })]);
+    mockClaimPendingEvents.mockResolvedValueOnce([makePendingRow({ retryCount: 1 })]);
 
     const result = await OutboxPoller.poll();
 
@@ -121,7 +129,7 @@ describe('1.7.2 OutboxPoller 生命周期与并发防重入', () => {
     const firstPending = new Promise<unknown[]>((r) => {
       resolveFirst = r;
     });
-    mockFetchPendingEvents.mockReturnValueOnce(firstPending);
+    mockClaimPendingEvents.mockReturnValueOnce(firstPending);
     mockRegisterEventHandlers.mockReturnValue(makeEventBus('test.lifecycle', { handle: vi.fn() }));
 
     // 启动第一次 poll（不 await）

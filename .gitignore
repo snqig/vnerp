@@ -90,6 +90,13 @@ i18n-missing.json
 /orders-*.png
 /debug-*.png
 
+# 临时调试脚本（下划线前缀）
+scripts/_*.js
+scripts/_*.mjs
+
+# 审计结果输出（临时生成）
+scripts/audit-final-result.json
+
 # 数据库备份
 /backups/
 *.bak

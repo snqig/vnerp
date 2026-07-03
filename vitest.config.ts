@@ -44,9 +44,6 @@ export default defineConfig({
         // 领域层（8.2/8.3 补测目标）
         'src/domain/shared/**/*.ts',
         'src/domain/warehouse/**/*.ts',
-        'src/domain/standard-card/**/*.ts',
-        // 应用层事件处理器（standard-card 领域补测目标）
-        'src/application/handlers/StandardCardHandlers.ts',
         // 事件总线基础设施（1.5-1.7 已补全测试）
         'src/infrastructure/event-bus/EventBus.ts',
         'src/infrastructure/event-bus/OutboxPoller.ts',

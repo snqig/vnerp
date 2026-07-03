@@ -1,4 +1,6 @@
 'use client';
+
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
@@ -64,8 +66,6 @@ const LABEL_STATUS_CONFIG: Record<
   3: { variant: 'secondary' },
 };
 
-
-
 export default function ProductLabelPage() {
   // 翻译钩子
   const t = useTranslations('Production');
@@ -96,18 +96,6 @@ export default function ProductLabelPage() {
   const [printItems, setPrintItems] = useState<Item[]>([]);
   const [qrDataUrls, setQrDataUrls] = useState<Record<number, string>>({});
   const printRef = useRef<HTMLDivElement>(null);
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const fetchData = useCallback(async () => {
     try {

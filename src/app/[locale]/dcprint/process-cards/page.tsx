@@ -1,8 +1,10 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
 import { useState, useRef, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -13,7 +15,6 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
@@ -79,17 +80,6 @@ interface MaterialLabel {
 }
 
 export default function ProcessCardsPage() {
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
 
   // 翻译钩子
   const t = useTranslations('Dcprint');
@@ -292,8 +282,8 @@ const authFetch = async (url: string, options: RequestInit = {}) => {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
-  const getLockBadge = (status: string) => {
-    return status === 'locked' ? (
+  const getLockBadge = (lockStatus: string) => {
+    return lockStatus ? (
       <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">{t('locked')}</Badge>
     ) : (
       <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
