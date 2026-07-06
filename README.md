@@ -1,4 +1,4 @@
-# VNERP 印刷行业 ERP 系统
+# 印刷生产经营信息管理系统 Print MIS
 
 [![CI](https://github.com/snqig/vnerp/actions/workflows/ci.yml/badge.svg)](https://github.com/snqig/vnerp/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Internal-blue)](#许可证)
