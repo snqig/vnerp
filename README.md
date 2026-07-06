@@ -3,7 +3,7 @@
 [![CI](https://github.com/snqig/vnerp/actions/workflows/ci.yml/badge.svg)](https://github.com/snqig/vnerp/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Internal-blue)](#许可证)
 
-> 越南达昌印刷 ERP — 基于 Next.js 16 + DDD + Drizzle ORM 的印刷行业综合管理系统，支持中文（简/繁）、英文、越南语四语言国际化。
+> 印刷生产经营信息管理系统 Print MIS — 基于 Next.js 16 + DDD + Drizzle ORM 的印刷行业综合管理系统，支持中文（简/繁）、英文、越南语四语言国际化。
 
 ## 快速开始
 
