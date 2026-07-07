@@ -1,10 +1,11 @@
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { ProcessStandardItem, StandardCard } from '../route';
 
 // POST /api/standard-cards/check-deviation - 参数偏差检测（设计文档 6.5 节）
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { standard_card_id, actual_params } = body;
 
@@ -98,4 +99,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       version: card.version,
     },
   });
-}, '参数偏差检测失败');
+}, { logTitle: '参数偏差检测', logType: 'business' });

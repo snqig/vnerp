@@ -1,13 +1,13 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 车辆数据接口
 interface Vehicle {
@@ -65,7 +65,7 @@ function buildQueryConditions(params: { status: string | null; keyword: string |
 }
 
 // GET - 获取车辆列表或单个车辆
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -100,10 +100,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   });
 
   return paginatedResponse(result.data, result.pagination);
-}, '获取车辆列表失败');
+});
 
 // POST - 创建车辆
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body: Vehicle = await request.json();
 
   // 验证必填字段
@@ -152,10 +152,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId }, '车辆创建成功');
-}, '创建车辆失败');
+}, { logTitle: '创建车辆', logType: 'business' });
 
 // PUT - 更新车辆
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -229,10 +229,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '车辆更新成功');
-}, '更新车辆失败');
+}, { logTitle: '更新车辆', logType: 'business' });
 
 // DELETE - 删除车辆（软删除）
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -256,4 +256,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await execute('UPDATE delivery_vehicle SET deleted = 1 WHERE id = ?', [vehicleId]);
 
   return successResponse(null, '车辆删除成功');
-}, '删除车辆失败');
+}, { logTitle: '删除车辆', logType: 'business' });

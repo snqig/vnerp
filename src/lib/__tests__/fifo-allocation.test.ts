@@ -253,7 +253,9 @@ describe('FIFO Allocation Logic', () => {
         .mockResolvedValueOnce([{ affectedRows: 1, insertId: 1 }]);
 
       const conn = {
-        query: vi.fn(),
+        // executeFIFODeductionInternal 会调 conn.query 查询 inv_inventory 以记录 before/after 数量，
+        // mock 返回 mysql2 格式 [rows, fields]，rows 为单条库存记录。
+        query: vi.fn().mockResolvedValue([[{ quantity: 100 }]]),
         execute: executeMock,
       };
 

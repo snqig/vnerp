@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
-import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { getInventoryLogs } from '@/lib/inventory-sync';
 
 // 获取库存流水
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
 
   const materialId = searchParams.get('materialId') ? parseInt(searchParams.get('materialId')!) : undefined;

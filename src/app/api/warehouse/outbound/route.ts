@@ -1,19 +1,19 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
   logOperation,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { generateDocumentNo } from '@/lib/document-numbering';
-import { WarehouseStateMachine, OutboundStatus } from '@/lib/warehouse-state-machine';
+import { WarehouseStateMachine, OutboundStatus } from '@/domain/warehouse/value-objects/WarehouseStateMachine';
 
 // 获取出库单列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status') || '';
@@ -119,7 +119,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 创建出库单
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   // 验证必填字段
@@ -229,10 +229,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '出库单创建成功');
-}, '创建出库单失败');
+}, { errorMessage: '创建出库单失败' });
 
 // 更新出库单
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, ...updateData } = body;
 
@@ -280,25 +280,11 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     ]
   );
 
-  await logOperation({
-    title: '更新出库单',
-    oper_type: 'warehouse',
-    oper_method: 'PUT',
-    oper_url: '/api/warehouse/outbound',
-    oper_param: JSON.stringify({
-      id,
-      orderDate: updateData.orderDate,
-      warehouseCode: updateData.warehouseCode,
-    }),
-    oper_result: `出库单 ${id} 更新成功`,
-    status: 1,
-  });
-
   return successResponse(null, '出库单更新成功');
-}, '更新出库单失败');
+}, { logTitle: '更新出库单', logType: 'business' });
 
 // 删除出库单（软删除）
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -345,4 +331,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(null, '出库单删除成功');
-}, '删除出库单失败');
+}, { errorMessage: '删除出库单失败' });

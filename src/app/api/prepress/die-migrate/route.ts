@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 async function safeAlterTable(tableName: string, sql: string) {
   try {
@@ -23,7 +24,7 @@ async function safeCreateTable(tableName: string, sql: string) {
   }
 }
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const results: any[] = [];
 
   results.push(
@@ -227,4 +228,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(results, '刀模/网版表结构优化完成');
-}, '刀模/网版表结构优化失败');
+}, { logTitle: '刀模/网版表结构优化', logType: 'business' });

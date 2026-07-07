@@ -1,12 +1,12 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 const MAINTENANCE_TYPE_MAP: Record<string, string> = {
   routine: '常规保养',
@@ -15,7 +15,7 @@ const MAINTENANCE_TYPE_MAP: Record<string, string> = {
   replace: '更换',
 };
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const die_id = searchParams.get('die_id');
   const maintenance_type = searchParams.get('maintenance_type');
@@ -73,9 +73,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     pendingCount: pendingCount?.count || 0,
     maintenanceTypeMap: MAINTENANCE_TYPE_MAP,
   });
-}, '获取保养记录失败');
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const validation = validateRequestBody(body, ['die_id', 'maintenance_type']);
   if (!validation.valid) {
@@ -171,9 +171,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       '保养记录创建成功'
     );
   });
-}, '创建保养记录失败');
+}, { errorMessage: '创建保养记录失败' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   if (!body.id) return commonErrors.badRequest('保养ID不能为空');
 
@@ -274,16 +274,16 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
     return successResponse(null, '保养记录更新成功');
   });
-}, '更新保养记录失败');
+}, { errorMessage: '更新保养记录失败' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return commonErrors.badRequest('保养ID不能为空');
 
   await execute('UPDATE prd_die_maintenance SET deleted = 1 WHERE id = ?', [parseInt(id)]);
   return successResponse(null, '删除成功');
-}, '删除保养记录失败');
+}, { logTitle: '删除保养记录', logType: 'business' });
 
 function computeDieStatus(
   cumulative: number,

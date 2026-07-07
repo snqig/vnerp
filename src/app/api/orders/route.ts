@@ -1,14 +1,14 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
+import { withPermission } from '@/lib/api-permissions';
 // 订单项接口
 interface OrderItem {
   product: string;
@@ -34,7 +34,7 @@ interface Order {
 }
 
 // GET - 获取订单列表/详情
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -151,10 +151,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     list: orderList,
     total: orderList.length,
   });
-}, '获取订单失败');
+}, { errorMessage: '获取订单失败' });
 
 // POST - 创建订单
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
 
   const { customer_id, customer_name, delivery_date, items, remark } = body;
@@ -223,10 +223,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse({ id: orderId, order_no: orderNo }, '订单创建成功');
-}, '创建订单失败');
+}, { errorMessage: '创建订单失败' });
 
 // PUT - 更新订单
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id, status, ...updateData } = body;
 
@@ -273,10 +273,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse({ id, status, ...updateData }, '订单更新成功');
-}, '更新订单失败');
+}, { errorMessage: '更新订单失败' });
 
 // DELETE - 删除订单
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -300,4 +300,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await query('UPDATE sal_order SET deleted = 1, update_time = NOW() WHERE id = ?', [order.id]);
 
   return successResponse(null, '订单删除成功');
-}, '删除订单失败');
+}, { errorMessage: '删除订单失败' });

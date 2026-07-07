@@ -68,7 +68,7 @@ interface Shipment {
   sales_order_no?: string; // 销售订单编号
   order_no?: string; // 订单编号
   type: ShipmentType; // 发货类型：normal/partial/return/re_ship
-  status: number; // 状态：1=草稿 2=待审批 3=待发货 4=部分发货 5=已发货 6=已取消
+  status: number; // 状态：1=待发货 2=已发货 3=已签收 9=已取消
   customer_id: number; // 客户 ID
   customer_name?: string; // 客户名称（冗余字段）
   warehouse_id: number; // 仓库 ID
@@ -133,21 +133,13 @@ export default function DeliveryPage() {
   const tc = useTranslations('Common');
 
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: tc('draft'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  1: { label: t('pendingDelivery'), color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
   2: {
-    label: tc('pending'),
-    color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-  },
-  3: { label: t('pendingDelivery'), color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
-  4: {
-    label: t('partialShip'),
-    color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  },
-  5: {
     label: t('delivered'),
     color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
   },
-  6: { label: tc('cancelled'), color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
+  3: { label: t('signed'), color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' },
+  9: { label: tc('cancelled'), color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
 };
 
 const SIGN_STATUS_MAP: Record<number, { label: string; color: string }> = {

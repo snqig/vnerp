@@ -1,13 +1,14 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { WorkflowEngine } from '@/application/workflow/WorkflowEngine';
 
 const workflowEngine = new WorkflowEngine();
 
 // 获取待审批任务列表
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, user: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type'); // pending: 待我审批, initiated: 我发起的

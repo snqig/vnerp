@@ -22,6 +22,14 @@ export class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // CSRF token：非安全方法需附带 X-CSRF-Token header
+    if (typeof document !== 'undefined') {
+      const csrfMatch = document.cookie.match(/(^| )csrf_token=([^;]+)/);
+      if (csrfMatch) {
+        headers['X-CSRF-Token'] = csrfMatch[2];
+      }
+    }
+
     return headers;
   }
 

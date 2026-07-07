@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 const CATEGORY_TYPE_MAP: Record<string, string[]> = {
   ink: ['油墨', '墨水', 'ink', 'INK'],
   substrate: ['PET', 'PP', 'PVC', 'BOPP', 'PE', '薄膜', '卷材', '片材'],
@@ -10,7 +11,7 @@ const CATEGORY_TYPE_MAP: Record<string, string[]> = {
   auxiliary: ['胶带', '保护膜', '离型纸', '包材'],
 };
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const searchParams = request.nextUrl.searchParams;
   const type = searchParams.get('type');
   const category = searchParams.get('category');

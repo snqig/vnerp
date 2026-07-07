@@ -1,12 +1,12 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, transaction, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // BOM状态常量
 const BOM_STATUS = {
@@ -20,7 +20,7 @@ const BOM_STATUS = {
  * 获取BOM列表
  * GET /api/orders/bom
  */
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -79,13 +79,13 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 
   return paginatedResponse(result.data, result.pagination);
-}, '获取BOM列表失败');
+});
 
 /**
  * 创建BOM
  * POST /api/orders/bom
  */
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   const validation = validateRequestBody(body, [
@@ -219,13 +219,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     return successResponse({ bomId, bomNo }, 'BOM创建成功');
   });
-}, '创建BOM失败');
+}, { logTitle: '创建BOM', logType: 'business' });
 
 /**
  * 更新BOM
  * PUT /api/orders/bom
  */
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, action, ...updateData } = body;
 
@@ -380,13 +380,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
     return successResponse({ id }, 'BOM更新成功');
   });
-}, '更新BOM失败');
+}, { logTitle: '更新BOM', logType: 'business' });
 
 /**
  * 删除BOM
  * DELETE /api/orders/bom?id={id}
  */
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -422,4 +422,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(null, 'BOM删除成功');
-}, '删除BOM失败');
+}, { logTitle: '删除BOM', logType: 'business' });

@@ -337,7 +337,7 @@ describe('FIFO分配算法', () => {
   describe('checkShortageAndWarn - 缺货预警', () => {
     it('应该返回缺货预警信息', async () => {
       vi.mocked(query)
-        .mockResolvedValueOnce([[{ safety_stock: 20, reorder_point: 50 }]])
+        .mockResolvedValueOnce([[{ safety_stock: 20, min_stock: 50 }]])
         .mockResolvedValueOnce([[{ total_available: 30 }]]);
 
       const warning = await checkShortageAndWarn(101, 100);
@@ -354,7 +354,7 @@ describe('FIFO分配算法', () => {
 
     it('应该返回null当没有缺货', async () => {
       vi.mocked(query)
-        .mockResolvedValueOnce([[{ safety_stock: 20, reorder_point: 50 }]])
+        .mockResolvedValueOnce([[{ safety_stock: 20, min_stock: 50 }]])
         .mockResolvedValueOnce([[{ total_available: 150 }]]);
 
       const warning = await checkShortageAndWarn(101, 100);

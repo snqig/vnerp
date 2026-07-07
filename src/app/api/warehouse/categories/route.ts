@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 // 仓库分类接口
 interface WarehouseCategory {
   id: number;
@@ -13,7 +14,7 @@ interface WarehouseCategory {
 }
 
 // GET - 获取仓库分类列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const categories = await query<WarehouseCategory>(`
     SELECT
       id, code, name, description, sort_order, status
@@ -23,4 +24,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   `);
 
   return successResponse(categories);
-}, '获取仓库分类列表失败');
+}, { errorMessage: '获取仓库分类列表失败' });

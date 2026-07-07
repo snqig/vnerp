@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
   const page = parseInt(searchParams.get('page') || '1');

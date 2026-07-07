@@ -314,7 +314,7 @@ export class MRPEngine {
       endDate.setDate(endDate.getDate() + horizonDays - 1);
       const planEndDate = formatDateStr(endDate);
 
-      const runNo = generateDocumentNo('MRP');
+      const runNo = await generateDocumentNo('mrp_run');
 
       const demands = await this.collectGrossRequirements(
         conn,

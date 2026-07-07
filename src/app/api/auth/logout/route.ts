@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { successResponse, withErrorHandler } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { revokeToken, removeRefreshToken } from '@/lib/token-blacklist';
 
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '');

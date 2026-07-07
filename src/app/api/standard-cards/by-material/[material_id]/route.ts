@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 type StandardCardType = 'color' | 'process' | 'quality' | 'comprehensive';
 
@@ -57,10 +58,10 @@ interface QualityStandardItem {
   defect_level?: string;
 }
 
-export const GET = withErrorHandler(
-  async (request: NextRequest, { params }: { params: Promise<{ material_id: string }> }) => {
-    const resolvedParams = await params;
-    const materialId = parseInt(resolvedParams.material_id);
+export const GET = withPermission(
+  async (request: NextRequest, userInfo, context) => {
+    const { material_id: materialIdStr } = await context.params;
+    const materialId = parseInt(materialIdStr);
 
     if (isNaN(materialId)) {
       return errorResponse('无效的产品ID', 400, 400);
@@ -119,6 +120,5 @@ export const GET = withErrorHandler(
       ...card,
       items,
     });
-  },
-  '获取产品标准卡失败'
+  }
 );

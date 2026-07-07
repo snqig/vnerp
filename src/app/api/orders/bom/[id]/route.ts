@@ -1,14 +1,15 @@
 import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 /**
  * 获取BOM详情
  * GET /api/orders/bom/{id}
  */
-export const GET = withErrorHandler(
-  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-    const { id } = await params;
+export const GET = withPermission(
+  async (request: NextRequest, userInfo, context) => {
+    const { id } = await context.params;
 
     if (!id || isNaN(parseInt(id))) {
       return errorResponse('无效的BOM ID', 400, 400);
@@ -76,6 +77,4 @@ export const GET = withErrorHandler(
       version_history: versionHistory,
       alternatives,
     });
-  },
-  '获取BOM详情失败'
-);
+  });

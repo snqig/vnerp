@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
 
@@ -18,12 +19,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       'prod_work_order',
       'prd_bom_detail',
       'prd_bom',
-      'sal_reconciliation_detail',
+      'sal_reconciliation_writeoff',
+      'sal_reconciliation_line',
       'sal_reconciliation',
-      'sal_return_order_item',
-      'sal_return_order',
-      'sal_delivery_order_item',
-      'sal_delivery_order',
+      'sal_return_detail',
+      'sal_return',
+      'sal_delivery_detail',
+      'sal_delivery',
       'inv_inventory_transaction',
       'inv_outbound_item',
       'inv_outbound_order',
@@ -1897,13 +1899,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         totalAmount += item.qty * item.price;
       }
       await conn.execute(
-        `INSERT INTO sal_delivery_order (delivery_no, order_no, customer_id, customer_name, delivery_date, total_qty, total_amount, sign_status, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO sal_delivery (delivery_no, order_id, order_no, customer_id, customer_name, delivery_date, warehouse_id, total_qty, total_amount, sign_status, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           dn.no,
+          saleOrderIds[dn.soi],
           salesOrders[dn.soi].no,
           dn.cid,
           dn.cname,
           dn.date,
+          1,
           totalQty,
           totalAmount,
           dn.sign,
@@ -1912,11 +1916,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       );
       const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const dnId = rows[0].id;
+      let lineNo = 1;
       for (const item of dn.items) {
         await conn.execute(
-          `INSERT INTO sal_delivery_order_item (delivery_id, material_id, material_name, material_spec, quantity, unit, unit_price, amount, sign_qty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO sal_delivery_detail (delivery_id, line_no, material_id, material_name, material_spec, quantity, unit, unit_price, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             dnId,
+            lineNo++,
             item.mid,
             item.name,
             item.spec,
@@ -1924,7 +1930,6 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
             item.unit,
             item.price,
             item.qty * item.price,
-            dn.sign ? item.qty : 0,
           ]
         );
       }
@@ -1967,42 +1972,41 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       },
     ];
     for (const rt of returnOrders) {
-      let totalQty = 0,
-        totalAmount = 0;
+      let totalAmount = 0;
       for (const item of rt.items) {
-        totalQty += item.qty;
         totalAmount += item.qty * item.price;
       }
       await conn.execute(
-        `INSERT INTO sal_return_order (return_no, order_no, delivery_no, customer_id, customer_name, return_date, return_type, return_reason, total_qty, total_amount, inspection_status, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2, 3)`,
+        `INSERT INTO sal_return (return_no, status, order_id, order_no, customer_id, customer_name, warehouse_id, delivery_no, reason, return_date, total_amount) VALUES (?, 3, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           rt.no,
+          saleOrderIds[rt.soi],
           salesOrders[rt.soi].no,
-          rt.dnNo,
           rt.cid,
           rt.cname,
-          rt.date,
-          rt.type,
+          1,
+          rt.dnNo,
           rt.reason,
-          totalQty,
+          rt.date,
           totalAmount,
         ]
       );
       const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const rtId = rows[0].id;
+      let lineNo = 1;
       for (const item of rt.items) {
         await conn.execute(
-          `INSERT INTO sal_return_order_item (return_id, material_id, material_name, material_spec, quantity, unit, unit_price, amount, qualified_qty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO sal_return_detail (return_id, line_no, material_id, material_name, material_spec, unit, quantity, unit_price, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             rtId,
+            lineNo++,
             item.mid,
             item.name,
             item.spec,
-            item.qty,
             item.unit,
+            item.qty,
             item.price,
             item.qty * item.price,
-            Math.round(item.qty * 0.8),
           ]
         );
       }
@@ -2556,10 +2560,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       const rcId = rows[0].id;
       const dnList = deliveryOrders.filter((d) => d.cid === rc.cid);
       for (const dn of dnList) {
-        for (const item of dn.items) {
+        const [dnRows]: any = await conn.execute(
+          'SELECT id, delivery_date, total_amount FROM sal_delivery WHERE delivery_no = ?',
+          [dn.no]
+        );
+        if (dnRows.length > 0) {
           await conn.execute(
-            `INSERT INTO sal_reconciliation_detail (reconciliation_id, source_type, source_no, amount, create_time) VALUES (?, 1, ?, ?, NOW())`,
-            [rcId, dn.no, item.qty * item.price]
+            `INSERT INTO sal_reconciliation_line (reconciliation_id, source_type, source_id, source_no, source_date, amount, create_time) VALUES (?, 1, ?, ?, ?, ?, NOW())`,
+            [rcId, dnRows[0].id, dn.no, dnRows[0].delivery_date, dnRows[0].total_amount]
           );
         }
       }

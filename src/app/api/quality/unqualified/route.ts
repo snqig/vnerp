@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -37,7 +38,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     inspection_id,
@@ -74,9 +75,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     ]
   );
   return successResponse({ id: result.insertId, handle_no: handleNo }, '不合格品处理单创建成功');
-});
+}, { logTitle: '创建不合格品处理单', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, handle_status, handle_result, cost_amount, remark } = body;
   if (handle_status !== undefined)
@@ -100,12 +101,12 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       id,
     ]);
   return successResponse(null, '更新成功');
-});
+}, { logTitle: '更新不合格品处理单', logType: 'business' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
   await execute('UPDATE qc_unqualified_handle SET deleted = 1 WHERE id = ?', [Number(id)]);
   return successResponse(null, '删除成功');
-});
+}, { logTitle: '删除不合格品处理单', logType: 'business' });

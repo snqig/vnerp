@@ -4,6 +4,7 @@ import {
   errorResponse,
 } from '@/lib/api-response';
 import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { query, execute } from '@/lib/db';
 
 /**
@@ -14,7 +15,7 @@ import { query, execute } from '@/lib/db';
  */
 
 // 获取物料成本信息
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
@@ -82,11 +83,11 @@ export const GET = withAuthAndErrorHandler(
       pageSize,
     });
   },
-  { permission: 'warehouse:view' }
+  { errorMessage: '操作失败' }
 );
 
 // 手动触发成本重算
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { materialId, warehouseId } = body;
@@ -153,5 +154,5 @@ export const POST = withAuthAndErrorHandler(
       movementCount: movements.length,
     }, '成本重算完成');
   },
-  { permission: 'warehouse:manage' }
+  { errorMessage: '操作失败' }
 );

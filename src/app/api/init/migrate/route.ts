@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+import { withPermission } from '@/lib/api-permissions';
+export const POST = withPermission(async (request: NextRequest) => {
   const result = await transaction(async (conn) => {
     const results: string[] = [];
 

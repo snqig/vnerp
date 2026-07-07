@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -50,7 +51,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     workorder_id,
@@ -218,9 +219,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '调色配料记录创建成功');
-});
+}, { logTitle: '调色配料', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, action, status, tare_weight, net_weight, gross_weight, remark } = body;
 
@@ -264,4 +265,4 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '更新成功');
-});
+}, { logTitle: '更新调色配料', logType: 'business' });

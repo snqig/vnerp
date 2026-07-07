@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { createMultiColorWorkOrder } from '@/lib/multi-color-printing';
 
 // 从工艺卡创建多色套印工单
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { standardCardId, salesOrderId, planQty, printArea, substrateType } = body;
 
@@ -30,4 +31,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     result.message
   );
-});
+}, { logTitle: '创建多色套印工单', logType: 'business' });

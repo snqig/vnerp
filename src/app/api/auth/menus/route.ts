@@ -1,31 +1,12 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { jwtVerify } from 'jose';
-import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import {
   getCachedPermissions,
   setCachedPermissions,
   clearCachedPermissions,
 } from '@/lib/auth-cache';
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET must be set in production environment');
-  }
-}
-
-const SECRET_KEY = JWT_SECRET || 'dev-only-secret-key';
-
-async function verifyToken(token: string) {
-  try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
-    return payload;
-  } catch {
-    return null;
-  }
-}
 
 function buildMenuTree(menus: any[], parentId: number = 0): any[] {
   const tree: any[] = [];
@@ -67,31 +48,8 @@ async function checkIsVisibleColumn(): Promise<boolean> {
   return isVisibleColumnExists;
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
-  const token = request.headers.get('authorization')?.replace('Bearer ', '');
-
-  if (!token) {
-    return commonErrors.unauthorized('未登录');
-  }
-
-  const payload = await verifyToken(token);
-  if (!payload) {
-    return commonErrors.unauthorized('登录已过期');
-  }
-
-  const userId = payload.userId as number;
-
-  const userCheck: any = await query(
-    'SELECT id, status FROM sys_user WHERE id = ? AND deleted = 0',
-    [userId]
-  );
-
-  if (!userCheck || userCheck.length === 0 || userCheck[0].status === 0) {
-    clearCachedPermissions(userId);
-    return errorResponse('用户已被禁用或不存在', 403, 403);
-  }
-
-  const cached = getCachedPermissions(userId);
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
+  const cached = getCachedPermissions(userInfo.userId);
   if (cached) {
     return successResponse(
       {
@@ -107,7 +65,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
      FROM sys_user_role ur
      JOIN sys_role r ON ur.role_id = r.id
      WHERE ur.user_id = ? AND r.status = 1`,
-    [userId]
+    [userInfo.userId]
   );
 
   if (userRoles.length === 0) {
@@ -142,29 +100,16 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     ...new Set((menus as any[]).filter((m) => m.permission).map((m) => m.permission)),
   ];
 
-  setCachedPermissions(userId, permissions, menuTree);
+  setCachedPermissions(userInfo.userId, permissions, menuTree);
 
   return successResponse({
     menus: menuTree,
     permissions,
     roles: userRoles,
   });
-}, '获取菜单失败');
+});
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
-  const token = request.headers.get('authorization')?.replace('Bearer ', '');
-
-  if (!token) {
-    return commonErrors.unauthorized('未登录');
-  }
-
-  const payload = await verifyToken(token);
-  if (!payload) {
-    return commonErrors.unauthorized('登录已过期');
-  }
-
-  const userId = payload.userId as number;
-  clearCachedPermissions(userId);
-
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
+  clearCachedPermissions(userInfo.userId);
   return successResponse(null, '缓存已清除');
-}, '清除缓存失败');
+});

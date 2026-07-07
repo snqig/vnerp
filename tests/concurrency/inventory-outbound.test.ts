@@ -24,6 +24,7 @@ import {
 } from './utils';
 import { query, execute, transaction } from '@/lib/db';
 
+// P0-2 基线重置已完成（Migration 019）：inv_outbound_item.deleted/quantity 列已补齐
 describe('库存出库并发测试', () => {
   let testWarehouse: TestWarehouse;
   let testMaterial: TestMaterial;
@@ -80,7 +81,7 @@ describe('库存出库并发测试', () => {
 
           await conn.execute(
             `INSERT INTO inv_outbound_item (
-              order_id, material_id, material_name, material_spec, qty, unit, batch_no, create_time, deleted
+              order_id, material_id, material_name, material_spec, quantity, unit, batch_no, create_time, deleted
             ) VALUES (?, ?, ?, '', ?, '个', ?, NOW(), 0)`,
             [
               orderId,
@@ -120,12 +121,12 @@ describe('库存出库并发测试', () => {
 
             // 获取出库明细
             const [itemRows]: any = await conn.execute(
-              `SELECT id, material_id, qty FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
-              [orderId]
-            );
+              `SELECT id, material_id, quantity FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
+            [orderId]
+          );
 
-            for (const item of itemRows) {
-              const requiredQty = parseFloat(String(item.qty));
+          for (const item of itemRows) {
+            const requiredQty = parseFloat(String(item.quantity));
 
               // 检查库存是否足够
               const [inventoryRows]: any = await conn.execute(

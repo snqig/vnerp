@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { CommonValidations, Validator } from '@/lib/validation';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+import { withPermission } from '@/lib/api-permissions';
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const month = searchParams.get('month') || format(new Date(), 'yyyy-MM');
   const deptId = searchParams.get('deptId');
@@ -82,9 +83,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     page,
     pageSize,
   });
-}, '获取薪资列表失败');
+}, { errorMessage: '获取薪资列表失败' });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
 
   const validation = CommonValidations.salary(body);
@@ -216,9 +217,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '薪资保存成功');
-}, '保存薪资失败');
+}, { errorMessage: '保存薪资失败' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -240,7 +241,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await query(`DELETE FROM sys_salary WHERE id = ?`, [idNum]);
 
   return successResponse(null, '薪资记录删除成功');
-}, '删除薪资失败');
+}, { errorMessage: '删除薪资失败' });
 
 function format(date: Date, format: string): string {
   const year = date.getFullYear();

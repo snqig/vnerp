@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 审核类型
 type ApproveType = 'review' | 'factory' | 'quality' | 'sales' | 'approve' | 'reject';
@@ -26,7 +27,7 @@ const STATUS_FLOW: Record<ApproveType, { from: number; to: number }> = {
 };
 
 // 审核标准卡
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, type, userId, userName, remark } = body;
 
@@ -107,10 +108,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     { id, type, userName, status: approveType === 'approve' ? 3 : approveType === 'reject' ? 1 : 2 },
     approveType === 'reject' ? '驳回成功，已回退到草稿' : `${getApproveTypeName(approveType)}成功`
   );
-}, '审核失败');
+}, { logTitle: '标准卡审核', logType: 'business' });
 
 // 撤销审核
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, type, userId, userName, remark } = body;
 
@@ -162,10 +163,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse({ id, type, status: 2 }, `撤销${getApproveTypeName(approveType)}成功`);
-}, '撤销审核失败');
+}, { logTitle: '撤销标准卡审核', logType: 'business' });
 
 // 获取审核状态
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -232,7 +233,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   };
 
   return successResponse(approvalStatus);
-}, '获取审核状态失败');
+});
 
 // 辅助函数
 function getStatusLabel(status: number): string {

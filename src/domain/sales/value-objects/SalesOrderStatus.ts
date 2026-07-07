@@ -74,7 +74,7 @@ export class SalesOrderStatus {
   private static transitions: Record<SalesStatus, SalesStatus[]> = {
     draft: ['submitted', 'closed'],
     submitted: ['approved', 'closed'],
-    approved: ['partially_shipped', 'closed'],
+    approved: ['partially_shipped', 'completed', 'closed'],
     partially_shipped: ['completed', 'closed'],
     completed: [],
     closed: [],

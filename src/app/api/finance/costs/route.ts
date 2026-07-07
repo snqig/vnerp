@@ -1,10 +1,11 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { calculateWorkOrderCost } from '@/lib/finance-core';
 
+import { withPermission } from '@/lib/api-permissions';
 // 查询成本列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -38,7 +39,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 计算工单成本
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { workOrderId } = body;
 

@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -48,7 +49,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     usage_type,
@@ -221,9 +222,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '油墨使用记录创建成功');
-});
+}, { logTitle: '油墨使用记录', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, status, remark } = body;
 
@@ -237,4 +238,4 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     await execute('UPDATE ink_usage SET remark = ? WHERE id = ?', [remark, id]);
 
   return successResponse(null, '更新成功');
-});
+}, { logTitle: '更新油墨使用记录', logType: 'business' });

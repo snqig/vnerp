@@ -4,7 +4,8 @@ import {
   errorResponse,
   validateRequestBody,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 
 /**
@@ -12,7 +13,7 @@ import { query, execute } from '@/lib/db';
  */
 
 // 获取报销单列表
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || '';
@@ -48,7 +49,7 @@ export const GET = withAuthAndErrorHandler(
 );
 
 // 创建报销单
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const validation = validateRequestBody(body, ['expense_type', 'amount', 'expense_date']);
@@ -92,11 +93,11 @@ export const POST = withAuthAndErrorHandler(
 
     return successResponse({ id: expenseId, expense_no: expenseNo }, '报销单创建成功');
   },
-  { permission: 'finance:create' }
+  { errorMessage: '操作失败' }
 );
 
 // 审核报销单
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { id, action } = body;
@@ -122,5 +123,5 @@ export const PUT = withAuthAndErrorHandler(
 
     return errorResponse('无效的操作类型', 400, 400);
   },
-  { permission: 'finance:manage' }
+  { errorMessage: '操作失败' }
 );

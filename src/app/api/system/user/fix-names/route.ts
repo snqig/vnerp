@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { execute, query } from '@/lib/db';
+import { withPermission } from '@/lib/api-permissions';
 
 const CORRECT_DATA: Record<
   string,
@@ -96,57 +97,60 @@ Object.keys(CORRECT_DATA).forEach((key) => {
   EMP_PREFIX_MAP['EMP' + key.substring(1)] = key;
 });
 
-export async function POST(request: NextRequest) {
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json(
-      { success: false, message: 'Not available in production' },
-      { status: 403 }
-    );
-  }
-
-  try {
-    const employees: any = await query(
-      'SELECT id, employee_no, name, dept_name, position, email, phone FROM sys_employee'
-    );
-
-    const results: { employee_no: string; old_name: string; new_name: string; updated: boolean }[] =
-      [];
-    let empUpdated = 0;
-    let userUpdated = 0;
-
-    for (const emp of employees) {
-      const empNo = emp.employee_no;
-      const correctKey = EMP_PREFIX_MAP[empNo] || (CORRECT_DATA[empNo] ? empNo : null);
-      const correct = correctKey ? CORRECT_DATA[correctKey] : null;
-
-      if (correct && emp.name !== correct.name) {
-        await execute(
-          'UPDATE sys_employee SET name = ?, dept_name = ?, position = ?, email = ?, phone = ? WHERE id = ?',
-          [correct.name, correct.dept_name, correct.position, correct.email, correct.phone, emp.id]
-        );
-        empUpdated++;
-
-        await execute(
-          'UPDATE sys_user SET real_name = ? WHERE username COLLATE utf8mb4_unicode_ci = ? AND deleted = 0',
-          [correct.name, empNo]
-        );
-        userUpdated++;
-
-        results.push({
-          employee_no: empNo,
-          old_name: emp.name,
-          new_name: correct.name,
-          updated: true,
-        });
-      }
+export const POST = withPermission(
+  async (request: NextRequest, userInfo) => {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { success: false, message: 'Not available in production' },
+        { status: 403 }
+      );
     }
 
-    return NextResponse.json({
-      success: true,
-      message: `修正完成：员工表 ${empUpdated} 条，用户表 ${userUpdated} 条`,
-      details: results,
-    });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
-  }
-}
+    try {
+      const employees: any = await query(
+        'SELECT id, employee_no, name, dept_name, position, email, phone FROM sys_employee'
+      );
+
+      const results: { employee_no: string; old_name: string; new_name: string; updated: boolean }[] =
+        [];
+      let empUpdated = 0;
+      let userUpdated = 0;
+
+      for (const emp of employees) {
+        const empNo = emp.employee_no;
+        const correctKey = EMP_PREFIX_MAP[empNo] || (CORRECT_DATA[empNo] ? empNo : null);
+        const correct = correctKey ? CORRECT_DATA[correctKey] : null;
+
+        if (correct && emp.name !== correct.name) {
+          await execute(
+            'UPDATE sys_employee SET name = ?, dept_name = ?, position = ?, email = ?, phone = ? WHERE id = ?',
+            [correct.name, correct.dept_name, correct.position, correct.email, correct.phone, emp.id]
+          );
+          empUpdated++;
+
+          await execute(
+            'UPDATE sys_user SET real_name = ? WHERE username COLLATE utf8mb4_unicode_ci = ? AND deleted = 0',
+            [correct.name, empNo]
+          );
+          userUpdated++;
+
+          results.push({
+            employee_no: empNo,
+            old_name: emp.name,
+            new_name: correct.name,
+            updated: true,
+          });
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `修正完成：员工表 ${empUpdated} 条，用户表 ${userUpdated} 条`,
+        details: results,
+      });
+    } catch (error: any) {
+      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    }
+  },
+  { logTitle: '修正员工数据', logType: 'system' }
+);

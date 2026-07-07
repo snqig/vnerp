@@ -1,12 +1,12 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 // 生成单号
 function generateRecordNo(): string {
   const date = new Date();
@@ -28,7 +28,7 @@ function generateLabelNo(): string {
 }
 
 // GET - 获取分切记录列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const sourceLabelNo = searchParams.get('sourceLabelNo') || '';
@@ -81,10 +81,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse(result);
-}, '获取分切记录列表失败');
+}, { errorMessage: '获取分切记录列表失败' });
 
 // POST - 执行分切操作
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
 
   const {
@@ -393,7 +393,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '分切操作成功');
-}, '分切操作失败');
+}, { errorMessage: '分切操作失败' });
 
 function parseSpecWidth(spec: string): number | null {
   if (!spec) return null;

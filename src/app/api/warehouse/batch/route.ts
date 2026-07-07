@@ -5,7 +5,8 @@ import {
   errorResponse,
   validateRequestBody,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 
 /**
@@ -15,7 +16,7 @@ import { query, execute } from '@/lib/db';
  */
 
 // 获取批次列表
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
@@ -71,11 +72,11 @@ export const GET = withAuthAndErrorHandler(
 
     return paginatedResponse(rows, { page, pageSize, total, totalPages });
   },
-  { permission: 'warehouse:view' }
+  { errorMessage: '操作失败' }
 );
 
 // 创建批次/序列号记录
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const validation = validateRequestBody(body, ['material_id', 'warehouse_id', 'batch_no', 'quantity']);
@@ -132,11 +133,11 @@ export const POST = withAuthAndErrorHandler(
 
     return successResponse({ id: result.insertId }, '批次创建成功');
   },
-  { permission: 'warehouse:create' }
+  { errorMessage: '操作失败' }
 );
 
 // 更新批次信息
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { id, action } = body;
@@ -199,5 +200,5 @@ export const PUT = withAuthAndErrorHandler(
 
     return successResponse(null, '批次信息更新成功');
   },
-  { permission: 'warehouse:manage' }
+  { errorMessage: '操作失败' }
 );

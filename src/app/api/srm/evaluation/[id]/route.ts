@@ -1,10 +1,11 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(
-  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-    const { id: idStr } = await params;
+export const GET = withPermission(
+  async (request: NextRequest, userInfo, context) => {
+    const { id: idStr } = await context.params;
     const id = Number(idStr);
     if (!id) return errorResponse('ID不能为空', 400, 400);
 

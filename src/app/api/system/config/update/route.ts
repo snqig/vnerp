@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { config_key, config_value, config_name, description } = body;
 
@@ -33,15 +34,4 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '更新成功');
-});
-
-function withErrorHandler(handler: (request: NextRequest) => Promise<any>) {
-  return async (request: NextRequest) => {
-    try {
-      return await handler(request);
-    } catch (error: any) {
-      console.error('API Error:', error);
-      return errorResponse(error.message || '服务器错误', 500, 500);
-    }
-  };
-}
+}, { logTitle: '更新系统配置', logType: 'system' });

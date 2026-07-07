@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { MaterialLifecycleService } from '@/application/services/MaterialLifecycleService';
 
 const service = new MaterialLifecycleService();
@@ -159,5 +160,5 @@ async function postHandler(request: NextRequest, user: UserInfo) {
   }
 }
 
-export const GET = withAuthAndErrorHandler(getHandler);
-export const POST = withAuthAndErrorHandler(postHandler);
+export const GET = withPermission(getHandler);
+export const POST = withPermission(postHandler, { logTitle: '物料生命周期操作' });

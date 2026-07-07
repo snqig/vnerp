@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 
 // 构建菜单树
 function buildMenuTree(menus: any[], parentId: number = 0): any[] {
@@ -15,7 +16,7 @@ function buildMenuTree(menus: any[], parentId: number = 0): any[] {
 }
 
 // 获取菜单列表
-export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');

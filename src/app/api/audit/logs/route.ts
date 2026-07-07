@@ -4,7 +4,8 @@
  */
 
 import { NextRequest } from 'next/server';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import {
   queryOperateLogs,
   queryLoginLogs,
@@ -17,7 +18,7 @@ import {
 // 操作日志查询
 // ============================================================
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   
   const module = searchParams.get('module') || undefined;

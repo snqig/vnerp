@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import {
   expandBom,
   expandBomBatch,
@@ -9,9 +9,9 @@ import {
 import {
   successResponse,
   errorResponse,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 /**
  * 展开单个产品的BOM
@@ -25,7 +25,7 @@ import {
  *   "enableCache": true    // 可选，默认true
  * }
  */
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   const validation = validateRequestBody(body, ['productId', 'quantity']);
@@ -62,7 +62,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
     throw error;
   }
-}, 'BOM展开失败');
+}, { logTitle: 'BOM展开', logType: 'business' });
 
 /**
  * 批量展开多个产品的BOM或获取树形结构
@@ -74,7 +74,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
  * - format: 'tree' 返回树形结构，'flat' 返回平铺列表（默认）
  * - maxDepth: 最大递归深度
  */
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const productId = searchParams.get('productId');
   const quantity = searchParams.get('quantity');
@@ -124,7 +124,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
     throw error;
   }
-}, 'BOM展开失败');
+});
 
 /**
  * 批量操作
@@ -142,7 +142,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
  * - batch: 批量展开多个产品的BOM
  * - merge: 展开多个产品并合并物料需求
  */
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   const validation = validateRequestBody(body, ['action', 'products']);
@@ -223,4 +223,4 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     }
     throw error;
   }
-}, '批量BOM操作失败');
+}, { logTitle: '批量BOM操作', logType: 'business' });

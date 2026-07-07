@@ -23,6 +23,7 @@ import {
 } from './utils';
 import { query, execute, transaction } from '@/lib/db';
 
+// P0-2 基线重置已完成（Migration 019）：inv_stocktaking/inv_stocktaking_item 表已创建
 describe('盘点审批并发测试', () => {
   let testWarehouse: TestWarehouse;
   let testMaterial: TestMaterial;
@@ -158,9 +159,9 @@ describe('盘点审批并发测试', () => {
 
                 // 记录库存流水
                 await conn.execute(
-                  `INSERT INTO inv_inventory_log (material_id, warehouse_id, change_qty, change_type, ref_no, ref_id, create_time)
+                  `INSERT INTO inv_inventory_log (material_id, warehouse_id, change_qty, change_type, order_no, remark, create_time)
                    VALUES (?, ?, ?, 'STOCKTAKING', ?, ?, NOW())`,
-                  [item.material_id, check.warehouse_id, diffQty, check.taking_no, checkId]
+                  [item.material_id, check.warehouse_id, diffQty, check.taking_no, '盘点调整']
                 );
               }
             }

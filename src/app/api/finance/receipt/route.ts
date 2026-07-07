@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { FinanceApplicationService } from '@/application/services/FinanceApplicationService';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 
-const financeService = new FinanceApplicationService();
+const financeService = FinanceApplicationService.create();
 
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
 
@@ -30,5 +31,5 @@ export const POST = withAuthAndErrorHandler(
       throw error;
     }
   },
-  { permission: 'finance:receipt' }
+  { errorMessage: '操作失败' }
 );

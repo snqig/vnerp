@@ -1,14 +1,14 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const die_id = searchParams.get('die_id');
   const work_order_id = searchParams.get('work_order_id');
@@ -91,9 +91,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     pageSize,
     summaryStats: summaryStats[0] || {},
   });
-}, '获取刀模使用记录失败');
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const validation = validateRequestBody(body, ['die_id', 'impressions']);
   if (!validation.valid) {
@@ -203,7 +203,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       '刀模使用记录已更新'
     );
   });
-}, '记录刀模使用失败');
+}, { logTitle: '记录刀模使用', logType: 'business' });
 
 function computeDieStatus(
   cumulative: number,

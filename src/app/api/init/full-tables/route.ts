@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const result = await transaction(async (conn) => {
     const results: string[] = [];
 
@@ -23,12 +24,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       'prod_work_order',
       'prd_bom_detail',
       'prd_bom',
-      'sal_reconciliation_detail',
+      'sal_reconciliation_writeoff',
+      'sal_reconciliation_line',
       'sal_reconciliation',
-      'sal_return_order_item',
-      'sal_return_order',
-      'sal_delivery_order_item',
-      'sal_delivery_order',
+      'sal_return_detail',
+      'sal_return',
+      'sal_delivery_detail',
+      'sal_delivery',
       'inv_inventory_transaction',
       'inv_outbound_item',
       'inv_outbound_order',
@@ -480,119 +482,135 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     // ========================================
     // 1. 送货单表
     // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_delivery_order (
+    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_delivery (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-      delivery_no VARCHAR(50) NOT NULL COMMENT '送货单号',
+      delivery_no VARCHAR(50) NOT NULL COMMENT '出库单号',
+      delivery_date DATE COMMENT '出库日期',
       order_id BIGINT UNSIGNED COMMENT '销售订单ID',
-      order_no VARCHAR(50) COMMENT '销售订单编号',
+      order_no VARCHAR(50) COMMENT '销售订单号（冗余）',
       customer_id BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
-      customer_name VARCHAR(100) COMMENT '客户名称',
-      delivery_date DATE COMMENT '送货日期',
-      contact_name VARCHAR(50) COMMENT '收货联系人',
-      contact_phone VARCHAR(20) COMMENT '联系电话',
-      delivery_address VARCHAR(255) COMMENT '送货地址',
-      warehouse_id BIGINT UNSIGNED COMMENT '发货仓库ID',
+      customer_name VARCHAR(100) COMMENT '客户名称（冗余）',
+      warehouse_id BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
+      total_amount DECIMAL(18,4) DEFAULT 0 COMMENT '总金额',
+      total_qty DECIMAL(18,4) DEFAULT 0 COMMENT '总数量（明细数量合计）',
       logistics_company VARCHAR(100) COMMENT '物流公司',
       tracking_no VARCHAR(50) COMMENT '物流单号',
-      driver_name VARCHAR(50) COMMENT '司机姓名',
-      vehicle_no VARCHAR(20) COMMENT '车牌号',
-      total_qty DECIMAL(18,4) DEFAULT 0 COMMENT '总数量',
-      total_amount DECIMAL(18,4) DEFAULT 0 COMMENT '总金额',
-      sign_status TINYINT DEFAULT 0 COMMENT '签收状态: 0-未签收, 1-已签收, 2-部分签收, 3-拒收',
-      sign_person VARCHAR(50) COMMENT '签收人',
-      sign_time DATETIME COMMENT '签收时间',
-      sign_remark VARCHAR(255) COMMENT '签收备注',
-      status TINYINT DEFAULT 1 COMMENT '状态: 1-待发货, 2-已发货, 3-已签收, 4-已取消',
+      contact_name VARCHAR(50) COMMENT '收货人姓名',
+      contact_phone VARCHAR(30) COMMENT '收货人电话',
+      delivery_address VARCHAR(500) COMMENT '配送地址',
+      status TINYINT DEFAULT 1 COMMENT '状态: 1-待发货, 2-已发货, 3-已签收, 9-已取消',
       remark TEXT COMMENT '备注',
+      create_by BIGINT UNSIGNED COMMENT '创建人ID',
+      ship_by BIGINT UNSIGNED COMMENT '发货人ID',
+      ship_time DATETIME COMMENT '发货时间',
+      sign_by BIGINT UNSIGNED COMMENT '签收人ID',
+      sign_time DATETIME COMMENT '签收时间',
+      sign_status TINYINT DEFAULT 0 COMMENT '签收状态: 0-未签收, 1-已签收',
+      version INT DEFAULT 0 COMMENT '乐观锁版本号',
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      create_by BIGINT UNSIGNED,
+      update_by BIGINT UNSIGNED,
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       UNIQUE KEY uk_delivery_no (delivery_no),
       KEY idx_order (order_id),
       KEY idx_customer (customer_id),
-      KEY idx_status (status)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='送货单表'`);
-    results.push('sal_delivery_order');
+      KEY idx_warehouse (warehouse_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售出库单表'`);
+    results.push('sal_delivery');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_delivery_order_item (
+    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_delivery_detail (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-      delivery_id BIGINT UNSIGNED NOT NULL COMMENT '送货单ID',
-      order_detail_id BIGINT UNSIGNED COMMENT '订单明细ID',
+      delivery_id BIGINT UNSIGNED NOT NULL COMMENT '出库单ID',
+      line_no INT COMMENT '行号',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
-      material_name VARCHAR(100) COMMENT '物料名称',
-      material_spec VARCHAR(255) COMMENT '规格型号',
-      quantity DECIMAL(18,4) NOT NULL COMMENT '送货数量',
+      material_code VARCHAR(50) COMMENT '物料编码（冗余）',
+      material_name VARCHAR(200) COMMENT '物料名称（冗余）',
+      material_spec VARCHAR(100) COMMENT '物料规格（冗余）',
+      order_detail_id BIGINT UNSIGNED COMMENT '订单明细ID',
+      quantity DECIMAL(18,4) NOT NULL COMMENT '出库数量',
       unit VARCHAR(20) COMMENT '单位',
       unit_price DECIMAL(18,4) COMMENT '单价',
       amount DECIMAL(18,4) COMMENT '金额',
       batch_no VARCHAR(50) COMMENT '批次号',
-      sign_qty DECIMAL(18,4) DEFAULT 0 COMMENT '签收数量',
       remark VARCHAR(255) COMMENT '备注',
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+      deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id),
       KEY idx_delivery (delivery_id),
-      KEY idx_material (material_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='送货单明细表'`);
-    results.push('sal_delivery_order_item');
+      KEY idx_material (material_id),
+      KEY idx_order_detail (order_detail_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售出库明细表'`);
+    results.push('sal_delivery_detail');
 
     // ========================================
     // 2. 退货单表
     // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_return_order (
+    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_return (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       return_no VARCHAR(50) NOT NULL COMMENT '退货单号',
-      order_id BIGINT UNSIGNED COMMENT '原销售订单ID',
-      order_no VARCHAR(50) COMMENT '原销售订单编号',
-      delivery_id BIGINT UNSIGNED COMMENT '原送货单ID',
-      delivery_no VARCHAR(50) COMMENT '原送货单号',
+      status TINYINT NOT NULL DEFAULT 1 COMMENT '状态: 1-待审核, 2-已审核, 3-已完成, 9-已取消',
+      order_id BIGINT UNSIGNED NOT NULL COMMENT '销售订单ID',
+      order_no VARCHAR(50) COMMENT '销售订单号（冗余）',
       customer_id BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
-      customer_name VARCHAR(100) COMMENT '客户名称',
-      return_date DATE COMMENT '退货日期',
-      return_type TINYINT DEFAULT 1 COMMENT '退货类型: 1-质量退货, 2-数量差异, 3-规格不符, 4-其他',
-      return_reason TEXT COMMENT '退货原因',
-      total_qty DECIMAL(18,4) DEFAULT 0 COMMENT '退货总数量',
+      customer_name VARCHAR(100) COMMENT '客户名称（冗余）',
+      warehouse_id BIGINT UNSIGNED NOT NULL COMMENT '入库仓库ID',
+      delivery_id BIGINT UNSIGNED COMMENT '关联发货单ID',
+      delivery_no VARCHAR(50) COMMENT '关联发货单号（冗余）',
+      reason VARCHAR(500) NOT NULL COMMENT '退货原因',
+      return_date DATE NOT NULL COMMENT '退货日期',
       total_amount DECIMAL(18,4) DEFAULT 0 COMMENT '退货总金额',
-      inspection_status TINYINT DEFAULT 0 COMMENT '质检状态: 0-未质检, 1-质检中, 2-已质检',
-      inspection_result TINYINT COMMENT '质检结果: 1-合格, 2-不合格, 3-部分合格',
-      warehouse_id BIGINT UNSIGNED COMMENT '退货入库仓库ID',
-      inbound_status TINYINT DEFAULT 0 COMMENT '入库状态: 0-未入库, 1-已入库',
-      status TINYINT DEFAULT 1 COMMENT '状态: 1-待审核, 2-已审核, 3-已退货, 4-已拒绝',
-      remark TEXT COMMENT '备注',
+      approve_by BIGINT UNSIGNED COMMENT '审核人ID',
+      approve_time DATETIME COMMENT '审核时间',
+      complete_by BIGINT UNSIGNED COMMENT '完成人ID',
+      complete_time DATETIME COMMENT '完成时间',
+      inbound_order_id BIGINT UNSIGNED COMMENT '关联入库单ID（退货入库）',
+      inbound_order_no VARCHAR(50) COMMENT '关联入库单号（冗余）',
+      receivable_id BIGINT UNSIGNED COMMENT '关联红字应收单ID',
+      receivable_no VARCHAR(50) COMMENT '关联红字应收单号（冗余）',
+      remark VARCHAR(500) COMMENT '备注',
+      version INT DEFAULT 0 COMMENT '乐观锁版本号',
+      deleted TINYINT DEFAULT 0,
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       create_by BIGINT UNSIGNED,
-      deleted TINYINT DEFAULT 0,
+      update_by BIGINT UNSIGNED,
       PRIMARY KEY (id),
       UNIQUE KEY uk_return_no (return_no),
+      KEY idx_status (status),
       KEY idx_order (order_id),
       KEY idx_customer (customer_id),
-      KEY idx_status (status)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='退货单表'`);
-    results.push('sal_return_order');
+      KEY idx_warehouse (warehouse_id),
+      KEY idx_delivery (delivery_id),
+      KEY idx_return_date (return_date)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='退货单主表'`);
+    results.push('sal_return');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_return_order_item (
+    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_return_detail (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       return_id BIGINT UNSIGNED NOT NULL COMMENT '退货单ID',
-      delivery_item_id BIGINT UNSIGNED COMMENT '送货单明细ID',
+      line_no INT NOT NULL COMMENT '行号',
+      delivery_detail_id BIGINT UNSIGNED COMMENT '关联发货明细ID',
+      order_detail_id BIGINT UNSIGNED COMMENT '关联订单明细ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
-      material_name VARCHAR(100) COMMENT '物料名称',
-      material_spec VARCHAR(255) COMMENT '规格型号',
-      quantity DECIMAL(18,4) NOT NULL COMMENT '退货数量',
+      material_code VARCHAR(50) COMMENT '物料编码（冗余）',
+      material_name VARCHAR(200) COMMENT '物料名称（冗余）',
+      material_spec VARCHAR(100) COMMENT '物料规格（冗余）',
       unit VARCHAR(20) COMMENT '单位',
-      unit_price DECIMAL(18,4) COMMENT '单价',
-      amount DECIMAL(18,4) COMMENT '金额',
+      quantity DECIMAL(18,4) NOT NULL COMMENT '退货数量',
+      unit_price DECIMAL(18,4) DEFAULT 0 COMMENT '单价',
+      amount DECIMAL(18,4) DEFAULT 0 COMMENT '金额',
       batch_no VARCHAR(50) COMMENT '批次号',
-      inspection_qty DECIMAL(18,4) DEFAULT 0 COMMENT '质检数量',
-      qualified_qty DECIMAL(18,4) DEFAULT 0 COMMENT '合格数量',
       remark VARCHAR(255) COMMENT '备注',
+      deleted TINYINT DEFAULT 0,
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_return (return_id),
-      KEY idx_material (material_id)
+      KEY idx_material (material_id),
+      KEY idx_order_detail (order_detail_id),
+      KEY idx_batch (batch_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='退货单明细表'`);
-    results.push('sal_return_order_item');
+    results.push('sal_return_detail');
 
     // ========================================
     // 3. 销售对账表
@@ -600,49 +618,70 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     await conn.execute(`CREATE TABLE IF NOT EXISTS sal_reconciliation (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       reconciliation_no VARCHAR(50) NOT NULL COMMENT '对账单号',
+      status TINYINT NOT NULL DEFAULT 1 COMMENT '状态: 1-草稿, 2-已确认, 3-部分核销, 4-已核销, 9-已关闭',
       customer_id BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
-      customer_name VARCHAR(100) COMMENT '客户名称',
-      period_start DATE NOT NULL COMMENT '对账期间开始',
-      period_end DATE NOT NULL COMMENT '对账期间结束',
-      delivery_amount DECIMAL(18,4) DEFAULT 0 COMMENT '送货金额',
-      return_amount DECIMAL(18,4) DEFAULT 0 COMMENT '退货金额',
+      customer_name VARCHAR(100) COMMENT '客户名称（冗余）',
+      period_start DATE NOT NULL COMMENT '对账开始日期',
+      period_end DATE NOT NULL COMMENT '对账结束日期',
+      delivery_amount DECIMAL(18,4) DEFAULT 0 COMMENT '发货总金额',
+      return_amount DECIMAL(18,4) DEFAULT 0 COMMENT '退货总金额',
+      net_amount DECIMAL(18,4) DEFAULT 0 COMMENT '净额（发货-退货）',
       discount_amount DECIMAL(18,4) DEFAULT 0 COMMENT '折扣金额',
-      net_amount DECIMAL(18,4) DEFAULT 0 COMMENT '对账净额',
-      received_amount DECIMAL(18,4) DEFAULT 0 COMMENT '已收金额',
-      balance_amount DECIMAL(18,4) DEFAULT 0 COMMENT '未收余额',
-      confirm_status TINYINT DEFAULT 0 COMMENT '客户确认: 0-未确认, 1-已确认, 2-有异议',
-      confirm_person VARCHAR(50) COMMENT '确认人',
+      received_amount DECIMAL(18,4) DEFAULT 0 COMMENT '已核销金额',
+      balance_amount DECIMAL(18,4) DEFAULT 0 COMMENT '未核销余额',
+      confirm_by BIGINT UNSIGNED COMMENT '确认人ID',
       confirm_time DATETIME COMMENT '确认时间',
-      confirm_remark VARCHAR(255) COMMENT '确认备注',
-      status TINYINT DEFAULT 1 COMMENT '状态: 1-草稿, 2-已发送, 3-已确认, 4-已关闭',
-      remark TEXT COMMENT '备注',
+      close_by BIGINT UNSIGNED COMMENT '关闭人ID',
+      close_time DATETIME COMMENT '关闭时间',
+      remark VARCHAR(500) COMMENT '备注',
+      version INT DEFAULT 0 COMMENT '乐观锁版本号',
+      deleted TINYINT DEFAULT 0,
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       create_by BIGINT UNSIGNED,
-      deleted TINYINT DEFAULT 0,
+      update_by BIGINT UNSIGNED,
       PRIMARY KEY (id),
       UNIQUE KEY uk_reconciliation_no (reconciliation_no),
+      KEY idx_status (status),
       KEY idx_customer (customer_id),
-      KEY idx_period (period_start, period_end),
-      KEY idx_status (status)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售对账表'`);
+      KEY idx_period (period_start, period_end)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对账单主表'`);
     results.push('sal_reconciliation');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_reconciliation_detail (
+    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_reconciliation_line (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       reconciliation_id BIGINT UNSIGNED NOT NULL COMMENT '对账单ID',
-      source_type TINYINT NOT NULL COMMENT '来源类型: 1-送货单, 2-退货单',
-      source_id BIGINT UNSIGNED COMMENT '来源单据ID',
-      source_no VARCHAR(50) COMMENT '来源单号',
-      source_date DATE COMMENT '单据日期',
-      amount DECIMAL(18,4) NOT NULL COMMENT '金额',
+      source_type TINYINT NOT NULL COMMENT '来源类型: 1-发货单, 2-退货单',
+      source_id BIGINT UNSIGNED NOT NULL COMMENT '来源单据ID',
+      source_no VARCHAR(50) NOT NULL COMMENT '来源单据号',
+      source_date DATE NOT NULL COMMENT '来源单据日期',
+      amount DECIMAL(18,4) NOT NULL COMMENT '单据金额',
       remark VARCHAR(255) COMMENT '备注',
+      deleted TINYINT DEFAULT 0,
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       KEY idx_reconciliation (reconciliation_id),
-      KEY idx_source (source_type, source_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售对账明细表'`);
-    results.push('sal_reconciliation_detail');
+      KEY idx_source (source_type, source_id),
+      KEY idx_source_no (source_no)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对账单明细表'`);
+    results.push('sal_reconciliation_line');
+
+    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_reconciliation_writeoff (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      reconciliation_id BIGINT UNSIGNED NOT NULL COMMENT '对账单ID',
+      receivable_id BIGINT UNSIGNED NOT NULL COMMENT '应收单ID',
+      amount DECIMAL(18,4) NOT NULL COMMENT '核销金额',
+      write_off_date DATE NOT NULL COMMENT '核销日期',
+      remark VARCHAR(255) COMMENT '备注',
+      deleted TINYINT DEFAULT 0,
+      create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+      create_by BIGINT UNSIGNED,
+      PRIMARY KEY (id),
+      KEY idx_reconciliation (reconciliation_id),
+      KEY idx_receivable (receivable_id),
+      KEY idx_write_off_date (write_off_date)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对账核销记录表'`);
+    results.push('sal_reconciliation_writeoff');
 
     // ========================================
     // 4. 设备管理表
@@ -1719,16 +1758,17 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '数据库表创建成功');
-}, '创建数据库表失败');
+}, { errorMessage: '创建数据库表失败' });
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const tables = [
-    'sal_delivery_order',
-    'sal_delivery_order_item',
-    'sal_return_order',
-    'sal_return_order_item',
+    'sal_delivery',
+    'sal_delivery_detail',
+    'sal_return',
+    'sal_return_detail',
     'sal_reconciliation',
-    'sal_reconciliation_detail',
+    'sal_reconciliation_line',
+    'sal_reconciliation_writeoff',
     'eqp_equipment',
     'eqp_maintenance_plan',
     'eqp_maintenance_record',
@@ -1766,4 +1806,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse({ existing, missing, total: tables.length });
-}, '检查表状态失败');
+}, { errorMessage: '检查表状态失败' });

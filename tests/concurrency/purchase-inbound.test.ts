@@ -23,6 +23,8 @@ import {
 } from './utils';
 import { query, execute, transaction } from '@/lib/db';
 
+// P0-2 基线重置已完成（Migration 019）：inv_inbound_order.operator_id/operator_name/warehouse_code/warehouse_name 已补齐
+// 表名映射：po_purchase_order → pur_purchase_order，po_purchase_order_item → pur_purchase_order_line
 describe('采购入库并发测试', () => {
   let testWarehouse: TestWarehouse;
   let testMaterial: TestMaterial;
@@ -61,23 +63,23 @@ describe('采购入库并发测试', () => {
         const poNo = `PO_${Date.now()}_${index}`;
 
         const result: any = await transaction(async (conn) => {
-          // 创建采购订单（模拟）
+          // 创建采购订单（实际表名 pur_purchase_order）
           const [poResult]: any = await conn.execute(
-            `INSERT INTO po_purchase_order (
-              order_no, supplier_id, supplier_name, status, total_amount,
-              operator_id, operator_name, create_time, update_time, deleted
-            ) VALUES (?, 1, '测试供应商', 2, 0, 1, '测试操作员', NOW(), NOW(), 0)`,
+            `INSERT INTO pur_purchase_order (
+              po_no, supplier_id, supplier_name, order_date, status, total_amount,
+              create_time, update_time, deleted
+            ) VALUES (?, 1, '测试供应商', NOW(), 2, 0, NOW(), NOW(), 0)`,
             [poNo]
           );
           const poId = poResult.insertId;
 
-          // 创建采购订单明细
+          // 创建采购订单明细（实际表名 pur_purchase_order_line）
           await conn.execute(
-            `INSERT INTO po_purchase_order_item (
-              order_id, material_id, material_name, quantity, unit_price,
+            `INSERT INTO pur_purchase_order_line (
+              po_id, line_no, material_id, material_code, material_name, order_qty, unit_price,
               received_qty, create_time
-            ) VALUES (?, ?, ?, ?, 0, 0, NOW())`,
-            [poId, testMaterial.id, testMaterial.material_name, quantityPerInbound]
+            ) VALUES (?, 1, ?, ?, ?, ?, 0, 0, NOW())`,
+            [poId, testMaterial.id, testMaterial.material_code, testMaterial.material_name, quantityPerInbound]
           );
 
           // 创建入库单
@@ -102,14 +104,13 @@ describe('采购入库并发测试', () => {
           // 创建入库明细
           await conn.execute(
             `INSERT INTO inv_inbound_item (
-              order_id, material_id, material_code, material_name, material_spec,
+              order_id, material_id, material_name, material_spec,
               batch_no, quantity, unit, unit_price, warehouse_location,
               produce_date, create_time, deleted
-            ) VALUES (?, ?, ?, ?, '', ?, ?, '个', 0, '', NULL, NOW(), 0)`,
+            ) VALUES (?, ?, ?, '', ?, ?, '个', 0, '', NULL, NOW(), 0)`,
             [
               inboundId,
               testMaterial.id,
-              testMaterial.material_code,
               testMaterial.material_name,
               `BATCH_IN_${Date.now()}_${index}`,
               quantityPerInbound,
@@ -128,7 +129,7 @@ describe('采购入库并发测试', () => {
           await transaction(async (conn) => {
             // 获取入库单信息并加锁
             const [inboundRows]: any = await conn.execute(
-              `SELECT id, order_no, status, warehouse_id, version
+              `SELECT id, order_no, status, warehouse_id
                FROM inv_inbound_order WHERE id = ? AND deleted = 0 FOR UPDATE`,
               [inboundId]
             );
@@ -145,7 +146,7 @@ describe('采购入库并发测试', () => {
 
             // 获取入库明细
             const [itemRows]: any = await conn.execute(
-              `SELECT id, material_id, material_code, material_name, batch_no, quantity
+              `SELECT id, material_id, material_name, batch_no, quantity
                FROM inv_inbound_item WHERE order_id = ? AND deleted = 0`,
               [inboundId]
             );
@@ -175,10 +176,10 @@ describe('采购入库并发测试', () => {
                 // 创建新批次
                 await conn.execute(
                   `INSERT INTO inv_inventory_batch (
-                    batch_no, material_id, warehouse_id, quantity, available_qty,
+                    batch_no, material_id, material_name, warehouse_id, quantity, available_qty,
                     status, create_time, update_time, deleted
-                  ) VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW(), 0)`,
-                  [item.batch_no, item.material_id, inbound.warehouse_id, qty, qty]
+                  ) VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW(), 0)`,
+                  [item.batch_no, item.material_id, '测试物料', inbound.warehouse_id, qty, qty]
                 );
               }
 
@@ -221,9 +222,9 @@ describe('采购入库并发测试', () => {
               await conn.execute(
                 `INSERT INTO inv_inventory_log (
                   material_id, warehouse_id, change_qty, change_type,
-                  ref_no, ref_id, create_time
+                  order_no, remark, create_time
                 ) VALUES (?, ?, ?, 'INBOUND', ?, ?, NOW())`,
-                [item.material_id, inbound.warehouse_id, qty, inbound.order_no, inboundId]
+                [item.material_id, inbound.warehouse_id, qty, inbound.order_no, '采购入库']
               );
             }
 
@@ -231,8 +232,6 @@ describe('采购入库并发测试', () => {
             await conn.execute(
               `UPDATE inv_inbound_order SET
                 status = 'completed',
-                audit_status = 1,
-                version = version + 1,
                 update_time = NOW()
               WHERE id = ?`,
               [inboundId]
@@ -363,14 +362,13 @@ describe('采购入库并发测试', () => {
             // 创建入库明细
             await conn.execute(
               `INSERT INTO inv_inbound_item (
-                order_id, material_id, material_code, material_name, material_spec,
+                order_id, material_id, material_name, material_spec,
                 batch_no, quantity, unit, unit_price, warehouse_location,
                 produce_date, create_time, deleted
-              ) VALUES (?, ?, ?, ?, '', ?, ?, '个', 0, '', NULL, NOW(), 0)`,
+              ) VALUES (?, ?, ?, '', ?, ?, '个', 0, '', NULL, NOW(), 0)`,
               [
                 inboundId,
                 testMat.id,
-                testMat.material_code,
                 testMat.material_name,
                 `BATCH_OVER_${Date.now()}_${index}`,
                 inboundQuantity,
@@ -445,7 +443,6 @@ describe('采购入库并发测试', () => {
             await conn.execute(
               `UPDATE inv_inbound_order SET
                 status = 'completed',
-                audit_status = 1,
                 update_time = NOW()
               WHERE id = ?`,
               [inboundId]

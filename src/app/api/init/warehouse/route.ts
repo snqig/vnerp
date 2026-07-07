@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 // 仓库初始化数据
 const warehouseData = [
   {
@@ -89,7 +90,7 @@ interface Warehouse {
 }
 
 // POST - 初始化仓库数据
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   // 检查是否需要添加category_id字段
   const checkColumn = await queryOne<{ count: number }>(`
     SELECT COUNT(*) as count FROM information_schema.columns
@@ -149,10 +150,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '仓库数据初始化成功'
   );
-}, '初始化仓库数据失败');
+}, { errorMessage: '初始化仓库数据失败' });
 
 // GET - 获取当前仓库数据
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const warehouses = await query<Warehouse>(`
     SELECT w.*, c.name as category_name
     FROM inv_warehouse w
@@ -165,4 +166,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     data: warehouses,
     count: warehouses.length,
   });
-}, '获取仓库数据失败');
+}, { errorMessage: '获取仓库数据失败' });

@@ -1,11 +1,12 @@
 import { NextRequest } from 'next/server';
 import { successResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { FinanceApplicationService } from '@/application/services/FinanceApplicationService';
 
-const financeService = new FinanceApplicationService();
+const financeService = FinanceApplicationService.create();
 
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const supplierId = searchParams.get('supplierId');
@@ -32,5 +33,5 @@ export const GET = withAuthAndErrorHandler(
       netCashFlow: receivableSummary.totalReceived - payableSummary.totalPaid,
     });
   },
-  { permission: 'finance:view' }
+  { errorMessage: '操作失败' }
 );

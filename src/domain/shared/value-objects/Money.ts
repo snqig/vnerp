@@ -47,4 +47,8 @@ export class Money {
   isPositive(): boolean {
     return this.amount > 0;
   }
+
+  equals(other: Money): boolean {
+    return this.amount === other.amount && this.currency === other.currency;
+  }
 }

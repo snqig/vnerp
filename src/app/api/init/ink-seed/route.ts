@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { queryOne, transaction } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+import { withPermission } from '@/lib/api-permissions';
+export const POST = withPermission(async (request: NextRequest) => {
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
 
@@ -347,7 +348,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '油墨种子数据初始化成功'
   );
-}, '初始化油墨种子数据失败');
+}, { errorMessage: '初始化油墨种子数据失败' });
 
 async function verifyDataIntegrity() {
   const errors: string[] = [];
@@ -385,7 +386,7 @@ async function verifyDataIntegrity() {
   return { valid: errors.length === 0, errors, details };
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const verification = await verifyDataIntegrity();
   return successResponse(verification, '数据完整性验证完成');
-}, '验证数据完整性失败');
+}, { errorMessage: '验证数据完整性失败' });

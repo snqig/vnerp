@@ -1,10 +1,11 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { generateReceivable, recordReceipt, queryReceivableSummary } from '@/lib/finance-core';
 
+import { withPermission } from '@/lib/api-permissions';
 // 查询应收单列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -43,7 +44,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 生成应收单
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { salesOrderId, shipmentId, amount, dueDate } = body;
 

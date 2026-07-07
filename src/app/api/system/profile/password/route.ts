@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 import { revokeAllUserTokens } from '@/lib/token-blacklist';
 import bcrypt from 'bcryptjs';
@@ -9,7 +10,7 @@ import bcrypt from 'bcryptjs';
  * 修改密码 API
  */
 
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { oldPassword, newPassword } = body;
@@ -56,5 +57,5 @@ export const PUT = withAuthAndErrorHandler(
 
     return successResponse(null, '密码修改成功，其他设备的登录状态已失效');
   },
-  { permission: '' }
+  { errorMessage: '操作失败' }
 );

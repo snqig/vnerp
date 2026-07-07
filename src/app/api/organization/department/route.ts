@@ -1,12 +1,12 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 interface Department {
   id?: number;
@@ -20,7 +20,7 @@ interface Department {
   update_time?: string;
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status');
@@ -57,9 +57,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     page,
     pageSize,
   });
-}, '获取部门列表失败');
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body: Department = await request.json();
 
   const validation = validateRequestBody(body, ['dept_code', 'dept_name']);
@@ -82,9 +82,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId }, '部门创建成功');
-}, '创建部门失败');
+}, { logTitle: '创建部门' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body: Department = await request.json();
   const { id } = body;
 
@@ -125,9 +125,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '部门更新成功');
-}, '更新部门失败');
+}, { logTitle: '更新部门' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -167,4 +167,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await execute('UPDATE sys_department SET deleted = 1 WHERE id = ?', [deptId]);
 
   return successResponse(null, '部门删除成功');
-}, '删除部门失败');
+}, { logTitle: '删除部门' });

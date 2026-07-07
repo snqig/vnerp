@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 50);
@@ -29,7 +30,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { category_code, category_name, parent_id, sort_order, status } = body;
   const result: any = await execute(
@@ -37,9 +38,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     [category_code, category_name, parent_id || 0, sort_order || 0, status ?? 1]
   );
   return successResponse({ id: result.insertId }, '分类创建成功');
-});
+}, { logTitle: '创建物料分类' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, category_name, sort_order, status } = body;
   if (category_name !== undefined)
@@ -58,12 +59,12 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
       id,
     ]);
   return successResponse(null, '更新成功');
-});
+}, { logTitle: '更新物料分类' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
   await execute('UPDATE inv_material_category SET deleted = 1 WHERE id = ?', [Number(id)]);
   return successResponse(null, '删除成功');
-});
+}, { logTitle: '删除物料分类' });

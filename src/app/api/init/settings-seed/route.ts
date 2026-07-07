@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
 
@@ -66,12 +67,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       'crm_follow_record',
       'sal_order',
       'sal_order_detail',
-      'sal_delivery_order',
-      'sal_delivery_order_item',
-      'sal_return_order',
-      'sal_return_order_item',
+      'sal_delivery',
+      'sal_delivery_detail',
+      'sal_return',
+      'sal_return_detail',
       'sal_reconciliation',
-      'sal_reconciliation_detail',
+      'sal_reconciliation_line',
+      'sal_reconciliation_writeoff',
       'sal_sample_order',
       'fin_cost_record',
       'fin_payable',

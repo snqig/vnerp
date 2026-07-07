@@ -3,9 +3,9 @@ import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 生成流程卡卡号
 function generateCardNo(): string {
@@ -18,7 +18,7 @@ function generateCardNo(): string {
 }
 
 // GET - 获取流程卡列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const workOrderNo = searchParams.get('workOrderNo') || '';
@@ -101,10 +101,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     page: result.pagination.page,
     pageSize: result.pagination.pageSize,
   });
-}, '获取流程卡列表失败');
+});
 
 // POST - 创建流程卡
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   // 验证必填字段
@@ -212,10 +212,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '流程卡创建成功');
-}, '创建流程卡失败');
+}, { logTitle: '创建流程卡', logType: 'business' });
 
 // PUT - 更新流程卡（添加辅料、配料完成、锁住/解锁）
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   if (!body.id && !body.cardNo) {
@@ -235,7 +235,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     default:
       return updateCardInfo(id || cardNo, updateData);
   }
-}, '更新流程卡失败');
+}, { logTitle: '更新流程卡', logType: 'business' });
 
 // 添加辅料到流程卡
 async function addMaterialToCard(cardIdentifier: string | number, data: any) {
@@ -348,7 +348,7 @@ async function updateCardInfo(cardIdentifier: string | number, data: any) {
 }
 
 // DELETE - 删除流程卡
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -359,7 +359,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await execute('UPDATE prd_process_card SET deleted = 1 WHERE id = ?', [id]);
 
   return successResponse(null, '流程卡删除成功');
-}, '删除流程卡失败');
+}, { logTitle: '删除流程卡', logType: 'business' });
 
 // 辅助函数：驼峰转蛇形
 function snakeCase(str: string): string {

@@ -1,11 +1,11 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 物料标签接口
 interface MaterialLabel {
@@ -42,7 +42,7 @@ interface MaterialLabel {
 }
 
 // GET - 获取物料标签列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const materialCode = searchParams.get('materialCode') || '';
@@ -152,10 +152,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse(result);
-}, '获取物料标签列表失败');
+});
 
 // POST - 创建物料标签
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   // 验证必填字段
@@ -239,10 +239,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '物料标签创建成功'
   );
-}, '创建物料标签失败');
+}, { logTitle: '创建物料标签', logType: 'business' });
 
 // PUT - 更新物料标签
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   if (!body.id) {
@@ -296,10 +296,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse(null, '物料标签更新成功');
-}, '更新物料标签失败');
+}, { logTitle: '更新物料标签', logType: 'business' });
 
 // DELETE - 删除物料标签（软删除）
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -310,7 +310,7 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await execute('UPDATE inv_material_label SET deleted = 1 WHERE id = ?', [id]);
 
   return successResponse(null, '物料标签删除成功');
-}, '删除物料标签失败');
+}, { logTitle: '删除物料标签', logType: 'business' });
 
 // 辅助函数：驼峰转蛇形
 function snakeCase(str: string): string {

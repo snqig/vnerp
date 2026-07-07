@@ -1,9 +1,10 @@
-import { NextRequest } from 'next/server';
-import { withErrorHandler, successResponse } from '@/lib/api-response';
+﻿import { NextRequest } from 'next/server';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { getNegativeStockWarnings } from '@/lib/inventory-sync';
 
 // 获取库存预警列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const warnings = await getNegativeStockWarnings();
 
   const critical = warnings.filter((w) => w.warningLevel === 'critical');

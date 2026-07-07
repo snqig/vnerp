@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { query, transaction } from '@/lib/db';
 import {
   explodeBOM,
@@ -10,7 +11,7 @@ import {
   runFullMRP,
 } from '@/lib/mrp-engine';
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { work_order_ids, warehouse_id, auto_generate_pr = false } = body;
 
@@ -30,9 +31,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result);
-});
+}, { logTitle: '运行MRP', logType: 'business' });
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
 

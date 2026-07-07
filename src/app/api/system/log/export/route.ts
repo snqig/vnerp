@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   successResponse,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query } from '@/lib/db';
 import { getTranslator } from '@/lib/i18n-server';
 
@@ -11,7 +12,7 @@ import { getTranslator } from '@/lib/i18n-server';
  * 支持CSV格式导出
  */
 
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || '';
@@ -93,5 +94,5 @@ export const GET = withAuthAndErrorHandler(
 
     return successResponse({ list: rows, total: rows.length });
   },
-  { permission: 'system:view' }
+  { errorMessage: '操作失败' }
 );

@@ -1,15 +1,15 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   logOperation,
 } from '@/lib/api-response';
 import { randomUUID } from 'crypto';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
+import { withPermission } from '@/lib/api-permissions';
 const WORK_ORDER_STATUS = {
   PENDING: 'pending',
   CONFIRMED: 'confirmed',
@@ -26,7 +26,7 @@ const SALE_ORDER_STATUS = {
   CANCELLED: 'cancelled',
 } as const;
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -108,9 +108,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     page,
     pageSize,
   });
-}, '获取工单失败');
+}, { errorMessage: '获取工单失败' });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { order_no, customer_name, items, bom_id, plan_start_date, plan_end_date } = body;
 
@@ -252,9 +252,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, `工单 ${result.work_order_no} 创建成功，已生成工单二维码`);
-}, '创建工单失败');
+}, { errorMessage: '创建工单失败' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id, status, priority, plan_start_date, plan_end_date } = body;
 
@@ -354,9 +354,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '工单更新成功');
-}, '更新工单失败');
+}, { errorMessage: '更新工单失败' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -413,4 +413,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(null, '工单删除成功');
-}, '删除工单失败');
+}, { errorMessage: '删除工单失败' });

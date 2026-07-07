@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+﻿import { NextRequest } from 'next/server';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { autoScheduleWorkOrders, saveScheduleResult } from '@/lib/production-scheduling-enhanced';
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { work_order_ids, start_date, respect_deadline = true } = body;
 
@@ -33,4 +34,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '自动排程完成'
   );
-});
+}, { logTitle: '自动排产', logType: 'business' });

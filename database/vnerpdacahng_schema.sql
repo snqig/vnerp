@@ -31,6 +31,9 @@ CREATE TABLE `sys_user` (
   `status` TINYINT DEFAULT 1 COMMENT '状态: 0-禁用, 1-启用',
   `last_login_time` DATETIME COMMENT '最后登录时间',
   `last_login_ip` VARCHAR(50) COMMENT '最后登录IP',
+  `login_fail_count` INT DEFAULT 0 COMMENT '登录失败次数',
+  `lock_time` DATETIME COMMENT '账号锁定时间',
+  `pwd_update_time` DATETIME COMMENT '密码修改时间',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `create_by` BIGINT UNSIGNED COMMENT '创建人ID',
@@ -418,19 +421,26 @@ CREATE TABLE `inv_warehouse` (
 CREATE TABLE `inv_inventory` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '库存ID',
   `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码（冗余，便于查询）',
+  `material_name` VARCHAR(100) COMMENT '物料名称（冗余）',
   `warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
   `location_code` VARCHAR(50) COMMENT '库位编码',
   `quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '库存数量',
+  `unit` VARCHAR(20) COMMENT '计量单位',
   `locked_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '锁定数量',
   `available_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '可用数量',
+  `stocktaking_flag` TINYINT NOT NULL DEFAULT 0 COMMENT '0-正常 1-盘点中（冻结出库）',
   `batch_no` VARCHAR(50) COMMENT '批次号',
   `production_date` DATE COMMENT '生产日期',
   `expiry_date` DATE COMMENT '过期日期',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_material_warehouse_batch` (`material_id`, `warehouse_id`, `batch_no`),
   KEY `idx_warehouse` (`warehouse_id`),
-  KEY `idx_batch` (`batch_no`)
+  KEY `idx_batch` (`batch_no`),
+  KEY `idx_material_code` (`material_code`),
+  KEY `idx_stocktaking_flag` (`stocktaking_flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='库存表';
 
 -- 库存流水表（不可修改、不可删除 - 审计要求）
@@ -499,100 +509,86 @@ CREATE TABLE `pur_request_detail` (
   KEY `idx_material` (`material_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='采购申请明细表';
 
--- 采购订单表
-CREATE TABLE `pur_order` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '订单ID',
-  `order_no` VARCHAR(50) NOT NULL COMMENT '订单编号',
-  `order_date` DATE COMMENT '订单日期',
-  `supplier_id` BIGINT UNSIGNED NOT NULL COMMENT '供应商ID',
-  `contact_name` VARCHAR(50) COMMENT '联系人',
-  `contact_phone` VARCHAR(20) COMMENT '联系电话',
-  `delivery_address` VARCHAR(255) COMMENT '送货地址',
-  `total_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '总金额',
-  `tax_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '税额',
-  `total_with_tax` DECIMAL(18,4) DEFAULT 0 COMMENT '含税总额',
+-- 采购订单表（权威定义，对齐 scripts/create_po_grn_tables.sql 与运行时代码）
+-- 表名 pur_purchase_order（旧 schema 用 pur_order，已废弃，见 Migration 015）
+-- 状态码 10/20/30/40/50/90（与 PurchaseOrderStatus.fromDbCode 对齐）
+CREATE TABLE `pur_purchase_order` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `po_no` VARCHAR(50) NOT NULL COMMENT '采购单号',
+  `supplier_id` INT UNSIGNED DEFAULT NULL COMMENT '供应商ID',
+  `supplier_name` VARCHAR(100) NOT NULL COMMENT '供应商名称',
+  `supplier_code` VARCHAR(50) DEFAULT NULL COMMENT '供应商编码',
+  `order_date` DATE NOT NULL COMMENT '订单日期',
+  `delivery_date` DATE DEFAULT NULL COMMENT '预计交货日期',
   `currency` VARCHAR(10) DEFAULT 'CNY' COMMENT '币种',
-  `exchange_rate` DECIMAL(10,4) DEFAULT 1 COMMENT '汇率',
-  `payment_terms` VARCHAR(100) COMMENT '付款条件',
-  `delivery_date` DATE COMMENT '交货日期',
-  `settlement_method` VARCHAR(50) COMMENT '结算方式',
-  `status` TINYINT DEFAULT 1 COMMENT '状态: 1-待确认, 2-已确认, 3-部分到货, 4-已完成, 5-已取消',
-  `remark` TEXT COMMENT '备注',
+  `exchange_rate` DECIMAL(10,4) DEFAULT 1.0000 COMMENT '汇率',
+  `total_amount` DECIMAL(14,2) DEFAULT 0 COMMENT '订单总金额',
+  `total_quantity` DECIMAL(14,3) DEFAULT 0 COMMENT '订单总数量',
+  `tax_rate` DECIMAL(5,2) DEFAULT 13.00 COMMENT '税率%',
+  `tax_amount` DECIMAL(14,2) DEFAULT 0 COMMENT '税额',
+  `grand_total` DECIMAL(14,2) DEFAULT 0 COMMENT '含税总金额',
+  `status` TINYINT UNSIGNED DEFAULT 10 COMMENT '状态: 10-草稿, 20-待审批, 30-已审批, 40-部分收货, 50-已完成, 90-已关闭',
+  `over_receipt_tolerance` DECIMAL(5,2) DEFAULT 5.00 COMMENT '超收容差率%',
+  `payment_terms` VARCHAR(100) DEFAULT NULL COMMENT '付款条款',
+  `delivery_address` TEXT DEFAULT NULL COMMENT '送货地址',
+  `contact_person` VARCHAR(50) DEFAULT NULL COMMENT '联系人',
+  `contact_phone` VARCHAR(50) DEFAULT NULL COMMENT '联系电话',
+  `remark` TEXT DEFAULT NULL COMMENT '备注',
+  `create_by` INT UNSIGNED DEFAULT NULL COMMENT '创建人ID',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_by` INT UNSIGNED DEFAULT NULL COMMENT '更新人ID',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `create_by` BIGINT UNSIGNED COMMENT '创建人ID',
-  `update_by` BIGINT UNSIGNED COMMENT '更新人ID',
-  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `audit_by` INT UNSIGNED DEFAULT NULL COMMENT '审批人ID',
+  `audit_time` DATETIME DEFAULT NULL COMMENT '审批时间',
+  `close_by` INT UNSIGNED DEFAULT NULL COMMENT '关闭人ID',
+  `close_time` DATETIME DEFAULT NULL COMMENT '关闭时间',
+  `close_reason` VARCHAR(200) DEFAULT NULL COMMENT '关闭原因',
+  `deleted` TINYINT(1) DEFAULT 0 COMMENT '是否删除',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_order_no` (`order_no`),
+  UNIQUE KEY `uk_po_no` (`po_no`),
   KEY `idx_supplier` (`supplier_id`),
   KEY `idx_status` (`status`),
-  KEY `idx_order_date` (`order_date`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='采购订单表';
+  KEY `idx_order_date` (`order_date`),
+  KEY `idx_delivery_date` (`delivery_date`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='采购单主表';
 
--- 采购订单明细表
-CREATE TABLE `pur_order_detail` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
-  `order_id` BIGINT UNSIGNED NOT NULL COMMENT '订单ID',
-  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
-  `quantity` DECIMAL(18,4) NOT NULL COMMENT '采购数量',
-  `unit` VARCHAR(20) COMMENT '单位',
-  `unit_price` DECIMAL(18,4) COMMENT '单价',
-  `tax_rate` DECIMAL(5,2) DEFAULT 0 COMMENT '税率(%)',
-  `amount` DECIMAL(18,4) COMMENT '金额',
-  `tax_amount` DECIMAL(18,4) COMMENT '税额',
-  `total_amount` DECIMAL(18,4) COMMENT '含税金额',
-  `received_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '已到货数量',
-  `delivery_date` DATE COMMENT '交货日期',
-  `remark` VARCHAR(255) COMMENT '备注',
-  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  PRIMARY KEY (`id`),
-  KEY `idx_order` (`order_id`),
-  KEY `idx_material` (`material_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='采购订单明细表';
-
--- 采购入库单表
-CREATE TABLE `pur_receipt` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '入库单ID',
-  `receipt_no` VARCHAR(50) NOT NULL COMMENT '入库单号',
-  `receipt_date` DATE COMMENT '入库日期',
-  `order_id` BIGINT UNSIGNED COMMENT '采购订单ID',
-  `supplier_id` BIGINT UNSIGNED NOT NULL COMMENT '供应商ID',
-  `warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
-  `total_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '总金额',
-  `inspector_id` BIGINT UNSIGNED COMMENT '检验员ID',
-  `inspection_result` TINYINT COMMENT '检验结果: 1-合格, 2-不合格',
-  `status` TINYINT DEFAULT 1 COMMENT '状态: 1-待入库, 2-已入库',
-  `remark` TEXT COMMENT '备注',
+-- 采购单行表（权威定义，对齐 scripts/create_po_grn_tables.sql）
+CREATE TABLE `pur_purchase_order_line` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `po_id` INT UNSIGNED NOT NULL COMMENT '采购单ID',
+  `line_no` INT UNSIGNED NOT NULL COMMENT '行号',
+  `material_id` INT UNSIGNED DEFAULT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) NOT NULL COMMENT '物料编码',
+  `material_name` VARCHAR(200) NOT NULL COMMENT '物料名称',
+  `material_spec` VARCHAR(500) DEFAULT NULL COMMENT '物料规格',
+  `unit` VARCHAR(20) DEFAULT '件' COMMENT '单位',
+  `order_qty` DECIMAL(14,3) NOT NULL DEFAULT 0 COMMENT '订购数量',
+  `received_qty` DECIMAL(14,3) DEFAULT 0 COMMENT '累计入库数量',
+  `returned_qty` DECIMAL(14,3) DEFAULT 0 COMMENT '累计退货数量',
+  `unit_price` DECIMAL(14,4) NOT NULL DEFAULT 0 COMMENT '单价',
+  `amount` DECIMAL(14,2) DEFAULT 0 COMMENT '金额',
+  `tax_rate` DECIMAL(5,2) DEFAULT 13.00 COMMENT '税率%',
+  `tax_amount` DECIMAL(14,2) DEFAULT 0 COMMENT '税额',
+  `line_total` DECIMAL(14,2) DEFAULT 0 COMMENT '行合计',
+  `require_date` DATE DEFAULT NULL COMMENT '需求日期',
+  `closed_flag` TINYINT(1) DEFAULT 0 COMMENT '行关闭标志',
+  `closed_reason` VARCHAR(200) DEFAULT NULL COMMENT '关闭原因',
+  `remark` TEXT DEFAULT NULL COMMENT '备注',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `create_by` BIGINT UNSIGNED COMMENT '创建人ID',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_receipt_no` (`receipt_no`),
-  KEY `idx_order` (`order_id`),
-  KEY `idx_supplier` (`supplier_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='采购入库单表';
+  UNIQUE KEY `uk_po_line` (`po_id`, `line_no`),
+  KEY `idx_material` (`material_id`),
+  KEY `idx_material_code` (`material_code`),
+  KEY `idx_require_date` (`require_date`),
+  CONSTRAINT `fk_pur_line_po` FOREIGN KEY (`po_id`) REFERENCES `pur_purchase_order`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='采购单行表';
 
--- 采购入库明细表
-CREATE TABLE `pur_receipt_detail` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
-  `receipt_id` BIGINT UNSIGNED NOT NULL COMMENT '入库单ID',
-  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
-  `order_detail_id` BIGINT UNSIGNED COMMENT '订单明细ID',
-  `quantity` DECIMAL(18,4) NOT NULL COMMENT '入库数量',
-  `unit` VARCHAR(20) COMMENT '单位',
-  `unit_price` DECIMAL(18,4) COMMENT '单价',
-  `amount` DECIMAL(18,4) COMMENT '金额',
-  `batch_no` VARCHAR(50) COMMENT '批次号',
-  `production_date` DATE COMMENT '生产日期',
-  `expiry_date` DATE COMMENT '过期日期',
-  `location_code` VARCHAR(50) COMMENT '库位编码',
-  `remark` VARCHAR(255) COMMENT '备注',
-  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  PRIMARY KEY (`id`),
-  KEY `idx_receipt` (`receipt_id`),
-  KEY `idx_material` (`material_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='采购入库明细表';
+-- 采购入库单表（已废弃）
+-- 运行时收货复用 inv_inbound_order 表（见 scripts/create_po_grn_tables.sql 第84行 ALTER TABLE inv_inbound_order）
+-- 旧表 pur_receipt/pur_receipt_detail 已在 Migration 015 中重命名为 *_deprecated
+-- 如需独立收货单表，请参考销售模块 Delivery 聚合模式新建
 
 -- ========================================================
 -- 6. 销售管理模块
@@ -636,6 +632,7 @@ CREATE TABLE `sal_order_detail` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
   `order_id` BIGINT UNSIGNED NOT NULL COMMENT '订单ID',
   `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_name` VARCHAR(100) COMMENT '物料名称（冗余）',
   `quantity` DECIMAL(18,4) NOT NULL COMMENT '销售数量',
   `unit` VARCHAR(20) COMMENT '单位',
   `unit_price` DECIMAL(18,4) COMMENT '单价',
@@ -647,9 +644,11 @@ CREATE TABLE `sal_order_detail` (
   `delivery_date` DATE COMMENT '交货日期',
   `remark` VARCHAR(255) COMMENT '备注',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '删除标记',
   PRIMARY KEY (`id`),
   KEY `idx_order` (`order_id`),
-  KEY `idx_material` (`material_id`)
+  KEY `idx_material` (`material_id`),
+  KEY `idx_material_name` (`material_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='销售订单明细表';
 
 -- 销售出库单表
@@ -658,16 +657,30 @@ CREATE TABLE `sal_delivery` (
   `delivery_no` VARCHAR(50) NOT NULL COMMENT '出库单号',
   `delivery_date` DATE COMMENT '出库日期',
   `order_id` BIGINT UNSIGNED COMMENT '销售订单ID',
+  `order_no` VARCHAR(50) COMMENT '销售订单号（冗余）',
   `customer_id` BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
+  `customer_name` VARCHAR(100) COMMENT '客户名称（冗余）',
   `warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
   `total_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '总金额',
+  `total_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '总数量（明细数量合计）',
   `logistics_company` VARCHAR(100) COMMENT '物流公司',
   `tracking_no` VARCHAR(50) COMMENT '物流单号',
-  `status` TINYINT DEFAULT 1 COMMENT '状态: 1-待发货, 2-已发货, 3-已签收',
+  `contact_name` VARCHAR(50) COMMENT '收货人姓名',
+  `contact_phone` VARCHAR(30) COMMENT '收货人电话',
+  `delivery_address` VARCHAR(500) COMMENT '配送地址',
+  `status` TINYINT DEFAULT 1 COMMENT '状态: 1-待发货, 2-已发货, 3-已签收, 9-已取消',
   `remark` TEXT COMMENT '备注',
+  `create_by` BIGINT UNSIGNED COMMENT '创建人ID',
+  `ship_by` BIGINT UNSIGNED COMMENT '发货人ID',
+  `ship_time` DATETIME COMMENT '发货时间',
+  `sign_by` BIGINT UNSIGNED COMMENT '签收人ID',
+  `sign_time` DATETIME COMMENT '签收时间',
+  `sign_status` TINYINT DEFAULT 0 COMMENT '签收状态: 0-未签收, 1-已签收',
+  `version` INT DEFAULT 0 COMMENT '乐观锁版本号',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `create_by` BIGINT UNSIGNED COMMENT '创建人ID',
+  `update_by` BIGINT UNSIGNED COMMENT '更新人ID',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_delivery_no` (`delivery_no`),
   KEY `idx_order` (`order_id`),
@@ -678,7 +691,11 @@ CREATE TABLE `sal_delivery` (
 CREATE TABLE `sal_delivery_detail` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
   `delivery_id` BIGINT UNSIGNED NOT NULL COMMENT '出库单ID',
+  `line_no` INT COMMENT '行号',
   `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码（冗余）',
+  `material_name` VARCHAR(200) COMMENT '物料名称（冗余）',
+  `material_spec` VARCHAR(100) COMMENT '物料规格（冗余）',
   `order_detail_id` BIGINT UNSIGNED COMMENT '订单明细ID',
   `quantity` DECIMAL(18,4) NOT NULL COMMENT '出库数量',
   `unit` VARCHAR(20) COMMENT '单位',
@@ -687,10 +704,145 @@ CREATE TABLE `sal_delivery_detail` (
   `batch_no` VARCHAR(50) COMMENT '批次号',
   `remark` VARCHAR(255) COMMENT '备注',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
   PRIMARY KEY (`id`),
   KEY `idx_delivery` (`delivery_id`),
   KEY `idx_material` (`material_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='销售出库明细表';
+
+-- 退货单主表
+CREATE TABLE `sal_return` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '退货单ID',
+  `return_no` VARCHAR(50) NOT NULL COMMENT '退货单号',
+  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态: 1-待审核, 2-已审核, 3-已完成, 9-已取消',
+  `order_id` BIGINT UNSIGNED NOT NULL COMMENT '销售订单ID',
+  `order_no` VARCHAR(50) COMMENT '销售订单号（冗余）',
+  `customer_id` BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
+  `customer_name` VARCHAR(100) COMMENT '客户名称（冗余）',
+  `warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '入库仓库ID',
+  `delivery_id` BIGINT UNSIGNED COMMENT '关联发货单ID',
+  `delivery_no` VARCHAR(50) COMMENT '关联发货单号（冗余）',
+  `reason` VARCHAR(500) NOT NULL COMMENT '退货原因',
+  `return_date` DATE NOT NULL COMMENT '退货日期',
+  `total_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '退货总金额',
+  `approve_by` BIGINT UNSIGNED COMMENT '审核人ID',
+  `approve_time` DATETIME COMMENT '审核时间',
+  `complete_by` BIGINT UNSIGNED COMMENT '完成人ID',
+  `complete_time` DATETIME COMMENT '完成时间',
+  `inbound_order_id` BIGINT UNSIGNED COMMENT '关联入库单ID（退货入库）',
+  `inbound_order_no` VARCHAR(50) COMMENT '关联入库单号（冗余）',
+  `receivable_id` BIGINT UNSIGNED COMMENT '关联红字应收单ID',
+  `receivable_no` VARCHAR(50) COMMENT '关联红字应收单号（冗余）',
+  `remark` VARCHAR(500) COMMENT '备注',
+  `version` INT DEFAULT 0 COMMENT '乐观锁版本号',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `create_by` BIGINT UNSIGNED COMMENT '创建人ID',
+  `update_by` BIGINT UNSIGNED COMMENT '更新人ID',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_return_no` (`return_no`),
+  KEY `idx_status` (`status`),
+  KEY `idx_order` (`order_id`),
+  KEY `idx_customer` (`customer_id`),
+  KEY `idx_warehouse` (`warehouse_id`),
+  KEY `idx_delivery` (`delivery_id`),
+  KEY `idx_return_date` (`return_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='退货单主表';
+
+-- 退货单明细表
+CREATE TABLE `sal_return_detail` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `return_id` BIGINT UNSIGNED NOT NULL COMMENT '退货单ID',
+  `line_no` INT NOT NULL COMMENT '行号',
+  `delivery_detail_id` BIGINT UNSIGNED COMMENT '关联发货明细ID',
+  `order_detail_id` BIGINT UNSIGNED COMMENT '关联订单明细ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码（冗余）',
+  `material_name` VARCHAR(200) COMMENT '物料名称（冗余）',
+  `material_spec` VARCHAR(100) COMMENT '物料规格（冗余）',
+  `unit` VARCHAR(20) COMMENT '单位',
+  `quantity` DECIMAL(18,4) NOT NULL COMMENT '退货数量',
+  `unit_price` DECIMAL(18,4) DEFAULT 0 COMMENT '单价',
+  `amount` DECIMAL(18,4) DEFAULT 0 COMMENT '金额',
+  `batch_no` VARCHAR(50) COMMENT '批次号',
+  `remark` VARCHAR(255) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_return` (`return_id`),
+  KEY `idx_material` (`material_id`),
+  KEY `idx_order_detail` (`order_detail_id`),
+  KEY `idx_batch` (`batch_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='退货单明细表';
+
+-- 对账单主表
+CREATE TABLE `sal_reconciliation` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '对账单ID',
+  `reconciliation_no` VARCHAR(50) NOT NULL COMMENT '对账单号',
+  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态: 1-草稿, 2-已确认, 3-部分核销, 4-已核销, 9-已关闭',
+  `customer_id` BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
+  `customer_name` VARCHAR(100) COMMENT '客户名称（冗余）',
+  `period_start` DATE NOT NULL COMMENT '对账开始日期',
+  `period_end` DATE NOT NULL COMMENT '对账结束日期',
+  `delivery_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '发货总金额',
+  `return_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '退货总金额',
+  `net_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '净额（发货-退货）',
+  `discount_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '折扣金额',
+  `received_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '已核销金额',
+  `balance_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '未核销余额',
+  `confirm_by` BIGINT UNSIGNED COMMENT '确认人ID',
+  `confirm_time` DATETIME COMMENT '确认时间',
+  `close_by` BIGINT UNSIGNED COMMENT '关闭人ID',
+  `close_time` DATETIME COMMENT '关闭时间',
+  `remark` VARCHAR(500) COMMENT '备注',
+  `version` INT DEFAULT 0 COMMENT '乐观锁版本号',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `create_by` BIGINT UNSIGNED COMMENT '创建人ID',
+  `update_by` BIGINT UNSIGNED COMMENT '更新人ID',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_reconciliation_no` (`reconciliation_no`),
+  KEY `idx_status` (`status`),
+  KEY `idx_customer` (`customer_id`),
+  KEY `idx_period` (`period_start`, `period_end`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='对账单主表';
+
+-- 对账单明细表（发货/退货单关联）
+CREATE TABLE `sal_reconciliation_line` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `reconciliation_id` BIGINT UNSIGNED NOT NULL COMMENT '对账单ID',
+  `source_type` TINYINT NOT NULL COMMENT '来源类型: 1-发货单, 2-退货单',
+  `source_id` BIGINT UNSIGNED NOT NULL COMMENT '来源单据ID',
+  `source_no` VARCHAR(50) NOT NULL COMMENT '来源单据号',
+  `source_date` DATE NOT NULL COMMENT '来源单据日期',
+  `amount` DECIMAL(18,4) NOT NULL COMMENT '单据金额',
+  `remark` VARCHAR(255) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_reconciliation` (`reconciliation_id`),
+  KEY `idx_source` (`source_type`, `source_id`),
+  KEY `idx_source_no` (`source_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='对账单明细表';
+
+-- 对账核销记录表
+CREATE TABLE `sal_reconciliation_writeoff` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '核销记录ID',
+  `reconciliation_id` BIGINT UNSIGNED NOT NULL COMMENT '对账单ID',
+  `receivable_id` BIGINT UNSIGNED NOT NULL COMMENT '应收单ID',
+  `amount` DECIMAL(18,4) NOT NULL COMMENT '核销金额',
+  `write_off_date` DATE NOT NULL COMMENT '核销日期',
+  `remark` VARCHAR(255) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `create_by` BIGINT UNSIGNED COMMENT '创建人ID',
+  PRIMARY KEY (`id`),
+  KEY `idx_reconciliation` (`reconciliation_id`),
+  KEY `idx_receivable` (`receivable_id`),
+  KEY `idx_write_off_date` (`write_off_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='对账核销记录表';
 
 -- ========================================================
 -- 7. 生产管理模块
@@ -985,8 +1137,9 @@ CREATE TABLE `qc_unqualified` (
 -- ========================================================
 
 -- 初始化管理员用户(密码需要加密后存储)
-INSERT INTO `sys_user` (`username`, `password`, `real_name`, `status`, `create_time`) VALUES
-('admin', '$2b$10$exPRft/Zkzh5o1QmCaKy/uVilWGDosF8un/6yA6jEIneEZNJ319F2', '系统管理员', 1, NOW());
+-- 默认口令 admin123，first_login=1 强制首次登录改密
+INSERT INTO `sys_user` (`username`, `password`, `real_name`, `status`, `first_login`, `create_time`) VALUES
+('admin', '$2b$10$exPRft/Zkzh5o1QmCaKy/uVilWGDosF8un/6yA6jEIneEZNJ319F2', '系统管理员', 1, 1, NOW());
 
 -- 初始化部门
 INSERT INTO `sys_department` (`dept_name`, `dept_code`, `sort_order`, `status`, `create_time`) VALUES
@@ -1320,26 +1473,779 @@ CREATE TABLE `material_batch_costs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='小料批次成本表';
 
 -- 库存批次表（支持FIFO和小料管理）
+-- 列对齐说明：本表合并了原 SQL 定义与代码已有引用，新增列：
+--   material_code/material_name（冗余）、available_qty/locked_qty（FIFO 扣减）、
+--   unit_price（成本冗余）、produce_date（生产日期）、deleted（软删除）、
+--   version（乐观锁）、update_time（更新时间）
 CREATE TABLE `inv_inventory_batch` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '批次ID',
   `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) NULL COMMENT '物料编码（冗余，便于查询）',
+  `material_name` VARCHAR(200) NULL COMMENT '物料名称（冗余）',
   `batch_no` VARCHAR(50) NOT NULL COMMENT '批次号',
   `qr_code` VARCHAR(50) COMMENT '二维码',
-  `quantity` DECIMAL(18,4) NOT NULL COMMENT '数量',
-  `remaining_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '剩余数量',
+  `quantity` DECIMAL(18,4) NOT NULL COMMENT '数量（原始入库数量）',
+  `available_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '可用数量（= quantity - locked_qty - 已出库）',
+  `locked_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '锁定数量（被领料单等单据占用）',
+  `remaining_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '剩余数量（兼容旧字段，与 available_qty 同义）',
   `unit_cost` DECIMAL(18,4) COMMENT '单位成本',
+  `unit_price` DECIMAL(18,4) DEFAULT 0 COMMENT '入库单价（冗余，用于成本核算）',
   `warehouse_id` BIGINT UNSIGNED COMMENT '仓库ID',
   `location` VARCHAR(50) COMMENT '库位',
   `split_flag` TINYINT DEFAULT 0 COMMENT '拆分标记：0-整料，1-小料，2-余料',
   `parent_qr_code` VARCHAR(50) COMMENT '父级二维码（小料关联整料）',
   `inbound_date` DATE COMMENT '入库日期',
+  `produce_date` DATE NULL COMMENT '生产日期',
   `expire_date` DATE COMMENT '过期日期',
-  `status` TINYINT DEFAULT 1 COMMENT '状态：1-可用，2-冻结，3-过期',
+  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '1-normal 可用, 2-frozen 冻结, 3-expired 过期',
+  `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '软删除: 0-正常, 1-已删除',
+  `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+  `alert_level` VARCHAR(20) DEFAULT 'normal' COMMENT '库存告警级别: normal/warning/critical',
+  `last_alert_time` TIMESTAMP NULL COMMENT '最后告警时间',
+  `inspection_status` VARCHAR(20) DEFAULT 'pending' COMMENT '检验状态: pending/pass/fail',
+  `quarantine_status` VARCHAR(20) DEFAULT 'none' COMMENT '隔离状态: none/quarantined/released',
   `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `idx_material` (`material_id`),
   KEY `idx_batch` (`batch_no`),
   KEY `idx_qr` (`qr_code`),
   KEY `idx_inbound_date` (`inbound_date`),
-  KEY `idx_expire_date` (`expire_date`)
+  KEY `idx_expire_date` (`expire_date`),
+  KEY `idx_warehouse` (`warehouse_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_material_warehouse_status` (`material_id`, `warehouse_id`, `status`, `deleted`),
+  KEY `idx_alert_level` (`alert_level`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='库存批次表（FIFO+小料管理）';
+
+-- ========================================================
+-- 12. 仓库入库模块
+-- ========================================================
+
+-- 入库单主表
+CREATE TABLE `inv_inbound_order` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '入库单ID',
+  `order_no` VARCHAR(30) NOT NULL COMMENT '入库单号',
+  `order_type` VARCHAR(20) DEFAULT 'purchase' COMMENT '入库类型: purchase-采购入库, return-退货入库, transfer-调拨入库',
+  `warehouse_id` INT NOT NULL COMMENT '仓库ID',
+  `supplier_name` VARCHAR(100) COMMENT '供应商名称',
+  `inbound_date` DATETIME COMMENT '入库日期',
+  `total_quantity` DECIMAL(15,3) DEFAULT 0 COMMENT '总数量',
+  `total_amount` DECIMAL(15,2) COMMENT '总金额',
+  `status` VARCHAR(20) DEFAULT 'pending' COMMENT '状态: draft/pending/approved/completed/cancelled',
+  `qc_status` VARCHAR(20) DEFAULT 'pending' COMMENT '质检状态: pending/pass/fail',
+  `remark` VARCHAR(500) COMMENT '备注',
+  `deleted` TINYINT(1) DEFAULT 0 COMMENT '软删除: 0-正常, 1-已删除',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_order_no` (`order_no`),
+  KEY `idx_status` (`status`),
+  KEY `idx_warehouse` (`warehouse_id`),
+  KEY `idx_inbound_date` (`inbound_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='入库单主表';
+
+-- 入库单明细表
+CREATE TABLE `inv_inbound_item` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `order_id` INT NOT NULL COMMENT '入库单ID',
+  `material_id` INT COMMENT '物料ID',
+  `material_name` VARCHAR(200) COMMENT '物料名称',
+  `material_spec` VARCHAR(200) COMMENT '物料规格',
+  `batch_no` VARCHAR(50) COMMENT '批次号',
+  `quantity` DECIMAL(15,3) COMMENT '数量',
+  `unit` VARCHAR(20) COMMENT '单位',
+  `unit_price` DECIMAL(15,4) COMMENT '单价',
+  `total_price` DECIMAL(15,4) COMMENT '总价',
+  `warehouse_location` VARCHAR(50) COMMENT '库位',
+  `produce_date` DATETIME COMMENT '生产日期',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_order` (`order_id`),
+  KEY `idx_material` (`material_id`),
+  KEY `idx_batch` (`batch_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='入库单明细表';
+
+-- ========================================================
+-- 13. 事件总线模块（Outbox 模式 + 幂等保障）
+-- ========================================================
+
+-- 领域事件持久化表（Outbox 模式）
+CREATE TABLE `domain_event_outbox` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '事件主键ID',
+  `event_type` VARCHAR(100) NOT NULL COMMENT '事件类型（如 InboundOrderCreated/SalesOrderApproved）',
+  `aggregate_type` VARCHAR(50) DEFAULT NULL COMMENT '聚合根类型（如 InboundOrder/SalesOrder）',
+  `aggregate_id` BIGINT UNSIGNED DEFAULT NULL COMMENT '聚合根ID',
+  `payload` JSON NOT NULL COMMENT '事件完整内容（JSON 序列化的 DomainEvent 对象）',
+  `status` VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT '状态: pending-待处理, dispatching-分发中, processed-已处理, failed-失败',
+  `retry_count` INT NOT NULL DEFAULT 0 COMMENT '已重试次数（最大3次，超过标记死信）',
+  `error_message` TEXT COMMENT '最近一次失败的错误信息（截断500字符）',
+  `next_execute_at` DATETIME DEFAULT NULL COMMENT '下次执行时间（指数退避: 1s/3s/9s；NULL 表示立即可执行）',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '事件创建时间',
+  `processed_at` DATETIME DEFAULT NULL COMMENT '处理完成时间（status=processed 时写入）',
+  `claimed_at` DATETIME DEFAULT NULL COMMENT '最近一次被 claim 的时间（status=dispatching 时写入）',
+  `dispatched_at` DATETIME DEFAULT NULL COMMENT '成功分发到 Stream 的时间（status=processed 前置）',
+  PRIMARY KEY (`id`),
+  KEY `idx_status_created` (`status`, `created_at`) COMMENT '待处理事件查询索引',
+  KEY `idx_status_next_execute` (`status`, `next_execute_at`) COMMENT '指数退避消费索引',
+  KEY `idx_aggregate` (`aggregate_type`, `aggregate_id`) COMMENT '聚合根溯源索引'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='领域事件持久化表（Outbox 模式）';
+
+-- 事件幂等表（防止 OutboxPoller 重试或 Stream 消费者重启时重复执行）
+CREATE TABLE `sys_event_processed` (
+  `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
+  `event_id` BIGINT NOT NULL COMMENT 'domain_event_outbox.id',
+  `handler_name` VARCHAR(255) NOT NULL COMMENT '处理器类名',
+  `status` VARCHAR(20) NOT NULL DEFAULT 'processed' COMMENT 'processing-处理中, processed-已处理',
+  `processed_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `uk_event_handler` (`event_id`, `handler_name`),
+  INDEX `idx_processed_at` (`processed_at`),
+  INDEX `idx_status_processed_at` (`status`, `processed_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='事件幂等表';
+
+-- 迁移版本记录表（migrate.ts 使用）
+CREATE TABLE `sys_migration` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `migration_name` VARCHAR(255) NOT NULL UNIQUE COMMENT '迁移文件名',
+  `batch` INT NOT NULL DEFAULT 1 COMMENT '批次号',
+  `applied_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '执行时间',
+  `execution_time` INT DEFAULT 0 COMMENT '执行耗时(ms)',
+  INDEX `idx_migration_name` (`migration_name`),
+  INDEX `idx_applied_at` (`applied_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='迁移版本记录表';
+
+-- ========================================================
+-- 14. 标准主档模块（三合一物料/BOM 标准化）
+-- ========================================================
+
+-- 标准物料主档（三合一）
+CREATE TABLE `inv_material_std` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '物料ID',
+  `material_code` VARCHAR(50) NOT NULL COMMENT '物料编码',
+  `material_name` VARCHAR(100) NOT NULL COMMENT '物料名称',
+  `material_spec` VARCHAR(200) NULL COMMENT '规格型号',
+  `unit` VARCHAR(20) NOT NULL COMMENT '计量单位',
+  `material_type` TINYINT NOT NULL DEFAULT 1 COMMENT '1原材料 2半成品 3成品 4辅料 5包材',
+  `category_id` BIGINT UNSIGNED DEFAULT NULL COMMENT '分类ID',
+  `is_batch` TINYINT NOT NULL DEFAULT 1 COMMENT '是否批次管理',
+  `is_expire` TINYINT NOT NULL DEFAULT 0 COMMENT '是否效期管理',
+  `safe_stock` DECIMAL(18,4) NOT NULL DEFAULT 0 COMMENT '安全库存',
+  `standard_cost` DECIMAL(18,4) DEFAULT 0 COMMENT '标准成本',
+  `shelf_life_days` INT DEFAULT NULL COMMENT '保质期天数',
+  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '0禁用 1启用',
+  `remark` TEXT DEFAULT NULL COMMENT '备注',
+  `legacy_source` VARCHAR(30) DEFAULT NULL COMMENT '旧表来源: inv_material/bom_material/mdm_material',
+  `legacy_id` BIGINT UNSIGNED DEFAULT NULL COMMENT '旧表原始ID',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `created_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '创建人ID',
+  `updated_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '更新人ID',
+  `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_material_code` (`material_code`),
+  KEY `idx_material_type` (`material_type`),
+  KEY `idx_category_id` (`category_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_legacy` (`legacy_source`, `legacy_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标准物料主档';
+
+-- 标准BOM头
+CREATE TABLE `prd_bom_std` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'BOM ID',
+  `bom_code` VARCHAR(50) NOT NULL COMMENT 'BOM编码',
+  `product_id` BIGINT UNSIGNED NOT NULL COMMENT '成品ID',
+  `product_name` VARCHAR(100) DEFAULT NULL COMMENT '成品名称',
+  `version` VARCHAR(20) NOT NULL DEFAULT 'V1.0' COMMENT '版本',
+  `effective_date` DATE NOT NULL COMMENT '生效日期',
+  `obsolete_date` DATE NULL COMMENT '失效日期',
+  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '0草稿 1生效 2作废',
+  `remark` TEXT DEFAULT NULL COMMENT '备注',
+  `legacy_source` VARCHAR(30) DEFAULT NULL COMMENT '旧表来源',
+  `legacy_id` BIGINT UNSIGNED DEFAULT NULL COMMENT '旧表原始ID',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `created_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '创建人ID',
+  `updated_by` BIGINT UNSIGNED DEFAULT NULL COMMENT '更新人ID',
+  `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_bom_code` (`bom_code`),
+  KEY `idx_product_id` (`product_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_effective_date` (`effective_date`),
+  KEY `idx_legacy` (`legacy_source`, `legacy_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标准BOM头';
+
+-- 标准BOM行
+CREATE TABLE `prd_bom_line_std` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'BOM行ID',
+  `bom_id` BIGINT UNSIGNED NOT NULL COMMENT 'BOM头ID',
+  `line_no` INT NOT NULL DEFAULT 1 COMMENT '行号',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) DEFAULT NULL COMMENT '物料编码',
+  `material_name` VARCHAR(100) DEFAULT NULL COMMENT '物料名称',
+  `consumption_qty` DECIMAL(18,4) NOT NULL COMMENT '单耗',
+  `waste_rate` DECIMAL(18,4) NOT NULL DEFAULT 0 COMMENT '损耗率%',
+  `material_type` TINYINT DEFAULT 1 COMMENT '1原材料 2半成品 3辅料 4包材 5其他',
+  `remark` VARCHAR(200) DEFAULT NULL COMMENT '备注',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除',
+  PRIMARY KEY (`id`),
+  KEY `idx_bom_id` (`bom_id`),
+  KEY `idx_material_id` (`material_id`),
+  CONSTRAINT `fk_bom_line_std_bom` FOREIGN KEY (`bom_id`) REFERENCES `prd_bom_std` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标准BOM行';
+
+-- ========================================================
+-- 15. 总账模块（会计科目/期间/凭证/余额）
+-- ========================================================
+
+-- 会计科目表
+CREATE TABLE `fin_account` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '科目ID',
+  `account_code` VARCHAR(20) NOT NULL COMMENT '科目编码',
+  `account_name` VARCHAR(100) NOT NULL COMMENT '科目名称',
+  `full_name` VARCHAR(200) COMMENT '全称（含父级）',
+  `parent_id` INT UNSIGNED COMMENT '父级科目ID',
+  `level` TINYINT DEFAULT 1 COMMENT '层级（1=一级）',
+  `account_type` TINYINT NOT NULL COMMENT '类型: 1=资产, 2=负债, 3=权益, 4=成本, 5=损益',
+  `balance_direction` TINYINT NOT NULL COMMENT '余额方向: 1=借, 2=贷',
+  `is_leaf` TINYINT DEFAULT 1 COMMENT '是否末级: 0=否, 1=是',
+  `assist_types` VARCHAR(200) COMMENT '辅助核算类型（JSON 数组）',
+  `status` TINYINT DEFAULT 1 COMMENT '状态: 0=禁用, 1=启用',
+  `sort_order` INT DEFAULT 0 COMMENT '排序',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_account_code` (`account_code`),
+  KEY `idx_parent` (`parent_id`),
+  KEY `idx_type` (`account_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='会计科目表';
+
+-- 会计期间表
+CREATE TABLE `fin_period` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '期间ID',
+  `period_code` VARCHAR(10) NOT NULL COMMENT '期间编码（如 2026-07）',
+  `period_name` VARCHAR(20) COMMENT '期间名称（如 2026年7月）',
+  `start_date` DATE NOT NULL COMMENT '开始日期',
+  `end_date` DATE NOT NULL COMMENT '结束日期',
+  `is_closed` TINYINT DEFAULT 0 COMMENT '是否已结账: 0=否, 1=是',
+  `status` TINYINT DEFAULT 0 COMMENT '状态: 0=开放, 1=结账中, 2=已关闭',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_period_code` (`period_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='会计期间表';
+
+-- 会计凭证主表
+CREATE TABLE `fin_voucher` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '凭证ID',
+  `voucher_no` VARCHAR(50) NOT NULL COMMENT '凭证编号',
+  `period_code` VARCHAR(10) NOT NULL COMMENT '所属期间',
+  `voucher_date` DATE NOT NULL COMMENT '凭证日期',
+  `voucher_type` TINYINT NOT NULL COMMENT '类型: 1=收, 2=付, 3=转, 4=调整',
+  `source_type` VARCHAR(50) COMMENT '来源类型（sale/purchase/payment/receipt/cost 等）',
+  `source_id` BIGINT UNSIGNED COMMENT '来源单据ID',
+  `source_no` VARCHAR(50) COMMENT '来源单据号',
+  `total_debit` DECIMAL(18,2) DEFAULT 0 COMMENT '借方合计',
+  `total_credit` DECIMAL(18,2) DEFAULT 0 COMMENT '贷方合计',
+  `total_amount` DECIMAL(18,2) DEFAULT 0 COMMENT '凭证总额（旧版兼容）',
+  `status` TINYINT DEFAULT 0 COMMENT '状态: 0=草稿, 1=已提交, 2=已审核, 3=已记账, 4=已作废',
+  `summary` TEXT COMMENT '摘要',
+  `remark` VARCHAR(500) COMMENT '备注（旧版兼容）',
+  `attachment_count` INT DEFAULT 0 COMMENT '附件数',
+  `deleted` TINYINT DEFAULT 0 COMMENT '软删除: 0=正常, 1=已删除',
+  `created_by` VARCHAR(50) COMMENT '制单人',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间（旧版兼容）',
+  `audited_by` VARCHAR(50) COMMENT '审核人',
+  `audited_at` DATETIME COMMENT '审核时间',
+  `posted_by` VARCHAR(50) COMMENT '记账人',
+  `posted_at` DATETIME COMMENT '记账时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_voucher_no` (`voucher_no`),
+  KEY `idx_period` (`period_code`),
+  KEY `idx_source` (`source_type`, `source_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='会计凭证主表';
+
+-- 会计凭证明细表
+CREATE TABLE `fin_voucher_line` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `voucher_id` BIGINT UNSIGNED NOT NULL COMMENT '凭证ID',
+  `line_no` INT NOT NULL COMMENT '行号',
+  `account_id` INT UNSIGNED NOT NULL COMMENT '科目ID',
+  `account_code` VARCHAR(20) COMMENT '科目编码（冗余）',
+  `account_name` VARCHAR(100) COMMENT '科目名称（冗余）',
+  `summary` VARCHAR(500) COMMENT '摘要',
+  `debit_amount` DECIMAL(18,2) DEFAULT 0 COMMENT '借方金额',
+  `credit_amount` DECIMAL(18,2) DEFAULT 0 COMMENT '贷方金额',
+  `debit_account` VARCHAR(100) COMMENT '借方科目名称（旧版兼容）',
+  `credit_account` VARCHAR(100) COMMENT '贷方科目名称（旧版兼容）',
+  `amount` DECIMAL(18,2) DEFAULT 0 COMMENT '金额（旧版兼容）',
+  `description` VARCHAR(500) COMMENT '描述（旧版兼容）',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间（旧版兼容）',
+  `customer_id` BIGINT UNSIGNED COMMENT '客户ID（辅助核算）',
+  `supplier_id` BIGINT UNSIGNED COMMENT '供应商ID（辅助核算）',
+  `department_id` INT UNSIGNED COMMENT '部门ID（辅助核算）',
+  `project_id` INT UNSIGNED COMMENT '项目ID（辅助核算）',
+  PRIMARY KEY (`id`),
+  KEY `idx_voucher` (`voucher_id`),
+  KEY `idx_account` (`account_id`),
+  CONSTRAINT `fk_voucher_line_voucher` FOREIGN KEY (`voucher_id`) REFERENCES `fin_voucher` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='会计凭证明细表';
+
+-- 科目余额表
+CREATE TABLE `fin_account_balance` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '余额ID',
+  `period_code` VARCHAR(10) NOT NULL COMMENT '期间编码',
+  `account_id` INT UNSIGNED NOT NULL COMMENT '科目ID',
+  `account_code` VARCHAR(20) COMMENT '科目编码（冗余）',
+  `begin_debit` DECIMAL(18,2) DEFAULT 0 COMMENT '期初借方',
+  `begin_credit` DECIMAL(18,2) DEFAULT 0 COMMENT '期初贷方',
+  `current_debit` DECIMAL(18,2) DEFAULT 0 COMMENT '本期借方发生',
+  `current_credit` DECIMAL(18,2) DEFAULT 0 COMMENT '本期贷方发生',
+  `year_debit` DECIMAL(18,2) DEFAULT 0 COMMENT '本年累计借方',
+  `year_credit` DECIMAL(18,2) DEFAULT 0 COMMENT '本年累计贷方',
+  `end_debit` DECIMAL(18,2) DEFAULT 0 COMMENT '期末借方',
+  `end_credit` DECIMAL(18,2) DEFAULT 0 COMMENT '期末贷方',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_period_account` (`period_code`, `account_id`),
+  KEY `idx_account` (`account_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='科目余额表';
+
+-- ========================================================
+-- 16. 仓储业务单据模块（补全缺失表）
+-- 说明：本章节补齐代码已引用但 SQL 中缺失的 11 张表，确保 schema 与代码对齐
+-- ========================================================
+
+-- 出库单主表
+CREATE TABLE `inv_outbound_order` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '出库单ID',
+  `order_no` VARCHAR(30) NOT NULL COMMENT '出库单号',
+  `order_date` DATE NOT NULL COMMENT '出库日期',
+  `outbound_type` VARCHAR(20) NOT NULL DEFAULT 'production' COMMENT 'production-生产出库, sales-销售出库, return-退货出库, other-其他',
+  `warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
+  `warehouse_code` VARCHAR(50) COMMENT '仓库编码（冗余）',
+  `warehouse_name` VARCHAR(100) COMMENT '仓库名称（冗余）',
+  `customer_id` BIGINT UNSIGNED COMMENT '客户ID（销售出库用）',
+  `customer_name` VARCHAR(100) COMMENT '客户名称（冗余）',
+  `work_order_id` BIGINT UNSIGNED COMMENT '工单ID（生产出库用）',
+  `work_order_no` VARCHAR(50) COMMENT '工单编号（冗余）',
+  `total_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '总数量',
+  `total_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '总金额',
+  `currency` VARCHAR(10) DEFAULT 'CNY' COMMENT '币种',
+  `status` VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT 'pending-待审, approved-已审, completed-已完成, cancelled-已取消',
+  `audit_status` TINYINT DEFAULT 0 COMMENT '0-待审, 1-通过, 2-驳回',
+  `auditor_id` BIGINT UNSIGNED COMMENT '审核人ID',
+  `auditor_name` VARCHAR(50) COMMENT '审核人姓名',
+  `audit_time` DATETIME COMMENT '审核时间',
+  `audit_remark` VARCHAR(500) COMMENT '审核备注',
+  `operator_id` BIGINT UNSIGNED COMMENT '操作人ID',
+  `operator_name` VARCHAR(50) COMMENT '操作人姓名',
+  `finance_posted` TINYINT DEFAULT 0 COMMENT '是否已生成财务凭证: 0-否, 1-是',
+  `version` INT DEFAULT 0 COMMENT '乐观锁版本号',
+  `remark` VARCHAR(500) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_order_no` (`order_no`),
+  KEY `idx_status` (`status`),
+  KEY `idx_warehouse` (`warehouse_id`),
+  KEY `idx_order_date` (`order_date`),
+  KEY `idx_outbound_type` (`outbound_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='出库单主表';
+
+-- 出库单明细表
+CREATE TABLE `inv_outbound_item` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `order_id` BIGINT UNSIGNED NOT NULL COMMENT '出库单ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码（冗余）',
+  `material_name` VARCHAR(200) COMMENT '物料名称（冗余）',
+  `material_spec` VARCHAR(200) COMMENT '物料规格',
+  `batch_no` VARCHAR(50) COMMENT '批次号',
+  `batch_id` BIGINT UNSIGNED COMMENT '批次ID',
+  `quantity` DECIMAL(18,4) NOT NULL COMMENT '数量',
+  `unit` VARCHAR(20) COMMENT '单位',
+  `unit_price` DECIMAL(18,4) DEFAULT 0 COMMENT '单价',
+  `amount` DECIMAL(18,4) DEFAULT 0 COMMENT '金额',
+  `warehouse_location` VARCHAR(50) COMMENT '库位',
+  `remark` VARCHAR(255) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_order` (`order_id`),
+  KEY `idx_material` (`material_id`),
+  KEY `idx_batch` (`batch_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='出库单明细表';
+
+-- 调拨单主表
+CREATE TABLE `inv_transfer_order` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '调拨单ID',
+  `transfer_no` VARCHAR(30) NOT NULL COMMENT '调拨单号',
+  `type` TINYINT NOT NULL COMMENT '1-库位调拨, 2-仓库调拨',
+  `from_warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '源仓库ID',
+  `to_warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '目标仓库ID',
+  `from_location` VARCHAR(50) COMMENT '源库位',
+  `to_location` VARCHAR(50) COMMENT '目标库位',
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-草稿, 1-待审批, 2-已出库, 3-已入库, 4-已取消',
+  `applicant_id` BIGINT UNSIGNED COMMENT '申请人ID',
+  `applicant_name` VARCHAR(50) COMMENT '申请人姓名',
+  `approver_id` BIGINT UNSIGNED COMMENT '审批人ID',
+  `approver_name` VARCHAR(50) COMMENT '审批人姓名',
+  `operator_id` BIGINT UNSIGNED COMMENT '操作人ID',
+  `operator_name` VARCHAR(50) COMMENT '操作人姓名',
+  `out_time` DATETIME COMMENT '出库时间',
+  `in_time` DATETIME COMMENT '入库时间',
+  `total_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '总数量',
+  `total_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '总金额',
+  `version` INT DEFAULT 0 COMMENT '乐观锁版本号',
+  `remark` VARCHAR(500) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_transfer_no` (`transfer_no`),
+  KEY `idx_status` (`status`),
+  KEY `idx_from_warehouse` (`from_warehouse_id`),
+  KEY `idx_to_warehouse` (`to_warehouse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='调拨单主表';
+
+-- 调拨单明细表
+CREATE TABLE `inv_transfer_item` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `transfer_id` BIGINT UNSIGNED NOT NULL COMMENT '调拨单ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码（冗余）',
+  `material_name` VARCHAR(200) COMMENT '物料名称（冗余）',
+  `qr_code` VARCHAR(50) COMMENT '二维码',
+  `batch_no` VARCHAR(50) COMMENT '批次号',
+  `quantity` DECIMAL(18,4) NOT NULL COMMENT '申请数量',
+  `out_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '实际出库数量',
+  `in_quantity` DECIMAL(18,4) DEFAULT 0 COMMENT '实际入库数量',
+  `unit` VARCHAR(20) COMMENT '单位',
+  `unit_price` DECIMAL(18,4) DEFAULT 0 COMMENT '单价',
+  `amount` DECIMAL(18,4) DEFAULT 0 COMMENT '金额',
+  `remark` VARCHAR(255) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_transfer` (`transfer_id`),
+  KEY `idx_material` (`material_id`),
+  KEY `idx_batch` (`batch_no`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='调拨单明细表';
+
+-- 盘点单主表
+CREATE TABLE `inv_stocktaking` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '盘点单ID',
+  `check_no` VARCHAR(30) NOT NULL COMMENT '盘点单号',
+  `type` TINYINT NOT NULL COMMENT '1-全仓, 2-部分, 3-抽样',
+  `warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
+  `warehouse_name` VARCHAR(100) COMMENT '仓库名称（冗余）',
+  `scope` VARCHAR(500) COMMENT '盘点范围（物料ID列表或分类ID列表 JSON）',
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-草稿, 1-进行中, 2-待审批, 3-已审批, 4-已取消',
+  `applicant_id` BIGINT UNSIGNED COMMENT '申请人ID',
+  `applicant_name` VARCHAR(50) COMMENT '申请人姓名',
+  `approver_id` BIGINT UNSIGNED COMMENT '审批人ID',
+  `approver_name` VARCHAR(50) COMMENT '审批人姓名',
+  `approve_time` DATETIME COMMENT '审批时间',
+  `approve_remark` VARCHAR(500) COMMENT '审批备注',
+  `total_items` INT DEFAULT 0 COMMENT '盘点项总数',
+  `diff_items` INT DEFAULT 0 COMMENT '差异数',
+  `total_diff_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '差异总金额',
+  `version` INT DEFAULT 0 COMMENT '乐观锁版本号',
+  `remark` VARCHAR(500) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_check_no` (`check_no`),
+  KEY `idx_status` (`status`),
+  KEY `idx_warehouse` (`warehouse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='盘点单主表';
+
+-- 盘点单明细表
+CREATE TABLE `inv_stocktaking_item` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `taking_id` BIGINT UNSIGNED NOT NULL COMMENT '盘点单ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码（冗余）',
+  `material_name` VARCHAR(200) COMMENT '物料名称（冗余）',
+  `batch_no` VARCHAR(50) COMMENT '批次号',
+  `warehouse_id` BIGINT UNSIGNED COMMENT '仓库ID',
+  `location` VARCHAR(50) COMMENT '库位',
+  `book_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '账面数量',
+  `actual_qty` DECIMAL(18,4) COMMENT '实盘数量',
+  `diff_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '差异=实盘-账面',
+  `unit` VARCHAR(20) COMMENT '单位',
+  `unit_price` DECIMAL(18,4) DEFAULT 0 COMMENT '单价',
+  `diff_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '差异金额',
+  `scan_time` DATETIME COMMENT '扫码时间',
+  `scan_operator` VARCHAR(50) COMMENT '扫码操作员',
+  `remark` VARCHAR(255) COMMENT '备注',
+  `status` TINYINT DEFAULT 0 COMMENT '0-待盘, 1-已盘, 2-差异已处理',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_taking` (`taking_id`),
+  KEY `idx_material` (`material_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='盘点单明细表';
+
+-- 库存调整单主表
+CREATE TABLE `inv_stock_adjust` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '调整单ID',
+  `adjust_no` VARCHAR(30) NOT NULL COMMENT '调整单号',
+  `warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
+  `adjust_date` DATE NOT NULL COMMENT '调整日期',
+  `adjust_type` TINYINT NOT NULL DEFAULT 1 COMMENT '调整类型: 1-盘盈, 2-盘亏, 3-其他',
+  `operator_id` BIGINT UNSIGNED COMMENT '操作人ID',
+  `operator_name` VARCHAR(50) COMMENT '操作人姓名',
+  `approver_id` BIGINT UNSIGNED COMMENT '审批人ID',
+  `approver_name` VARCHAR(50) COMMENT '审批人姓名',
+  `approve_time` DATETIME COMMENT '审批时间',
+  `status` TINYINT DEFAULT 0 COMMENT '0-待审, 1-已审, 2-已驳回',
+  `total_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '总数量',
+  `total_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '总金额',
+  `version` INT DEFAULT 0 COMMENT '乐观锁版本号',
+  `remark` VARCHAR(500) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_adjust_no` (`adjust_no`),
+  KEY `idx_status` (`status`),
+  KEY `idx_warehouse` (`warehouse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='库存调整单主表';
+
+-- 库存调整单明细表
+CREATE TABLE `inv_stock_adjust_item` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `adjust_id` BIGINT UNSIGNED NOT NULL COMMENT '调整单ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码（冗余）',
+  `material_name` VARCHAR(200) COMMENT '物料名称（冗余）',
+  `batch_no` VARCHAR(50) COMMENT '批次号',
+  `before_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '调整前数量',
+  `adjust_qty` DECIMAL(18,4) NOT NULL COMMENT '调整数量（正/负）',
+  `after_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '调整后数量',
+  `unit` VARCHAR(20) COMMENT '单位',
+  `unit_price` DECIMAL(18,4) DEFAULT 0 COMMENT '单价',
+  `amount` DECIMAL(18,4) DEFAULT 0 COMMENT '金额',
+  `reason` VARCHAR(255) COMMENT '调整原因',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_adjust` (`adjust_id`),
+  KEY `idx_material` (`material_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='库存调整单明细表';
+
+-- 销售出库单主表
+CREATE TABLE `inv_sales_outbound` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '销售出库单ID',
+  `outbound_no` VARCHAR(30) NOT NULL COMMENT '销售出库单号',
+  `order_id` BIGINT UNSIGNED COMMENT '销售订单ID',
+  `order_no` VARCHAR(50) COMMENT '销售订单号（冗余）',
+  `customer_id` BIGINT UNSIGNED COMMENT '客户ID',
+  `customer_name` VARCHAR(100) COMMENT '客户名称（冗余）',
+  `warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
+  `warehouse_name` VARCHAR(100) COMMENT '仓库名称（冗余）',
+  `outbound_date` DATE NOT NULL COMMENT '出库日期',
+  `delivery_person` VARCHAR(50) COMMENT '配送人',
+  `logistics_no` VARCHAR(100) COMMENT '物流单号',
+  `status` TINYINT DEFAULT 1 COMMENT '1-待出库, 2-已出库, 3-已完成, 4-已取消',
+  `finance_posted` TINYINT DEFAULT 0 COMMENT '是否已生成财务凭证: 0-否, 1-是',
+  `operator_id` BIGINT UNSIGNED COMMENT '操作人ID',
+  `operator_name` VARCHAR(50) COMMENT '操作人姓名',
+  `total_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '总数量',
+  `total_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '总金额',
+  `version` INT DEFAULT 0 COMMENT '乐观锁版本号',
+  `remark` VARCHAR(500) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_outbound_no` (`outbound_no`),
+  KEY `idx_status` (`status`),
+  KEY `idx_order` (`order_id`),
+  KEY `idx_warehouse` (`warehouse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='销售出库单主表';
+
+-- 销售出库单明细表
+CREATE TABLE `inv_sales_outbound_item` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `outbound_id` BIGINT UNSIGNED NOT NULL COMMENT '销售出库单ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码（冗余）',
+  `material_name` VARCHAR(200) COMMENT '物料名称（冗余）',
+  `batch_no` VARCHAR(50) COMMENT '批次号',
+  `quantity` DECIMAL(18,4) NOT NULL COMMENT '数量',
+  `unit` VARCHAR(20) COMMENT '单位',
+  `unit_price` DECIMAL(18,4) DEFAULT 0 COMMENT '单价',
+  `amount` DECIMAL(18,4) DEFAULT 0 COMMENT '金额',
+  `remark` VARCHAR(255) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_outbound` (`outbound_id`),
+  KEY `idx_material` (`material_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='销售出库单明细表';
+
+-- 生产入库单主表
+CREATE TABLE `inv_production_inbound` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '生产入库单ID',
+  `inbound_no` VARCHAR(30) NOT NULL COMMENT '生产入库单号',
+  `work_order_id` BIGINT UNSIGNED COMMENT '工单ID',
+  `work_order_no` VARCHAR(50) COMMENT '工单编号（冗余）',
+  `warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
+  `warehouse_name` VARCHAR(100) COMMENT '仓库名称（冗余）',
+  `inbound_date` DATE NOT NULL COMMENT '入库日期',
+  `operator_id` BIGINT UNSIGNED COMMENT '操作人ID',
+  `operator_name` VARCHAR(50) COMMENT '操作人姓名',
+  `qc_status` VARCHAR(20) DEFAULT 'pending' COMMENT 'pending-待检, pass-合格, fail-不合格',
+  `status` TINYINT DEFAULT 1 COMMENT '1-待入库, 2-已入库, 3-已完成, 4-已取消',
+  `finance_posted` TINYINT DEFAULT 0 COMMENT '是否已生成财务凭证: 0-否, 1-是',
+  `total_qty` DECIMAL(18,4) DEFAULT 0 COMMENT '总数量',
+  `total_amount` DECIMAL(18,4) DEFAULT 0 COMMENT '总金额',
+  `version` INT DEFAULT 0 COMMENT '乐观锁版本号',
+  `remark` VARCHAR(500) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_inbound_no` (`inbound_no`),
+  KEY `idx_status` (`status`),
+  KEY `idx_work_order` (`work_order_id`),
+  KEY `idx_warehouse` (`warehouse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='生产入库单主表';
+
+-- 生产入库单明细表
+CREATE TABLE `inv_production_inbound_item` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '明细ID',
+  `inbound_id` BIGINT UNSIGNED NOT NULL COMMENT '生产入库单ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `material_code` VARCHAR(50) COMMENT '物料编码（冗余）',
+  `material_name` VARCHAR(200) COMMENT '物料名称（冗余）',
+  `batch_no` VARCHAR(50) COMMENT '批次号',
+  `quantity` DECIMAL(18,4) NOT NULL COMMENT '数量',
+  `unit` VARCHAR(20) COMMENT '单位',
+  `unit_price` DECIMAL(18,4) DEFAULT 0 COMMENT '单价',
+  `amount` DECIMAL(18,4) DEFAULT 0 COMMENT '金额',
+  `remark` VARCHAR(255) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_inbound` (`inbound_id`),
+  KEY `idx_material` (`material_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='生产入库单明细表';
+
+-- 单位换算表
+CREATE TABLE `inv_unit_conversion` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '换算ID',
+  `material_id` BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
+  `from_unit` VARCHAR(20) NOT NULL COMMENT '源单位',
+  `to_unit` VARCHAR(20) NOT NULL COMMENT '目标单位',
+  `ratio` DECIMAL(18,6) NOT NULL COMMENT '换算比率: from_unit * ratio = to_unit',
+  `is_default` TINYINT DEFAULT 0 COMMENT '是否默认换算: 0-否, 1-是',
+  `remark` VARCHAR(255) COMMENT '备注',
+  `deleted` TINYINT DEFAULT 0 COMMENT '删除标记',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_material_units` (`material_id`, `from_unit`, `to_unit`),
+  KEY `idx_material` (`material_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='单位换算表';
+
+-- 仓库操作日志表
+CREATE TABLE `inv_warehouse_log` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+  `warehouse_id` BIGINT UNSIGNED NOT NULL COMMENT '仓库ID',
+  `operation_type` VARCHAR(30) NOT NULL COMMENT 'create-创建, update-更新, delete-删除, freeze-冻结, unfreeze-解冻',
+  `operation_content` TEXT COMMENT '操作内容（JSON 或文本）',
+  `operator_id` BIGINT UNSIGNED COMMENT '操作人ID',
+  `operator_name` VARCHAR(50) COMMENT '操作人姓名',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_warehouse` (`warehouse_id`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='仓库操作日志表';
+
+-- ========================================================
+-- 补充索引（Phase 1-4 审计后补充的高频查询字段索引）
+-- setup-db.mjs 的 executeStatements 逐语句容错，重复索引会跳过
+-- 增量环境通过 database/migrations/009_add_indexes_and_fks.sql 执行
+-- ========================================================
+
+-- 财务辅助核算维度
+ALTER TABLE `fin_voucher_line` ADD INDEX `idx_customer` (`customer_id`);
+ALTER TABLE `fin_voucher_line` ADD INDEX `idx_supplier` (`supplier_id`);
+ALTER TABLE `fin_voucher_line` ADD INDEX `idx_department` (`department_id`);
+ALTER TABLE `fin_voucher_line` ADD INDEX `idx_project` (`project_id`);
+ALTER TABLE `fin_receivable` ADD INDEX `idx_source` (`source_id`);
+ALTER TABLE `fin_payable` ADD INDEX `idx_source` (`source_id`);
+ALTER TABLE `fin_receipt_record` ADD INDEX `idx_handler` (`handler_id`);
+ALTER TABLE `fin_payment_record` ADD INDEX `idx_handler` (`handler_id`);
+
+-- 质量管理
+ALTER TABLE `qc_inspection` ADD INDEX `idx_material` (`material_id`);
+ALTER TABLE `qc_inspection` ADD INDEX `idx_source` (`source_id`);
+ALTER TABLE `qc_inspection` ADD INDEX `idx_inspector` (`inspector_id`);
+ALTER TABLE `qc_unqualified` ADD INDEX `idx_inspection` (`inspection_id`);
+ALTER TABLE `qc_unqualified` ADD INDEX `idx_material` (`material_id`);
+ALTER TABLE `qc_unqualified` ADD INDEX `idx_handler` (`handler_id`);
+
+-- 出入库高频字段
+ALTER TABLE `inv_outbound_order` ADD INDEX `idx_customer` (`customer_id`);
+ALTER TABLE `inv_outbound_order` ADD INDEX `idx_work_order` (`work_order_id`);
+ALTER TABLE `inv_outbound_order` ADD INDEX `idx_auditor` (`auditor_id`);
+ALTER TABLE `inv_outbound_order` ADD INDEX `idx_operator` (`operator_id`);
+ALTER TABLE `inv_outbound_item` ADD INDEX `idx_batch_id` (`batch_id`);
+ALTER TABLE `inv_material` ADD INDEX `idx_warehouse` (`warehouse_id`);
+ALTER TABLE `inv_inventory_log` ADD INDEX `idx_operator` (`operator_id`);
+ALTER TABLE `inv_sales_outbound` ADD INDEX `idx_customer` (`customer_id`);
+ALTER TABLE `inv_sales_outbound` ADD INDEX `idx_operator` (`operator_id`);
+ALTER TABLE `inv_production_inbound` ADD INDEX `idx_operator` (`operator_id`);
+ALTER TABLE `inv_warehouse_log` ADD INDEX `idx_operator` (`operator_id`);
+ALTER TABLE `inv_fifo_override_log` ADD INDEX `idx_operator` (`operator_id`);
+ALTER TABLE `inv_fifo_override_log` ADD INDEX `idx_approve` (`approve_id`);
+
+-- 仓库管理
+ALTER TABLE `inv_transfer_order` ADD INDEX `idx_applicant` (`applicant_id`);
+ALTER TABLE `inv_transfer_order` ADD INDEX `idx_approver` (`approver_id`);
+ALTER TABLE `inv_transfer_order` ADD INDEX `idx_operator` (`operator_id`);
+ALTER TABLE `inv_stocktaking` ADD INDEX `idx_applicant` (`applicant_id`);
+ALTER TABLE `inv_stocktaking` ADD INDEX `idx_approver` (`approver_id`);
+ALTER TABLE `inv_stocktaking_item` ADD INDEX `idx_warehouse` (`warehouse_id`);
+ALTER TABLE `inv_stock_adjust` ADD INDEX `idx_operator` (`operator_id`);
+ALTER TABLE `inv_stock_adjust` ADD INDEX `idx_approver` (`approver_id`);
+
+-- 生产管理
+ALTER TABLE `prd_work_order` ADD INDEX `idx_sales_order` (`sales_order_id`);
+ALTER TABLE `prd_work_order` ADD INDEX `idx_workshop` (`workshop_id`);
+ALTER TABLE `prd_work_order` ADD INDEX `idx_workcenter` (`workcenter_id`);
+ALTER TABLE `prd_standard_card` ADD INDEX `idx_creator` (`creator_id`);
+ALTER TABLE `prd_standard_card` ADD INDEX `idx_reviewer` (`reviewer_id`);
+ALTER TABLE `prd_work_order_color_seq` ADD INDEX `idx_screen_plate` (`screen_plate_id`);
+ALTER TABLE `prd_work_order_color_seq` ADD INDEX `idx_ink_formula` (`ink_formula_id`);
+ALTER TABLE `prd_schedule` ADD INDEX `idx_order` (`order_id`);
+
+-- 采购管理
+ALTER TABLE `pur_request` ADD INDEX `idx_request_dept` (`request_dept_id`);
+ALTER TABLE `pur_request` ADD INDEX `idx_requester` (`requester_id`);
+-- pur_receipt/pur_receipt_detail 索引已删除（表已废弃，见 Migration 015）
+
+-- 销售管理
+ALTER TABLE `sal_delivery` ADD INDEX `idx_warehouse` (`warehouse_id`);
+ALTER TABLE `sal_delivery_detail` ADD INDEX `idx_order_detail` (`order_detail_id`);
+
+-- 领退料
+ALTER TABLE `material_requisitions` ADD INDEX `idx_warehouse` (`warehouse_id`);
+ALTER TABLE `material_requisitions` ADD INDEX `idx_approver` (`approver_id`);
+ALTER TABLE `material_requisitions` ADD INDEX `idx_original_requisition` (`original_requisition_id`);
+ALTER TABLE `material_returns` ADD INDEX `idx_applicant` (`applicant_id`);
+ALTER TABLE `material_returns` ADD INDEX `idx_confirm` (`confirm_id`);
+ALTER TABLE `material_returns` ADD INDEX `idx_warehouse` (`warehouse_id`);
+ALTER TABLE `material_batch_costs` ADD INDEX `idx_warehouse` (`warehouse_id`);
+
+-- 系统管理
+ALTER TABLE `sys_department` ADD INDEX `idx_leader` (`leader_id`);
+ALTER TABLE `sys_role_menu` ADD INDEX `idx_menu` (`menu_id`);

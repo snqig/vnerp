@@ -3,7 +3,8 @@ import {
   successResponse,
   errorResponse,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 
 /**
@@ -14,7 +15,7 @@ import { query, execute } from '@/lib/db';
  */
 
 // 获取预警推送配置
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'config';
@@ -71,11 +72,11 @@ export const GET = withAuthAndErrorHandler(
 
     return errorResponse('无效的查询类型', 400, 400);
   },
-  { permission: 'warehouse:view' }
+  { errorMessage: '操作失败' }
 );
 
 // 创建/更新预警规则 或 手动触发推送
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { action } = body;
@@ -127,11 +128,11 @@ export const POST = withAuthAndErrorHandler(
 
     return errorResponse('无效的操作类型', 400, 400);
   },
-  { permission: 'warehouse:manage' }
+  { errorMessage: '操作失败' }
 );
 
 // 更新预警规则
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { id, rule_name, alert_type, threshold, notify_method, notify_users, enabled } = body;
@@ -182,7 +183,7 @@ export const PUT = withAuthAndErrorHandler(
 
     return successResponse(null, '预警规则更新成功');
   },
-  { permission: 'warehouse:manage' }
+  { errorMessage: '操作失败' }
 );
 
 // 触发预警推送

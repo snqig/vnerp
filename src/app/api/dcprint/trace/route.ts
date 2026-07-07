@@ -1,7 +1,8 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 物料项接口
 interface MaterialItem {
@@ -45,7 +46,7 @@ function generateTraceNo(): string {
 }
 
 // GET - 获取追溯记录列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const workOrderNo = searchParams.get('workOrderNo') || '';
@@ -122,10 +123,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   };
 
   return successResponse(result);
-}, '获取追溯记录列表失败');
+});
 
 // POST - 执行追溯查询
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { cardNo, traceType = 'forward', operatorId, operatorName } = body;
 
@@ -251,10 +252,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '追溯查询成功'
   );
-}, '追溯查询失败');
+}, { logTitle: '追溯查询', logType: 'business' });
 
 // GET /detail - 获取追溯详情
-export const detail = withErrorHandler(async (request: NextRequest) => {
+export const detail = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const traceNo = searchParams.get('traceNo');
 
@@ -311,7 +312,7 @@ export const detail = withErrorHandler(async (request: NextRequest) => {
     mainMaterials: details?.filter((d) => d.materialType === 'main') || [],
     auxiliaryMaterials: details?.filter((d) => d.materialType === 'auxiliary') || [],
   });
-}, '获取追溯详情失败');
+});
 
 // 辅助函数：分页查询
 async function queryPaginated(

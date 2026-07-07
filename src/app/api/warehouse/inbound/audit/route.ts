@@ -1,10 +1,11 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
-import { WarehouseStateMachine, InboundStatus } from '@/lib/warehouse-state-machine';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { WarehouseStateMachine, InboundStatus } from '@/domain/warehouse/value-objects/WarehouseStateMachine';
 
+import { withPermission } from '@/lib/api-permissions';
 // 审核入库单 - 确认入库并更新库存
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id, auditorId, auditorName, remark } = body;
 
@@ -257,10 +258,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     { orderId: id, orderNo: order.order_no, status: 'completed' },
     '入库单审核成功，库存已更新'
   );
-}, '审核入库单失败');
+}, { errorMessage: '审核入库单失败' });
 
 // 撤销审核 - 将已完成的入库单退回
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id, auditorId, auditorName, remark } = body;
 
@@ -379,4 +380,4 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     { orderId: id, orderNo: order.order_no, status: 'pending' },
     '入库单撤销审核成功，库存已扣减'
   );
-}, '撤销审核失败');
+}, { errorMessage: '撤销审核失败' });

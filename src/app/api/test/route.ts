@@ -1,6 +1,6 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { allocateFIFO, splitMaterial, checkWholeMaterial, enforceFIFO } from '@/lib/warehouse-core';
 import {
   autoGenerateRequisition,
@@ -17,6 +17,7 @@ import {
   calculateWorkOrderCost,
 } from '@/lib/finance-core';
 
+import { withPermission } from '@/lib/api-permissions';
 // 测试用例执行器
 interface TestCase {
   name: string;
@@ -157,7 +158,7 @@ const testCases: TestCase[] = [
 ];
 
 // 执行所有测试
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { module } = body;
 
@@ -221,7 +222,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 获取测试模块列表
-export const GET = withErrorHandler(async () => {
+export const GET = withPermission(async () => {
   const modules = [...new Set(testCases.map((c) => c.module))];
   return successResponse({ modules, totalCases: testCases.length }, '获取测试模块列表成功');
 });

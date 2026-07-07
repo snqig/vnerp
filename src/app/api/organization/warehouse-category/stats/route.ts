@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const stats = await query(`
     SELECT
       wc.id,
@@ -48,4 +49,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       emptyCategoryCount: categoryWithNoWarehouses.length,
     },
   });
-}, '获取仓库分类统计失败');
+});

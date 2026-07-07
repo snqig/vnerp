@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+import { withPermission } from '@/lib/api-permissions';
+export const GET = withPermission(async (request: NextRequest) => {
   const results: string[] = [];
 
   const addColumnIfNotExists = async (table: string, column: string, definition: string) => {
@@ -108,4 +109,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(results, '迁移完成');
-}, '迁移失败');
+}, { errorMessage: '迁移失败' });

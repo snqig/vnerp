@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 
 // 获取角色的数据权限配置
-export const GET = withAuthAndErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const roleId = searchParams.get('roleId');
 
@@ -31,7 +31,7 @@ export const GET = withAuthAndErrorHandler(async (request: NextRequest) => {
 });
 
 // 保存角色的数据权限配置
-export const POST = withAuthAndErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { roleId, scopes } = body as {
     roleId: number;

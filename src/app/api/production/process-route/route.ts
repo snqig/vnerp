@@ -4,11 +4,11 @@ import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const page = parseInt(searchParams.get('page') || '1');
@@ -40,9 +40,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse({ list, total: countResult?.total || 0, page, pageSize });
-}, '获取工艺路线列表失败');
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const validation = validateRequestBody(body, ['route_code', 'route_name']);
   if (!validation.valid) {
@@ -93,9 +93,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '工艺路线创建成功');
-}, '创建工艺路线失败');
+}, { logTitle: '创建工艺路线', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   if (!body.id) return commonErrors.badRequest('工艺路线ID不能为空');
 
@@ -133,9 +133,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '工艺路线更新成功');
-}, '更新工艺路线失败');
+}, { logTitle: '更新工艺路线', logType: 'business' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return commonErrors.badRequest('工艺路线ID不能为空');
@@ -143,4 +143,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await execute('UPDATE prd_process_route SET deleted = 1 WHERE id = ?', [parseInt(id)]);
   await execute('DELETE FROM prd_process_route_step WHERE route_id = ?', [parseInt(id)]);
   return successResponse(null, '删除成功');
-}, '删除工艺路线失败');
+}, { logTitle: '删除工艺路线', logType: 'business' });

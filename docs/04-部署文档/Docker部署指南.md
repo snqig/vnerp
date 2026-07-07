@@ -36,8 +36,10 @@ docker compose logs -f app
 # 停止服务
 docker compose down
 
-# 停止并清理数据（谨慎！）
-docker compose down -v
+# ⚠️ 危险：停止并清理数据卷，会永久删除数据
+# 生产环境 MySQL 已改用 bind mount（./data/mysql），down -v 不会删除业务数据，
+# 但会清除 redis_data 等 named volume。仅在确需重置时使用。
+# docker compose down -v
 ```
 
 ### 访问地址
@@ -399,8 +401,10 @@ docker system df -v
 # 清理未使用的镜像/容器
 docker system prune
 
-# 清理未使用的数据卷（谨慎！）
-docker volume prune
+# ⚠️ 危险：清理未使用的数据卷
+# 生产环境 MySQL 已改用 bind mount（./data/mysql），不受 volume prune 影响，
+# 但 redis_data 等 named volume 会被清除。执行前请确认无重要数据。
+# docker volume prune
 ```
 
 ### Q4: 如何修改 MySQL 配置？

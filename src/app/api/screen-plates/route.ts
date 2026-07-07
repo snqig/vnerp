@@ -1,9 +1,9 @@
-import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
-import { cachedApiRoute, invalidateCache } from '@/lib/api-cache';
+﻿import { query, execute, transaction } from '@/lib/db';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import type { NextRequest } from 'next/server';
 
-export const GET = cachedApiRoute(withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const plateCode = searchParams.get('plateCode');
@@ -85,9 +85,9 @@ export const GET = cachedApiRoute(withErrorHandler(async (request: NextRequest) 
     },
     '网版列表'
   );
-}), { ttl: 300, keyPrefix: 'api:screen-plates' });
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     plateCode,
@@ -146,9 +146,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: plateId, plateCode }, '网版创建成功');
-});
+}, { logTitle: '创建网版', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id } = body;
 
@@ -195,9 +195,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   await execute(`UPDATE prd_screen_plate SET ${updateFields.join(', ')} WHERE id = ?`, params);
 
   return successResponse(null, '网版更新成功');
-});
+}, { logTitle: '更新网版', logType: 'business' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -216,4 +216,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse(null, '网版删除成功');
-});
+}, { logTitle: '删除网版', logType: 'business' });

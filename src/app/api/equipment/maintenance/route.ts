@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { getMrPrefix, getMpPrefix, generateDocNo } from '@/lib/global-config';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -74,7 +75,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return successResponse({ list: rows, total, page, pageSize, type: 'record' });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { type } = body;
 
@@ -162,9 +163,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '保养记录创建成功');
-});
+}, { logTitle: '创建设备保养记录', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { type, id } = body;
 
@@ -259,9 +260,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '保养记录更新成功');
-});
+}, { logTitle: '更新设备保养记录', logType: 'business' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const type = searchParams.get('type') || 'plan';
@@ -275,4 +276,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '删除成功');
-});
+}, { logTitle: '删除设备保养记录', logType: 'business' });

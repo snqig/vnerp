@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 // 状态常量定义
 const BIZ_ORDER_STATUS = {
   DRAFT: 10,
@@ -149,7 +150,7 @@ async function updateBizOrderStatus(orderId: number, triggerBy: string) {
  * 创建PO时的数量勾稽校验
  * POST /api/linkage/validate/po-create
  */
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { sourceOrderLineId, poQty, materialId } = body;
 
@@ -230,13 +231,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       '校验通过'
     );
   });
-}, 'PO创建校验失败');
+}, { errorMessage: 'PO创建校验失败' });
 
 /**
  * PO审批通过后反写业务订单
  * PUT /api/linkage/validate/po-approved
  */
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { poId, action } = body;
 
@@ -407,13 +408,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
     return errorResponse('无效的操作类型', 400, 400);
   });
-}, '勾稽处理失败');
+}, { errorMessage: '勾稽处理失败' });
 
 /**
  * 获取业务订单履行跟踪
  * GET /api/linkage/validate?orderId={id}
  */
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const orderId = searchParams.get('orderId');
 
@@ -511,4 +512,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     linked_grns: linkedGRNs,
     status_history: statusHistory,
   });
-}, '获取履行跟踪失败');
+}, { errorMessage: '获取履行跟踪失败' });

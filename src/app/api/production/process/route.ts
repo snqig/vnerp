@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { getTrPrefix, generateDocNo } from '@/lib/global-config';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
   const cardNo = searchParams.get('cardNo');
@@ -71,9 +72,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     page,
     pageSize,
   });
-}, '获取生产流程失败');
+});
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, processStatus, currentProcess, operatorId, operatorName, remark, cardNo } = body;
 
@@ -96,4 +97,4 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse(null, '流程更新成功');
-}, '更新生产流程失败');
+}, { logTitle: '更新生产流程', logType: 'business' });

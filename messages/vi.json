@@ -3759,6 +3759,8 @@
     "confirmed": "Đã xác nhận",
     "dialogDescription": "Mô tả hộp thoại",
     "disputed": "Có tranh chấp",
+    "fullyWrittenOff": "Đã tất toán",
+    "partialWriteoff": "Tất toán một phần",
     "periodEnd": "Kết thúc chu kỳ",
     "periodStart": "Bắt đầu chu kỳ",
     "reconciliationDetail": "Chi tiết đối chiếu",

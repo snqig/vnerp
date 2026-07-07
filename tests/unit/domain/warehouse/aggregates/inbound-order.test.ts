@@ -166,7 +166,7 @@ describe('8.2 InboundOrder 聚合根', () => {
     });
 
     it('DB status approved 映射为 completed', () => {
-      const order = InboundOrder.reconstitute(makeOrderProps({ status: 'approved' }));
+      const order = InboundOrder.reconstitute(makeOrderProps({ status: 'approved' as any }));
       expect(order.status.value).toBe('completed');
     });
   });

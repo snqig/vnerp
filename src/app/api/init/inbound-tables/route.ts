@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 // 创建入库管理相关表
 const CREATE_TABLES_SQL = `
 -- 1. 入库订单主表
@@ -79,7 +80,7 @@ CREATE TABLE IF NOT EXISTS inv_inventory_batch (
 `;
 
 // GET - 检查并创建表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   try {
     // 检查表是否存在
     const tables = await query(`
@@ -231,4 +232,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     console.error('创建表失败:', error);
     return errorResponse(`创建表失败: ${error.message}`, 500, 500);
   }
-}, '初始化入库管理表失败');
+}, { errorMessage: '初始化入库管理表失败' });

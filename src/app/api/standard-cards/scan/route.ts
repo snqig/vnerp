@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import {
   StandardCardType,
   ColorStandardItem,
@@ -10,7 +11,7 @@ import {
 } from '../route';
 
 // POST /api/standard-cards/scan - 扫码查看标准卡（设计文档 6.3 节）
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { qr_code } = body;
 
@@ -107,4 +108,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     work_order_no: workOrderNo,
     standard_cards: cardsWithItems,
   });
-}, '扫码查看标准卡失败');
+}, { logTitle: '扫码查看标准卡', logType: 'business' });

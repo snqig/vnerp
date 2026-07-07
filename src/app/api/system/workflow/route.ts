@@ -1,13 +1,14 @@
 import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { WorkflowEngine } from '@/application/workflow/WorkflowEngine';
 
 const workflowEngine = new WorkflowEngine();
 
 // 获取所有审批流程配置
-export const GET = withAuthAndErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const module = searchParams.get('module'); // 模块: sales_order, purchase_order, etc.
   const isActive = searchParams.get('isActive');
@@ -44,7 +45,7 @@ export const GET = withAuthAndErrorHandler(async (request: NextRequest) => {
 });
 
 // 创建审批流程配置
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, user: UserInfo) => {
     const body = await request.json();
     const { workflowName, moduleType, description, nodes, isActive = false, priority = 0 } = body;
@@ -105,7 +106,7 @@ export const POST = withAuthAndErrorHandler(
 );
 
 // 更新审批流程配置
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, user: UserInfo) => {
     const body = await request.json();
     const { workflowId, workflowName, description, nodes, isActive, priority } = body;
@@ -169,7 +170,7 @@ export const PUT = withAuthAndErrorHandler(
 );
 
 // 删除审批流程配置
-export const DELETE = withAuthAndErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const workflowId = searchParams.get('workflowId');
 

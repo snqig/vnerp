@@ -1,0 +1,14 @@
+{
+  "testName": "盘点审批并发测试",
+  "totalRequests": 5,
+  "successCount": 5,
+  "failureCount": 0,
+  "successRate": 100,
+  "failureRate": 0,
+  "avgResponseTime": 67,
+  "minResponseTime": 41,
+  "maxResponseTime": 91,
+  "totalDuration": 93,
+  "errors": [],
+  "timestamp": "2026-07-07T00:24:02.024Z"
+}

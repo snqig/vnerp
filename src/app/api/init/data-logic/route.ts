@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const result = await transaction(async (conn) => {
     const results: string[] = [];
 
@@ -479,7 +480,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         so.id as sales_order_id
       FROM sal_order so
       LEFT JOIN crm_customer c ON so.customer_id = c.id
-      LEFT JOIN sal_delivery_order sd ON sd.order_id = so.id AND sd.deleted = 0
+      LEFT JOIN sal_delivery sd ON sd.order_id = so.id AND sd.deleted = 0
       WHERE so.deleted = 0`
     );
 
@@ -557,4 +558,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result);
-}, '数据逻辑关系修正失败');
+}, { errorMessage: '数据逻辑关系修正失败' });

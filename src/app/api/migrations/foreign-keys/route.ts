@@ -1,7 +1,8 @@
 import { query, execute } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import type { NextRequest } from 'next/server';
 
+import { withPermission } from '@/lib/api-permissions';
 async function tableExists(name: string): Promise<boolean> {
   const rows = await query(
     `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
@@ -70,7 +71,7 @@ async function addColumnSafe(table: string, column: string, definition: string):
   }
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const step = searchParams.get('step') || 'all';
   const results: string[] = [];

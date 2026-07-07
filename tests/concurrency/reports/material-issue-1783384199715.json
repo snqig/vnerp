@@ -1,0 +1,14 @@
+{
+  "testName": "领料并发测试",
+  "totalRequests": 8,
+  "successCount": 8,
+  "failureCount": 0,
+  "successRate": 100,
+  "failureRate": 0,
+  "avgResponseTime": 197.25,
+  "minResponseTime": 76,
+  "maxResponseTime": 310,
+  "totalDuration": 313,
+  "errors": [],
+  "timestamp": "2026-07-07T00:29:59.714Z"
+}

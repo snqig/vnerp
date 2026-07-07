@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { OutboxPoller } from '@/infrastructure/event-bus/OutboxPoller';
 import { getDomainEventOutbox, getEventBusType } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import type { EventOutboxRecord } from '@/infrastructure/event-bus/types/IDomainEventOutboxRepository';
 
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest) => {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
@@ -31,10 +31,10 @@ export const GET = withAuthAndErrorHandler(
 
     return errorResponse('Unknown action. Use ?action=status', 400, 400);
   },
-  { permission: 'system:outbox:view' }
+  { errorMessage: '操作失败' }
 );
 
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest) => {
     const body = await request.json();
     const action = body.action;
@@ -59,5 +59,5 @@ export const POST = withAuthAndErrorHandler(
 
     return errorResponse('Unknown action. Use poll, start, or stop', 400, 400);
   },
-  { permission: 'system:outbox:manage' }
+  { errorMessage: '操作失败' }
 );

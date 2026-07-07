@@ -19,7 +19,7 @@ async function getCompanyName(): Promise<string> {
     return cachedCompanyName;
   }
   try {
-    const rows = await query<{ config_value: string }[]>(
+    const rows = await query<{ config_value: string }>(
       `SELECT config_value FROM sys_config WHERE config_key IN ('company_name', 'company_short_name') ORDER BY FIELD(config_key, 'company_name', 'company_short_name') LIMIT 1`
     );
     if (Array.isArray(rows) && rows.length > 0 && rows[0]?.config_value) {

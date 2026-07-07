@@ -2,7 +2,8 @@ import { NextRequest } from 'next/server';
 import {
   successResponse,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query } from '@/lib/db';
 
 /**
@@ -11,7 +12,7 @@ import { query } from '@/lib/db';
  * 按账龄区间统计应收/应付款，识别坏账风险
  */
 
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'receivable'; // receivable应付/payable应付

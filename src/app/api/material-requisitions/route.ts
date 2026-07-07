@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { getMrPrefix, generateDocNo } from '@/lib/global-config';
 
+import { withPermission } from '@/lib/api-permissions';
 const ISSUE_TYPE_MAP: Record<number, string> = {
   1: '正常领料',
   2: '超领',
@@ -19,7 +20,7 @@ function generateIssueNo(): string {
   return generateDocNo(getMrPrefix());
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -77,7 +78,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const {
     workOrderId,
@@ -166,7 +167,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id, action, items, approverId, approverName } = body;
 

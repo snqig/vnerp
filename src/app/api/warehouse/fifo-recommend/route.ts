@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 function computeExpiryWeight(expireDate: string | null): number {
   if (!expireDate) return 0;
   const now = new Date();
@@ -40,7 +41,7 @@ function computeOverrideRiskScore(batch: any): number {
   return Math.min(100, risk);
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const materialId = searchParams.get('materialId');
   const warehouseId = searchParams.get('warehouseId');

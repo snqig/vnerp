@@ -3759,6 +3759,8 @@
     "confirmed": "已確認",
     "dialogDescription": "對話框描述",
     "disputed": "有爭議",
+    "fullyWrittenOff": "已全部核銷",
+    "partialWriteoff": "部分核銷",
     "periodEnd": "週期結束",
     "periodStart": "週期開始",
     "reconciliationDetail": "對賬詳情",

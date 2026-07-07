@@ -68,7 +68,7 @@ export async function allocateFIFO(
       id, batch_no, material_id, material_code, material_name,
       available_qty, unit_price, inbound_date, unit, expire_date, opened_at, version
     FROM inv_inventory_batch
-    WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 'normal'`;
+    WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 1`;
 
   if (!allowExpired) {
     sql += ` AND (expire_date IS NULL OR expire_date >= CURDATE())`;
@@ -144,19 +144,20 @@ export async function checkShortageAndWarn(
   requiredQty: number
 ): Promise<ShortageWarning | null> {
   const [safetyRows]: any = await query(
-    `SELECT safety_stock, reorder_point FROM inv_material WHERE id = ? AND deleted = 0`,
+    `SELECT safety_stock, min_stock FROM inv_material WHERE id = ? AND deleted = 0`,
     [materialId]
   );
 
   if (!safetyRows || safetyRows.length === 0) return null;
 
-  const { safety_stock, reorder_point } = safetyRows[0];
+  const { safety_stock, min_stock } = safetyRows[0];
+  const reorder_point = min_stock;
   const safetyStock = parseFloat(safety_stock) || 0;
   const reorderPoint = parseFloat(reorder_point) || 0;
 
   const [invRows]: any = await query(
     `SELECT COALESCE(SUM(available_qty), 0) as total_available FROM inv_inventory_batch
-     WHERE material_id = ? AND deleted = 0 AND status = 'normal'`,
+     WHERE material_id = ? AND deleted = 0 AND status = 1`,
     [materialId]
   );
 
@@ -276,54 +277,31 @@ async function executeFIFODeductionInternal(
       mode: 'fifo_auto',
     });
 
-    const transNo = `OUT${Date.now()}${alloc.batch_id}`;
+    const [currentInv]: any = await conn.query(
+      'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0',
+      [alloc.material_id, params.warehouseId]
+    );
+    const beforeQty = currentInv.length > 0 ? parseFloat(currentInv[0].quantity) : 0;
+    const afterQty = beforeQty - alloc.allocate_qty;
+
     await conn.execute(
-      `INSERT INTO inv_inventory_transaction (
-        trans_no, trans_type, batch_no, material_id, material_code, material_name,
-        warehouse_id, warehouse_code, quantity, source_type, source_no,
-        operated_by, operated_at, remark
-      ) VALUES (?, 'outbound', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
+      `INSERT INTO inv_inventory_log (
+        material_id, warehouse_id, batch_no, operation_type, operation_qty,
+        before_qty, after_qty, business_type, business_no, remark, operator_id, create_time
+      ) VALUES (?, ?, ?, 2, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
-        transNo,
-        alloc.batch_no,
         alloc.material_id,
-        alloc.material_code,
-        alloc.material_name,
         params.warehouseId,
-        params.warehouseCode,
-        -alloc.allocate_qty,
+        alloc.batch_no,
+        alloc.allocate_qty,
+        beforeQty,
+        afterQty,
         params.sourceType,
         params.sourceNo,
-        params.operatorId,
         `FIFO出库-批次${alloc.batch_no}`,
+        params.operatorId,
       ]
     );
-
-    try {
-      await conn.execute(
-        `INSERT INTO inv_outbound_batch_allocation (
-          source_type, source_id, source_no, warehouse_id,
-          material_id, batch_id, batch_no, allocated_qty, unit_cost, total_cost,
-          fifo_mode, operator_id, operator_name
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'fifo_auto', ?, ?)`,
-        [
-          params.sourceType,
-          params.sourceId,
-          params.sourceNo,
-          params.warehouseId,
-          alloc.material_id,
-          alloc.batch_id,
-          alloc.batch_no,
-          alloc.allocate_qty,
-          alloc.unit_cost,
-          lineCostDecimal.toNumber(),
-          params.operatorId,
-          params.operatorName,
-        ]
-      );
-    } catch (e) {
-      console.error('[FIFO分配] 出库批次分配记录写入失败:', e);
-    }
   }
 
   return { deductionDetails, totalCost: totalCostDecimal.toNumber() };
@@ -469,54 +447,31 @@ export async function executeSpecifiedBatchDeduction(
   const unitCostDecimal = new Decimal(batchData.unit_price || 0);
   const totalCostDecimal = requiredQtyDecimal.times(unitCostDecimal);
 
-  const transNo = `OUT${Date.now()}${batchData.id}`;
+  const [currentInv]: any = await conn.query(
+    'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0',
+    [params.materialId, params.warehouseId]
+  );
+  const beforeQty = currentInv.length > 0 ? parseFloat(currentInv[0].quantity) : 0;
+  const afterQty = beforeQty - params.requiredQty;
+
   await conn.execute(
-    `INSERT INTO inv_inventory_transaction (
-      trans_no, trans_type, batch_no, material_id, material_code, material_name,
-      warehouse_id, warehouse_code, quantity, source_type, source_no,
-      operated_by, operated_at, remark
-    ) VALUES (?, 'outbound', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
+    `INSERT INTO inv_inventory_log (
+      material_id, warehouse_id, batch_no, operation_type, operation_qty,
+      before_qty, after_qty, business_type, business_no, remark, operator_id, create_time
+    ) VALUES (?, ?, ?, 2, ?, ?, ?, ?, ?, ?, ?, NOW())`,
     [
-      transNo,
-      params.batchNo,
       params.materialId,
-      params.materialCode,
-      params.materialName,
       params.warehouseId,
-      params.warehouseCode,
-      -params.requiredQty,
+      params.batchNo,
+      params.requiredQty,
+      beforeQty,
+      afterQty,
       params.sourceType,
       params.sourceNo,
-      params.operatorId,
       `指定批次出库-${params.batchNo}`,
+      params.operatorId,
     ]
   );
-
-  try {
-    await conn.execute(
-      `INSERT INTO inv_outbound_batch_allocation (
-        source_type, source_id, source_no, warehouse_id,
-        material_id, batch_id, batch_no, allocated_qty, unit_cost, total_cost,
-        fifo_mode, operator_id, operator_name
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'specified_batch', ?, ?)`,
-      [
-        params.sourceType,
-        params.sourceId,
-        params.sourceNo,
-        params.warehouseId,
-        params.materialId,
-        batchData.id,
-        params.batchNo,
-        params.requiredQty,
-        unitCostDecimal.toNumber(),
-        totalCostDecimal.toNumber(),
-        params.operatorId,
-        params.operatorName,
-      ]
-    );
-  } catch (e) {
-    console.error('[指定批次出库] 出库批次分配记录写入失败:', e);
-  }
 
   return {
     deductionDetail: {

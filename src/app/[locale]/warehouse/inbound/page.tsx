@@ -79,7 +79,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { LucideIcon } from 'lucide-react';
 import { logger } from '@/lib/logger';
-import { mockWarehouseInbounds, mockWarehouses, mockSuppliers, USE_MOCK, mockApiListResponse } from '@/lib/mock-data';
+
 
 // 接口定义（符合 inv_production_inbound 表结构）
 interface InboundItem {
@@ -362,13 +362,6 @@ export default function InboundManagementPage() {
   const fetchInboundRecords = useCallback(async () => {
     logger.info({ module: 'Warehouse', action: 'fetchInboundRecords' }, '开始获取入库单列表', { searchQuery, statusFilter });
     try {
-      if (USE_MOCK) {
-        logger.info({ module: 'Warehouse', action: 'fetchInboundRecords' }, '使用 mock 数据');
-        const records = mockWarehouseInbounds;
-        setInboundRecords(records);
-        return;
-      }
-
       const params = new URLSearchParams();
       if (searchQuery) params.append('keyword', searchQuery);
       if (statusFilter !== 'all') params.append('status', statusFilter);

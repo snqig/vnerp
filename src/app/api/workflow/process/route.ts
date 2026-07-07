@@ -1,13 +1,14 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { WorkflowEngine } from '@/application/workflow/WorkflowEngine';
 
 const workflowEngine = new WorkflowEngine();
 
 // 执行审批操作
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, user: UserInfo) => {
     const body = await request.json();
     const { instanceId, taskId, action, comment } = body;
@@ -47,11 +48,12 @@ export const POST = withAuthAndErrorHandler(
       console.error('审批处理失败:', error);
       return errorResponse('审批处理失败: ' + error.message, 500, 500);
     }
-  }
+  },
+  { logTitle: '执行审批操作' }
 );
 
 // 获取审批详情
-export const GET = withAuthAndErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const instanceId = searchParams.get('instanceId');
   const sourceType = searchParams.get('sourceType');

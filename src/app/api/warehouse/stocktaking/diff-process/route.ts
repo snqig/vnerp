@@ -3,7 +3,8 @@ import {
   successResponse,
   errorResponse,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 
 /**
@@ -14,7 +15,7 @@ import { query, execute } from '@/lib/db';
  */
 
 // 获取待处理的盘点差异
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'pending';
@@ -77,12 +78,11 @@ export const GET = withAuthAndErrorHandler(
       pageSize,
       summary: summary[0] || {},
     });
-  },
-  { permission: 'warehouse:view' }
+  }
 );
 
 // 差异审批/处理
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { action } = body;
@@ -199,5 +199,5 @@ export const POST = withAuthAndErrorHandler(
 
     return errorResponse('无效的操作类型', 400, 400);
   },
-  { permission: 'warehouse:manage' }
+  { errorMessage: '操作失败' }
 );

@@ -7,7 +7,8 @@ import {
   withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { PurchaseApplicationService } from '@/application/services/PurchaseApplicationService';
 import { MysqlPurchaseOrderRepository } from '@/infrastructure/repositories/MysqlPurchaseOrderRepository';
@@ -20,7 +21,7 @@ function getPurchaseService(): PurchaseApplicationService {
   return new PurchaseApplicationService(orderRepo);
 }
 
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const keyword = searchParams.get('keyword') || '';
@@ -88,11 +89,10 @@ export const GET = withAuthAndErrorHandler(
     }));
 
     return paginatedResponse(serializedData, result.pagination);
-  },
-  { permission: 'purchase:view' }
+  }
 );
 
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
 
@@ -151,10 +151,10 @@ export const POST = withAuthAndErrorHandler(
       throw error;
     }
   },
-  { permission: 'purchase:create' }
+  { errorMessage: '操作失败' }
 );
 
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { id, action } = body;
@@ -204,10 +204,10 @@ export const PUT = withAuthAndErrorHandler(
       throw error;
     }
   },
-  { permission: 'purchase:create' }
+  { errorMessage: '操作失败' }
 );
 
-export const DELETE = withAuthAndErrorHandler(
+export const DELETE = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -231,5 +231,5 @@ export const DELETE = withAuthAndErrorHandler(
       throw error;
     }
   },
-  { permission: 'purchase:create' }
+  { errorMessage: '操作失败' }
 );

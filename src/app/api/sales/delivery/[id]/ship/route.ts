@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // POST /api/sales/delivery/[id]/ship - 扫码发货（符合设计文档 5.2 节）
-export const POST = withErrorHandler(
-  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-    const resolvedParams = await params;
-    const shipmentId = parseInt(resolvedParams.id);
+export const POST = withPermission(
+  async (request: NextRequest, userInfo) => {
+    // withPermission不转发context.params，从URL路径提取动态路由参数
+    const shipmentId = parseInt(new URL(request.url).pathname.split('/')[4]);
     const body = await request.json();
     const { items, logistics_company, tracking_no } = body;
 
@@ -133,5 +134,5 @@ export const POST = withErrorHandler(
       '扫码发货成功'
     );
   },
-  '扫码发货失败'
+  { logTitle: '扫码发货', logType: 'business' }
 );

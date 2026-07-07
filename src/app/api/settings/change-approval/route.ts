@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { invalidateCache } from '@/lib/api-cache';
 
 interface ChangeRequest {
@@ -27,7 +28,7 @@ const APPROVAL_REQUIRED_MODULES = [
   '生产与品质规则',
 ];
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status') || 'all';
   const module = searchParams.get('module') || 'all';
@@ -53,9 +54,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   } catch {
     return successResponse([]);
   }
-}, '获取变更请求列表失败');
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body: ChangeRequest = await request.json();
 
   if (!body.module || !body.config_key || !body.new_value) {
@@ -124,9 +125,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse({ needsApproval: false }, '变更无需审批，可直接生效');
-}, '创建变更请求失败');
+}, { logTitle: '创建变更请求' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, action, approver_id, approver_name } = body;
 
@@ -174,4 +175,4 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     { id, status: newStatus },
     action === 'approve' ? '变更已审批通过并生效' : '变更已驳回'
   );
-}, '审批变更请求失败');
+}, { logTitle: '审批变更请求' });

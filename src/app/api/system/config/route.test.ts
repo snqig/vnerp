@@ -14,6 +14,12 @@ vi.mock('@/lib/api-response', () => ({
   }),
 }));
 
+// route.ts 的处理器被 withPermission 包装，测试不携带认证 token，
+// 因此 mock withPermission 透传 handler，避免触发 withAuthAndErrorHandler 的认证链路。
+vi.mock('@/lib/api-permissions', () => ({
+  withPermission: (handler: any) => handler,
+}));
+
 import { query, execute } from '@/lib/db';
 
 const mockExecute = vi.mocked(execute) as unknown as ReturnType<typeof vi.fn>;

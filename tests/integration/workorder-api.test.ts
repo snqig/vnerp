@@ -25,6 +25,42 @@ vi.mock('@/lib/document-numbering', () => ({
   generateDocumentNo: vi.fn().mockResolvedValue('WO20240101001'),
 }));
 
+// withPermission -> withAuthAndErrorHandler -> extractToken/verifyToken 链路需要真实 token，
+// 集成测试不携带认证头，因此 mock withAuthAndErrorHandler 直接执行 handler 并注入 admin userInfo，
+// 同时保留 try-catch 语义以便业务异常返回 500。
+vi.mock('@/lib/api-auth', () => ({
+  withAuthAndErrorHandler: (
+    handler: (req: Request, userInfo: any, context?: any) => Promise<Response>,
+    _options?: { permission?: string; errorMessage?: string }
+  ) => {
+    return async (request: Request, context?: any): Promise<Response> => {
+      const userInfo = {
+        userId: 1,
+        username: 'admin',
+        realName: '管理员',
+        roles: ['admin'],
+        permissions: [],
+        firstLogin: false,
+      };
+      try {
+        return await handler(request, userInfo, context);
+      } catch (error: any) {
+        const body = {
+          code: 500,
+          success: false,
+          message: error?.message || '服务器内部错误',
+          data: null,
+        };
+        return new Response(JSON.stringify(body), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    };
+  },
+  FIRST_LOGIN_WHITELIST: ['/api/auth/change-password', '/api/auth/logout', '/api/auth/user-info', '/api/auth/refresh'],
+}));
+
 import { query, transaction } from '@/lib/db';
 import { GET, POST, PUT, DELETE } from '@/app/api/workorders/route';
 

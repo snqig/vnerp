@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const sn = searchParams.get('sn');
   const batchNo = searchParams.get('batchNo');
@@ -40,7 +41,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     sn,
@@ -129,7 +130,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '追溯链记录创建成功');
-});
+}, { logTitle: '创建追溯链记录', logType: 'business' });
 
 async function buildTraceChain(startSn: string): Promise<any[]> {
   const chain: any[] = [];

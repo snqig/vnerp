@@ -8,7 +8,8 @@ import {
   validateRequestBody,
   logOperation,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 
 // 仓库类型映射
 const warehouseTypeMap: { [key: string]: number } = {
@@ -105,7 +106,7 @@ function formatWarehouse(warehouse: any): Warehouse {
   };
 }
 
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const keyword = searchParams.get('keyword') || '';
@@ -172,7 +173,7 @@ export const GET = withAuthAndErrorHandler(
 );
 
 // POST - 创建仓库
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body: Warehouse = await request.json();
 
@@ -238,7 +239,7 @@ export const POST = withAuthAndErrorHandler(
 );
 
 // PUT - 更新仓库
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body: Warehouse = await request.json();
     const { id } = body;
@@ -314,7 +315,7 @@ export const PUT = withAuthAndErrorHandler(
 );
 
 // DELETE - 删除仓库（软删除）
-export const DELETE = withAuthAndErrorHandler(
+export const DELETE = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

@@ -4,12 +4,12 @@ import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { getWrPrefix, generateDocNo } from '@/lib/global-config';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const work_order_id = searchParams.get('work_order_id');
@@ -48,9 +48,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     pageSize,
     summaryStats: summaryStats[0] || {},
   });
-}, '获取报工记录失败');
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const validation = validateRequestBody(body, ['work_order_id', 'process_name']);
   if (!validation.valid) {
@@ -164,9 +164,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '报工记录创建成功');
-}, '创建报工记录失败');
+}, { logTitle: '创建报工记录', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   if (!body.id) return commonErrors.badRequest('报工ID不能为空');
 
@@ -202,13 +202,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '报工记录更新成功');
-}, '更新报工记录失败');
+}, { logTitle: '更新报工记录', logType: 'business' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return commonErrors.badRequest('报工ID不能为空');
 
   await execute('UPDATE prd_work_report SET deleted = 1 WHERE id = ?', [parseInt(id)]);
   return successResponse(null, '删除成功');
-}, '删除报工记录失败');
+}, { logTitle: '删除报工记录', logType: 'business' });

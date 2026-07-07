@@ -1,8 +1,9 @@
-import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+﻿import { query, execute, transaction } from '@/lib/db';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import type { NextRequest } from 'next/server';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const workOrderId = searchParams.get('workOrderId');
@@ -76,7 +77,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     workOrderId,
@@ -126,9 +127,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: (result as any).insertId }, '油墨耗用记录成功');
-});
+}, { logTitle: '记录油墨耗用', logType: 'business' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -139,4 +140,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await execute('UPDATE ink_usage SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
   return successResponse(null, '油墨耗用记录删除成功');
-});
+}, { logTitle: '删除油墨耗用记录', logType: 'business' });

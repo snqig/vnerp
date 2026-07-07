@@ -1,9 +1,10 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { writeFile } from 'fs/promises';
 import { mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 const UPLOAD_CONFIG = {
   maxSize: 20 * 1024 * 1024,
@@ -27,7 +28,7 @@ function generateUniqueFilename(originalName: string): string {
   return `${timestamp}-${random}.${extension}`;
 }
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const formData = await request.formData();
   const file = formData.get('file') as File;
 
@@ -71,4 +72,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '上传成功'
   );
-}, '上传文件失败');
+}, { logTitle: '上传合同文件' });

@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+import { withPermission } from '@/lib/api-permissions';
+export const GET = withPermission(async (request: NextRequest) => {
   const qrCode = request.nextUrl.searchParams.get('qrCode');
 
   if (!qrCode) {
@@ -67,4 +68,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     nextAction:
       order.status === 'approved' || order.status === 'completed' ? '可分切/出库' : '待审核',
   });
-}, '扫码查询失败');
+}, { errorMessage: '扫码查询失败' });

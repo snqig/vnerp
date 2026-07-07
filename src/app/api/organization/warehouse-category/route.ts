@@ -1,12 +1,12 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 interface WarehouseCategory {
   id?: number;
@@ -19,7 +19,7 @@ interface WarehouseCategory {
   update_time?: string;
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status');
@@ -46,9 +46,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const result = await query<WarehouseCategory>(sql, params);
 
   return successResponse(result);
-}, '获取仓库分类列表失败');
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body: WarehouseCategory = await request.json();
 
   const validation = validateRequestBody(body, ['code', 'name']);
@@ -71,9 +71,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId }, '仓库分类创建成功');
-}, '创建仓库分类失败');
+}, { logTitle: '创建仓库分类' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body: WarehouseCategory = await request.json();
   const { id } = body;
 
@@ -114,9 +114,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '仓库分类更新成功');
-}, '更新仓库分类失败');
+}, { logTitle: '更新仓库分类' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -151,4 +151,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '仓库分类删除成功');
-}, '删除仓库分类失败');
+}, { logTitle: '删除仓库分类' });

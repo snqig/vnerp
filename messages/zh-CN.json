@@ -3654,6 +3654,8 @@
     "confirmed": "已确认",
     "dialogDescription": "对话框描述",
     "disputed": "有争议",
+    "fullyWrittenOff": "已全部核销",
+    "partialWriteoff": "部分核销",
     "periodEnd": "周期结束",
     "periodStart": "周期开始",
     "reconciliationDetail": "对账详情",

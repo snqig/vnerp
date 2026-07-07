@@ -89,7 +89,7 @@ describe('Stream 流程模拟测试', () => {
 
   describe('场景 1：StreamPublisher XADD 日志', () => {
     it('XADD 成功：输出 debug 日志，含 eventId 和 streamMessageId', async () => {
-      const publisher = new StreamPublisher(redisMock);
+      const publisher = new StreamPublisher(redisMock as any);
 
       const messageId = await publisher.publish({
         id: 42,
@@ -115,7 +115,7 @@ describe('Stream 流程模拟测试', () => {
 
     it('XADD 失败：输出 error 日志并抛出异常', async () => {
       redisMock.xadd.mockRejectedValue(new Error('Redis connection lost'));
-      const publisher = new StreamPublisher(redisMock);
+      const publisher = new StreamPublisher(redisMock as any);
 
       await expect(
         publisher.publish({

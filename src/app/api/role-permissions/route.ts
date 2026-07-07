@@ -4,9 +4,9 @@ import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 角色权限接口
 interface RolePermission {
@@ -15,7 +15,7 @@ interface RolePermission {
 }
 
 // GET - 获取角色权限
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const roleId = searchParams.get('roleId');
 
@@ -41,10 +41,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse(result);
-}, '获取角色权限失败');
+});
 
 // POST - 保存角色权限
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { role_id, menu_ids } = body;
 
@@ -93,4 +93,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(null, '权限设置成功');
-}, '保存角色权限失败');
+}, { logTitle: '保存角色权限' });

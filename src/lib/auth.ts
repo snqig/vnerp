@@ -26,6 +26,10 @@ export interface UserInfo {
    * 用于用户级 token 撤销判断（修改密码后让旧 token 立即失效）。
    */
   iat?: number;
+  /**
+   * 是否首次登录（需强制改密）。true 时除白名单外所有 API 返回 403。
+   */
+  firstLogin?: boolean;
 }
 
 // 数据权限范围
@@ -43,6 +47,7 @@ interface UserRow {
   username: string;
   real_name: string;
   department_id: number | null;
+  first_login: number;
 }
 
 interface RoleRow {
@@ -105,7 +110,7 @@ export async function verifyToken(token: string): Promise<UserInfo | null> {
 export async function getUserInfo(userId: number): Promise<UserInfo | null> {
   // 查询用户基本信息
   const users = await query<UserRow>(
-    `SELECT id, username, real_name, department_id FROM sys_user 
+    `SELECT id, username, real_name, department_id, first_login FROM sys_user
      WHERE id = ? AND deleted = 0 AND status = 1`,
     [userId]
   );
@@ -200,6 +205,7 @@ export async function getUserInfo(userId: number): Promise<UserInfo | null> {
     permissions: permissions.map((p) => p.permission),
     departmentId: user.department_id ?? undefined,
     dataScope,
+    firstLogin: Boolean(user.first_login),
   };
 }
 

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { commonErrors, withErrorHandler } from '@/lib/api-response';
+import { commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { getTranslator } from '@/lib/i18n-server';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const format = searchParams.get('format') || 'pdf';
@@ -156,4 +157,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       'Content-Disposition': `attachment; filename*=UTF-8''order_${order.order_no}.html`,
     },
   });
-}, '导出订单失败');
+});

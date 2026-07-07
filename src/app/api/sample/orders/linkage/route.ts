@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 const SAMPLE_DELIVERY_STATUS = {
   PENDING: 'pending',
@@ -16,7 +17,7 @@ const WORK_ORDER_STATUS = {
   CANCELLED: 'cancelled',
 } as const;
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { sample_order_id, plan_start_date, plan_end_date } = body;
 
@@ -141,9 +142,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       `打样工单 ${workOrderNo} 创建成功`
     );
   });
-}, '打样订单转工单失败');
+}, { logTitle: '打样订单转工单' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { sample_order_id, action, actual_delivery_date } = body;
 
@@ -222,9 +223,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
     return errorResponse('无效的操作类型', 400, 400);
   });
-}, '打样订单状态更新失败');
+}, { logTitle: '打样订单状态更新' });
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const sample_order_id = searchParams.get('sample_order_id');
 
@@ -268,4 +269,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     work_orders: workOrders,
     material_requirements: materialReqs,
   });
-}, '获取打样订单关联信息失败');
+});

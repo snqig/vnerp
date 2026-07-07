@@ -3,7 +3,8 @@ import { tracer, healthChecker, alertManager, checkThresholds } from '@/lib/moni
 import { queryAnalyzer } from '@/lib/performance/db-optimization';
 import { apiMetrics } from '@/lib/performance/api-optimization';
 import { performanceMonitor } from '@/lib/performance/frontend-optimization';
-import { handleError, withErrorHandler } from '@/lib/error-handling';
+import { handleError } from '@/lib/error-handling';
+import { withPermission } from '@/lib/api-permissions';
 
 async function handler(req: NextRequest) {
   const url = new URL(req.url);
@@ -82,4 +83,4 @@ async function handler(req: NextRequest) {
   }
 }
 
-export const GET = withErrorHandler(handler);
+export const GET = withPermission(handler);

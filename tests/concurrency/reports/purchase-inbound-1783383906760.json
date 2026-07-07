@@ -1,0 +1,19 @@
+{
+  "testName": "采购入库并发测试",
+  "totalRequests": 6,
+  "successCount": 1,
+  "failureCount": 5,
+  "successRate": 16.666666666666664,
+  "failureRate": 83.33333333333334,
+  "avgResponseTime": 95.5,
+  "minResponseTime": 91,
+  "maxResponseTime": 110,
+  "totalDuration": 112,
+  "errors": [
+    {
+      "error": "Deadlock found when trying to get lock; try restarting transaction",
+      "count": 5
+    }
+  ],
+  "timestamp": "2026-07-07T00:25:06.754Z"
+}

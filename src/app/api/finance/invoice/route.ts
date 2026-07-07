@@ -5,7 +5,8 @@ import {
   errorResponse,
   validateRequestBody,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 
 /**
@@ -14,7 +15,7 @@ import { query, execute } from '@/lib/db';
  */
 
 // 获取发票列表
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -63,11 +64,11 @@ export const GET = withAuthAndErrorHandler(
 
     return paginatedResponse(rows, { page, pageSize, total, totalPages });
   },
-  { permission: 'finance:view' }
+  { errorMessage: '操作失败' }
 );
 
 // 创建发票
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const validation = validateRequestBody(body, ['invoice_type', 'partner_id', 'partner_name', 'invoice_date', 'items']);
@@ -155,11 +156,11 @@ export const POST = withAuthAndErrorHandler(
       conn.release();
     }
   },
-  { permission: 'finance:create' }
+  { errorMessage: '操作失败' }
 );
 
 // 更新发票状态（审核/核销/作废）
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { id, action } = body;
@@ -220,5 +221,5 @@ export const PUT = withAuthAndErrorHandler(
 
     return errorResponse('不支持的操作', 400, 400);
   },
-  { permission: 'finance:audit' }
+  { errorMessage: '操作失败' }
 );

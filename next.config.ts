@@ -1,3 +1,4 @@
+import './src/lib/env'; // 启动时校验环境变量（生产 fail-fast，开发回退默认值）
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 

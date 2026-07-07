@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 function pad(n: number, len: number = 3): string {
   return String(n).padStart(len, '0');
@@ -23,16 +24,17 @@ function randomAmount(min: number, max: number): number {
   return Math.round((min + Math.random() * (max - min)) * 100) / 100;
 }
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
 
     const deleteTables = [
       'bom_line',
       'bom_material',
-      'sal_delivery_order_item',
-      'sal_return_order_item',
-      'sal_reconciliation_detail',
+      'sal_delivery_detail',
+      'sal_return_detail',
+      'sal_reconciliation_writeoff',
+      'sal_reconciliation_line',
       'prd_material_return_item',
       'inv_transfer_item',
       'inv_stocktaking_item',
@@ -54,8 +56,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       'ink_opening_record',
       'prd_die',
       'prd_die_template',
-      'sal_delivery_order',
-      'sal_return_order',
+      'sal_delivery',
+      'sal_return',
       'sal_reconciliation',
       'prd_material_return',
       'inv_transfer_order',
@@ -830,7 +832,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       const totalAmount = randomAmount(1000, 200000);
       const signStatus = randomItem([0, 1]);
       await conn.execute(
-        `INSERT INTO sal_delivery_order (delivery_no, order_id, order_no, customer_id, customer_name, delivery_date, contact_name, contact_phone, delivery_address, warehouse_id, logistics_company, tracking_no, driver_name, vehicle_no, total_qty, total_amount, sign_status, sign_person, sign_time, sign_remark, status, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO sal_delivery (delivery_no, order_id, order_no, customer_id, customer_name, delivery_date, contact_name, contact_phone, delivery_address, warehouse_id, logistics_company, tracking_no, total_qty, total_amount, sign_status, sign_by, sign_time, status, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           `DN-2026-${pad(i + 1, 5)}`,
           so.id,
@@ -844,16 +846,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           wh.id,
           randomItem(logisticsCompanies),
           `SF${randomInt(1000000000, 9999999999)}`,
-          randomItem(['张师傅', '李师傅', '王师傅']),
-          `粤S${randomInt(10000, 99999)}`,
           totalQty,
           totalAmount,
           signStatus,
-          signStatus === 1 ? `签收人${i + 1}` : null,
+          signStatus === 1 ? defaultUserId : null,
           signStatus === 1
             ? `${randomDate(yearStart, now)} ${String(randomInt(8, 17)).padStart(2, '0')}:00:00`
             : null,
-          signStatus === 1 ? '正常签收' : null,
           randomItem([1, 2, 3]),
           defaultUserId,
         ]
@@ -861,7 +860,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
       deliveryIds.push(idRow[0].id);
     }
-    stats.sal_delivery_order = 20;
+    stats.sal_delivery = 20;
 
     for (let i = 0; i < 20; i++) {
       const deliveryId = deliveryIds[i % deliveryIds.length];
@@ -870,9 +869,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       const unitPrice = mat.sale_price || randomAmount(0.5, 30);
       const amount = Math.round(quantity * unitPrice * 100) / 100;
       await conn.execute(
-        `INSERT INTO sal_delivery_order_item (delivery_id, material_id, material_name, material_spec, quantity, unit, unit_price, amount, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO sal_delivery_detail (delivery_id, line_no, material_id, material_name, material_spec, quantity, unit, unit_price, amount, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           deliveryId,
+          i + 1,
           mat.id,
           mat.material_name,
           mat.specification,
@@ -884,7 +884,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         ]
       );
     }
-    stats.sal_delivery_order_item = 20;
+    stats.sal_delivery_detail = 20;
 
     const returnReasons = [
       '丝印偏色超出标准',
@@ -907,36 +907,30 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       );
       const custName = custRow[0]?.customer_name || `客户${i + 1}`;
       const deliveryId = deliveryIds[i % deliveryIds.length];
-      const totalQty = randomInt(10, 5000);
       const totalAmount = randomAmount(500, 50000);
       const wh = warehouses[i % warehouses.length];
       await conn.execute(
-        `INSERT INTO sal_return_order (return_no, order_id, order_no, delivery_id, delivery_no, customer_id, customer_name, return_date, return_type, return_reason, total_qty, total_amount, inspection_status, inspection_result, warehouse_id, inbound_status, status, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO sal_return (return_no, status, order_id, order_no, customer_id, customer_name, warehouse_id, delivery_id, delivery_no, reason, return_date, total_amount, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           `RT-2026-${pad(i + 1, 5)}`,
+          randomItem([1, 2, 3]),
           so.id,
           so.order_no,
-          deliveryId,
-          `DN-2026-${pad((i % deliveryIds.length) + 1, 5)}`,
           so.customer_id,
           custName,
-          randomDate(yearStart, now),
-          randomItem([1, 2, 3]),
-          randomItem(returnReasons),
-          totalQty,
-          totalAmount,
-          randomItem([0, 1]),
-          randomItem([null, 1, 2]),
           wh.id,
-          randomItem([0, 1]),
-          randomItem([1, 2, 3]),
+          deliveryId,
+          `DN-2026-${pad((i % deliveryIds.length) + 1, 5)}`,
+          randomItem(returnReasons),
+          randomDate(yearStart, now),
+          totalAmount,
           defaultUserId,
         ]
       );
       const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
       returnIds.push(idRow[0].id);
     }
-    stats.sal_return_order = 20;
+    stats.sal_return = 20;
 
     for (let i = 0; i < 20; i++) {
       const returnId = returnIds[i % returnIds.length];
@@ -945,21 +939,22 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       const unitPrice = mat.sale_price || randomAmount(0.5, 30);
       const amount = Math.round(quantity * unitPrice * 100) / 100;
       await conn.execute(
-        `INSERT INTO sal_return_order_item (return_id, material_id, material_name, material_spec, quantity, unit, unit_price, amount, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO sal_return_detail (return_id, line_no, material_id, material_name, material_spec, unit, quantity, unit_price, amount, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           returnId,
+          i + 1,
           mat.id,
           mat.material_name,
           mat.specification,
-          quantity,
           mat.unit,
+          quantity,
           unitPrice,
           amount,
           `B2026${pad(i + 1, 4)}`,
         ]
       );
     }
-    stats.sal_return_order_item = 20;
+    stats.sal_return_detail = 20;
 
     const reconciliationIds: number[] = [];
     for (let i = 0; i < 20; i++) {
@@ -974,9 +969,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       const netAmount = Math.round((deliveryAmount - returnAmount - discountAmount) * 100) / 100;
       const receivedAmount = randomAmount(0, netAmount);
       const balanceAmount = Math.round((netAmount - receivedAmount) * 100) / 100;
-      const confirmStatus = randomItem([0, 1]);
       await conn.execute(
-        `INSERT INTO sal_reconciliation (reconciliation_no, customer_id, customer_name, period_start, period_end, delivery_amount, return_amount, discount_amount, net_amount, received_amount, balance_amount, confirm_status, confirm_person, confirm_time, confirm_remark, status, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO sal_reconciliation (reconciliation_no, customer_id, customer_name, period_start, period_end, delivery_amount, return_amount, discount_amount, net_amount, received_amount, balance_amount, status, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           `RC-2026-${pad(i + 1, 5)}`,
           cust.id,
@@ -989,13 +983,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
           netAmount,
           receivedAmount,
           balanceAmount,
-          confirmStatus,
-          confirmStatus === 1 ? defaultUserName : null,
-          confirmStatus === 1
-            ? `${randomDate(yearStart, now)} ${String(randomInt(8, 17)).padStart(2, '0')}:00:00`
-            : null,
-          confirmStatus === 1 ? '对账确认无误' : null,
-          randomItem([1, 2]),
+          randomItem([1, 2, 3, 4]),
           defaultUserId,
         ]
       );
@@ -1012,11 +1000,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         sourceType === 1 ? `DN-2026-${pad((i % 20) + 1, 5)}` : `RT-2026-${pad((i % 20) + 1, 5)}`;
       const amount = randomAmount(1000, 100000);
       await conn.execute(
-        `INSERT INTO sal_reconciliation_detail (reconciliation_id, source_type, source_id, source_no, source_date, amount) VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO sal_reconciliation_line (reconciliation_id, source_type, source_id, source_no, source_date, amount) VALUES (?, ?, ?, ?, ?, ?)`,
         [rcId, sourceType, so.id, sourceNo, randomDate(yearStart, now), amount]
       );
     }
-    stats.sal_reconciliation_detail = 20;
+    stats.sal_reconciliation_line = 20;
 
     const materialReturnIds: number[] = [];
     for (let i = 0; i < 20; i++) {

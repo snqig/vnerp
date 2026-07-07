@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { storeRefreshToken } from '@/lib/token-blacklist';
 import { logger, generateTraceId } from '@/lib/logger';
+import { generateCsrfToken, setCsrfCookie } from '@/lib/csrf';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
     const clientIP = getClientIP(request);
     logger.stepStart(ctx, '用户登录', { clientIP });
 
-    const rateResult = checkRateLimit(clientIP, {
+    const rateResult = await checkRateLimit(clientIP, {
       windowMs: 15 * 60 * 1000,
       maxRequests: 20,
       keyPrefix: 'login',
@@ -176,9 +177,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const isPasswordValid =
-      (await verifyPassword(password, user.password)) ||
-      (process.env.NODE_ENV !== 'production' && password === '521223' && username === 'admin');
+    const isPasswordValid = await verifyPassword(password, user.password);
 
     if (!isPasswordValid) {
       logger.branch(ctx, '密码验证', '密码正确', false, { userId: user.id });
@@ -366,7 +365,7 @@ export async function POST(request: NextRequest) {
     const refreshExpiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7天
     await storeRefreshToken(refreshToken, user.id, refreshExpiresAt);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: '登录成功',
       data: {
@@ -375,6 +374,12 @@ export async function POST(request: NextRequest) {
         user: userInfo,
       },
     });
+
+    // 登录成功后下发 CSRF token cookie
+    const csrfToken = generateCsrfToken();
+    setCsrfCookie(response, csrfToken);
+
+    return response;
   } catch (error) {
     console.error('登录失败:', error);
     return NextResponse.json(

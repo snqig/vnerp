@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 async function safeCreateTable(tableName: string, sql: string) {
   try {
@@ -11,7 +12,7 @@ async function safeCreateTable(tableName: string, sql: string) {
   }
 }
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const results: any[] = [];
 
   results.push(
@@ -258,4 +259,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(results, '油墨管理相关表初始化完成');
-});
+}, { logTitle: '油墨管理表初始化', logType: 'business' });

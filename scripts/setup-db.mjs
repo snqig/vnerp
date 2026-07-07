@@ -149,7 +149,44 @@ async function run() {
       }
     }
 
-    // 5. 统计表数量
+    // 5. 标记所有已有迁移文件为已执行（schema.sql 已包含全部结构，跳过增量迁移）
+    const migrationsDir = path.join(projectRoot, 'database', 'migrations');
+    if (fs.existsSync(migrationsDir)) {
+      await conn.execute(`
+        CREATE TABLE IF NOT EXISTS \`sys_migration\` (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          migration_name VARCHAR(255) NOT NULL UNIQUE,
+          batch INT NOT NULL DEFAULT 0,
+          applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          execution_time INT DEFAULT 0,
+          INDEX idx_migration_name (migration_name),
+          INDEX idx_applied_at (applied_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+      `);
+      const migrationFiles = fs
+        .readdirSync(migrationsDir)
+        .filter((f) => f.endsWith('.sql') || f.endsWith('.ts') || f.endsWith('.js'))
+        .sort();
+      let marked = 0;
+      for (const f of migrationFiles) {
+        try {
+          await conn.execute(
+            `INSERT IGNORE INTO \`sys_migration\` (migration_name, batch, execution_time) VALUES (?, 0, 0)`,
+            [f]
+          );
+          const [res] = await conn.execute(
+            `SELECT COUNT(*) as cnt FROM \`sys_migration\` WHERE migration_name = ?`,
+            [f]
+          );
+          if (res[0].cnt > 0) marked++;
+        } catch {
+          // INSERT IGNORE 已处理重复，此处仅需跳过
+        }
+      }
+      console.log(`[setup-db] ✓ 已标记 ${marked}/${migrationFiles.length} 个迁移文件为已执行（batch 0）`);
+    }
+
+    // 6. 统计表数量
     const [rows] = await conn.query(
       `SELECT COUNT(*) as cnt FROM information_schema.tables WHERE table_schema = ?`,
       [DB_NAME]

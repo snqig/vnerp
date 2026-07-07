@@ -3760,6 +3760,8 @@
     "confirmed": "Confirmed",
     "dialogDescription": "Dialog description",
     "disputed": "Disputed",
+    "fullyWrittenOff": "Fully Written Off",
+    "partialWriteoff": "Partial Write-off",
     "periodEnd": "Period End",
     "periodStart": "Period Start",
     "reconciliationDetail": "Reconciliation Detail",

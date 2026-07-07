@@ -5,11 +5,12 @@ import {
   errorResponse,
   validateRequestBody,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 
 // 获取定时任务列表
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -43,11 +44,11 @@ export const GET = withAuthAndErrorHandler(
 
     return paginatedResponse(rows, { page, pageSize, total, totalPages });
   },
-  { permission: 'system:config' }
+  { errorMessage: '操作失败' }
 );
 
 // 创建/更新定时任务
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const validation = validateRequestBody(body, ['task_name', 'task_type', 'cron_expression']);
@@ -72,11 +73,11 @@ export const POST = withAuthAndErrorHandler(
 
     return successResponse({ id: result.insertId }, '定时任务创建成功');
   },
-  { permission: 'system:config' }
+  { errorMessage: '操作失败' }
 );
 
 // 更新任务状态
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { id, action } = body;
@@ -164,11 +165,11 @@ export const PUT = withAuthAndErrorHandler(
 
     return errorResponse('不支持的操作', 400, 400);
   },
-  { permission: 'system:config' }
+  { errorMessage: '操作失败' }
 );
 
 // 删除任务
-export const DELETE = withAuthAndErrorHandler(
+export const DELETE = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -177,7 +178,7 @@ export const DELETE = withAuthAndErrorHandler(
     await execute('DELETE FROM sys_scheduled_task WHERE id = ?', [Number(id)]);
     return successResponse(null, '任务删除成功');
   },
-  { permission: 'system:config' }
+  { errorMessage: '操作失败' }
 );
 
 // 任务执行逻辑

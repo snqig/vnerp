@@ -291,22 +291,22 @@ describe('集成测试 - 业务流程', () => {
 
     it('预警级别计算：零库存为critical', () => {
       const result = simulateInventoryQuery({ material_code: 'INK-008' });
-      expect(result.data.list[0].alertLevel).toBe('critical');
+      expect((result.data.list[0] as any).alertLevel).toBe('critical');
     });
 
     it('预警级别计算：库存<=50%安全库存为critical', () => {
       const result = simulateInventoryQuery({ material_code: 'INK-006' });
-      expect(result.data.list[0].alertLevel).toBe('critical');
+      expect((result.data.list[0] as any).alertLevel).toBe('critical');
     });
 
     it('预警级别计算：库存在50%-100%安全库存为warning', () => {
       const result = simulateInventoryQuery({ material_code: 'PAPER-001' });
-      expect(result.data.list[0].alertLevel).toBe('warning');
+      expect((result.data.list[0] as any).alertLevel).toBe('warning');
     });
 
     it('预警级别计算：库存>安全库存为normal', () => {
       const result = simulateInventoryQuery({ material_code: 'INK-001' });
-      expect(result.data.list[0].alertLevel).toBe('normal');
+      expect((result.data.list[0] as any).alertLevel).toBe('normal');
     });
 
     it('无结果搜索：返回空列表', () => {
@@ -426,7 +426,7 @@ describe('集成测试 - 业务流程', () => {
         const levelOrder: Record<string, number> = { critical: 0, warning: 1, normal: 2 };
         return levelOrder[a.alertLevel] - levelOrder[b.alertLevel];
       });
-      expect(sorted[0].alertLevel).toBe('critical');
+      expect((sorted[0] as any).alertLevel).toBe('critical');
 
       // Step 4: 处理critical级别 - 冻结防止超卖
       const criticalIds = sorted

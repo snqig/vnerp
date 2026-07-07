@@ -1,9 +1,10 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 // 获取批次库存列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const materialKeyword = searchParams.get('materialKeyword') || '';
   const batchNo = searchParams.get('batchNo') || '';
@@ -60,7 +61,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 获取可用批次列表（用于出库时选择）
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { material_id, warehouse_id, required_qty } = body;
 
@@ -118,7 +119,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 入库操作（新增批次库存）
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { inbound_no, warehouse_id, inbound_date, items, remark } = body;
 
@@ -233,7 +234,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 出库操作（扣减批次库存）
-export const PATCH = withErrorHandler(async (request: NextRequest) => {
+export const PATCH = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { outbound_no, customer_id, customer_name, warehouse_id, outbound_date, items, remark } =
     body;

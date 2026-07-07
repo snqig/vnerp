@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { getIcPrefix, generateDocNo, getConfig } from '@/lib/global-config';
 
+import { withPermission } from '@/lib/api-permissions';
 interface InventoryCheck {
   id: number;
   check_no: string;
@@ -55,7 +56,7 @@ function generateCheckNo(): string {
   return generateDocNo(getIcPrefix());
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -112,7 +113,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { type = 1, warehouse_id, checker_id, remark } = body;
 
@@ -192,7 +193,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id, action, approver_id, items } = body;
 
@@ -373,7 +374,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 

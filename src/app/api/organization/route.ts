@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
 import {
   successResponse,
@@ -6,7 +6,8 @@ import {
   commonErrors,
   validateRequestBody,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 
 // 企业信息数据接口
 interface Company {
@@ -30,7 +31,7 @@ interface Company {
 }
 
 // GET - 获取企业信息
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
@@ -49,12 +50,11 @@ export const GET = withAuthAndErrorHandler(
     }
 
     return commonErrors.badRequest('无效的请求类型');
-  },
-  { errorMessage: '获取企业信息失败' }
+  }
 );
 
 // PUT - 更新企业信息
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body: Company = await request.json();
 
@@ -140,5 +140,5 @@ export const PUT = withAuthAndErrorHandler(
 
     return successResponse(null, '企业信息更新成功');
   },
-  { errorMessage: '更新企业信息失败' }
+  { logTitle: '更新企业信息' }
 );

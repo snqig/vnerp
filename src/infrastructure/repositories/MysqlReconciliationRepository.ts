@@ -1,0 +1,254 @@
+import { IReconciliationRepository } from '@/domain/sales/repositories/IReconciliationRepository';
+import {
+  Reconciliation,
+  ReconciliationProps,
+  ReconciliationLineProps,
+} from '@/domain/sales/aggregates/Reconciliation';
+import { WriteOffRecordProps } from '@/domain/sales/entities/WriteOffRecord';
+import { query, execute, transaction } from '@/lib/db';
+import { generateDocumentNo } from '@/lib/document-numbering';
+
+const MAIN_COLUMNS = `id, reconciliation_no, status, customer_id, customer_name,
+                      period_start, period_end, delivery_amount, return_amount, net_amount,
+                      discount_amount, received_amount, balance_amount,
+                      confirm_by, confirm_time, close_by, close_time,
+                      remark, create_by, create_time, update_time`;
+
+const LINE_COLUMNS = `id, reconciliation_id, source_type, source_id, source_no,
+                      source_date, amount, remark`;
+
+const WRITEOFF_COLUMNS = `id, reconciliation_id, receivable_id, amount, write_off_date,
+                          remark, create_by, create_time`;
+
+export class MysqlReconciliationRepository implements IReconciliationRepository {
+  async findById(id: number): Promise<Reconciliation | null> {
+    const rows = await query<any>(
+      `SELECT ${MAIN_COLUMNS} FROM sal_reconciliation WHERE id = ? AND deleted = 0`,
+      [id]
+    );
+    if (!rows || rows.length === 0) return null;
+    const [lines, writeOffs] = await Promise.all([
+      this.findLines(rows[0].id),
+      this.findWriteOffs(rows[0].id),
+    ]);
+    return this.mapToAggregate(rows[0], lines, writeOffs);
+  }
+
+  async findByReconciliationNo(reconciliationNo: string): Promise<Reconciliation | null> {
+    const rows = await query<any>(
+      `SELECT ${MAIN_COLUMNS} FROM sal_reconciliation WHERE reconciliation_no = ? AND deleted = 0`,
+      [reconciliationNo]
+    );
+    if (!rows || rows.length === 0) return null;
+    const [lines, writeOffs] = await Promise.all([
+      this.findLines(rows[0].id),
+      this.findWriteOffs(rows[0].id),
+    ]);
+    return this.mapToAggregate(rows[0], lines, writeOffs);
+  }
+
+  async findByCustomerId(customerId: number): Promise<Reconciliation[]> {
+    const rows = await query<any>(
+      `SELECT ${MAIN_COLUMNS} FROM sal_reconciliation WHERE customer_id = ? AND deleted = 0 ORDER BY create_time DESC`,
+      [customerId]
+    );
+    return Promise.all(
+      rows.map(async (r) => {
+        const [lines, writeOffs] = await Promise.all([this.findLines(r.id), this.findWriteOffs(r.id)]);
+        return this.mapToAggregate(r, lines, writeOffs);
+      })
+    );
+  }
+
+  async findByStatus(status: number): Promise<Reconciliation[]> {
+    const rows = await query<any>(
+      `SELECT ${MAIN_COLUMNS} FROM sal_reconciliation WHERE status = ? AND deleted = 0 ORDER BY create_time DESC`,
+      [status]
+    );
+    return Promise.all(
+      rows.map(async (r) => {
+        const [lines, writeOffs] = await Promise.all([this.findLines(r.id), this.findWriteOffs(r.id)]);
+        return this.mapToAggregate(r, lines, writeOffs);
+      })
+    );
+  }
+
+  async save(reconciliation: Reconciliation): Promise<number> {
+    const reconciliationNo =
+      reconciliation.reconciliationNo || (await generateDocumentNo('reconciliation'));
+
+    return transaction(async (conn) => {
+      const [result]: any = await conn.execute(
+        `INSERT INTO sal_reconciliation
+         (reconciliation_no, status, customer_id, customer_name, period_start, period_end,
+          delivery_amount, return_amount, net_amount, discount_amount, received_amount,
+          balance_amount, remark, create_by, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          reconciliationNo,
+          reconciliation.status.value,
+          reconciliation.customerId,
+          reconciliation.customerName || null,
+          reconciliation.periodStart,
+          reconciliation.periodEnd,
+          reconciliation.deliveryAmount,
+          reconciliation.returnAmount,
+          reconciliation.netAmount,
+          reconciliation.discountAmount,
+          reconciliation.receivedAmount,
+          reconciliation.balanceAmount,
+          reconciliation.remark || null,
+          reconciliation.createBy ?? null,
+        ]
+      );
+
+      const newId = result.insertId;
+
+      for (const line of reconciliation.lines) {
+        await conn.execute(
+          `INSERT INTO sal_reconciliation_line
+           (reconciliation_id, source_type, source_id, source_no, source_date, amount, create_time)
+           VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+          [
+            newId,
+            line.sourceType,
+            line.sourceId,
+            line.sourceNo,
+            line.sourceDate,
+            line.amount,
+          ]
+        );
+      }
+
+      return newId;
+    });
+  }
+
+  async updateWriteOff(
+    id: number,
+    receivedAmount: number,
+    balanceAmount: number,
+    status: number
+  ): Promise<void> {
+    await execute(
+      `UPDATE sal_reconciliation
+       SET received_amount = ?, balance_amount = ?, status = ?, update_time = NOW()
+       WHERE id = ?`,
+      [receivedAmount, balanceAmount, status, id]
+    );
+  }
+
+  async saveWriteOffRecord(
+    reconciliationId: number,
+    receivableId: number,
+    amount: number,
+    writeOffDate: string,
+    createBy?: number,
+    remark?: string
+  ): Promise<void> {
+    await execute(
+      `INSERT INTO sal_reconciliation_writeoff
+       (reconciliation_id, receivable_id, amount, write_off_date, remark, create_by, create_time)
+       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+      [reconciliationId, receivableId, amount, writeOffDate, remark || null, createBy ?? null]
+    );
+  }
+
+  async updateStatus(id: number, status: number): Promise<void> {
+    await execute(
+      `UPDATE sal_reconciliation SET status = ?, update_time = NOW() WHERE id = ?`,
+      [status, id]
+    );
+  }
+
+  async updateConfirmation(id: number, status: number, confirmBy: number, confirmTime: string): Promise<void> {
+    await execute(
+      `UPDATE sal_reconciliation
+       SET status = ?, confirm_by = ?, confirm_time = ?, update_time = NOW()
+       WHERE id = ?`,
+      [status, confirmBy, confirmTime, id]
+    );
+  }
+
+  async updateClosure(id: number, status: number, closeBy: number, closeTime: string): Promise<void> {
+    await execute(
+      `UPDATE sal_reconciliation
+       SET status = ?, close_by = ?, close_time = ?, update_time = NOW()
+       WHERE id = ?`,
+      [status, closeBy, closeTime, id]
+    );
+  }
+
+  async softDelete(id: number): Promise<void> {
+    await execute(
+      `UPDATE sal_reconciliation SET deleted = 1, update_time = NOW() WHERE id = ?`,
+      [id]
+    );
+  }
+
+  private async findLines(reconciliationId: number): Promise<any[]> {
+    return query<any>(
+      `SELECT ${LINE_COLUMNS} FROM sal_reconciliation_line
+       WHERE reconciliation_id = ? AND deleted = 0
+       ORDER BY source_date, id`,
+      [reconciliationId]
+    );
+  }
+
+  private async findWriteOffs(reconciliationId: number): Promise<any[]> {
+    return query<any>(
+      `SELECT ${WRITEOFF_COLUMNS} FROM sal_reconciliation_writeoff
+       WHERE reconciliation_id = ? AND deleted = 0
+       ORDER BY write_off_date, id`,
+      [reconciliationId]
+    );
+  }
+
+  private mapToAggregate(row: any, lines: any[], writeOffs: any[]): Reconciliation {
+    const lineProps: ReconciliationLineProps[] = lines.map((l) => ({
+      id: l.id,
+      sourceType: l.source_type,
+      sourceId: l.source_id,
+      sourceNo: l.source_no || '',
+      sourceDate: l.source_date ? new Date(l.source_date).toISOString().slice(0, 10) : '',
+      amount: Number(l.amount),
+    }));
+
+    const writeOffProps: WriteOffRecordProps[] = writeOffs.map((w) => ({
+      id: w.id,
+      reconciliationId: w.reconciliation_id,
+      receivableId: w.receivable_id,
+      amount: Number(w.amount),
+      writeOffDate: w.write_off_date ? new Date(w.write_off_date).toISOString().slice(0, 10) : '',
+      remark: w.remark || '',
+      createTime: w.create_time,
+    }));
+
+    const props: ReconciliationProps = {
+      id: row.id,
+      reconciliationNo: row.reconciliation_no,
+      status: row.status,
+      customerId: row.customer_id,
+      customerName: row.customer_name || '',
+      periodStart: row.period_start ? new Date(row.period_start).toISOString().slice(0, 10) : '',
+      periodEnd: row.period_end ? new Date(row.period_end).toISOString().slice(0, 10) : '',
+      deliveryAmount: Number(row.delivery_amount || 0),
+      returnAmount: Number(row.return_amount || 0),
+      netAmount: Number(row.net_amount || 0),
+      discountAmount: Number(row.discount_amount || 0),
+      receivedAmount: Number(row.received_amount || 0),
+      balanceAmount: Number(row.balance_amount || 0),
+      confirmBy: row.confirm_by,
+      confirmTime: row.confirm_time ? new Date(row.confirm_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
+      closeBy: row.close_by,
+      closeTime: row.close_time ? new Date(row.close_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
+      remark: row.remark || '',
+      createBy: row.create_by,
+      lines: lineProps,
+      writeOffRecords: writeOffProps,
+      createTime: row.create_time,
+      updateTime: row.update_time,
+    };
+    return Reconciliation.reconstitute(props);
+  }
+}

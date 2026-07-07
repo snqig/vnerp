@@ -5,9 +5,9 @@ import {
   paginatedResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
 // 采购申请接口
@@ -72,7 +72,7 @@ function calculateTotalAmount(items: RequestItem[] | undefined): number {
 }
 
 // GET - 获取采购申请列表或单个申请
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -143,10 +143,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   return paginatedResponse(result.data, result.pagination);
-}, '获取采购申请列表失败');
+});
 
 // POST - 创建采购申请
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   // 验证必填字段
@@ -231,10 +231,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result, '采购申请创建成功');
-}, '创建采购申请失败');
+}, { logTitle: '创建采购申请', logType: 'business' });
 
 // PUT - 更新采购申请
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -326,10 +326,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(null, '采购申请更新成功');
-}, '更新采购申请失败');
+}, { logTitle: '更新采购申请', logType: 'business' });
 
 // DELETE - 删除采购申请
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -371,4 +371,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(null, '采购申请删除成功');
-}, '删除采购申请失败');
+}, { logTitle: '删除采购申请', logType: 'business' });

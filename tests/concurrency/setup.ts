@@ -40,8 +40,9 @@ export interface TestWarehouse {
  * 创建测试仓库
  */
 export async function createTestWarehouse(): Promise<TestWarehouse> {
-  const warehouseCode = `TEST_WH_${Date.now()}`;
-  const warehouseName = `测试仓库_${Date.now()}`;
+  const unique = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  const warehouseCode = `TEST_WH_${unique}`;
+  const warehouseName = `测试仓库_${unique}`;
 
   const result: any = await execute(
     `INSERT INTO inv_warehouse (warehouse_code, warehouse_name, status, create_time, update_time, deleted)
@@ -64,13 +65,13 @@ export async function createTestMaterial(
   quantity: number = 1000
 ): Promise<TestMaterial> {
   const materialCode = `TEST_MAT_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-  const materialName = `测试物料_${Date.now()}`;
-  const batchNo = `BATCH_${Date.now()}`;
+  const materialName = `测试物料_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  const batchNo = `BATCH_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
   await transaction(async (conn) => {
-    // 创建物料基础信息
+    // 创建物料基础信息（实际表名为 inv_material）
     const [matResult]: any = await conn.execute(
-      `INSERT INTO bas_material (material_code, material_name, unit, status, create_time, update_time, deleted)
+      `INSERT INTO inv_material (material_code, material_name, unit, status, create_time, update_time, deleted)
        VALUES (?, ?, '个', 1, NOW(), NOW(), 0)`,
       [materialCode, materialName]
     );
@@ -84,17 +85,17 @@ export async function createTestMaterial(
       [materialId, warehouseId, quantity, quantity, batchNo]
     );
 
-    // 创建批次记录
+    // 创建批次记录（material_name 为 NOT NULL，必须提供）
     await conn.execute(
-      `INSERT INTO inv_inventory_batch (batch_no, material_id, warehouse_id, quantity, available_qty, status, create_time, update_time, deleted)
-       VALUES (?, ?, ?, ?, ?, 1, NOW(), NOW(), 0)`,
-      [batchNo, materialId, warehouseId, quantity, quantity]
+      `INSERT INTO inv_inventory_batch (batch_no, material_id, material_name, warehouse_id, quantity, available_qty, status, create_time, update_time, deleted)
+       VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW(), 0)`,
+      [batchNo, materialId, materialName, warehouseId, quantity, quantity]
     );
   });
 
   // 查询物料ID
   const [material]: any = await query(
-    `SELECT id FROM bas_material WHERE material_code = ?`,
+    `SELECT id FROM inv_material WHERE material_code = ?`,
     [materialCode]
   );
 
@@ -126,8 +127,8 @@ export async function cleanupTestMaterial(materialId: number): Promise<void> {
     await conn.execute(`UPDATE inv_inventory_batch SET deleted = 1 WHERE material_id = ?`, [
       materialId,
     ]);
-    // 删除物料基础信息
-    await conn.execute(`UPDATE bas_material SET deleted = 1 WHERE id = ?`, [materialId]);
+    // 删除物料基础信息（实际表名为 inv_material）
+    await conn.execute(`UPDATE inv_material SET deleted = 1 WHERE id = ?`, [materialId]);
   });
 }
 
@@ -188,7 +189,7 @@ export async function createTestOutboundOrder(
 
     await conn.execute(
       `INSERT INTO inv_outbound_item (
-        order_id, material_id, material_name, material_spec, qty, unit, batch_no, create_time, deleted
+        order_id, material_id, material_name, material_spec, quantity, unit, batch_no, create_time, deleted
       ) VALUES (?, ?, ?, '', ?, '个', ?, NOW(), 0)`,
       [orderId, materialId, materialName, quantity, batchNo || '']
     );
@@ -231,36 +232,37 @@ export async function createTestMaterialRequisition(
 ): Promise<number> {
   const issueNo = `MR_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-  // 先创建一个测试工单
-  const [woResult]: any = await execute(
-    `INSERT INTO prod_work_order (order_no, status, create_time, update_time, deleted)
-     VALUES (?, 1, NOW(), NOW(), 0)`,
+  // 创建工单（实际表 prod_work_order 使用 work_order_no，不是 order_no；status 为 VARCHAR）
+  // execute() 返回 ResultSetHeader 直接（非数组），不能用数组解构
+  const woResult: any = await execute(
+    `INSERT INTO prod_work_order (work_order_no, status, create_time, update_time, deleted)
+     VALUES (?, 'pending', NOW(), NOW(), 0)`,
     [`WO_${Date.now()}`]
   );
   const workOrderId = woResult.insertId;
 
-  const result: any = await transaction(async (conn) => {
-    const [issueResult]: any = await conn.execute(
-      `INSERT INTO prd_material_issue (
-        issue_no, work_order_id, work_order_no, warehouse_id,
-        issue_date, issue_type, status, operator_id, operator_name,
-        create_time, update_time, deleted
-      ) VALUES (?, ?, '', ?, NOW(), 1, 1, 1, '测试操作员', NOW(), NOW(), 0)`,
-      [issueNo, workOrderId, warehouseId]
-    );
+    const result: any = await transaction(async (conn) => {
+      const [issueResult]: any = await conn.execute(
+        `INSERT INTO prd_material_issue (
+          issue_no, work_order_id, work_order_no, warehouse_id,
+          issue_date, issue_type, status, operator_id, operator_name,
+          create_time, update_time, deleted
+        ) VALUES (?, ?, '', ?, NOW(), 'normal', 1, 1, '测试操作员', NOW(), NOW(), 0)`,
+        [issueNo, workOrderId, warehouseId]
+      );
 
-    const issueId = issueResult.insertId;
+      const issueId = issueResult.insertId;
 
-    await conn.execute(
-      `INSERT INTO prd_material_issue_item (
-        issue_id, material_id, material_code, material_name,
-        required_qty, issued_qty, unit, create_time
-      ) VALUES (?, ?, '', ?, ?, 0, '个', NOW())`,
-      [issueId, materialId, materialName, quantity]
-    );
+      await conn.execute(
+        `INSERT INTO prd_material_issue_item (
+          issue_id, material_id, material_code, material_name,
+          required_qty, issued_qty, unit, create_time
+        ) VALUES (?, ?, '', ?, ?, 0, '个', NOW())`,
+        [issueId, materialId, materialName, quantity]
+      );
 
-    return issueId;
-  });
+      return issueId;
+    });
 
   return result;
 }

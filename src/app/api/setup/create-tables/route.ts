@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { extractToken, verifyToken, hasRole, UserInfo } from '@/lib/auth';
 import { secureLog } from '@/lib/logger';
 
+import { withPermission } from '@/lib/api-permissions';
 interface CountRow {
   cnt: number;
 }
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   );
 }
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   // 鉴权
   const authResult = await authenticateAndAuthorize(request);
   if (authResult instanceof NextResponse) {

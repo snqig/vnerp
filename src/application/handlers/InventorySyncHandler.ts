@@ -49,7 +49,7 @@ export class InventorySyncHandler implements EventHandler<InboundOrderApprovedEv
         } else {
           await conn.execute(
             `INSERT INTO inv_inventory_batch (batch_no, material_id, material_code, material_name, warehouse_id, available_qty, quantity, unit_price, inbound_date, status, produce_date, create_time)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'normal', ?, NOW())`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
             [
               item.batchNo,
               item.materialId,

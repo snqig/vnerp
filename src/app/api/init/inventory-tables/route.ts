@@ -1,9 +1,10 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import fs from 'fs';
 import path from 'path';
 
+import { withPermission } from '@/lib/api-permissions';
 // 表状态接口
 interface TableStatus {
   table: string;
@@ -19,7 +20,7 @@ interface ExecutionResult {
 }
 
 // POST - 初始化库存相关表
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   // 读取 SQL 文件
   const sqlFilePath = path.join(process.cwd(), 'database', 'inventory_tables.sql');
 
@@ -78,10 +79,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '库存表初始化完成'
   );
-}, '初始化库存表失败');
+}, { errorMessage: '初始化库存表失败' });
 
 // GET - 检查表是否存在
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const tables = ['bas_material', 'inv_location', 'inv_inventory_batch'];
   const results: TableStatus[] = [];
 
@@ -105,4 +106,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     allExist,
     ready: allExist,
   });
-}, '检查表状态失败');
+}, { errorMessage: '检查表状态失败' });

@@ -1,10 +1,11 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { getShPrefix, generateDocNo } from '@/lib/global-config';
 
 // POST /api/sales/delivery/partial - 提交部分发货申请（符合设计文档 5.3 节）
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { sales_order_id, quantity, remark } = body;
 
@@ -61,4 +62,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '部分发货申请提交成功'
   );
-}, '提交部分发货申请失败');
+}, { logTitle: '提交部分发货申请', logType: 'business' });

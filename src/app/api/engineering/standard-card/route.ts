@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
 import {
-  withErrorHandler,
   successResponse,
   errorResponse,
   paginatedResponse,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { query, transaction } from '@/lib/db';
 import {
   createCardWithVersion,
@@ -15,7 +15,7 @@ import {
   compareVersions,
 } from '@/lib/standard-card-service';
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { card_data, template_id, copy_from_id } = body;
 
@@ -26,9 +26,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result);
-});
+}, { logTitle: '创建工艺卡', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { action } = body;
 
@@ -49,9 +49,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(result);
-});
+}, { logTitle: '更新工艺卡', logType: 'business' });
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action') || 'list';
 

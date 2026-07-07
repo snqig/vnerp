@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 const SPLIT_FLAG_MAP: Record<number, string> = {
   0: '整料',
@@ -14,8 +15,8 @@ const STATUS_MAP: Record<number, string> = {
   2: '已调整',
 };
 
-export const GET = withErrorHandler(
-  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const GET = withPermission(
+  async (request: NextRequest, userInfo, { params }: { params: Promise<{ id: string }> }) => {
     const resolvedParams = await params;
     const checkId = parseInt(resolvedParams.id);
 

@@ -3,7 +3,8 @@ import {
   successResponse,
   errorResponse,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { query, execute } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
@@ -13,7 +14,7 @@ import bcrypt from 'bcryptjs';
  * PUT - 更新个人信息 / 修改密码
  */
 
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const rows: any = await query(
       `SELECT id, username, real_name, avatar, email, phone, department_id,
@@ -40,10 +41,10 @@ export const GET = withAuthAndErrorHandler(
       pwdUpdateTime: user.pwd_update_time,
     });
   },
-  { permission: '' }
+  { errorMessage: '操作失败' }
 );
 
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { action } = body;
@@ -106,5 +107,5 @@ export const PUT = withAuthAndErrorHandler(
 
     return successResponse(null, '个人信息更新成功');
   },
-  { permission: '' }
+  { errorMessage: '操作失败' }
 );

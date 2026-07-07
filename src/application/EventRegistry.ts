@@ -5,6 +5,7 @@ import { secureLog } from '@/lib/logger';
 import { SalesToWorkOrderHandler } from '@/application/handlers/SalesToWorkOrderHandler';
 import { SalesShippedHandler } from '@/application/handlers/SalesShippedHandler';
 import { SalesReceivableHandler } from '@/application/handlers/SalesReceivableHandler';
+import { DeliveryShippedHandler } from '@/application/handlers/DeliveryShippedHandler';
 import { InventorySyncHandler } from '@/application/handlers/InventorySyncHandler';
 import { InventoryRollbackHandler } from '@/application/handlers/InventoryRollbackHandler';
 import { FinanceVoucherHandler } from '@/application/handlers/FinanceVoucherHandler';
@@ -16,6 +17,10 @@ import { ScreenPlateCostHandler } from '@/application/handlers/ScreenPlateCostHa
 import { PurchaseApprovedHandler } from '@/application/handlers/PurchaseApprovedHandler';
 import { PurchaseReceivedHandler } from '@/application/handlers/PurchaseReceivedHandler';
 import { PurchasePayableHandler } from '@/application/handlers/PurchasePayableHandler';
+import { PurchaseReturnCompletedHandler } from '@/application/handlers/PurchaseReturnCompletedHandler';
+import { PurchaseReconciliationWrittenOffHandler } from '@/application/handlers/PurchaseReconciliationWrittenOffHandler';
+import { WorkOrderMaterialIssuedHandler } from '@/application/handlers/WorkOrderMaterialIssuedHandler';
+import { WorkOrderCompletedHandler } from '@/application/handlers/WorkOrderCompletedHandler';
 
 /**
  * 统一事件处理器注册中心
@@ -57,6 +62,34 @@ export class EventRegistry {
     eventBus.subscribe('inbound.created', new AuditLogHandler());
     eventBus.subscribe('inbound.submitted', new AuditLogHandler());
 
+    // 出库单事件
+    eventBus.subscribe('outbound.created', new AuditLogHandler());
+    eventBus.subscribe('outbound.submitted', new AuditLogHandler());
+    eventBus.subscribe('outbound.approved', new AuditLogHandler());
+    eventBus.subscribe('outbound.approved', new CacheInvalidationHandler());
+    eventBus.subscribe('outbound.cancelled', new AuditLogHandler());
+    eventBus.subscribe('outbound.cancelled', new CacheInvalidationHandler());
+
+    // 调拨单事件
+    eventBus.subscribe('transfer.created', new AuditLogHandler());
+    eventBus.subscribe('transfer.submitted', new AuditLogHandler());
+    eventBus.subscribe('transfer.approved', new AuditLogHandler());
+    eventBus.subscribe('transfer.shipped', new AuditLogHandler());
+    eventBus.subscribe('transfer.shipped', new CacheInvalidationHandler());
+    eventBus.subscribe('transfer.received', new AuditLogHandler());
+    eventBus.subscribe('transfer.received', new CacheInvalidationHandler());
+    eventBus.subscribe('transfer.cancelled', new AuditLogHandler());
+    eventBus.subscribe('transfer.cancelled', new CacheInvalidationHandler());
+
+    // 盘点单事件
+    eventBus.subscribe('stocktaking.created', new AuditLogHandler());
+    eventBus.subscribe('stocktaking.started', new AuditLogHandler());
+    eventBus.subscribe('stocktaking.submitted', new AuditLogHandler());
+    eventBus.subscribe('stocktaking.approved', new AuditLogHandler());
+    eventBus.subscribe('stocktaking.approved', new CacheInvalidationHandler());
+    eventBus.subscribe('stocktaking.cancelled', new AuditLogHandler());
+    eventBus.subscribe('stocktaking.cancelled', new CacheInvalidationHandler());
+
     // 采购事件
     eventBus.subscribe('purchase.created', new AuditLogHandler());
     eventBus.subscribe('purchase.submitted', new AuditLogHandler());
@@ -70,6 +103,23 @@ export class EventRegistry {
     eventBus.subscribe('purchase.received', new AuditLogHandler());
 
     eventBus.subscribe('purchase.closed', new AuditLogHandler());
+
+    // 采购退货事件
+    eventBus.subscribe('purchase_return.created', new AuditLogHandler());
+    eventBus.subscribe('purchase_return.approved', new AuditLogHandler());
+    eventBus.subscribe('purchase_return.completed', new IdempotentHandler(new PurchaseReturnCompletedHandler()));
+    eventBus.subscribe('purchase_return.completed', new AuditLogHandler());
+    eventBus.subscribe('purchase_return.completed', new CacheInvalidationHandler());
+    eventBus.subscribe('purchase_return.cancelled', new AuditLogHandler());
+
+    // 采购对账事件
+    eventBus.subscribe('purchase_reconciliation.created', new AuditLogHandler());
+    eventBus.subscribe('purchase_reconciliation.confirmed', new AuditLogHandler());
+    eventBus.subscribe('purchase_reconciliation.partial_written_off', new AuditLogHandler());
+    eventBus.subscribe('purchase_reconciliation.written_off', new IdempotentHandler(new PurchaseReconciliationWrittenOffHandler()));
+    eventBus.subscribe('purchase_reconciliation.written_off', new AuditLogHandler());
+    eventBus.subscribe('purchase_reconciliation.written_off', new CacheInvalidationHandler());
+    eventBus.subscribe('purchase_reconciliation.closed', new AuditLogHandler());
 
     // 销售事件
     eventBus.subscribe('sales.created', new AuditLogHandler());
@@ -87,16 +137,41 @@ export class EventRegistry {
 
     eventBus.subscribe('sales.closed', new AuditLogHandler());
 
+    // 送货单（Delivery）事件
+    eventBus.subscribe('delivery.created', new AuditLogHandler());
+    eventBus.subscribe('delivery.shipped', new IdempotentHandler(new DeliveryShippedHandler()));
+    eventBus.subscribe('delivery.shipped', new AuditLogHandler());
+    eventBus.subscribe('delivery.shipped', new CacheInvalidationHandler());
+    eventBus.subscribe('delivery.signed', new AuditLogHandler());
+    eventBus.subscribe('delivery.signed', new CacheInvalidationHandler());
+    eventBus.subscribe('delivery.cancelled', new AuditLogHandler());
+    eventBus.subscribe('delivery.cancelled', new CacheInvalidationHandler());
+
+    // 退货单（ReturnOrder）事件
+    eventBus.subscribe('return_order.created', new AuditLogHandler());
+    eventBus.subscribe('return_order.approved', new AuditLogHandler());
+    eventBus.subscribe('return_order.completed', new AuditLogHandler());
+    eventBus.subscribe('return_order.completed', new CacheInvalidationHandler());
+    eventBus.subscribe('return_order.cancelled', new AuditLogHandler());
+
+    // 对账单（Reconciliation）事件
+    eventBus.subscribe('reconciliation.created', new AuditLogHandler());
+    eventBus.subscribe('reconciliation.confirmed', new AuditLogHandler());
+    eventBus.subscribe('reconciliation.partial_written_off', new AuditLogHandler());
+    eventBus.subscribe('reconciliation.written_off', new AuditLogHandler());
+    eventBus.subscribe('reconciliation.written_off', new CacheInvalidationHandler());
+    eventBus.subscribe('reconciliation.closed', new AuditLogHandler());
+
     // 生产工单事件
     eventBus.subscribe('workorder.created', new AuditLogHandler());
     eventBus.subscribe('workorder.created', new CacheInvalidationHandler());
     eventBus.subscribe('workorder.released', new AuditLogHandler());
     eventBus.subscribe('workorder.started', new AuditLogHandler());
 
-    eventBus.subscribe('workorder.material_issued', new IdempotentHandler(new InventorySyncHandler()));
+    eventBus.subscribe('workorder.material_issued', new IdempotentHandler(new WorkOrderMaterialIssuedHandler()));
     eventBus.subscribe('workorder.material_issued', new AuditLogHandler());
 
-    eventBus.subscribe('workorder.completed', new IdempotentHandler(new InventorySyncHandler()));
+    eventBus.subscribe('workorder.completed', new IdempotentHandler(new WorkOrderCompletedHandler()));
     eventBus.subscribe('workorder.completed', new IdempotentHandler(new FinanceVoucherHandler()));
     eventBus.subscribe('workorder.completed', new IdempotentHandler(new QrCodeGenerationHandler()));
     eventBus.subscribe('workorder.completed', new IdempotentHandler(new InkCostHandler()));
@@ -115,6 +190,11 @@ export class EventRegistry {
       inboundApprovedHandlers: eventBus.getHandlerCount('inbound.approved'),
       purchaseReceivedHandlers: eventBus.getHandlerCount('purchase.received'),
       salesShippedHandlers: eventBus.getHandlerCount('sales.shipped'),
+      deliveryShippedHandlers: eventBus.getHandlerCount('delivery.shipped'),
+      returnOrderCompletedHandlers: eventBus.getHandlerCount('return_order.completed'),
+      reconciliationWrittenOffHandlers: eventBus.getHandlerCount('reconciliation.written_off'),
+      purchaseReturnCompletedHandlers: eventBus.getHandlerCount('purchase_return.completed'),
+      purchaseReconWrittenOffHandlers: eventBus.getHandlerCount('purchase_reconciliation.written_off'),
       workorderCompletedHandlers: eventBus.getHandlerCount('workorder.completed'),
     });
   }

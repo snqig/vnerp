@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -37,9 +38,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ list: rows, total, page, pageSize });
-});
+}, { logTitle: '获取字典类型', logType: 'system' });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const dict_name = body.dict_name;
   const dict_code = body.dict_type || body.dict_code;
@@ -52,9 +53,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId }, '创建成功');
-});
+}, { logTitle: '创建字典类型', logType: 'system' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const id = body.id;
   const dict_name = body.dict_name;
@@ -70,11 +71,11 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   return successResponse(null, '更新成功');
 });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
 
   await query(`DELETE FROM sys_dict_type WHERE id = ?`, [Number(id)]);
   return successResponse(null, '删除成功');
-});
+}, { logTitle: '删除字典类型', logType: 'system' });

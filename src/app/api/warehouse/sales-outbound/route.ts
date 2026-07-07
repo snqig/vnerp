@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne, execute, transaction } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse, logOperation } from '@/lib/api-response';
+import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
 import { randomUUID } from 'crypto';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+import { withPermission } from '@/lib/api-permissions';
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -48,7 +49,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const {
     order_id,
@@ -152,7 +153,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   return successResponse(result, '销售出库单创建成功');
 });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id, action, status, remark } = body;
 
@@ -403,7 +404,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   return successResponse(null, '更新成功');
 });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });

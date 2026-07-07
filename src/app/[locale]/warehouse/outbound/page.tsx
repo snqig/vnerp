@@ -109,7 +109,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
-import { mockOutboundRecords, mockWarehouses, USE_MOCK } from '@/lib/mock-data';
+
 
 // 状态类型
 const statusOptions = [
@@ -439,12 +439,6 @@ export default function OutboundManagementPage() {
   const fetchOutboundRecords = useCallback(async () => {
     logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '开始获取出库单列表');
     try {
-      if (USE_MOCK) {
-        logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '使用 mock 出库数据');
-        setOutboundRecords(mockOutboundRecords);
-        return;
-      }
-
       const params = new URLSearchParams();
       if (searchQuery) params.append('keyword', searchQuery);
       if (statusFilter !== 'all') params.append('status', statusFilter);
@@ -465,10 +459,6 @@ export default function OutboundManagementPage() {
   // 获取仓库列表
   const fetchWarehouses = useCallback(async () => {
     try {
-      if (USE_MOCK) {
-        setWarehouses(mockWarehouses);
-        return;
-      }
       const response = await authFetch('/api/warehouse?all=true');
       const result = await response.json();
       if (result.success) {

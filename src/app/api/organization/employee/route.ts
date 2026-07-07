@@ -1,13 +1,13 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 员工数据接口
 interface Employee {
@@ -86,7 +86,7 @@ function buildQueryConditions(params: {
 }
 
 // GET - 获取员工列表或单个员工
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const keyword = searchParams.get('keyword') || '';
@@ -124,10 +124,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   });
 
   return paginatedResponse(result.data, result.pagination);
-}, '获取员工列表失败');
+});
 
 // POST - 创建员工
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body: Employee = await request.json();
 
   // 验证必填字段
@@ -182,10 +182,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId }, '员工创建成功');
-}, '创建员工失败');
+}, { logTitle: '创建员工' });
 
 // PUT - 更新员工
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body: Employee = await request.json();
   const { id } = body;
 
@@ -281,10 +281,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '员工更新成功');
-}, '更新员工失败');
+}, { logTitle: '更新员工' });
 
 // DELETE - 删除员工（软删除）
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -310,4 +310,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(null, '员工删除成功');
-}, '删除员工失败');
+}, { logTitle: '删除员工' });

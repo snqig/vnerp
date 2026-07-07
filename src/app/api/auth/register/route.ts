@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
   logOperation,
 } from '@/lib/api-response';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
 
+import { withPermission } from '@/lib/api-permissions';
 // 用户注册数据接口
 interface RegisterData {
   username: string;
@@ -43,10 +43,10 @@ function validateEmail(email: string): boolean {
 }
 
 // POST - 用户注册
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   // 限流：每 IP 15 分钟最多 5 次注册，防批量注册
   const clientIP = getClientIP(request);
-  const rateResult = checkRateLimit(clientIP, {
+  const rateResult = await checkRateLimit(clientIP, {
     windowMs: 15 * 60 * 1000,
     maxRequests: 5,
     keyPrefix: 'register',
@@ -202,4 +202,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse({ userId }, '注册成功');
-}, '注册失败');
+}, { errorMessage: '注册失败' });

@@ -1,11 +1,11 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
-  withErrorHandler,
   errorResponse,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { StateMachineValidator, InspectStatus, StateTransitionLogger } from '@/lib/state-machine';
 import { generateDocNo, getQiPrefix } from '@/lib/global-config';
 
@@ -58,7 +58,7 @@ async function getCurrentInspectStatus(cardId: number): Promise<InspectStatus> {
 }
 
 // 获取品质检验列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
   const cardNo = searchParams.get('cardNo');
@@ -113,10 +113,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   const result = await queryPaginatedLocal(sql, countSql, params, { page, pageSize });
   return paginatedResponse(result.data, result.pagination);
-}, '获取品质检验列表失败');
+});
 
 // 创建品质检验记录
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     cardId,
@@ -201,10 +201,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse({ inspectNo }, '品质检验记录创建成功');
-}, '创建品质检验记录失败');
+}, { logTitle: '创建品质检验记录', logType: 'business' });
 
 // 更新品质检验结果
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, inspectResult, qualifiedQty, defectQty, inspector, remark } = body;
 
@@ -278,4 +278,4 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '品质检验结果更新成功');
-}, '更新品质检验结果失败');
+}, { logTitle: '更新品质检验记录', logType: 'business' });

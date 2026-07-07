@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 // 采购单状态常量
 const PO_STATUS = {
   DRAFT: 10,
@@ -24,7 +25,7 @@ const GRN_STATUS = {
 } as const;
 
 // 获取可入库的采购单行
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const poId = searchParams.get('poId');
   const materialCode = searchParams.get('materialCode') || '';
@@ -107,7 +108,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 创建关联采购单的入库单（带数量勾稽控制）
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { poId, items, warehouse_id, inbound_date, delivery_no, remark } = body;
 
@@ -283,10 +284,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       '入库单创建成功（关联采购单）'
     );
   });
-}, '创建入库单失败');
+}, { errorMessage: '创建入库单失败' });
 
 // 入库单过账（更新库存并联动更新PO状态）
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { grn_id, action, qc_results } = body;
 
@@ -430,4 +431,4 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
     return errorResponse('无效的操作', 400, 400);
   });
-}, '入库单处理失败');
+}, { errorMessage: '入库单处理失败' });

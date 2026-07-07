@@ -4,7 +4,8 @@ import {
   errorResponse,
   validateRequestBody,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 
 /**
@@ -15,7 +16,7 @@ import { query, execute } from '@/lib/db';
  */
 
 // 获取单位换算列表
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
@@ -48,11 +49,11 @@ export const GET = withAuthAndErrorHandler(
 
     return successResponse({ list: rows, total, page, pageSize });
   },
-  { permission: 'warehouse:view' }
+  { errorMessage: '操作失败' }
 );
 
 // 创建/更新单位换算
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const validation = validateRequestBody(body, ['material_id', 'from_unit', 'to_unit', 'ratio']);
@@ -92,11 +93,11 @@ export const POST = withAuthAndErrorHandler(
 
     return successResponse({ id: result.insertId }, '换算关系创建成功');
   },
-  { permission: 'warehouse:manage' }
+  { errorMessage: '操作失败' }
 );
 
 // 删除换算关系
-export const DELETE = withAuthAndErrorHandler(
+export const DELETE = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -108,11 +109,11 @@ export const DELETE = withAuthAndErrorHandler(
     await execute('DELETE FROM inv_unit_conversion WHERE id = ?', [Number(id)]);
     return successResponse(null, '换算关系已删除');
   },
-  { permission: 'warehouse:manage' }
+  { errorMessage: '操作失败' }
 );
 
 // 单位换算计算
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { material_id, from_unit, to_unit, quantity } = body;
@@ -151,5 +152,5 @@ export const PUT = withAuthAndErrorHandler(
       ratio: Number(conv.ratio),
     }, '换算完成');
   },
-  { permission: 'warehouse:view' }
+  { errorMessage: '操作失败' }
 );

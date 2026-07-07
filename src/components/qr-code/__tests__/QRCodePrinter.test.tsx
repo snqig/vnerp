@@ -126,7 +126,7 @@ describe('QRCodePrinter - 核心逻辑分支', () => {
 
     const onPrintSuccess = vi.fn();
     const { getByText } = renderWithIntl(
-      <QRCodePrinter qrCode="QR-OK" icon="print" copies={3} onPrintSuccess={onPrintSuccess} />,
+      <QRCodePrinter qrCode="QR-OK" icon="print" onPrintSuccess={onPrintSuccess} />,
       'zh-CN'
     );
 

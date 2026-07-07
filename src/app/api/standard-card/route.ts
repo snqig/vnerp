@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { StandardCardApplicationService } from '@/application/services/StandardCardApplicationService';
 
 const service = new StandardCardApplicationService();
@@ -155,7 +156,7 @@ async function deleteHandler(request: NextRequest, user: UserInfo) {
   }
 }
 
-export const GET = withAuthAndErrorHandler(getHandler);
-export const POST = withAuthAndErrorHandler(postHandler);
-export const PUT = withAuthAndErrorHandler(putHandler);
-export const DELETE = withAuthAndErrorHandler(deleteHandler);
+export const GET = withPermission(getHandler);
+export const POST = withPermission(postHandler, { logTitle: '创建标准卡', logType: 'business' });
+export const PUT = withPermission(putHandler, { logTitle: '更新标准卡', logType: 'business' });
+export const DELETE = withPermission(deleteHandler, { logTitle: '删除标准卡', logType: 'business' });

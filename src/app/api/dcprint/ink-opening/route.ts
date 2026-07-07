@@ -4,14 +4,13 @@ import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
-  logOperation,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
 import { getConfig, isInkUnopenedShelfLife, getInkOpenedShelfLife } from '@/lib/global-config';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const keyword = searchParams.get('keyword') || '';
@@ -81,9 +80,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     },
     overdue_list: overdueList,
   });
-}, '获取油墨开罐记录失败');
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const validation = validateRequestBody(body, ['material_id', 'open_time', 'expire_hours']);
   if (!validation.valid) {
@@ -252,19 +251,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return { id: insertId, record_no: recordNo, expire_time: finalExpireTime, qr_code: qrCode };
   });
 
-  await logOperation({
-    title: '油墨开罐',
-    oper_type: '开罐',
-    oper_method: 'POST',
-    oper_url: '/api/dcprint/ink-opening',
-    oper_param: JSON.stringify({ material_id, material_name, workorder_no }),
-    oper_result: `油墨开罐 ${result.record_no}，已生成二维码 ${result.qr_code}`,
-  });
-
   return successResponse(result, '油墨开罐记录创建成功');
-}, '创建油墨开罐记录失败');
+}, { logTitle: '油墨开罐', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   if (!body.id) return commonErrors.badRequest('记录ID不能为空');
 
@@ -298,9 +288,9 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '油墨开罐记录更新成功');
-}, '更新油墨开罐记录失败');
+}, { logTitle: '更新油墨开罐记录', logType: 'business' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return commonErrors.badRequest('记录ID不能为空');
@@ -313,4 +303,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
 
   await execute('UPDATE ink_opening_record SET deleted = 1 WHERE id = ?', [parseInt(id)]);
   return successResponse(null, '油墨开罐记录删除成功');
-}, '删除油墨开罐记录失败');
+}, { logTitle: '删除油墨开罐记录', logType: 'business' });

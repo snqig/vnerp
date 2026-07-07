@@ -3,7 +3,8 @@ import {
   successResponse,
   errorResponse,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 import { logger, generateTraceId } from '@/lib/logger';
 
@@ -15,7 +16,7 @@ import { logger, generateTraceId } from '@/lib/logger';
  */
 
 // 获取冻结记录列表
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
@@ -61,11 +62,11 @@ export const GET = withAuthAndErrorHandler(
 
     return successResponse({ list: rows, total, page, pageSize });
   },
-  { permission: 'warehouse:view' }
+  { errorMessage: '操作失败' }
 );
 
 // 创建冻结记录
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const traceId = generateTraceId();
     const ctx = { module: 'freeze', action: 'create', userId: userInfo.userId, traceId };
@@ -134,11 +135,11 @@ export const POST = withAuthAndErrorHandler(
     logger.stepEnd(ctx, '库存冻结', { insertId: result.insertId });
     return successResponse({ id: result.insertId }, '库存冻结成功');
   },
-  { permission: 'warehouse:manage' }
+  { errorMessage: '操作失败' }
 );
 
 // 解冻
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const traceId = generateTraceId();
     const ctx = { module: 'freeze', action: 'unfreeze', userId: userInfo.userId, traceId };
@@ -243,5 +244,5 @@ export const PUT = withAuthAndErrorHandler(
     logger.branch(ctx, '操作类型', '有效操作(unfreeze/partial_unfreeze)', false, { action });
     return errorResponse('无效的操作类型', 400, 400);
   },
-  { permission: 'warehouse:manage' }
+  { errorMessage: '操作失败' }
 );

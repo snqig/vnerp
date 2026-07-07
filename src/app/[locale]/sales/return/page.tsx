@@ -105,7 +105,7 @@ export default function ReturnPage() {
     1: { label: tc('pending'), color: 'bg-yellow-100 text-yellow-800' },
     2: { label: tc('approved'), color: 'bg-blue-100 text-blue-800' },
     3: { label: t('returned'), color: 'bg-green-100 text-green-800' },
-    4: { label: tc('rejected'), color: 'bg-red-100 text-red-800' },
+    9: { label: tc('cancelled'), color: 'bg-red-100 text-red-800' },
   };
 
   const [list, setList] = useState<ReturnOrder[]>([]);

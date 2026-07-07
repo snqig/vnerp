@@ -1,7 +1,8 @@
-import { query, execute } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+﻿import { query, execute } from '@/lib/db';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import type { NextRequest } from 'next/server';
 
+import { withPermission } from '@/lib/api-permissions';
 function generateLabelNo(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -11,7 +12,7 @@ function generateLabelNo(): string {
   return `LBL-${year}${month}${day}-${random}`;
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const labelNo = searchParams.get('labelNo');
@@ -100,7 +101,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { type } = body;
 
@@ -275,7 +276,7 @@ async function handleCut(body: any) {
   );
 }
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id } = body;
 
@@ -313,7 +314,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   return successResponse(null, '标签更新成功');
 });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 

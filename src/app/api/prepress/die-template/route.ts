@@ -1,12 +1,12 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 const ASSET_TYPE_MAP: Record<string, string> = {
   die: '刀模',
@@ -34,7 +34,7 @@ function computeDieStatus(
   return 'available';
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const template_type = searchParams.get('template_type');
@@ -116,9 +116,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     assetTypeMap: ASSET_TYPE_MAP,
     dieStatusMap: DIE_STATUS_MAP,
   });
-}, '获取刀模板/网版列表失败');
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const validation = validateRequestBody(body, ['template_code', 'template_name', 'template_type']);
   if (!validation.valid) {
@@ -187,9 +187,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId }, '刀模板/网版创建成功');
-}, '创建刀模板/网版失败');
+}, { errorMessage: '创建刀模板/网版失败' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   if (!body.id) return commonErrors.badRequest('ID不能为空');
 
@@ -277,13 +277,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
 
     return successResponse(null, '刀模板/网版更新成功');
   });
-}, '更新刀模板/网版失败');
+}, { errorMessage: '更新刀模板/网版失败' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return commonErrors.badRequest('ID不能为空');
 
   await execute('UPDATE prd_die_template SET deleted = 1 WHERE id = ?', [parseInt(id)]);
   return successResponse(null, '删除成功');
-}, '删除刀模板/网版失败');
+}, { logTitle: '删除刀模板/网版', logType: 'business' });

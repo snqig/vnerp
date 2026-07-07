@@ -1,14 +1,14 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+import { withPermission } from '@/lib/api-permissions';
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const equipment_type = searchParams.get('equipment_type');
@@ -46,9 +46,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   )) as any[];
 
   return successResponse({ list, total: countResult?.total || 0, page, pageSize, typeStats });
-}, '获取设备列表失败');
+}, { errorMessage: '获取设备列表失败' });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const validation = validateRequestBody(body, ['equipment_code', 'equipment_name']);
   if (!validation.valid) {
@@ -87,9 +87,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId }, '设备创建成功');
-}, '创建设备失败');
+}, { errorMessage: '创建设备失败' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   if (!body.id) {
     return commonErrors.badRequest('设备ID不能为空');
@@ -123,13 +123,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse(null, '设备更新成功');
-}, '更新设备失败');
+}, { errorMessage: '更新设备失败' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return commonErrors.badRequest('设备ID不能为空');
 
   await execute('UPDATE eqp_equipment SET deleted = 1 WHERE id = ?', [parseInt(id)]);
   return successResponse(null, '设备删除成功');
-}, '删除设备失败');
+}, { errorMessage: '删除设备失败' });

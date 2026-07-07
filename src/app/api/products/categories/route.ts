@@ -1,9 +1,10 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const parentId = searchParams.get('parentId');
   const page = parseInt(searchParams.get('page') || '1');
@@ -51,7 +52,7 @@ export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo
 });
 
 // 创建产品分类
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const {
@@ -88,11 +89,11 @@ export const POST = withAuthAndErrorHandler(
 
     return successResponse({ id: insertId, categoryCode }, '产品分类创建成功');
   },
-  { errorMessage: '创建产品分类失败' }
+  { logTitle: '创建产品分类' }
 );
 
 // 更新产品分类
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { id, categoryName, sortOrder, description, status } = body;
@@ -136,11 +137,11 @@ export const PUT = withAuthAndErrorHandler(
 
     return successResponse({ id }, '产品分类更新成功');
   },
-  { errorMessage: '更新产品分类失败' }
+  { logTitle: '更新产品分类' }
 );
 
 // 删除产品分类
-export const DELETE = withAuthAndErrorHandler(
+export const DELETE = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -176,5 +177,5 @@ export const DELETE = withAuthAndErrorHandler(
 
     return successResponse(null, '产品分类删除成功');
   },
-  { errorMessage: '删除产品分类失败' }
+  { logTitle: '删除产品分类' }
 );

@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
 
   if (searchParams.get('action') === 'stats') {
@@ -48,7 +49,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     order_id,
@@ -113,9 +114,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId, schedule_no: scheduleNo }, '排产计划创建成功');
-});
+}, { logTitle: '创建排产计划', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, ...fields } = body;
   if (!id) return errorResponse('ID不能为空', 400, 400);
@@ -148,12 +149,12 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
     );
   }
   return successResponse(null, '更新成功');
-});
+}, { logTitle: '更新排产计划', logType: 'business' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return errorResponse('ID不能为空', 400, 400);
   await execute('UPDATE prd_schedule SET deleted = 1 WHERE id = ?', [id]);
   return successResponse(null, '删除成功');
-});
+}, { logTitle: '删除排产计划', logType: 'business' });

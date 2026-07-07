@@ -34,8 +34,8 @@ vi.mock('@/infrastructure/cache/CacheGuard', () => ({
   CacheGuard: class {
     constructor(private cache: typeof mockCacheManager) {}
     async getOrLoad<T>(key: string, _ttl: number, loader: () => Promise<T>): Promise<T> {
-      const cached = await this.cache.get<T>(key);
-      if (cached !== null) return cached;
+      const cached = await this.cache.get(key);
+      if (cached !== null) return cached as T;
       const value = await loader();
       await this.cache.set(key, value, _ttl);
       return value;

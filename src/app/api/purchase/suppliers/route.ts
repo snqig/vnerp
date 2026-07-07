@@ -1,15 +1,15 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status') || '';
@@ -68,132 +68,141 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return paginatedResponse(result.data, result.pagination);
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
-  const body = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, userInfo) => {
+    const body = await request.json();
 
-  const validation = validateRequestBody(body, ['supplier_code', 'supplier_name']);
+    const validation = validateRequestBody(body, ['supplier_code', 'supplier_name']);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const {
-    supplier_code,
-    supplier_name,
-    short_name,
-    supplier_type,
-    contact_name,
-    contact_phone,
-    contact_email,
-    address,
-    credit_level,
-    settlement_method,
-    payment_terms,
-    remark,
-  } = body;
-
-  const existing = await query(
-    'SELECT id FROM pur_supplier WHERE supplier_code = ? AND deleted = 0',
-    [supplier_code]
-  );
-
-  if ((existing as any[]).length > 0) {
-    return errorResponse('供应商编码已存在', 400, 400);
-  }
-
-  const result = await query(
-    `INSERT INTO pur_supplier 
-     (supplier_code, supplier_name, short_name, supplier_type, contact_name, contact_phone, 
-      contact_email, address, credit_level, settlement_method, payment_terms, status, remark, create_time) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
-    [
+    const {
       supplier_code,
       supplier_name,
-      short_name || '',
-      supplier_type || 1,
-      contact_name || '',
-      contact_phone || '',
-      contact_email || '',
-      address || '',
-      credit_level || '',
-      settlement_method || '',
-      payment_terms || '',
-      remark || '',
-    ]
-  );
+      short_name,
+      supplier_type,
+      contact_name,
+      contact_phone,
+      contact_email,
+      address,
+      credit_level,
+      settlement_method,
+      payment_terms,
+      remark,
+    } = body;
 
-  return successResponse({ id: (result as any).insertId, supplier_code }, '供应商创建成功');
-});
+    const existing = await query(
+      'SELECT id FROM pur_supplier WHERE supplier_code = ? AND deleted = 0',
+      [supplier_code]
+    );
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
-  const body = await request.json();
-  const { id, ...updateData } = body;
-
-  if (!id) {
-    return errorResponse('供应商ID不能为空', 400, 400);
-  }
-
-  const existing = await query('SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0', [id]);
-
-  if ((existing as any[]).length === 0) {
-    return commonErrors.notFound('供应商不存在');
-  }
-
-  const fieldMapping: { [key: string]: string } = {
-    supplier_code: 'supplier_code',
-    supplier_name: 'supplier_name',
-    short_name: 'short_name',
-    supplier_type: 'supplier_type',
-    contact_name: 'contact_name',
-    contact_phone: 'contact_phone',
-    contact_email: 'contact_email',
-    address: 'address',
-    credit_level: 'credit_level',
-    cooperation_status: 'cooperation_status',
-    settlement_method: 'settlement_method',
-    payment_terms: 'payment_terms',
-    status: 'status',
-    remark: 'remark',
-  };
-
-  const updateFields: string[] = [];
-  const updateParams: any[] = [];
-
-  for (const [key, value] of Object.entries(updateData)) {
-    if (fieldMapping[key] && value !== undefined) {
-      updateFields.push(`${fieldMapping[key]} = ?`);
-      updateParams.push(value);
+    if ((existing as any[]).length > 0) {
+      return errorResponse('供应商编码已存在', 400, 400);
     }
-  }
 
-  if (updateFields.length === 0) {
-    return errorResponse('没有要更新的字段', 400, 400);
-  }
+    const result = await query(
+      `INSERT INTO pur_supplier
+       (supplier_code, supplier_name, short_name, supplier_type, contact_name, contact_phone,
+        contact_email, address, credit_level, settlement_method, payment_terms, status, remark, create_time)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, NOW())`,
+      [
+        supplier_code,
+        supplier_name,
+        short_name || '',
+        supplier_type || 1,
+        contact_name || '',
+        contact_phone || '',
+        contact_email || '',
+        address || '',
+        credit_level || '',
+        settlement_method || '',
+        payment_terms || '',
+        remark || '',
+      ]
+    );
 
-  updateParams.push(id);
-  await query(
-    `UPDATE pur_supplier SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
-    updateParams
-  );
+    return successResponse({ id: (result as any).insertId, supplier_code }, '供应商创建成功');
+  },
+  { logTitle: '创建供应商', logType: 'business' }
+);
 
-  return successResponse({ id }, '供应商更新成功');
-});
+export const PUT = withPermission(
+  async (request: NextRequest, userInfo) => {
+    const body = await request.json();
+    const { id, ...updateData } = body;
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+    if (!id) {
+      return errorResponse('供应商ID不能为空', 400, 400);
+    }
 
-  if (!id) {
-    return errorResponse('供应商ID不能为空', 400, 400);
-  }
+    const existing = await query('SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0', [id]);
 
-  const existing = await query('SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0', [id]);
+    if ((existing as any[]).length === 0) {
+      return commonErrors.notFound('供应商不存在');
+    }
 
-  if ((existing as any[]).length === 0) {
-    return commonErrors.notFound('供应商不存在');
-  }
+    const fieldMapping: { [key: string]: string } = {
+      supplier_code: 'supplier_code',
+      supplier_name: 'supplier_name',
+      short_name: 'short_name',
+      supplier_type: 'supplier_type',
+      contact_name: 'contact_name',
+      contact_phone: 'contact_phone',
+      contact_email: 'contact_email',
+      address: 'address',
+      credit_level: 'credit_level',
+      cooperation_status: 'cooperation_status',
+      settlement_method: 'settlement_method',
+      payment_terms: 'payment_terms',
+      status: 'status',
+      remark: 'remark',
+    };
 
-  await query('UPDATE pur_supplier SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
+    const updateFields: string[] = [];
+    const updateParams: any[] = [];
 
-  return successResponse(null, '供应商删除成功');
-});
+    for (const [key, value] of Object.entries(updateData)) {
+      if (fieldMapping[key] && value !== undefined) {
+        updateFields.push(`${fieldMapping[key]} = ?`);
+        updateParams.push(value);
+      }
+    }
+
+    if (updateFields.length === 0) {
+      return errorResponse('没有要更新的字段', 400, 400);
+    }
+
+    updateParams.push(id);
+    await query(
+      `UPDATE pur_supplier SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
+      updateParams
+    );
+
+    return successResponse({ id }, '供应商更新成功');
+  },
+  { logTitle: '更新供应商', logType: 'business' }
+);
+
+export const DELETE = withPermission(
+  async (request: NextRequest, userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return errorResponse('供应商ID不能为空', 400, 400);
+    }
+
+    const existing = await query('SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0', [id]);
+
+    if ((existing as any[]).length === 0) {
+      return commonErrors.notFound('供应商不存在');
+    }
+
+    await query('UPDATE pur_supplier SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
+
+    return successResponse(null, '供应商删除成功');
+  },
+  { logTitle: '删除供应商', logType: 'business' }
+);

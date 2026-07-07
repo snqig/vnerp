@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { getTrPrefix, generateDocNo } from '@/lib/global-config';
 
 interface Transfer {
@@ -50,7 +51,7 @@ function generateTransferNo(): string {
   return generateDocNo(getTrPrefix());
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -102,7 +103,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     type = 1,
@@ -166,7 +167,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       if (!item.material_id || !item.quantity) continue;
 
       await execute(
-        `INSERT INTO inv_transfer_order_item (
+        `INSERT INTO inv_transfer_item (
           transfer_id, material_id, quantity,
           unit, batch_no
         ) VALUES (?, ?, ?, ?, ?)`,
@@ -185,7 +186,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, action, approver_id } = body;
 
@@ -255,7 +256,7 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 

@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 
-export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
@@ -71,7 +72,7 @@ async function getParentRoleName(parentId: number): Promise<string | null> {
   return rows.length > 0 ? rows[0].role_name : null;
 }
 
-export const POST = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
+export const POST = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
   const body = await request.json();
   const { role_name, role_code, parent_id, inherit_mode, description, data_scope, status, permissions } = body;
 
@@ -105,7 +106,7 @@ export const POST = withAuthAndErrorHandler(async (request: NextRequest, userInf
   return successResponse({ id: result.insertId }, 'ROLE_CREATED');
 });
 
-export const PUT = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
   const body = await request.json();
   const { id, role_name, role_code, parent_id, inherit_mode, description, data_scope, status, permissions } = body;
 
@@ -169,7 +170,7 @@ export const PUT = withAuthAndErrorHandler(async (request: NextRequest, userInfo
   return successResponse(null, 'ROLE_UPDATED');
 });
 
-export const DELETE = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return errorResponse('ROLE_ID_REQUIRED', 400, 400);

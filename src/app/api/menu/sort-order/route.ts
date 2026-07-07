@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { execute, queryOne, transaction } from '@/lib/db';
-import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { jwtVerify } from 'jose';
 import { secureLog } from '@/lib/logger';
 
@@ -32,7 +33,7 @@ async function verifyToken(token: string) {
 }
 
 // POST - 保存菜单排序
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   // 获取token
   const authHeader = request.headers.get('authorization');
   secureLog('debug', 'Menu sort auth', { hasAuth: !!authHeader });
@@ -80,4 +81,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(null, '菜单排序已保存');
-}, '保存菜单排序失败');
+}, { logTitle: '保存菜单排序' });

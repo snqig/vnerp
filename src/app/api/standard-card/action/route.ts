@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { StandardCardApplicationService } from '@/application/services/StandardCardApplicationService';
 
 const service = new StandardCardApplicationService();
@@ -74,4 +75,4 @@ async function postHandler(request: NextRequest, user: UserInfo) {
   }
 }
 
-export const POST = withAuthAndErrorHandler(postHandler);
+export const POST = withPermission(postHandler, { logTitle: '标准卡操作', logType: 'business' });

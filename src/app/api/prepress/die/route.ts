@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { withErrorHandler, successResponse, logOperation } from '@/lib/api-response';
-import { cachedApiRoute, invalidateCache } from '@/lib/api-cache';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
 
-export const GET = cachedApiRoute(withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -34,9 +34,9 @@ export const GET = cachedApiRoute(withErrorHandler(async (request: NextRequest) 
     [...params, pageSize, (page - 1) * pageSize]
   );
   return successResponse({ list: rows, total, page, pageSize });
-}), { ttl: 300, keyPrefix: 'api:die' });
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     die_code,
@@ -85,19 +85,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     ]
   );
 
-  await logOperation({
-    title: '刀具入库',
-    oper_type: '入库',
-    oper_method: 'POST',
-    oper_url: '/api/prepress/die',
-    oper_param: JSON.stringify({ die_code, die_name }),
-    oper_result: `刀具 ${die_code} 入库成功，已生成二维码 ${qrCode}`,
-  });
-
   return successResponse({ id: result.insertId, qr_code: qrCode }, '刀具创建成功');
-});
+}, { logTitle: '刀具入库', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     id,
@@ -133,12 +124,12 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   if (remark !== undefined)
     await execute('UPDATE prd_die SET remark = ? WHERE id = ? AND deleted = 0', [remark, id]);
   return successResponse(null, '更新成功');
-});
+}, { logTitle: '更新刀具', logType: 'business' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
   await execute('UPDATE prd_die SET deleted = 1 WHERE id = ?', [Number(id)]);
   return successResponse(null, '删除成功');
-});
+}, { logTitle: '删除刀具', logType: 'business' });

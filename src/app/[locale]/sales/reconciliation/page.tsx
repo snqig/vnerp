@@ -48,9 +48,6 @@ interface Reconciliation {
   net_amount: number;
   received_amount: number;
   balance_amount: number;
-  confirm_status: number;
-  confirm_person: string;
-  confirm_time: string;
   status: number;
   remark: string;
   create_time: string;
@@ -75,23 +72,21 @@ export default function ReconciliationPage() {
   const t = useTranslations('SalesReconciliation');
   const tc = useTranslations('Common');
 
-  const CONFIRM_STATUS_MAP: Record<number, { label: string; color: string }> = {
-    0: { label: t('notConfirmed'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-    1: {
-      label: t('confirmed'),
-      color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-    },
-    2: { label: t('disputed'), color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
-  };
-
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
     1: { label: tc('draft'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-    2: { label: t('sent'), color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
-    3: {
+    2: {
       label: t('confirmed'),
       color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
     },
-    4: { label: tc('closed'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+    3: {
+      label: t('partialWriteoff'),
+      color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+    },
+    4: {
+      label: t('fullyWrittenOff'),
+      color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+    },
+    9: { label: tc('closed'), color: 'bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-stone-200' },
   };
 
   const [list, setList] = useState<Reconciliation[]>([]);
@@ -355,7 +350,6 @@ export default function ReconciliationPage() {
                     <TableHead>{t('netAmount')}</TableHead>
                     <TableHead>{t('receivedAmount')}</TableHead>
                     <TableHead>{tc("balance")}</TableHead>
-                    <TableHead>{t('customerConfirm')}</TableHead>
                     <TableHead>{tc("status")}</TableHead>
                     <TableHead className="text-right">{tc("actions")}</TableHead>
                   </TableRow>
@@ -382,13 +376,6 @@ export default function ReconciliationPage() {
                       </TableCell>
                       <TableCell className="text-orange-600">
                         ¥{parseFloat(String(r.balance_amount || 0)).toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={CONFIRM_STATUS_MAP[r.confirm_status]?.color || 'bg-gray-100'}
-                        >
-                          {CONFIRM_STATUS_MAP[r.confirm_status]?.label || tc('unknown')}
-                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={STATUS_MAP[r.status]?.color || 'bg-gray-100'}>
@@ -519,10 +506,6 @@ export default function ReconciliationPage() {
                 <div>
                   <span className="text-gray-500">{t('reconciliationPeriod')}：</span>
                   {detailData.period_start} ~ {detailData.period_end}
-                </div>
-                <div>
-                  <span className="text-gray-500">{t('customerConfirm')}：</span>
-                  {CONFIRM_STATUS_MAP[detailData.confirm_status]?.label}
                 </div>
               </div>
               <div className="grid grid-cols-5 gap-3 text-center">

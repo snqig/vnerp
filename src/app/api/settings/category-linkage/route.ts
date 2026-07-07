@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 interface LinkageItem {
   material_category_id: number;
@@ -33,7 +34,7 @@ const TYPE_WAREHOUSE_MAPPING: Record<number, { preferred_prefix: string; preferr
   6: { preferred_prefix: 'WH-CAT-INK', preferred_name: '油墨仓' },
 };
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const checkType = searchParams.get('checkType') || 'all';
 
@@ -101,9 +102,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     items: results,
     type_mapping: TYPE_WAREHOUSE_MAPPING,
   });
-}, '分类联动校验失败');
+});
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { materialCategoryId, warehouseCategoryId } = body;
 
@@ -135,4 +136,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     compatible: true,
     message: `物料分类"${mc[0].category_name}"与仓库分类"${wh[0].name}"关联校验通过`,
   });
-}, '关联校验失败');
+}, { logTitle: '关联校验' });

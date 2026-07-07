@@ -1,17 +1,16 @@
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { withAuthAndErrorHandler } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { DeadlockMonitor } from '@/infrastructure/monitoring/DeadlockMonitor';
 
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest) => {
     const result = await DeadlockMonitor.checkDeadlocks();
     return successResponse(result);
-  },
-  { permission: 'system:monitor:view' }
+  }
 );
 
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest) => {
     const body = await request.json();
 
@@ -28,5 +27,5 @@ export const POST = withAuthAndErrorHandler(
 
     return errorResponse('Unknown action. Use kill-transaction', 400, 400);
   },
-  { permission: 'system:monitor:manage' }
+  { errorMessage: '操作失败' }
 );

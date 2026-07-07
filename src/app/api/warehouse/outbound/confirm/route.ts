@@ -1,14 +1,15 @@
-import { NextRequest } from 'next/server';
+﻿﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler, logOperation } from '@/lib/api-response';
-import { WarehouseStateMachine, OutboundStatus } from '@/lib/warehouse-state-machine';
+import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
+import { WarehouseStateMachine, OutboundStatus } from '@/domain/warehouse/value-objects/WarehouseStateMachine';
 import {
   allocateFIFO,
   executeFIFODeductionWithRetry,
   executeSpecifiedBatchDeduction,
 } from '@/lib/fifo-allocation';
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id, operatorId, operatorName, remark } = body;
 
@@ -222,9 +223,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '出库单确认成功，库存已按先进先出扣减'
   );
-}, '确认出库失败');
+}, { errorMessage: '确认出库失败' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id, operatorId, operatorName, remark } = body;
 
@@ -383,4 +384,4 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse({ orderId: id, orderNo, status: 'pending' }, '出库单撤销成功，库存已恢复');
-}, '撤销出库失败');
+}, { errorMessage: '撤销出库失败' });

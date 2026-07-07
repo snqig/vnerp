@@ -23,6 +23,7 @@ import {
 } from './utils';
 import { query, execute, transaction } from '@/lib/db';
 
+// P0-2 基线重置已完成（Migration 019）：prd_material_issue.operator_id、prd_material_issue_item.create_time 已补齐
 describe('领料并发测试', () => {
   let testWarehouse: TestWarehouse;
   let testMaterial: TestMaterial;
@@ -59,10 +60,11 @@ describe('领料并发测试', () => {
       const createMaterialIssue = async (index: number): Promise<number> => {
         const issueNo = `MR_${Date.now()}_${index}`;
 
-        // 先创建一个测试工单
-        const [woResult]: any = await execute(
-          `INSERT INTO prod_work_order (order_no, status, create_time, update_time, deleted)
-           VALUES (?, 1, NOW(), NOW(), 0)`,
+        // 先创建一个测试工单（prod_work_order 使用 work_order_no，status 为 VARCHAR）
+        // execute() 返回 ResultSetHeader 直接（非数组），不能用数组解构
+        const woResult: any = await execute(
+          `INSERT INTO prod_work_order (work_order_no, status, create_time, update_time, deleted)
+           VALUES (?, 'pending', NOW(), NOW(), 0)`,
           [`WO_${Date.now()}_${index}`]
         );
         const workOrderId = woResult.insertId;
@@ -74,7 +76,7 @@ describe('领料并发测试', () => {
               issue_no, work_order_id, work_order_no, warehouse_id,
               issue_date, issue_type, status, operator_id, operator_name,
               create_time, update_time, deleted
-            ) VALUES (?, ?, '', ?, NOW(), 1, 1, 1, '测试操作员', NOW(), NOW(), 0)`,
+            ) VALUES (?, ?, '', ?, NOW(), 'normal', 1, 1, '测试操作员', NOW(), NOW(), 0)`,
             [issueNo, workOrderId, testWarehouse.id]
           );
 

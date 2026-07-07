@@ -1,14 +1,14 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 function isValidDate(dateStr: string): boolean {
   if (!dateStr) return false;
   const d = new Date(dateStr);
@@ -24,7 +24,7 @@ function isValidStatus(status: string): boolean {
   return ['normal', 'late', 'absent', 'leave'].includes(status);
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '10');
@@ -101,7 +101,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 创建考勤记录
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
 
   // 验证必填字段
@@ -183,10 +183,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId }, '考勤记录创建成功');
-}, '创建考勤记录失败');
+}, { errorMessage: '创建考勤记录失败' });
 
 // 更新考勤记录
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id, ...updateData } = body;
 
@@ -245,10 +245,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse(null, '考勤记录更新成功');
-}, '更新考勤记录失败');
+}, { errorMessage: '更新考勤记录失败' });
 
 // 删除考勤记录（软删除）
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -269,4 +269,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await execute('UPDATE hr_attendance SET deleted = 1 WHERE id = ?', [id]);
 
   return successResponse(null, '考勤记录删除成功');
-}, '删除考勤记录失败');
+}, { errorMessage: '删除考勤记录失败' });

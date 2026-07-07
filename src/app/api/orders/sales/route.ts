@@ -1,12 +1,12 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
-  withErrorHandler,
   paginatedResponse,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import {
   SalesOrderApprovedEvent,
@@ -14,7 +14,7 @@ import {
 } from '@/domain/sales/events/SalesOrderEvents';
 import { secureLog } from '@/lib/logger';
 
-export const GET = withAuthAndErrorHandler(async (request: NextRequest, user: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, user: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
@@ -69,7 +69,7 @@ export const GET = withAuthAndErrorHandler(async (request: NextRequest, user: Us
   return successResponse({ list, total, page, pageSize });
 });
 
-export const POST = withAuthAndErrorHandler(async (request: NextRequest, user: UserInfo) => {
+export const POST = withPermission(async (request: NextRequest, user: UserInfo) => {
   const body = await request.json();
   const {
     customer_id,
@@ -140,9 +140,9 @@ export const POST = withAuthAndErrorHandler(async (request: NextRequest, user: U
   ]);
 
   return successResponse({ id: orderId, order_no, status: 'draft' }, '销售订单创建成功');
-});
+}, { logTitle: '创建销售订单', logType: 'business' });
 
-export const PUT = withAuthAndErrorHandler(async (request: NextRequest, user: UserInfo) => {
+export const PUT = withPermission(async (request: NextRequest, user: UserInfo) => {
   const body = await request.json();
   const { id, action } = body;
 
@@ -233,4 +233,4 @@ export const PUT = withAuthAndErrorHandler(async (request: NextRequest, user: Us
     default:
       return errorResponse('未知操作', 400, 400);
   }
-});
+}, { logTitle: '更新销售订单状态', logType: 'business' });

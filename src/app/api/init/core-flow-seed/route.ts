@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import { transaction } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 function pad(n: number, len: number = 3): string {
   return String(n).padStart(len, '0');
 }
@@ -23,7 +24,7 @@ function randomAmount(min: number, max: number): number {
   return Math.round((min + Math.random() * (max - min)) * 100) / 100;
 }
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
     const now = new Date();

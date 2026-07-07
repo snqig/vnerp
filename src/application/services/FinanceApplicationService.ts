@@ -1,328 +1,495 @@
-import { transaction, query, execute, queryPaginated } from '@/lib/db';
-import { secureLog } from '@/lib/logger';
-import { NotFoundError, DomainError } from '@/domain/shared/DomainTypes';
+import { IReceivableRepository } from '@/domain/finance/repositories/IReceivableRepository';
+import { IPayableRepository } from '@/domain/finance/repositories/IPayableRepository';
+import { IVoucherRepository } from '@/domain/finance/repositories/IVoucherRepository';
+import { Receivable, ReceivableProps } from '@/domain/finance/aggregates/Receivable';
+import { Payable, PayableProps } from '@/domain/finance/aggregates/Payable';
+import { Voucher, VoucherProps } from '@/domain/finance/aggregates/Voucher';
+import {
+  DomainError,
+  NotFoundError,
+} from '@/domain/shared/DomainTypes';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
+import { transaction, query, queryPaginated, PaginatedResult } from '@/lib/db';
+import { MysqlReceivableRepository } from '@/infrastructure/repositories/MysqlReceivableRepository';
+import { MysqlPayableRepository } from '@/infrastructure/repositories/MysqlPayableRepository';
+import { MysqlVoucherRepository } from '@/infrastructure/repositories/MysqlVoucherRepository';
+import { generateDocumentNo } from '@/lib/document-numbering';
+
+export interface RecordReceiptInput {
+  receivableId: number;
+  amount: number;
+  receiptDate?: string;
+  receiptMethod?: string;
+  bankAccount?: string;
+  referenceNo?: string;
+  handlerId?: number;
+  createBy?: number;
+  remark?: string;
+}
+
+export interface RecordPaymentInput {
+  payableId: number;
+  amount: number;
+  paymentDate?: string;
+  paymentMethod?: string;
+  bankAccount?: string;
+  referenceNo?: string;
+  handlerId?: number;
+  createBy?: number;
+  remark?: string;
+}
+
+export interface ReceivableListQuery {
+  page: number;
+  pageSize: number;
+  customerId?: number;
+  status?: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface PayableListQuery {
+  page: number;
+  pageSize: number;
+  supplierId?: number;
+  status?: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface FinanceSummaryQuery {
+  customerId?: number;
+  supplierId?: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface ReceivableSummary {
+  totalAmount: number;
+  totalReceived: number;
+  totalBalance: number;
+  count: number;
+  overdueAmount: number;
+  overdueCount: number;
+}
+
+export interface PayableSummary {
+  totalAmount: number;
+  totalPaid: number;
+  totalBalance: number;
+  count: number;
+  overdueAmount: number;
+  overdueCount: number;
+}
 
 export class FinanceApplicationService {
-  async getPayableList(params: {
-    page: number;
-    pageSize: number;
-    supplierId?: number;
-    status?: number;
-    startDate?: string;
-    endDate?: string;
-  }) {
-    let sql = 'SELECT * FROM fin_payable WHERE deleted = 0';
-    let countSql = 'SELECT COUNT(*) as total FROM fin_payable WHERE deleted = 0';
-    const queryParams: any[] = [];
+  constructor(
+    private readonly receivableRepo: IReceivableRepository,
+    private readonly payableRepo: IPayableRepository,
+    private readonly voucherRepo: IVoucherRepository
+  ) {}
 
-    if (params.supplierId) {
-      sql += ' AND supplier_id = ?';
-      countSql += ' AND supplier_id = ?';
-      queryParams.push(params.supplierId);
-    }
-    if (params.status !== undefined) {
-      sql += ' AND status = ?';
-      countSql += ' AND status = ?';
-      queryParams.push(params.status);
-    }
-    if (params.startDate) {
-      sql += ' AND create_time >= ?';
-      countSql += ' AND create_time >= ?';
-      queryParams.push(params.startDate);
-    }
-    if (params.endDate) {
-      sql += ' AND create_time <= ?';
-      countSql += ' AND create_time <= ?';
-      queryParams.push(params.endDate);
-    }
-
-    sql += ' ORDER BY create_time DESC';
-    return queryPaginated(sql, countSql, queryParams, {
-      page: params.page,
-      pageSize: params.pageSize,
-    });
+  static create(): FinanceApplicationService {
+    return new FinanceApplicationService(
+      new MysqlReceivableRepository(),
+      new MysqlPayableRepository(),
+      new MysqlVoucherRepository()
+    );
   }
 
-  async getReceivableList(params: {
-    page: number;
-    pageSize: number;
-    customerId?: number;
-    status?: number;
-    startDate?: string;
-    endDate?: string;
-  }) {
-    let sql = 'SELECT * FROM fin_receivable WHERE deleted = 0';
-    let countSql = 'SELECT COUNT(*) as total FROM fin_receivable WHERE deleted = 0';
-    const queryParams: any[] = [];
+  // ==================== 应收款列表与汇总 ====================
 
-    if (params.customerId) {
-      sql += ' AND customer_id = ?';
-      countSql += ' AND customer_id = ?';
-      queryParams.push(params.customerId);
+  async getReceivableList(q: ReceivableListQuery): Promise<PaginatedResult<any>> {
+    const where: string[] = ['deleted = 0'];
+    const values: any[] = [];
+    if (q.customerId !== undefined) {
+      where.push('customer_id = ?');
+      values.push(q.customerId);
     }
-    if (params.status !== undefined) {
-      sql += ' AND status = ?';
-      countSql += ' AND status = ?';
-      queryParams.push(params.status);
+    if (q.status !== undefined) {
+      where.push('status = ?');
+      values.push(q.status);
     }
-    if (params.startDate) {
-      sql += ' AND create_time >= ?';
-      countSql += ' AND create_time >= ?';
-      queryParams.push(params.startDate);
+    if (q.startDate) {
+      where.push('receivable_date >= ?');
+      values.push(q.startDate);
     }
-    if (params.endDate) {
-      sql += ' AND create_time <= ?';
-      countSql += ' AND create_time <= ?';
-      queryParams.push(params.endDate);
+    if (q.endDate) {
+      where.push('receivable_date <= ?');
+      values.push(q.endDate);
     }
-
-    sql += ' ORDER BY create_time DESC';
-    return queryPaginated(sql, countSql, queryParams, {
-      page: params.page,
-      pageSize: params.pageSize,
-    });
+    const whereClause = where.join(' AND ');
+    const sql = `SELECT * FROM fin_receivable WHERE ${whereClause} ORDER BY create_time DESC`;
+    const countSql = `SELECT COUNT(*) as total FROM fin_receivable WHERE ${whereClause}`;
+    return queryPaginated<any>(
+      sql,
+      countSql,
+      values,
+      { page: q.page, pageSize: q.pageSize }
+    );
   }
 
-  async recordPayment(params: {
-    payableId: number;
-    amount: number;
-    paymentDate: string;
-    paymentMethod: string;
-    remark?: string;
-    createBy?: number;
-  }): Promise<{ paymentNo: string }> {
-    return await transaction(async (conn) => {
-      const [payableRows]: any = await conn.execute(
-        'SELECT id, payable_no, amount, paid_amount, status FROM fin_payable WHERE id = ? AND deleted = 0 FOR UPDATE',
-        [params.payableId]
-      );
-
-      if (!payableRows || payableRows.length === 0) {
-        throw new NotFoundError('应付账款不存在');
-      }
-
-      const payable = payableRows[0];
-      const remaining = parseFloat(payable.amount) - parseFloat(payable.paid_amount);
-
-      if (params.amount <= 0) throw new DomainError('付款金额必须大于0');
-      if (params.amount > remaining) {
-        throw new DomainError(`付款金额超限: 剩余应付${remaining}, 本次付款${params.amount}`);
-      }
-
-      const paymentNo = 'PAY' + Date.now();
-      await conn.execute(
-        `INSERT INTO fin_payment (payment_no, payable_id, amount, payment_date, payment_method, remark, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [
-          paymentNo,
-          params.payableId,
-          params.amount,
-          params.paymentDate,
-          params.paymentMethod,
-          params.remark || null,
-          params.createBy || null,
-        ]
-      );
-
-      const newPaidAmount = parseFloat(payable.paid_amount) + params.amount;
-      const newStatus = newPaidAmount >= parseFloat(payable.amount) ? 3 : 2;
-
-      await conn.execute(
-        'UPDATE fin_payable SET paid_amount = ?, status = ?, update_time = NOW() WHERE id = ?',
-        [newPaidAmount, newStatus, params.payableId]
-      );
-
-      secureLog('info', 'Payment recorded', {
-        paymentNo,
-        payableId: params.payableId,
-        amount: params.amount,
-      });
-      return { paymentNo };
-    });
+  async getReceivableSummary(q: FinanceSummaryQuery): Promise<ReceivableSummary> {
+    const where: string[] = ['deleted = 0'];
+    const values: any[] = [];
+    if (q.customerId !== undefined) {
+      where.push('customer_id = ?');
+      values.push(q.customerId);
+    }
+    if (q.startDate) {
+      where.push('receivable_date >= ?');
+      values.push(q.startDate);
+    }
+    if (q.endDate) {
+      where.push('receivable_date <= ?');
+      values.push(q.endDate);
+    }
+    const whereClause = where.join(' AND ');
+    const rows = await query<any>(
+      `SELECT
+         COALESCE(SUM(receivable_amount), 0) AS total_amount,
+         COALESCE(SUM(received_amount), 0) AS total_received,
+         COALESCE(SUM(balance), 0) AS total_balance,
+         COUNT(*) AS count,
+         COALESCE(SUM(CASE WHEN due_date < CURDATE() AND status IN (1, 2) THEN balance ELSE 0 END), 0) AS overdue_amount,
+         SUM(CASE WHEN due_date < CURDATE() AND status IN (1, 2) THEN 1 ELSE 0 END) AS overdue_count
+       FROM fin_receivable
+       WHERE ${whereClause}`,
+      values
+    );
+    const r = rows[0] || {};
+    return {
+      totalAmount: Number(r.total_amount) || 0,
+      totalReceived: Number(r.total_received) || 0,
+      totalBalance: Number(r.total_balance) || 0,
+      count: Number(r.count) || 0,
+      overdueAmount: Number(r.overdue_amount) || 0,
+      overdueCount: Number(r.overdue_count) || 0,
+    };
   }
 
-  async recordReceipt(params: {
-    receivableId: number;
-    amount: number;
-    receiptDate: string;
-    receiptMethod: string;
-    remark?: string;
-    createBy?: number;
-  }): Promise<{ receiptNo: string }> {
-    return await transaction(async (conn) => {
-      const [receivableRows]: any = await conn.execute(
-        'SELECT id, receivable_no, amount, received_amount, status FROM fin_receivable WHERE id = ? AND deleted = 0 FOR UPDATE',
-        [params.receivableId]
-      );
+  // ==================== 应付款列表与汇总 ====================
 
-      if (!receivableRows || receivableRows.length === 0) {
-        throw new NotFoundError('应收账款不存在');
-      }
+  async getPayableList(q: PayableListQuery): Promise<PaginatedResult<any>> {
+    const where: string[] = ['deleted = 0'];
+    const values: any[] = [];
+    if (q.supplierId !== undefined) {
+      where.push('supplier_id = ?');
+      values.push(q.supplierId);
+    }
+    if (q.status !== undefined) {
+      where.push('status = ?');
+      values.push(q.status);
+    }
+    if (q.startDate) {
+      where.push('payable_date >= ?');
+      values.push(q.startDate);
+    }
+    if (q.endDate) {
+      where.push('payable_date <= ?');
+      values.push(q.endDate);
+    }
+    const whereClause = where.join(' AND ');
+    const sql = `SELECT * FROM fin_payable WHERE ${whereClause} ORDER BY create_time DESC`;
+    const countSql = `SELECT COUNT(*) as total FROM fin_payable WHERE ${whereClause}`;
+    return queryPaginated<any>(
+      sql,
+      countSql,
+      values,
+      { page: q.page, pageSize: q.pageSize }
+    );
+  }
 
-      const receivable = receivableRows[0];
-      const remaining = parseFloat(receivable.amount) - parseFloat(receivable.received_amount);
+  async getPayableSummary(q: FinanceSummaryQuery): Promise<PayableSummary> {
+    const where: string[] = ['deleted = 0'];
+    const values: any[] = [];
+    if (q.supplierId !== undefined) {
+      where.push('supplier_id = ?');
+      values.push(q.supplierId);
+    }
+    if (q.startDate) {
+      where.push('payable_date >= ?');
+      values.push(q.startDate);
+    }
+    if (q.endDate) {
+      where.push('payable_date <= ?');
+      values.push(q.endDate);
+    }
+    const whereClause = where.join(' AND ');
+    const rows = await query<any>(
+      `SELECT
+         COALESCE(SUM(payable_amount), 0) AS total_amount,
+         COALESCE(SUM(paid_amount), 0) AS total_paid,
+         COALESCE(SUM(balance), 0) AS total_balance,
+         COUNT(*) AS count,
+         COALESCE(SUM(CASE WHEN due_date < CURDATE() AND status IN (1, 2) THEN balance ELSE 0 END), 0) AS overdue_amount,
+         SUM(CASE WHEN due_date < CURDATE() AND status IN (1, 2) THEN 1 ELSE 0 END) AS overdue_count
+       FROM fin_payable
+       WHERE ${whereClause}`,
+      values
+    );
+    const r = rows[0] || {};
+    return {
+      totalAmount: Number(r.total_amount) || 0,
+      totalPaid: Number(r.total_paid) || 0,
+      totalBalance: Number(r.total_balance) || 0,
+      count: Number(r.count) || 0,
+      overdueAmount: Number(r.overdue_amount) || 0,
+      overdueCount: Number(r.overdue_count) || 0,
+    };
+  }
 
-      if (params.amount <= 0) throw new DomainError('收款金额必须大于0');
-      if (params.amount > remaining) {
-        throw new DomainError(`收款金额超限: 剩余应收${remaining}, 本次收款${params.amount}`);
-      }
+  // ==================== 应收款 ====================
 
-      const receiptNo = 'RCV' + Date.now();
+  async getReceivableById(id: number): Promise<Receivable> {
+    const receivable = await this.receivableRepo.findById(id);
+    if (!receivable) {
+      throw new NotFoundError('应收款不存在');
+    }
+    return receivable;
+  }
+
+  async createReceivable(props: ReceivableProps): Promise<{ id: number; receivableNo: string }> {
+    const receivable = Receivable.create(props);
+    const id = await this.receivableRepo.save(receivable);
+    await this.persistAndPublishEvents('Receivable', id, receivable);
+    return { id, receivableNo: receivable.receivableNo };
+  }
+
+  async recordReceipt(input: RecordReceiptInput): Promise<{ receiptNo: string; status: number }> {
+    const receivable = await this.getReceivableById(input.receivableId);
+
+    const receiptNo = await generateDocumentNo('receipt');
+    receivable.recordReceipt(input.amount, receiptNo);
+
+    await transaction(async (conn) => {
       await conn.execute(
-        `INSERT INTO fin_receipt (receipt_no, receivable_id, amount, receipt_date, receipt_method, remark, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+        `INSERT INTO fin_receipt_record
+         (receipt_no, receivable_id, customer_id, amount, receipt_date,
+          receipt_method, bank_account, reference_no, handler_id, remark, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           receiptNo,
-          params.receivableId,
-          params.amount,
-          params.receiptDate,
-          params.receiptMethod,
-          params.remark || null,
-          params.createBy || null,
+          input.receivableId,
+          receivable.customerId,
+          input.amount,
+          input.receiptDate || null,
+          input.receiptMethod || null,
+          input.bankAccount || null,
+          input.referenceNo || null,
+          input.createBy ?? input.handlerId ?? null,
+          input.remark || null,
         ]
       );
 
-      const newReceivedAmount = parseFloat(receivable.received_amount) + params.amount;
-      const newStatus = newReceivedAmount >= parseFloat(receivable.amount) ? 3 : 2;
-
       await conn.execute(
-        'UPDATE fin_receivable SET received_amount = ?, status = ?, update_time = NOW() WHERE id = ?',
-        [newReceivedAmount, newStatus, params.receivableId]
+        `UPDATE fin_receivable
+         SET received_amount = ?, balance = ?, status = ?, update_time = NOW()
+         WHERE id = ?`,
+        [
+          receivable.receivedAmount.amount,
+          receivable.balance.amount,
+          receivable.status.value,
+          input.receivableId,
+        ]
       );
 
-      secureLog('info', 'Receipt recorded', {
-        receiptNo,
-        receivableId: params.receivableId,
-        amount: params.amount,
-      });
-      return { receiptNo };
+      const events = receivable.getDomainEvents();
+      if (events.length > 0) {
+        await getDomainEventOutbox().saveEvents(conn, 'Receivable', input.receivableId, events);
+      }
     });
+
+    receivable.clearDomainEvents();
+    return { receiptNo, status: receivable.status.value };
   }
 
-  async getPayableSummary(params: {
-    supplierId?: number;
-    startDate?: string;
-    endDate?: string;
-  }): Promise<{
-    totalPayable: number;
-    totalPaid: number;
-    totalRemaining: number;
-    overdueCount: number;
-  }> {
-    let sql = `SELECT
-      COALESCE(SUM(amount), 0) as total_payable,
-      COALESCE(SUM(paid_amount), 0) as total_paid,
-      COALESCE(SUM(amount - paid_amount), 0) as total_remaining,
-      SUM(CASE WHEN due_date < CURDATE() AND status != 3 THEN 1 ELSE 0 END) as overdue_count
-    FROM fin_payable WHERE deleted = 0`;
-    const queryParams: any[] = [];
+  async writeOffReceivable(id: number, reason?: string): Promise<{ status: number }> {
+    const receivable = await this.getReceivableById(id);
+    receivable.writeOff(reason);
 
-    if (params.supplierId) {
-      sql += ' AND supplier_id = ?';
-      queryParams.push(params.supplierId);
-    }
-    if (params.startDate) {
-      sql += ' AND create_time >= ?';
-      queryParams.push(params.startDate);
-    }
-    if (params.endDate) {
-      sql += ' AND create_time <= ?';
-      queryParams.push(params.endDate);
-    }
+    await this.receivableRepo.updateStatus(id, receivable.status.value);
+    await this.persistAndPublishEvents('Receivable', id, receivable);
 
-    const rows: any = await query(sql, queryParams);
-    const row = rows[0];
-    return {
-      totalPayable: parseFloat(row.total_payable),
-      totalPaid: parseFloat(row.total_paid),
-      totalRemaining: parseFloat(row.total_remaining),
-      overdueCount: parseInt(row.overdue_count),
-    };
+    return { status: receivable.status.value };
   }
 
-  async getReceivableSummary(params: {
-    customerId?: number;
-    startDate?: string;
-    endDate?: string;
-  }): Promise<{
-    totalReceivable: number;
-    totalReceived: number;
-    totalRemaining: number;
-    overdueCount: number;
-  }> {
-    let sql = `SELECT
-      COALESCE(SUM(amount), 0) as total_receivable,
-      COALESCE(SUM(received_amount), 0) as total_received,
-      COALESCE(SUM(amount - received_amount), 0) as total_remaining,
-      SUM(CASE WHEN due_date < CURDATE() AND status != 3 THEN 1 ELSE 0 END) as overdue_count
-    FROM fin_receivable WHERE deleted = 0`;
-    const queryParams: any[] = [];
-
-    if (params.customerId) {
-      sql += ' AND customer_id = ?';
-      queryParams.push(params.customerId);
-    }
-    if (params.startDate) {
-      sql += ' AND create_time >= ?';
-      queryParams.push(params.startDate);
-    }
-    if (params.endDate) {
-      sql += ' AND create_time <= ?';
-      queryParams.push(params.endDate);
-    }
-
-    const rows: any = await query(sql, queryParams);
-    const row = rows[0];
-    return {
-      totalReceivable: parseFloat(row.total_receivable),
-      totalReceived: parseFloat(row.total_received),
-      totalRemaining: parseFloat(row.total_remaining),
-      overdueCount: parseInt(row.overdue_count),
-    };
+  async listReceivablesByStatus(status: number): Promise<Receivable[]> {
+    return this.receivableRepo.findByStatus(status);
   }
 
-  async getIncomeExpenseDetail(params: {
-    startDate: string;
-    endDate: string;
-    page: number;
-    pageSize: number;
-  }) {
-    let sql = `SELECT 'income' as type, receipt_no as doc_no, customer_name as counterpart, amount, receipt_date as doc_date, receipt_method as method
-               FROM fin_receipt WHERE 1=1`;
-    let countSql = `SELECT COUNT(*) as total FROM fin_receipt WHERE 1=1`;
-    const queryParams: any[] = [];
+  async listOverdueReceivables(date?: string): Promise<Receivable[]> {
+    return this.receivableRepo.findOverdue(date);
+  }
 
-    if (params.startDate) {
-      sql += ' AND receipt_date >= ?';
-      countSql += ' AND receipt_date >= ?';
-      queryParams.push(params.startDate);
+  async deleteReceivable(id: number): Promise<void> {
+    const receivable = await this.getReceivableById(id);
+    if (receivable.status.value !== 4) {
+      throw new DomainError('仅已坏账状态的应收款可删除');
     }
-    if (params.endDate) {
-      sql += ' AND receipt_date <= ?';
-      countSql += ' AND receipt_date <= ?';
-      queryParams.push(params.endDate);
+    await this.receivableRepo.softDelete(id);
+  }
+
+  // ==================== 应付款 ====================
+
+  async getPayableById(id: number): Promise<Payable> {
+    const payable = await this.payableRepo.findById(id);
+    if (!payable) {
+      throw new NotFoundError('应付款不存在');
     }
+    return payable;
+  }
 
-    sql += ` UNION ALL
-             SELECT 'expense' as type, payment_no as doc_no, supplier_name as counterpart, amount, payment_date as doc_date, payment_method as method
-             FROM fin_payment WHERE 1=1`;
+  async createPayable(props: PayableProps): Promise<{ id: number; payableNo: string }> {
+    const payable = Payable.create(props);
+    const id = await this.payableRepo.save(payable);
+    await this.persistAndPublishEvents('Payable', id, payable);
+    return { id, payableNo: payable.payableNo };
+  }
 
-    if (params.startDate) {
-      sql += ' AND payment_date >= ?';
-      countSql += ' UNION ALL SELECT COUNT(*) as total FROM fin_payment WHERE payment_date >= ?';
-      queryParams.push(params.startDate);
-    }
-    if (params.endDate) {
-      sql += ' AND payment_date <= ?';
-      countSql += ' AND payment_date <= ?';
-      queryParams.push(params.endDate);
-    }
+  async recordPayment(input: RecordPaymentInput): Promise<{ paymentNo: string; status: number }> {
+    const payable = await this.getPayableById(input.payableId);
 
-    sql += ' ORDER BY doc_date DESC';
+    const paymentNo = await generateDocumentNo('payment');
+    payable.recordPayment(input.amount, paymentNo);
 
-    return queryPaginated(sql, countSql, queryParams, {
-      page: params.page,
-      pageSize: params.pageSize,
+    await transaction(async (conn) => {
+      await conn.execute(
+        `INSERT INTO fin_payment_record
+         (payment_no, payable_id, supplier_id, amount, payment_date,
+          payment_method, bank_account, reference_no, handler_id, remark, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          paymentNo,
+          input.payableId,
+          payable.supplierId,
+          input.amount,
+          input.paymentDate || null,
+          input.paymentMethod || null,
+          input.bankAccount || null,
+          input.referenceNo || null,
+          input.createBy ?? input.handlerId ?? null,
+          input.remark || null,
+        ]
+      );
+
+      await conn.execute(
+        `UPDATE fin_payable
+         SET paid_amount = ?, balance = ?, status = ?, update_time = NOW()
+         WHERE id = ?`,
+        [
+          payable.paidAmount.amount,
+          payable.balance.amount,
+          payable.status.value,
+          input.payableId,
+        ]
+      );
+
+      const events = payable.getDomainEvents();
+      if (events.length > 0) {
+        await getDomainEventOutbox().saveEvents(conn, 'Payable', input.payableId, events);
+      }
     });
+
+    payable.clearDomainEvents();
+    return { paymentNo, status: payable.status.value };
+  }
+
+  async listPayablesByStatus(status: number): Promise<Payable[]> {
+    return this.payableRepo.findByStatus(status);
+  }
+
+  async listOverduePayables(date?: string): Promise<Payable[]> {
+    return this.payableRepo.findOverdue(date);
+  }
+
+  async deletePayable(id: number): Promise<void> {
+    const payable = await this.getPayableById(id);
+    if (payable.status.value !== 3) {
+      throw new DomainError('仅已结清状态的应付款可删除');
+    }
+    await this.payableRepo.softDelete(id);
+  }
+
+  // ==================== 凭证 ====================
+
+  async getVoucherById(id: number): Promise<Voucher> {
+    const voucher = await this.voucherRepo.findById(id);
+    if (!voucher) {
+      throw new NotFoundError('凭证不存在');
+    }
+    return voucher;
+  }
+
+  async createVoucher(props: VoucherProps): Promise<{ id: number; voucherNo: string }> {
+    const voucher = Voucher.create(props);
+    const id = await this.voucherRepo.save(voucher);
+    await this.persistAndPublishEvents('Voucher', id, voucher);
+    return { id, voucherNo: voucher.voucherNo };
+  }
+
+  async submitVoucher(id: number): Promise<{ status: number }> {
+    const voucher = await this.getVoucherById(id);
+    voucher.submit();
+    await this.voucherRepo.updateStatus(id, voucher.status.value);
+    await this.persistAndPublishEvents('Voucher', id, voucher);
+    return { status: voucher.status.value };
+  }
+
+  async auditVoucher(id: number, auditedBy: string): Promise<{ status: number }> {
+    const voucher = await this.getVoucherById(id);
+    voucher.audit(auditedBy);
+    await this.voucherRepo.updateStatus(id, voucher.status.value, auditedBy);
+    await this.persistAndPublishEvents('Voucher', id, voucher);
+    return { status: voucher.status.value };
+  }
+
+  async postVoucher(id: number, postedBy: string): Promise<{ status: number }> {
+    const voucher = await this.getVoucherById(id);
+    voucher.post(postedBy);
+    await this.voucherRepo.updateStatus(id, voucher.status.value, undefined, postedBy);
+    await this.persistAndPublishEvents('Voucher', id, voucher);
+    return { status: voucher.status.value };
+  }
+
+  async voidVoucher(id: number, reason?: string): Promise<{ status: number }> {
+    const voucher = await this.getVoucherById(id);
+    voucher.void(reason);
+    await this.voucherRepo.updateStatus(id, voucher.status.value);
+    await this.persistAndPublishEvents('Voucher', id, voucher);
+    return { status: voucher.status.value };
+  }
+
+  async listVouchersByStatus(status: number): Promise<Voucher[]> {
+    return this.voucherRepo.findByStatus(status);
+  }
+
+  async listVouchersByPeriod(periodCode: string): Promise<Voucher[]> {
+    return this.voucherRepo.findByPeriod(periodCode);
+  }
+
+  async deleteVoucher(id: number): Promise<void> {
+    const voucher = await this.getVoucherById(id);
+    if (!voucher.canDelete()) {
+      throw new DomainError('仅草稿状态的凭证可删除');
+    }
+    await this.voucherRepo.softDelete(id);
+  }
+
+  // ==================== 共用 ====================
+
+  private async persistAndPublishEvents(
+    aggregateType: string,
+    aggregateId: number,
+    aggregate: { getDomainEvents(): any[]; clearDomainEvents(): void }
+  ): Promise<void> {
+    const events = aggregate.getDomainEvents();
+    if (events.length === 0) return;
+
+    await transaction(async (conn) => {
+      await getDomainEventOutbox().saveEvents(conn, aggregateType, aggregateId, events);
+    });
+
+    aggregate.clearDomainEvents();
   }
 }

@@ -1,365 +1,186 @@
 import { NextRequest } from 'next/server';
+import { query } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
+  commonErrors,
   validateRequestBody,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
-import { query, execute } from '@/lib/db';
+import { withPermission } from '@/lib/api-permissions';
+import { PurchaseReturnApplicationService } from '@/application/services/PurchaseReturnApplicationService';
+import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
+import type { PurchaseReturnLineProps } from '@/domain/purchase/entities/PurchaseReturnLine';
 
-// 获取采购退货单列表
-export const GET = withAuthAndErrorHandler(
-  async (request: NextRequest, userInfo: UserInfo) => {
-    const { searchParams } = new URL(request.url);
-    const keyword = searchParams.get('keyword') || '';
-    const status = searchParams.get('status') || '';
-    const supplierId = searchParams.get('supplierId') || '';
-    const startDate = searchParams.get('startDate') || '';
-    const endDate = searchParams.get('endDate') || '';
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '10');
+const returnService = PurchaseReturnApplicationService.create();
 
-    let where = 'WHERE 1=1';
-    const params: any[] = [];
+// 采购退货单列表查询
+export const GET = withPermission(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const keyword = searchParams.get('keyword') || '';
+  const status = searchParams.get('status') || '';
+  const supplierId = searchParams.get('supplierId') || '';
+  const startDate = searchParams.get('startDate') || '';
+  const endDate = searchParams.get('endDate') || '';
+  const page = parseInt(searchParams.get('page') || '1');
+  const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
-    if (keyword) {
-      where += ' AND (r.return_no LIKE ? OR r.remark LIKE ?)';
-      params.push(`%${keyword}%`, `%${keyword}%`);
-    }
-    if (status) {
-      where += ' AND r.status = ?';
-      params.push(status);
-    }
-    if (supplierId) {
-      where += ' AND r.supplier_id = ?';
-      params.push(Number(supplierId));
-    }
-    if (startDate) {
-      where += ' AND r.return_date >= ?';
-      params.push(startDate);
-    }
-    if (endDate) {
-      where += ' AND r.return_date <= ?';
-      params.push(endDate);
-    }
+  const where: string[] = ['r.deleted = 0'];
+  const params: any[] = [];
 
-    const countRows: any = await query(
-      `SELECT COUNT(*) as total FROM purchase_return ${where}`,
-      params
-    );
-    const total = countRows[0]?.total || 0;
-    const totalPages = Math.ceil(total / pageSize);
+  if (keyword) {
+    where.push('(r.return_no LIKE ? OR r.order_no LIKE ? OR r.supplier_name LIKE ? OR r.reason LIKE ?)');
+    const like = `%${keyword}%`;
+    params.push(like, like, like, like);
+  }
+  if (status) {
+    where.push('r.status = ?');
+    params.push(Number(status));
+  }
+  if (supplierId) {
+    where.push('r.supplier_id = ?');
+    params.push(Number(supplierId));
+  }
+  if (startDate) {
+    where.push('r.return_date >= ?');
+    params.push(startDate);
+  }
+  if (endDate) {
+    where.push('r.return_date <= ?');
+    params.push(endDate);
+  }
 
-    const rows: any = await query(
-      `SELECT r.*, s.supplier_name, s.supplier_code,
-        (SELECT COUNT(*) FROM purchase_return_item WHERE return_id = r.id) as item_count
-      FROM purchase_return r
-      LEFT JOIN suppliers s ON r.supplier_id = s.id
-      ${where}
-      ORDER BY r.id DESC
-      LIMIT ? OFFSET ?`,
-      [...params, pageSize, (page - 1) * pageSize]
-    );
+  const whereClause = where.join(' AND ');
 
-    return paginatedResponse(rows, { page, pageSize, total, totalPages });
-  },
-  { permission: 'purchase:view' }
-);
+  const countRows: any = await query(
+    `SELECT COUNT(*) as total FROM pur_purchase_return r WHERE ${whereClause}`,
+    params
+  );
+  const total = countRows[0]?.total || 0;
+  const totalPages = Math.ceil(total / pageSize) || 0;
+
+  const rows: any = await query(
+    `SELECT r.id, r.return_no, r.status, r.order_id, r.order_no,
+       r.supplier_id, r.supplier_name, r.warehouse_id, r.receipt_id, r.receipt_no,
+       r.reason, r.return_date, r.total_amount,
+       r.approve_by, r.approve_time, r.complete_by, r.complete_time,
+       r.outbound_order_id, r.outbound_order_no, r.payable_id, r.payable_no,
+       r.remark, r.create_by, r.create_time, r.update_time,
+       (SELECT COUNT(*) FROM pur_purchase_return_line WHERE return_id = r.id) AS line_count
+     FROM pur_purchase_return r
+     WHERE ${whereClause}
+     ORDER BY r.create_time DESC
+     LIMIT ? OFFSET ?`,
+    [...params, pageSize, (page - 1) * pageSize]
+  );
+
+  return paginatedResponse(rows, { page, pageSize, total, totalPages });
+});
 
 // 创建采购退货单
-export const POST = withAuthAndErrorHandler(
-  async (request: NextRequest, userInfo: UserInfo) => {
-    const body = await request.json();
-    const validation = validateRequestBody(body, ['supplier_id', 'items']);
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
+  const body = await request.json();
+  const validation = validateRequestBody(body, ['order_id', 'supplier_id', 'warehouse_id', 'reason', 'items']);
 
-    if (!validation.valid) {
-      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-    }
+  if (!validation.valid) {
+    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+  }
 
-    if (!Array.isArray(body.items) || body.items.length === 0) {
-      return errorResponse('RETURN_ITEMS_REQUIRED', 400, 400);
-    }
+  if (!Array.isArray(body.items) || body.items.length === 0) {
+    return errorResponse('退货明细不能为空', 400, 400);
+  }
 
-    // 生成退货单号
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const countRows: any = await query(
-      'SELECT COUNT(*) as cnt FROM purchase_return WHERE return_no LIKE ?',
-      [`PR${dateStr}%`]
+  const lines: PurchaseReturnLineProps[] = body.items.map((item: any, index: number) => ({
+    lineNo: index + 1,
+    orderLineId: item.order_line_id ?? undefined,
+    materialId: item.material_id,
+    materialCode: item.material_code || '',
+    materialName: item.material_name || '',
+    materialSpec: item.material_spec || '',
+    unit: item.unit || '件',
+    quantity: Number(item.quantity),
+    unitPrice: Number(item.unit_price) || 0,
+    batchNo: item.batch_no || '',
+    reason: item.reason || '',
+    remark: item.remark || '',
+  }));
+
+  try {
+    const result = await returnService.createReturn({
+      returnNo: body.return_no || '',
+      orderId: Number(body.order_id),
+      orderNo: body.order_no || '',
+      supplierId: Number(body.supplier_id),
+      supplierName: body.supplier_name || '',
+      warehouseId: Number(body.warehouse_id),
+      receiptId: body.receipt_id ?? undefined,
+      receiptNo: body.receipt_no || '',
+      reason: body.reason,
+      returnDate: body.return_date || new Date().toISOString().slice(0, 10),
+      lines,
+      remark: body.remark || '',
+      createBy: userInfo.userId,
+    });
+
+    return successResponse(
+      { id: result.id, return_no: result.returnNo },
+      '采购退货单创建成功'
     );
-    const seq = String((countRows[0]?.cnt || 0) + 1).padStart(3, '0');
-    const returnNo = `PR${dateStr}${seq}`;
-
-    const conn = await (await import('@/lib/db')).getConnection();
-
-    try {
-      await conn.beginTransaction();
-
-      // 计算总金额
-      let totalAmount = 0;
-      let totalTax = 0;
-
-      for (const item of body.items) {
-        const amount = (item.return_qty || 0) * (item.unit_price || 0);
-        const tax = amount * ((item.tax_rate || 13) / 100);
-        totalAmount += amount;
-        totalTax += tax;
-      }
-
-      // 插入退货主表
-      const [result]: any = await conn.execute(
-        `INSERT INTO purchase_return
-        (return_no, order_id, order_no, supplier_id, supplier_name, return_date,
-         return_type, total_amount, tax_amount, grand_total, status, remark,
-         create_by, create_time)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [
-          returnNo,
-          body.order_id || null,
-          body.order_no || '',
-          body.supplier_id,
-          body.supplier_name || '',
-          body.return_date || new Date().toISOString().slice(0, 10),
-          body.return_type || 'quality',
-          totalAmount,
-          totalTax,
-          totalAmount + totalTax,
-          'pending',
-          body.remark || '',
-          userInfo.userId,
-        ]
-      );
-
-      const returnId = result.insertId;
-
-      // 插入退货明细
-      for (let i = 0; i < body.items.length; i++) {
-        const item = body.items[i];
-        const amount = (item.return_qty || 0) * (item.unit_price || 0);
-        const tax = amount * ((item.tax_rate || 13) / 100);
-
-        await conn.execute(
-          `INSERT INTO purchase_return_item
-          (return_id, line_no, order_item_id, material_id, material_code, material_name,
-           material_spec, unit, return_qty, unit_price, amount, tax_rate, tax_amount, line_total, remark)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            returnId,
-            i + 1,
-            item.order_item_id || null,
-            item.material_id,
-            item.material_code || '',
-            item.material_name || '',
-            item.material_spec || '',
-            item.unit || '件',
-            item.return_qty,
-            item.unit_price || 0,
-            amount,
-            item.tax_rate || 13,
-            tax,
-            amount + tax,
-            item.remark || '',
-          ]
-        );
-      }
-
-      await conn.commit();
-
-      return successResponse({ id: returnId, return_no: returnNo }, 'PURCHASE_RETURN_CREATED');
-    } catch (error) {
-      await conn.rollback();
-      throw error;
-    } finally {
-      conn.release();
+  } catch (error) {
+    if (error instanceof DomainError || error instanceof NotFoundError) {
+      return errorResponse(error.message, 400, 400);
     }
-  },
-  { permission: 'purchase:create' }
-);
+    throw error;
+  }
+}, { logTitle: '创建采购退货单', logType: 'business' });
 
-// 更新退货单状态（审核/完成/取消）
-export const PUT = withAuthAndErrorHandler(
-  async (request: NextRequest, userInfo: UserInfo) => {
-    const body = await request.json();
-    const { id, action } = body;
+// 退货单操作：审核 / 完成 / 取消
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
+  const body = await request.json();
+  const { id, action } = body;
 
-    if (!id) {
-      return errorResponse('RETURN_ORDER_ID_REQUIRED', 400, 400);
+  if (!id || !action) {
+    return errorResponse('参数不完整：需要 id 和 action', 400, 400);
+  }
+
+  try {
+    if (action === 'approve') {
+      const result = await returnService.approveReturn(Number(id), userInfo.userId);
+      return successResponse(result, '采购退货单审核成功');
     }
 
-    if (!action) {
-      return errorResponse('OPERATION_TYPE_REQUIRED', 400, 400);
+    if (action === 'complete') {
+      const result = await returnService.completeReturn(Number(id), userInfo.userId);
+      return successResponse(result, '采购退货单已完成');
     }
 
-    const conn = await (await import('@/lib/db')).getConnection();
-
-    try {
-      await conn.beginTransaction();
-
-      // 查询退货单
-      const [rows]: any = await conn.execute(
-        'SELECT * FROM purchase_return WHERE id = ?',
-        [id]
-      );
-
-      if (rows.length === 0) {
-        await conn.rollback();
-        return errorResponse('RETURN_ORDER_NOT_FOUND', 404, 404);
-      }
-
-      const returnOrder = rows[0];
-
-      if (action === 'approve') {
-        if (returnOrder.status !== 'pending') {
-          await conn.rollback();
-          return errorResponse('ONLY_PENDING_CAN_APPROVE', 400, 400);
-        }
-
-        await conn.execute(
-          'UPDATE purchase_return SET status = ?, audit_by = ?, audit_time = NOW() WHERE id = ?',
-          ['approved', userInfo.userId, id]
-        );
-
-        await conn.commit();
-        return successResponse(null, 'RETURN_APPROVED');
-      }
-
-      if (action === 'complete') {
-        if (returnOrder.status !== 'approved') {
-          await conn.rollback();
-          return errorResponse('ONLY_APPROVED_CAN_COMPLETE', 400, 400);
-        }
-
-        // 查询退货明细，执行库存扣减
-        const [items]: any = await conn.execute(
-          'SELECT * FROM purchase_return_item WHERE return_id = ?',
-          [id]
-        );
-
-        for (const item of items) {
-          // 扣减库存
-          await conn.execute(
-            `UPDATE stock SET quantity = quantity - ?, update_time = NOW()
-             WHERE material_id = ? AND warehouse_id = ?`,
-            [item.return_qty, item.material_id, returnOrder.warehouse_id || 1]
-          );
-
-          // 记录库存流水
-          await conn.execute(
-            `INSERT INTO stock_movement
-            (movement_type, movement_no, material_id, material_code, material_name,
-             warehouse_id, quantity, unit, order_no, order_type, remark, create_by, create_time)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-            [
-              'purchase_return',
-              returnOrder.return_no,
-              item.material_id,
-              item.material_code,
-              item.material_name,
-              returnOrder.warehouse_id || 1,
-              -item.return_qty,
-              item.unit,
-              returnOrder.return_no,
-              'purchase_return',
-              `采购退货：${returnOrder.return_no}`,
-              userInfo.userId,
-            ]
-          );
-        }
-
-        // 生成红字应付单
-        await conn.execute(
-          `INSERT INTO finance_payable
-          (payable_no, source_type, source_id, source_no, supplier_id, supplier_name,
-           amount, tax_amount, grand_total, status, remark, create_by, create_time)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-          [
-            `RP${returnOrder.return_no.slice(2)}`,
-            'purchase_return',
-            id,
-            returnOrder.return_no,
-            returnOrder.supplier_id,
-            returnOrder.supplier_name,
-            -returnOrder.total_amount,
-            -returnOrder.tax_amount,
-            -returnOrder.grand_total,
-            'pending',
-            `采购退货红字应付：${returnOrder.return_no}`,
-            userInfo.userId,
-          ]
-        );
-
-        await conn.execute(
-          'UPDATE purchase_return SET status = ? WHERE id = ?',
-          ['completed', id]
-        );
-
-        await conn.commit();
-        return successResponse(null, 'RETURN_COMPLETED');
-      }
-
-      if (action === 'cancel') {
-        if (returnOrder.status === 'completed') {
-          // 已完成的退货单需要回滚库存
-          const [items]: any = await conn.execute(
-            'SELECT * FROM purchase_return_item WHERE return_id = ?',
-            [id]
-          );
-
-          for (const item of items) {
-            // 回滚库存（恢复之前扣减的库存）
-            await conn.execute(
-              `UPDATE stock SET quantity = quantity + ?, update_time = NOW()
-               WHERE material_id = ? AND warehouse_id = ?`,
-              [item.return_qty, item.material_id, returnOrder.warehouse_id || 1]
-            );
-
-            // 记录库存流水
-            await conn.execute(
-              `INSERT INTO stock_movement
-              (movement_type, movement_no, material_id, material_code, material_name,
-               warehouse_id, quantity, unit, order_no, order_type, remark, create_by, create_time)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-              [
-                'purchase_return_cancel',
-                returnOrder.return_no,
-                item.material_id,
-                item.material_code,
-                item.material_name,
-                returnOrder.warehouse_id || 1,
-                item.return_qty,
-                item.unit,
-                returnOrder.return_no,
-                'purchase_return_cancel',
-                `采购退货取消，回滚库存：${returnOrder.return_no}`,
-                userInfo.userId,
-              ]
-            );
-          }
-
-          // 删除红字应付单
-          await conn.execute(
-            `DELETE FROM finance_payable WHERE source_type = 'purchase_return' AND source_id = ?`,
-            [id]
-          );
-        }
-
-        await conn.execute(
-          'UPDATE purchase_return SET status = ? WHERE id = ?',
-          ['cancelled', id]
-        );
-
-        await conn.commit();
-        return successResponse(null, 'RETURN_CANCELLED');
-      }
-
-      await conn.rollback();
-      return errorResponse('UNSUPPORTED_OPERATION_TYPE', 400, 400);
-    } catch (error) {
-      await conn.rollback();
-      throw error;
-    } finally {
-      conn.release();
+    if (action === 'cancel') {
+      const result = await returnService.cancelReturn(Number(id), body.reason);
+      return successResponse(result, '采购退货单已取消');
     }
-  },
-  { permission: 'purchase:audit' }
-);
+
+    return errorResponse('不支持的操作类型', 400, 400);
+  } catch (error) {
+    if (error instanceof DomainError || error instanceof NotFoundError) {
+      return errorResponse(error.message, 400, 400);
+    }
+    throw error;
+  }
+}, { logTitle: '更新采购退货单', logType: 'business' });
+
+// 软删除退货单（仅待审核状态）
+export const DELETE = withPermission(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  if (!id) return commonErrors.badRequest('退货单ID不能为空');
+
+  try {
+    await returnService.deleteReturn(parseInt(id));
+    return successResponse(null, '采购退货单删除成功');
+  } catch (error) {
+    if (error instanceof DomainError || error instanceof NotFoundError) {
+      return errorResponse(error.message, 400, 400);
+    }
+    throw error;
+  }
+}, { logTitle: '删除采购退货单', logType: 'business' });

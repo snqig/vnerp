@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { query, transaction } from '@/lib/db';
 import {
   calculateXbarRChart,
@@ -8,7 +9,7 @@ import {
   getSPCDataFromDB,
 } from '@/lib/spc-analysis';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
 

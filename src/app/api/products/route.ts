@@ -1,16 +1,16 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 获取产品列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const categoryId = searchParams.get('categoryId') || '';
@@ -83,7 +83,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 创建产品
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   // 验证必填字段
@@ -150,10 +150,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const insertId = (result as any).insertId;
 
   return successResponse({ id: insertId, product_code }, '产品创建成功');
-}, '创建产品失败');
+}, { logTitle: '创建产品' });
 
 // 更新产品
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, ...updateData } = body;
 
@@ -208,10 +208,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id }, '产品更新成功');
-}, '更新产品失败');
+}, { logTitle: '更新产品' });
 
 // 删除产品
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -230,4 +230,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await query('UPDATE mdm_product SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
   return successResponse(null, '产品删除成功');
-}, '删除产品失败');
+}, { errorMessage: '删除产品失败' });

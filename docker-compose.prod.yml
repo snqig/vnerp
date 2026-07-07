@@ -20,7 +20,8 @@ services:
     ports:
       - "${DB_PORT:-3306}:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      # bind mount：数据落在项目 ./data/mysql 目录，可见、不会被 docker volume prune 清除
+      - ./data/mysql:/var/lib/mysql
       - ./database/vnerpdacahng_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./database/seeds/vnerp-seed-data.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
       - ./backups/mysql:/var/backups
@@ -156,8 +157,7 @@ services:
       - vnerp-network
 
 volumes:
-  mysql_data:
-    driver: local
+  # mysql_data 已改为 bind mount（./data/mysql），无需 named volume 声明
   redis_data:
     driver: local
   app_logs:

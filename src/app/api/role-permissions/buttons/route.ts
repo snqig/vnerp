@@ -4,9 +4,9 @@ import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 按钮权限接口
 interface ButtonPermission {
@@ -15,7 +15,7 @@ interface ButtonPermission {
 }
 
 // GET - 获取角色的按钮权限
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const roleId = searchParams.get('roleId');
 
@@ -40,10 +40,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     : [];
 
   return successResponse(permissions);
-}, '获取按钮权限失败');
+});
 
 // POST - 保存角色的按钮权限
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { role_id, permissions } = body;
 
@@ -82,4 +82,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '按钮权限保存成功');
-}, '保存按钮权限失败');
+}, { logTitle: '保存按钮权限' });

@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { logger, generateTraceId } from '@/lib/logger';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const traceId = generateTraceId();
   const ctx = { module: 'inventory', action: 'list', traceId };
 
@@ -18,10 +19,17 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   logger.stepStart(ctx, '查询库存列表', { keyword, categoryId, warehouseId, lowStock, page, pageSize });
 
   let sql = `
-    SELECT m.*, w.warehouse_name, mc.category_name
+    SELECT m.*, w.warehouse_name, mc.category_name,
+           COALESCE(ib.stock_qty, 0) as stock_qty
     FROM inv_material m
     LEFT JOIN inv_warehouse w ON m.warehouse_id = w.id
     LEFT JOIN inv_material_category mc ON m.category_id = mc.id
+    LEFT JOIN (
+      SELECT material_id, COALESCE(SUM(available_qty), 0) as stock_qty
+      FROM inv_inventory_batch
+      WHERE deleted = 0
+      GROUP BY material_id
+    ) ib ON m.id = ib.material_id
     WHERE m.deleted = 0
   `;
   const values: any[] = [];
@@ -47,7 +55,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   if (lowStock === 'true') {
     logger.branch(ctx, '筛选条件', '低库存筛选', true);
-    sql += ` AND m.safety_stock > 0 AND m.stock_qty <= m.safety_stock`;
+    sql += ` AND m.safety_stock > 0 AND COALESCE(ib.stock_qty, 0) <= m.safety_stock`;
   }
 
   sql += ` ORDER BY m.create_time DESC LIMIT ? OFFSET ?`;
@@ -85,7 +93,12 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     update_time: item.update_time,
   }));
 
-  let countSql = `SELECT COUNT(*) as total FROM inv_material m WHERE m.deleted = 0`;
+  let countSql = `SELECT COUNT(*) as total FROM inv_material m LEFT JOIN (
+    SELECT material_id, COALESCE(SUM(available_qty), 0) as stock_qty
+    FROM inv_inventory_batch
+    WHERE deleted = 0
+    GROUP BY material_id
+  ) ib ON m.id = ib.material_id WHERE m.deleted = 0`;
   const countValues: any[] = [];
   if (keyword) {
     countSql += ` AND (m.material_code LIKE ? OR m.material_name LIKE ?)`;
@@ -100,7 +113,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     countValues.push(parseInt(warehouseId));
   }
   if (lowStock === 'true') {
-    countSql += ` AND m.safety_stock > 0 AND m.stock_qty <= m.safety_stock`;
+    countSql += ` AND m.safety_stock > 0 AND COALESCE(ib.stock_qty, 0) <= m.safety_stock`;
   }
   const countResult = await query(countSql, countValues);
   const total = (countResult as any[])[0]?.total || 0;

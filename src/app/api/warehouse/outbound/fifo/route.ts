@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction, queryOne } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler, logOperation } from '@/lib/api-response';
+import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 interface FIFOAllocationItem {
   batch_id: number;
@@ -36,7 +37,7 @@ async function allocateFIFO(
       id, batch_no, material_id, material_code, material_name,
       available_qty, unit_price, inbound_date, unit, expire_date, version
     FROM inv_inventory_batch 
-    WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 'normal'
+    WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 1
     ORDER BY
       CASE
         WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 30 THEN 0
@@ -95,7 +96,7 @@ async function allocateFIFO(
   return result;
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const materialId = searchParams.get('materialId');
   const warehouseId = searchParams.get('warehouseId');
@@ -111,7 +112,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
       quantity, available_qty, locked_qty, unit, unit_price,
       inbound_date, produce_date, expire_date, status
     FROM inv_inventory_batch 
-    WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 'normal'
+    WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 1
     ORDER BY
       CASE
         WHEN expire_date IS NOT NULL AND DATEDIFF(expire_date, CURDATE()) <= 30 THEN 0
@@ -161,9 +162,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     shortage,
     can_fulfill: shortage === 0,
   });
-}, '获取FIFO分配方案失败');
+}, { errorMessage: '获取FIFO分配方案失败' });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     warehouseId,
@@ -338,9 +339,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     return successResponse(result, 'FIFO出库单创建成功');
   });
-}, 'FIFO出库失败');
+}, { errorMessage: 'FIFO出库失败' });
 
-export const PATCH = withErrorHandler(async (request: NextRequest) => {
+export const PATCH = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { orderId, operatorId, operatorName, remark } = body;
 
@@ -466,24 +467,28 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
         [requiredQty, requiredQty, item.material_id, order.warehouse_id]
       );
 
+      const [currentInv]: any = await conn.execute(
+        'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0',
+        [item.material_id, order.warehouse_id]
+      );
+      const afterQty = currentInv.length > 0 ? parseFloat(currentInv[0].quantity) : 0;
+      const beforeQty = afterQty + requiredQty;
+
       await conn.execute(
-        `INSERT INTO inv_inventory_transaction (
-          trans_no, trans_type, batch_no, material_id, material_code, material_name,
-          warehouse_id, warehouse_code, quantity, source_type, source_no,
-          operated_by, operated_at, remark
-        ) VALUES (?, 'outbound', ?, ?, ?, ?, ?, ?, ?, 'outbound_order', ?, ?, NOW(), ?)`,
+        `INSERT INTO inv_inventory_log (
+          material_id, warehouse_id, batch_no, operation_type, operation_qty,
+          before_qty, after_qty, business_type, business_no, remark, operator_id, create_time
+        ) VALUES (?, ?, ?, 2, ?, ?, ?, 'outbound_order', ?, ?, ?, NOW())`,
         [
-          `OUT${Date.now()}${item.id}`,
-          item.batch_no || '',
           item.material_id,
-          '',
-          item.material_name,
           order.warehouse_id,
-          order.warehouse_code || '',
-          -requiredQty,
+          item.batch_no || null,
+          requiredQty,
+          beforeQty,
+          afterQty,
           order.order_no,
-          operatorId,
           remark || '',
+          operatorId || null,
         ]
       );
     }
@@ -523,4 +528,4 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
 
     return successResponse(result, 'FIFO出库确认成功，库存已按先进先出扣减');
   });
-}, 'FIFO出库确认失败');
+}, { errorMessage: 'FIFO出库确认失败' });

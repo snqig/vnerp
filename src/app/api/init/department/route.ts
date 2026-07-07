@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import mysql from 'mysql2/promise';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 // 部门接口
 interface Department {
   id: number;
@@ -37,7 +38,7 @@ const subDepartmentData = [
 ];
 
 // POST - 初始化部门数据
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   // 使用事务初始化数据
   await transaction(async (connection) => {
     // 清空现有部门数据
@@ -98,10 +99,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '部门数据初始化成功'
   );
-}, '初始化部门数据失败');
+}, { errorMessage: '初始化部门数据失败' });
 
 // GET - 获取当前部门数据
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const depts = await query<Department>(
     'SELECT * FROM sys_department ORDER BY parent_id, sort_order'
   );
@@ -131,4 +132,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     tree: treeData,
     stats,
   });
-}, '获取部门数据失败');
+}, { errorMessage: '获取部门数据失败' });

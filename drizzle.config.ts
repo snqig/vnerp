@@ -1,7 +1,16 @@
 import { defineConfig } from 'drizzle-kit';
 
-// Drizzle Kit 配置（MySQL dialect）
-// 使用: pnpm db:generate 生成迁移 / pnpm db:push 推送 schema / pnpm db:studio 可视化
+/**
+ * Drizzle Kit 配置（MySQL dialect）
+ *
+ * [DEPRECATED] 迁移生成已废弃。
+ * - db:generate / db:push / db:migrate 已在 package.json 中改为警告提示
+ * - 权威 schema 来源：database/vnerpdacahng_schema.sql
+ * - 增量迁移：database/migrations/（通过 scripts/migrate.ts 执行）
+ * - 此配置仅保留 db:studio（可视化工具）用途
+ *
+ * 使用: pnpm db:studio 可视化查看数据库
+ */
 export default defineConfig({
   schema: './src/lib/db/schema.ts',
   out: './drizzle',

@@ -1,12 +1,12 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 菜单数据接口
 interface Menu {
@@ -27,7 +27,7 @@ interface Menu {
 }
 
 // GET - 获取所有菜单
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const menus = await query<Menu>(`
     SELECT
       id, parent_id, menu_name, menu_code, menu_type, icon,
@@ -39,10 +39,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   `);
 
   return successResponse(menus);
-}, '获取菜单失败');
+});
 
 // POST - 创建菜单
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body: Menu = await request.json();
 
   // 验证必填字段
@@ -81,10 +81,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId }, '菜单创建成功');
-}, '创建菜单失败');
+}, { logTitle: '创建菜单' });
 
 // PUT - 更新菜单
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body: Menu = await request.json();
   const { id } = body;
 
@@ -143,10 +143,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '菜单更新成功');
-}, '更新菜单失败');
+}, { logTitle: '更新菜单' });
 
 // DELETE - 删除菜单
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -185,4 +185,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   });
 
   return successResponse(null, '菜单删除成功');
-}, '删除菜单失败');
+}, { logTitle: '删除菜单' });

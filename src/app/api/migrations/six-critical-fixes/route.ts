@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 async function tableExists(name: string): Promise<boolean> {
   const rows = await query(
     `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
@@ -42,7 +43,7 @@ async function addIndexSafe(table: string, indexName: string, columns: string) {
   return `Already exists: index ${indexName} on ${table}`;
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const step = searchParams.get('step') || 'all';
   const results: string[] = [];
@@ -604,4 +605,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(results, '迁移完成');
-}, '迁移失败');
+}, { errorMessage: '迁移失败' });

@@ -3,7 +3,8 @@ import {
   successResponse,
   errorResponse,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { query } from '@/lib/db';
 import { getTranslator } from '@/lib/i18n-server';
 
@@ -13,7 +14,7 @@ import { getTranslator } from '@/lib/i18n-server';
  * 支持导出库存变动记录为CSV格式
  */
 
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
@@ -132,5 +133,5 @@ export const GET = withAuthAndErrorHandler(
 
     return successResponse({ list: rows, total: rows.length });
   },
-  { permission: 'warehouse:view' }
+  { errorMessage: '操作失败' }
 );

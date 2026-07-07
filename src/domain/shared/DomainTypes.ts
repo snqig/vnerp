@@ -33,4 +33,7 @@ export interface DomainEvent {
   readonly eventType: string;
   readonly occurredAt: Date;
   readonly payload: Record<string, unknown>;
+  readonly id?: number;
+  readonly aggregateType?: string;
+  readonly aggregateId?: number;
 }

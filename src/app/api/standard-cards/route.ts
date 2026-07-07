@@ -1,12 +1,12 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { getSamplePrefix, generateDocNo } from '@/lib/global-config';
 
 // 标准卡类型定义
@@ -149,7 +149,7 @@ const LIST_FIELDS = `
 `;
 
 // GET - 获取标准卡列表或单个标准卡
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -208,10 +208,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   });
 
   return paginatedResponse(result.data, result.pagination);
-}, '获取标准卡列表失败');
+});
 
 // POST - 创建标准卡
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   // 生成标准卡编号
@@ -331,10 +331,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId, card_no: cardNo }, '标准卡创建成功');
-}, '创建标准卡失败');
+}, { errorMessage: '创建标准卡失败' });
 
 // PUT - 更新标准卡
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id } = body;
 
@@ -497,10 +497,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse(null, '标准卡更新成功');
-}, '更新标准卡失败');
+}, { logTitle: '更新标准卡', logType: 'business' });
 
 // DELETE - 删除标准卡（软删除）
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -523,4 +523,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await execute('UPDATE prd_standard_card SET deleted = 1 WHERE id = ?', [cardId]);
 
   return successResponse(null, '标准卡删除成功');
-}, '删除标准卡失败');
+}, { logTitle: '删除标准卡', logType: 'business' });

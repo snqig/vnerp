@@ -103,6 +103,14 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  // CSRF token：非安全方法需附带 X-CSRF-Token header（与 cookie 双重提交校验）
+  if (typeof document !== 'undefined') {
+    const csrfMatch = document.cookie.match(/(^| )csrf_token=([^;]+)/);
+    if (csrfMatch) {
+      headers['X-CSRF-Token'] = csrfMatch[2];
+    }
+  }
+
   const response = await fetch(url, { ...options, headers });
 
   // 401 and not the refresh endpoint itself: try silent refresh once

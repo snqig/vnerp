@@ -1,9 +1,10 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, queryOne, execute } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // POST - 扫描二维码查询信息
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { qrContent, scanType, operatorId, operatorName } = body;
 
@@ -71,7 +72,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '扫码查询成功'
   );
-}, '扫码查询失败');
+}, { logTitle: '扫码查询', logType: 'business' });
 
 // 查询物料标签
 async function queryMaterialLabel(labelNo: string) {

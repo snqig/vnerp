@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { adjustInventory } from '@/lib/inventory-sync';
 
 // 库存调整（统一入口）
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     materialId,

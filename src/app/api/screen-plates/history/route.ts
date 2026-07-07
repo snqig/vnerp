@@ -1,8 +1,9 @@
-import { query, execute } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+﻿import { query, execute } from '@/lib/db';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import type { NextRequest } from 'next/server';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const plateId = searchParams.get('plateId');
 
@@ -22,7 +23,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return successResponse(rows, '网版生命周期记录');
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { plateId, action, tensionValue, lifeIncrement, remark, operatorId, operatorName } = body;
 
@@ -82,4 +83,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse({ historyId: (result as any).insertId }, '生命周期记录添加成功');
-});
+}, { logTitle: '添加网版生命周期记录', logType: 'business' });

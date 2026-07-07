@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server';
-import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import {
   getWorkOrderColorSequencesDetail,
   calculateWorkOrderInkCost,
 } from '@/lib/multi-color-printing';
 
 // 获取工单色序详情
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const workOrderId = searchParams.get('workOrderId');
 
@@ -19,7 +20,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 计算工单油墨成本
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { workOrderId, printArea, planQty } = body;
 
@@ -34,4 +35,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse(result, '计算油墨成本成功');
-});
+}, { logTitle: '计算工单油墨成本', logType: 'business' });

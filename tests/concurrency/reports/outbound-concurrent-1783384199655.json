@@ -1,0 +1,14 @@
+{
+  "testName": "出库并发测试",
+  "totalRequests": 10,
+  "successCount": 10,
+  "failureCount": 0,
+  "successRate": 100,
+  "failureRate": 0,
+  "avgResponseTime": 243.7,
+  "minResponseTime": 131,
+  "maxResponseTime": 372,
+  "totalDuration": 375,
+  "errors": [],
+  "timestamp": "2026-07-07T00:29:59.654Z"
+}

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 const SPLIT_FLAG_MAP: Record<number, string> = {
   0: '整料',
@@ -8,8 +9,8 @@ const SPLIT_FLAG_MAP: Record<number, string> = {
   2: '余料',
 };
 
-export const POST = withErrorHandler(
-  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const POST = withPermission(
+  async (request: NextRequest, userInfo, { params }: { params: Promise<{ id: string }> }) => {
     const resolvedParams = await params;
     const checkId = parseInt(resolvedParams.id);
     const body = await request.json();

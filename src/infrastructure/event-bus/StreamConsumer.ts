@@ -212,7 +212,7 @@ export class StreamConsumer {
         aggregateType: data.aggregateType || undefined,
         aggregateId: data.aggregateId ? Number(data.aggregateId) : undefined,
         occurredAt: data.occurredAt ? new Date(data.occurredAt) : new Date(),
-        ...payload,
+        payload,
       });
 
       secureLog('debug', 'StreamConsumer: event published to bus, now XACK', {

@@ -39,6 +39,8 @@ pnpm dev
 
 **默认账号**（种子数据）：用户名 `admin` / 密码 `admin123`
 
+> ⚠️ **安全警告**：默认口令 `admin123` 仅供初始化使用。`first_login=1` 标记会强制 admin 首次登录时修改密码，修改前无法访问任何业务页面。**生产部署前必须确认默认口令已被更改**，并配置 `system.force_change_password=true` 与 `system.password_expire_days` 策略。
+
 ### 常用命令
 
 | 命令 | 说明 |

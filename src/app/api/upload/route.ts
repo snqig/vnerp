@@ -1,9 +1,10 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { writeFile } from 'fs/promises';
 import { mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { successResponse, errorResponse, commonErrors, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 上传配置
 const UPLOAD_CONFIG = {
@@ -38,7 +39,7 @@ function validateFileSize(file: File): boolean {
 }
 
 // POST - 上传文件
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const formData = await request.formData();
   const file = formData.get('file') as File;
 
@@ -97,4 +98,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '上传成功'
   );
-}, '上传文件失败');
+}, { logTitle: '上传文件' });

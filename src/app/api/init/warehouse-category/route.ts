@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 
+import { withPermission } from '@/lib/api-permissions';
 // 仓库分类关联接口
 interface WarehouseCategoryLink {
   id: number;
@@ -13,7 +14,7 @@ interface WarehouseCategoryLink {
 }
 
 // POST - 初始化仓库分类关联
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   // 使用事务处理字段添加和数据更新
   await transaction(async (connection) => {
     // 直接添加 category_id 字段（如果不存在会报错，但我们可以忽略）
@@ -65,10 +66,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     },
     '仓库分类关联初始化成功'
   );
-}, '初始化仓库分类关联失败');
+}, { errorMessage: '初始化仓库分类关联失败' });
 
 // GET - 获取当前仓库分类关联状态
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   // 检查 category_id 字段是否存在
   const columnExists = await queryOne<{ count: number }>(`
     SELECT COUNT(*) as count FROM information_schema.columns
@@ -102,4 +103,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     stats,
     initialized: hasCategoryField && stats.withCategory > 0,
   });
-}, '获取仓库分类关联状态失败');
+}, { errorMessage: '获取仓库分类关联状态失败' });

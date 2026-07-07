@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -63,9 +64,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ list: rows, total, page, pageSize });
-});
+}, { logTitle: '获取操作日志', logType: 'system' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (id) {
@@ -74,10 +75,10 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
   await query(`TRUNCATE TABLE sys_operation_log`);
   return successResponse(null, '清空成功');
-});
+}, { logTitle: '清空操作日志', logType: 'system' });
 
 // 导出操作日志
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { action } = body;
 
@@ -129,4 +130,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   return errorResponse('不支持的操作', 400, 400);
-});
+}, { logTitle: '导出操作日志', logType: 'system' });

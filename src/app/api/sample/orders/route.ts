@@ -1,17 +1,17 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, transaction, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
 // 获取打样订单列表
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const customerName = searchParams.get('customerName') || '';
@@ -97,7 +97,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 });
 
 // 创建打样订单
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   // 验证必填字段
@@ -151,10 +151,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const insertId = (result as any).insertId;
 
   return successResponse({ id: insertId, order_no: orderNo }, '打样订单创建成功');
-}, '创建打样订单失败');
+}, { logTitle: '创建打样订单' });
 
 // 更新打样订单
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, ...updateData } = body;
 
@@ -205,10 +205,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id }, '打样订单更新成功');
-}, '更新打样订单失败');
+}, { logTitle: '更新打样订单' });
 
 // 删除打样订单
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -227,4 +227,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await query('UPDATE sal_sample_order SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
   return successResponse(null, '打样订单删除成功');
-}, '删除打样订单失败');
+}, { logTitle: '删除打样订单' });

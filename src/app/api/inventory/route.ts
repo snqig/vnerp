@@ -1,16 +1,16 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
   logOperation,
 } from '@/lib/api-response';
 import { allocateFIFO, executeFIFODeductionWithRetry } from '@/lib/fifo-allocation';
 import { generateTransNo, generateBatchNo } from '@/lib/utils';
 
+import { withPermission } from '@/lib/api-permissions';
 class InventoryError extends Error {
   type: 'notFound' | 'conflict' | 'insufficient';
   constructor(message: string, type: 'notFound' | 'conflict' | 'insufficient') {
@@ -34,7 +34,7 @@ function calculateAlertLevel(availableQty: number, safetyStock?: number): string
   return 'normal';
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const warehouseId = searchParams.get('warehouseId');
   const status = searchParams.get('status');
@@ -127,9 +127,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     page,
     pageSize,
   });
-}, '获取库存列表失败');
+}, { errorMessage: '获取库存列表失败' });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { action, batchNo, quantity, warehouseId, materialId, sourceType, sourceNo } = body;
 
@@ -621,4 +621,4 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
 
   return commonErrors.badRequest('未知操作类型');
-}, '库存操作失败');
+}, { errorMessage: '库存操作失败' });

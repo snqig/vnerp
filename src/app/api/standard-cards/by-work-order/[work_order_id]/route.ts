@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
-import { successResponse, errorResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 type StandardCardType = 'color' | 'process' | 'quality' | 'comprehensive';
 
@@ -24,10 +25,10 @@ interface StandardCard {
   update_time?: string;
 }
 
-export const GET = withErrorHandler(
-  async (request: NextRequest, { params }: { params: Promise<{ work_order_id: string }> }) => {
-    const resolvedParams = await params;
-    const workOrderId = parseInt(resolvedParams.work_order_id);
+export const GET = withPermission(
+  async (request: NextRequest, userInfo, context) => {
+    const { work_order_id: workOrderIdStr } = await context.params;
+    const workOrderId = parseInt(workOrderIdStr);
 
     if (isNaN(workOrderId)) {
       return errorResponse('无效的工单ID', 400, 400);
@@ -46,6 +47,5 @@ export const GET = withErrorHandler(
     }
 
     return successResponse(cards);
-  },
-  '获取工单标准卡失败'
+  }
 );

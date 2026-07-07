@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { withErrorHandler, successResponse, logOperation } from '@/lib/api-response';
+import { successResponse, logOperation } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
 import { getMrPrefix, generateDocNo } from '@/lib/global-config';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -38,7 +39,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const {
     base_ink_id,
@@ -106,22 +107,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     ]
   );
 
-  await logOperation({
-    title: '调色油墨入库',
-    oper_type: '调色',
-    oper_method: 'POST',
-    oper_url: '/api/dcprint/ink-mixed',
-    oper_param: JSON.stringify({ color_name, quantity }),
-    oper_result: `调色油墨 ${recordNo} 入库成功，已生成二维码 ${qrCode}`,
-  });
-
   return successResponse(
     { id: result.insertId, record_no: recordNo, qr_code: qrCode },
     '调色油墨入库成功'
   );
-});
+}, { logTitle: '调色油墨入库', logType: 'business' });
 
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, status, remark } = body;
 
@@ -139,13 +131,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '更新成功');
-});
+}, { logTitle: '更新调色油墨', logType: 'business' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
 
   await execute('UPDATE ink_mixed_record SET deleted = 1 WHERE id = ?', [Number(id)]);
   return successResponse(null, '删除成功');
-});
+}, { logTitle: '删除调色油墨', logType: 'business' });

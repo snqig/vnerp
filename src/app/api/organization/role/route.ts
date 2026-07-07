@@ -1,12 +1,12 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 // 角色数据接口
 interface Role {
@@ -79,7 +79,7 @@ function formatRole(role: any): Role {
   };
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status');
@@ -119,10 +119,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     page,
     pageSize,
   });
-}, '获取角色列表失败');
+});
 
 // POST - 创建角色
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body: Role = await request.json();
 
   // 验证必填字段
@@ -159,10 +159,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: result.insertId }, '角色创建成功');
-}, '创建角色失败');
+}, { logTitle: '创建角色' });
 
 // PUT - 更新角色
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body: Role = await request.json();
   const { id } = body;
 
@@ -213,10 +213,10 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   }
 
   return successResponse(null, '角色更新成功');
-}, '更新角色失败');
+}, { logTitle: '更新角色' });
 
 // DELETE - 删除角色（软删除）
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -249,4 +249,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await execute('UPDATE sys_role SET deleted = 1 WHERE id = ?', [roleId]);
 
   return successResponse(null, '角色删除成功');
-}, '删除角色失败');
+}, { logTitle: '删除角色' });

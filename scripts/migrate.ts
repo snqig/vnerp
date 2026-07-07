@@ -82,7 +82,7 @@ function getMigrationFiles() {
   }
   return fs
     .readdirSync(migrationsDir)
-    .filter((f) => f.endsWith('.ts') || f.endsWith('.js'))
+    .filter((f) => f.endsWith('.ts') || f.endsWith('.js') || f.endsWith('.sql'))
     .sort();
 }
 
@@ -104,14 +104,32 @@ async function executeMigration(conn, fileName, direction = 'up') {
   const startTime = Date.now();
 
   try {
-    const migration = await import(filePath);
-    const fn = migration[direction];
+    if (fileName.endsWith('.sql')) {
+      if (direction === 'down') {
+        throw new Error(`SQL 迁移文件 ${fileName} 不支持回滚（down），请手动处理`);
+      }
+      const sqlContent = fs.readFileSync(filePath, 'utf8');
+      const statements = sqlContent
+        .split('\n')
+        .filter((line) => !line.trim().startsWith('--'))
+        .join('\n')
+        .split(';')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
 
-    if (typeof fn !== 'function') {
-      throw new Error(`迁移文件 ${fileName} 缺少 ${direction} 函数`);
+      for (const stmt of statements) {
+        await conn.query(stmt);
+      }
+    } else {
+      const migration = await import(filePath);
+      const fn = migration[direction];
+
+      if (typeof fn !== 'function') {
+        throw new Error(`迁移文件 ${fileName} 缺少 ${direction} 函数`);
+      }
+
+      await fn(conn);
     }
-
-    await fn(conn);
 
     const executionTime = Date.now() - startTime;
 

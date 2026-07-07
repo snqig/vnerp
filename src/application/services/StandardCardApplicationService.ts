@@ -9,6 +9,9 @@ import {
   StandardCardObsoletedEvent,
 } from '@/domain/standard-card/events/StandardCardEvents';
 import { getEventBus, EventBus } from '@/infrastructure/event-bus/EventBus';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
+import { DomainEvent } from '@/domain/shared/DomainTypes';
+import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 
 export interface CreateStandardCardDTO {

@@ -1,18 +1,18 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, transaction, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
   errorResponse,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
 /**
  * 获取物料列表
  * GET /api/orders/bom/materials
  */
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -53,13 +53,13 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 
   return paginatedResponse(result.data, result.pagination);
-}, '获取物料列表失败');
+});
 
 /**
  * 创建物料
  * POST /api/orders/bom/materials
  */
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
 
   const validation = validateRequestBody(body, ['materialCode', 'materialName']);
@@ -117,13 +117,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id: (result as any).insertId, materialCode }, '物料创建成功');
-}, '创建物料失败');
+}, { logTitle: '创建BOM物料', logType: 'business' });
 
 /**
  * 更新物料
  * PUT /api/orders/bom/materials
  */
-export const PUT = withErrorHandler(async (request: NextRequest) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const body = await request.json();
   const { id, ...updateData } = body;
 
@@ -180,13 +180,13 @@ export const PUT = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ id }, '物料更新成功');
-}, '更新物料失败');
+}, { logTitle: '更新BOM物料', logType: 'business' });
 
 /**
  * 删除物料
  * DELETE /api/orders/bom/materials?id={id}
  */
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
@@ -204,4 +204,4 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   await query('UPDATE bom_material SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
   return successResponse(null, '物料删除成功');
-}, '删除物料失败');
+}, { logTitle: '删除BOM物料', logType: 'business' });

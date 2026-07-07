@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { validateDocumentNo, generateDocumentNo, DocumentType } from '@/lib/document-numbering';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+import { withPermission } from '@/lib/api-permissions';
+export const GET = withPermission(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url);
   const docType = searchParams.get('docType') as DocumentType;
   const docNo = searchParams.get('docNo') || '';

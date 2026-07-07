@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { withErrorHandler, successResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -32,9 +33,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   );
 
   return successResponse({ list: rows, total, page, pageSize });
-});
+}, { logTitle: '获取登录日志', logType: 'system' });
 
-export const DELETE = withErrorHandler(async (request: NextRequest) => {
+export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   await query('TRUNCATE TABLE sys_login_log');
   return successResponse(null, '清空成功');
-});
+}, { logTitle: '清空登录日志', logType: 'system' });

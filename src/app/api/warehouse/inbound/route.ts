@@ -5,7 +5,8 @@ import {
   errorResponse,
   commonErrors,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { InboundApplicationService } from '@/application/services/InboundApplicationService';
 import { MysqlInboundOrderRepository } from '@/infrastructure/repositories/MysqlInboundOrderRepository';
@@ -19,7 +20,7 @@ function getInboundService(): InboundApplicationService {
   return new InboundApplicationService(orderRepo);
 }
 
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const keyword = searchParams.get('keyword') || '';
@@ -68,10 +69,10 @@ export const GET = withAuthAndErrorHandler(
 
     return paginatedResponse(serializedData, result.pagination);
   },
-  { permission: 'warehouse:inbound:list' }
+  { errorMessage: '操作失败' }
 );
 
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
 
@@ -111,10 +112,10 @@ export const POST = withAuthAndErrorHandler(
 
     return successResponse({ order_id: result.id, order_no: result.orderNo }, '入库单创建成功');
   },
-  { permission: 'warehouse:inbound:create' }
+  { errorMessage: '操作失败' }
 );
 
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
 
@@ -179,10 +180,10 @@ export const PUT = withAuthAndErrorHandler(
       throw error;
     }
   },
-  { permission: 'warehouse:inbound:edit' }
+  { errorMessage: '操作失败' }
 );
 
-export const DELETE = withAuthAndErrorHandler(
+export const DELETE = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -206,5 +207,5 @@ export const DELETE = withAuthAndErrorHandler(
       throw error;
     }
   },
-  { permission: 'warehouse:inbound:delete' }
+  { errorMessage: '操作失败' }
 );

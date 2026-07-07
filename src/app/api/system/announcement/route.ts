@@ -4,7 +4,8 @@ import {
   errorResponse,
   validateRequestBody,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
+import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 
 /**
@@ -12,7 +13,7 @@ import { query, execute } from '@/lib/db';
  */
 
 // 获取公告列表
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'published';
@@ -52,11 +53,11 @@ export const GET = withAuthAndErrorHandler(
 
     return successResponse({ list: rows, total, page, pageSize });
   },
-  { permission: 'system:view' }
+  { errorMessage: '操作失败' }
 );
 
 // 创建/发布公告
-export const POST = withAuthAndErrorHandler(
+export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const validation = validateRequestBody(body, ['title', 'content']);
@@ -83,11 +84,11 @@ export const POST = withAuthAndErrorHandler(
 
     return successResponse({ id: result.insertId }, '公告创建成功');
   },
-  { permission: 'system:manage' }
+  { errorMessage: '操作失败' }
 );
 
 // 更新公告
-export const PUT = withAuthAndErrorHandler(
+export const PUT = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
     const { id, action } = body;
@@ -140,11 +141,11 @@ export const PUT = withAuthAndErrorHandler(
 
     return successResponse(null, '公告更新成功');
   },
-  { permission: 'system:manage' }
+  { errorMessage: '操作失败' }
 );
 
 // 删除公告
-export const DELETE = withAuthAndErrorHandler(
+export const DELETE = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -158,5 +159,5 @@ export const DELETE = withAuthAndErrorHandler(
 
     return successResponse(null, '公告已删除');
   },
-  { permission: 'system:manage' }
+  { errorMessage: '操作失败' }
 );

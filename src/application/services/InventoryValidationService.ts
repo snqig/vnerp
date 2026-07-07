@@ -82,6 +82,23 @@ export class InventoryValidationService {
     return { allSufficient: errors.length === 0, errors };
   }
 
+  // inv_inventory_log.operation_type: 1-入库, 2-出库, 3-盘点, 4-调拨, 5-报废, 6-锁定, 7-解锁
+  private static readonly TRANS_TYPE_MAP: Record<string, number> = {
+    in: 1,
+    out: 2,
+    adjust: 3,
+    transfer: 4,
+    return: 7,
+  };
+
+  private static isStockInType(operationType: number): boolean {
+    return operationType === 1 || operationType === 7;
+  }
+
+  private static isStockOutType(operationType: number): boolean {
+    return operationType === 2 || operationType === 5;
+  }
+
   static async recordTransaction(params: {
     transNo: string;
     transType: 'in' | 'out' | 'transfer' | 'adjust' | 'return';
@@ -99,28 +116,42 @@ export class InventoryValidationService {
     operatorName?: string;
     remark?: string;
   }): Promise<void> {
+    const operationType = this.TRANS_TYPE_MAP[params.transType];
+    if (operationType === undefined) {
+      throw new Error(`无效的流水类型: ${params.transType}`);
+    }
+
     await transaction(async (conn) => {
+      const [invRows]: any = await conn.execute(
+        'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
+        [params.materialId, params.warehouseId]
+      );
+      const beforeQty = invRows.length > 0 ? parseFloat(invRows[0].quantity) : 0;
+      const absQty = Math.abs(params.quantity);
+      const signedQty = this.isStockOutType(operationType)
+        ? -absQty
+        : this.isStockInType(operationType)
+          ? absQty
+          : params.quantity;
+      const afterQty = beforeQty + signedQty;
+
       await conn.execute(
-        `INSERT INTO inv_inventory_transaction
-         (trans_no, trans_type, source_type, source_id, material_id, material_code, material_name,
-          batch_no, warehouse_id, quantity, unit_price, total_amount, operator_id, operator_name, remark, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        `INSERT INTO inv_inventory_log
+         (material_id, warehouse_id, batch_no, operation_type, operation_qty, before_qty, after_qty,
+          business_type, business_no, remark, operator_id, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
-          params.transNo,
-          params.transType,
-          params.sourceType,
-          params.sourceId,
           params.materialId,
-          params.materialCode,
-          params.materialName,
-          params.batchNo,
           params.warehouseId,
-          params.quantity,
-          params.unitPrice,
-          params.totalAmount,
-          params.operatorId || null,
-          params.operatorName || null,
+          params.batchNo || null,
+          operationType,
+          absQty,
+          beforeQty,
+          afterQty,
+          params.sourceType,
+          params.transNo,
           params.remark || null,
+          params.operatorId || null,
         ]
       );
     });
@@ -136,44 +167,52 @@ export class InventoryValidationService {
   static async reverseTransaction(originalTransNo: string, operatorId?: number): Promise<void> {
     await transaction(async (conn) => {
       const [rows]: any = await conn.execute(
-        'SELECT id, trans_no, trans_type, source_type, source_id, material_id, material_code, material_name, batch_no, warehouse_id, quantity, unit_price, total_amount FROM inv_inventory_transaction WHERE trans_no = ? AND is_reversed = 0',
+        'SELECT id, material_id, warehouse_id, batch_no, operation_type, operation_qty FROM inv_inventory_log WHERE business_no = ? ORDER BY id DESC LIMIT 1',
         [originalTransNo]
       );
 
       if (!rows || rows.length === 0) {
-        throw new Error(`流水${originalTransNo}不存在或已被冲销`);
+        throw new Error(`流水${originalTransNo}不存在`);
       }
 
       const original = rows[0];
-      const reverseType = original.trans_type === 'in' ? 'out' : 'in';
-      const reverseTransNo = 'RV' + Date.now();
+      const reverseType = this.isStockInType(original.operation_type)
+        ? 2
+        : this.isStockOutType(original.operation_type)
+          ? 1
+          : original.operation_type;
 
-      await conn.execute(
-        `INSERT INTO inv_inventory_transaction
-         (trans_no, trans_type, source_type, source_id, material_id, material_code, material_name,
-          batch_no, warehouse_id, quantity, unit_price, total_amount, is_reversed, reversed_by, operator_id, remark, create_time)
-         VALUES (?, ?, 'reversal', ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, NOW())`,
-        [
-          reverseTransNo,
-          reverseType,
-          original.source_id,
-          original.material_id,
-          original.material_code,
-          original.material_name,
-          original.batch_no,
-          original.warehouse_id,
-          original.quantity,
-          original.unit_price,
-          original.total_amount,
-          original.id,
-          operatorId || null,
-          `冲销流水 ${originalTransNo}`,
-        ]
+      const [invRows]: any = await conn.execute(
+        'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
+        [original.material_id, original.warehouse_id]
       );
+      const beforeQty = invRows.length > 0 ? parseFloat(invRows[0].quantity) : 0;
+      const absQty = Math.abs(parseFloat(original.operation_qty));
+      const signedQty = this.isStockOutType(reverseType)
+        ? -absQty
+        : this.isStockInType(reverseType)
+          ? absQty
+          : -absQty;
+      const afterQty = beforeQty + signedQty;
 
+      const reverseTransNo = 'RV' + Date.now();
       await conn.execute(
-        'UPDATE inv_inventory_transaction SET is_reversed = 1, reversed_by = ? WHERE id = ?',
-        [original.id, original.id]
+        `INSERT INTO inv_inventory_log
+         (material_id, warehouse_id, batch_no, operation_type, operation_qty, before_qty, after_qty,
+          business_type, business_no, remark, operator_id, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'reversal', ?, ?, ?, NOW())`,
+        [
+          original.material_id,
+          original.warehouse_id,
+          original.batch_no,
+          reverseType,
+          absQty,
+          beforeQty,
+          afterQty,
+          reverseTransNo,
+          `冲销流水 ${originalTransNo}`,
+          operatorId || null,
+        ]
       );
     });
 

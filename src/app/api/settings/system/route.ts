@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server';
 import { query, execute, queryOne } from '@/lib/db';
-import { withErrorHandler, successResponse, errorResponse, commonErrors } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { clearConfigCache } from '@/lib/global-config';
 
 interface SystemConfigItem {
@@ -845,7 +846,7 @@ async function initDefaultConfigs(): Promise<void> {
   }
 }
 
-export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
   await initDefaultConfigs();
 
   const { searchParams } = new URL(request.url);
@@ -904,7 +905,7 @@ export const GET = withAuthAndErrorHandler(async (request: NextRequest, userInfo
   });
 });
 
-export const POST = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
+export const POST = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
   await initDefaultConfigs();
 
   const body = await request.json();
@@ -983,9 +984,9 @@ export const POST = withAuthAndErrorHandler(async (request: NextRequest, userInf
 
     return successResponse(null, '配置更新成功');
   }
-});
+}, { logTitle: '保存系统配置' });
 
-export const PUT = withAuthAndErrorHandler(async (request: NextRequest, userInfo: UserInfo) => {
+export const PUT = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
   const body = await request.json();
   const { log_id, action, approver_id } = body;
 
@@ -1030,4 +1031,4 @@ export const PUT = withAuthAndErrorHandler(async (request: NextRequest, userInfo
     default:
       return errorResponse('无效的操作类型', 400, 400);
   }
-});
+}, { logTitle: '审批配置变更' });

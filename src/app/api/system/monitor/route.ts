@@ -2,14 +2,15 @@ import { NextRequest } from 'next/server';
 import {
   successResponse,
 } from '@/lib/api-response';
-import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
+import { UserInfo } from '@/lib/api-auth';
+import { withPermission } from '@/lib/api-permissions';
 import { query } from '@/lib/db';
 
 /**
  * 系统监控 API
  * 提供系统运行状态、数据库状态、连接池状态等信息
  */
-export const GET = withAuthAndErrorHandler(
+export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'overview';
@@ -103,7 +104,7 @@ export const GET = withAuthAndErrorHandler(
 
     return successResponse({ message: 'Unknown type' });
   },
-  { permission: 'system:monitor' }
+  { errorMessage: '操作失败' }
 );
 
 function formatBytes(bytes: number): string {

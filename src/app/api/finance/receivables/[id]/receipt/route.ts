@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
-import { withErrorHandler, successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
+import { withPermission } from '@/lib/api-permissions';
 import { recordReceipt } from '@/lib/finance-core';
 
-export const POST = withErrorHandler(
-  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const POST = withPermission(
+  async (request: NextRequest, userInfo, { params }: { params: Promise<{ id: string }> }) => {
     const resolvedParams = await params;
     const body = await request.json();
     const { amount, receiptMethod, receiptDate, bankAccount, referenceNo, operatorId } = body;

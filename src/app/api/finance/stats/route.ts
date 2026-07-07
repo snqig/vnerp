@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server';
+﻿import { NextRequest } from 'next/server';
 import { query, queryOne } from '@/lib/db';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+import { withPermission } from '@/lib/api-permissions';
+export const GET = withPermission(async (request: NextRequest) => {
   const receivableSummary = (await queryOne(`SELECT
     COALESCE(SUM(amount), 0) as total_amount,
     COALESCE(SUM(received_amount), 0) as total_received,
@@ -98,4 +99,4 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     top_receivables: topReceivables,
     top_payables: topPayables,
   });
-}, '获取财务统计失败');
+}, { errorMessage: '获取财务统计失败' });
