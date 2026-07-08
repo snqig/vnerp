@@ -171,7 +171,6 @@ export default function OrganizationPage() {
         useMockCompany();
       }
     } catch (error) {
-      console.error('获取企业信息失败:', error);
       useMockCompany();
     } finally {
       setCompanyLoading(false);
@@ -215,7 +214,6 @@ export default function OrganizationPage() {
         toast.error(result.message || '保存失败');
       }
     } catch (error) {
-      console.error('保存企业信息失败:', error);
       toast.error('保存企业信息失败');
     } finally {
       setCompanySaving(false);
@@ -249,7 +247,6 @@ export default function OrganizationPage() {
         useMockDepartments();
       }
     } catch (error) {
-      console.error('获取部门列表失败:', error);
       useMockDepartments();
     } finally {
       setDeptLoading(false);
@@ -287,7 +284,6 @@ export default function OrganizationPage() {
         toast.error(result.message || tc('error'));
       }
     } catch (error) {
-      console.error('保存部门失败:', error);
       toast.error('保存部门失败');
     }
   };
@@ -307,7 +303,6 @@ export default function OrganizationPage() {
         toast.error(result.message || '删除失败');
       }
     } catch (error) {
-      console.error('删除部门失败:', error);
       toast.error('删除部门失败');
     }
   };
@@ -339,7 +334,6 @@ export default function OrganizationPage() {
         useMockRoles();
       }
     } catch (error) {
-      console.error('获取角色列表失败:', error);
       useMockRoles();
     } finally {
       setRoleLoading(false);
@@ -404,7 +398,6 @@ export default function OrganizationPage() {
         toast.error(result.message || tc('error'));
       }
     } catch (error) {
-      console.error('保存角色失败:', error);
       toast.error('保存角色失败');
     }
   };
@@ -424,7 +417,6 @@ export default function OrganizationPage() {
         toast.error(result.message || '删除失败');
       }
     } catch (error) {
-      console.error('删除角色失败:', error);
       toast.error('删除角色失败');
     }
   };

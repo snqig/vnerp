@@ -224,7 +224,6 @@ export default function MRPPage() {
         );
       }
     } catch (e) {
-      console.error('获取工单失败:', e);
     }
   }, []);
 
@@ -243,7 +242,6 @@ export default function MRPPage() {
         );
       }
     } catch (e) {
-      console.error('获取仓库失败:', e);
     }
   }, []);
 
@@ -263,7 +261,6 @@ export default function MRPPage() {
         );
       }
     } catch (e) {
-      console.error('获取物料失败:', e);
     }
   }, []);
 
@@ -290,7 +287,6 @@ export default function MRPPage() {
         setMrpResult(data.data || data);
       }
     } catch (e) {
-      console.error('MRP运算失败:', e);
     } finally {
       setMrpLoading(false);
     }
@@ -308,7 +304,6 @@ export default function MRPPage() {
         setBomTree(data.data || data);
       }
     } catch (e) {
-      console.error('BOM展开失败:', e);
     } finally {
       setBomLoading(false);
     }
@@ -326,7 +321,6 @@ export default function MRPPage() {
         setTimeBuckets(Array.isArray(data.data) ? data.data : []);
       }
     } catch (e) {
-      console.error('时间分桶计算失败:', e);
     } finally {
       setBucketLoading(false);
     }

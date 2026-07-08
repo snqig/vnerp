@@ -17,7 +17,7 @@ const isProd = process.env.NODE_ENV === 'production';
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: devOrigins,
-  reactStrictMode: false,
+  reactStrictMode: true,
   devIndicators: false,
   poweredByHeader: false,
   compress: true,

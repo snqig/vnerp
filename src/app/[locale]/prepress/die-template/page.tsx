@@ -64,6 +64,8 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { useTranslations } from 'next-intl';
 
 interface DieTemplate {
@@ -1023,31 +1025,20 @@ export default function DieTemplatePage() {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   {td("refresh")}
                 </Button>
-                <TableExportToolbar
-                  selectedCount={selectedIds.size}
-                  totalCount={sortedList.length}
-                  onSelectAll={toggleSelectAll}
-                  onDeselectAll={() => setSelectedIds(new Set())}
-                  onPrint={() => printTable(getExportData(), exportColumns, td("dieTemplateList"))}
-                  onExportPDF={() =>
-                    exportTableToPDF(
-                      getExportData(),
-                      td("dieTemplateList"),
-                      exportColumns,
-                      td("dieTemplateList")
-                    )
-                  }
-                  onExportXLS={() =>
-                    exportTableToXLS(getExportData(), td("dieTemplateList"), exportColumns)
-                  }
-                  onExportWORD={() =>
-                    exportTableToWORD(
-                      getExportData(),
-                      td("dieTemplateList"),
-                      exportColumns,
-                      td("dieTemplateList")
-                    )
-                  }
+                <GlobalExportToolbar
+                  filename="刀模模板列表"
+                  title="刀模模板列表"
+                  columns={[
+                    { key: 'template_code', label: td('code'), width: 15 },
+                    { key: 'template_name', label: tc('name'), width: 20 },
+                    { key: 'asset_type', label: td('assetType'), width: 12, formatter: (_v, row) => (ASSET_TYPE_MAP[row.asset_type] || TYPE_MAP[row.template_type])?.label || '-' },
+                    { key: 'specification', label: td('specification'), width: 15, formatter: (v) => v || '-' },
+                    { key: 'cumulative_impressions', label: td('cumulativeMax'), width: 15, formatter: (_v, row) => `${row.cumulative_impressions || row.current_usage} / ${row.max_impressions || row.max_usage}` },
+                    { key: 'current_usage', label: td('usageRate'), width: 10, formatter: (_v, row) => `${getUsagePercent(row)}%` },
+                    { key: 'die_status', label: td('lifeCycle'), width: 12, formatter: (_v, row) => (DIE_STATUS_MAP[row.die_status] || STATUS_MAP[row.status])?.label || '-' },
+                    { key: 'storage_location', label: td('storageLocation'), width: 15, formatter: (v) => v || '-' },
+                  ]}
+                  data={selectedIds.size > 0 ? sortedList.filter((i) => selectedIds.has(i.id)) : sortedList}
                 />
                 <Button
                   onClick={() => {

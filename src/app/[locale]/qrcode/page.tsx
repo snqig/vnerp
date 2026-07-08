@@ -35,6 +35,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, RefreshCw, QrCode, Eye, Printer, ScanLine, History } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations, useLocale } from 'next-intl';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 interface QRRecord {
   id: number;
@@ -126,7 +128,6 @@ export default function QRCodePage() {
         setTotal(totalCount);
       }
     } catch (e) {
-      console.error(e);
     }
   }, [page, keyword, typeFilter]);
 
@@ -260,6 +261,27 @@ export default function QRCodePage() {
             <Button variant="outline" size="sm" onClick={fetchData}>
               <RefreshCw className="h-4 w-4" />
             </Button>
+            <GlobalExportToolbar
+              filename="二维码记录列表"
+              title="二维码记录列表"
+              columns={[
+                { key: 'qr_code', label: '二维码编码', width: 25 },
+                { key: 'qr_type', label: '类型', width: 12 },
+                { key: 'ref_no', label: '关联单号', width: 18 },
+                { key: 'material_code', label: '物料编码', width: 15 },
+                { key: 'material_name', label: '物料名称', width: 20 },
+                { key: 'batch_no', label: '批次号', width: 15 },
+                { key: 'quantity', label: '数量', width: 10 },
+                { key: 'unit', label: '单位', width: 8 },
+                { key: 'warehouse_name', label: '仓库', width: 12 },
+                { key: 'print_count', label: '打印次数', width: 10 },
+                { key: 'scan_count', label: '扫描次数', width: 10 },
+                { key: 'status', label: '状态', width: 10, formatter: (v: any) => ['','有效','已用','过期','作废'][v] || String(v) },
+                { key: 'create_time', label: '创建时间', width: 18 },
+              ] as ExportColumn[]}
+              data={list}
+              landscape={true}
+            />
             <Button
               size="sm"
               onClick={() => {

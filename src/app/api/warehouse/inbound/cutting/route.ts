@@ -1,4 +1,4 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
@@ -414,7 +414,7 @@ async function queryPaginated(
 
   try {
     const [data, countResult] = await Promise.all([
-      query<any[]>(`${sql} LIMIT ${pageSize} OFFSET ${offset}`, params || []),
+      query<any[]>(`${sql} LIMIT ? OFFSET ?`, [...(params || []), pageSize, offset]),
       queryOne<{ total: number }>(countSql, params || []),
     ]);
 
@@ -427,7 +427,6 @@ async function queryPaginated(
       },
     };
   } catch (error) {
-    console.error('分页查询失败:', error);
     return {
       list: [],
       pagination: {

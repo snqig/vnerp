@@ -54,6 +54,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 interface EvalItem {
   id?: number;
@@ -544,24 +546,23 @@ export default function SupplierEvalPage() {
               <Printer className="h-4 w-4" />
               {t('print')}
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1">
-                  <Download className="h-4 w-4" />
-                  {t('export')}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={handleExportXLS}>
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  {t('exportXLS')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportPDF}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  {t('exportPDF')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <GlobalExportToolbar
+              filename="供应商评价"
+              title="供应商评价管理"
+              columns={[
+                { key: 'eval_no', label: t('evalNo'), width: 18 },
+                { key: 'supplier_name', label: tc('supplier'), width: 20 },
+                { key: 'eval_period', label: t('evalPeriod'), width: 12, formatter: (v) => periodMap[v] || v },
+                { key: 'quality_score', label: t('qualityScore'), width: 10 },
+                { key: 'delivery_score', label: t('deliveryScore'), width: 10 },
+                { key: 'price_score', label: t('priceScore'), width: 10 },
+                { key: 'service_score', label: t('serviceScore'), width: 10 },
+                { key: 'total_score', label: t('totalScore'), width: 10 },
+                { key: 'supplier_level', label: t('level'), width: 8, formatter: (v) => levelMap[v]?.label || v },
+                { key: 'status', label: tc('status'), width: 10, formatter: (v) => evalStatusMap[v]?.label || '-' },
+              ]}
+              data={selectedIds.length > 0 ? records.filter((r) => r.id && selectedIds.includes(r.id)) : records}
+            />
           </div>
         </div>
 

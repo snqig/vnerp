@@ -1,0 +1,11 @@
+import mysql from 'mysql2/promise';
+import fs from 'fs';
+const env = fs.readFileSync('d:/dcprint/erp-project/.env', 'utf-8');
+env.split('\n').forEach(l => { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2]; });
+const c = await mysql.createConnection({ host: process.env.DB_HOST, port: +process.env.DB_PORT, user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME });
+const [r1] = await c.query("SELECT COLUMN_NAME, IS_NULLABLE, COLUMN_DEFAULT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_login_log' ORDER BY ORDINAL_POSITION");
+console.log('sys_login_log columns:');
+r1.forEach(col => console.log(`  ${col.COLUMN_NAME.padEnd(15)} nullable=${col.IS_NULLABLE} default=${col.COLUMN_DEFAULT}`));
+const [r2] = await c.query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE '%notif%'");
+console.log('\nnotification tables:', r2.map(t => t.TABLE_NAME));
+await c.end();

@@ -335,7 +335,6 @@ function StandardCardInputContent() {
           setCustomerList(formattedCustomers);
         }
       } catch (error) {
-        console.error(t('loadCustomerFailed'), error);
       }
     };
     fetchCustomers();
@@ -351,7 +350,6 @@ function StandardCardInputContent() {
           setMaterialList(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error(t('loadMaterialFailed'), error);
       }
     };
     const fetchInks = async () => {
@@ -363,7 +361,6 @@ function StandardCardInputContent() {
           setInkList(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error(t('loadInkFailed'), error);
       }
     };
     const fetchScreenPlates = async () => {
@@ -375,7 +372,6 @@ function StandardCardInputContent() {
           setScreenPlateList(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error(t('loadScreenPlateFailed'), error);
       }
     };
     const fetchDies = async () => {
@@ -387,7 +383,6 @@ function StandardCardInputContent() {
           setDieList(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error(t('loadDieFailed'), error);
       }
     };
     const fetchEmployees = async () => {
@@ -399,7 +394,6 @@ function StandardCardInputContent() {
           setEmployeeList(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error(t('loadEmployeeFailed'), error);
       }
     };
     fetchMaterials();
@@ -499,7 +493,6 @@ function StandardCardInputContent() {
         });
       }
     } catch (error) {
-      console.error(t('loadCardFailed'), error);
       toast({ title: t('loadDataFailed'), variant: 'destructive' });
     }
   }, [toast]);
@@ -622,7 +615,6 @@ function StandardCardInputContent() {
         return null;
       }
     } catch (error) {
-      console.error(t('saveFailed'), error);
       toast({ title: t('saveFailedNetwork'), variant: 'destructive' });
       return null;
     } finally {

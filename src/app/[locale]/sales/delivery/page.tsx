@@ -327,7 +327,6 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
         toast.error(result.message || '创建失败');
       }
     } catch (e) {
-      console.error(e);
       toast.error('保存发货单失败');
     }
   };
@@ -395,7 +394,6 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
         toast.error(result.message || '发货失败');
       }
     } catch (e) {
-      console.error(e);
       toast.error('执行发货操作失败');
     }
   };
@@ -428,7 +426,6 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
         toast.error(result.message || '提交失败');
       }
     } catch (e) {
-      console.error(e);
       toast.error('提交部分发货申请失败');
     }
   };
@@ -460,7 +457,6 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
         toast.error(result.message || '提交失败');
       }
     } catch (e) {
-      console.error(e);
       toast.error('提交补发申请失败');
     }
   };
@@ -479,7 +475,6 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
         toast.error(result.message || '更新失败');
       }
     } catch (e) {
-      console.error(e);
       toast.error('更新状态失败');
     }
   };
@@ -496,7 +491,6 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
         toast.error(result.message || '删除失败');
       }
     } catch (e) {
-      console.error(e);
       toast.error('删除失败');
     }
   };
@@ -511,7 +505,6 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
         setDetailOpen(true);
       }
     } catch (e) {
-      console.error(e);
       toast.error('获取详情失败');
     }
   };

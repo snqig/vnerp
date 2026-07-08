@@ -48,6 +48,16 @@ interface AuthState {
   isLoading: boolean;
 }
 
+/**
+ * 服务端 SSR 预取的初始认证数据。
+ * 由 layout.tsx 在服务端调用 MenuService 获取后，作为 prop 注入 AuthProvider。
+ * 存在时跳过客户端首次 fetch（仍可后台静默刷新），从根源上消除菜单 SSR 不同步 / 闪烁。
+ */
+export interface InitialAuthData {
+  menus: Menu[];
+  permissions: string[];
+}
+
 interface AuthContextType extends AuthState {
   login: (
     username: string,
@@ -63,19 +73,75 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+/** localStorage key for menu cache */
+const MENU_CACHE_KEY = 'cached_menus';
+const MENU_CACHE_TS_KEY = 'cached_menus_ts';
+/** 菜单缓存有效期：30 分钟 */
+const MENU_CACHE_TTL = 30 * 60 * 1000;
+
+/** 从 localStorage 读取缓存的菜单数据 */
+function loadCachedMenus(): { menus: Menu[]; permissions: string[] } | null {
+  try {
+    const ts = localStorage.getItem(MENU_CACHE_TS_KEY);
+    if (!ts) return null;
+    // 缓存过期检查
+    if (Date.now() - parseInt(ts, 10) > MENU_CACHE_TTL) {
+      localStorage.removeItem(MENU_CACHE_KEY);
+      localStorage.removeItem(MENU_CACHE_TS_KEY);
+      return null;
+    }
+    const raw = localStorage.getItem(MENU_CACHE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (Array.isArray(data?.menus)) {
+      return { menus: data.menus, permissions: Array.isArray(data.permissions) ? data.permissions : [] };
+    }
+  } catch {
+    // 缓存数据损坏，清除
+    localStorage.removeItem(MENU_CACHE_KEY);
+    localStorage.removeItem(MENU_CACHE_TS_KEY);
+  }
+  return null;
+}
+
+/** 将菜单数据缓存到 localStorage */
+function saveCachedMenus(menus: Menu[], permissions: string[]) {
+  try {
+    localStorage.setItem(MENU_CACHE_KEY, JSON.stringify({ menus, permissions }));
+    localStorage.setItem(MENU_CACHE_TS_KEY, String(Date.now()));
+  } catch {
+    // localStorage 满了或不可用，静默忽略
+  }
+}
+
+export function AuthProvider({
+  children,
+  initialAuth,
+}: {
+  children: ReactNode;
+  initialAuth?: InitialAuthData | null;
+}) {
+  // SSR 注入了 initialAuth 时，初值直接使用服务端菜单：
+  //   - menus / permissions 来自服务端预取（SSR 与首帧客户端完全一致，无水合差异）
+  //   - isLoading = false（无需等首次 fetch）
+  //   - user / isAuthenticated 仍由 useEffect 从 localStorage 恢复（避免 SSR 读取 localStorage）
+  // 无 initialAuth 时（未登录 / SSR 预取失败）：保持原有行为，isLoading=true 显示骨架屏。
   const [state, setState] = useState<AuthState>({
     user: null,
-    menus: [],
-    permissions: [],
+    menus: initialAuth?.menus ?? [],
+    permissions: initialAuth?.permissions ?? [],
     isAuthenticated: false,
-    isLoading: true,
+    isLoading: !initialAuth,
   });
 
   const authChecked = useRef(false);
   const menusLoadedRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const menusCountRef = useRef(0);
+  /** 后台刷新标记：避免重复触发 */
+  const backgroundRefreshDone = useRef(false);
+  /** 缓存 initialAuth 引用，供 useEffect 中判断是否跳过首次 fetch */
+  const initialAuthRef = useRef<InitialAuthData | null | undefined>(initialAuth);
 
   const fetchMenus = useCallback(
     async (token: string, force: boolean = false, clearOnAuthError: boolean = true) => {
@@ -96,12 +162,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (!response.ok) {
           if (response.status === 401) {
-            console.error('[AuthContext] 菜单API返回401');
             if (clearOnAuthError) {
               localStorage.removeItem('token');
               localStorage.removeItem('user');
               localStorage.removeItem('refreshToken');
               localStorage.removeItem('userId');
+              localStorage.removeItem(MENU_CACHE_KEY);
+              localStorage.removeItem(MENU_CACHE_TS_KEY);
               sessionStorage.removeItem('token');
               sessionStorage.removeItem('user');
               sessionStorage.removeItem('refreshToken');
@@ -119,7 +186,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setState((prev) => ({ ...prev, isLoading: false }));
             }
           } else {
-            console.error('[AuthContext] 菜单API返回错误:', response.status);
             setState((prev) => ({ ...prev, isLoading: false }));
           }
           return;
@@ -127,7 +193,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
-          console.error('[AuthContext] 菜单API返回非JSON响应');
           setState((prev) => ({ ...prev, isLoading: false }));
           return;
         }
@@ -136,11 +201,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (result.success) {
           menusLoadedRef.current = true;
           const menus = Array.isArray(result.data?.menus) ? result.data.menus : [];
+          const permissions = Array.isArray(result.data?.permissions) ? result.data.permissions : [];
           menusCountRef.current = menus.length;
+
+          // 持久化菜单缓存到 localStorage
+          saveCachedMenus(menus, permissions);
+
           setState((prev) => ({
             ...prev,
             menus: menus,
-            permissions: Array.isArray(result.data?.permissions) ? result.data.permissions : [],
+            permissions: permissions,
             isLoading: false,
           }));
         }
@@ -148,7 +218,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error instanceof Error && error.name === 'AbortError') {
           return;
         }
-        console.error('获取菜单失败:', error);
         setState((prev) => ({ ...prev, isLoading: false }));
       }
     },
@@ -166,16 +235,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token && userStr) {
         try {
           const user = JSON.parse(userStr);
+
+          // SSR 已注入 initialAuth：直接采用服务端菜单，跳过首次 fetch。
+          // 仅恢复 user / isAuthenticated（这些字段 SSR 阶段无法从 localStorage 读取），
+          // 仍触发后台静默刷新，保证菜单最终与服务端一致；同时持久化到 localStorage 作降级缓存。
+          const ssrInitial = initialAuthRef.current;
+          if (ssrInitial && ssrInitial.menus.length > 0) {
+            setState({
+              user,
+              menus: ssrInitial.menus,
+              permissions: ssrInitial.permissions,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+            menusLoadedRef.current = true;
+            menusCountRef.current = ssrInitial.menus.length;
+            saveCachedMenus(ssrInitial.menus, ssrInitial.permissions);
+            // 后台静默刷新，不清除认证状态
+            fetchMenus(token, true, false).catch(() => {});
+            return;
+          }
+
+          // 降级：优先从 localStorage 恢复缓存的菜单，实现 0ms 侧边栏渲染
+          const cached = loadCachedMenus();
+
           setState({
             user,
-            menus: [],
-            permissions: user.permissions || [],
+            menus: cached?.menus ?? [],
+            permissions: cached?.permissions ?? [],
             isAuthenticated: true,
-            isLoading: true,
+            // 有缓存菜单 → 不显示 loading（侧边栏即时展示）
+            // 无缓存菜单 → 显示骨架屏
+            isLoading: !cached,
           });
-          await fetchMenus(token);
+
+          if (cached) {
+            // 有缓存：先展示缓存菜单，后台静默刷新最新数据
+            menusLoadedRef.current = true;
+            menusCountRef.current = cached.menus.length;
+            // 静默刷新，不清除认证状态
+            fetchMenus(token, true, false).catch(() => {});
+          } else {
+            // 无缓存：等待 API 返回（首次登录场景）
+            await fetchMenus(token);
+          }
         } catch (e) {
-          console.error('[AuthContext] 解析失败:', e);
           setState((prev) => ({ ...prev, isLoading: false }));
         }
       } else {
@@ -222,7 +326,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
 
           fetchMenus(result.data.token, true, false).catch((e) => {
-            console.error('[AuthContext] 登录后加载菜单失败:', e);
           });
           return { success: true };
         } else {
@@ -235,11 +338,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [fetchMenus]
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    // 调用登出 API：清除 httpOnly cookie（access_token + refresh_token）+ 将 token 加入黑名单
+    // 必须在清除 localStorage 之前调用，因为 authFetch 需要从 localStorage 读取 token。
+    // 使用 authFetch 以携带 Authorization header + CSRF token；API 失败也继续清除本地状态
+    // （cookie 会在 24h 后自然过期，不影响安全性）。
+    try {
+      const { authFetch } = await import('@/lib/auth-fetch');
+      await authFetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // ignore：网络错误等，继续清除本地状态
+    }
+
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userId');
+    localStorage.removeItem(MENU_CACHE_KEY);
+    localStorage.removeItem(MENU_CACHE_TS_KEY);
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('refreshToken');
@@ -255,6 +371,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading: false,
     });
     if (typeof window !== 'undefined') {
+      // 使用整页跳转而非 router.push：确保所有客户端状态被完全重置，
+      // 且 SSR layout.tsx 重新执行（此时 access_token cookie 已被清除，prefetchMenus 返回 null）
       window.location.href = '/login';
     }
   }, []);

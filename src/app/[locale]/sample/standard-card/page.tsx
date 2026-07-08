@@ -193,21 +193,16 @@ export default function StandardCardPage() {
         params.append('keyword', debouncedSearchTerm);
       }
 
-      console.log('[StandardCard] loadCards - 请求参数:', { page: currentPage, status: statusFilter, keyword: debouncedSearchTerm });
       const response = await fetch(`/api/standard-cards?${params.toString()}`);
       const result = await response.json();
-      console.log('[StandardCard] loadCards - 响应:', { success: result.success, total: result.pagination?.total || result.data?.total, listLength: Array.isArray(result.data) ? result.data.length : result.data?.list?.length });
 
       if (result.success) {
         const cardList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
-        console.log('[StandardCard] loadCards - 卡片状态分布:', cardList.reduce((acc: Record<number, number>, c: any) => { acc[c.status] = (acc[c.status] || 0) + 1; return acc; }, {}));
         setCards(cardList);
         setTotalCount(result.pagination?.total || result.data?.total || 0);
       } else {
-        console.error('[StandardCard] loadCards - 失败:', result.message);
       }
     } catch (error) {
-      console.error('[StandardCard] loadCards - 异常:', error);
     } finally {
       setLoading(false);
     }
@@ -269,22 +264,18 @@ export default function StandardCardPage() {
   };
 
   const handleApprove = async (card: StandardCardListItem) => {
-    console.log('[StandardCard] handleApprove - 卡片:', { id: card.id, card_no: card.card_no, 当前状态: card.status });
     setCardToApprove(card);
     setLoadingApproval(true);
     try {
       const response = await fetch(`/api/standard-cards/approve?id=${card.id}`);
       const result = await response.json();
-      console.log('[StandardCard] handleApprove - 审核状态响应:', { success: result.success, status: result.data?.status, steps: result.data?.steps?.map((s: any) => ({ name: s.name, status: s.status })) });
       if (result.success) {
         setApprovalStatus(result.data);
         setApproveDialogOpen(true);
       } else {
-        console.error('[StandardCard] handleApprove - 获取审核状态失败:', result.message);
         alert(t('getReviewStatusFailed') + ': ' + result.message);
       }
     } catch (error) {
-      console.error('[StandardCard] handleApprove - 异常:', error);
       alert(t('getReviewStatusFailed'));
     } finally {
       setLoadingApproval(false);
@@ -293,7 +284,6 @@ export default function StandardCardPage() {
 
   const handleApproveAction = async (type: string, userName: string) => {
     if (!cardToApprove) return;
-    console.log('[StandardCard] handleApproveAction - 操作:', { id: cardToApprove.id, type, userName });
 
     try {
       const response = await fetch('/api/standard-cards/approve', {
@@ -308,17 +298,14 @@ export default function StandardCardPage() {
       });
 
       const result = await response.json();
-      console.log('[StandardCard] handleApproveAction - 响应:', { success: result.success, message: result.message, newStatus: result.data?.status });
       if (result.success) {
         alert(result.message);
         setApproveDialogOpen(false);
         loadCards();
       } else {
-        console.error('[StandardCard] handleApproveAction - 失败:', result.message);
         alert(t('operationFailed') + ': ' + result.message);
       }
     } catch (error) {
-      console.error('[StandardCard] handleApproveAction - 异常:', error);
       alert(t('reviewFailed'));
     }
   };
@@ -349,7 +336,6 @@ export default function StandardCardPage() {
         alert(t('operationFailed') + ': ' + result.message);
       }
     } catch (error) {
-      console.error('撤销审核失败:', error);
       alert(t('revokeFailed'));
     }
   };
@@ -379,7 +365,6 @@ export default function StandardCardPage() {
           alert(t('deleteFailed') + ': ' + (result.message || t('unknownError')));
         }
       } catch (error: any) {
-        console.error('删除失败:', error);
         alert(t('deleteFailed') + ': ' + (error.message || t('checkNetwork')));
       }
     }
@@ -397,7 +382,6 @@ export default function StandardCardPage() {
   };
 
   const handleSubmitForReview = async (card: StandardCardListItem) => {
-    console.log('[StandardCard] handleSubmitForReview - 卡片:', { id: card.id, card_no: card.card_no, 当前状态: card.status });
     try {
       const response = await fetch('/api/standard-cards/approve', {
         method: 'POST',
@@ -410,7 +394,6 @@ export default function StandardCardPage() {
         }),
       });
       const result = await response.json();
-      console.log('[StandardCard] handleSubmitForReview - 响应:', { success: result.success, message: result.message, newStatus: result.data?.status });
       if (result.success) {
         alert(t('submitReviewSuccess'));
         loadCards();
@@ -418,14 +401,12 @@ export default function StandardCardPage() {
         alert(t('submitReviewFailed') + ': ' + result.message);
       }
     } catch (error) {
-      console.error('[StandardCard] handleSubmitForReview - 异常:', error);
       alert(t('submitReviewFailed'));
     }
   };
 
   const handleReject = async (card: StandardCardListItem) => {
     if (!confirm(t('rejectConfirm'))) return;
-    console.log('[StandardCard] handleReject - 卡片:', { id: card.id, card_no: card.card_no, 当前状态: card.status });
     try {
       const response = await fetch('/api/standard-cards/approve', {
         method: 'POST',
@@ -438,7 +419,6 @@ export default function StandardCardPage() {
         }),
       });
       const result = await response.json();
-      console.log('[StandardCard] handleReject - 响应:', { success: result.success, message: result.message, newStatus: result.data?.status });
       if (result.success) {
         alert(t('rejectSuccess'));
         loadCards();
@@ -446,7 +426,6 @@ export default function StandardCardPage() {
         alert(t('rejectFailed') + ': ' + result.message);
       }
     } catch (error) {
-      console.error('[StandardCard] handleReject - 异常:', error);
       alert(t('rejectFailed'));
     }
   };

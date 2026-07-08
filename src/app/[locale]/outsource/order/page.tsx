@@ -102,7 +102,6 @@ export default function OutsourceOrderPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -112,7 +111,6 @@ export default function OutsourceOrderPage() {
       const result = await res.json();
       if (result.success) setSuppliers(result.data?.list || result.data || []);
     } catch (e) {
-      console.error(e);
     }
   };
 

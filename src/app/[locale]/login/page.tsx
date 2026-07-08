@@ -168,7 +168,7 @@ export default function LoginPage() {
   useEffect(() => {
     setMounted(true);
     if (!isLoading && isAuthenticated) {
-      router.replace('/');
+      router.replace('/dashboard');
     }
   }, [isLoading, isAuthenticated, router]);
 
@@ -319,7 +319,7 @@ export default function LoginPage() {
           }
         }
         toast.success(t('loginSuccess'));
-        router.replace('/');
+        router.replace('/dashboard');
       } else {
         setError(result.message || t('loginFailed'));
       }
@@ -363,7 +363,7 @@ export default function LoginPage() {
             JSON.stringify(user)
           );
         }
-        router.replace('/');
+        router.replace('/dashboard');
       } else {
         toast.error(result.message || '修改失败');
       }

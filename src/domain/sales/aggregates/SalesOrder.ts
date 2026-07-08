@@ -1,6 +1,7 @@
 import { DomainEvent, DomainError } from '../../shared/DomainTypes';
 import { SalesOrderStatus, SalesStatus } from '../value-objects/SalesOrderStatus';
 import { SalesOrderLine, SalesOrderLineProps } from '../entities/SalesOrderLine';
+import { roundAmount } from '@/lib/decimal-utils';
 import {
   SalesOrderCreatedEvent,
   SalesOrderSubmittedEvent,
@@ -19,6 +20,13 @@ export interface SalesOrderProps {
   deliveryDate?: string;
   totalAmount?: number;
   totalQuantity?: number;
+  taxRate?: number;
+  taxAmount?: number;
+  totalWithTax?: number;
+  discountAmount?: number;
+  discountRate?: number;
+  currency?: string;
+  paymentTerms?: string;
   warehouseId?: number;
   remark?: string;
   createBy?: number;
@@ -42,6 +50,13 @@ export class SalesOrder {
     public readonly deliveryDate: string,
     private _totalAmount: number,
     private _totalQuantity: number,
+    private _taxRate: number,
+    private _taxAmount: number,
+    private _totalWithTax: number,
+    private _discountAmount: number,
+    private _discountRate: number,
+    public readonly currency: string,
+    public readonly paymentTerms: string,
     public readonly warehouseId: number,
     public readonly remark: string,
     public readonly createBy: number | undefined,
@@ -63,8 +78,14 @@ export class SalesOrder {
     const lines = props.lines.map((line, index) =>
       SalesOrderLine.create({ ...line, lineNo: line.lineNo || index + 1 })
     );
-    const totalAmount = lines.reduce((sum, l) => sum + l.amount, 0);
+    const totalAmount = roundAmount(lines.reduce((sum, l) => sum + l.amount, 0));
     const totalQuantity = lines.reduce((sum, l) => sum + l.orderQty, 0);
+    const taxRate = props.taxRate ?? 0;
+    const discountRate = props.discountRate ?? 0;
+    const discountAmount = props.discountAmount ?? roundAmount(totalAmount * discountRate / 100);
+    const taxableAmount = roundAmount(totalAmount - discountAmount);
+    const taxAmount = props.taxAmount ?? roundAmount(taxableAmount * taxRate / 100);
+    const totalWithTax = roundAmount(taxableAmount + taxAmount);
 
     const order = new SalesOrder(
       props.id,
@@ -76,6 +97,13 @@ export class SalesOrder {
       props.deliveryDate || '',
       totalAmount,
       totalQuantity,
+      taxRate,
+      taxAmount,
+      totalWithTax,
+      discountAmount,
+      discountRate,
+      props.currency || 'CNY',
+      props.paymentTerms || '',
       props.warehouseId || 1,
       props.remark || '',
       props.createBy,
@@ -112,6 +140,13 @@ export class SalesOrder {
       props.deliveryDate || '',
       props.totalAmount || 0,
       props.totalQuantity || 0,
+      props.taxRate || 0,
+      props.taxAmount || 0,
+      props.totalWithTax || props.totalAmount || 0,
+      props.discountAmount || 0,
+      props.discountRate || 0,
+      props.currency || 'CNY',
+      props.paymentTerms || '',
       props.warehouseId || 1,
       props.remark || '',
       props.createBy,
@@ -134,6 +169,21 @@ export class SalesOrder {
   }
   get totalQuantity(): number {
     return this._totalQuantity;
+  }
+  get taxRate(): number {
+    return this._taxRate;
+  }
+  get taxAmount(): number {
+    return this._taxAmount;
+  }
+  get totalWithTax(): number {
+    return this._totalWithTax;
+  }
+  get discountAmount(): number {
+    return this._discountAmount;
+  }
+  get discountRate(): number {
+    return this._discountRate;
   }
   get auditBy(): number | undefined {
     return this._auditBy;

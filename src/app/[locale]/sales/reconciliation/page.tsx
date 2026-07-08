@@ -145,7 +145,6 @@ export default function ReconciliationPage() {
         });
       }
     } catch (e) {
-      console.error(e);
       toast.error(t('fetchListFailed'));
     } finally {
       setLoading(false);
@@ -160,7 +159,6 @@ export default function ReconciliationPage() {
         setCustomers(result.data?.list || result.data || []);
       }
     } catch (e) {
-      console.error(e);
     }
   }, []);
 
@@ -194,7 +192,6 @@ export default function ReconciliationPage() {
         toast.error(result.message || tc('createFailed'));
       }
     } catch (e) {
-      console.error(e);
       toast.error(t('createFailed'));
     }
   };
@@ -208,7 +205,6 @@ export default function ReconciliationPage() {
         setDetailItems(result.data?.details || []);
       }
     } catch (e) {
-      console.error(e);
       setDetailItems([]);
     }
     setDetailOpen(true);

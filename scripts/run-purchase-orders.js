@@ -1,4 +1,4 @@
-const mysql = require('mysql2/promise');
+﻿const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
@@ -6,7 +6,7 @@ const path = require('path');
 const dbConfig = {
   host: '127.0.0.1',
   user: 'root',
-  password: 'Snqig521223',
+  password: process.env.DB_PASSWORD || '',
   database: 'vnerpdacahng',
   charset: 'utf8mb4',
   multipleStatements: true, // 允许多条语句

@@ -237,7 +237,6 @@ export default function MaterialLabelsPage() {
         toast.error(result.message || t('cuttingFailed'));
       }
     } catch (error) {
-      console.error(t('cuttingFailed'), error);
       toast.error(t('cuttingFailedRetry'));
     } finally {
       setCuttingLoading(false);

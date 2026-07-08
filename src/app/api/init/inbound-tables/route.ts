@@ -229,7 +229,6 @@ export const GET = withPermission(async (request: NextRequest) => {
       details: results,
     });
   } catch (error: any) {
-    console.error('创建表失败:', error);
     return errorResponse(`创建表失败: ${error.message}`, 500, 500);
   }
 }, { errorMessage: '初始化入库管理表失败' });

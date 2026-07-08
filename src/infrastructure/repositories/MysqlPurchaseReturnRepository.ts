@@ -1,8 +1,61 @@
+import mysql from 'mysql2/promise';
 import { IPurchaseReturnRepository, Pagination, PaginatedResult } from '@/domain/purchase/repositories/IPurchaseReturnRepository';
 import { PurchaseReturn, PurchaseReturnProps } from '@/domain/purchase/aggregates/PurchaseReturn';
 import { PurchaseReturnLineProps } from '@/domain/purchase/entities/PurchaseReturnLine';
+import { PurchaseReturnStatusValue } from '@/domain/purchase/value-objects/PurchaseReturnStatus';
 import { query, execute, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
+
+type SqlValue = string | number | null | boolean | Date;
+
+/** pur_purchase_return 表行类型 */
+interface PurPurchaseReturnRow {
+  id: number;
+  return_no: string;
+  status: number;
+  order_id: number;
+  order_no: string;
+  supplier_id: number;
+  supplier_name: string;
+  warehouse_id: number;
+  receipt_id: number | null;
+  receipt_no: string;
+  reason: string;
+  return_date: string;
+  total_amount: number | string;
+  approve_by: number | null;
+  approve_time: string | null;
+  complete_by: number | null;
+  complete_time: string | null;
+  outbound_order_id: number | null;
+  outbound_order_no: string | null;
+  payable_id: number | null;
+  payable_no: string | null;
+  remark: string;
+  create_by: number | null;
+  create_time: string;
+  update_time: string;
+  deleted: number;
+}
+
+/** pur_purchase_return_line 表行类型 */
+interface PurPurchaseReturnLineRow {
+  id: number;
+  return_id: number;
+  line_no: number;
+  order_line_id: number | null;
+  material_id: number;
+  material_code: string;
+  material_name: string;
+  material_spec: string;
+  unit: string;
+  quantity: number | string;
+  unit_price: number | string;
+  amount: number | string;
+  batch_no: string;
+  reason: string;
+  remark: string;
+}
 
 const RETURN_COLUMNS = `id, return_no, status, order_id, order_no, supplier_id, supplier_name,
   warehouse_id, receipt_id, receipt_no, reason, return_date, total_amount,
@@ -16,12 +69,12 @@ const LINE_COLUMNS = `id, return_id, line_no, order_line_id, material_id, materi
 
 export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository {
   async findById(id: number): Promise<PurchaseReturn | null> {
-    const rows = await query<any>(
+    const rows = await query<PurPurchaseReturnRow>(
       `SELECT ${RETURN_COLUMNS} FROM pur_purchase_return WHERE id = ? AND deleted = 0`,
       [id]
     );
     if (!rows || rows.length === 0) return null;
-    const lines = await query<any>(
+    const lines = await query<PurPurchaseReturnLineRow>(
       `SELECT ${LINE_COLUMNS} FROM pur_purchase_return_line WHERE return_id = ? ORDER BY line_no`,
       [id]
     );
@@ -29,12 +82,12 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
   }
 
   async findByReturnNo(returnNo: string): Promise<PurchaseReturn | null> {
-    const rows = await query<any>(
+    const rows = await query<PurPurchaseReturnRow>(
       `SELECT ${RETURN_COLUMNS} FROM pur_purchase_return WHERE return_no = ? AND deleted = 0`,
       [returnNo]
     );
     if (!rows || rows.length === 0) return null;
-    const lines = await query<any>(
+    const lines = await query<PurPurchaseReturnLineRow>(
       `SELECT ${LINE_COLUMNS} FROM pur_purchase_return_line WHERE return_id = ? ORDER BY line_no`,
       [rows[0].id]
     );
@@ -42,13 +95,13 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
   }
 
   async findByOrderId(orderId: number): Promise<PurchaseReturn[]> {
-    const rows = await query<any>(
+    const rows = await query<PurPurchaseReturnRow>(
       `SELECT ${RETURN_COLUMNS} FROM pur_purchase_return WHERE order_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [orderId]
     );
     if (!rows || rows.length === 0) return [];
     const returnIds = rows.map((r) => r.id);
-    const allLines = await query<any>(
+    const allLines = await query<PurPurchaseReturnLineRow>(
       `SELECT ${LINE_COLUMNS} FROM pur_purchase_return_line WHERE return_id IN (?) ORDER BY return_id, line_no`,
       [returnIds]
     );
@@ -64,7 +117,7 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
     filters?: { keyword?: string; supplierId?: number; startDate?: string; endDate?: string }
   ): Promise<PaginatedResult<PurchaseReturn>> {
     const where: string[] = ['deleted = 0', 'status = ?'];
-    const values: any[] = [status];
+    const values: SqlValue[] = [status];
     if (filters?.keyword) {
       where.push('(return_no LIKE ? OR supplier_name LIKE ? OR order_no LIKE ?)');
       const like = `%${filters.keyword}%`;
@@ -84,14 +137,14 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
     }
     const whereClause = where.join(' AND ');
 
-    const countRows = await query<any>(
+    const countRows = await query<{ total: number }>(
       `SELECT COUNT(*) as total FROM pur_purchase_return WHERE ${whereClause}`,
       values
     );
     const total = countRows[0]?.total || 0;
 
     const offset = (pagination.page - 1) * pagination.pageSize;
-    const rows = await query<any>(
+    const rows = await query<PurPurchaseReturnRow>(
       `SELECT ${RETURN_COLUMNS} FROM pur_purchase_return WHERE ${whereClause} ORDER BY create_time DESC LIMIT ? OFFSET ?`,
       [...values, pagination.pageSize, offset]
     );
@@ -109,7 +162,7 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
     }
 
     const returnIds = rows.map((r) => r.id);
-    const allLines = await query<any>(
+    const allLines = await query<PurPurchaseReturnLineRow>(
       `SELECT ${LINE_COLUMNS} FROM pur_purchase_return_line WHERE return_id IN (?) ORDER BY return_id, line_no`,
       [returnIds]
     );
@@ -134,7 +187,7 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
     const returnNo = ret.returnNo || (await generateDocumentNo('purchase_return'));
 
     return transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO pur_purchase_return
          (return_no, status, order_id, order_no, supplier_id, supplier_name,
           warehouse_id, receipt_id, receipt_no, reason, return_date, total_amount,
@@ -232,7 +285,7 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
     );
   }
 
-  private mapToAggregate(row: any, lines: any[]): PurchaseReturn {
+  private mapToAggregate(row: PurPurchaseReturnRow, lines: PurPurchaseReturnLineRow[]): PurchaseReturn {
     const lineProps: PurchaseReturnLineProps[] = (lines || []).map((l) => ({
       id: l.id,
       returnId: l.return_id,
@@ -254,7 +307,7 @@ export class MysqlPurchaseReturnRepository implements IPurchaseReturnRepository 
     const props: PurchaseReturnProps = {
       id: row.id,
       returnNo: row.return_no,
-      status: row.status,
+      status: row.status as PurchaseReturnStatusValue,
       orderId: row.order_id,
       orderNo: row.order_no || '',
       supplierId: row.supplier_id,

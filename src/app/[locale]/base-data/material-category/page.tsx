@@ -84,7 +84,6 @@ export default function MaterialCategoryPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
   useEffect(() => {

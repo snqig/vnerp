@@ -62,6 +62,8 @@ import {
   exportTableToPDF,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { toast } from 'sonner';
 
@@ -777,41 +779,23 @@ export default function IncomingInspectionPage() {
               <Plus className="w-4 h-4 mr-2" />
               {tc('add')}
             </Button>
-            <TableExportToolbar
-              selectedCount={selectedInspections.length}
-              totalCount={sortedData.length}
-              onSelectAll={() => setSelectedInspections(sortedData.map((i) => i.id))}
-              onDeselectAll={() => setSelectedInspections([])}
-              onPrint={() => {
-                const selectedData = sortedData.filter((i) => selectedInspections.includes(i.id));
-                if (selectedData.length === 0) {
-                  toast.error(tc('selectRecordsToPrint'));
-                  return;
-                }
-                const printWindow = window.open('', '_blank');
-                if (!printWindow) {
-                  toast.error(tc('cannotOpenPrintWindow'));
-                  return;
-                }
-                const rows = selectedData
-                  .map(
-                    (i) =>
-                      `<tr><td>${i.id}</td><td>${i.date}</td><td>${i.supplier}</td><td>${i.materialName}</td><td>${i.specification}</td><td>${i.batchNo}</td><td>${i.quantity} ${i.unit}</td><td>${i.inspectionType}</td><td>${statusConfig[i.result]?.label || i.result}</td><td>${i.inspector}</td></tr>`
-                  )
-                  .join('');
-                printWindow.document.write(
-                  `<!DOCTYPE html><html><head><title>${t('incomingInspectionPrint')}</title><style>body{font-family:"Microsoft YaHei",sans-serif;padding:20px}h1{text-align:center;font-size:20px;margin-bottom:4px}p.sub{text-align:center;color:#666;font-size:12px;margin-bottom:16px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #333;padding:6px 8px;text-align:center}th{background:#f0f0f0;font-weight:bold}@media print{body{padding:0}}</style></head><body><h1>${t('incomingInspectionRecord')}</h1><p class="sub">${tc('printTime')}: ${new Date().toLocaleString()} | ${tc('totalRecords')}: ${selectedData.length}</p><table><thead><tr><th>${t('inspectionNo')}</th><th>${tc("date")}</th><th>${tc("supplier")}</th><th>${tc("materialName")}</th><th>${tc("specification")}</th><th>${tc("batchNo")}</th><th>${tc("quantity")}</th><th>${t('inspectionType')}</th><th>${t('inspectionResult')}</th><th>${t('inspector')}</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=function(){window.print();}</script></body></html>`
-                );
-                printWindow.document.close();
-                toast.success(tc('printTaskSent'));
-              }}
-              onExportPDF={() =>
-                exportTableToPDF(sortedData, t('incomingInspectionReport'), exportColumns, t('incomingInspectionReport'))
-              }
-              onExportXLS={() => exportTableToXLS(sortedData, t('incomingInspectionReport'), exportColumns)}
-              onExportWORD={() =>
-                exportTableToWORD(sortedData, t('incomingInspectionReport'), exportColumns, t('incomingInspectionReport'))
-              }
+            <GlobalExportToolbar
+              filename="来料检验报告"
+              title="来料检验报告"
+              landscape
+              columns={[
+                { key: 'id', label: t('inspectionNo'), width: 18 },
+                { key: 'date', label: tc('date'), width: 12 },
+                { key: 'supplier', label: tc('supplier'), width: 15 },
+                { key: 'materialName', label: tc('materialName'), width: 18 },
+                { key: 'specification', label: tc('specification'), width: 12 },
+                { key: 'batchNo', label: tc('batchNo'), width: 15 },
+                { key: 'quantity', label: tc('quantity'), width: 10 },
+                { key: 'inspectionType', label: t('inspectionType'), width: 10 },
+                { key: 'result', label: t('inspectionResult'), width: 10, formatter: (v) => statusConfig[v]?.label || v },
+                { key: 'inspector', label: t('inspector'), width: 10 },
+              ]}
+              data={selectedInspections.length > 0 ? sortedData.filter((i) => selectedInspections.includes(i.id)) : sortedData}
             />
           </div>
         </div>

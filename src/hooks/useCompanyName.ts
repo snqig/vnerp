@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { authFetch } from '@/lib/auth-fetch';
 
 export function useCompanyName() {
   const [companyName, setCompanyName] = useState('越南达昌科技有限公司');
@@ -7,18 +8,10 @@ export function useCompanyName() {
   useEffect(() => {
     let cancelled = false;
 
-    const getAuthHeaders = (): Record<string, string> => {
-      const token =
-        typeof window !== 'undefined'
-          ? localStorage.getItem('token') || sessionStorage.getItem('token')
-          : null;
-      return token ? { Authorization: `Bearer ${token}` } : {};
-    };
-
     const fetchWithRetry = async (url: string, retries = 2): Promise<Response | null> => {
       for (let i = 0; i <= retries; i++) {
         try {
-          const res = await fetch(url, { headers: getAuthHeaders() });
+          const res = await authFetch(url);
           if (res.status === 401) return null;
           if (res.ok && res.headers.get('content-type')?.includes('application/json')) {
             return res;

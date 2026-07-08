@@ -146,7 +146,6 @@ export default function ReturnPage() {
         setTotal(result.data?.total || 0);
       }
     } catch (e) {
-      console.error(e);
       toast.error(t('fetchListFailed'));
     } finally {
       setLoading(false);
@@ -161,7 +160,6 @@ export default function ReturnPage() {
         setCustomers(result.data?.list || result.data || []);
       }
     } catch (e) {
-      console.error(e);
     }
   }, []);
 
@@ -232,7 +230,6 @@ export default function ReturnPage() {
         toast.error(result.message || tc('createFailed'));
       }
     } catch (e) {
-      console.error(e);
       toast.error(t('saveFailed'));
     }
   };
@@ -251,7 +248,6 @@ export default function ReturnPage() {
         toast.error(result.message || tc('updateFailed'));
       }
     } catch (e) {
-      console.error(e);
       toast.error(tc('updateFailed'));
     }
   };
@@ -268,7 +264,6 @@ export default function ReturnPage() {
         toast.error(result.message || tc('deleteFailed'));
       }
     } catch (e) {
-      console.error(e);
       toast.error(tc('deleteFailed'));
     }
   };

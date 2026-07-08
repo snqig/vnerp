@@ -11,7 +11,6 @@ export const POST = withPermission(async (request: NextRequest) => {
       try {
         await conn.execute(`DELETE FROM ${tableName} WHERE deleted = 0 OR deleted IS NULL`);
       } catch (e: any) {
-        console.log(`清理表 ${tableName} 失败:`, e.message);
       }
     };
 
@@ -35,7 +34,6 @@ export const POST = withPermission(async (request: NextRequest) => {
     try {
       await conn.execute('DELETE FROM inv_inventory');
     } catch (e: any) {
-      console.log('清理inv_inventory失败:', e.message);
     }
 
     const customers = [

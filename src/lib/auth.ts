@@ -1,16 +1,12 @@
 import { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
-import { query } from './db';
+import { query, type SqlValue } from './db';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const SECRET_KEY = process.env.JWT_SECRET;
 
-if (!JWT_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET must be set in production environment');
-  }
+if (!SECRET_KEY) {
+  throw new Error('JWT_SECRET environment variable is required');
 }
-
-const SECRET_KEY = JWT_SECRET || 'dev-only-secret-key';
 
 // 用户信息接口
 export interface UserInfo {
@@ -72,10 +68,18 @@ interface ResourceRow {
 }
 
 // 从请求中提取Token
+// 优先读取 Authorization: Bearer <token> 头（向后兼容前端 localStorage 模式）；
+// 缺失时回退读取 access_token HttpOnly Cookie（Phase 1 cookie 迁移改造）。
+// login/refresh 路由已经在设置 JSON body token 的同时下发 access_token Cookie，
+// 此改动让服务端鉴权链路（middleware / verifyToken / withPermission）在两种模式下都可用。
 export function extractToken(request: NextRequest): string | null {
   const authHeader = request.headers.get('authorization');
   if (authHeader && authHeader.startsWith('Bearer ')) {
     return authHeader.substring(7);
+  }
+  const cookieToken = request.cookies.get('access_token')?.value;
+  if (cookieToken) {
+    return cookieToken;
   }
   return null;
 }
@@ -102,6 +106,34 @@ export async function verifyToken(token: string): Promise<UserInfo | null> {
       iat: iatMs,
     };
   } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * 轻量级 JWT 验证：仅校验签名和过期时间，不查询数据库。
+ *
+ * 用于 SSR 预取场景（layout.tsx 服务端预取菜单），避免在每次 SSR 渲染时
+ * 都执行完整的 getUserInfo DB 查询。返回 JWT payload 中的基础信息（userId 等），
+ * 调用方可据此进一步调用 MenuService.getMenusByUserId 获取菜单。
+ *
+ * token 无效或过期时返回 null。
+ */
+export async function verifyTokenLight(token: string): Promise<{
+  userId: number;
+  username: string;
+  realName: string;
+  roles: string[];
+} | null> {
+  try {
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
+    return {
+      userId: payload.userId as number,
+      username: payload.username as string,
+      realName: payload.realName as string,
+      roles: payload.roles as string[],
+    };
+  } catch {
     return null;
   }
 }
@@ -295,7 +327,7 @@ export async function validateResourceAccess(
   resourceId: string | number
 ): Promise<boolean> {
   let sql = '';
-  let params: unknown[] = [];
+  let params: SqlValue[] = [];
 
   switch (resourceType) {
     case 'order':

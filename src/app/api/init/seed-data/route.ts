@@ -1253,8 +1253,8 @@ export const POST = withPermission(async (request: NextRequest) => {
       stats.qc_final_inspection = 10;
     }
 
-    // ===== qc_unqualified_handle =====
-    if (await isEmpty('qc_unqualified_handle')) {
+    // ===== qc_unqualified =====
+    if (await isEmpty('qc_unqualified')) {
       const [unqualifiedRecords]: any = await conn.execute(
         'SELECT id, unqualified_no FROM qc_unqualified LIMIT 10'
       );
@@ -1262,7 +1262,7 @@ export const POST = withPermission(async (request: NextRequest) => {
       for (let i = 1; i <= 10; i++) {
         const m = existingMaterials[(i - 1) % existingMaterials.length] || mat;
         await conn.execute(
-          `INSERT INTO qc_unqualified_handle (handle_no, inspection_id, material_id, material_code, material_name, unqualified_qty, handle_type, handle_status, responsible_dept, responsible_person, handle_result, cost_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO qc_unqualified (handle_no, inspection_id, material_id, material_code, material_name, quantity, handle_type, handle_status, responsible_dept, responsible_person, handle_result, cost_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             `UQH202604${String(i).padStart(3, '0')}`,
             unqualifiedRecords.length > 0
@@ -1281,7 +1281,7 @@ export const POST = withPermission(async (request: NextRequest) => {
           ]
         );
       }
-      stats.qc_unqualified_handle = 10;
+      stats.qc_unqualified = 10;
     }
     // ===== sys_notice =====
     if (await isEmpty('sys_notice')) {

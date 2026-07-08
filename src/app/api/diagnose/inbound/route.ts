@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { withPermission } from '@/lib/api-permissions';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission(async (request: NextRequest) => {
   try {
     const inboundOrders = await query(
       `SELECT id, order_no, supplier_name, warehouse_id, status, total_quantity, total_amount, inbound_date, create_time
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
       `SELECT COUNT(*) as count FROM inv_inbound_item`
     );
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       data: {
         orders: inboundOrders,
@@ -26,10 +27,10 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error: any) {
-    return Response.json({
+    return NextResponse.json({
       success: false,
       error: error.message,
       stack: error.stack
     }, { status: 500 });
   }
-}
+});

@@ -32,7 +32,6 @@ export class StandardCardNotificationHandler implements EventHandler {
   }
 
   private async handleCreated(event: DomainEvent): Promise<void> {
-    console.log(`[StandardCardNotification] 标准卡创建: ${event.payload.code}`);
   }
 
   private async handleSubmitted(event: DomainEvent): Promise<void> {
@@ -54,7 +53,7 @@ export class StandardCardNotificationHandler implements EventHandler {
         source_id: standardCardId,
         receive_user: this.getProcessManagerUserId(),
         is_read: 0,
-      } as any);
+      });
       logger.db(ctx, 'insert', 'sys_notification', { source_id: standardCardId });
 
       await getCacheManager().delete(`standard_card_list`);
@@ -87,7 +86,7 @@ export class StandardCardNotificationHandler implements EventHandler {
         source_id: standardCardId,
         receive_user: this.getGeneralManagerUserId(),
         is_read: 0,
-      } as any);
+      });
       logger.db(ctx, 'insert', 'sys_notification', { source_id: standardCardId });
 
       await getCacheManager().delete(`standard_card_${standardCardId}`);
@@ -102,7 +101,6 @@ export class StandardCardNotificationHandler implements EventHandler {
 
   private async handleConfirmed(event: DomainEvent): Promise<void> {
     const { standardCardId, code, version, materialId, userId } = event.payload;
-    console.log(`[StandardCardNotification] 标准卡已确认: ${code} V${version}`);
 
     await db.insert('sys_notification', {
       title: '标准卡已生效',
@@ -112,7 +110,7 @@ export class StandardCardNotificationHandler implements EventHandler {
       source_id: standardCardId,
       receive_user: userId,
       is_read: 0,
-    } as any);
+    });
 
     await getCacheManager().delete(`standard_card_${standardCardId}`);
     await getCacheManager().delete(`material_standard_card_${materialId}`);
@@ -120,7 +118,6 @@ export class StandardCardNotificationHandler implements EventHandler {
 
   private async handleObsoleted(event: DomainEvent): Promise<void> {
     const { standardCardId, code, version, reason, userId } = event.payload;
-    console.log(`[StandardCardNotification] 标准卡已作废: ${code} V${version}`);
 
     await getCacheManager().delete(`standard_card_${standardCardId}`);
     await getCacheManager().delete(`standard_card_list`);
@@ -134,7 +131,6 @@ export class StandardCardNotificationHandler implements EventHandler {
       reason: string;
       userId: number;
     };
-    console.log(`[StandardCardNotification] 标准卡已驳回: ${code} V${version}`);
 
     await db.insert('sys_notification', {
       title: '标准卡审核被驳回',
@@ -144,7 +140,7 @@ export class StandardCardNotificationHandler implements EventHandler {
       source_id: standardCardId,
       receive_user: userId,
       is_read: 0,
-    } as any);
+    });
 
     await getCacheManager().delete(`standard_card_${standardCardId}`);
     await getCacheManager().delete(`standard_card_list`);
@@ -158,9 +154,6 @@ export class StandardCardNotificationHandler implements EventHandler {
       code: string;
       userId: number;
     };
-    console.log(
-      `[StandardCardNotification] 标准卡新版本创建: ${code} V${newVersion} (基于 V${parentVersion})`
-    );
 
     await getCacheManager().delete(`standard_card_${parentStandardCardId}`);
     await getCacheManager().delete(`standard_card_list`);
@@ -204,24 +197,21 @@ export class StandardCardWorkOrderLinkHandler implements EventHandler {
     materialId: number,
     standardCardId: number
   ): Promise<void> {
-    const pendingWorkOrders = await db.query(
-      `SELECT id FROM prd_work_order 
-          WHERE material_id = ${materialId} 
-          AND status IN ('created', 'scheduled') 
+    const pendingWorkOrders = await db.query<{ id: number }>(
+      `SELECT id FROM prd_work_order
+          WHERE material_id = ${materialId}
+          AND status IN ('created', 'scheduled')
           AND standard_card_id IS NULL
           LIMIT 100`
     );
 
     for (const wo of pendingWorkOrders) {
       await db.execute(
-        `UPDATE prd_work_order SET standard_card_id = ${standardCardId}, update_time = NOW() WHERE id = ${(wo as any).id}`
+        `UPDATE prd_work_order SET standard_card_id = ${standardCardId}, update_time = NOW() WHERE id = ${wo.id}`
       );
     }
 
     if (pendingWorkOrders.length > 0) {
-      console.log(
-        `[StandardCardWorkOrderLink] 为 ${pendingWorkOrders.length} 个待开工工单关联了新标准卡`
-      );
     }
   }
 

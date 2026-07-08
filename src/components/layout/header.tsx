@@ -105,7 +105,7 @@ interface HeaderProps {
 export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { menus: authMenus } = useAuth();
+  const { menus: authMenus, logout } = useAuth();
   const { companyName } = useCompanyName();
   const t = useTranslations('Nav');
   const ta = useTranslations('Auth');
@@ -162,18 +162,6 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
     setActiveTopMenu(findActiveParent());
   }, [findActiveParent]);
 
-  const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  }, []);
-
   const fetchNotifications = useCallback(async () => {
     try {
       const res = await fetch('/api/system/notice?page=1&pageSize=10');
@@ -209,19 +197,15 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
     try {
       // 从本地存储读取用户信息
       const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
-      console.log('[Header] fetchUserInfo - storedUser:', storedUser ? '存在' : '不存在');
       if (storedUser) {
         const user = JSON.parse(storedUser);
-        console.log('[Header] fetchUserInfo - 解析用户:', { username: user.username, real_name: user.real_name, email: user.email });
         setUserInfo({
           username: user.username || user.real_name || '管理员',
           email: user.email || 'admin@dachang.com',
         });
       } else {
-        console.warn('[Header] fetchUserInfo - 本地无用户信息缓存，使用默认值');
       }
     } catch (e) {
-      console.error('[Header] fetchUserInfo - 失败:', e);
     }
   }, []);
 
@@ -248,12 +232,9 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
   };
 
   const handleLogout = async () => {
-    try {
-      await authFetch('/api/auth/logout', { method: 'POST' });
-    } catch (e) {
-      // ignore
-    }
-    router.push('/login');
+    // 委托给 AuthContext.logout：统一调用 /api/auth/logout 清除 httpOnly cookie，
+    // 清空 AuthContext 状态，并整页跳转到 /login（避免客户端状态残留导致重定向循环）
+    await logout();
   };
 
   return (

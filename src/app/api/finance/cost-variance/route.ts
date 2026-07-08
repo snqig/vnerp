@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
+import { CalcParamService } from '@/lib/calc-param-service';
 
 import { withPermission } from '@/lib/api-permissions';
 export const GET = withPermission(async (request: NextRequest) => {
@@ -91,20 +92,23 @@ export const GET = withPermission(async (request: NextRequest) => {
       [wo.id]
     );
 
-    const standardLaborRate = 50;
-    const standardMaterialUnitCost = Number(wo.sale_unit_price || 0) * 0.45;
+    const standardLaborRate = await CalcParamService.getDecimal('cost.standard_labor_rate', 50);
+    const materialCostRatio = await CalcParamService.getDecimal('cost.material_cost_ratio', 0.45);
+    const standardEfficiency = await CalcParamService.getDecimal('cost.standard_efficiency_per_hour', 500);
+    const overheadRate = await CalcParamService.getDecimal('cost.overhead_rate', 0.15);
+
+    const standardMaterialUnitCost = Number(wo.sale_unit_price || 0) * materialCostRatio;
 
     const actualMaterialCost = Number(materialCostRows[0]?.actual_material_cost || 0);
     const standardMaterialCost = Number(wo.plan_qty || 0) * standardMaterialUnitCost;
     const materialVariance = standardMaterialCost - Math.abs(actualMaterialCost);
 
     const actualWorkHours = Number(laborCostRows[0]?.actual_work_hours || 0);
-    const standardWorkHours = Number(wo.plan_qty || 0) / 500;
+    const standardWorkHours = Number(wo.plan_qty || 0) / standardEfficiency;
     const standardLaborCost = standardWorkHours * standardLaborRate;
     const actualLaborCost = actualWorkHours * standardLaborRate;
     const laborVariance = standardLaborCost - actualLaborCost;
 
-    const overheadRate = 0.15;
     const standardOverheadCost = standardMaterialCost * overheadRate;
     const actualOverheadCost = Math.abs(actualMaterialCost) * overheadRate;
     const overheadVariance = standardOverheadCost - actualOverheadCost;

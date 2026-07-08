@@ -28,11 +28,13 @@ function sleep(ms: number): Promise<void> {
  */
 export class CacheGuard {
   private redis: RedisLockClient | null = null;
+  private redisConnected: (() => boolean) | null = null;
   private localLoads = new Map<string, Promise<unknown>>();
 
   constructor(private cache: CacheManager) {
     if (cache instanceof RedisCacheManager) {
       this.redis = cache.rawClient() as unknown as RedisLockClient;
+      this.redisConnected = () => cache.isConnected();
     }
   }
 
@@ -40,7 +42,8 @@ export class CacheGuard {
     const cached = await this.cache.get<T>(key);
     if (cached !== null) return cached;
 
-    if (this.redis) {
+    // Redis 可用时使用跨进程互斥锁；不可用时退化为进程内 singleflight
+    if (this.redis && this.redisConnected && this.redisConnected()) {
       return this.getOrLoadWithRedisLock(key, ttl, loader);
     }
     return this.getOrLoadWithLocalSingleflight(key, ttl, loader);

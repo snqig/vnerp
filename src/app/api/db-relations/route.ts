@@ -10,7 +10,6 @@ export async function GET() {
 
     return NextResponse.json(relations);
   } catch (error) {
-    console.error('Failed to read db-relations.json:', error);
     return NextResponse.json(
       { error: 'Failed to load database relations' },
       { status: 500 }

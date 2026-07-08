@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
       );
       if (Array.isArray(rows) && rows.length > 0) overview.todayOrders = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('ceo overview failed:', e);
     }
 
     try {
@@ -31,7 +30,6 @@ export async function GET(request: NextRequest) {
       );
       if (Array.isArray(rows) && rows.length > 0) overview.todayOrders = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('ceo todayOrders failed:', e);
     }
 
     try {
@@ -41,7 +39,6 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0)
         overview.todayProduction = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('ceo todayProduction failed:', e);
     }
 
     try {
@@ -51,7 +48,6 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0)
         overview.todayDelivery = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('ceo todayDelivery failed:', e);
     }
 
     try {
@@ -61,7 +57,6 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0)
         overview.inventoryValue = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('ceo inventoryValue failed:', e);
     }
 
     const production: any = {
@@ -84,7 +79,6 @@ export async function GET(request: NextRequest) {
         production.completedToday = Number(rows[0].completed || 0);
       }
     } catch (e) {
-      console.error('ceo production failed:', e);
     }
 
     try {
@@ -103,7 +97,6 @@ export async function GET(request: NextRequest) {
           }))
         : [];
     } catch (e) {
-      console.error('ceo activeWorkOrders failed:', e);
     }
 
     try {
@@ -131,7 +124,6 @@ export async function GET(request: NextRequest) {
           ? Math.round((running / production.equipmentStatus.length) * 100)
           : 0;
     } catch (e) {
-      console.error('ceo equipment failed:', e);
     }
 
     try {
@@ -142,7 +134,6 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0)
         production.warningCount = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('ceo warningCount failed:', e);
     }
 
     const quality: any = {
@@ -159,7 +150,6 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0)
         quality.totalInspections = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('ceo quality failed:', e);
     }
 
     try {
@@ -180,7 +170,6 @@ export async function GET(request: NextRequest) {
             : 0;
       }
     } catch (e) {
-      console.error('ceo quality detail failed:', e);
     }
 
     const finance: any = {
@@ -203,7 +192,6 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(payRows) && payRows.length > 0)
         finance.totalPayable = Number(payRows[0].total || 0);
     } catch (e) {
-      console.error('ceo finance failed:', e);
     }
 
     try {
@@ -218,7 +206,6 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(expRows) && expRows.length > 0)
         finance.monthExpense = Number(expRows[0].total || 0);
     } catch (e) {
-      console.error('ceo monthFinance failed:', e);
     }
 
     const inventory: any = { totalItems: 0, lowStock: 0, totalValue: 0, warehouseUtilization: 0 };
@@ -233,7 +220,6 @@ export async function GET(request: NextRequest) {
         inventory.lowStock = Number(rows[0].low_stock || 0);
       }
     } catch (e) {
-      console.error('ceo inventory failed:', e);
     }
 
     try {
@@ -242,7 +228,6 @@ export async function GET(request: NextRequest) {
       );
       if (Array.isArray(rows) && rows.length > 0) inventory.totalValue = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('ceo inventoryValue failed:', e);
     }
 
     try {
@@ -253,7 +238,6 @@ export async function GET(request: NextRequest) {
         inventory.warehouseUtilization = Math.min(100, Number(rows[0].total || 0) * 5);
       }
     } catch (e) {
-      console.error('ceo warehouseUtilization failed:', e);
     }
 
     let orderTrend: any[] = [];
@@ -265,7 +249,6 @@ export async function GET(request: NextRequest) {
       `);
       orderTrend = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('ceo orderTrend failed:', e);
     }
 
     let topProducts: any[] = [];
@@ -277,7 +260,6 @@ export async function GET(request: NextRequest) {
       `);
       topProducts = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('ceo topProducts failed:', e);
     }
 
     let workshopDaily: any[] = [];
@@ -295,7 +277,6 @@ export async function GET(request: NextRequest) {
           }))
         : [];
     } catch (e) {
-      console.error('ceo workshopDaily failed:', e);
     }
 
     let materialConsumption: any[] = [];
@@ -312,7 +293,6 @@ export async function GET(request: NextRequest) {
           }))
         : [];
     } catch (e) {
-      console.error('ceo materialConsumption failed:', e);
     }
 
     let monthlyMaterialConsumption: any[] = [];
@@ -329,7 +309,6 @@ export async function GET(request: NextRequest) {
           }))
         : [];
     } catch (e) {
-      console.error('ceo monthlyMaterialConsumption failed:', e);
     }
 
     let workshopHistory: any[] = [];
@@ -346,7 +325,6 @@ export async function GET(request: NextRequest) {
           }))
         : [];
     } catch (e) {
-      console.error('ceo workshopHistory failed:', e);
     }
 
     const shiftData: any = {
@@ -389,7 +367,6 @@ export async function GET(request: NextRequest) {
             : 0;
       }
     } catch (e) {
-      console.error('ceo shiftData failed:', e);
     }
 
     const powerConsumption: any[] = [];
@@ -405,7 +382,6 @@ export async function GET(request: NextRequest) {
       `);
       processRelations = Array.isArray(rows) ? rows.map((r: any) => r.product_name) : [];
     } catch (e) {
-      console.error('ceo processRelations failed:', e);
     }
 
     return NextResponse.json({
@@ -429,7 +405,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('获取CEO看板数据失败:', error);
     return NextResponse.json({ success: false, message: '获取CEO看板数据失败' }, { status: 500 });
   }
 }

@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse, logOperation } from '@/lib/api-response';
 import { randomUUID } from 'crypto';
@@ -339,7 +339,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
             String(now.getDate()).padStart(2, '0') +
             String(Math.floor(Math.random() * 10000)).padStart(4, '0');
           await execute(
-            'INSERT INTO qc_unqualified_handle (handle_no, inspection_id, material_id, material_code, material_name, unqualified_qty, handle_type, handle_status, remark) VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?)',
+            'INSERT INTO qc_unqualified (handle_no, inspection_id, material_id, material_code, material_name, quantity, handle_type, handle_status, remark) VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?)',
             [
               handleNo,
               id,

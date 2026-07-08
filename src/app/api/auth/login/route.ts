@@ -7,18 +7,14 @@ import { storeRefreshToken } from '@/lib/token-blacklist';
 import { logger, generateTraceId } from '@/lib/logger';
 import { generateCsrfToken, setCsrfCookie } from '@/lib/csrf';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const SECRET_KEY = process.env.JWT_SECRET;
 
-if (!JWT_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET must be set in production environment');
-  }
+if (!SECRET_KEY) {
+  throw new Error('JWT_SECRET environment variable is required');
 }
 
-const SECRET_KEY = JWT_SECRET || 'dev-only-secret-key';
-
 const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_MINUTES = 15;
+const LOCKOUT_MINUTES = Number(process.env.LOGIN_LOCKOUT_MINUTES || 15);
 
 interface LoginUserRow {
   id: number;
@@ -73,8 +69,8 @@ export async function POST(request: NextRequest) {
     logger.stepStart(ctx, '用户登录', { clientIP });
 
     const rateResult = await checkRateLimit(clientIP, {
-      windowMs: 15 * 60 * 1000,
-      maxRequests: 20,
+      windowMs: Number(process.env.LOGIN_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
+      maxRequests: Number(process.env.LOGIN_RATE_LIMIT_MAX || 20),
       keyPrefix: 'login',
     });
 
@@ -274,7 +270,6 @@ export async function POST(request: NextRequest) {
           departmentName = deptResult[0].dept_name;
         }
       } catch (e) {
-        console.error('查询部门名称失败:', e);
       }
     }
 
@@ -301,7 +296,7 @@ export async function POST(request: NextRequest) {
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('24h')
+      .setExpirationTime(process.env.JWT_ACCESS_TOKEN_TTL || '24h')
       .sign(new TextEncoder().encode(SECRET_KEY));
 
     const userInfo = {
@@ -375,13 +370,30 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // 写入 httpOnly cookie：供 middleware 鉴权和 SSR 服务端预取菜单使用。
+    // access_token 用于 SSR 预取 + middleware 拦截；refresh_token 用于服务端无感刷新。
+    // 保留 JSON 返回的 token：客户端仍需要它做 Authorization header。
+    response.cookies.set('access_token', token, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60, // 24h，与 JWT 过期一致
+    });
+    response.cookies.set('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: Number(process.env.JWT_REFRESH_COOKIE_MAX_AGE || 7 * 24 * 60 * 60), // 7d default
+    });
+
     // 登录成功后下发 CSRF token cookie
     const csrfToken = generateCsrfToken();
     setCsrfCookie(response, csrfToken);
 
     return response;
   } catch (error) {
-    console.error('登录失败:', error);
     return NextResponse.json(
       {
         success: false,
@@ -397,12 +409,11 @@ async function logLogin(username: string, request: NextRequest, success: boolean
     const ip = getClientIP(request);
     const userAgent = request.headers.get('user-agent') || '';
     await execute(
-      `INSERT INTO sys_login_log (username, ip_address, user_agent, login_status, fail_reason)
+      `INSERT INTO sys_login_log (username, ip, user_agent, status, error_msg)
        VALUES (?, ?, ?, ?, ?)`,
       [username, ip, userAgent, success ? 1 : 0, success ? '' : message]
     );
   } catch (e) {
-    console.error('[auth:login] logLogin error:', e);
   }
 }
 

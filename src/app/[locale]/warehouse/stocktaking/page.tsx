@@ -52,6 +52,8 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 interface InventoryCheck {
   id: number;
@@ -175,7 +177,6 @@ export default function StocktakingPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -187,7 +188,6 @@ export default function StocktakingPage() {
         setWarehouses(result.data?.map((w: any) => ({ id: w.id, name: w.name })) || []);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -312,7 +312,6 @@ export default function StocktakingPage() {
         setShowDetailDialog(true);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -333,19 +332,19 @@ export default function StocktakingPage() {
                 <Search className="h-3 w-3" />
               </Button>
             </div>
-            <TableExportToolbar
-              selectedCount={selectedIds.size}
-              totalCount={list.length}
-              onSelectAll={() => setSelectedIds(new Set(list.map((i) => i.id)))}
-              onDeselectAll={() => setSelectedIds(new Set())}
-              onPrint={() => printTable(getExportData(), exportColumns, t('stocktaking'))}
-              onExportPDF={() =>
-                exportTableToPDF(getExportData(), t('stocktaking'), exportColumns, t('stocktaking'))
-              }
-              onExportXLS={() => exportTableToXLS(getExportData(), t('stocktaking'), exportColumns)}
-              onExportWORD={() =>
-                exportTableToWORD(getExportData(), t('stocktaking'), exportColumns, t('stocktaking'))
-              }
+            <GlobalExportToolbar
+              filename="盘点单"
+              title="盘点单列表"
+              columns={[
+                { key: 'check_no', label: t('checkNo'), width: 18 },
+                { key: 'warehouse_name', label: t('warehouse'), width: 15 },
+                { key: 'type', label: tc('type'), width: 10, formatter: (v) => TYPE_MAP[v] || '-' },
+                { key: 'total_items', label: t('checkItems'), width: 10 },
+                { key: 'diff_items', label: t('diffItems'), width: 10 },
+                { key: 'diff_amount', label: t('diffAmount'), width: 12, formatter: (v) => Number(v || 0).toFixed(2) },
+                { key: 'status', label: tc('status'), width: 10, formatter: (v) => STATUS_MAP[v]?.label || '-' },
+              ]}
+              data={selectedIds.size > 0 ? list.filter((i) => selectedIds.has(i.id)) : list}
             />
             <Button
               size="sm"

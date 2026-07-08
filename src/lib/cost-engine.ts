@@ -1,11 +1,25 @@
+/**
+ * @module 成本引擎 (Cost Engine)
+ * @description 该模块提供生产成本核算核心功能，包括移动加权平均法、全月一次加权平均法、
+ * 标准成本差异分析等成本计算方法，以及产品成本卷积（BOM 材料成本 + 人工成本 + 制造费用 + 委外费用）核算。
+ */
 import { query, execute, getConnection } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { roundTo as roundToUtil, roundPrice as roundPriceUtil, roundAmount as roundAmountUtil } from '@/lib/decimal-utils';
 import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
 
+/** 成本计算方法：移动加权平均、全月加权平均、标准成本 */
 export type CostCalculationMethod = 'moving_average' | 'weighted_average' | 'standard_cost';
+
+/** 成本要素类型：材料、人工、制造费用、委外加工 */
 export type CostElementType = 'material' | 'labor' | 'manufacturing' | 'outsourcing';
+
+/** 成本计算批次状态：待计算、计算中、已完成、已关闭 */
 export type CostBatchStatus = 'pending' | 'calculating' | 'completed' | 'closed';
 
+/**
+ * 成本计算的输入参数（用于移动加权平均计算）
+ */
 export interface CostCalculationInput {
   currentQty: number;
   currentCostPrice: number;
@@ -15,6 +29,9 @@ export interface CostCalculationInput {
   inAmount?: number;
 }
 
+/**
+ * 成本计算的结果（移动加权平均计算输出）
+ */
 export interface CostCalculationResult {
   newQty: number;
   newCostPrice: number;
@@ -23,6 +40,9 @@ export interface CostCalculationResult {
   priceChangeRate: number;
 }
 
+/**
+ * 表示物料的成本明细项（用于月末加权平均成本核算）
+ */
 export interface CostDetailItem {
   materialId: number;
   materialCode: string;
@@ -41,6 +61,9 @@ export interface CostDetailItem {
   weightedPrice: number;
 }
 
+/**
+ * 表示产品成本核算结果
+ */
 export interface ProductCostResult {
   productId: number;
   productCode: string;
@@ -57,6 +80,11 @@ export interface ProductCostResult {
   costLevel: number;
 }
 
+/**
+ * 表示标准成本差异分析结果
+ *
+ * 包含价格差异和数量差异两个维度的分析数据。
+ */
 export interface VarianceAnalysisResult {
   materialId: number;
   materialCode: string;
@@ -127,15 +155,45 @@ interface OutsourceFeeRow extends RowDataPacket {
   total_fee: number;
 }
 
+/**
+ * 成本核算引擎类
+ *
+ * 支持多种成本计算方法（移动加权平均、全月加权平均、标准成本），
+ * 提供出入库成本计算、标准成本差异分析、月末加权平均成本核算，
+ * 以及产品成本卷积（材料 + 人工 + 制造费用 + 委外）等功能。
+ */
 export class CostEngine {
   private method: CostCalculationMethod;
   private precision: number;
 
+  /**
+   * 创建成本引擎实例
+   *
+   * @param method - 成本计算方法，默认为移动加权平均法
+   * @param precision - 数量精度（小数位数），默认为 4 位
+   */
   constructor(method: CostCalculationMethod = 'moving_average', precision: number = 4) {
     this.method = method;
     this.precision = precision;
   }
 
+  /**
+   * 计算移动加权平均成本
+   *
+   * 每次入库时即时重新计算库存平均成本，公式如下：
+   * - 新数量 = 当前数量 + 入库数量
+   * - 新总金额 = 当前总金额 + 入库金额
+   * - 新成本单价 = 新总金额 / 新数量（数量为 0 时单价为 0）
+   * - 价格变动 = 新成本单价 - 当前成本单价
+   * - 价格变动率 = 价格变动 / 当前成本单价（当前单价为 0 时变动率为 0）
+   *
+   * @param input - 成本计算输入参数
+   * @returns 成本计算结果，包含新数量、新单价、新总金额及价格变动信息
+   * @throws {Error} 当入库数量 ≤ 0 时抛出"入库数量必须大于0"
+   * @throws {Error} 当入库单价 < 0 时抛出"入库单价不能为负"
+   * @throws {Error} 当当前库存数量 < 0 时抛出"当前库存数量不能为负"
+   * @throws {Error} 当当前成本单价 < 0 时抛出"当前成本单价不能为负"
+   */
   calculateMovingAverage(input: CostCalculationInput): CostCalculationResult {
     const { currentQty, currentCostPrice, inQty, inPrice } = input;
 
@@ -171,6 +229,20 @@ export class CostEngine {
     };
   }
 
+  /**
+   * 计算全月一次加权平均成本
+   *
+   * 以期初结存数量和金额加上本期全部入库数量和金额，计算加权平均单价，公式如下：
+   * - 加权平均单价 = (期初金额 + 入库金额) / (期初数量 + 入库数量)
+   * - 期末数量 = 期初数量 + 入库数量
+   * - 期末金额 = 期初金额 + 入库金额
+   *
+   * @param beginQty - 期初数量
+   * @param beginAmount - 期初金额
+   * @param inQty - 本期入库数量
+   * @param inAmount - 本期入库金额
+   * @returns 包含加权平均单价、期末数量和期末金额的对象
+   */
   calculateWeightedAverage(
     beginQty: number,
     beginAmount: number,
@@ -188,6 +260,17 @@ export class CostEngine {
     };
   }
 
+  /**
+   * 计算出库成本
+   *
+   * 出库成本 = 出库数量 × 单位成本
+   *
+   * @param qty - 出库数量
+   * @param unitPrice - 单位成本
+   * @returns 出库总成本金额（四舍五入到两位小数）
+   * @throws {Error} 当出库数量 < 0 时抛出"出库数量不能为负"
+   * @throws {Error} 当单位成本 < 0 时抛出"单位成本不能为负"
+   */
   calculateIssueCost(qty: number, unitPrice: number): number {
     if (qty < 0) {
       throw new Error('出库数量不能为负');
@@ -198,6 +281,21 @@ export class CostEngine {
     return this.roundAmount(qty * unitPrice);
   }
 
+  /**
+   * 计算标准成本差异分析
+   *
+   * 将实际成本与标准成本进行对比，分解为价格差异和数量差异，公式如下：
+   * - 价格差异 = (实际单价 - 标准单价) × 实际数量
+   * - 数量差异 = (实际数量 - 标准数量) × 标准单价
+   * - 总差异 = 实际总成本 - 标准总成本 = 价格差异 + 数量差异
+   * - 各差异率 = 对应差异 / 标准总成本（标准总成本为 0 时差异率为 0）
+   *
+   * @param standardPrice - 标准单价
+   * @param actualPrice - 实际单价
+   * @param standardQty - 标准数量
+   * @param actualQty - 实际数量
+   * @returns 差异分析结果，包含价格差异、数量差异及总差异的绝对值和比率
+   */
   calculateStandardVariance(
     standardPrice: number,
     actualPrice: number,
@@ -232,6 +330,23 @@ export class CostEngine {
     };
   }
 
+  /**
+   * 计算月末全月加权平均成本明细
+   *
+   * 查询指定期间内所有物料的期初、入库、出库数据，使用全月一次加权平均法
+   * 计算每个物料的加权平均单价，并据此计算发出成本和期末结存。
+   *
+   * 计算流程：
+   * 1. 汇总期间内各物料的期初、入库、出库数量和金额
+   * 2. 加权平均单价 = (期初金额 + 入库金额) / (期初数量 + 入库数量)
+   * 3. 出库成本 = 出库数量 × 加权平均单价
+   * 4. 期末数量 = 期初数量 + 入库数量 - 出库数量
+   * 5. 期末金额 = 期初金额 + 入库金额 - 出库成本
+   *
+   * @param period - 会计期间，格式为 "YYYY-MM"
+   * @param warehouseId - 可选的仓库 ID，用于筛选特定仓库的数据
+   * @returns 各物料的成本明细数组
+   */
   async calculateMonthEndWeightedAverage(
     period: string,
     warehouseId?: number
@@ -330,6 +445,25 @@ export class CostEngine {
     }
   }
 
+  /**
+   * 卷积计算产品总成本
+   *
+   * 通过 BOM 和工艺路线，将材料成本、人工成本、制造费用和委外加工费
+   * 逐层汇总计算产品总成本和单位成本。
+   *
+   * 成本构成：
+   * - 材料成本：BOM 中各子件用量 × (1 + 损耗率) × 库存成本单价
+   * - 人工成本：各工序标准工时 × 工作中心小时费率
+   * - 制造费用：各工序机时（或标准工时） × 工作中心制造费用小时费率
+   * - 委外费用：关联工单的委外订单加工费合计
+   * - 单位成本 = 总成本 / 完工数量（完工数量为 0 时单位成本为 0）
+   *
+   * @param productId - 产品（物料）ID
+   * @param period - 会计期间，格式为 "YYYY-MM"
+   * @param workOrderId - 可选的工单 ID，用于核算特定工单成本
+   * @returns 产品成本核算结果
+   * @throws {Error} 当产品 ID 不存在时抛出"产品ID {id} 不存在"
+   */
   async convolveProductCost(
     productId: number,
     period: string,
@@ -398,6 +532,18 @@ export class CostEngine {
     }
   }
 
+  /**
+   * 计算产品材料成本
+   *
+   * 根据产品 BOM 明细，查询各子件库存成本单价并计算材料成本。
+   * 计算公式：材料成本 = Σ(子件用量 × (1 + 损耗率) × 子件库存成本单价)
+   *
+   * @param conn - 数据库连接
+   * @param productId - 产品 ID
+   * @param period - 会计期间
+   * @param workOrderId - 可选的工单 ID
+   * @returns 材料成本合计金额
+   */
   private async calculateMaterialCost(
     conn: PoolConnection,
     productId: number,
@@ -445,6 +591,18 @@ export class CostEngine {
     return totalMaterialCost;
   }
 
+  /**
+   * 计算产品人工成本
+   *
+   * 根据产品工艺路线中各工序的标准工时和工作中心小时费率计算人工成本。
+   * 计算公式：人工成本 = Σ(工序标准工时 × 工作中心小时费率)
+   *
+   * @param conn - 数据库连接
+   * @param productId - 产品 ID
+   * @param period - 会计期间
+   * @param workOrderId - 可选的工单 ID
+   * @returns 人工成本合计金额
+   */
   private async calculateLaborCost(
     conn: PoolConnection,
     productId: number,
@@ -471,6 +629,19 @@ export class CostEngine {
     return totalLaborCost;
   }
 
+  /**
+   * 计算产品制造费用
+   *
+   * 根据产品工艺路线中各工序的机时（或标准工时）和工作中心制造费用小时费率计算制造费用。
+   * 计算公式：制造费用 = Σ(工序机时 × 工作中心制造费用小时费率)
+   * 注：当机时为空时使用标准工时作为替代。
+   *
+   * @param conn - 数据库连接
+   * @param productId - 产品 ID
+   * @param period - 会计期间
+   * @param workOrderId - 可选的工单 ID
+   * @returns 制造费用合计金额
+   */
   private async calculateManufacturingCost(
     conn: PoolConnection,
     productId: number,
@@ -497,6 +668,18 @@ export class CostEngine {
     return totalMfgCost;
   }
 
+  /**
+   * 计算产品委外加工费用
+   *
+   * 查询关联工单的委外订单明细，汇总所有已确认（status >= 30）的委外加工费。
+   * 若未提供工单 ID，则返回 0。
+   *
+   * @param conn - 数据库连接
+   * @param productId - 产品 ID
+   * @param period - 会计期间
+   * @param workOrderId - 工单 ID（可选，未提供时返回 0）
+   * @returns 委外加工费合计金额
+   */
   private async calculateOutsourcingCost(
     conn: PoolConnection,
     productId: number,
@@ -516,20 +699,46 @@ export class CostEngine {
     return rows.length > 0 ? Number(rows[0].total_fee || 0) : 0;
   }
 
+  /**
+   * 数量四舍五入到指定精度
+   *
+   * @param v - 原始数值
+   * @returns 按构造函数指定精度四舍五入后的数值
+   */
   private round(v: number): number {
-    const factor = Math.pow(10, this.precision);
-    return Math.round(v * factor) / factor;
+    return roundToUtil(v, this.precision);
   }
 
+  /**
+   * 单价四舍五入到四位小数 — Decimal.js 精度
+   */
   private roundPrice(v: number): number {
-    return Math.round(v * 10000) / 10000;
+    return roundPriceUtil(v);
   }
 
+  /**
+   * 金额四舍五入到两位小数（分）— Decimal.js 精度
+   */
   private roundAmount(v: number): number {
-    return Math.round(v * 100) / 100;
+    return roundAmountUtil(v);
   }
 }
 
+/**
+ * 计算经济订货批量（EOQ, Economic Order Quantity）
+ *
+ * 使用经典 EOQ 模型公式确定最优订货量，使订货成本与持有成本之和最小：
+ * EOQ = √(2 × 年需求量 × 每次订货成本 / 单位年持有成本)
+ *
+ * @param annualDemand - 年度需求量
+ * @param orderingCost - 每次订货成本
+ * @param holdingCost - 单位年度持有成本
+ * @returns 经济订货批量，当任一参数 ≤ 0 时返回 0
+ *
+ * @example
+ * const eoq = calculateEOQ(10000, 100, 2);
+ * // 返回 1000
+ */
 export function calculateEOQ(
   annualDemand: number,
   orderingCost: number,
@@ -541,4 +750,7 @@ export function calculateEOQ(
   return Math.sqrt((2 * annualDemand * orderingCost) / holdingCost);
 }
 
+/**
+ * 成本引擎类的默认导出
+ */
 export default CostEngine;

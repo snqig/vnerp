@@ -48,6 +48,8 @@ import {
   exportTableToWORD,
   printTable,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import {
   Search,
@@ -607,7 +609,6 @@ export default function QualityProcessPage() {
       setIsInspectOpen(false);
       alert('检验提交成功');
     } catch (error) {
-      console.error('提交检验失败:', error);
       alert('提交失败');
     } finally {
       setLoading(false);
@@ -639,7 +640,6 @@ export default function QualityProcessPage() {
       setQrCodeDataUrl(dataUrl);
       setIsQRCodeOpen(true);
     } catch (error) {
-      console.error('生成二维码失败:', error);
     }
   };
 
@@ -774,52 +774,27 @@ export default function QualityProcessPage() {
                   <Printer className="h-4 w-4 mr-2" />
                   {tc('print')}
                 </Button>
-                <TableExportToolbar
-                  selectedCount={selectedIds.length}
-                  totalCount={filteredProcesses.length}
-                  onSelectAll={() => setSelectedIds(filteredProcesses.map((p) => p.id))}
-                  onDeselectAll={() => setSelectedIds([])}
-                  onPrint={handlePrint}
-                  onExportPDF={() =>
-                    exportTableToPDF(
-                      filteredProcesses,
-                      t('processInspectionReport'),
-                      [
-                        { key: 'card_no', header: t('cardNo') },
-                        { key: 'product_name', header: tc('productName') },
-                        { key: 'product_code', header: tc('productCode') },
-                        { key: 'material_spec', header: tc('specification') },
-                        { key: 'quantity', header: tc('quantity') },
-                        { key: 'status', header: tc('status') },
-                      ],
-                      t('processInspectionReport')
-                    )
-                  }
-                  onExportXLS={() =>
-                    exportTableToXLS(filteredProcesses, t('processInspectionReport'), [
-                      { key: 'card_no', header: t('cardNo') },
-                      { key: 'product_name', header: tc('productName') },
-                      { key: 'product_code', header: tc('productCode') },
-                      { key: 'material_spec', header: tc('specification') },
-                      { key: 'quantity', header: tc('quantity') },
-                      { key: 'status', header: tc('status') },
-                    ])
-                  }
-                  onExportWORD={() =>
-                    exportTableToWORD(
-                      filteredProcesses,
-                      t('processInspectionReport'),
-                      [
-                        { key: 'card_no', header: t('cardNo') },
-                        { key: 'product_name', header: tc('productName') },
-                        { key: 'product_code', header: tc('productCode') },
-                        { key: 'material_spec', header: tc('specification') },
-                        { key: 'quantity', header: tc('quantity') },
-                        { key: 'status', header: tc('status') },
-                      ],
-                      t('processInspectionReport')
-                    )
-                  }
+                <GlobalExportToolbar
+                  filename="过程检验报告"
+                  title="过程检验报告"
+                  landscape
+                  columns={[
+                    { key: 'card_no', label: t('cardNo'), width: 18 },
+                    { key: 'product_name', label: tc('productName'), width: 25 },
+                    { key: 'product_code', label: tc('productCode'), width: 15 },
+                    { key: 'material_spec', label: tc('specification'), width: 15 },
+                    { key: 'plan_qty', label: tc('quantity'), width: 10 },
+                    { key: 'burdening_status', label: tc('status'), width: 12, formatter: (v) => {
+                      const m: Record<number, string> = {
+                        0: t('pendingProduction'),
+                        1: t('pendingInspection'),
+                        2: t('inspecting'),
+                        3: t('inspected'),
+                      };
+                      return m[v] || tc('unknown');
+                    } },
+                  ]}
+                  data={selectedIds.length > 0 ? filteredProcesses.filter((p) => selectedIds.includes(p.id)) : filteredProcesses}
                 />
               </div>
             </div>

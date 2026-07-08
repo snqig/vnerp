@@ -42,6 +42,13 @@ backups
 *.log
 logs/
 
+# 密钥文件（防止意外打入镜像）
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
 # 临时文件
 *.tmp
 *.bak

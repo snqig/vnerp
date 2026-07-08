@@ -41,6 +41,8 @@ import {
   exportTableToPDF,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
 
@@ -152,7 +154,6 @@ export default function Complaint8DPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -274,58 +275,18 @@ export default function Complaint8DPage() {
                 <Plus className="h-4 w-4 mr-2" />
                 {t('newComplaint')}
               </Button>
-              <TableExportToolbar
-                selectedCount={selectedIds.length}
-                totalCount={sortedData.length}
-                onSelectAll={() =>
-                  setSelectedIds(
-                    sortedData
-                      .filter((i: ComplaintRecord) => i.id)
-                      .map((i: ComplaintRecord) => i.id!)
-                  )
-                }
-                onDeselectAll={() => setSelectedIds([])}
-                onPrint={() => {}}
-                onExportPDF={() =>
-                  exportTableToPDF(
-                    sortedData,
-                    t('complaint8DReport'),
-                    [
-                      { key: 'complaint_no', header: t('complaintNo') },
-                      { key: 'customer_name', header: tc('customerName') },
-                      { key: 'product_name', header: tc('productName') },
-                      { key: 'defect_type', header: t('defectType') },
-                      { key: 'defect_qty', header: t('defectQty') },
-                      { key: 'status', header: tc('status') },
-                    ],
-                    t('complaint8DReport')
-                  )
-                }
-                onExportXLS={() =>
-                  exportTableToXLS(sortedData, t('complaint8DReport'), [
-                    { key: 'complaint_no', header: t('complaintNo') },
-                    { key: 'customer_name', header: tc('customerName') },
-                    { key: 'product_name', header: tc('productName') },
-                    { key: 'defect_type', header: t('defectType') },
-                    { key: 'defect_qty', header: t('defectQty') },
-                    { key: 'status', header: tc('status') },
-                  ])
-                }
-                onExportWORD={() =>
-                  exportTableToWORD(
-                    sortedData,
-                    t('complaint8DReport'),
-                    [
-                      { key: 'complaint_no', header: t('complaintNo') },
-                      { key: 'customer_name', header: tc('customerName') },
-                      { key: 'product_name', header: tc('productName') },
-                      { key: 'defect_type', header: t('defectType') },
-                      { key: 'defect_qty', header: t('defectQty') },
-                      { key: 'status', header: tc('status') },
-                    ],
-                    t('complaint8DReport')
-                  )
-                }
+              <GlobalExportToolbar
+                filename="客诉8D报告"
+                title="客诉8D报告"
+                columns={[
+                  { key: 'complaint_no', label: t('complaintNo'), width: 18 },
+                  { key: 'customer_name', label: tc('customerName'), width: 20 },
+                  { key: 'product_name', label: tc('productName'), width: 20 },
+                  { key: 'defect_type', label: t('defectType'), width: 12, formatter: (v) => t(defectTypeMap[v] || v) },
+                  { key: 'defect_qty', label: t('defectQty'), width: 10 },
+                  { key: 'status', label: tc('status'), width: 12, formatter: (v) => t(statusMap[v]?.label || tc('unknown')) },
+                ]}
+                data={selectedIds.length > 0 ? sortedData.filter((i) => i.id && selectedIds.includes(i.id)) : sortedData}
               />
             </div>
 

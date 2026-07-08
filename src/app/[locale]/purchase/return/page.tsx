@@ -116,7 +116,6 @@ export default function PurchaseReturnPage() {
         setTotal(result.data?.total || 0);
       }
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -130,7 +129,6 @@ export default function PurchaseReturnPage() {
         setPurchaseOrders(result.data?.list || result.data || []);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 

@@ -2,6 +2,7 @@ import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { WorkOrderCompletedEvent } from '@/domain/production/events/WorkOrderEvents';
 import { query, execute, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { CalcParamService } from '@/lib/calc-param-service';
 
 export interface ScreenPlateUsageRecord {
   plateId: number;
@@ -56,8 +57,18 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
   ): Promise<ScreenPlateCostResult> {
     const plateUsages: ScreenPlateUsageRecord[] = [];
 
-    const usageRows: any[] = (await query(
-      `SELECT 
+    const usageRows = await query<{
+      plateId: number;
+      plateCode: string;
+      plateName: string;
+      totalUsedCount: string | number;
+      maxUseCount: string | number;
+      lifeCount: string | number;
+      maxLifeCount: string | number;
+      currentUsage: string | number;
+      purchasePrice: string | number;
+    }>(
+      `SELECT
         sp.id as plateId,
         sp.plate_code as plateCode,
         sp.plate_name as plateName,
@@ -72,17 +83,17 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
        WHERE spu.work_order_id = ?
        AND spu.deleted = 0`,
       [workOrderId]
-    )) as any[];
+    );
 
     let totalPlateCost = 0;
 
     for (const row of usageRows) {
       const plateId = row.plateId;
-      const currentUsage = parseInt(row.currentUsage || 1);
-      const maxUseCount = parseInt(row.maxUseCount || 1000);
-      const lifeCount = parseInt(row.lifeCount || 0);
-      const maxLifeCount = parseInt(row.maxLifeCount || 10000);
-      const purchasePrice = parseFloat(row.purchasePrice || 0);
+      const currentUsage = parseInt(String(row.currentUsage || 1));
+      const maxUseCount = parseInt(String(row.maxUseCount || 1000));
+      const lifeCount = parseInt(String(row.lifeCount || 0));
+      const maxLifeCount = parseInt(String(row.maxLifeCount || 10000));
+      const purchasePrice = parseFloat(String(row.purchasePrice || 0));
 
       // 计算摊销成本：按使用次数摊销
       const amortizedCost = this.calculateAmortizedCost(purchasePrice, maxUseCount, currentUsage);
@@ -145,15 +156,19 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
       return 0;
     }
 
-    // 磨损成本 = 采购价格 * (当前寿命计数 / 最大寿命计数)
+    // 磨损成本 = 采购价格 * (当前寿命计数 / 最大寿命计数) * 磨损系数
     const wearRatio = lifeCount / maxLifeCount;
+    const wearCostRatio = CalcParamService.getCachedDecimal('screen_plate.wear_cost_ratio', 0.1);
 
-    return purchasePrice * wearRatio * 0.1; // 磨损系数10%
+    return purchasePrice * wearRatio * wearCostRatio; // 磨损系数从配置读取
   }
 
   private async calculateScreenPlateCostFromLink(workOrderId: number): Promise<number> {
-    const linkRows: any[] = (await query(
-      `SELECT 
+    const linkRows = await query<{
+      usageCount: string | number;
+      purchase_price: string | number;
+    }>(
+      `SELECT
         COUNT(*) as usageCount,
         sp.purchase_price
        FROM prd_work_order wo
@@ -161,12 +176,12 @@ export class ScreenPlateCostHandler implements EventHandler<WorkOrderCompletedEv
        WHERE wo.id = ?
        LIMIT 1`,
       [workOrderId]
-    )) as any[];
+    );
 
     if (linkRows.length > 0) {
       const row = linkRows[0];
-      const usageCount = parseInt(row.usageCount || 0);
-      const purchasePrice = parseFloat(row.purchasePrice || 0);
+      const usageCount = parseInt(String(row.usageCount || 0));
+      const purchasePrice = parseFloat(String(row.purchase_price || 0));
 
       // 默认每次使用成本估算
       return usageCount * (purchasePrice / 1000);

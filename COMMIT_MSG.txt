@@ -1,0 +1,70 @@
+feat(erp): 安全加固+DB迁移统一+Docker部署+CI/CD自动化+监控告警+文档完善
+
+本次迭代为综合性工程治理提交，覆盖安全、数据库、部署、CI/CD、监控、
+文档、重构与清理八大领域，共变更 538 个文件。
+
+## 安全加固
+- 修复 P0 SQL 注入：soft-delete.ts 动态表名使用 escapeId+白名单校验
+- 修复 P0 SQL 注入：MaterialLifecycleService.ts 参数化 id
+- 修复 P0 SQL 注入：process-cards/route.ts 动态字段名使用 fieldColumnMap
+- 修复 P0 SQL 注入：quality/incoming/route.ts UPDATE...IN(SELECT) 改为 JOIN UPDATE
+- 修复 P0 SQL 注入：labels/cutting 路由 LIMIT/OFFSET 参数化
+- 9 个 diagnose 路由补充 withPermission 权限装饰器
+- ApiClient 合并至 authFetch，6 个消费页面获得 401 静默刷新 + CSRF 保护
+- finance/cost 页面移除 shadow authFetch，恢复 CSRF + refresh
+- extractToken() 支持 HttpOnly cookie 回退（Cookie 迁移 Phase 1）
+
+## 数据库迁移（020-045）
+- 020-026: 统一 QC/软删除/字符集/小数精度/审计字段
+- 027-028: 采购/总账模块 PK 类型 INT→BIGINT UNSIGNED
+- 029-034: 补齐 P0/P1 外键约束（仓库/销售/生产/系统模块）
+- 035-041: 通知表/计算参数/销售税费/AQL抽样/BOM 统一
+- 042: 修复 027 重复 FK 静默失败（drop 双 FK 后 ALTER）
+- 043-044: P0 缺口 + sys_user 级联 PK 统一（20 FK + 6 审计列）
+- 045: 删除 demo/demo_crud 菜单（含角色关联）
+
+## Docker 部署
+- Dockerfile 多阶段构建，standalone 模式（node server.js）
+- docker-compose.prod.yml: read_only+tmpfs、MySQL/Redis 改 expose
+- nginx.conf 新增 Content-Security-Policy 头
+- .dockerignore 排除 *.pem/*.key/*.crt 密钥文件
+- scripts/deploy-docker.sh 一键部署脚本
+
+## CI/CD 自动化
+- .github/workflows/ci.yml: unit-test → e2e-test → docker-publish → deploy
+- 镜像推送 GHCR（ghcr.io/snqig/vnerp），三标签策略（sha/latest/日期）
+- SSH 自动部署：git pull → docker compose pull → up -d → 健康检查
+- GHA 缓存加速构建（cache-from/cache-to: type=gha）
+
+## 监控告警（Prometheus + Grafana）
+- docker-compose.monitoring.yml: 7 服务编排
+- prometheus.yml + rules/alerts.yml: 10 条告警规则
+- alertmanager.yml: critical/warning 分级路由
+- grafana 自动 provisioning Prometheus 数据源
+- 文档：04-运维指南/监控告警接入方案.md（4 层监控模型）
+
+## 文档完善
+- 新建 docs/13-分析报告/，归档 9 份散落报告
+- 合并 04-部署文档 到 04-运维指南（解决 04 重复编号）
+- Docker部署指南.md 新增 CI/CD 自动化部署章节
+- 00-运维指南总览.md 更新为 9 文件索引，修正 drizzle/ 失效引用
+- 新增 Docker安全扫描报告.md（11 项发现，3 项已修复）
+
+## 重构
+- warehouse/inbound（2902 行）拆分为 6 hooks + 12 子组件 + 2 utils
+- 新增 Drizzle 仓储实现 + RepositoryRegistry（REPOSITORY_IMPL 切换）
+- 20 个 error.tsx 错误边界 + global-error.tsx
+- 质量管理领域层（UnqualifiedProduct 聚合 + 值对象 + 事件）
+- 全局导入导出服务 + 菜单树服务
+
+## i18n
+- 4 语言（zh-CN/zh-TW/en/vi）翻译补全
+- 服务端/客户端 missing key 日志（Set 去重 + 诊断脚本指引）
+
+## 清理
+- 删除 demo 种子数据、button-demo 页面、test/debug 路由
+- 删除废弃 migrations/ + drizzle/ 目录
+- 删除 database/_archive/ 一次性 SQL 执行脚本
+- 删除 tests/concurrency/reports/ 测试产物
+- 删除 HTML 报告、tsc-errors.txt、nul 保留文件名
+- .gitignore 新增 review_results.json + 并发测试报告

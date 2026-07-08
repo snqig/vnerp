@@ -54,6 +54,8 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { useTranslations } from 'next-intl';
 
 interface SampleOrder {
@@ -572,26 +574,21 @@ export default function SampleOrdersPage() {
                 </Select>
               </div>
               <div className="flex gap-2 items-center">
-                <TableExportToolbar
-                  selectedCount={selectedIds.size}
-                  totalCount={sortedOrders.length}
-                  onSelectAll={toggleSelectAll}
-                  onDeselectAll={() => setSelectedIds(new Set())}
-                  onPrint={handlePrint}
-                  onExportPDF={() =>
-                    exportTableToPDF(getExportData(), t('sampleOrderList'), exportColumns, t('sampleOrderList'))
-                  }
-                  onExportXLS={() =>
-                    exportTableToXLS(getExportData(), t('sampleOrderList'), exportColumns)
-                  }
-                  onExportWORD={() =>
-                    exportTableToWORD(
-                      getExportData(),
-                      t('sampleOrderList'),
-                      exportColumns,
-                      t('sampleOrderList')
-                    )
-                  }
+                <GlobalExportToolbar
+                  filename="样品订单列表"
+                  title="样品订单列表"
+                  columns={[
+                    { key: 'notify_date', label: t('notifyDate'), width: 12, formatter: (v) => formatDate(v) },
+                    { key: 'customer_name', label: tc('customer'), width: 18 },
+                    { key: 'product_name', label: t('productName'), width: 22 },
+                    { key: 'material_no', label: t('materialNo'), width: 12 },
+                    { key: 'version', label: tc('version'), width: 8 },
+                    { key: 'size_spec', label: tc('size'), width: 12 },
+                    { key: 'quantity', label: tc('quantity'), width: 8 },
+                    { key: 'customer_require_date', label: t('requireDate'), width: 12, formatter: (v) => formatDate(v) },
+                    { key: 'delivery_status', label: tc('status'), width: 12, formatter: (v) => t(statusLabelMap[v] || v) },
+                  ]}
+                  data={selectedIds.size > 0 ? sortedOrders.filter((o) => selectedIds.has(o.id)) : sortedOrders}
                 />
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                   <DialogTrigger asChild>

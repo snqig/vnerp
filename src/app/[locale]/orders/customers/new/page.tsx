@@ -88,7 +88,6 @@ export default function NewCustomerPage() {
         alert(t('createCustomerFailed') + ': ' + result.message);
       }
     } catch (error) {
-      console.error(t('createCustomerFailed'), error);
       alert(t('createCustomerNetworkError'));
     } finally {
       setLoading(false);

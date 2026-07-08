@@ -52,7 +52,6 @@ function loadEnv(): Env {
   if (result.success) {
     // 生产环境额外校验 JWT_SECRET 强度
     if (result.data.NODE_ENV === 'production' && result.data.JWT_SECRET.length < 16) {
-      console.error('[env] JWT_SECRET must be at least 16 characters in production');
       throw new Error('JWT_SECRET must be at least 16 characters in production');
     }
     return result.data;
@@ -63,30 +62,8 @@ function loadEnv(): Env {
     .map((issue) => `  ${issue.path.join('.')}: ${issue.message}`)
     .join('\n');
 
-  if (process.env.NODE_ENV === 'production') {
-    console.error('[env] Environment variable validation failed:\n' + errors);
-    throw new Error('Environment variable validation failed. See logs above.');
-  }
-
-  // 开发环境：打印警告并使用回退默认值
-  console.warn('[env] Environment variable validation failed (using fallbacks in dev):\n' + errors);
-
-  // 回退：提供开发友好的默认值
-  return {
-    DB_HOST: process.env.DB_HOST || '127.0.0.1',
-    DB_PORT: Number(process.env.DB_PORT) || 3306,
-    DB_USER: process.env.DB_USER || 'root',
-    DB_PASSWORD: process.env.DB_PASSWORD || '',
-    DB_NAME: process.env.DB_NAME || 'vnerpdacahng',
-    JWT_SECRET: process.env.JWT_SECRET || 'dev-only-insecure-secret-32chars',
-    NODE_ENV: 'development' as const,
-    DEBUG_DB: process.env.DEBUG_DB || 'false',
-    REDIS_URL: process.env.REDIS_URL,
-    EVENT_BUS_TYPE: 'db' as const,
-    ALLOW_SETUP_API: 'false',
-    CORS_ALLOW_ORIGIN: '*',
-    DEV_ORIGINS: process.env.DEV_ORIGINS,
-  };
+  console.error('[env] Environment variable validation failed:\n' + errors);
+  throw new Error('Environment variable validation failed. See logs above.');
 }
 
 export const env = loadEnv();

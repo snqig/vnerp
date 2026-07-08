@@ -77,7 +77,6 @@ export default function DbRelationsPage() {
         setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to load data:', err);
         setLoading(false);
       });
   }, []);

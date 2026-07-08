@@ -407,7 +407,6 @@ export async function GET(request: NextRequest) {
       details: results,
     });
   } catch (error: any) {
-    console.error('初始化失败:', error);
     return errorResponse(`初始化失败: ${error.message}`, 500, 500);
   }
 }

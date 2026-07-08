@@ -181,6 +181,12 @@ export class EventRegistry {
 
     eventBus.subscribe('workorder.closed', new AuditLogHandler());
 
+    // 质量不合格品事件
+    eventBus.subscribe('quality.unqualified.created', new AuditLogHandler());
+    eventBus.subscribe('quality.unqualified.handling_started', new AuditLogHandler());
+    eventBus.subscribe('quality.unqualified.completed', new AuditLogHandler());
+    eventBus.subscribe('quality.unqualified.completed', new CacheInvalidationHandler());
+
     // 标准卡事件 — BOM 展开缓存失效
     eventBus.subscribe('StandardCardConfirmed', new CacheInvalidationHandler());
     eventBus.subscribe('StandardCardObsoleted', new CacheInvalidationHandler());
@@ -196,6 +202,7 @@ export class EventRegistry {
       purchaseReturnCompletedHandlers: eventBus.getHandlerCount('purchase_return.completed'),
       purchaseReconWrittenOffHandlers: eventBus.getHandlerCount('purchase_reconciliation.written_off'),
       workorderCompletedHandlers: eventBus.getHandlerCount('workorder.completed'),
+      qualityUnqualifiedCompletedHandlers: eventBus.getHandlerCount('quality.unqualified.completed'),
     });
   }
 

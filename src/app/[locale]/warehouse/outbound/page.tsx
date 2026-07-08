@@ -465,7 +465,6 @@ export default function OutboundManagementPage() {
         setWarehouses(result.data);
       }
     } catch (error) {
-      console.error('获取仓库列表失败:', error);
     }
   }, []);
 
@@ -478,7 +477,6 @@ export default function OutboundManagementPage() {
         setWarehouseCategories(result.data);
       }
     } catch (error) {
-      console.error('获取仓库分类列表失败:', error);
     }
   }, []);
 
@@ -604,7 +602,6 @@ export default function OutboundManagementPage() {
         toast.error(result.message || t('saveFailed'));
       }
     } catch (error) {
-      console.error('保存出库单失败:', error);
       toast.error(t('saveFailed'));
     }
   };
@@ -660,7 +657,6 @@ export default function OutboundManagementPage() {
         toast.error(result.message || t('updateFailed'));
       }
     } catch (error) {
-      console.error('更新出库单失败:', error);
       toast.error(t('updateFailed'));
     }
   };
@@ -688,7 +684,6 @@ export default function OutboundManagementPage() {
         toast.error(result.message || t('deleteFailed'));
       }
     } catch (error) {
-      console.error('删除出库单失败:', error);
       toast.error(t('deleteFailed'));
     }
     setIsDeleteDialogOpen(false);
@@ -724,7 +719,6 @@ export default function OutboundManagementPage() {
         toast.error(result.message || tc('error'));
       }
     } catch (error) {
-      console.error('审核出库单失败:', error);
       toast.error(tc('error'));
     }
     setIsAuditDialogOpen(false);
@@ -758,7 +752,6 @@ export default function OutboundManagementPage() {
         toast.error(t('fifoFetchFailed'));
       }
     } catch (error) {
-      console.error('获取FIFO分配方案失败:', error);
       toast.error(t('fifoFetchFailed'));
     }
     setFifoLoading(false);

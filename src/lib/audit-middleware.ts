@@ -84,7 +84,7 @@ function truncateString(str: string, maxLength: number = 1000): string {
   return str.substring(0, maxLength) + '... [truncated]';
 }
 
-async function parseRequestBody(request: NextRequest): Promise<any> {
+async function parseRequestBody(request: NextRequest): Promise<unknown> {
   try {
     const clonedRequest = request.clone();
     const contentType = request.headers.get('content-type') || '';
@@ -98,7 +98,7 @@ async function parseRequestBody(request: NextRequest): Promise<any> {
       contentType.includes('multipart/form-data')
     ) {
       const formData = await clonedRequest.formData();
-      const obj: Record<string, any> = {};
+      const obj: Record<string, unknown> = {};
       formData.forEach((value, key) => {
         obj[key] = value;
       });
@@ -149,7 +149,7 @@ export function withAudit(
     setAuditUserContext(userId ? Number(userId) : undefined, username || undefined, ip, userAgent);
 
     // 解析请求参数
-    let requestParam: any = null;
+    let requestParam: unknown = null;
     if (!options?.skipRequestBody && ['POST', 'PUT', 'PATCH'].includes(method)) {
       requestParam = await parseRequestBody(request);
     }
@@ -166,7 +166,7 @@ export function withAudit(
     }
 
     let response: NextResponse;
-    let responseData: any = null;
+    let responseData: unknown = null;
     let errorMsg = '';
     let status = 1;
 
@@ -186,22 +186,23 @@ export function withAudit(
 
       // 判断操作是否成功
       if (responseData && typeof responseData === 'object') {
+        const resp = responseData as { code?: number; message?: string; msg?: string };
         if (
-          responseData.code !== undefined &&
-          responseData.code !== 200 &&
-          responseData.code !== 0
+          resp.code !== undefined &&
+          resp.code !== 200 &&
+          resp.code !== 0
         ) {
           status = 0;
-          errorMsg = responseData.message || responseData.msg || '操作失败';
+          errorMsg = resp.message || resp.msg || '操作失败';
         }
       }
 
       if (response.status >= 400) {
         status = 0;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       status = 0;
-      errorMsg = error.message || '服务器内部错误';
+      errorMsg = error instanceof Error ? error.message : '服务器内部错误';
 
       // 重新抛出错误，让上层错误处理器处理
       throw error;
@@ -285,8 +286,8 @@ export async function recordBusinessOperation(
   type: string,
   content: string,
   data?: {
-    beforeData?: Record<string, any>;
-    afterData?: Record<string, any>;
+    beforeData?: Record<string, unknown>;
+    afterData?: Record<string, unknown>;
     status?: number;
     errorMsg?: string;
   }

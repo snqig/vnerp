@@ -1,17 +1,39 @@
+/**
+ * @module MRP 引擎
+ * @description MRP（物料需求计划）核心计算引擎。负责执行 BOM 展开、时间分段计算、净需求分析、
+ * 计划订单生成以及自动生成采购申请等完整 MRP 运算流程。该模块是 ERP 系统中生产计划与物料控制
+ * 的关键组件，输入工单编号和仓库信息，输出物料供需平衡的完整计算报告。
+ */
+
 import { query, execute, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
+import { CalcParamService } from '@/lib/calc-param-service';
 
+/**
+ * 表示 BOM 树中的一个节点，用于存储展开后的物料清单结构
+ */
 export interface BOMNode {
+  /** 物料 ID */
   material_id: number;
+  /** 物料编码 */
   material_code: string;
+  /** 物料名称 */
   material_name: string;
+  /** 需求数量（已考虑损耗率） */
   quantity: number;
+  /** 计量单位 */
   unit: string;
+  /** BOM 层级，0 为顶层产品 */
   level: number;
+  /** BOM 路径，用 '>' 分隔各层级物料 ID，用于环检测 */
   path: string;
+  /** 是否为叶节点（无下级 BOM） */
   is_leaf: boolean;
+  /** 采购/生产提前期（天） */
   lead_time_days: number;
+  /** 损耗率（0~1 之间的小数） */
   scrap_rate: number;
+  /** 子 BOM 节点列表 */
   children?: BOMNode[];
 }
 
@@ -55,6 +77,23 @@ interface MaterialInfoRow {
   lead_time_days: number | null;
 }
 
+/**
+ * 展开 BOM（物料清单）树
+ * 
+ * 使用迭代栈（非递归）方式从上往下展开指定产品的 BOM 结构。
+ * 算法流程：
+ * 1. 查询产品基础信息，创建根节点
+ * 2. 使用栈进行广度优先遍历，逐层查询每个物料的 BOM 明细
+ * 3. 计算子物料数量时考虑损耗率：grossQty = parentQty × quantity × (1 + scrapRate)
+ * 4. 通过 path 路径和 visited 集合防止循环引用和无限递归
+ * 5. 最多展开 maxDepth 层
+ * 
+ * @param conn - 数据库连接对象
+ * @param productId - 产品/物料 ID
+ * @param quantity - 顶层产品的需求数量
+ * @param maxDepth - 最大展开深度，默认 10 层
+ * @returns BOM 树的根节点，包含完整的父子层级结构
+ */
 export async function explodeBOM(
   conn: any,
   productId: number,
@@ -76,11 +115,12 @@ export async function explodeBOM(
     productUnit = productRows[0].unit || '件';
   }
 
+  const defaultLeadTime = await CalcParamService.getInt('mrp.default_lead_time_days', 7);
   const leadTimeRows: any = await conn.query(
-    `SELECT id, 7 AS lead_time_days FROM inv_material WHERE id = ? AND deleted = 0`,
+    `SELECT id FROM inv_material WHERE id = ? AND deleted = 0`,
     [productId]
   );
-  const rootLeadTime = leadTimeRows.length > 0 ? Number(leadTimeRows[0].lead_time_days || 7) : 7;
+  const rootLeadTime = leadTimeRows.length > 0 ? defaultLeadTime : defaultLeadTime;
 
   const root: BOMNode = {
     material_id: productId,
@@ -153,6 +193,7 @@ export async function explodeBOM(
     );
 
     for (const line of lines) {
+      // 计算损耗率（百分比转小数）和考虑损耗后的毛需求数量
       const scrapRate = Number(line.loss_rate || 0) / 100;
       const grossQty = item.parent_qty * Number(line.quantity) * (1 + scrapRate);
 
@@ -161,10 +202,10 @@ export async function explodeBOM(
       const childCircularKey = `${line.material_id}:${childPath}`;
 
       const matInfoRows: any = await conn.query(
-        `SELECT id, material_code, material_name, 7 AS lead_time_days FROM inv_material WHERE id = ?`,
+        `SELECT id, material_code, material_name FROM inv_material WHERE id = ?`,
         [line.material_id]
       );
-      const childLeadTime = matInfoRows.length > 0 ? Number(matInfoRows[0].lead_time_days || 7) : 7;
+      const childLeadTime = defaultLeadTime;
       const childCode = matInfoRows.length > 0 ? matInfoRows[0].material_code || '' : '';
       const childName = matInfoRows.length > 0 ? matInfoRows[0].material_name || '' : '';
 
@@ -208,6 +249,9 @@ export async function explodeBOM(
   return root;
 }
 
+/**
+ * 表示一个时间分段（时区）内的 MRP 供需数据
+ */
 export interface TimeBucket {
   date: string;
   gross_requirement: number;
@@ -218,6 +262,25 @@ export interface TimeBucket {
   planned_order_receipt: number;
 }
 
+/**
+ * 计算指定物料的时间分段供需平衡
+ * 
+ * 按 day/week/month 粒度将时间范围划分为多个分段，逐段计算 MRP 核心指标。
+ * 计算逻辑：
+ * 1. 获取物料提前期和当前库存
+ * 2. 收集工单需求（gross requirement）和在途采购收货（scheduled receipt）
+ * 3. 逐段滚动计算：在手库存 = max(0, 上期库存 + 计划收货 - 毛需求)
+ * 4. 净需求 = max(0, 毛需求 - 在手库存 - 计划收货)
+ * 5. 根据提前期前移计划订单下达日期
+ * 
+ * @param conn - 数据库连接对象
+ * @param materialId - 物料 ID
+ * @param warehouseId - 仓库 ID
+ * @param startDate - 计算起始日期（YYYY-MM-DD）
+ * @param endDate - 计算结束日期（YYYY-MM-DD）
+ * @param bucketSize - 时间分段粒度：'day' | 'week' | 'month'，默认 'week'
+ * @returns 各时间分段的 MRP 计算明细数组
+ */
 export async function calculateTimeBuckets(
   conn: any,
   materialId: number,
@@ -232,11 +295,12 @@ export async function calculateTimeBuckets(
     return [];
   }
 
+  const defaultLeadTime = await CalcParamService.getInt('mrp.default_lead_time_days', 7);
   const matInfoRows: any = await conn.query(
-    `SELECT id, 7 AS lead_time_days FROM inv_material WHERE id = ? AND deleted = 0`,
+    `SELECT id FROM inv_material WHERE id = ? AND deleted = 0`,
     [materialId]
   );
-  const leadTimeDays = matInfoRows.length > 0 ? Number(matInfoRows[0].lead_time_days || 7) : 7;
+  const leadTimeDays = defaultLeadTime;
 
   const invRows: any = await conn.query(
     `SELECT COALESCE(SUM(available_qty), 0) as total_available
@@ -303,13 +367,16 @@ export async function calculateTimeBuckets(
     let grossReq = 0;
     let schedReceipt = 0;
 
+    // 汇总该分段内所有日期的毛需求和计划收货
     for (const d of bucket.dates) {
       const dStr = formatDateStr(d);
       grossReq += requirementMap.get(dStr) || 0;
       schedReceipt += receiptMap.get(dStr) || 0;
     }
 
+    // 预计在手库存 = max(0, 滚动手在 + 计划收货 - 毛需求)
     const onHand = Math.max(0, runningOnHand + schedReceipt - grossReq);
+    // 净需求 = max(0, 毛需求 - 在手库存 - 计划收货)
     const netReq = Math.max(0, grossReq - runningOnHand - schedReceipt);
 
     let plannedRelease = 0;
@@ -333,6 +400,7 @@ export async function calculateTimeBuckets(
     runningOnHand = onHand;
   }
 
+  // 根据提前期前移计划订单：接收日期的时间分段 -> 释放日期的时间分段
   for (let i = 0; i < result.length; i++) {
     if (result[i].planned_order_receipt > 0) {
       const releaseBucketIdx = i - Math.ceil(leadTimeDays / getBucketDays(bucketSize));
@@ -430,6 +498,9 @@ function addDays(dateStr: string, days: number): string {
   return formatDateStr(d);
 }
 
+/**
+ * 表示单个物料的净需求分析结果
+ */
 export interface NetRequirement {
   material_id: number;
   material_code: string;
@@ -448,6 +519,19 @@ export interface NetRequirement {
   shortage_warning: boolean;
 }
 
+/**
+ * 计算工单的净需求
+ * 
+ * 针对指定的工单列表，展开每个工单产品的 BOM 树，汇总所有叶子物料的毛需求量，
+ * 再结合库存、已分配量、在途量和安全库存计算每个物料的净需求。
+ * 
+ * 净需求公式：netReq = max(0, grossRequirement - onHandQty + allocatedQty - inTransitQty + safetyStock)
+ * 
+ * @param conn - 数据库连接对象
+ * @param workOrderIds - 工单 ID 数组
+ * @param warehouseId - 仓库 ID
+ * @returns 各物料的净需求分析结果数组，按物料聚合汇总
+ */
 export async function calculateNetRequirements(
   conn: any,
   workOrderIds: number[],
@@ -553,14 +637,15 @@ export async function calculateNetRequirements(
     );
     const inTransitQty = Number(inTransitRows.length > 0 ? inTransitRows[0].total_in_transit : 0);
 
+    const defaultLeadTime = await CalcParamService.getInt('mrp.default_lead_time_days', 7);
     const matInfoRows: any = await conn.query(
-      `SELECT id, material_code, material_name, unit, safety_stock, purchase_price, 7 AS lead_time_days
+      `SELECT id, material_code, material_name, unit, safety_stock, purchase_price
        FROM inv_material WHERE id = ? AND deleted = 0`,
       [materialId]
     );
 
     let safetyStock = 0;
-    let leadTimeDays = 7;
+    let leadTimeDays = defaultLeadTime;
     let materialCode = req.material_code;
     let materialName = req.material_name;
     let unit = req.unit;
@@ -568,7 +653,7 @@ export async function calculateNetRequirements(
     if (matInfoRows && matInfoRows.length > 0) {
       const matInfo = matInfoRows[0];
       safetyStock = Number(matInfo.safety_stock || 0);
-      leadTimeDays = Number(matInfo.lead_time_days || 7);
+      leadTimeDays = defaultLeadTime;
       materialCode = matInfo.material_code || materialCode;
       materialName = matInfo.material_name || materialName;
       unit = matInfo.unit || unit;
@@ -644,6 +729,9 @@ function collectLeafMaterials(
   return leaves;
 }
 
+/**
+ * 表示 MRP 计算生成的计划订单
+ */
 export interface PlannedOrder {
   material_id: number;
   material_code: string;
@@ -657,6 +745,20 @@ export interface PlannedOrder {
   priority: 'urgent' | 'normal' | 'low';
 }
 
+/**
+ * 根据净需求生成计划订单
+ * 
+ * 将净需求计算结果转化为计划订单。按物料聚合净需求量，根据需求日期距离今天的天数
+ * 自动设置优先级：
+ * - 距今天 ≤3 天：紧急（urgent）
+ * - 距今天 ≤14 天：正常（normal）
+ * - 其他：低（low）
+ * 
+ * @param conn - 数据库连接对象
+ * @param workOrderIds - 工单 ID 数组
+ * @param warehouseId - 仓库 ID
+ * @returns 按物料聚合的计划订单数组
+ */
 export async function generatePlannedOrders(
   conn: any,
   workOrderIds: number[],
@@ -719,6 +821,19 @@ export async function generatePlannedOrders(
   return Array.from(orderMap.values());
 }
 
+/**
+ * 根据 MRP 计划订单自动生成采购申请
+ * 
+ * 将计划订单按供应商分组，为每组创建一条采购申请（pur_request），
+ * 并为每个物料创建采购申请明细行（pur_request_item）。
+ * 采购申请编号格式：PR + 日期 + 4位随机数。
+ * 
+ * @param conn - 数据库连接对象
+ * @param plannedOrders - 计划订单数组
+ * @param operatorId - 操作人 ID
+ * @param operatorName - 操作人名称
+ * @returns 生成的采购申请列表，每项包含申请编号和物料项数
+ */
 export async function generatePurchaseRequestsFromMRP(
   conn: any,
   plannedOrders: PlannedOrder[],
@@ -835,6 +950,24 @@ export async function generatePurchaseRequestsFromMRP(
   return results;
 }
 
+/**
+ * 运行完整的 MRP 计算流程
+ * 
+ * 这是 MRP 引擎的入口函数，串联执行以下完整流程：
+ * 1. BOM 展开：对每个工单产品展开 BOM 树
+ * 2. 净需求计算：汇总叶子物料需求，结合库存计算缺口
+ * 3. 计划订单生成：将净需求转化为计划订单
+ * 4. （可选）自动生成采购申请：根据计划订单创建采购申请
+ * 5. 汇总统计：总物料数、短缺数、计划数量、计划金额
+ * 
+ * @param conn - 数据库连接对象
+ * @param workOrderIds - 工单 ID 数组
+ * @param warehouseId - 仓库 ID
+ * @param operatorId - 操作人 ID
+ * @param operatorName - 操作人名称
+ * @param autoGeneratePR - 是否自动生成采购申请，默认 false
+ * @returns MRP 完整计算结果，包含 BOM 树、净需求、计划订单、采购申请（可选）和汇总统计
+ */
 export async function runFullMRP(
   conn: any,
   workOrderIds: number[],
@@ -865,7 +998,7 @@ export async function runFullMRP(
         level: 0,
         path: '',
         is_leaf: true,
-        lead_time_days: 7,
+        lead_time_days: await CalcParamService.getInt('mrp.default_lead_time_days', 7),
         scrap_rate: 0,
         children: [],
       },

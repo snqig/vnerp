@@ -1,5 +1,7 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { escapeId } from 'mysql2';
 import { query } from '@/lib/db';
+import { withPermission } from '@/lib/api-permissions';
 
 const tables = [
   'inv_inbound_order',
@@ -19,20 +21,20 @@ const tables = [
   'prod_work_order_item',
 ];
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission(async (request: NextRequest) => {
   const results: any = {};
 
   for (const table of tables) {
     try {
-      const columns = await query(`SHOW COLUMNS FROM ${table}`);
+      const columns = await query(`SHOW COLUMNS FROM ${escapeId(table)}`);
       results[table] = { exists: true, columns: columns.map((c: any) => c.Field) };
     } catch (error: any) {
       results[table] = { exists: false, error: error.message };
     }
   }
 
-  return Response.json({
+  return NextResponse.json({
     success: true,
     tables: results
   });
-}
+});

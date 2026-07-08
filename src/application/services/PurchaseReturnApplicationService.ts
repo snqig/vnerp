@@ -6,10 +6,11 @@ import {
   PayableRefundResult,
 } from '@/domain/purchase/aggregates/PurchaseReturn';
 import { MysqlPurchaseReturnRepository } from '@/infrastructure/repositories/MysqlPurchaseReturnRepository';
-import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
+import { DomainError, DomainEvent, NotFoundError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
+import type { ResultSetHeader } from 'mysql2';
 
 export class PurchaseReturnApplicationService {
   constructor(private readonly returnRepo: IPurchaseReturnRepository) {}
@@ -61,7 +62,7 @@ export class PurchaseReturnApplicationService {
     await transaction(async (conn) => {
       // 1. 创建退货出库单（inv_outbound_order）
       const outboundOrderNo = await generateDocumentNo('outbound');
-      const [obResult]: any = await conn.execute(
+      const [obResult] = await conn.execute<ResultSetHeader>(
         `INSERT INTO inv_outbound_order
          (order_no, order_date, outbound_type, warehouse_id, total_qty, total_amount,
           status, audit_status, finance_posted, operator_id, remark, create_time)
@@ -81,7 +82,7 @@ export class PurchaseReturnApplicationService {
       // 2. 创建红字应付单（fin_payable，负数金额代表供应商应退）
       const payableNo = await generateDocumentNo('payable');
       const refundAmount = ret.totalAmount;
-      const [payResult]: any = await conn.execute(
+      const [payResult] = await conn.execute<ResultSetHeader>(
         `INSERT INTO fin_payable
          (payable_no, source_type, source_id, source_no, supplier_id,
           amount, paid_amount, balance, due_date, status, remark)
@@ -113,8 +114,8 @@ export class PurchaseReturnApplicationService {
              payable_id = ?, payable_no = ?, update_time = NOW()
          WHERE id = ?`,
         [
-          ret.completeBy,
-          ret.completeTime,
+          ret.completeBy ?? null,
+          ret.completeTime ?? null,
           outboundOrderId,
           outboundOrderNo,
           payableId,
@@ -160,7 +161,7 @@ export class PurchaseReturnApplicationService {
   private async persistAndPublishEvents(
     aggregateType: string,
     aggregateId: number,
-    aggregate: { getDomainEvents(): any[]; clearDomainEvents(): void }
+    aggregate: { getDomainEvents(): DomainEvent[]; clearDomainEvents(): void }
   ): Promise<void> {
     const events = aggregate.getDomainEvents();
     if (events.length === 0) return;

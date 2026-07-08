@@ -43,10 +43,10 @@ export function validateCsrfToken(request: NextRequest): boolean {
 export function setCsrfCookie(response: NextResponse, token: string): void {
   response.cookies.set(CSRF_COOKIE_NAME, token, {
     httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7, // 7 天
+    maxAge: Number(process.env.CSRF_COOKIE_MAX_AGE || 60 * 60 * 24 * 7), // 7 天 default
   });
 }
 

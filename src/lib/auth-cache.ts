@@ -3,7 +3,7 @@
 
 interface CachedPermissions {
   permissions: string[];
-  menus: any[];
+  menus: unknown[];
   timestamp: number;
 }
 
@@ -60,7 +60,7 @@ export function getCachedPermissions(userId: number): CachedPermissions | null {
 }
 
 // 设置用户权限缓存
-export function setCachedPermissions(userId: number, permissions: string[], menus: any[]): void {
+export function setCachedPermissions(userId: number, permissions: string[], menus: unknown[]): void {
   // 限制缓存大小
   if (permissionsCache.size >= MAX_CACHE_SIZE) {
     const firstKey = permissionsCache.keys().next().value;

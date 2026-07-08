@@ -6,14 +6,54 @@ import { Payable, PayableProps } from '@/domain/finance/aggregates/Payable';
 import { Voucher, VoucherProps } from '@/domain/finance/aggregates/Voucher';
 import {
   DomainError,
+  DomainEvent,
   NotFoundError,
 } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
-import { transaction, query, queryPaginated, PaginatedResult } from '@/lib/db';
+import { transaction, query, queryPaginated, PaginatedResult, type SqlValue } from '@/lib/db';
 import { MysqlReceivableRepository } from '@/infrastructure/repositories/MysqlReceivableRepository';
 import { MysqlPayableRepository } from '@/infrastructure/repositories/MysqlPayableRepository';
 import { MysqlVoucherRepository } from '@/infrastructure/repositories/MysqlVoucherRepository';
 import { generateDocumentNo } from '@/lib/document-numbering';
+
+/** 应收款列表行类型 */
+interface ReceivableRow {
+  id: number;
+  receivable_no: string;
+  customer_id: number;
+  receivable_amount: number;
+  received_amount: number;
+  balance: number;
+  status: number;
+  receivable_date: Date;
+  due_date: Date;
+  [key: string]: unknown;
+}
+
+/** 应付款列表行类型 */
+interface PayableRow {
+  id: number;
+  payable_no: string;
+  supplier_id: number;
+  payable_amount: number;
+  paid_amount: number;
+  balance: number;
+  status: number;
+  payable_date: Date;
+  due_date: Date;
+  [key: string]: unknown;
+}
+
+/** 汇总行类型 */
+interface SummaryRow {
+  total_amount: number;
+  total_received: number;
+  total_paid: number;
+  total_balance: number;
+  count: number;
+  overdue_amount: number;
+  overdue_count: number;
+}
 
 export interface RecordReceiptInput {
   receivableId: number;
@@ -99,9 +139,9 @@ export class FinanceApplicationService {
 
   // ==================== 应收款列表与汇总 ====================
 
-  async getReceivableList(q: ReceivableListQuery): Promise<PaginatedResult<any>> {
+  async getReceivableList(q: ReceivableListQuery): Promise<PaginatedResult<ReceivableRow>> {
     const where: string[] = ['deleted = 0'];
-    const values: any[] = [];
+    const values: SqlValue[] = [];
     if (q.customerId !== undefined) {
       where.push('customer_id = ?');
       values.push(q.customerId);
@@ -121,7 +161,7 @@ export class FinanceApplicationService {
     const whereClause = where.join(' AND ');
     const sql = `SELECT * FROM fin_receivable WHERE ${whereClause} ORDER BY create_time DESC`;
     const countSql = `SELECT COUNT(*) as total FROM fin_receivable WHERE ${whereClause}`;
-    return queryPaginated<any>(
+    return queryPaginated<ReceivableRow>(
       sql,
       countSql,
       values,
@@ -131,7 +171,7 @@ export class FinanceApplicationService {
 
   async getReceivableSummary(q: FinanceSummaryQuery): Promise<ReceivableSummary> {
     const where: string[] = ['deleted = 0'];
-    const values: any[] = [];
+    const values: SqlValue[] = [];
     if (q.customerId !== undefined) {
       where.push('customer_id = ?');
       values.push(q.customerId);
@@ -145,7 +185,7 @@ export class FinanceApplicationService {
       values.push(q.endDate);
     }
     const whereClause = where.join(' AND ');
-    const rows = await query<any>(
+    const rows = await query<SummaryRow>(
       `SELECT
          COALESCE(SUM(receivable_amount), 0) AS total_amount,
          COALESCE(SUM(received_amount), 0) AS total_received,
@@ -157,7 +197,7 @@ export class FinanceApplicationService {
        WHERE ${whereClause}`,
       values
     );
-    const r = rows[0] || {};
+    const r = rows[0] || ({} as SummaryRow);
     return {
       totalAmount: Number(r.total_amount) || 0,
       totalReceived: Number(r.total_received) || 0,
@@ -170,9 +210,9 @@ export class FinanceApplicationService {
 
   // ==================== 应付款列表与汇总 ====================
 
-  async getPayableList(q: PayableListQuery): Promise<PaginatedResult<any>> {
+  async getPayableList(q: PayableListQuery): Promise<PaginatedResult<PayableRow>> {
     const where: string[] = ['deleted = 0'];
-    const values: any[] = [];
+    const values: SqlValue[] = [];
     if (q.supplierId !== undefined) {
       where.push('supplier_id = ?');
       values.push(q.supplierId);
@@ -192,7 +232,7 @@ export class FinanceApplicationService {
     const whereClause = where.join(' AND ');
     const sql = `SELECT * FROM fin_payable WHERE ${whereClause} ORDER BY create_time DESC`;
     const countSql = `SELECT COUNT(*) as total FROM fin_payable WHERE ${whereClause}`;
-    return queryPaginated<any>(
+    return queryPaginated<PayableRow>(
       sql,
       countSql,
       values,
@@ -202,7 +242,7 @@ export class FinanceApplicationService {
 
   async getPayableSummary(q: FinanceSummaryQuery): Promise<PayableSummary> {
     const where: string[] = ['deleted = 0'];
-    const values: any[] = [];
+    const values: SqlValue[] = [];
     if (q.supplierId !== undefined) {
       where.push('supplier_id = ?');
       values.push(q.supplierId);
@@ -216,7 +256,7 @@ export class FinanceApplicationService {
       values.push(q.endDate);
     }
     const whereClause = where.join(' AND ');
-    const rows = await query<any>(
+    const rows = await query<SummaryRow>(
       `SELECT
          COALESCE(SUM(payable_amount), 0) AS total_amount,
          COALESCE(SUM(paid_amount), 0) AS total_paid,
@@ -228,7 +268,7 @@ export class FinanceApplicationService {
        WHERE ${whereClause}`,
       values
     );
-    const r = rows[0] || {};
+    const r = rows[0] || ({} as SummaryRow);
     return {
       totalAmount: Number(r.total_amount) || 0,
       totalPaid: Number(r.total_paid) || 0,
@@ -481,7 +521,7 @@ export class FinanceApplicationService {
   private async persistAndPublishEvents(
     aggregateType: string,
     aggregateId: number,
-    aggregate: { getDomainEvents(): any[]; clearDomainEvents(): void }
+    aggregate: { getDomainEvents(): DomainEvent[]; clearDomainEvents(): void }
   ): Promise<void> {
     const events = aggregate.getDomainEvents();
     if (events.length === 0) return;

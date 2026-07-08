@@ -1,21 +1,61 @@
+import mysql from 'mysql2/promise';
 import { IVoucherRepository } from '@/domain/finance/repositories/IVoucherRepository';
 import { Voucher, VoucherProps } from '@/domain/finance/aggregates/Voucher';
 import { VoucherLineProps } from '@/domain/finance/entities/VoucherLine';
 import { query, execute, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
+type SqlValue = string | number | null | boolean | Date;
+
 const VOUCHER_COLUMNS = `id, voucher_no, period_code, voucher_date, voucher_type,
                          source_type, source_id, source_no, total_debit, total_credit,
-                         status, summary, created_by, created_at, audited_by, audited_at,
+                         status, summary, create_by, audited_by, audited_at,
                          posted_by, posted_at, create_time`;
 
 const LINE_COLUMNS = `id, voucher_id, line_no, account_id, account_code, account_name,
                       summary, debit_amount, credit_amount, customer_id, supplier_id,
                       department_id, project_id`;
 
+interface FinVoucherRow {
+  id: number;
+  voucher_no: string;
+  period_code: string;
+  voucher_date: string | null;
+  voucher_type: number | null;
+  source_type: string | null;
+  source_id: number | null;
+  source_no: string | null;
+  total_debit: string | number | null;
+  total_credit: string | number | null;
+  status: number | null;
+  summary: string | null;
+  create_by: string | null;
+  audited_by: string | null;
+  audited_at: string | null;
+  posted_by: string | null;
+  posted_at: string | null;
+  create_time: string | null;
+}
+
+interface FinVoucherLineRow {
+  id: number;
+  voucher_id: number;
+  line_no: number;
+  account_id: number;
+  account_code: string | null;
+  account_name: string | null;
+  summary: string | null;
+  debit_amount: string | number | null;
+  credit_amount: string | number | null;
+  customer_id: number | null;
+  supplier_id: number | null;
+  department_id: number | null;
+  project_id: number | null;
+}
+
 export class MysqlVoucherRepository implements IVoucherRepository {
   async findById(id: number): Promise<Voucher | null> {
-    const rows = await query<any>(
+    const rows = await query<FinVoucherRow>(
       `SELECT ${VOUCHER_COLUMNS} FROM fin_voucher WHERE id = ? AND deleted = 0`,
       [id]
     );
@@ -24,7 +64,7 @@ export class MysqlVoucherRepository implements IVoucherRepository {
   }
 
   async findByVoucherNo(voucherNo: string): Promise<Voucher | null> {
-    const rows = await query<any>(
+    const rows = await query<FinVoucherRow>(
       `SELECT ${VOUCHER_COLUMNS} FROM fin_voucher WHERE voucher_no = ? AND deleted = 0`,
       [voucherNo]
     );
@@ -33,7 +73,7 @@ export class MysqlVoucherRepository implements IVoucherRepository {
   }
 
   async findByPeriod(periodCode: string): Promise<Voucher[]> {
-    const rows = await query<any>(
+    const rows = await query<FinVoucherRow>(
       `SELECT ${VOUCHER_COLUMNS} FROM fin_voucher
        WHERE period_code = ? AND deleted = 0
        ORDER BY voucher_date DESC, id DESC`,
@@ -44,7 +84,7 @@ export class MysqlVoucherRepository implements IVoucherRepository {
   }
 
   async findBySource(sourceType: string, sourceId: number): Promise<Voucher | null> {
-    const rows = await query<any>(
+    const rows = await query<FinVoucherRow>(
       `SELECT ${VOUCHER_COLUMNS} FROM fin_voucher
        WHERE source_type = ? AND source_id = ? AND deleted = 0
        LIMIT 1`,
@@ -55,7 +95,7 @@ export class MysqlVoucherRepository implements IVoucherRepository {
   }
 
   async findByStatus(status: number): Promise<Voucher[]> {
-    const rows = await query<any>(
+    const rows = await query<FinVoucherRow>(
       `SELECT ${VOUCHER_COLUMNS} FROM fin_voucher
        WHERE status = ? AND deleted = 0
        ORDER BY voucher_date DESC, id DESC`,
@@ -71,12 +111,12 @@ export class MysqlVoucherRepository implements IVoucherRepository {
     const lines = voucher.lines;
 
     return transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO fin_voucher
          (voucher_no, period_code, voucher_date, voucher_type, source_type,
           source_id, source_no, total_debit, total_credit, status, summary,
-          created_by, created_at, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+          create_by, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           voucherNo,
           voucher.periodCode,
@@ -158,26 +198,26 @@ export class MysqlVoucherRepository implements IVoucherRepository {
     );
   }
 
-  private async mapToAggregate(row: any): Promise<Voucher> {
-    const lineRows = await query<any>(
+  private async mapToAggregate(row: FinVoucherRow): Promise<Voucher> {
+    const lineRows = await query<FinVoucherLineRow>(
       `SELECT ${LINE_COLUMNS} FROM fin_voucher_line WHERE voucher_id = ? ORDER BY line_no`,
       [row.id]
     );
     return this.toAggregate(row, lineRows);
   }
 
-  private async batchMapToAggregates(rows: any[]): Promise<Voucher[]> {
+  private async batchMapToAggregates(rows: FinVoucherRow[]): Promise<Voucher[]> {
     if (rows.length === 0) return [];
-    const ids = rows.map((r) => r.id);
+    const ids: SqlValue[] = rows.map((r) => r.id);
     const placeholders = ids.map(() => '?').join(',');
-    const lineRows = await query<any>(
+    const lineRows = await query<FinVoucherLineRow>(
       `SELECT ${LINE_COLUMNS} FROM fin_voucher_line
        WHERE voucher_id IN (${placeholders})
        ORDER BY voucher_id, line_no`,
       ids
     );
 
-    const linesMap = new Map<number, any[]>();
+    const linesMap = new Map<number, FinVoucherLineRow[]>();
     for (const line of lineRows) {
       if (!linesMap.has(line.voucher_id)) {
         linesMap.set(line.voucher_id, []);
@@ -190,7 +230,7 @@ export class MysqlVoucherRepository implements IVoucherRepository {
     );
   }
 
-  private toAggregate(row: any, lineRows: any[]): Voucher {
+  private toAggregate(row: FinVoucherRow, lineRows: FinVoucherLineRow[]): Voucher {
     const lines: VoucherLineProps[] = lineRows.map((line) => ({
       id: line.id,
       voucherId: line.voucher_id,
@@ -211,22 +251,22 @@ export class MysqlVoucherRepository implements IVoucherRepository {
       id: row.id,
       voucherNo: row.voucher_no,
       periodCode: row.period_code,
-      voucherDate: row.voucher_date,
-      voucherType: row.voucher_type,
+      voucherDate: row.voucher_date ?? undefined,
+      voucherType: row.voucher_type ?? undefined,
       sourceType: row.source_type || '',
       sourceId: row.source_id ?? undefined,
       sourceNo: row.source_no || '',
       totalDebit: Number(row.total_debit || 0),
       totalCredit: Number(row.total_credit || 0),
-      status: row.status,
+      status: row.status ?? undefined,
       summary: row.summary || '',
       lines,
-      createdBy: row.created_by || '',
+      createdBy: row.create_by || '',
       auditedBy: row.audited_by || '',
       postedBy: row.posted_by || '',
-      auditedAt: row.audited_at,
-      postedAt: row.posted_at,
-      createTime: row.create_time,
+      auditedAt: row.audited_at ?? undefined,
+      postedAt: row.posted_at ?? undefined,
+      createTime: row.create_time ?? undefined,
     };
     return Voucher.reconstitute(props);
   }

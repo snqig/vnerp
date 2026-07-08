@@ -4,9 +4,21 @@
  * 原则：数据一旦产生，永久留存
  */
 
+import { escapeId } from 'mysql2';
 import { query, execute, transaction } from '@/lib/db';
 import { logDocumentCancel, logOperation, logDataChange } from '@/lib/audit-logger';
 import { createSnapshot } from '@/lib/data-diff';
+
+/**
+ * Validate that a table or field name only contains safe identifier characters
+ * (alphanumeric + underscore, starting with letter or underscore).
+ * Prevents SQL injection through dynamic identifier interpolation.
+ */
+function assertValidIdentifier(name: string, label = 'table name'): void {
+  if (!name || typeof name !== 'string' || !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+    throw new Error(`Invalid ${label}: "${name}" contains invalid characters`);
+  }
+}
 
 // ============================================================
 // 类型定义
@@ -147,8 +159,10 @@ export async function cancelDocument(options: SoftDeleteOptions): Promise<Cancel
   } = options;
 
   try {
+    assertValidIdentifier(tableName);
+
     // 1. 查询原始数据（用于快照）
-    const rows: any = await query(`SELECT * FROM \`${tableName}\` WHERE id = ?`, [recordId]);
+    const rows: any = await query(`SELECT * FROM ${escapeId(tableName)} WHERE id = ?`, [recordId]);
 
     if (rows.length === 0) {
       return { success: false, message: '单据不存在' };
@@ -177,7 +191,7 @@ export async function cancelDocument(options: SoftDeleteOptions): Promise<Cancel
     await transaction(async (conn) => {
       // 更新单据状态为作废
       await conn.execute(
-        `UPDATE \`${tableName}\` SET 
+        `UPDATE ${escapeId(tableName)} SET 
           status = ?, 
           deleted = 1,
           update_time = NOW()
@@ -223,7 +237,6 @@ export async function cancelDocument(options: SoftDeleteOptions): Promise<Cancel
 
     return { success: true, message: '单据作废成功' };
   } catch (error: any) {
-    console.error('[SoftDelete] 作废单据失败:', error);
     return { success: false, message: `作废失败: ${error.message}` };
   }
 }
@@ -238,6 +251,8 @@ export async function restoreDocument(
   restoredById?: number
 ): Promise<CancelResult> {
   try {
+    assertValidIdentifier(tableName);
+
     // 1. 查询作废记录
     const cancelRows: any = await query(
       `SELECT * FROM document_cancel_log 
@@ -256,7 +271,7 @@ export async function restoreDocument(
     await transaction(async (conn) => {
       // 恢复原始状态
       await conn.execute(
-        `UPDATE \`${tableName}\` SET 
+        `UPDATE ${escapeId(tableName)} SET 
           status = ?, 
           deleted = 0,
           update_time = NOW()
@@ -286,7 +301,6 @@ export async function restoreDocument(
 
     return { success: true, message: '单据恢复成功' };
   } catch (error: any) {
-    console.error('[SoftDelete] 恢复单据失败:', error);
     return { success: false, message: `恢复失败: ${error.message}` };
   }
 }
@@ -305,8 +319,10 @@ export async function physicalDelete(
   }
 ): Promise<CancelResult> {
   try {
+    assertValidIdentifier(tableName);
+
     // 1. 查询当前状态
-    const rows: any = await query(`SELECT * FROM \`${tableName}\` WHERE id = ?`, [recordId]);
+    const rows: any = await query(`SELECT * FROM ${escapeId(tableName)} WHERE id = ?`, [recordId]);
 
     if (rows.length === 0) {
       return { success: false, message: '记录不存在' };
@@ -335,11 +351,10 @@ export async function physicalDelete(
     });
 
     // 4. 执行物理删除
-    await execute(`DELETE FROM \`${tableName}\` WHERE id = ?`, [recordId]);
+    await execute(`DELETE FROM ${escapeId(tableName)} WHERE id = ?`, [recordId]);
 
     return { success: true, message: '删除成功' };
   } catch (error: any) {
-    console.error('[SoftDelete] 物理删除失败:', error);
     return { success: false, message: `删除失败: ${error.message}` };
   }
 }
@@ -412,7 +427,7 @@ async function checkBusinessCondition(
 
     case 'not_paid': {
       // 检查是否已付款/收款
-      const rows: any = await query(`SELECT paid_amount FROM ${tableName} WHERE id = ?`, [
+      const rows: any = await query(`SELECT paid_amount FROM ${escapeId(tableName)} WHERE id = ?`, [
         recordId,
       ]);
       if (rows[0]?.paid_amount > 0) {
@@ -456,7 +471,7 @@ export async function quickCancel(
 
   // 查询单据编号
   const rows: any = await query(
-    `SELECT \`${config.noField}\` as doc_no, status FROM \`${config.tableName}\` WHERE id = ?`,
+    `SELECT ${escapeId(config.noField)} as doc_no, status FROM ${escapeId(config.tableName)} WHERE id = ?`,
     [recordId]
   );
 

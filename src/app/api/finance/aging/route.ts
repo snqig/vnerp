@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { escapeId } from 'mysql2';
 import {
   successResponse,
 } from '@/lib/api-response';
@@ -35,7 +36,7 @@ export const GET = withPermission(
     // 查询所有未结清的往来款
     const rows: any = await query(
       `SELECT r.*, DATEDIFF(?, r.due_date) as age_days
-       FROM ${tableName} r
+       FROM ${escapeId(tableName)} r
        WHERE r.status != 'settled' AND r.remaining_amount > 0
        ORDER BY r.due_date ASC`,
       [asOfDate]

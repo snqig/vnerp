@@ -2,12 +2,13 @@ const mysql = require('../erp-project/node_modules/mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
-// 数据库配置
+// 数据库配置（从环境变量读取，禁止硬编码）
+require('dotenv').config();
 const config = {
-  host: '127.0.0.1',
-  user: 'root',
-  password: 'Snqig521223',
-  database: 'vnerpdacahng',
+  host: process.env.DB_HOST || '127.0.0.1',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'vnerpdacahng',
   charset: 'utf8mb4',
   multipleStatements: true  // 允许多条语句
 };

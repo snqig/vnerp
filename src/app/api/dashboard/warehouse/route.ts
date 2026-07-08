@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
         overview.totalValue = Number(rows[0].total_value || 0);
       }
     } catch (e) {
-      console.error('warehouse overview failed:', e);
     }
 
     try {
@@ -40,7 +39,6 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(outRows) && outRows.length > 0)
         overview.todayOutbound = Number(outRows[0].total || 0);
     } catch (e) {
-      console.error('warehouse today failed:', e);
     }
 
     let categoryDistribution: any[] = [];
@@ -54,7 +52,6 @@ export async function GET(request: NextRequest) {
       `);
       categoryDistribution = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('warehouse category failed:', e);
     }
 
     let lowStockItems: any[] = [];
@@ -69,7 +66,6 @@ export async function GET(request: NextRequest) {
       `);
       lowStockItems = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('warehouse lowStock failed:', e);
     }
 
     let recentTransactions: any[] = [];
@@ -83,7 +79,6 @@ export async function GET(request: NextRequest) {
       `);
       recentTransactions = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('warehouse transactions failed:', e);
     }
 
     let warehouseOccupancy: any[] = [];
@@ -97,7 +92,6 @@ export async function GET(request: NextRequest) {
       `);
       warehouseOccupancy = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('warehouse occupancy failed:', e);
     }
 
     return NextResponse.json({
@@ -111,7 +105,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('获取仓库看板数据失败:', error);
     return NextResponse.json({ success: false, message: '获取仓库看板数据失败' }, { status: 500 });
   }
 }

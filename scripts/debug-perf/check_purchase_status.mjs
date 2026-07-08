@@ -1,0 +1,11 @@
+import mysql from 'mysql2/promise';
+import fs from 'fs';
+const env = fs.readFileSync('d:/dcprint/erp-project/.env', 'utf-8');
+env.split('\n').forEach(l => { const m = l.match(/^([A-Z_]+)=(.*)$/); if (m) process.env[m[1]] = m[2]; });
+const c = await mysql.createConnection({ host: process.env.DB_HOST, port: +process.env.DB_PORT, user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME });
+const [r1] = await c.query("SELECT status, COUNT(*) as cnt FROM pur_purchase_order GROUP BY status ORDER BY status");
+console.log('pur_purchase_order status distribution:');
+r1.forEach(r => console.log(`  status=${r.status}: ${r.cnt} rows`));
+const [r2] = await c.query("SELECT COLUMN_NAME, COLUMN_TYPE, COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pur_purchase_order' AND COLUMN_NAME = 'status'");
+console.log('\nstatus column def:', r2);
+await c.end();

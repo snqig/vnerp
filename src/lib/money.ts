@@ -1,31 +1,29 @@
-// 金额处理工具类 - 使用整数分存储，避免浮点精度问题
+// 金额处理工具类 - 使用 Decimal.js 消除浮点误差，整数分存储
+
+import { yuanToFen as decimalYuanToFen, fenToYuan as decimalFenToYuan,
+         multiplyMoney as decimalMultiplyMoney, divideMoney as decimalDivideMoney,
+         calculateTaxFen, roundAmount } from './decimal-utils';
 
 /**
- * 将元转换为分（用于存储）
- * @param yuan 元为单位的金额
- * @returns 分为单位的整数
+ * 将元转换为分（用于存储）— Decimal.js 精度
  */
 export function yuanToFen(yuan: number | string): number {
   const num = typeof yuan === 'string' ? parseFloat(yuan) : yuan;
   if (isNaN(num)) {
     throw new Error('Invalid amount');
   }
-  return Math.round(num * 100);
+  return decimalYuanToFen(num);
 }
 
 /**
  * 将分转换为元（用于显示）
- * @param fen 分为单位的整数
- * @param decimals 小数位数，默认2
- * @returns 元为单位的金额
  */
 export function fenToYuan(fen: number | string, decimals: number = 2): number {
   const num = typeof fen === 'string' ? parseInt(fen, 10) : fen;
   if (isNaN(num)) {
     throw new Error('Invalid amount');
   }
-  const result = num / 100;
-  return parseFloat(result.toFixed(decimals));
+  return decimalFenToYuan(num, decimals);
 }
 
 /**
@@ -65,25 +63,14 @@ export function subtractMoney(a: number, b: number): number {
  * @returns 乘积（分）
  */
 export function multiplyMoney(amount: number, quantity: number): number {
-  // 先将分转换为元进行乘法，再转回分
-  const yuan = amount / 100;
-  const result = Math.round(yuan * quantity * 100);
-  return result;
+  return decimalMultiplyMoney(amount, quantity);
 }
 
 /**
- * 金额除法
- * @param amount 金额（分）
- * @param divisor 除数
- * @returns 商（分）
+ * 金额除法 — Decimal.js 精度
  */
 export function divideMoney(amount: number, divisor: number): number {
-  if (divisor === 0) {
-    throw new Error('Division by zero');
-  }
-  const yuan = amount / 100;
-  const result = Math.round((yuan / divisor) * 100);
-  return result;
+  return decimalDivideMoney(amount, divisor);
 }
 
 /**
@@ -104,9 +91,9 @@ export function calculateOrderTotal(items: Array<{ price: number; quantity: numb
  * @returns 税额（分）
  */
 export function calculateTax(amount: number, taxRate: number): number {
-  const yuan = amount / 100;
-  const tax = Math.round(yuan * taxRate * 100);
-  return tax;
+  // taxRate is passed as decimal (0.13), convert to percent for calculateTaxFen
+  const taxRatePercent = taxRate * 100;
+  return calculateTaxFen(amount, taxRatePercent);
 }
 
 /**

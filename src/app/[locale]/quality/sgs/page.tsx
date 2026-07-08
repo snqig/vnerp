@@ -40,6 +40,8 @@ import {
   exportTableToPDF,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
 
@@ -238,7 +240,6 @@ export default function SGSManagementPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -250,7 +251,6 @@ export default function SGSManagementPage() {
         setWarningData(result.data);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -306,7 +306,6 @@ export default function SGSManagementPage() {
         setShowDetailDialog(true);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -427,52 +426,18 @@ export default function SGSManagementPage() {
               <Plus className="h-3 w-3 mr-1" />
               {t('addCert')}
             </Button>
-            <TableExportToolbar
-              selectedCount={selectedIds.length}
-              totalCount={sortedData.length}
-              onSelectAll={() => setSelectedIds(sortedData.filter((i) => i.id).map((i) => i.id!))}
-              onDeselectAll={() => setSelectedIds([])}
-              onPrint={() => {}}
-              onExportPDF={() =>
-                exportTableToPDF(
-                  sortedData,
-                  t('sgsCertReport'),
-                  [
-                    { key: 'cert_no', header: t('certNo') },
-                    { key: 'material_name', header: tc('materialName') },
-                    { key: 'supplier_name', header: tc('supplier') },
-                    { key: 'cert_type', header: t('certType') },
-                    { key: 'test_result', header: t('testResult') },
-                    { key: 'expire_date', header: t('validUntil') },
-                  ],
-                  t('sgsCertReport')
-                )
-              }
-              onExportXLS={() =>
-                exportTableToXLS(sortedData, t('sgsCertReport'), [
-                  { key: 'cert_no', header: t('certNo') },
-                  { key: 'material_name', header: tc('materialName') },
-                  { key: 'supplier_name', header: tc('supplier') },
-                  { key: 'cert_type', header: t('certType') },
-                  { key: 'test_result', header: t('testResult') },
-                  { key: 'expire_date', header: t('validUntil') },
-                ])
-              }
-              onExportWORD={() =>
-                exportTableToWORD(
-                  sortedData,
-                  t('sgsCertReport'),
-                  [
-                    { key: 'cert_no', header: t('certNo') },
-                    { key: 'material_name', header: tc('materialName') },
-                    { key: 'supplier_name', header: tc('supplier') },
-                    { key: 'cert_type', header: t('certType') },
-                    { key: 'test_result', header: t('testResult') },
-                    { key: 'expire_date', header: t('validUntil') },
-                  ],
-                  t('sgsCertReport')
-                )
-              }
+            <GlobalExportToolbar
+              filename="SGS证书报告"
+              title="SGS证书报告"
+              columns={[
+                { key: 'cert_no', label: t('certNo'), width: 18 },
+                { key: 'material_name', label: tc('materialName'), width: 20 },
+                { key: 'supplier_name', label: tc('supplier'), width: 18 },
+                { key: 'cert_type', label: t('certType'), width: 12 },
+                { key: 'test_result', label: t('testResult'), width: 12 },
+                { key: 'expire_date', label: t('validUntil'), width: 12 },
+              ]}
+              data={selectedIds.length > 0 ? sortedData.filter((i) => i.id && selectedIds.includes(i.id)) : sortedData}
             />
           </div>
         </div>

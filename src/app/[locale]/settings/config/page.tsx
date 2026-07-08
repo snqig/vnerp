@@ -114,7 +114,6 @@ export default function ConfigPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   }, [page, searchName]);
 
@@ -176,7 +175,6 @@ export default function ConfigPage() {
           const result = await res.json();
           if (result.success) created++;
         } catch (e) {
-          console.error(e);
         }
       }
     }

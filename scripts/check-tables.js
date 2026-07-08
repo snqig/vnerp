@@ -1,8 +1,8 @@
-const mysql = require('mysql2/promise');
+﻿const mysql = require('mysql2/promise');
 
 async function main() {
   const c = await mysql.createConnection({
-    host: '127.0.0.1', user: 'root', password: 'Snqig521223', database: 'vnerpdacahng' });
+    host: '127.0.0.1', user: 'root', password: process.env.DB_PASSWORD || '', database: 'vnerpdacahng' });
 
   const tables = ['eng_sample_to_mass', 'eng_sop', 'prd_die_template', 'prd_process_card'];
 

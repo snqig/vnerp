@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
         overview.completedOrders = Number(rows[0].completed || 0);
       }
     } catch (e) {
-      console.error('sales overview failed:', e);
     }
 
     try {
@@ -40,7 +39,6 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0)
         overview.monthRevenue = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('sales revenue failed:', e);
     }
 
     let orderTrend: any[] = [];
@@ -52,7 +50,6 @@ export async function GET(request: NextRequest) {
       `);
       orderTrend = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('sales orderTrend failed:', e);
     }
 
     let topCustomers: any[] = [];
@@ -65,7 +62,6 @@ export async function GET(request: NextRequest) {
       `);
       topCustomers = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('sales topCustomers failed:', e);
     }
 
     let topProducts: any[] = [];
@@ -76,7 +72,6 @@ export async function GET(request: NextRequest) {
       `);
       topProducts = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('sales topProducts failed:', e);
     }
 
     let recentOrders: any[] = [];
@@ -89,7 +84,6 @@ export async function GET(request: NextRequest) {
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('sales recentOrders failed:', e);
     }
 
     let statusDistribution: any[] = [];
@@ -99,7 +93,6 @@ export async function GET(request: NextRequest) {
       `);
       statusDistribution = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('sales statusDistribution failed:', e);
     }
 
     return NextResponse.json({
@@ -107,7 +100,6 @@ export async function GET(request: NextRequest) {
       data: { overview, orderTrend, topCustomers, topProducts, recentOrders, statusDistribution },
     });
   } catch (error) {
-    console.error('获取销售看板数据失败:', error);
     return NextResponse.json({ success: false, message: '获取销售看板数据失败' }, { status: 500 });
   }
 }

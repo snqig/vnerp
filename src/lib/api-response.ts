@@ -14,8 +14,8 @@ export function sanitizeObject<T>(obj: T): T {
   if (obj instanceof Date) return (obj as Date).toISOString().slice(0, 10) as T;
   if (Array.isArray(obj)) return obj.map((item) => sanitizeObject(item)) as T;
   if (obj && typeof obj === 'object') {
-    const sanitized: any = {};
-    for (const [key, value] of Object.entries(obj)) {
+    const sanitized: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       sanitized[key] = sanitizeObject(value);
     }
     return sanitized as T;
@@ -23,14 +23,14 @@ export function sanitizeObject<T>(obj: T): T {
   return obj;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code: number;
   success: boolean;
   message: string;
   data: T | null;
 }
 
-export interface PaginatedResponse<T = any> extends ApiResponse<{
+export interface PaginatedResponse<T = unknown> extends ApiResponse<{
   list: T[];
   total: number;
   page: number;
@@ -79,7 +79,7 @@ export function paginatedResponse<T>(
 export function errorResponse(
   message: string,
   code = 500,
-  statusCode = 500
+  statusCode: number = code
 ): NextResponse<ApiResponse<null>> {
   return NextResponse.json(
     {
@@ -104,7 +104,7 @@ export const commonErrors = {
 };
 
 // 统一的API错误处理包装器
-export function withErrorHandler<T extends (...args: any[]) => Promise<NextResponse>>(
+export function withErrorHandler<T extends (...args: unknown[]) => Promise<NextResponse>>(
   handler: T,
   errorMessage = '操作失败'
 ): T {
@@ -112,7 +112,6 @@ export function withErrorHandler<T extends (...args: any[]) => Promise<NextRespo
     try {
       return await handler(...args);
     } catch (error) {
-      console.error('[API Error]:', error);
       const message = error instanceof Error ? error.message : errorMessage;
       return errorResponse(message, 500, 500);
     }
@@ -136,7 +135,6 @@ export function withAuthAndErrorHandler(
       
       return await handler(request, context);
     } catch (error) {
-      console.error('[API Error]:', error);
       const message = error instanceof Error ? error.message : errorMessage;
       return errorResponse(message, 500, 500);
     }
@@ -144,12 +142,13 @@ export function withAuthAndErrorHandler(
 }
 
 // 验证请求体
-export function validateRequestBody<T extends Record<string, any>>(
+export function validateRequestBody<T extends object>(
   body: T,
   requiredFields: string[]
 ): { valid: boolean; missing: string[] } {
+  const obj = body as Record<string, unknown>;
   const missing = requiredFields.filter((field) => {
-    const value = body[field];
+    const value = obj[field];
     return value === undefined || value === null || value === '';
   });
 
@@ -187,6 +186,5 @@ export async function logOperation(params: {
       ]
     );
   } catch (e) {
-    console.error('记录操作日志失败:', e);
   }
 }

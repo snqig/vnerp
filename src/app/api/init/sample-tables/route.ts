@@ -139,7 +139,6 @@ export async function GET(request: NextRequest) {
       details: results,
     });
   } catch (error: any) {
-    console.error('创建打样订单管理表失败:', error);
     return errorResponse(`创建表失败: ${error.message}`, 500, 500);
   }
 }

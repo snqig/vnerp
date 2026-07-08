@@ -1,8 +1,54 @@
+import mysql from 'mysql2/promise';
 import { IDeliveryRepository } from '@/domain/sales/repositories/IDeliveryRepository';
 import { Delivery, DeliveryProps } from '@/domain/sales/aggregates/Delivery';
 import { DeliveryLineProps } from '@/domain/sales/entities/DeliveryLine';
+import { DeliveryStatusValue } from '@/domain/sales/value-objects/DeliveryStatus';
 import { query, execute, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
+
+/** sal_delivery 表行类型 */
+interface SalDeliveryRow {
+  id: number;
+  delivery_no: string;
+  status: number;
+  order_id: number | null;
+  order_no: string | null;
+  customer_id: number;
+  customer_name: string | null;
+  warehouse_id: number;
+  delivery_date: string | null;
+  logistics_company: string | null;
+  tracking_no: string | null;
+  total_amount: number | string | null;
+  remark: string | null;
+  create_by: number | null;
+  ship_by: number | null;
+  ship_time: string | null;
+  sign_by: number | null;
+  sign_time: string | null;
+  create_time: string | null;
+  update_time: string | null;
+  deleted: number;
+}
+
+/** sal_delivery_detail 表行类型 */
+interface SalDeliveryDetailRow {
+  id: number;
+  delivery_id: number;
+  line_no: number;
+  order_detail_id: number | null;
+  material_id: number;
+  material_code: string | null;
+  material_name: string | null;
+  material_spec: string | null;
+  unit: string | null;
+  quantity: number | string;
+  unit_price: number | string;
+  amount: number | string;
+  batch_no: string | null;
+  remark: string | null;
+  deleted: number;
+}
 
 const MAIN_COLUMNS = `id, delivery_no, status, order_id, order_no, customer_id, customer_name,
                       warehouse_id, delivery_date, logistics_company, tracking_no,
@@ -15,7 +61,7 @@ const DETAIL_COLUMNS = `id, delivery_id, line_no, order_detail_id, material_id, 
 
 export class MysqlDeliveryRepository implements IDeliveryRepository {
   async findById(id: number): Promise<Delivery | null> {
-    const rows = await query<any>(
+    const rows = await query<SalDeliveryRow>(
       `SELECT ${MAIN_COLUMNS} FROM sal_delivery WHERE id = ? AND deleted = 0`,
       [id]
     );
@@ -25,7 +71,7 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
   }
 
   async findByDeliveryNo(deliveryNo: string): Promise<Delivery | null> {
-    const rows = await query<any>(
+    const rows = await query<SalDeliveryRow>(
       `SELECT ${MAIN_COLUMNS} FROM sal_delivery WHERE delivery_no = ? AND deleted = 0`,
       [deliveryNo]
     );
@@ -35,7 +81,7 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
   }
 
   async findByOrderId(orderId: number): Promise<Delivery[]> {
-    const rows = await query<any>(
+    const rows = await query<SalDeliveryRow>(
       `SELECT ${MAIN_COLUMNS} FROM sal_delivery WHERE order_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [orderId]
     );
@@ -43,7 +89,7 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
   }
 
   async findByCustomerId(customerId: number): Promise<Delivery[]> {
-    const rows = await query<any>(
+    const rows = await query<SalDeliveryRow>(
       `SELECT ${MAIN_COLUMNS} FROM sal_delivery WHERE customer_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [customerId]
     );
@@ -51,7 +97,7 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
   }
 
   async findByStatus(status: number): Promise<Delivery[]> {
-    const rows = await query<any>(
+    const rows = await query<SalDeliveryRow>(
       `SELECT ${MAIN_COLUMNS} FROM sal_delivery WHERE status = ? AND deleted = 0 ORDER BY create_time DESC`,
       [status]
     );
@@ -62,7 +108,7 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
     const deliveryNo = delivery.deliveryNo || (await generateDocumentNo('delivery'));
 
     return transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO sal_delivery
          (delivery_no, status, order_id, order_no, customer_id, customer_name,
           warehouse_id, delivery_date, logistics_company, tracking_no,
@@ -172,19 +218,19 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
     );
   }
 
-  private async findLines(deliveryId: number): Promise<any[]> {
-    return query<any>(
+  private async findLines(deliveryId: number): Promise<SalDeliveryDetailRow[]> {
+    return query<SalDeliveryDetailRow>(
       `SELECT ${DETAIL_COLUMNS} FROM sal_delivery_detail WHERE delivery_id = ? AND deleted = 0 ORDER BY line_no`,
       [deliveryId]
     );
   }
 
-  private mapToAggregate(row: any, lines: any[]): Delivery {
+  private mapToAggregate(row: SalDeliveryRow, lines: SalDeliveryDetailRow[]): Delivery {
     const lineProps: DeliveryLineProps[] = lines.map((l) => ({
       id: l.id,
       deliveryId: l.delivery_id,
       lineNo: l.line_no,
-      orderDetailId: l.order_detail_id,
+      orderDetailId: l.order_detail_id ?? undefined,
       materialId: l.material_id,
       materialCode: l.material_code || '',
       materialName: l.material_name || '',
@@ -200,8 +246,8 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
     const props: DeliveryProps = {
       id: row.id,
       deliveryNo: row.delivery_no,
-      status: row.status,
-      orderId: row.order_id,
+      status: row.status as DeliveryStatusValue,
+      orderId: row.order_id ?? 0,
       orderNo: row.order_no || '',
       customerId: row.customer_id,
       customerName: row.customer_name || '',
@@ -212,13 +258,13 @@ export class MysqlDeliveryRepository implements IDeliveryRepository {
       totalAmount: Number(row.total_amount || 0),
       lines: lineProps,
       remark: row.remark || '',
-      createBy: row.create_by,
-      shipBy: row.ship_by,
+      createBy: row.create_by ?? undefined,
+      shipBy: row.ship_by ?? undefined,
       shipTime: row.ship_time ? new Date(row.ship_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
-      signBy: row.sign_by,
+      signBy: row.sign_by ?? undefined,
       signTime: row.sign_time ? new Date(row.sign_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
-      createTime: row.create_time,
-      updateTime: row.update_time,
+      createTime: row.create_time ?? undefined,
+      updateTime: row.update_time ?? undefined,
     };
     return Delivery.reconstitute(props);
   }

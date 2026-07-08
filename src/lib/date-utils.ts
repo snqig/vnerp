@@ -23,7 +23,6 @@ async function fetchDateFormat(): Promise<string> {
         }
       }
     } catch (e) {
-      console.error('Failed to fetch date format', e);
     }
     return cachedDateFormat;
   })();

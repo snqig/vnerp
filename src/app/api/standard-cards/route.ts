@@ -1,4 +1,4 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { query, execute, queryOne, queryPaginated } from '@/lib/db';
 import {
   successResponse,
@@ -315,7 +315,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
     quality_manager: body.quality_manager || '',
     sales: body.sales || '',
     approver: body.approver || '',
-    creator_id: body.creator_id || null,
+    create_by: body.creator_id || null,
     reviewer_id: body.reviewer_id || null,
     deleted: 0
   };
@@ -327,7 +327,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
 
   const result = await execute(
     `INSERT INTO prd_standard_card (${fields.join(', ')}) VALUES (${placeholders})`,
-    values
+    values as import('@/lib/db').SqlValue[]
   );
 
   return successResponse({ id: result.insertId, card_no: cardNo }, '标准卡创建成功');
@@ -440,7 +440,7 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
     'quality_manager': 'quality_manager',
     'sales': 'sales',
     'approver': 'approver',
-    'creator_id': 'creator_id',
+    'creator_id': 'create_by',
     'reviewer_id': 'reviewer_id'
   };
 
@@ -493,7 +493,7 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
 
   await execute(
     `UPDATE prd_standard_card SET ${setClause} WHERE id = ? AND deleted = 0`,
-    values
+    values as import('@/lib/db').SqlValue[]
   );
 
   return successResponse(null, '标准卡更新成功');

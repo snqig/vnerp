@@ -5,6 +5,7 @@
 
 import { query, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { CalcParamService } from '@/lib/calc-param-service';
 
 // ============================================================
 // 类型定义
@@ -63,8 +64,9 @@ export function calculateInkConsumption(
   inkThickness: number, // μm (微米)
   inkDensity: number, // g/cm³
   quantity: number,
-  lossRate: number = 0.15 // 默认15%损耗
+  lossRate?: number // 损耗率，默认从 sys_calc_param 读取（默认 0.15）
 ): number {
+  const effectiveLossRate = lossRate ?? CalcParamService.getCachedDecimal('printing.default_loss_rate', 0.15);
   // 厚度转换: μm → cm (1μm = 0.0001cm)
   const thicknessCm = inkThickness * 0.0001;
   // 体积 = 面积 × 厚度
@@ -72,7 +74,7 @@ export function calculateInkConsumption(
   // 质量 = 体积 × 密度
   const mass = volume * inkDensity;
   // 总消耗 = 单件质量 × 数量 × (1 + 损耗率)
-  const totalConsumption = mass * quantity * (1 + lossRate);
+  const totalConsumption = mass * quantity * (1 + effectiveLossRate);
   return Math.round(totalConsumption * 100) / 100;
 }
 
@@ -109,7 +111,7 @@ export async function calculateMultiColorInkConsumption(
 
     const inkDensity = formula.ink_density || 1.2; // 默认密度 g/cm³
     const inkThickness = formula.default_thickness || 15; // 默认厚度 μm
-    const lossRate = formula.default_loss_rate || 0.15;
+    const lossRate = formula.default_loss_rate ?? CalcParamService.getCachedDecimal('printing.default_loss_rate', 0.15);
     const unitPrice = formula.unit_price || 0;
 
     const theoreticalConsumption = calculateInkConsumption(

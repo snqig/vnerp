@@ -69,7 +69,6 @@ export default function NoticePage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
   useEffect(() => {

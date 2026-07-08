@@ -88,7 +88,6 @@ export default function SalesOutboundPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
   const fetchWarehouses = async () => {
@@ -97,7 +96,6 @@ export default function SalesOutboundPage() {
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
     } catch (e) {
-      console.error(e);
     }
   };
   const fetchCustomers = async () => {
@@ -106,7 +104,6 @@ export default function SalesOutboundPage() {
       const result = await res.json();
       if (result.success) setCustomers(result.data?.list || result.data || []);
     } catch (e) {
-      console.error(e);
     }
   };
   useEffect(() => {

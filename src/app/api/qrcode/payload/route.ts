@@ -101,7 +101,6 @@ export async function POST(request: NextRequest) {
       '二维码生成成功'
     );
   } catch (error: any) {
-    console.error('二维码生成失败:', error);
     return errorResponse('二维码生成失败: ' + error.message, 500);
   }
 }

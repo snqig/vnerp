@@ -7,7 +7,7 @@ import { withPermission } from '@/lib/api-permissions';
 // 构建菜单树
 function buildMenuTree(menus: any[], parentId: number = 0): any[] {
   return menus
-    .filter((menu) => menu.parent_id === parentId)
+    .filter((menu) => (menu.parent_id ?? 0) === parentId)
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((menu) => ({
       ...menu,
@@ -56,7 +56,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo: UserInf
 
     return successResponse(menuTree, '获取菜单列表成功');
   } catch (error) {
-    console.error('获取菜单列表失败:', error);
     return errorResponse('获取菜单列表失败', 500);
   }
 });

@@ -43,7 +43,6 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       'pur_purchase_order_line',
       'pur_request_item',
       'hr_training_participant',
-      'qc_unqualified_handle',
       'qc_unqualified',
       'qc_final_inspection',
       'bom_header',
@@ -1570,7 +1569,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       const costAmount = randomAmount(100, 10000);
       const user = users[i % users.length];
       await conn.execute(
-        `INSERT INTO qc_unqualified_handle (handle_no, inspection_id, material_id, material_code, material_name, unqualified_qty, handle_type, handle_status, responsible_dept, responsible_person, handle_result, cost_amount, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO qc_unqualified (handle_no, inspection_id, material_id, material_code, material_name, quantity, handle_type, handle_status, responsible_dept, responsible_person, handle_result, cost_amount, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           `UQH-2026-${pad(i + 1, 5)}`,
           inspId,
@@ -1588,7 +1587,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
         ]
       );
     }
-    stats.qc_unqualified_handle = 20;
+    stats.qc_unqualified = 20;
 
     const complaintTypes = ['quality', 'delivery', 'service'];
     const complaintLevels = ['serious', 'major', 'minor'];

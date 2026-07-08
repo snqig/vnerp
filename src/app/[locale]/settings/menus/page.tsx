@@ -87,7 +87,6 @@ export default function MenusPage() {
         setExpandedIds(parentIds);
       }
     } catch (e) {
-      console.error('获取菜单失败:', e);
       toast({ title: '获取菜单失败', variant: 'destructive' });
     } finally {
       setLoading(false);

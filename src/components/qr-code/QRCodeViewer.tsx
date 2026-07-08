@@ -59,7 +59,6 @@ export function QRCodeViewer({
         setRecord(result.data.record);
       }
     } catch (error) {
-      console.error('Failed to fetch QR code info:', error);
     } finally {
       setIsLoading(false);
     }

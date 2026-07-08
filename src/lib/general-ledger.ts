@@ -1,13 +1,31 @@
+/**
+ * @module 总账模块 (General Ledger)
+ * @description 该模块提供总账核心功能，包括会计凭证的创建、审核、记账，
+ * 科目余额计算、资产负债表与利润表生成，以及期末损益结转等会计核算流程。
+ */
 import { query, execute, getConnection, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { roundAmount as roundAmountUtil } from '@/lib/decimal-utils';
 import type { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 
+/** 会计科目类型：资产、负债、所有者权益、成本、损益 */
 export type AccountType = 'asset' | 'liability' | 'equity' | 'cost' | 'profit_loss';
+
+/** 余额方向：借方或贷方 */
 export type BalanceDirection = 'debit' | 'credit';
+
+/** 凭证状态：草稿、已提交、已审核、已记账、已作废 */
 export type VoucherStatus = 'draft' | 'submitted' | 'audited' | 'posted' | 'voided';
+
+/** 凭证类型：收款、付款、转账、调整 */
 export type VoucherType = 'receipt' | 'payment' | 'transfer' | 'adjustment';
+
+/** 会计期间状态：开放、已结账、结账中 */
 export type PeriodStatus = 'open' | 'closed' | 'closing';
 
+/**
+ * 表示一个会计科目实体
+ */
 export interface Account {
   id: number;
   accountCode: string;
@@ -23,6 +41,9 @@ export interface Account {
   sortOrder: number;
 }
 
+/**
+ * 表示凭证中的一行分录明细
+ */
 export interface VoucherLine {
   id?: number;
   voucherId?: number;
@@ -39,6 +60,9 @@ export interface VoucherLine {
   projectId?: number;
 }
 
+/**
+ * 表示一张完整的会计凭证
+ */
 export interface Voucher {
   id: number;
   voucherNo: string;
@@ -62,6 +86,9 @@ export interface Voucher {
   lines: VoucherLine[];
 }
 
+/**
+ * 表示某会计期间某科目的余额信息
+ */
 export interface AccountBalance {
   periodCode: string;
   accountId: number;
@@ -78,6 +105,9 @@ export interface AccountBalance {
   direction: BalanceDirection;
 }
 
+/**
+ * 表示资产负债表中的一个项目行
+ */
 export interface BalanceSheetItem {
   itemCode: string;
   itemName: string;
@@ -87,6 +117,9 @@ export interface BalanceSheetItem {
   parentCode?: string;
 }
 
+/**
+ * 表示利润表（损益表）中的一个项目行
+ */
 export interface IncomeStatementItem {
   itemCode: string;
   itemName: string;
@@ -97,6 +130,9 @@ export interface IncomeStatementItem {
   parentCode?: string;
 }
 
+/**
+ * 会计科目类型映射表，定义每种科目类型的中文标签、科目编码前缀及默认余额方向
+ */
 export const ACCOUNT_TYPE_MAP: Record<
   AccountType,
   { label: string; prefix: string; direction: BalanceDirection }
@@ -138,9 +174,26 @@ interface AccountBalanceRow extends RowDataPacket {
   year_credit: number;
 }
 
+/**
+ * 总账核心引擎类
+ *
+ * 提供会计凭证全生命周期管理（创建→审核→记账）、科目余额计算、
+ * 财务报表生成（资产负债表、利润表）以及期末损益结转等功能。
+ */
 export class GeneralLedger {
+  /**
+   * 创建总账引擎实例
+   */
   constructor() {}
 
+  /**
+   * 验证凭证借贷是否平衡
+   *
+   * 遍历所有凭证明细行，累加借方与贷方金额，判断两者差额是否在 0.01 元以内。
+   *
+   * @param voucher - 包含明细行的凭证对象
+   * @returns 借贷平衡时返回 true，否则返回 false
+   */
   validateVoucherBalance(voucher: { lines: VoucherLine[] }): boolean {
     let totalDebit = 0;
     let totalCredit = 0;
@@ -153,6 +206,23 @@ export class GeneralLedger {
     return Math.abs(totalDebit - totalCredit) < 0.01;
   }
 
+  /**
+   * 计算科目期末余额
+   *
+   * 根据期初余额和本期发生额计算期末余额，公式如下：
+   * - 净期初 = 期初借方 - 期初贷方
+   * - 净本期 = 本期借方 - 本期贷方
+   * - 净期末 = 净期初 + 净本期
+   * - 若净期末 > 0，则期末借方 = 净期末；若净期末 < 0，则期末贷方 = |净期末|
+   * - 净余额方向根据科目余额方向确定：借方科目取净期末值，贷方科目取相反值
+   *
+   * @param beginDebit - 期初借方金额
+   * @param beginCredit - 期初贷方金额
+   * @param currentDebit - 本期借方发生额
+   * @param currentCredit - 本期贷方发生额
+   * @param direction - 科目余额方向（借方或贷方）
+   * @returns 包含期末借方、期末贷方和净余额的对象
+   */
   calculateAccountBalance(
     beginDebit: number,
     beginCredit: number,
@@ -182,6 +252,18 @@ export class GeneralLedger {
     };
   }
 
+  /**
+   * 创建会计凭证
+   *
+   * 在事务中插入凭证主表和所有明细行记录，并验证借贷平衡和明细非空。
+   * 凭证创建后状态保持传入时的初始状态（通常为草稿或已提交）。
+   *
+   * @param voucher - 凭证数据（不含 id 和 createdAt）
+   * @returns 新创建的凭证 ID
+   * @throws {Error} 当凭证借贷不平衡时抛出"凭证借贷不平衡"
+   * @throws {Error} 当凭证明细为空时抛出"凭证明细不能为空"
+   * @throws {Error} 当数据库操作失败时抛出原始错误（事务已回滚）
+   */
   async createVoucher(voucher: Omit<Voucher, 'id' | 'createdAt'>): Promise<number> {
     if (!this.validateVoucherBalance(voucher)) {
       throw new Error('凭证借贷不平衡');
@@ -203,7 +285,7 @@ export class GeneralLedger {
           voucher_no, period_code, voucher_date, voucher_type,
           source_type, source_id, source_no,
           total_debit, total_credit, status,
-          summary, attachment_count, created_by
+          summary, attachment_count, create_by
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           voucher.voucherNo,
@@ -264,6 +346,17 @@ export class GeneralLedger {
     }
   }
 
+  /**
+   * 审核会计凭证
+   *
+   * 将已提交（status=1）的凭证状态更新为已审核（status=2），并记录审核人和审核时间。
+   *
+   * @param voucherId - 凭证 ID
+   * @param auditor - 审核人标识
+   * @returns 审核成功返回 true
+   * @throws {Error} 当凭证不存在时抛出"凭证不存在"
+   * @throws {Error} 当凭证状态不是已提交时抛出"只有已提交的凭证才能审核"
+   */
   async auditVoucher(voucherId: number, auditor: string): Promise<boolean> {
     const conn = await getConnection();
     try {
@@ -293,6 +386,21 @@ export class GeneralLedger {
     }
   }
 
+  /**
+   * 记账（过账）会计凭证
+   *
+   * 将已审核（status=2）凭证的各明细行金额更新到科目余额表（fin_account_balance），
+   * 使用 ON DUPLICATE KEY UPDATE 累加本期和本年借贷发生额，然后将凭证状态更新为已记账（status=3）。
+   * 整个操作在数据库事务中执行，失败时自动回滚。
+   *
+   * @param voucherId - 凭证 ID
+   * @param poster - 记账人标识
+   * @returns 记账成功返回 true
+   * @throws {Error} 当凭证不存在时抛出"凭证不存在"
+   * @throws {Error} 当凭证状态不是已审核时抛出"只有已审核的凭证才能记账"
+   * @throws {Error} 当会计期间已结账时抛出"会计期间已结账，不能记账"
+   * @throws {Error} 当数据库操作失败时抛出原始错误（事务已回滚）
+   */
   async postVoucher(voucherId: number, poster: string): Promise<boolean> {
     const conn = await getConnection();
     try {
@@ -371,6 +479,16 @@ export class GeneralLedger {
     }
   }
 
+  /**
+   * 计算指定会计期间所有科目的余额
+   *
+   * 查询所有启用的末级科目，关联上期期末余额（作为本期期初）、本期发生额和本年累计发生额，
+   * 调用 calculateAccountBalance 计算期末借贷方余额。
+   * 本年累计 = 当年1月至当前期间的合计发生额。
+   *
+   * @param periodCode - 会计期间编码，格式为 "YYYY-MM"
+   * @returns 所有末级科目的余额信息数组
+   */
   async calculatePeriodBalances(periodCode: string): Promise<AccountBalance[]> {
     const conn = await getConnection();
     try {
@@ -437,6 +555,19 @@ export class GeneralLedger {
     }
   }
 
+  /**
+   * 生成资产负债表
+   *
+   * 基于指定期间的科目余额数据，按资产负债表结构生成报表项目。
+   * 报表结构：资产（A）→ 流动资产（A01）/ 非流动资产（A02）；
+   * 负债和所有者权益（B）→ 流动负债（B01）/ 所有者权益（B02）。
+   *
+   * 资产按借方科目计算净额 = 期末借方 - 期末贷方；
+   * 负债和权益按贷方科目计算净额 = 期末贷方 - 期末借方。
+   *
+   * @param periodCode - 会计期间编码，格式为 "YYYY-MM"
+   * @returns 资产负债表项目数组，按层级排列
+   */
   async generateBalanceSheet(periodCode: string): Promise<BalanceSheetItem[]> {
     const balances = await this.calculatePeriodBalances(periodCode);
     const balanceMap = new Map<number, AccountBalance>();
@@ -574,6 +705,23 @@ export class GeneralLedger {
     return items;
   }
 
+  /**
+   * 生成利润表（损益表）
+   *
+   * 基于指定期间的科目余额数据，按利润表结构生成报表项目。
+   * 报表结构：营业收入（I01）→ 营业成本（I02）→ 期间费用（I03）→ 利润总额（I04）。
+   *
+   * 计算公式：
+   * - 营业收入 = 主营业务收入科目贷方发生额 - 借方发生额
+   * - 营业成本 = 主营业务成本科目借方发生额 - 贷方发生额
+   * - 期间费用 = 销售费用 + 管理费用 + 财务费用（均按借方净额计算）
+   * - 利润总额 = 营业收入 - 营业成本 - 期间费用
+   *
+   * 每个项目同时提供本期金额和本年累计金额。
+   *
+   * @param periodCode - 会计期间编码，格式为 "YYYY-MM"
+   * @returns 利润表项目数组，按报表顺序排列
+   */
   async generateIncomeStatement(periodCode: string): Promise<IncomeStatementItem[]> {
     const [yearStr, monthStr] = periodCode.split('-');
     const firstPeriod = `${yearStr}-01`;
@@ -693,6 +841,23 @@ export class GeneralLedger {
     return items;
   }
 
+  /**
+   * 期末损益结转
+   *
+   * 将指定期间所有损益类科目（编码以 5 或 6 开头）的本期净余额结转至"本年利润"科目，
+   * 自动生成一张转账类型的结转凭证。
+   *
+   * 结转规则：
+   * - 损益科目净余额 = 本期借方发生额 - 本期贷方发生额
+   * - 净余额 > 0（借方余额，如成本费用类）：贷方结转，减少该科目余额
+   * - 净余额 < 0（贷方余额，如收入类）：借方结转，减少该科目余额
+   * - 净利润 = 贷方结转合计 - 借方结转合计
+   * - 净利润 > 0 时，借记本年利润；净利润 < 0 时，贷记本年利润
+   *
+   * @param periodCode - 会计期间编码，格式为 "YYYY-MM"
+   * @param operator - 操作人标识
+   * @returns 生成的结转凭证 ID
+   */
   async carryForwardProfit(periodCode: string, operator: string): Promise<number> {
     const balances = await this.calculatePeriodBalances(periodCode);
 
@@ -777,6 +942,12 @@ export class GeneralLedger {
     });
   }
 
+  /**
+   * 将凭证类型枚举转换为数据库存储的整数值
+   *
+   * @param type - 凭证类型枚举
+   * @returns 对应的整数值（receipt=1, payment=2, transfer=3, adjustment=4），默认为 3
+   */
   private voucherTypeToInt(type: VoucherType): number {
     const map: Record<VoucherType, number> = {
       receipt: 1,
@@ -787,6 +958,12 @@ export class GeneralLedger {
     return map[type] || 3;
   }
 
+  /**
+   * 将凭证状态枚举转换为数据库存储的整数值
+   *
+   * @param status - 凭证状态枚举
+   * @returns 对应的整数值（draft=0, submitted=1, audited=2, posted=3, voided=4），默认为 0
+   */
   private voucherStatusToInt(status: VoucherStatus): number {
     const map: Record<VoucherStatus, number> = {
       draft: 0,
@@ -798,9 +975,18 @@ export class GeneralLedger {
     return map[status] || 0;
   }
 
+  /**
+   * 金额四舍五入到两位小数（分）
+   *
+   * @param v - 原始金额
+   * @returns 四舍五入到两位小数后的金额
+   */
   private roundAmount(v: number): number {
-    return Math.round(v * 100) / 100;
+    return roundAmountUtil(v);
   }
 }
 
+/**
+ * 总账引擎类的默认导出
+ */
 export default GeneralLedger;

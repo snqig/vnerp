@@ -5,23 +5,7 @@ import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -38,18 +22,11 @@ import {
   UserCircle,
   RefreshCw,
   Printer,
-  QrCode,
-  Upload,
-  X,
-  CheckSquare,
-  Square,
   FileSpreadsheet,
   FileText,
-  BarChart3,
   Users,
   GraduationCap,
   Calendar,
-  ArrowUpDown,
   ArrowUp,
   ArrowDown,
 } from 'lucide-react';
@@ -57,74 +34,24 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
 import { usePermission } from '@/hooks/usePermission';
-import { PermissionGuard } from '@/components/PermissionGuard';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
-import { 
-  mockEmployees, 
-  mockDepartments, 
-  mockRoles, 
+import { authFetch } from '@/lib/auth-fetch';
+import {
+  mockEmployees,
+  mockDepartments,
+  mockRoles,
   USE_MOCK_HR_DATA,
   mockApiListResponse,
-  mockApiResponse
 } from '@/lib/mock-hr-data';
-
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
-
-// 员工接口
-interface Employee {
-  id: number;
-  employee_no: string;
-  name: string;
-  gender: number;
-  age?: number;
-  id_card?: string;
-  phone: string;
-  email: string;
-  dept_id: number;
-  dept_name: string;
-  section?: string;
-  role_id: number;
-  role_name: string;
-  position: string;
-  entry_date: string;
-  birth_date?: string;
-  native_place?: string;
-  home_address?: string;
-  current_address?: string;
-  birth_month?: string;
-  id_card_expiry?: string;
-  education?: string;
-  status: number;
-  remark?: string;
-  photo?: string;
-}
-
-// 部门接口
-interface Department {
-  id: number;
-  dept_code: string;
-  dept_name: string;
-}
-
-// 角色接口
-interface Role {
-  id: number;
-  role_code: string;
-  role_name: string;
-}
+import type { Employee, Department, Role } from './types';
+import { EmployeeFormDialog } from './components/dialogs/EmployeeFormDialog';
+import { PrintDialog } from './components/dialogs/PrintDialog';
+import { BatchPrintDialog } from './components/dialogs/BatchPrintDialog';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 export default function EmployeePage() {
   // 翻译钩子
@@ -272,7 +199,6 @@ export default function EmployeePage() {
         '获取员工列表失败',
         { error: (error as Error).message }
       );
-      console.error(t("fetchEmployeesFailed"), error);
       toast.error(t("fetchEmployeesFailed"));
     } finally {
       setLoading(false);
@@ -308,7 +234,6 @@ export default function EmployeePage() {
         '获取部门列表失败',
         { error: (error as Error).message }
       );
-      console.error(t("fetchDepartmentsFailed"), error);
     }
   }, []);
 
@@ -341,7 +266,6 @@ export default function EmployeePage() {
         '获取角色列表失败',
         { error: (error as Error).message }
       );
-      console.error(t("fetchRolesFailed"), error);
     }
   }, []);
 
@@ -414,7 +338,6 @@ export default function EmployeePage() {
         '上传照片异常',
         { error: (error as Error).message }
       );
-      console.error('上传照片失败:', error);
       toast.error(t("uploadPhotoFailed"));
     } finally {
       setUploadingPhoto(false);
@@ -488,7 +411,6 @@ export default function EmployeePage() {
         '保存员工异常',
         { error: (error as Error).message }
       );
-      console.error('保存员工失败:', error);
       toast.error(t("saveFailed"));
     }
   };
@@ -536,7 +458,6 @@ export default function EmployeePage() {
         '删除员工异常',
         { employeeId: id, error: (error as Error).message }
       );
-      console.error('删除员工失败:', error);
       toast.error(t("deleteFailed"));
     }
   };
@@ -964,52 +885,6 @@ export default function EmployeePage() {
     toast.success(t("printWindowOpened"));
   };
 
-  // 批量打印卡片组件
-  const BatchPrintCard = ({ employee, index }: { employee: Employee; index: number }) => {
-    const [qrUrl, setQrUrl] = useState('');
-
-    useEffect(() => {
-      const generateQR = async () => {
-        const queryUrl = `${window.location.origin}/hr/employee/query?id=${employee.id}`;
-        const url = await QRCode.toDataURL(queryUrl, { width: 100, margin: 1 });
-        setQrUrl(url);
-      };
-      generateQR();
-    }, [employee.id]);
-
-    return (
-      <div className="border rounded-lg p-4 bg-card">
-        <div className="flex items-start gap-4">
-          <span className="text-sm text-muted-foreground">{tc("serialNo")} {index + 1}</span>
-          <span className="font-medium">{employee.name}</span>
-        </div>
-        <div className="flex gap-4">
-          <div className="w-20 h-24 bg-muted rounded flex items-center justify-center overflow-hidden">
-            {employee.photo ? (
-              <img
-                src={employee.photo}
-                alt={employee.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <UserCircle className="w-10 h-10 text-muted-foreground" />
-            )}
-          </div>
-          <div className="flex-1 text-sm space-y-1">
-            <div>{tc("employeeNo")}: {employee.employee_no}</div>
-            <div>{tc("department")}: {employee.dept_name}</div>
-            <div>{tc("position")}: {employee.position || '-'}</div>
-          </div>
-          {qrUrl && (
-            <div className="w-16 h-16">
-              <img src={qrUrl} alt={tc("qrCode")} className="w-full h-full" />
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   // 生成员工查询二维码
   const generateEmployeeQR = async (employee: Employee) => {
     logger.info(
@@ -1041,7 +916,6 @@ export default function EmployeePage() {
         '生成二维码失败',
         { employeeId: employee.id, error: (error as Error).message }
       );
-      console.error(t("generateQRFailed"), error);
       toast.error(t("generateQRFailed"));
     }
   };
@@ -1310,14 +1184,39 @@ export default function EmployeePage() {
                 <Printer className="w-4 h-4 mr-2" />
                 {tc("print")}
               </Button>
-              <Button variant="outline" onClick={exportToExcel}>
-                <FileSpreadsheet className="w-4 h-4 mr-2" />
-                {tc("exportExcel")}
-              </Button>
-              <Button variant="outline" onClick={exportToPDF}>
-                <FileText className="w-4 h-4 mr-2" />
-                {tc("exportPDF")}
-              </Button>
+              <GlobalExportToolbar
+                filename="员工列表"
+                title="员工列表"
+                landscape
+                columns={[
+                  { key: 'employee_no', label: tc('employeeNo'), width: 15 },
+                  { key: 'name', label: tc('name'), width: 12 },
+                  { key: 'gender', label: tc('gender'), width: 8, formatter: (v) => (v === 1 ? tc('maleShort') : tc('femaleShort')) },
+                  { key: 'age', label: tc('age'), width: 6 },
+                  { key: 'dept_name', label: tc('department'), width: 15 },
+                  { key: 'section', label: tc('section'), width: 12 },
+                  { key: 'position', label: tc('position'), width: 12 },
+                  { key: 'entry_date', label: tc('entryDate'), width: 12 },
+                  { key: 'education', label: tc('education'), width: 10 },
+                  { key: 'native_place', label: tc('nativePlace'), width: 12 },
+                  { key: 'phone', label: tc('contact'), width: 15 },
+                  {
+                    key: 'status',
+                    label: tc('status'),
+                    width: 10,
+                    formatter: (v) => {
+                      const m: Record<number, string> = {
+                        1: t('statusActive'),
+                        0: t('statusInactive'),
+                        2: t('statusProbation'),
+                        3: t('statusResigned'),
+                      };
+                      return m[v] || tc('unknown');
+                    },
+                  },
+                ]}
+                data={selectedEmployees.length > 0 ? employees.filter((emp) => selectedEmployees.includes(emp.id)) : sortedEmployees()}
+              />
             </div>
 
             {/* 统计面板 */}
@@ -1706,544 +1605,40 @@ export default function EmployeePage() {
       </div>
 
       {/* 员工表单对话框 */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" resizable>
-          <DialogHeader>
-            <DialogTitle>{editing ? t("editEmployee") : t("addEmployeeTitle")}</DialogTitle>
-            <DialogDescription>{editing ? t("editEmployeeDesc") : t("addEmployeeDesc")}</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-3 gap-4 py-4">
-            {/* 照片上传区域 */}
-            <div className="col-span-1 row-span-4">
-              <Label className="mb-2 block">{tc("employeePhoto")}</Label>
-              <div className="relative">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  className="hidden"
-                />
-                {form.photo ? (
-                  <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600">
-                    <img src={form.photo} alt={tc("employeePhoto")} className="w-full h-full object-cover" />
-                    <button
-                      onClick={handleRemovePhoto}
-                      className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                      title={tc("deletePhoto")}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingPhoto}
-                    className="w-full aspect-[3/4] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-blue-400 dark:hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors disabled:opacity-50"
-                  >
-                    {uploadingPhoto ? (
-                      <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
-                    ) : (
-                      <>
-                        <Upload className="w-8 h-8 text-gray-400" />
-                        <span className="text-sm text-gray-500">{tc("uploadPhoto")}</span>
-                        <span className="text-xs text-gray-400">{tc("supportJpgPng")}</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("employeeNo")}</Label>
-              <Input
-                value={form.employee_no || ''}
-                onChange={(e) => setForm({ ...form, employee_no: e.target.value })}
-                placeholder={tc("autoGenerate")}
-                readOnly={!editing}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>
-                {tc("name")} <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                value={form.name || ''}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder={tc("enterName")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>
-                {tc("gender")} <span className="text-gray-400 text-xs">{tc("idCardAuto")}</span>
-              </Label>
-              <Select
-                value={form.gender?.toString() || '1'}
-                onValueChange={(v) => setForm({ ...form, gender: parseInt(v) })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={tc("selectGender")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">{tc("maleShort")}</SelectItem>
-                  <SelectItem value="2">{tc("femaleShort")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("contact")}</Label>
-              <Input
-                value={form.phone || ''}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder={tc("enterPhone")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("email")}</Label>
-              <Input
-                value={form.email || ''}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder={tc("enterEmail")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("department")}</Label>
-              <Select
-                value={form.dept_id?.toString() || ''}
-                onValueChange={(v) => setForm({ ...form, dept_id: parseInt(v) })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={tc("selectDepartment")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id.toString()}>
-                      {dept.dept_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("position")}</Label>
-              <Input
-                value={form.position || ''}
-                onChange={(e) => setForm({ ...form, position: e.target.value })}
-                placeholder={tc("enterPosition")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("role")}</Label>
-              <Select
-                value={form.role_id?.toString() || ''}
-                onValueChange={(v) => setForm({ ...form, role_id: parseInt(v) })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={tc("selectRole")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.id.toString()}>
-                      {role.role_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("entryDate")}</Label>
-              <Input
-                type="date"
-                value={form.entry_date || ''}
-                onChange={(e) => setForm({ ...form, entry_date: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("status")}</Label>
-              <Select
-                value={form.status?.toString() || '1'}
-                onValueChange={(v) => setForm({ ...form, status: parseInt(v) })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={tc("selectStatus")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">{tc("statusActive")}</SelectItem>
-                  <SelectItem value="2">{tc("statusProbation")}</SelectItem>
-                  <SelectItem value="3">{tc("statusResigned")}</SelectItem>
-                  <SelectItem value="0">{tc("statusInactive")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>
-                {tc("age")} <span className="text-gray-400 text-xs">{tc("autoCalculate")}</span>
-              </Label>
-              <Input
-                type="number"
-                value={form.age || ''}
-                readOnly
-                className="bg-gray-50"
-                placeholder={tc("autoCalculate")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("section")}</Label>
-              <Input
-                value={form.section || ''}
-                onChange={(e) => setForm({ ...form, section: e.target.value })}
-                placeholder={tc("enterSection")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>
-                {tc("birthDate")} <span className="text-gray-400 text-xs">{tc("autoCalculate")}</span>
-              </Label>
-              <Input type="date" value={form.birth_date || ''} readOnly className="bg-gray-50" />
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("idCard")}</Label>
-              <Input
-                value={form.id_card || ''}
-                onChange={(e) => {
-                  const idCard = e.target.value.replace(/[^0-9Xx]/g, '');
-                  let birthDate = '';
-                  let age = undefined;
-                  let gender = form.gender;
-                  if (idCard.length === 18) {
-                    const year = idCard.substring(6, 10);
-                    const month = idCard.substring(10, 12);
-                    const day = idCard.substring(12, 14);
-                    birthDate = `${year}-${month}-${day}`;
-                    const birthYear = parseInt(year);
-                    const currentYear = new Date().getFullYear();
-                    age = currentYear - birthYear;
-                    const genderDigit = parseInt(idCard.substring(16, 17));
-                    gender = genderDigit % 2 === 1 ? 1 : 2;
-                  } else if (idCard.length === 15) {
-                    const year = '19' + idCard.substring(6, 8);
-                    const month = idCard.substring(8, 10);
-                    const day = idCard.substring(10, 12);
-                    birthDate = `${year}-${month}-${day}`;
-                    const birthYear = parseInt(year);
-                    const currentYear = new Date().getFullYear();
-                    age = currentYear - birthYear;
-                    const genderDigit = parseInt(idCard.substring(14, 15));
-                    gender = genderDigit % 2 === 1 ? 1 : 2;
-                  }
-                  setForm({
-                    ...form,
-                    id_card: idCard,
-                    birth_date: birthDate || form.birth_date,
-                    age: age || form.age,
-                    gender: gender,
-                  });
-                }}
-                placeholder={tc("enterIdCard")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("nativePlace")}</Label>
-              <Input
-                value={form.native_place || ''}
-                onChange={(e) => setForm({ ...form, native_place: e.target.value })}
-                placeholder={tc("enterNativePlace")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("education")}</Label>
-              <Select
-                value={form.education || ''}
-                onValueChange={(v) => setForm({ ...form, education: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={tc("selectEducation")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="初中">{tc("juniorHigh")}</SelectItem>
-                  <SelectItem value="中专">{tc("technical")}</SelectItem>
-                  <SelectItem value="高中">{tc("highSchool")}</SelectItem>
-                  <SelectItem value="大专">{tc("associate")}</SelectItem>
-                  <SelectItem value="本科">{tc("bachelor")}</SelectItem>
-                  <SelectItem value="硕士">{tc("master")}</SelectItem>
-                  <SelectItem value="博士">{tc("doctor")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("homeAddress")}</Label>
-              <Input
-                value={form.home_address || ''}
-                onChange={(e) => setForm({ ...form, home_address: e.target.value })}
-                placeholder={tc("enterHomeAddress")}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{tc("currentAddress")}</Label>
-              <Input
-                value={form.current_address || ''}
-                onChange={(e) => setForm({ ...form, current_address: e.target.value })}
-                placeholder={tc("enterCurrentAddress")}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              {tc("cancel")}
-            </Button>
-            <Button onClick={saveEmployee} className="bg-blue-600 hover:bg-blue-700">
-              {editing ? t("update") : t("create")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EmployeeFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        editing={editing}
+        form={form}
+        setForm={setForm}
+        departments={departments}
+        roles={roles}
+        uploadingPhoto={uploadingPhoto}
+        fileInputRef={fileInputRef}
+        onPhotoUpload={handlePhotoUpload}
+        onRemovePhoto={handleRemovePhoto}
+        onSave={saveEmployee}
+      />
 
       {/* 打印上岗证对话框 */}
-      <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
-        <DialogContent className="max-w-lg" resizable>
-          <DialogHeader>
-            <DialogTitle>{tc("cardPreview")}</DialogTitle>
-            <DialogDescription>{tc("clickToPrint")}</DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center py-4 overflow-auto">
-            {/* 上岗证卡片 - 打印内容 */}
-            <div ref={printRef} className="card" style={{ minWidth: '320px' }}>
-              <div className="header">
-                <div className="company-name">{companyName}</div>
-                <div className="card-title">{tc("employeeCard")}</div>
-              </div>
-              <div className="photo-area">
-                {selectedEmployee?.photo ? (
-                  <img
-                    src={selectedEmployee.photo}
-                    alt={selectedEmployee.name}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                ) : (
-                  <span className="photo-text">{tc("photo")}</span>
-                )}
-              </div>
-              <div className="content-row">
-                <div className="left-section">
-                  <div className="qr-section">
-                    {qrCodeUrl && (
-                      <>
-                        <img src={qrCodeUrl} alt={tc("qrCode")} className="qr-code" />
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="right-section">
-                  <div className="info-section">
-                    <div className="info-row">
-                      <span className="info-label">{tc("name")}</span>
-                      <span className="info-value">{selectedEmployee?.name}</span>
-                    </div>
-                    <div className="info-row">
-                      <span className="info-label">{tc("gender")}</span>
-                      <span className="info-value">
-                        {selectedEmployee?.gender === 1 ? t("maleShort") : t("femaleShort")}
-                      </span>
-                    </div>
-                    <div className="info-row">
-                      <span className="info-label">{tc("department")}</span>
-                      <span className="info-value">{selectedEmployee?.dept_name}</span>
-                    </div>
-                    <div className="info-row">
-                      <span className="info-label">{tc("position")}</span>
-                      <span className="info-value">{selectedEmployee?.position || '-'}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="employee-no">NO: {selectedEmployee?.employee_no}</div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPrintDialogOpen(false)}>
-              {tc("cancel")}
-            </Button>
-            <Button onClick={handlePrint} className="bg-blue-600 hover:bg-blue-700">
-              <Printer className="w-4 h-4 mr-2" />
-              {tc("printCard")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PrintDialog
+        open={printDialogOpen}
+        onOpenChange={setPrintDialogOpen}
+        selectedEmployee={selectedEmployee}
+        qrCodeUrl={qrCodeUrl}
+        companyName={companyName}
+        printRef={printRef}
+        onPrint={handlePrint}
+      />
 
       {/* 批量打印对话框 */}
-      <Dialog open={batchPrintDialogOpen} onOpenChange={setBatchPrintDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto" resizable>
-          <DialogHeader>
-            <DialogTitle>{tc("batchPrintTitle")}</DialogTitle>
-            <DialogDescription>{tc("batchPrintDesc", { count: selectedEmployees.length })}</DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="grid grid-cols-2 gap-4">
-              {employees
-                .filter((emp) => selectedEmployees.includes(emp.id))
-                .map((emp, index) => (
-                  <BatchPrintCard key={emp.id} employee={emp} index={index} />
-                ))}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBatchPrintDialogOpen(false)}>
-              {tc("cancel")}
-            </Button>
-            <Button onClick={handleBatchPrintAll} className="bg-blue-600 hover:bg-blue-700">
-              <Printer className="w-4 h-4 mr-2" />
-              {tc("printAll")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 打印样式 */}
-      <style jsx>{`
-        .card {
-          width: 320px;
-          height: 480px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          border-radius: 16px;
-          padding: 24px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-          color: white;
-          position: relative;
-          overflow: hidden;
-        }
-        .card::before {
-          content: '';
-          position: absolute;
-          top: -50%;
-          right: -50%;
-          width: 100%;
-          height: 100%;
-          background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-        }
-        .header {
-          text-align: center;
-          margin-bottom: 20px;
-          position: relative;
-          z-index: 1;
-        }
-        .company-name {
-          font-size: 16px;
-          font-weight: bold;
-          letter-spacing: 2px;
-          margin-bottom: 8px;
-          line-height: 1.4;
-        }
-        .card-title {
-          font-size: 16px;
-          opacity: 0.9;
-        }
-        .photo-area {
-          width: 120px;
-          height: 160px;
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-          z-index: 1;
-          border: 2px dashed rgba(255, 255, 255, 0.4);
-          overflow: hidden;
-          margin: 0 auto 20px;
-        }
-        .photo-area img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          border-radius: 6px;
-        }
-        .photo-text {
-          font-size: 12px;
-          opacity: 0.7;
-        }
-        .content-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 20px;
-          position: relative;
-          z-index: 1;
-          gap: 16px;
-        }
-        .left-section {
-          width: 45%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-        }
-        .right-section {
-          width: 55%;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-        }
-        .employee-no {
-          font-size: 12px;
-          opacity: 0.9;
-          font-weight: 500;
-          text-align: center;
-          margin-top: 10px;
-          position: relative;
-          z-index: 1;
-        }
-        .info-section {
-          position: relative;
-          z-index: 1;
-          margin-bottom: 20px;
-        }
-        .info-row {
-          display: flex;
-          margin-bottom: 12px;
-          font-size: 14px;
-        }
-        .info-label {
-          width: 60px;
-          opacity: 0.8;
-        }
-        .info-value {
-          flex: 1;
-          font-weight: 500;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-          padding-bottom: 2px;
-        }
-        .qr-section {
-          text-align: center;
-          position: relative;
-          z-index: 1;
-        }
-        .qr-code {
-          width: 100px;
-          height: 100px;
-          background: white;
-          border-radius: 8px;
-          padding: 6px;
-          margin: 0 auto 6px;
-        }
-        .qr-code img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-        }
-        .qr-text {
-          font-size: 11px;
-          opacity: 0.8;
-        }
-        .card-number {
-          position: absolute;
-          bottom: 12px;
-          right: 16px;
-          font-size: 11px;
-          opacity: 0.6;
-          z-index: 1;
-        }
-      `}</style>
+      <BatchPrintDialog
+        open={batchPrintDialogOpen}
+        onOpenChange={setBatchPrintDialogOpen}
+        employees={employees}
+        selectedEmployees={selectedEmployees}
+        onPrintAll={handleBatchPrintAll}
+      />
     </MainLayout>
   );
 }

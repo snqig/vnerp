@@ -39,6 +39,8 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { Plus, Search, Edit, Trash2, Printer, QrCode } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import QRCode from 'qrcode';
@@ -113,7 +115,6 @@ export default function ProductLabelPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   }, [page, searchNo, searchMaterial, searchStatus]);
 
@@ -314,15 +315,20 @@ export default function ProductLabelPage() {
                 {t('query')}
               </Button>
             </div>
-            <TableExportToolbar
-              selectedCount={selectedIds.size}
-              totalCount={list.length}
-              onSelectAll={toggleSelectAll}
-              onDeselectAll={() => setSelectedIds(new Set())}
-              onPrint={handlePrint}
-              onExportPDF={handleExportPDF}
-              onExportXLS={handleExportXLS}
-              onExportWORD={handleExportWORD}
+            <GlobalExportToolbar
+              filename="成品标签"
+              title="成品标签"
+              columns={[
+                { key: 'label_no', label: t('labelNo'), width: 18 },
+                { key: 'work_order_no', label: t('workOrderNo'), width: 15 },
+                { key: 'material_code', label: t('materialCode'), width: 15 },
+                { key: 'material_name', label: t('materialName'), width: 20 },
+                { key: 'quantity', label: tc('quantity'), width: 10 },
+                { key: 'batch_no', label: t('batchNo'), width: 12 },
+                { key: 'qc_result', label: t('qcResult'), width: 12 },
+                { key: 'status', label: tc('status'), width: 12, formatter: (v) => getExportLabel(v) },
+              ]}
+              data={selectedIds.size > 0 ? list.filter((i) => selectedIds.has(i.id)) : list}
             />
             <Button
               size="sm"

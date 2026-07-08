@@ -3,7 +3,6 @@
 import { useSnowAdminTheme } from '@/hooks/useSnowAdminTheme';
 import { Sidebar } from './sidebar';
 import { Header } from './header';
-import { cn } from '@/lib/utils';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -12,6 +11,10 @@ interface MainLayoutProps {
 
 export function MainLayout({ children, title }: MainLayoutProps) {
   const { navigationMode } = useSnowAdminTheme();
+
+  // SSR 已能提供菜单（layout.tsx 服务端预取注入 initialAuth），
+  // 不再需要 sidebarReady 延迟挂载来消除水合差异。
+  // Sidebar 内部在 isLoading=true 时仍会渲染骨架屏作为降级。
 
   if (navigationMode === 'top') {
     return (

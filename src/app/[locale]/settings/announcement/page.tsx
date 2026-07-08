@@ -70,7 +70,6 @@ export default function AnnouncementPage() {
         setTotal(result.data?.total || 0);
       }
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }

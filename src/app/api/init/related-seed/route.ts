@@ -77,7 +77,6 @@ export const POST = withPermission(async (request: NextRequest) => {
         );
         empCount++;
       } catch (e: any) {
-        console.error(`Insert employee ${emp.no} failed:`, e.message);
       }
     }
     stats.employees = empCount;

@@ -104,7 +104,6 @@ export default function EquipmentPage() {
         setTypeStats(result.data?.typeStats || []);
       }
     } catch (e) {
-      console.error(e);
       toast.error('获取设备列表失败');
     } finally {
       setLoading(false);
@@ -136,7 +135,6 @@ export default function EquipmentPage() {
         toast.error(result.message || tc('error'));
       }
     } catch (e) {
-      console.error(e);
       toast.error('保存设备失败');
     }
   };
@@ -153,7 +151,6 @@ export default function EquipmentPage() {
         toast.error(result.message || '删除失败');
       }
     } catch (e) {
-      console.error(e);
       toast.error('删除设备失败');
     }
   };

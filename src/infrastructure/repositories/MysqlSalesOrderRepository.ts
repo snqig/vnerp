@@ -1,16 +1,60 @@
+import mysql from 'mysql2/promise';
 import { ISalesOrderRepository } from '@/domain/sales/repositories/ISalesOrderRepository';
 import { SalesOrder, SalesOrderProps } from '@/domain/sales/aggregates/SalesOrder';
 import { SalesOrderStatus } from '@/domain/sales/value-objects/SalesOrderStatus';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
+type SqlValue = string | number | null | boolean | Date;
+
+/** sal_order 表行类型 */
+interface SalOrderRow {
+  id: number;
+  order_no: string;
+  customer_id: number;
+  customer_name: string;
+  order_date: string | null;
+  delivery_date: string | null;
+  total_amount: number | string;
+  total_qty: number | string;
+  shipped_qty: number | string;
+  status: number;
+  warehouse_id: number | null;
+  remark: string | null;
+  create_by: number | null;
+  create_time: string | null;
+  update_time: string | null;
+  audit_by: number | null;
+  audit_time: string | null;
+  deleted: number;
+}
+
+/** sal_order_detail 表行类型 */
+interface SalOrderDetailRow {
+  id: number;
+  order_id: number;
+  material_id: number;
+  material_code: string | null;
+  material_name: string | null;
+  specification: string | null;
+  unit: string | null;
+  quantity: number | string;
+  shipped_qty: number | string;
+  unit_price: number | string;
+  amount: number | string;
+  remark: string | null;
+  create_time: string | null;
+  update_time: string | null;
+  deleted: number;
+}
+
 export class MysqlSalesOrderRepository implements ISalesOrderRepository {
   async findById(id: number): Promise<SalesOrder | null> {
-    const orders = await query<any>('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
+    const orders = await query<SalOrderRow>('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
-    const details = await query<any>(
+    const details = await query<SalOrderDetailRow>(
       'SELECT * FROM sal_order_detail WHERE order_id = ? AND deleted = 0 ORDER BY id ASC',
       [id]
     );
@@ -25,7 +69,7 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
   ) {
     let sql = `SELECT o.* FROM sal_order o WHERE o.deleted = 0`;
     let countSql = `SELECT COUNT(*) as total FROM sal_order o WHERE o.deleted = 0`;
-    const params: any[] = [];
+    const params: SqlValue[] = [];
 
     if (status && status !== 'all') {
       const dbCode = SalesOrderStatus.from(status).toDbCode();
@@ -61,27 +105,28 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
 
     sql += ' ORDER BY o.create_time DESC';
 
-    const result = await queryPaginated(sql, countSql, params, pagination);
+    type SalOrderWithDetails = SalOrderRow & { _details?: SalOrderDetailRow[] };
+    const result = await queryPaginated<SalOrderWithDetails>(sql, countSql, params, pagination);
 
     if (result.data.length > 0) {
-      const orderIds = result.data.map((o: any) => o.id);
+      const orderIds = result.data.map((o) => o.id);
       const placeholders = orderIds.map(() => '?').join(',');
-      const details = await query(
+      const details = await query<SalOrderDetailRow>(
         `SELECT * FROM sal_order_detail WHERE order_id IN (${placeholders}) AND deleted = 0 ORDER BY id ASC`,
         orderIds
       );
-      const detailsMap = new Map<number, any[]>();
-      for (const d of details as any[]) {
+      const detailsMap = new Map<number, SalOrderDetailRow[]>();
+      for (const d of details) {
         if (!detailsMap.has(d.order_id)) detailsMap.set(d.order_id, []);
         detailsMap.get(d.order_id)!.push(d);
       }
-      for (const order of result.data as any[]) {
+      for (const order of result.data) {
         order._details = detailsMap.get(order.id) || [];
       }
     }
 
     return {
-      data: result.data.map((o: any) =>
+      data: result.data.map((o) =>
         SalesOrder.reconstitute(this.mapToProps(o, o._details || []))
       ),
       pagination: result.pagination,
@@ -92,7 +137,7 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
     const orderNo = await generateDocumentNo('sales_order');
 
     return await transaction(async (conn) => {
-      const [orderResult]: any = await conn.execute(
+      const [orderResult] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO sal_order (order_no, customer_id, customer_name, order_date, delivery_date,
           total_amount, total_qty, shipped_qty, status, warehouse_id, remark, create_by, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, NOW())`,
@@ -165,7 +210,7 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
     await execute('UPDATE sal_order SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
   }
 
-  private mapToProps(order: any, details: any[]): SalesOrderProps {
+  private mapToProps(order: SalOrderRow, details: SalOrderDetailRow[]): SalesOrderProps {
     return {
       id: order.id,
       orderNo: order.order_no,
@@ -174,14 +219,14 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
       customerName: order.customer_name || '',
       orderDate: order.order_date || '',
       deliveryDate: order.delivery_date || '',
-      totalAmount: order.total_amount,
-      totalQuantity: order.total_qty,
+      totalAmount: Number(order.total_amount),
+      totalQuantity: Number(order.total_qty),
       warehouseId: order.warehouse_id || 1,
       remark: order.remark || '',
-      createBy: order.create_by,
-      auditBy: order.audit_by,
-      auditTime: order.audit_time,
-      lines: (details || []).map((d: any, index: number) => ({
+      createBy: order.create_by ?? undefined,
+      auditBy: order.audit_by ?? undefined,
+      auditTime: order.audit_time ?? undefined,
+      lines: (details || []).map((d, index) => ({
         id: d.id,
         orderId: d.order_id,
         lineNo: index + 1,
@@ -190,14 +235,14 @@ export class MysqlSalesOrderRepository implements ISalesOrderRepository {
         materialName: d.material_name || '',
         specification: d.specification || '',
         unit: d.unit || '件',
-        orderQty: d.quantity,
-        shippedQty: d.shipped_qty || 0,
-        unitPrice: d.unit_price || 0,
-        amount: d.amount || 0,
-        remark: d.remark,
+        orderQty: Number(d.quantity),
+        shippedQty: Number(d.shipped_qty) || 0,
+        unitPrice: Number(d.unit_price) || 0,
+        amount: Number(d.amount) || 0,
+        remark: d.remark ?? undefined,
       })),
-      createTime: order.create_time,
-      updateTime: order.update_time,
+      createTime: order.create_time ?? undefined,
+      updateTime: order.update_time ?? undefined,
     };
   }
 }

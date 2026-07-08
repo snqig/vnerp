@@ -42,6 +42,8 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 interface Item {
   id: number;
@@ -113,7 +115,6 @@ export default function StockAdjustPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
   const fetchWarehouses = async () => {
@@ -122,7 +123,6 @@ export default function StockAdjustPage() {
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
     } catch (e) {
-      console.error(e);
     }
   };
   useEffect(() => {
@@ -206,19 +206,18 @@ export default function StockAdjustPage() {
                 <Search className="h-3 w-3" />
               </Button>
             </div>
-            <TableExportToolbar
-              selectedCount={selectedIds.size}
-              totalCount={list.length}
-              onSelectAll={() => setSelectedIds(new Set(list.map((i) => i.id)))}
-              onDeselectAll={() => setSelectedIds(new Set())}
-              onPrint={() => printTable(getExportData(), exportColumns, t('stockAdjustTitle'))}
-              onExportPDF={() =>
-                exportTableToPDF(getExportData(), t('stockAdjustTitle'), exportColumns, t('stockAdjustTitle'))
-              }
-              onExportXLS={() => exportTableToXLS(getExportData(), t('stockAdjustTitle'), exportColumns)}
-              onExportWORD={() =>
-                exportTableToWORD(getExportData(), t('stockAdjustTitle'), exportColumns, t('stockAdjustTitle'))
-              }
+            <GlobalExportToolbar
+              filename="库存调整"
+              title="库存调整"
+              columns={[
+                { key: 'adjust_no', label: t('adjustNo'), width: 18 },
+                { key: 'warehouse_name', label: t('warehouse'), width: 15, formatter: (v) => v || '-' },
+                { key: 'adjust_date', label: t('adjustDate'), width: 12, formatter: (v) => v || '-' },
+                { key: 'adjust_type', label: t('adjustType'), width: 12, formatter: (v) => typeMap[v] || '-' },
+                { key: 'operator_name', label: t('operator'), width: 12, formatter: (v) => v || '-' },
+                { key: 'status', label: tc('status'), width: 10, formatter: (v) => statusMap[v]?.label || '-' },
+              ]}
+              data={selectedIds.size > 0 ? list.filter((i) => selectedIds.has(i.id)) : list}
             />
             <Button
               size="sm"

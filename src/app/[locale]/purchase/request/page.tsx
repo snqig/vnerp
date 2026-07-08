@@ -46,6 +46,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useDebounce } from '@/hooks/use-debounce';
 import { SearchInput } from '@/components/ui/search-input';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 interface PurchaseRequest {
   id: number;
@@ -469,24 +471,21 @@ export default function PurchaseRequestPage() {
                 <Printer className="h-4 w-4" />
                 {tc('print')}
               </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1">
-                    <Download className="h-4 w-4" />
-                    {tc('export')}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={handleExportXLS}>
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    {t('exportXLS')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportPDF}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    {t('exportPDF')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <GlobalExportToolbar
+                filename="采购申请"
+                title="采购申请列表"
+                columns={[
+                  { key: 'request_no', label: t('requestNo'), width: 18 },
+                  { key: 'request_date', label: t('requestDate'), width: 12, formatter: (v) => formatDate(v) },
+                  { key: 'request_dept', label: t('requestDept'), width: 12 },
+                  { key: 'requester_name', label: t('requester'), width: 12 },
+                  { key: 'request_type', label: tc('type'), width: 10 },
+                  { key: 'priority', label: tc('priority'), width: 10, formatter: (v) => priorityMapCN[v] || tc('medium') },
+                  { key: 'total_amount', label: tc('amount'), width: 12, formatter: (v, row) => formatAmount(v, row.currency) },
+                  { key: 'status', label: tc('status'), width: 10, formatter: (v) => statusMapCN[v] || tc('unknown') },
+                ]}
+                data={selectedIds.length > 0 ? requests.filter((r) => selectedIds.includes(r.id)) : sortedRequests}
+              />
             </div>
           </div>
         </div>

@@ -3,6 +3,13 @@ import { WorkOrder, WorkOrderProps } from '@/domain/production/aggregates/WorkOr
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
+import type { RowDataPacket, ResultSetHeader } from 'mysql2';
+
+/** 库存行类型 */
+interface InventoryRow {
+  id: number;
+  quantity: string | number;
+}
 
 export class ProductionApplicationService {
   constructor(
@@ -49,7 +56,7 @@ export class ProductionApplicationService {
     await transaction(async (conn) => {
       const { WorkOrderStatusVO } =
         await import('@/domain/production/value-objects/WorkOrderStatus');
-      const [result]: any = await conn.execute(
+      const [result] = await conn.execute<ResultSetHeader>(
         'UPDATE prod_work_order SET status = ?, actual_start_date = NOW(), update_time = NOW() WHERE id = ? AND status = ?',
         [wo.status.toDbCode(), id, WorkOrderStatusVO.from(previousStatus).toDbCode()]
       );
@@ -93,14 +100,15 @@ export class ProductionApplicationService {
           [issue.quantity, id, issue.materialId]
         );
 
-        const [existingInv]: any = await conn.execute(
+        const [existingInv] = await conn.execute<RowDataPacket[]>(
           'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
           [issue.materialId, issue.warehouseId]
         );
         if (existingInv.length > 0) {
+          const invRow = existingInv[0] as unknown as InventoryRow;
           await conn.execute(
             'UPDATE inv_inventory SET quantity = quantity - ?, update_time = NOW() WHERE id = ?',
-            [issue.quantity, existingInv[0].id]
+            [issue.quantity, invRow.id]
           );
         }
 
@@ -131,20 +139,21 @@ export class ProductionApplicationService {
     await transaction(async (conn) => {
       const { WorkOrderStatusVO } =
         await import('@/domain/production/value-objects/WorkOrderStatus');
-      const [result]: any = await conn.execute(
+      const [result] = await conn.execute<ResultSetHeader>(
         'UPDATE prod_work_order SET status = ?, completed_qty = completed_qty + ?, actual_end_date = NOW(), update_time = NOW() WHERE id = ? AND status = ?',
         [wo.status.toDbCode(), completedQty, id, WorkOrderStatusVO.from(previousStatus).toDbCode()]
       );
       if (result.affectedRows === 0) throw new VersionConflictError();
 
-      const [existingInv]: any = await conn.execute(
+      const [existingInv] = await conn.execute<RowDataPacket[]>(
         'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
         [wo.productId, warehouseId]
       );
       if (existingInv.length > 0) {
+        const invRow = existingInv[0] as unknown as InventoryRow;
         await conn.execute(
           'UPDATE inv_inventory SET quantity = quantity + ?, update_time = NOW() WHERE id = ?',
-          [completedQty, existingInv[0].id]
+          [completedQty, invRow.id]
         );
       } else {
         await conn.execute(

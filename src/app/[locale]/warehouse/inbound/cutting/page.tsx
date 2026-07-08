@@ -27,6 +27,8 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 // 分切记录类型
 interface CuttingRecord {
@@ -145,7 +147,6 @@ export default function CuttingRecordsPage() {
         }
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
-          console.error('Failed to fetch cutting records:', error);
         }
       } finally {
         setLoading(false);
@@ -224,19 +225,25 @@ export default function CuttingRecordsPage() {
                 <CardDescription>{t('recordCount', { count: total })}</CardDescription>
               </div>
               <div className="flex gap-2">
-                <TableExportToolbar
-                  selectedCount={selectedIds.size}
-                  totalCount={records.length}
-                  onSelectAll={() => setSelectedIds(new Set(records.map((r) => r.id)))}
-                  onDeselectAll={() => setSelectedIds(new Set())}
-                  onPrint={() => printTable(getExportData(), exportColumns, t('exportTitle'))}
-                  onExportPDF={() =>
-                    exportTableToPDF(getExportData(), t('exportTitle'), exportColumns, t('exportTitle'))
-                  }
-                  onExportXLS={() => exportTableToXLS(getExportData(), t('exportTitle'), exportColumns)}
-                  onExportWORD={() =>
-                    exportTableToWORD(getExportData(), t('exportTitle'), exportColumns, t('exportTitle'))
-                  }
+                <GlobalExportToolbar
+                  filename="分切记录"
+                  title="分切记录"
+                  landscape
+                  columns={[
+                    { key: 'recordNo', label: t('recordNoCol'), width: 15 },
+                    { key: 'sourceLabelNo', label: t('sourceLabelNoCol'), width: 15 },
+                    { key: 'materialName', label: t('materialName'), width: 18 },
+                    { key: 'materialCode', label: t('materialCode'), width: 15 },
+                    { key: 'specification', label: t('specification'), width: 12 },
+                    { key: 'originalWidth', label: t('originalWidthMM'), width: 12 },
+                    { key: 'cutWidthStr', label: t('cutWidthMM'), width: 12 },
+                    { key: 'cutTotalWidth', label: t('cutTotalMM'), width: 12 },
+                    { key: 'remainWidth', label: t('remainWidthMM'), width: 12 },
+                    { key: 'operatorName', label: t('operator'), width: 10 },
+                    { key: 'cutTime', label: t('cutTime'), width: 18, formatter: (v) => new Date(v).toLocaleString() },
+                    { key: 'status', label: tc('status'), width: 10, formatter: (v) => v === 'active' ? tc('normal') : v === 'frozen' ? tc('frozen') : tc('disabled') },
+                  ]}
+                  data={selectedIds.size > 0 ? records.filter((r) => selectedIds.has(r.id)) : records}
                 />
                 <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
                   <RefreshCw className="h-4 w-4 mr-2" />

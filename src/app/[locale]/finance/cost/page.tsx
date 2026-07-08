@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Search, RefreshCw, DollarSign, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface CostItem {
   id: number;
@@ -63,18 +64,6 @@ export default function CostPage() {
     total: 0,
   });
 
-  const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  }, []);
-
   const fetchData = useCallback(async () => {
     try {
       const params = new URLSearchParams({
@@ -90,7 +79,6 @@ export default function CostPage() {
         setTotal(result.data?.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   }, [page, keyword, typeFilter]);
 
@@ -102,7 +90,6 @@ export default function CostPage() {
         setSummary(result.data.cost_summary || summary);
       }
     } catch (e) {
-      console.error(e);
     }
   }, []);
 

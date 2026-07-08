@@ -40,6 +40,8 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { Plus, Search, Edit, Trash2, FileCheck, Upload, FileText, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
@@ -142,7 +144,6 @@ export default function ContractReviewPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   }, [page, searchCustomer, searchProduct, searchStatus]);
 
@@ -319,15 +320,21 @@ export default function ContractReviewPage() {
                 </Button>
               </div>
               <div className="flex items-center gap-2">
-                <TableExportToolbar
-                  selectedCount={selectedIds.size}
-                  totalCount={list.length}
-                  onSelectAll={toggleSelectAll}
-                  onDeselectAll={() => setSelectedIds(new Set())}
-                  onPrint={handlePrint}
-                  onExportPDF={handleExportPDF}
-                  onExportXLS={handleExportXLS}
-                  onExportWORD={handleExportWORD}
+                <GlobalExportToolbar
+                  filename="合同评审管理"
+                  title="合同评审管理"
+                  columns={[
+                    { key: 'review_no', label: t('reviewNo'), width: 18 },
+                    { key: 'order_no', label: t('orderNo'), width: 15 },
+                    { key: 'customer_name', label: t('customerName'), width: 18 },
+                    { key: 'product_name', label: t('productName'), width: 20 },
+                    { key: 'quantity', label: t('quantity'), width: 10 },
+                    { key: 'amount', label: t('amount'), width: 12 },
+                    { key: 'delivery_date', label: t('deliveryDate'), width: 12 },
+                    { key: 'sample_status', label: t('sampleStatus'), width: 12, formatter: (v) => sampleStatusMap[v]?.label || tc('unknown') },
+                    { key: 'status', label: t('reviewStatus'), width: 12, formatter: (v) => statusMap[v]?.label || tc('unknown') },
+                  ]}
+                  data={selectedIds.size > 0 ? list.filter((i) => i.id && selectedIds.has(i.id)) : list}
                 />
                 <Button
                   onClick={() => {

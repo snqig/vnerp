@@ -178,7 +178,6 @@ export default function SPCPage() {
         );
       }
     } catch (e) {
-      console.error('获取物料失败:', e);
     }
   }, []);
 
@@ -198,7 +197,6 @@ export default function SPCPage() {
         setXbarResult(data.data || data);
       }
     } catch (e) {
-      console.error('生成Xbar-R图失败:', e);
     } finally {
       setXbarLoading(false);
     }
@@ -215,7 +213,6 @@ export default function SPCPage() {
         setParetoResult(Array.isArray(data.data) ? data.data : []);
       }
     } catch (e) {
-      console.error('帕累托分析失败:', e);
     } finally {
       setParetoLoading(false);
     }
@@ -232,7 +229,6 @@ export default function SPCPage() {
         setPChartResult(data.data || data);
       }
     } catch (e) {
-      console.error('生成P控制图失败:', e);
     } finally {
       setPChartLoading(false);
     }

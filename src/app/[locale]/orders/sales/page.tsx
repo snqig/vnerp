@@ -65,6 +65,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useCompanyName } from '@/hooks/useCompanyName';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 type SortField =
   | 'order_no'
@@ -184,7 +186,6 @@ export default function SalesOrdersPage() {
         setCustomers(result.data?.list || result.data || []);
       }
     } catch (error) {
-      console.error(t('fetchCustomersFailed'), error);
     }
   };
 
@@ -196,7 +197,6 @@ export default function SalesOrdersPage() {
         setMaterials(result.data?.list || result.data || []);
       }
     } catch (error) {
-      console.error(t('fetchMaterialsFailed'), error);
     }
   };
 
@@ -217,7 +217,6 @@ export default function SalesOrdersPage() {
           toast.error(result.message || t('fetchOrdersFailed'));
         }
       } catch (error) {
-        console.error(t('fetchOrdersFailed'), error);
         toast.error(t('fetchOrdersFailed'));
       } finally {
         setLoading(false);
@@ -256,6 +255,18 @@ export default function SalesOrdersPage() {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />;
     if (sortOrder === 'asc') return <ArrowUp className="ml-1 h-3 w-3" />;
     return <ArrowDown className="ml-1 h-3 w-3" />;
+  };
+
+  const getAriaSort = (field: SortField): 'ascending' | 'descending' | 'none' => {
+    if (sortField !== field || !sortOrder) return 'none';
+    return sortOrder === 'asc' ? 'ascending' : 'descending';
+  };
+
+  const handleSortKeyDown = (e: React.KeyboardEvent, field: SortField) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleSort(field);
+    }
   };
 
   const filteredOrders = useMemo(() => {
@@ -720,7 +731,6 @@ export default function SalesOrdersPage() {
         toast.error(result.message || t('submitFailed'));
       }
     } catch (error) {
-      console.error(t('submitFailed'), error);
       toast.error(t('submitNetworkError'));
     } finally {
       setSubmitting(false);
@@ -843,29 +853,41 @@ export default function SalesOrdersPage() {
                     {tc('delete')}({selectedOrders.length})
                   </Button>
                 )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <Download className="h-4 w-4 mr-2" />
-                      {tc('export')}
-                      <ChevronDown className="h-3 w-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                      <FileDown className="h-4 w-4 mr-2" />
-                      {t('exportPdf')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExport('excel')}>
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      {t('exportExcel')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExport('word')}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      {t('exportWord')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <GlobalExportToolbar
+                  filename="销售订单"
+                  title="销售订单列表"
+                  landscape
+                  columns={[
+                    { key: 'order_no', label: t('orderNo'), width: 18 },
+                    { key: 'customer_name', label: t('customer'), width: 20 },
+                    { key: 'order_date', label: t('orderDate'), width: 12, formatter: (v) => formatDate(v) },
+                    { key: 'delivery_date', label: t('deliveryDate'), width: 12, formatter: (v) => formatDate(v) },
+                    { key: 'total_amount', label: t('amount'), width: 12, formatter: (v) => Number(v || 0).toFixed(2) },
+                    {
+                      key: 'status',
+                      label: tc('status'),
+                      width: 10,
+                      formatter: (v) => {
+                        const m: Record<number, string> = {
+                          1: t('statusPending'),
+                          2: t('statusConfirmed'),
+                          3: t('statusPartialShip'),
+                          4: t('statusCompleted'),
+                          5: t('statusCancelled'),
+                        };
+                        return m[v] || `${t('unknown')}(${v})`;
+                      },
+                    },
+                    {
+                      key: 'items',
+                      label: t('productDetail'),
+                      width: 30,
+                      formatter: (_v, row) =>
+                        row.items?.map((i: any) => `${i.material_name} x${i.quantity}${i.unit}`).join('; ') || '-',
+                    },
+                  ]}
+                  data={selectedOrders.length > 0 ? filteredOrders.filter((o) => selectedOrders.includes(o.id)) : filteredOrders}
+                />
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                   <DialogTrigger asChild>
                     <Button>
@@ -1068,7 +1090,10 @@ export default function SalesOrdersPage() {
                     <TableHead className="w-10"></TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted/50"
+                      tabIndex={0}
+                      aria-sort={getAriaSort('order_no')}
                       onClick={() => handleSort('order_no')}
+                      onKeyDown={(e) => handleSortKeyDown(e, 'order_no')}
                     >
                       <span className="inline-flex items-center">
                         {t('orderNo')}{getSortIcon('order_no')}
@@ -1076,7 +1101,10 @@ export default function SalesOrdersPage() {
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted/50"
+                      tabIndex={0}
+                      aria-sort={getAriaSort('customer_name')}
                       onClick={() => handleSort('customer_name')}
+                      onKeyDown={(e) => handleSortKeyDown(e, 'customer_name')}
                     >
                       <span className="inline-flex items-center">
                         {t('customer')}{getSortIcon('customer_name')}
@@ -1084,7 +1112,10 @@ export default function SalesOrdersPage() {
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted/50"
+                      tabIndex={0}
+                      aria-sort={getAriaSort('order_date')}
                       onClick={() => handleSort('order_date')}
+                      onKeyDown={(e) => handleSortKeyDown(e, 'order_date')}
                     >
                       <span className="inline-flex items-center">
                         {t('orderDate')}{getSortIcon('order_date')}
@@ -1092,7 +1123,10 @@ export default function SalesOrdersPage() {
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted/50"
+                      tabIndex={0}
+                      aria-sort={getAriaSort('delivery_date')}
                       onClick={() => handleSort('delivery_date')}
+                      onKeyDown={(e) => handleSortKeyDown(e, 'delivery_date')}
                     >
                       <span className="inline-flex items-center">
                         {t('deliveryDate')}{getSortIcon('delivery_date')}
@@ -1100,7 +1134,10 @@ export default function SalesOrdersPage() {
                     </TableHead>
                     <TableHead
                       className="text-right cursor-pointer select-none hover:bg-muted/50"
+                      tabIndex={0}
+                      aria-sort={getAriaSort('total_amount')}
                       onClick={() => handleSort('total_amount')}
+                      onKeyDown={(e) => handleSortKeyDown(e, 'total_amount')}
                     >
                       <span className="inline-flex items-center justify-end">
                         {t('amount')}{getSortIcon('total_amount')}
@@ -1108,7 +1145,10 @@ export default function SalesOrdersPage() {
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted/50"
+                      tabIndex={0}
+                      aria-sort={getAriaSort('status')}
                       onClick={() => handleSort('status')}
+                      onKeyDown={(e) => handleSortKeyDown(e, 'status')}
                     >
                       <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
                     </TableHead>

@@ -1,8 +1,20 @@
+/**
+ * @module api-permissions
+ * @description API 权限检查系统，定义了系统中所有权限标识、路由与 HTTP 方法的权限映射关系，
+ * 以及权限校验的核心逻辑。所有需要权限控制的 API 路由均通过此模块进行访问级别判断。
+ */
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuthAndErrorHandler, FIRST_LOGIN_WHITELIST } from './api-auth';
+import { withAuthAndErrorHandler, FIRST_LOGIN_WHITELIST, RouteHandlerContext } from './api-auth';
 import { logOperation } from './api-response';
-import { UserInfo } from './auth';
+import { UserInfo, hasPermission } from './auth';
 
+/**
+ * 系统中所有权限标识的常量定义
+ *
+ * 每个权限标识采用 `模块:操作` 的格式，用于在角色权限配置和 API 路由权限检查中
+ * 标识用户对特定资源的访问级别。如 `warehouse:view` 表示仓库查看权限，
+ * `warehouse:create` 表示仓库创建权限。
+ */
 export const API_PERMISSIONS = {
   WAREHOUSE_VIEW: 'warehouse:view',
   WAREHOUSE_CREATE: 'warehouse:create',
@@ -198,6 +210,13 @@ export const API_PERMISSIONS = {
   WORKFLOW_PROCESS: 'workflow:process',
 } as const;
 
+/**
+ * 路径与 HTTP 方法的权限映射表
+ *
+ * 将每个 API 路径前缀映射到其各 HTTP 方法（GET/POST/PUT/DELETE/PATCH）所需的权限标识。
+ * 路由匹配采用最长前缀匹配策略，路径越长优先级越高。用于 `getRequiredPermission` 函数
+ * 查找请求所需的权限。
+ */
 export const ROUTE_PERMISSIONS: Record<
   string,
   { GET?: string; POST?: string; PUT?: string; DELETE?: string; PATCH?: string }
@@ -887,6 +906,12 @@ export const ROUTE_PERMISSIONS: Record<
   '/api/dashboard/quality': { GET: API_PERMISSIONS.DASHBOARD_VIEW },
 };
 
+/**
+ * 无需认证即可访问的公开路由列表
+ *
+ * 这些路由（如登录、注册、重置锁定等）不需要进行权限检查，
+ * 即使未登录或首次登录状态下也可正常访问。
+ */
 export const PUBLIC_ROUTES = [
   '/api/auth/login',
   '/api/auth/register',
@@ -895,9 +920,26 @@ export const PUBLIC_ROUTES = [
   '/api/document-number',
 ];
 
-// 首次登录强制改密白名单（定义已移至 api-auth.ts，此处 re-export 保持向后兼容）
+/**
+ * 首次登录强制改密白名单
+ *
+ * 定义已移至 api-auth.ts，此处通过 re-export 保持向后兼容。
+ * 白名单中的路由在用户首次登录（firstLogin=true）时仍可访问，
+ * 主要包括修改密码、登出、获取用户信息等必要操作。
+ */
 export { FIRST_LOGIN_WHITELIST };
 
+/**
+ * 根据请求路径和 HTTP 方法获取所需的权限标识
+ *
+ * 首先检查路径是否属于公开路由（无需权限），然后采用最长前缀匹配策略
+ * 从 ROUTE_PERMISSIONS 映射表中查找对应的权限标识。匹配越长的路径优先级越高，
+ * 例如 `/api/warehouse/outbound` 会优先匹配 `/api/warehouse/outbound` 而非 `/api/warehouse`。
+ *
+ * @param pathname - 请求的 URL 路径，如 `/api/warehouse/inbound`
+ * @param method - HTTP 请求方法，如 `GET`、`POST`、`PUT`、`DELETE`、`PATCH`
+ * @returns 所需的权限标识字符串，若为公开路由或未配置权限的路由则返回 null
+ */
 export function getRequiredPermission(pathname: string, method: string): string | null {
   for (const publicRoute of PUBLIC_ROUTES) {
     if (pathname.startsWith(publicRoute)) return null;
@@ -913,8 +955,24 @@ export function getRequiredPermission(pathname: string, method: string): string 
   return methodPermissions[method as keyof typeof methodPermissions] || null;
 }
 
+/**
+ * 带权限检查的 API 路由处理器包装器
+ *
+ * 在 `withAuthAndErrorHandler` 认证和错误处理的基础上，增加基于路由的自动权限校验。
+ * 流程：认证 → 根据请求路径和方法自动查找所需权限 → 检查用户是否拥有该权限或 admin 角色 →
+ * 首次登录改密拦截 → 执行业务处理器 → 可选的操作日志记录。
+ *
+ * admin 角色的用户自动跳过所有权限检查，拥有系统最高访问级别。
+ *
+ * @param handler - 业务处理器函数，接收请求、用户信息和上下文
+ * @param options - 可选配置
+ * @param options.errorMessage - 自定义错误提示消息，传递给 withAuthAndErrorHandler
+ * @param options.logTitle - 操作日志标题，若提供则在成功响应时记录操作日志
+ * @param options.logType - 操作日志类型，默认为 `'api'`
+ * @returns 包装后的 Next.js API 路由处理函数
+ */
 export function withPermission(
-  handler: (request: NextRequest, userInfo: UserInfo, context?: any) => Promise<NextResponse>,
+  handler: (request: NextRequest, userInfo: UserInfo, context?: RouteHandlerContext) => Promise<NextResponse>,
   options?: {
     errorMessage?: string;
     logTitle?: string;
@@ -927,11 +985,7 @@ export function withPermission(
       const method = request.method;
       const requiredPermission = getRequiredPermission(pathname, method);
 
-      if (
-        requiredPermission &&
-        !userInfo.permissions.includes(requiredPermission) &&
-        !userInfo.roles.includes('admin')
-      ) {
+      if (requiredPermission && !hasPermission(userInfo, requiredPermission)) {
         return NextResponse.json(
           {
             code: 403,

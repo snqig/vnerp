@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { escapeId } from 'mysql2';
 import { query, execute, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
@@ -317,18 +318,18 @@ async function updateCardInfo(cardIdentifier: string | number, data: any) {
   const updateFields: string[] = [];
   const params: any[] = [];
 
-  const fields = [
-    'productCode',
-    'productName',
-    'materialSpec',
-    'workOrderDate',
-    'planQty',
-    'remark',
-  ];
+  const fieldColumnMap: Record<string, string> = {
+    productCode: 'product_code',
+    productName: 'product_name',
+    materialSpec: 'material_spec',
+    workOrderDate: 'work_order_date',
+    planQty: 'plan_qty',
+    remark: 'remark',
+  };
 
-  fields.forEach((field) => {
+  Object.entries(fieldColumnMap).forEach(([field, column]) => {
     if (data[field] !== undefined) {
-      updateFields.push(`${snakeCase(field)} = ?`);
+      updateFields.push(`${escapeId(column)} = ?`);
       params.push(data[field]);
     }
   });
@@ -361,11 +362,6 @@ export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   return successResponse(null, '流程卡删除成功');
 }, { logTitle: '删除流程卡', logType: 'business' });
 
-// 辅助函数：驼峰转蛇形
-function snakeCase(str: string): string {
-  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-}
-
 // 辅助函数：分页查询
 async function queryPaginated(
   sql: string,
@@ -378,7 +374,7 @@ async function queryPaginated(
 
   try {
     const [data, countResult] = await Promise.all([
-      query<any[]>(`${sql} LIMIT ${pageSize} OFFSET ${offset}`, params || []),
+      query<any[]>(`${sql} LIMIT ? OFFSET ?`, [...(params || []), pageSize, offset]),
       queryOne<{ total: number }>(countSql, params || []),
     ]);
 
@@ -391,7 +387,6 @@ async function queryPaginated(
       },
     };
   } catch (error) {
-    console.error('分页查询失败:', error);
     return {
       list: [],
       pagination: {

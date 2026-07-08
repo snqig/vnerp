@@ -150,7 +150,6 @@ export default function EquipmentMaintenancePage() {
         setEquipmentList(result.data?.list || []);
       }
     } catch (e) {
-      console.error(e);
     }
   }, []);
 
@@ -166,7 +165,6 @@ export default function EquipmentMaintenancePage() {
         setPlanTotal(result.data?.total || 0);
       }
     } catch (e) {
-      console.error(e);
       toast({ title: '获取保养计划失败', variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -189,7 +187,6 @@ export default function EquipmentMaintenancePage() {
         setRecordTotal(result.data?.total || 0);
       }
     } catch (e) {
-      console.error(e);
       toast({ title: '获取保养记录失败', variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -221,7 +218,6 @@ export default function EquipmentMaintenancePage() {
         toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
     } catch (e) {
-      console.error(e);
       toast({ title: '保存失败', variant: 'destructive' });
     }
   };

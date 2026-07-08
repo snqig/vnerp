@@ -1,4 +1,5 @@
 import { DomainError } from '../../shared/DomainTypes';
+import { roundPrice, roundAmount, multiplyDecimal } from '@/lib/decimal-utils';
 
 export interface SalesOrderLineProps {
   id?: number;
@@ -13,10 +14,17 @@ export interface SalesOrderLineProps {
   shippedQty: number;
   unitPrice: number;
   amount: number;
+  taxRate?: number;
+  taxAmount?: number;
+  lineTotal?: number;
   remark?: string;
 }
 
 export class SalesOrderLine {
+  private _taxRate: number;
+  private _taxAmount: number;
+  private _lineTotal: number;
+
   private constructor(
     public readonly id: number | undefined,
     public readonly orderId: number | undefined,
@@ -30,8 +38,15 @@ export class SalesOrderLine {
     private _shippedQty: number,
     private _unitPrice: number,
     private _amount: number,
+    taxRate: number,
+    taxAmount: number,
+    lineTotal: number,
     public readonly remark: string | undefined
-  ) {}
+  ) {
+    this._taxRate = taxRate;
+    this._taxAmount = taxAmount;
+    this._lineTotal = lineTotal;
+  }
 
   static create(props: SalesOrderLineProps): SalesOrderLine {
     if (!props.materialId || props.materialId <= 0) {
@@ -40,7 +55,10 @@ export class SalesOrderLine {
     if (!props.orderQty || props.orderQty <= 0) {
       throw new DomainError('销售数量必须大于0');
     }
-    const amount = (props.orderQty || 0) * (props.unitPrice || 0);
+    const amount = roundAmount(multiplyDecimal(props.orderQty || 0, props.unitPrice || 0));
+    const taxRate = props.taxRate ?? 0;
+    const taxAmount = roundAmount(multiplyDecimal(amount, taxRate / 100));
+    const lineTotal = roundAmount(amount + taxAmount);
     return new SalesOrderLine(
       props.id,
       props.orderId,
@@ -54,11 +72,18 @@ export class SalesOrderLine {
       props.shippedQty || 0,
       props.unitPrice || 0,
       amount,
+      taxRate,
+      taxAmount,
+      lineTotal,
       props.remark
     );
   }
 
   static reconstitute(props: SalesOrderLineProps): SalesOrderLine {
+    const amount = props.amount || 0;
+    const taxRate = props.taxRate || 0;
+    const taxAmount = props.taxAmount || 0;
+    const lineTotal = props.lineTotal || amount;
     return new SalesOrderLine(
       props.id,
       props.orderId,
@@ -71,7 +96,10 @@ export class SalesOrderLine {
       props.orderQty,
       props.shippedQty || 0,
       props.unitPrice || 0,
-      props.amount || 0,
+      amount,
+      taxRate,
+      taxAmount,
+      lineTotal,
       props.remark
     );
   }
@@ -87,6 +115,15 @@ export class SalesOrderLine {
   }
   get amount(): number {
     return this._amount;
+  }
+  get taxRate(): number {
+    return this._taxRate;
+  }
+  get taxAmount(): number {
+    return this._taxAmount;
+  }
+  get lineTotal(): number {
+    return this._lineTotal;
   }
 
   get remainingQty(): number {

@@ -66,6 +66,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { useTranslations } from 'next-intl';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 // 薪资数据类型
 interface Salary {
@@ -373,7 +375,6 @@ export default function HRSalaryPage() {
         setDepartments(deptList);
       }
     } catch (error) {
-      console.error('获取薪资数据失败:', error);
     } finally {
       setLoading(false);
     }
@@ -568,7 +569,6 @@ export default function HRSalaryPage() {
       setIsEditOpen(false);
       toast.success(t('salarySaveSuccess'));
     } catch (error) {
-      console.error('保存薪资失败:', error);
       toast.error(t('salarySaveFailed'));
     } finally {
       setLoading(false);
@@ -794,10 +794,29 @@ export default function HRSalaryPage() {
                   <Printer className="h-4 w-4 mr-2" />
                   {tc("print")}
                 </Button>
-                <Button variant="outline" onClick={handleExport}>
-                  <Download className="h-4 w-4 mr-2" />
-                  {tc("export")}
-                </Button>
+                <GlobalExportToolbar
+                  filename={`薪资表_${currentMonth}`}
+                  title="薪资表"
+                  landscape
+                  columns={[
+                    { key: 'employee_no', label: t('employeeNo'), width: 12 },
+                    { key: 'name', label: tc('name'), width: 10 },
+                    { key: 'dept_name', label: tc('department'), width: 12 },
+                    { key: 'position', label: t('position'), width: 12 },
+                    { key: 'basic_salary', label: t('basicSalary'), width: 10, formatter: (v) => Number(v || 0) },
+                    { key: 'position_allowance', label: t('positionAllowance'), width: 10, formatter: (v) => Number(v || 0) },
+                    { key: 'performance_bonus', label: t('performanceBonus'), width: 10, formatter: (v) => Number(v || 0) },
+                    { key: 'overtime_pay', label: t('overtimePay'), width: 10, formatter: (v) => Number(v || 0) },
+                    { key: 'other_bonus', label: t('otherBonus'), width: 10, formatter: (v) => Number(v || 0) },
+                    { key: 'social_security', label: t('socialSecurity'), width: 10, formatter: (v) => Number(v || 0) },
+                    { key: 'housing_fund', label: t('housingFund'), width: 10, formatter: (v) => Number(v || 0) },
+                    { key: 'personal_tax', label: t('personalTax'), width: 10, formatter: (v) => Number(v || 0) },
+                    { key: 'other_deduction', label: t('otherDeduction'), width: 10, formatter: (v) => Number(v || 0) },
+                    { key: 'actual_salary', label: t('actualSalary'), width: 12, formatter: (v) => Number(v || 0) },
+                    { key: 'remark', label: tc('remark'), width: 15 },
+                  ]}
+                  data={selectedIds.length > 0 ? filteredSalaries.filter((s) => selectedIds.includes(s.id)) : filteredSalaries}
+                />
               </div>
             </div>
           </CardContent>

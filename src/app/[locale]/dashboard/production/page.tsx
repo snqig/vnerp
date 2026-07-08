@@ -244,7 +244,6 @@ export default function ProductionDashboard() {
           });
         }
       } catch (e) {
-        console.error('获取生产看板数据失败:', e);
       } finally {
         setLoading(false);
       }

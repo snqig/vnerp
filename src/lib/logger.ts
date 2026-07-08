@@ -24,13 +24,13 @@ interface LogContext {
   action: string;    // 操作名（如 freeze_stock, calculate_cost）
   userId?: number;   // 操作用户
   traceId?: string;  // 追踪ID
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class AppLogger {
   private isDev = process.env.NODE_ENV === 'development';
 
-  private formatMessage(level: LogLevel, context: LogContext, message: string, data?: any): string {
+  private formatMessage(level: LogLevel, context: LogContext, message: string, data?: unknown): string {
     const timestamp = new Date().toISOString();
     const prefix = `${LOG_COLORS[level]}[${timestamp}] [${level.toUpperCase()}] [${context.module}:${context.action}]${RESET}`;
     const userStr = context.userId ? ` [user:${context.userId}]` : '';
@@ -39,48 +39,48 @@ class AppLogger {
     return `${prefix}${userStr}${traceStr} ${message}${dataStr}`;
   }
 
-  debug(context: LogContext, message: string, data?: any) {
+  debug(context: LogContext, message: string, data?: unknown) {
     if (!this.isDev) return;
-    console.log(this.formatMessage('debug', context, message, data));
+    console.debug(this.formatMessage('debug', context, message, data));
   }
 
-  info(context: LogContext, message: string, data?: any) {
-    console.log(this.formatMessage('info', context, message, data));
+  info(context: LogContext, message: string, data?: unknown) {
+    console.info(this.formatMessage('info', context, message, data));
   }
 
-  warn(context: LogContext, message: string, data?: any) {
+  warn(context: LogContext, message: string, data?: unknown) {
     console.warn(this.formatMessage('warn', context, message, data));
   }
 
-  error(context: LogContext, message: string, data?: any) {
+  error(context: LogContext, message: string, data?: unknown) {
     console.error(this.formatMessage('error', context, message, data));
   }
 
   /**
    * 记录业务流程开始
    */
-  stepStart(context: LogContext, step: string, params?: any) {
+  stepStart(context: LogContext, step: string, params?: unknown) {
     this.info(context, `▶ 开始: ${step}`, params);
   }
 
   /**
    * 记录业务流程完成
    */
-  stepEnd(context: LogContext, step: string, result?: any) {
+  stepEnd(context: LogContext, step: string, result?: unknown) {
     this.info(context, `✔ 完成: ${step}`, result);
   }
 
   /**
    * 记录业务流程中的分支决策
    */
-  branch(context: LogContext, branchName: string, condition: string, taken: boolean, data?: any) {
+  branch(context: LogContext, branchName: string, condition: string, taken: boolean, data?: unknown) {
     this.info(context, `⑂ 分支[${branchName}]: 条件="${condition}" → ${taken ? '✓ 命中' : '✗ 未命中'}`, data);
   }
 
   /**
    * 记录数据库操作
    */
-  db(context: LogContext, operation: string, table: string, data?: any) {
+  db(context: LogContext, operation: string, table: string, data?: unknown) {
     this.debug(context, `💾 DB[${operation}]: ${table}`, data);
   }
 
@@ -102,7 +102,7 @@ export const logger = new AppLogger();
  * 安全日志函数（兼容旧代码）
  * 提供简单的函数式调用接口
  */
-export function secureLog(level: LogLevel, message: string, data?: any) {
+export function secureLog(level: LogLevel, message: string, data?: unknown) {
   const ctx: LogContext = { module: 'app', action: 'secure' };
   logger[level](ctx, message, data);
 }
@@ -117,16 +117,16 @@ export function generateTraceId(): string {
 /**
  * 敏感数据脱敏
  */
-export function maskSensitiveData(data: any): any {
+export function maskSensitiveData<T>(data: T): T {
   if (!data || typeof data !== 'object') return data;
-  
+
   const sensitiveKeys = ['password', 'pwd', 'token', 'secret', 'apiKey', 'api_key', 'authorization', 'creditCard', 'idCard', 'phone', 'email'];
-  
-  const mask = (obj: any): any => {
+
+  const mask = (obj: unknown): unknown => {
     if (!obj || typeof obj !== 'object') return obj;
     if (Array.isArray(obj)) return obj.map(mask);
-    
-    const result: any = {};
+
+    const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
       const lowerKey = key.toLowerCase();
       if (sensitiveKeys.some(k => lowerKey.includes(k))) {
@@ -139,6 +139,6 @@ export function maskSensitiveData(data: any): any {
     }
     return result;
   };
-  
-  return mask(data);
+
+  return mask(data) as T;
 }

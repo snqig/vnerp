@@ -13,6 +13,9 @@ export default defineConfig({
   
   /* 完全并行运行测试 */
   fullyParallel: true,
+
+  /* 单个测试超时时间（webpack 冷启动编译较慢） */
+  timeout: 120000,
   
   /* 禁止在CI中重复测试 */
   forbidOnly: !!process.env.CI,
@@ -79,11 +82,14 @@ export default defineConfig({
     },
   ],
 
-  /* 本地开发服务器配置 */
+  /* 本地开发服务器配置
+   * 使用 --webpack 模式启动开发服务器，避免 Windows 下 Turbopack
+   * 处理 CSS 时读取保留设备名 `nul` 导致的崩溃问题。
+   */
   webServer: {
-    command: 'pnpm run dev',
+    command: 'pnpm run dev:webpack',
     url: 'http://localhost:5000',
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    timeout: 180000,
   },
 });

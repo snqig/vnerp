@@ -294,6 +294,5 @@ async function logScan(
       ]
     );
   } catch (error) {
-    console.error('记录扫码日志失败:', error);
   }
 }

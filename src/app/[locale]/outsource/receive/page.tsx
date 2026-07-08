@@ -100,7 +100,6 @@ export default function OutsourceReceivePage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -110,7 +109,6 @@ export default function OutsourceReceivePage() {
       const result = await res.json();
       if (result.success) setOutsourceOrders(result.data?.list || []);
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -120,7 +118,6 @@ export default function OutsourceReceivePage() {
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
     } catch (e) {
-      console.error(e);
     }
   };
 

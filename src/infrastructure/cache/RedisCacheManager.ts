@@ -11,12 +11,23 @@ import { secureLog } from '@/lib/logger';
 export class RedisCacheManager implements CacheManager {
   private client: Redis;
   private connected = false;
+  private lastErrorLogAt = 0;
+  private errorSuppressedCount = 0;
+  private static readonly ERROR_THROTTLE_MS = 30000;
 
   constructor(url: string, options?: { maxRetriesPerRequest?: number }) {
     this.client = new Redis(url, {
-      maxRetriesPerRequest: options?.maxRetriesPerRequest ?? 3,
+      // 降为 1：Redis 不可达时每条命令最多重试 1 次即 reject，
+      // 配合 commandTimeout:1000 确保单命令最多阻塞 ~2s（而非 3 次 × 退避 = 6s+）
+      maxRetriesPerRequest: options?.maxRetriesPerRequest ?? 1,
       enableReadyCheck: true,
       lazyConnect: false,
+      // 单条命令最多等待 1s，避免 Redis 不可达时每条命令挂起数秒拖慢整体请求
+      commandTimeout: 1000,
+      // 重连退避：首次 200ms，后续最多 500ms，避免默认策略的 2s+ 间隔
+      retryStrategy(times: number) {
+        return Math.min(times * 200, 500);
+      },
       reconnectOnError(err: Error) {
         // 仅对 READONLY 等可恢复错误自动重连
         const target = err as Error & { partial?: boolean };
@@ -26,6 +37,8 @@ export class RedisCacheManager implements CacheManager {
 
     this.client.on('connect', () => {
       this.connected = true;
+      this.lastErrorLogAt = 0;
+      this.errorSuppressedCount = 0;
       secureLog('info', 'RedisCacheManager connected');
     });
 
@@ -35,9 +48,17 @@ export class RedisCacheManager implements CacheManager {
 
     this.client.on('error', (err: Error) => {
       this.connected = false;
-      secureLog('error', 'RedisCacheManager error', {
+      const now = Date.now();
+      if (now - this.lastErrorLogAt < RedisCacheManager.ERROR_THROTTLE_MS) {
+        this.errorSuppressedCount++;
+        return;
+      }
+      const suppressed = this.errorSuppressedCount;
+      this.lastErrorLogAt = now;
+      this.errorSuppressedCount = 0;
+      secureLog('warn', 'RedisCacheManager error (throttled 30s)', {
         message: err.message,
-        stack: err.stack,
+        suppressedCount: suppressed,
       });
     });
 
@@ -48,6 +69,8 @@ export class RedisCacheManager implements CacheManager {
   }
 
   async get<T>(key: string): Promise<T | null> {
+    // 未连接时立即降级返回 null，避免 ioredis 重试阻塞请求（Redis 不可达时每条命令会挂起数秒）
+    if (!this.connected) return null;
     try {
       const raw = await this.client.get(key);
       if (raw === null) return null;
@@ -63,6 +86,7 @@ export class RedisCacheManager implements CacheManager {
   }
 
   async set<T>(key: string, value: T, ttlSeconds: number = 300): Promise<void> {
+    if (!this.connected) return;
     try {
       const raw = JSON.stringify(value);
       // EX 原子设置 TTL，避免 SET + EXPIRE 两次往返的竞态
@@ -78,6 +102,7 @@ export class RedisCacheManager implements CacheManager {
   }
 
   async delete(key: string): Promise<void> {
+    if (!this.connected) return;
     try {
       await this.client.del(key);
     } catch (err) {
@@ -94,6 +119,7 @@ export class RedisCacheManager implements CacheManager {
    * pattern 为 Redis 风格（* 匹配），如 "revoked_jti:*"
    */
   async deletePattern(pattern: string): Promise<void> {
+    if (!this.connected) return;
     try {
       let cursor = '0';
       const batch: string[] = [];
@@ -133,6 +159,7 @@ export class RedisCacheManager implements CacheManager {
    * 将成员加入集合，并设置集合的 TTL（覆盖 maxJwtTtl）
    */
   async sAdd(key: string, ttlSeconds: number, ...members: string[]): Promise<void> {
+    if (!this.connected) return;
     try {
       if (members.length === 0) return;
       const pipeline = this.client.multi();
@@ -153,6 +180,7 @@ export class RedisCacheManager implements CacheManager {
    * 判断成员是否在集合中
    */
   async sIsMember(key: string, member: string): Promise<boolean> {
+    if (!this.connected) return false;
     try {
       const r = await this.client.sismember(key, member);
       return r === 1;

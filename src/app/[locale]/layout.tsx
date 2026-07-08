@@ -1,13 +1,15 @@
 import { getMessages } from 'next-intl/server';
+import { cookies } from 'next/headers';
 import { IntlProvider } from '@/components/IntlProvider';
 import { notFound } from 'next/navigation';
 import { locales, type Locale } from '@/i18n/locales';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider, type InitialAuthData } from '@/contexts/AuthContext';
 import { ToastProviderComponent } from '@/components/ui/toast';
 import { SnowAdminThemeProvider } from '@/hooks/useSnowAdminTheme';
 import SystemConfigInitializer from '@/components/SystemConfigInitializer';
 import { HtmlLangSetter } from '@/components/HtmlLangSetter';
 import { query } from '@/lib/db';
+import { getMenusByToken } from '@/lib/menu-service';
 
 let cachedCompanyName: string | null = null;
 let cacheTimestamp: number = 0;
@@ -33,6 +35,34 @@ async function getCompanyName(): Promise<string> {
   return '越南达昌科技有限公司';
 }
 
+/**
+ * 服务端预取菜单数据。
+ *
+ * 读取 access_token cookie，若存在则轻量级校验 JWT 并查询菜单。
+ * 任何失败（无 cookie / token 过期 / DB 异常）均返回 null，
+ * AuthProvider 会降级到客户端 fetch + localStorage 缓存。
+ *
+ * 注意：服务端不能 HTTP 自调 /api/auth/menus，必须直接调用菜单服务函数。
+ */
+async function prefetchMenus(): Promise<InitialAuthData | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('access_token')?.value;
+    if (!token) return null;
+
+    const result = await getMenusByToken(token);
+    if (!result) return null;
+
+    return {
+      menus: result.menus,
+      permissions: result.permissions,
+    };
+  } catch {
+    // SSR 预取失败时静默降级，不影响页面渲染
+    return null;
+  }
+}
+
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
@@ -53,13 +83,14 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
   const companyName = await getCompanyName();
+  const initialAuth = await prefetchMenus();
 
   return (
     <>
       <HtmlLangSetter locale={locale} />
       <IntlProvider locale={locale} messages={messages}>
         <SnowAdminThemeProvider>
-          <AuthProvider>
+          <AuthProvider initialAuth={initialAuth}>
             <SystemConfigInitializer />
             <ToastProviderComponent>{children}</ToastProviderComponent>
           </AuthProvider>

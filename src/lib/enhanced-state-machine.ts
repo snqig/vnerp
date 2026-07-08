@@ -1,5 +1,6 @@
 import { secureLog } from '@/lib/logger';
 import { execute } from '@/lib/db';
+import { CalcParamService } from '@/lib/calc-param-service';
 
 export type InspectStatus = 'pending' | 'inspecting' | 'pass' | 'fail' | 'rework' | 'scrap';
 
@@ -53,13 +54,19 @@ export const inspectStateMachine: Record<InspectStatus, TransitionConfig<Inspect
     allowedTransitions: [
       {
         to: 'pass',
-        condition: (ctx) => ctx.passRate >= 98 || ctx.inspectionResult === 'pass',
-        conditionDesc: '合格率>=98%或判定为合格',
+        condition: (ctx) => {
+          const threshold = CalcParamService.getCachedDecimal('qc.pass_rate_threshold', 98);
+          return ctx.passRate >= threshold || ctx.inspectionResult === 'pass';
+        },
+        conditionDesc: '合格率>=配置阈值(默认98%)或判定为合格',
       },
       {
         to: 'fail',
-        condition: (ctx) => ctx.passRate < 98 || ctx.inspectionResult === 'fail',
-        conditionDesc: '合格率<98%或判定为不合格',
+        condition: (ctx) => {
+          const threshold = CalcParamService.getCachedDecimal('qc.pass_rate_threshold', 98);
+          return ctx.passRate < threshold || ctx.inspectionResult === 'fail';
+        },
+        conditionDesc: '合格率<配置阈值(默认98%)或判定为不合格',
       },
     ],
     onExit: (ctx) => {

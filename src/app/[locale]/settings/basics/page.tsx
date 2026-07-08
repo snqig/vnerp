@@ -124,7 +124,6 @@ export default function BasicsSettingsPage() {
         }
       }
     } catch (e) {
-      console.error('加载配置失败:', e);
       toast.error('加载配置失败');
     } finally {
       setLoading(false);
@@ -163,7 +162,6 @@ export default function BasicsSettingsPage() {
         toast.error(result.message || '保存失败');
       }
     } catch (e: any) {
-      console.error('保存配置失败:', e);
       toast.error(e.message || '保存失败');
     } finally {
       setSaving(false);

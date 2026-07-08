@@ -3,6 +3,8 @@
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -183,7 +185,6 @@ export default function ProductionReportPage() {
         setSummaryStats(result.data?.summaryStats || {});
       }
     } catch (e) {
-      console.error(e);
       toast.error(t('fetchReportFailed'));
     } finally {
       setLoading(false);
@@ -194,7 +195,6 @@ export default function ProductionReportPage() {
     try {
       const res = await authFetch('/api/workorders?pageSize=50');
       if (!res.ok) {
-        console.error('获取工单列表失败: HTTP', res.status);
         return;
       }
       const text = await res.text();
@@ -202,12 +202,10 @@ export default function ProductionReportPage() {
       try {
         result = JSON.parse(text);
       } catch (e) {
-        console.error('解析工单列表响应失败:', text.substring(0, 100));
         return;
       }
       if (result.success) setWorkOrders(result.data?.list || []);
     } catch (e) {
-      console.error(e);
     }
   }, []);
 
@@ -217,7 +215,6 @@ export default function ProductionReportPage() {
       const result = await res.json();
       if (result.success) setEquipmentList(result.data?.list || []);
     } catch (e) {
-      console.error(e);
     }
   }, []);
 
@@ -236,7 +233,6 @@ export default function ProductionReportPage() {
       const result = await res.json();
       if (result.success) setDieTemplateList(result.data?.list || []);
     } catch (e) {
-      console.error(e);
     }
   }, []);
 
@@ -272,7 +268,6 @@ export default function ProductionReportPage() {
         toast.error(result.message || t('reportFailed'));
       }
     } catch (e) {
-      console.error(e);
       toast.error(t('reportFailed'));
     }
   };
@@ -501,6 +496,26 @@ export default function ProductionReportPage() {
               <Button variant="outline" onClick={fetchData}>
                 <RefreshCw className="w-4 h-4" />
               </Button>
+              <GlobalExportToolbar
+                filename="生产报工记录"
+                title="生产报工记录列表"
+                columns={[
+                  { key: 'report_no', label: '报工单号', width: 18 },
+                  { key: 'work_order_no', label: '工单号', width: 18 },
+                  { key: 'process_name', label: '工序', width: 15 },
+                  { key: 'operator_name', label: '操作员', width: 12 },
+                  { key: 'equipment_name', label: '设备', width: 15 },
+                  { key: 'plan_qty', label: '计划数量', width: 10 },
+                  { key: 'completed_qty', label: '完成数量', width: 10 },
+                  { key: 'qualified_qty', label: '合格数量', width: 10 },
+                  { key: 'scrap_qty', label: '报废数量', width: 10 },
+                  { key: 'efficiency', label: '效率', width: 10, formatter: (v: any) => `${Number(v || 0).toFixed(1)}%` },
+                  { key: 'work_hours', label: '工时', width: 10, formatter: (v: any) => `${Number(v || 0).toFixed(1)}h` },
+                  { key: 'report_time', label: '报工时间', width: 18 },
+                ] as ExportColumn[]}
+                data={list}
+                landscape={true}
+              />
               <Button
                 onClick={() => {
                   setForm({ ...form, start_time: new Date().toISOString().slice(0, 16) });

@@ -1,13 +1,29 @@
+/**
+ * @module MRP 引擎 V2
+ * @description MRP（物料需求计划）引擎的第二代实现。相比 V1 版本，V2 采用面向对象设计，
+ * 支持净变更运行、多层次需求展开、安全库存策略配置、批量化规则（lot-for-lot/固定批量/EOQ/周期供应）、
+ * 替代物料、产能负荷分析以及完整的供需时间分段计算。该模块是 ERP 系统中生产计划与物料控制
+ * 的高级计算组件，提供更加灵活和精细化的物料供需平衡分析能力。
+ */
+
 import { query, execute, transaction, getConnection } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { secureLog } from '@/lib/logger';
+import { CalcParamService } from '@/lib/calc-param-service';
 import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
 
+/** 批量化策略类型 */
 export type LotSizingType = 'lot_for_lot' | 'fixed' | 'eoq' | 'period_supply';
+/** 时间分段粒度 */
 export type BucketSize = 'day' | 'week' | 'month';
+/** MRP 行动计划类型：生产/采购/调拨 */
 export type MRPActionType = 'produce' | 'purchase' | 'transfer';
+/** MRP 运行状态 */
 export type MRPStatus = 'calculating' | 'completed' | 'confirmed' | 'cancelled';
 
+/**
+ * MRP 运行全局配置参数
+ */
 export interface MRPConfig {
   horizonDays: number;
   bucketSize: BucketSize;
@@ -20,6 +36,9 @@ export interface MRPConfig {
   enableSubstitute: boolean;
 }
 
+/**
+ * MRP 一次运行的入参
+ */
 export interface MRPRunParams {
   runType: 'full' | 'net_change';
   planStartDate: string;
@@ -30,6 +49,9 @@ export interface MRPRunParams {
   remark?: string;
 }
 
+/**
+ * 单个时间分段内的 MRP 供需明细
+ */
 export interface MRPTimeBucket {
   bucketDate: string;
   grossRequirement: number;
@@ -45,6 +67,9 @@ export interface MRPTimeBucket {
   substituteUsed?: number;
 }
 
+/**
+ * 单个物料在 MRP 运行中的完整分析结果
+ */
 export interface MRPMaterialResult {
   materialId: number;
   materialCode: string;
@@ -63,6 +88,9 @@ export interface MRPMaterialResult {
   endOnHand: number;
 }
 
+/**
+ * MRP 一次运行的完整结果
+ */
 export interface MRPRunResult {
   runId: number;
   runNo: string;
@@ -79,6 +107,9 @@ export interface MRPRunResult {
   endTime?: Date;
 }
 
+/**
+ * 工作中心产能负荷分析数据
+ */
 export interface CapacityLoad {
   workCenterId: number;
   workCenterCode: string;
@@ -90,6 +121,9 @@ export interface CapacityLoad {
   isOverloaded: boolean;
 }
 
+/**
+ * 替代物料信息
+ */
 export interface SubstituteMaterial {
   materialId: number;
   materialCode: string;
@@ -162,6 +196,18 @@ const DEFAULT_CONFIG: MRPConfig = {
   enableSubstitute: true,
 };
 
+/**
+ * 计算经济订购批量（EOQ）
+ * 
+ * 使用经典的 EOQ 公式：EOQ = sqrt(2 × 年需求 × 订购成本 / 单位持有成本)
+ * 其中单位持有成本 = 单价 × 持有成本率
+ * 
+ * @param annualDemand - 年需求量
+ * @param orderingCost - 每次订购成本
+ * @param holdingCostRate - 持有成本率（小数，如 0.2 表示 20%）
+ * @param unitPrice - 物料单价
+ * @returns 经济订购批量，若任何参数 ≤ 0 则返回 0
+ */
 export function calculateEOQ(
   annualDemand: number,
   orderingCost: number,
@@ -175,6 +221,22 @@ export function calculateEOQ(
   return Math.sqrt((2 * annualDemand * orderingCost) / holdingCost);
 }
 
+/**
+ * 应用批量化规则调整订单数量
+ * 
+ * 支持四种策略：
+ * - lot_for_lot：按需订购，不做调整
+ * - fixed：按固定批量向上取整
+ * - eoq：按经济订购批量向上取整
+ * - period_supply：按需订购（周期内合并由上游处理）
+ * 
+ * @param netRequirement - 净需求数量
+ * @param lotSizing - 批量化策略类型
+ * @param fixedLotSize - 固定批量大小
+ * @param eoq - 经济订购批量
+ * @param periodSupplyDays - 供应周期天数（暂未使用）
+ * @returns 调整后的计划订单数量，净需求 ≤ 0 时返回 0
+ */
 export function applyLotSizing(
   netRequirement: number,
   lotSizing: LotSizingType,
@@ -204,6 +266,20 @@ export function applyLotSizing(
   }
 }
 
+/**
+ * 计算安全库存量
+ * 
+ * 支持三种策略：
+ * - none：不使用安全库存，返回 0
+ * - fixed：使用固定的安全库存值
+ * - days_of_coverage：按日均需求 × 覆盖天数计算
+ * 
+ * @param policy - 安全库存策略
+ * @param fixedSafetyStock - 固定安全库存量（policy 为 'fixed' 时使用）
+ * @param dailyAvgDemand - 日均需求量
+ * @param daysOfCoverage - 覆盖天数（policy 为 'days_of_coverage' 时使用）
+ * @returns 计算得到的安全库存量
+ */
 export function calculateSafetyStock(
   policy: 'fixed' | 'days_of_coverage' | 'none',
   fixedSafetyStock: number,
@@ -222,6 +298,17 @@ export function calculateSafetyStock(
   }
 }
 
+/**
+ * 生成时间分段日期列表
+ * 
+ * 从起始日期开始，按 day/week/month 粒度将时间范围划分为等长分段，
+ * 每个分段包含一个标识日期和该段内的所有日期。
+ * 
+ * @param startDate - 起始日期（YYYY-MM-DD）
+ * @param days - 时间范围总天数
+ * @param bucketSize - 分段粒度：'day' | 'week' | 'month'
+ * @returns 时间分段数组，每项包含标识日期、起止日期和段内所有日期
+ */
 export function generateBucketDates(
   startDate: string,
   days: number,
@@ -290,16 +377,55 @@ export function generateBucketDates(
   return buckets;
 }
 
+/**
+ * MRP 计算引擎 V2
+ * 
+ * 面向对象的 MRP 计算引擎，支持完整的物料需求计划流程：
+ * 1. 收集毛需求（销售订单）
+ * 2. 多层级 BOM 展开，逐级传递依赖需求
+ * 3. 时间分段供需平衡计算
+ * 4. 产能负荷分析
+ * 
+ * 使用方式：
+ * ```typescript
+ * const engine = new MRPEngine({ horizonDays: 90, bucketSize: 'week' });
+ * const result = await engine.run({
+ *   runType: 'full',
+ *   planStartDate: '2024-01-01',
+ *   warehouseId: 1,
+ *   productIds: [101, 102]
+ * });
+ * ```
+ */
 export class MRPEngine {
   private config: MRPConfig;
   private conn: PoolConnection | null;
   private warnings: string[] = [];
 
+  /**
+   * 创建 MRP 引擎实例
+   * 
+   * @param config - 可选，部分 MRP 配置参数，未指定的使用默认值
+   * @param conn - 可选，外部数据库连接，不传则 run 时自动获取
+   */
   constructor(config?: Partial<MRPConfig>, conn?: PoolConnection) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.conn = conn || null;
   }
 
+  /**
+   * 执行 MRP 计算
+   * 
+   * 完整执行一次 MRP 运算，包括：
+   * 1. 生成运行编号
+   * 2. 收集销售订单毛需求
+   * 3. 多层级物料展开，逐级计算供需平衡
+   * 4. 产能负荷分析
+   * 5. 汇总统计（计划订单数、采购申请数、工单数）
+   * 
+   * @param params - MRP 运行参数
+   * @returns MRP 运行完整结果，包含物料分析、产能负荷和警告信息
+   */
   async run(params: MRPRunParams): Promise<MRPRunResult> {
     const startTime = new Date();
     this.warnings = [];
@@ -506,8 +632,9 @@ export class MRPEngine {
         warehouseId
       );
 
-      const isPurchase = materialInfo.material_type === 'purchase';
-      const actionType: MRPActionType = isPurchase ? 'purchase' : 'produce';
+    // 外购物料标记为 purchase，自制件标记为 produce 后续展开子件
+    const isPurchase = materialInfo.material_type === 'purchase';
+    const actionType: MRPActionType = isPurchase ? 'purchase' : 'produce';
 
       for (const bucket of buckets) {
         bucket.actionType = actionType;
@@ -524,7 +651,7 @@ export class MRPEngine {
             : 'product',
         unit: materialInfo.unit,
         safetyStock: Number(materialInfo.safety_stock || 0),
-        leadTimeDays: Number(materialInfo.lead_time_days || 7),
+        leadTimeDays: Number(materialInfo.lead_time_days || await CalcParamService.getInt('mrp.default_lead_time_days', 7)),
         lotSizing: this.config.defaultLotSizing,
         fixedLotSize: this.config.defaultFixedLotSize,
         buckets,
@@ -536,6 +663,7 @@ export class MRPEngine {
 
       materialMap.set(materialId, materialResult);
 
+      // 自制件需要展开 BOM，将计划下达量作为下级子件的毛需求
       if (!isPurchase) {
         const children = await this.getBOMChildren(conn, materialId);
         for (const child of children) {
@@ -546,6 +674,7 @@ export class MRPEngine {
           const childDemandMap = demandMap.get(child.material_id) || new Map();
           for (const bucket of buckets) {
             if (bucket.plannedOrderRelease > 0) {
+              // 子件毛需求 = 计划下达量 × 单位用量 × (1 + 损耗率/100)
               const childQty =
                 bucket.plannedOrderRelease * child.consumption_qty * (1 + child.loss_rate / 100);
               childDemandMap.set(
@@ -593,26 +722,30 @@ export class MRPEngine {
       warehouseId
     );
 
-    const leadTimeDays = Number(materialInfo.lead_time_days || 7);
+    const leadTimeDays = Number(materialInfo.lead_time_days || await CalcParamService.getInt('mrp.default_lead_time_days', 7));
     const lotSizing = materialInfo.lot_sizing || this.config.defaultLotSizing;
     const fixedLotSize = Number(materialInfo.fixed_lot_size || this.config.defaultFixedLotSize);
 
+    // 滚动在手库存 = 当前库存 - 安全库存
     let runningOnHand = currentOnHand - safetyStock;
 
     for (const bucket of buckets) {
       let grossReq = 0;
       let schedReceipt = 0;
 
+      // 汇总该分段内所有日期的毛需求和计划收货
       for (const d of bucket.dates) {
         grossReq += demandDates.get(d) || 0;
         schedReceipt += scheduledReceipts.get(d) || 0;
       }
 
+      // 计划前在手库存 = 滚动手在 + 计划收货 - 毛需求
       const projectedOnHandBefore = runningOnHand + schedReceipt - grossReq;
 
       let netReq = 0;
       let plannedReceipt = 0;
 
+      // 若计划前在手库存为负，则产生净需求，需应用批量化规则
       if (projectedOnHandBefore < 0) {
         netReq = Math.abs(projectedOnHandBefore);
         plannedReceipt = applyLotSizing(netReq, lotSizing, fixedLotSize);
@@ -633,6 +766,7 @@ export class MRPEngine {
       runningOnHand = onHandAfter;
     }
 
+    // 根据提前期前移计划订单：接收日期的时间分段 -> 释放日期的时间分段
     for (let i = 0; i < result.length; i++) {
       if (result[i].plannedOrderReceipt > 0) {
         const releaseBucketIdx = this.findReleaseBucketIndex(i, leadTimeDays, buckets);
@@ -804,6 +938,18 @@ export class MRPEngine {
     return horizonDays > 0 ? total / horizonDays : 0;
   }
 
+  /**
+   * 计算产能负荷需求
+   * 
+   * 遍历所有非采购物料（产品/半成品）的计划订单，根据工艺路线计算各工位中心的
+   * 标准工时需求。负荷率 = 需求工时 / 标准产能，负荷率 > 1 表示超负荷。
+   * 
+   * @param conn - 数据库连接
+   * @param materials - 所有物料的 MRP 分析结果
+   * @param startDate - 计算起始日期
+   * @param horizonDays - 计算范围天数
+   * @returns 各工作中心按日期汇总的产能负荷分析
+   */
   async calculateCapacityRequired(
     conn: PoolConnection,
     materials: MRPMaterialResult[],
@@ -830,6 +976,7 @@ export class MRPEngine {
         );
 
         for (const pr of processRows) {
+          // 需求工时 = 计划生产数量 × 标准工时
           const requiredHours = bucket.plannedOrderRelease * Number(pr.standard_hours || 0);
           const key = `${pr.work_center_id}_${bucket.bucketDate}`;
 
@@ -848,8 +995,10 @@ export class MRPEngine {
 
           const entry = capacityMap.get(key)!;
           entry.requiredCapacity += requiredHours;
+          // 负荷率 = 需求工时 / 标准产能
           entry.loadRate =
             entry.standardCapacity > 0 ? entry.requiredCapacity / entry.standardCapacity : 0;
+          // 负荷率 > 1 表示超负荷
           entry.isOverloaded = entry.loadRate > 1;
         }
       }
@@ -864,6 +1013,12 @@ export class MRPEngine {
   }
 }
 
+/**
+ * 将 Date 或日期字符串格式化为 YYYY-MM-DD 格式
+ * 
+ * @param d - Date 对象或日期字符串
+ * @returns YYYY-MM-DD 格式的日期字符串
+ */
 function formatDateStr(d: Date | string): string {
   if (typeof d === 'string') {
     return d.substring(0, 10);
@@ -874,6 +1029,12 @@ function formatDateStr(d: Date | string): string {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * 四舍五入保留 4 位小数
+ * 
+ * @param v - 要舍入的数值
+ * @returns 保留 4 位小数的数值
+ */
 function round4(v: number): number {
   return Math.round(v * 10000) / 10000;
 }

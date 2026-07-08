@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { escapeId } from 'mysql2';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -56,7 +57,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 
     try {
       const rows = await query(
-        `SELECT id, code, name, status, parent_id FROM ${tableName} WHERE deleted = 0`
+        `SELECT id, code, name, status, parent_id FROM ${escapeId(tableName)} WHERE deleted = 0`
       ) as any[];
 
       const codeRegex = new RegExp(rules.code_pattern);

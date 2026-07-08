@@ -55,7 +55,6 @@ export default function LoginLogPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
   useEffect(() => {

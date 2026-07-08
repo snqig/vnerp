@@ -5,25 +5,33 @@
 
 import { test, expect } from '@playwright/test';
 
+const TEST_USER = {
+  username: 'admin',
+  password: 'admin123',
+};
+
+async function login(page: import('@playwright/test').Page) {
+  await fetch('/api/auth/reset-lock', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: 'admin' }),
+  }).catch(() => {});
+
+  await page.goto('/en/login', { waitUntil: 'domcontentloaded' });
+  await page.waitForLoadState('networkidle');
+  await page.waitForSelector('input#username', { timeout: 60000 });
+  await page.fill('input#username', TEST_USER.username);
+  await page.fill('input#password', TEST_USER.password);
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.waitForURL('**/en/dashboard', { timeout: 60000 });
+  await page.waitForTimeout(2000);
+}
+
 test.describe('入库管理测试', () => {
 
   test.beforeEach(async ({ page }) => {
-    await fetch('/api/auth/reset-lock', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin' }),
-    }).catch(() => {});
-
-    await page.goto('/login', { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
-    await page.fill('input#username', 'admin');
-    await page.fill('input#password', '521223');
-    await page.locator('input#password').press('Enter');
-
-    await expect(page).toHaveURL('/', { timeout: 60000 });
-    await page.waitForTimeout(2000);
-
-    await page.goto('/warehouse/inbound');
+    await login(page);
+    await page.goto('/en/warehouse/inbound');
     await page.waitForTimeout(3000);
   });
 
@@ -89,7 +97,7 @@ test.describe('入库管理测试', () => {
   test('性能测试: 入库管理页面加载时间', async ({ page }) => {
     const startTime = Date.now();
 
-    await page.goto('/warehouse/inbound');
+    await page.goto('/en/warehouse/inbound');
     await page.waitForSelector('h2, h1, table, .card, [class*="card"]', { timeout: 15000 });
 
     const loadTime = Date.now() - startTime;

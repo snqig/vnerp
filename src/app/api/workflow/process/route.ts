@@ -45,7 +45,6 @@ export const POST = withPermission(
         result.message
       );
     } catch (error: any) {
-      console.error('审批处理失败:', error);
       return errorResponse('审批处理失败: ' + error.message, 500, 500);
     }
   },

@@ -46,7 +46,6 @@ export function initializeApplication(): void {
 
     initialized = true;
   } catch (error) {
-    console.error('Failed to initialize application:', error);
   }
 }
 

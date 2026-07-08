@@ -1,5 +1,7 @@
 import { query, execute, transaction, queryOne } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import type { PoolConnection } from 'mysql2/promise';
+import type { ResultSetHeader } from 'mysql2';
 
 export interface WorkflowNode {
   id: number;
@@ -44,24 +46,84 @@ export interface ApprovalTask {
   actionTime?: Date;
 }
 
+/** wf_workflow_config 表行类型 */
+interface WorkflowConfigRow {
+  id: number;
+  workflow_name: string;
+  module_type: string;
+  priority: number;
+  is_active: number;
+  deleted: number;
+}
+
+/** wf_approval_instance 表行类型 */
+interface ApprovalInstanceRow {
+  id: number;
+  workflow_id: number;
+  workflow_name: string;
+  source_type: string;
+  source_id: number;
+  source_no: string;
+  current_node_id: number;
+  current_node_name: string;
+  status: number;
+  initiator_id: number;
+  initiator_name: string;
+  create_time: Date;
+  update_time: Date;
+}
+
+/** wf_approval_task 表行类型 */
+interface ApprovalTaskRow {
+  id: number;
+  instance_id: number;
+  node_id: number;
+  node_name: string;
+  approver_id: number;
+  approver_name: string;
+  status: number;
+  action?: string;
+  comment?: string;
+  action_time?: Date;
+}
+
+/** 工作流配置 + 节点的复合返回类型 */
+interface WorkflowWithNodes {
+  id: number;
+  workflow_name: string;
+  module_type: string;
+  priority: number;
+  is_active: number;
+  deleted: number;
+  nodes: WorkflowNode[];
+}
+
+/** 待审批任务行（含实例字段） */
+interface PendingTaskRow extends ApprovalTaskRow {
+  source_type: string;
+  source_no: string;
+  initiator_name: string;
+  apply_time: Date;
+}
+
 export class WorkflowEngine {
-  async getWorkflowForModule(moduleType: string): Promise<any> {
-    const rows = (await query(
-      `SELECT * FROM wf_workflow_config 
+  async getWorkflowForModule(moduleType: string): Promise<WorkflowWithNodes | null> {
+    const rows = await query<WorkflowConfigRow>(
+      `SELECT * FROM wf_workflow_config
        WHERE module_type = ? AND is_active = 1 AND deleted = 0
        ORDER BY priority DESC LIMIT 1`,
       [moduleType]
-    )) as any[];
+    );
 
     if (rows.length === 0) {
       return null;
     }
 
     const workflow = rows[0];
-    const nodes = (await query(
+    const nodes = await query<WorkflowNode>(
       'SELECT * FROM wf_workflow_node WHERE workflow_id = ? ORDER BY node_order',
       [workflow.id]
-    )) as any[];
+    );
 
     return { ...workflow, nodes };
   }
@@ -93,7 +155,7 @@ export class WorkflowEngine {
     }
 
     const instanceId = await transaction(async (conn) => {
-      const [result] = await conn.execute(
+      const [result] = await conn.execute<ResultSetHeader>(
         `INSERT INTO wf_approval_instance (
           workflow_id, workflow_name, source_type, source_id, source_no,
           current_node_id, current_node_name, status,
@@ -112,14 +174,16 @@ export class WorkflowEngine {
         ]
       );
 
-      const instId = (result as any).insertId;
+      const instId = result.insertId;
 
       // 创建第一个审批任务
       await this.createApprovalTasks(conn, instId, firstApproveNode);
 
       // 如果有会签节点（multi），同时创建多个任务
+      // 注意：approval_mode 类型为 'and' | 'or'，此处保留对 'multi' 的判断以兼容历史数据
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (
-        firstApproveNode.approval_mode === 'multi' ||
+        (firstApproveNode.approval_mode as any) === 'multi' ||
         firstApproveNode.approver_type === 'multi'
       ) {
         const additionalApprovers = await this.getAdditionalApprovers(firstApproveNode, amount);
@@ -150,7 +214,7 @@ export class WorkflowEngine {
   }
 
   private async createApprovalTasks(
-    conn: any,
+    conn: PoolConnection,
     instanceId: number,
     node: WorkflowNode
   ): Promise<void> {
@@ -199,7 +263,7 @@ export class WorkflowEngine {
   }): Promise<{ success: boolean; message: string; nextNode?: string }> {
     const { instanceId, taskId, approverId, action, comment } = params;
 
-    const task: any = await queryOne(
+    const task = await queryOne<ApprovalTaskRow>(
       'SELECT * FROM wf_approval_task WHERE id = ? AND instance_id = ?',
       [taskId, instanceId]
     );
@@ -216,21 +280,23 @@ export class WorkflowEngine {
       return { success: false, message: '该任务已处理' };
     }
 
-    const instance: any = await queryOne('SELECT * FROM wf_approval_instance WHERE id = ?', [
-      instanceId,
-    ]);
+    const instance = await queryOne<ApprovalInstanceRow>(
+      'SELECT * FROM wf_approval_instance WHERE id = ?',
+      [instanceId]
+    );
 
     if (!instance || instance.status !== 1) {
       return { success: false, message: '审批实例状态异常' };
     }
 
-    const workflow: any = await queryOne('SELECT * FROM wf_workflow_config WHERE id = ?', [
-      instance.workflow_id,
-    ]);
+    const workflow = await queryOne<WorkflowConfigRow>(
+      'SELECT * FROM wf_workflow_config WHERE id = ?',
+      [instance.workflow_id]
+    );
 
-    const nodes: any[] = await query(
+    const nodes = await query<WorkflowNode>(
       'SELECT * FROM wf_workflow_node WHERE workflow_id = ? ORDER BY node_order',
-      [workflow.id]
+      [workflow?.id ?? 0]
     );
 
     if (action === 'reject') {
@@ -260,10 +326,10 @@ export class WorkflowEngine {
   }
 
   private async rejectWorkflow(
-    instance: any,
-    task: any,
+    instance: ApprovalInstanceRow,
+    task: ApprovalTaskRow,
     comment: string,
-    nodes: any[]
+    nodes: WorkflowNode[]
   ): Promise<void> {
     await transaction(async (conn) => {
       await conn.execute(
@@ -314,11 +380,14 @@ export class WorkflowEngine {
   }
 
   private async getNextNode(
-    instance: any,
-    currentTask: any,
-    nodes: any[],
-    currentNode: any
-  ): Promise<any | null> {
+    instance: ApprovalInstanceRow,
+    currentTask: ApprovalTaskRow,
+    nodes: WorkflowNode[],
+    currentNode: WorkflowNode | undefined
+  ): Promise<WorkflowNode | null> {
+    if (!currentNode) {
+      return null;
+    }
     const currentIndex = nodes.findIndex((n) => n.id === currentNode.id);
 
     if (currentNode.approval_mode === 'or') {
@@ -327,11 +396,11 @@ export class WorkflowEngine {
     }
 
     // 会签模式：检查是否所有人都已通过
-    const pendingTasks: any[] = (await query(
+    const pendingTasks = await query<{ count: number }>(
       `SELECT COUNT(*) as count FROM wf_approval_task
        WHERE instance_id = ? AND node_id = ? AND status = 1`,
       [instance.id, currentNode.id]
-    )) as any[];
+    );
 
     if (pendingTasks[0]?.count > 0) {
       return null; // 还有人未审批
@@ -340,7 +409,10 @@ export class WorkflowEngine {
     return nodes[currentIndex + 1] || null;
   }
 
-  private async moveToNextNode(instance: any, nextNode: any): Promise<void> {
+  private async moveToNextNode(
+    instance: ApprovalInstanceRow,
+    nextNode: WorkflowNode
+  ): Promise<void> {
     await transaction(async (conn) => {
       await conn.execute(
         `UPDATE wf_approval_instance SET
@@ -362,7 +434,7 @@ export class WorkflowEngine {
     });
   }
 
-  private async completeWorkflow(instance: any): Promise<void> {
+  private async completeWorkflow(instance: ApprovalInstanceRow): Promise<void> {
     await transaction(async (conn) => {
       await conn.execute(
         `UPDATE wf_approval_instance SET
@@ -377,7 +449,10 @@ export class WorkflowEngine {
     secureLog('info', 'Workflow completed', { instanceId: instance.id });
   }
 
-  private async completeWorkflowInstance(conn: any, instance: any): Promise<void> {
+  private async completeWorkflowInstance(
+    conn: PoolConnection,
+    instance: ApprovalInstanceRow
+  ): Promise<void> {
     await conn.execute(
       `UPDATE wf_approval_instance SET status = 3, update_time = NOW() WHERE id = ?`,
       [instance.id]
@@ -387,7 +462,7 @@ export class WorkflowEngine {
     await this.triggerBusinessCallback(instance);
   }
 
-  private async triggerBusinessCallback(instance: any): Promise<void> {
+  private async triggerBusinessCallback(instance: ApprovalInstanceRow): Promise<void> {
     try {
       if (instance.source_type === 'sales_order') {
         await execute(`UPDATE sal_order SET status = 3, audit_time = NOW() WHERE id = ?`, [
@@ -398,11 +473,11 @@ export class WorkflowEngine {
           instance.source_id,
         ]);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       secureLog('error', 'Business callback failed', {
         sourceType: instance.source_type,
         sourceId: instance.source_id,
-        error: String(error),
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -417,40 +492,40 @@ export class WorkflowEngine {
   private async getRoleApprovers(roleIds: string[]): Promise<Array<{ id: number; name: string }>> {
     if (!roleIds || roleIds.length === 0) return [];
 
-    const rows = (await query(
+    const rows = await query<{ id: number; name: string }>(
       `SELECT u.id, u.real_name as name FROM sys_user u
        LEFT JOIN sys_user_role ur ON u.id = ur.user_id
        WHERE ur.role_id IN (?) AND u.status = 1 LIMIT 5`,
       [roleIds]
-    )) as any[];
+    );
 
     return rows;
   }
 
   private async getDepartmentHead(): Promise<{ id: number; name: string } | null> {
-    const rows = (await query(
+    const rows = await query<{ id: number; name: string }>(
       `SELECT id, real_name as name FROM sys_user
        WHERE position LIKE '%主管%' OR position LIKE '%经理%' LIMIT 1`
-    )) as any[];
+    );
 
     return rows.length > 0 ? rows[0] : null;
   }
 
-  async getPendingTasks(userId: number): Promise<any[]> {
-    const rows = (await query(
+  async getPendingTasks(userId: number): Promise<PendingTaskRow[]> {
+    const rows = await query<PendingTaskRow>(
       `SELECT t.*, i.source_type, i.source_no, i.initiator_name, i.create_time as apply_time
        FROM wf_approval_task t
        LEFT JOIN wf_approval_instance i ON t.instance_id = i.id
        WHERE t.approver_id = ? AND t.status = 1 AND i.status = 1
        ORDER BY t.create_time DESC`,
       [userId]
-    )) as any[];
+    );
 
     return rows;
   }
 
-  async getApprovalHistory(sourceType: string, sourceId: number): Promise<any[]> {
-    const instance: any = await queryOne(
+  async getApprovalHistory(sourceType: string, sourceId: number): Promise<ApprovalTaskRow[]> {
+    const instance = await queryOne<{ id: number }>(
       'SELECT id FROM wf_approval_instance WHERE source_type = ? AND source_id = ?',
       [sourceType, sourceId]
     );
@@ -459,10 +534,10 @@ export class WorkflowEngine {
       return [];
     }
 
-    const tasks = (await query(
+    const tasks = await query<ApprovalTaskRow>(
       `SELECT * FROM wf_approval_task WHERE instance_id = ? ORDER BY action_time`,
       [instance.id]
-    )) as any[];
+    );
 
     return tasks;
   }

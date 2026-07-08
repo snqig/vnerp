@@ -40,6 +40,8 @@ import {
   exportTableToPDF,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
 
@@ -120,7 +122,6 @@ export default function SupplierAuditPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -223,52 +224,18 @@ export default function SupplierAuditPage() {
                 <Plus className="h-4 w-4 mr-2" />
                 {t('newAudit')}
               </Button>
-              <TableExportToolbar
-                selectedCount={selectedIds.length}
-                totalCount={sortedData.length}
-                onSelectAll={() => setSelectedIds(sortedData.filter((i) => i.id).map((i) => i.id!))}
-                onDeselectAll={() => setSelectedIds([])}
-                onPrint={() => {}}
-                onExportPDF={() =>
-                  exportTableToPDF(
-                    sortedData,
-                    t('supplierAuditReport'),
-                    [
-                      { key: 'audit_no', header: t('auditNo') },
-                      { key: 'supplier_name', header: tc('supplier') },
-                      { key: 'audit_type', header: t('auditType') },
-                      { key: 'audit_date', header: t('auditDate') },
-                      { key: 'total_score', header: t('totalScore') },
-                      { key: 'audit_result', header: tc('result') },
-                    ],
-                    t('supplierAuditReport')
-                  )
-                }
-                onExportXLS={() =>
-                  exportTableToXLS(sortedData, t('supplierAuditReport'), [
-                    { key: 'audit_no', header: t('auditNo') },
-                    { key: 'supplier_name', header: tc('supplier') },
-                    { key: 'audit_type', header: t('auditType') },
-                    { key: 'audit_date', header: t('auditDate') },
-                    { key: 'total_score', header: t('totalScore') },
-                    { key: 'audit_result', header: tc('result') },
-                  ])
-                }
-                onExportWORD={() =>
-                  exportTableToWORD(
-                    sortedData,
-                    t('supplierAuditReport'),
-                    [
-                      { key: 'audit_no', header: t('auditNo') },
-                      { key: 'supplier_name', header: tc('supplier') },
-                      { key: 'audit_type', header: t('auditType') },
-                      { key: 'audit_date', header: t('auditDate') },
-                      { key: 'total_score', header: t('totalScore') },
-                      { key: 'audit_result', header: tc('result') },
-                    ],
-                    t('supplierAuditReport')
-                  )
-                }
+              <GlobalExportToolbar
+                filename="供应商审核报告"
+                title="供应商审核报告"
+                columns={[
+                  { key: 'audit_no', label: t('auditNo'), width: 18 },
+                  { key: 'supplier_name', label: tc('supplier'), width: 20 },
+                  { key: 'audit_type', label: t('auditType'), width: 12 },
+                  { key: 'audit_date', label: t('auditDate'), width: 12 },
+                  { key: 'total_score', label: t('totalScore'), width: 10 },
+                  { key: 'audit_result', label: tc('result'), width: 12 },
+                ]}
+                data={selectedIds.length > 0 ? sortedData.filter((i) => i.id && selectedIds.includes(i.id)) : sortedData}
               />
             </div>
 

@@ -120,7 +120,6 @@ export const POST = withPermission(
         ['修改密码', user.username, '/api/auth/change-password', 'POST', '', 1]
       );
     } catch (e) {
-      console.error('记录操作日志失败:', e);
     }
 
     return successResponse(null, '密码修改成功');

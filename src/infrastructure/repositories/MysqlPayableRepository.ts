@@ -1,7 +1,26 @@
+import mysql from 'mysql2/promise';
 import { IPayableRepository } from '@/domain/finance/repositories/IPayableRepository';
 import { Payable, PayableProps } from '@/domain/finance/aggregates/Payable';
 import { query, execute, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
+
+/** fin_payable 表行类型 */
+interface FinPayableRow {
+  id: number;
+  payable_no: string;
+  source_type: number | null;
+  source_id: number | null;
+  source_no: string | null;
+  supplier_id: number;
+  amount: number | string;
+  paid_amount: number | string | null;
+  balance: number | string | null;
+  due_date: string | null;
+  status: number;
+  remark: string | null;
+  create_time: string | null;
+  update_time: string | null;
+}
 
 const COLUMNS = `id, payable_no, source_type, source_id, source_no, supplier_id,
                  amount, paid_amount, balance, due_date, status, remark,
@@ -9,7 +28,7 @@ const COLUMNS = `id, payable_no, source_type, source_id, source_no, supplier_id,
 
 export class MysqlPayableRepository implements IPayableRepository {
   async findById(id: number): Promise<Payable | null> {
-    const rows = await query<any>(
+    const rows = await query<FinPayableRow>(
       `SELECT ${COLUMNS} FROM fin_payable WHERE id = ?`,
       [id]
     );
@@ -18,7 +37,7 @@ export class MysqlPayableRepository implements IPayableRepository {
   }
 
   async findByPayableNo(payableNo: string): Promise<Payable | null> {
-    const rows = await query<any>(
+    const rows = await query<FinPayableRow>(
       `SELECT ${COLUMNS} FROM fin_payable WHERE payable_no = ?`,
       [payableNo]
     );
@@ -27,7 +46,7 @@ export class MysqlPayableRepository implements IPayableRepository {
   }
 
   async findBySupplierId(supplierId: number): Promise<Payable[]> {
-    const rows = await query<any>(
+    const rows = await query<FinPayableRow>(
       `SELECT ${COLUMNS} FROM fin_payable WHERE supplier_id = ? ORDER BY create_time DESC`,
       [supplierId]
     );
@@ -35,7 +54,7 @@ export class MysqlPayableRepository implements IPayableRepository {
   }
 
   async findByStatus(status: number): Promise<Payable[]> {
-    const rows = await query<any>(
+    const rows = await query<FinPayableRow>(
       `SELECT ${COLUMNS} FROM fin_payable WHERE status = ? ORDER BY create_time DESC`,
       [status]
     );
@@ -44,7 +63,7 @@ export class MysqlPayableRepository implements IPayableRepository {
 
   async findOverdue(date?: string): Promise<Payable[]> {
     const checkDate = date || new Date().toISOString().slice(0, 10);
-    const rows = await query<any>(
+    const rows = await query<FinPayableRow>(
       `SELECT ${COLUMNS} FROM fin_payable
        WHERE due_date < ? AND status IN (1, 2)
        ORDER BY due_date ASC`,
@@ -58,7 +77,7 @@ export class MysqlPayableRepository implements IPayableRepository {
       payable.payableNo || (await generateDocumentNo('payable'));
 
     return transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO fin_payable
          (payable_no, source_type, source_id, source_no, supplier_id,
           amount, paid_amount, balance, due_date, status, remark)
@@ -117,12 +136,12 @@ export class MysqlPayableRepository implements IPayableRepository {
     await execute(`DELETE FROM fin_payable WHERE id = ?`, [id]);
   }
 
-  private mapToAggregate(row: any): Payable {
+  private mapToAggregate(row: FinPayableRow): Payable {
     const props: PayableProps = {
       id: row.id,
       payableNo: row.payable_no,
-      sourceType: row.source_type,
-      sourceId: row.source_id,
+      sourceType: row.source_type ?? undefined,
+      sourceId: row.source_id ?? undefined,
       sourceNo: row.source_no || '',
       supplierId: row.supplier_id,
       amount: Number(row.amount),
@@ -131,8 +150,8 @@ export class MysqlPayableRepository implements IPayableRepository {
       dueDate: row.due_date || '',
       status: row.status,
       remark: row.remark || '',
-      createTime: row.create_time,
-      updateTime: row.update_time,
+      createTime: row.create_time ?? undefined,
+      updateTime: row.update_time ?? undefined,
     };
     return Payable.reconstitute(props);
   }

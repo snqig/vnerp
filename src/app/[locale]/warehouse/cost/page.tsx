@@ -52,7 +52,6 @@ export default function CostPage() {
         setTotal(result.data?.total || 0);
       }
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -71,7 +70,6 @@ export default function CostPage() {
         setDetailOpen(true);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 

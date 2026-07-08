@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { withPermission } from '@/lib/api-permissions';
 
-export async function GET(request: NextRequest) {
+export const GET = withPermission(async (request: NextRequest) => {
   try {
     const statusColumn = await query(`
       SELECT COLUMN_NAME, DATA_TYPE, COLUMN_TYPE
@@ -10,14 +11,14 @@ export async function GET(request: NextRequest) {
       AND TABLE_NAME = 'inv_material_label'
       AND COLUMN_NAME = 'status'
     `);
-    return Response.json({
+    return NextResponse.json({
       success: true,
       statusColumn: statusColumn[0]
     });
   } catch (error: any) {
-    return Response.json({
+    return NextResponse.json({
       success: false,
       error: error.message
     }, { status: 500 });
   }
-}
+});

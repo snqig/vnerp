@@ -25,7 +25,26 @@ export const POST = withPermission(
       // 请求体可能为空，忽略
     }
 
-    return successResponse(null, '登出成功');
+    const response = successResponse(null, '登出成功');
+
+    // 清除 httpOnly cookie：access_token + refresh_token
+    // 通过 maxAge=0 立即过期，确保后续 SSR 和 middleware 不再识别为登录态
+    response.cookies.set('access_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+    });
+    response.cookies.set('refresh_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+    });
+
+    return response;
   },
   { errorMessage: '登出失败' }
 );

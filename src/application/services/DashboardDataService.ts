@@ -38,13 +38,13 @@ export class DashboardDataService {
 
   private async computeOverview() {
     try {
-      const orderCount: any = await query(
+      const orderCount = await query<{ count: number }>(
         'SELECT COUNT(*) as count FROM sal_order WHERE DATE(create_time) = CURDATE() AND deleted = 0'
       );
-      const inventoryValue: any = await query(
+      const inventoryValue = await query<{ value: number }>(
         'SELECT COALESCE(SUM(stock_qty * unit_price), 0) as value FROM inv_material WHERE deleted = 0'
       );
-      const deliveryCount: any = await query(
+      const deliveryCount = await query<{ count: number }>(
         'SELECT COUNT(*) as count FROM inv_outbound_order WHERE DATE(create_time) = CURDATE() AND deleted = 0'
       );
 
@@ -60,7 +60,7 @@ export class DashboardDataService {
 
   private async computeProductionStats() {
     try {
-      const production: any = await query(
+      const production = await query<{ planned: number; completed: number }>(
         `SELECT COALESCE(SUM(plan_qty), 0) as planned, COALESCE(SUM(completed_qty), 0) as completed
          FROM prd_process_card WHERE DATE(create_time) = CURDATE() AND deleted = 0`
       );
@@ -75,7 +75,7 @@ export class DashboardDataService {
 
   private async computeOrderTrend(days: number) {
     try {
-      const trend: any = await query(
+      const trend = await query<{ date: Date; count: number }>(
         `SELECT DATE(create_time) as date, COUNT(*) as count
          FROM sal_order
          WHERE create_time >= DATE_SUB(CURDATE(), INTERVAL ? DAY) AND deleted = 0

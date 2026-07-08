@@ -268,7 +268,6 @@ export default function FinanceDashboard() {
         const result = await res.json();
         if (result.success && result.data) setData(result.data);
       } catch (e) {
-        console.error('获取财务看板数据失败:', e);
       } finally {
         setLoading(false);
       }

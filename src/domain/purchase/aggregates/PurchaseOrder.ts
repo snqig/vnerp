@@ -271,7 +271,7 @@ export class PurchaseOrder {
       if (!line) {
         throw new DomainError(`行号${recv.lineNo}不存在`);
       }
-      line.receive(recv.quantity);
+      line.receive(recv.quantity, this.overReceiptTolerance);
 
       receivedItems.push({
         materialId: line.materialId,

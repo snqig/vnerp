@@ -59,6 +59,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useDebounce } from '@/hooks/use-debounce';
 import { SearchInput } from '@/components/ui/search-input';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 interface Supplier {
   id: number;
@@ -194,7 +196,6 @@ export default function SuppliersPage() {
         setTotal(result.pagination?.total || result.data?.total || data.length);
       }
     } catch (e) {
-      console.error('获取供应商失败:', e);
     } finally {
       setLoading(false);
     }
@@ -529,24 +530,27 @@ export default function SuppliersPage() {
                   <Printer className="h-4 w-4" />
                   打印
                 </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-1">
-                      <Download className="h-4 w-4" />
-                      导出
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={handleExportXLS}>
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      导出 XLS
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleExportPDF}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      导出 PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <GlobalExportToolbar
+                  filename="供应商列表"
+                  title="供应商列表"
+                  columns={[
+                    { key: 'supplier_code', label: '供应商编号', width: 15 },
+                    { key: 'supplier_name', label: '供应商名称', width: 25 },
+                    { key: 'supplier_type', label: tc('type'), width: 10, formatter: (v) => supplierTypeMap[v] || '-' },
+                    { key: 'credit_level', label: '等级', width: 8 },
+                    {
+                      key: 'status',
+                      label: tc('status'),
+                      width: 10,
+                      formatter: (v) => (statusMap[v] || statusMap[1]).label,
+                    },
+                    { key: 'contact_name', label: '联系人', width: 12 },
+                    { key: 'contact_phone', label: tc('phone'), width: 15 },
+                    { key: 'contact_email', label: tc('email'), width: 20 },
+                    { key: 'address', label: tc('address'), width: 30 },
+                  ]}
+                  data={selectedIds.length > 0 ? list.filter((s) => selectedIds.includes(s.id)) : sortedList}
+                />
               </div>
             </div>
           </CardContent>

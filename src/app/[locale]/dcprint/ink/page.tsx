@@ -40,6 +40,8 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { useTranslations } from 'next-intl';
 
 interface Item {
@@ -123,7 +125,6 @@ export default function InkManagementPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   }, [page, searchCode, searchName, searchType, searchStatus]);
 
@@ -308,15 +309,22 @@ export default function InkManagementPage() {
                 {tc('search')}
               </Button>
               <div className="ml-auto">
-                <TableExportToolbar
-                  selectedCount={selectedIds.size}
-                  totalCount={sortedList.length}
-                  onSelectAll={toggleSelectAll}
-                  onDeselectAll={() => setSelectedIds(new Set())}
-                  onPrint={handlePrint}
-                  onExportPDF={handleExportPDF}
-                  onExportXLS={handleExportXLS}
-                  onExportWORD={handleExportWORD}
+                <GlobalExportToolbar
+                  filename="油墨管理"
+                  title="油墨管理"
+                  columns={[
+                    { key: 'ink_code', label: t('inkCode'), width: 15 },
+                    { key: 'ink_name', label: t('inkName'), width: 20 },
+                    { key: 'ink_type', label: tc('type'), width: 10, formatter: (v) => typeMap[v] || '-' },
+                    { key: 'color_name', label: tc('color'), width: 10 },
+                    { key: 'color_code', label: t('colorCode'), width: 10 },
+                    { key: 'brand', label: tc('brand'), width: 12 },
+                    { key: 'unit', label: tc('unit'), width: 8 },
+                    { key: 'stock_qty', label: t('stock'), width: 10 },
+                    { key: 'safety_stock', label: t('safetyStock'), width: 10 },
+                    { key: 'status', label: tc('status'), width: 10, formatter: (v) => statusMap[v]?.label || '-' },
+                  ]}
+                  data={selectedIds.size > 0 ? sortedList.filter((i) => selectedIds.has(i.id)) : sortedList}
                 />
               </div>
             </div>

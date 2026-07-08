@@ -13,7 +13,6 @@ let refreshPromise: Promise<string | null> | null = null;
 
 async function refreshAccessToken(): Promise<string | null> {
   if (refreshPromise) {
-    console.debug('[authFetch] refresh in progress, reusing current Promise');
     return refreshPromise;
   }
 
@@ -21,14 +20,9 @@ async function refreshAccessToken(): Promise<string | null> {
     localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken');
   const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
   if (!refreshToken || !userId) {
-    console.warn('[authFetch] refresh failed: missing refreshToken or userId', {
-      hasRefreshToken: !!refreshToken,
-      hasUserId: !!userId,
-    });
     return null;
   }
 
-  console.debug('[authFetch] start refresh token', { userId });
   const startTime = Date.now();
 
   refreshPromise = (async () => {
@@ -39,15 +33,10 @@ async function refreshAccessToken(): Promise<string | null> {
         body: JSON.stringify({ refreshToken, userId }),
       });
       if (!res.ok) {
-        console.warn('[authFetch] refresh returned non-200', { status: res.status });
         return null;
       }
       const json = await res.json();
       if (!json.success || !json.data?.token) {
-        console.warn('[authFetch] refresh returned failure', {
-          success: json.success,
-          hasToken: !!json.data?.token,
-        });
         return null;
       }
 
@@ -58,14 +47,8 @@ async function refreshAccessToken(): Promise<string | null> {
       if (json.data.refreshToken) {
         storage.setItem('refreshToken', json.data.refreshToken);
       }
-      console.debug('[authFetch] refresh success', {
-        userId,
-        durationMs: Date.now() - startTime,
-        storageType: useSession ? 'sessionStorage' : 'localStorage',
-      });
       return json.data.token as string;
     } catch (err) {
-      console.error('[authFetch] refresh error', err);
       return null;
     } finally {
       refreshPromise = null;
@@ -76,7 +59,6 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 function clearAuthAndRedirect(): void {
-  console.warn('[authFetch] clear auth state and redirect to login');
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('userId');
@@ -119,25 +101,15 @@ export async function authFetch(url: string, options: RequestInit = {}): Promise
     typeof window !== 'undefined' &&
     !url.includes('/api/auth/refresh')
   ) {
-    console.debug('[authFetch] received 401, attempting refresh', {
-      url,
-      hasToken: !!token,
-    });
     const newToken = await refreshAccessToken();
     if (newToken) {
       const retryHeaders: Record<string, string> = {
         ...headers,
         Authorization: `Bearer ${newToken}`,
       };
-      console.debug('[authFetch] refresh success, retrying original request', { url });
       const retryResponse = await fetch(url, { ...options, headers: retryHeaders });
-      console.debug('[authFetch] retry result', {
-        url,
-        status: retryResponse.status,
-      });
       return retryResponse;
     }
-    console.warn('[authFetch] refresh failed, clearing auth state', { url });
     clearAuthAndRedirect();
   }
 

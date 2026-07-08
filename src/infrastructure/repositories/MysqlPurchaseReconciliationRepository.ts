@@ -1,3 +1,4 @@
+import mysql from 'mysql2/promise';
 import {
   IPurchaseReconciliationRepository,
   Pagination,
@@ -9,8 +10,48 @@ import {
   PurchaseReconciliationLineProps,
 } from '@/domain/purchase/aggregates/PurchaseReconciliation';
 import { PurchaseWriteOffRecordProps } from '@/domain/purchase/entities/PurchaseWriteOffRecord';
+import { PurchaseReconciliationStatusValue } from '@/domain/purchase/value-objects/PurchaseReconciliationStatus';
 import { query, execute, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
+
+type SqlValue = string | number | null | boolean | Date;
+
+/** pur_purchase_reconciliation 表行类型 */
+interface PurPurchaseReconciliationRow {
+  id: number;
+  reconciliation_no: string;
+  status: number;
+  supplier_id: number;
+  supplier_name: string;
+  period_start: string;
+  period_end: string;
+  receipt_amount: number | string;
+  return_amount: number | string;
+  net_amount: number | string | null;
+  discount_amount: number | string | null;
+  paid_amount: number | string | null;
+  balance_amount: number | string | null;
+  remark: string | null;
+  create_by: number | null;
+  confirm_by: number | null;
+  confirm_time: string | null;
+  close_by: number | null;
+  close_time: string | null;
+  create_time: string;
+  update_time: string;
+  deleted: number;
+}
+
+/** pur_purchase_reconciliation_writeoff 表行类型 */
+interface PurPurchaseReconciliationWriteoffRow {
+  id: number;
+  reconciliation_id: number;
+  payable_id: number;
+  amount: number | string;
+  write_off_date: string;
+  remark: string | null;
+  create_time: string;
+}
 
 const RECON_COLUMNS = `id, reconciliation_no, status, supplier_id, supplier_name,
   period_start, period_end, receipt_amount, return_amount, net_amount,
@@ -20,12 +61,12 @@ const RECON_COLUMNS = `id, reconciliation_no, status, supplier_id, supplier_name
 
 export class MysqlPurchaseReconciliationRepository implements IPurchaseReconciliationRepository {
   async findById(id: number): Promise<PurchaseReconciliation | null> {
-    const rows = await query<any>(
+    const rows = await query<PurPurchaseReconciliationRow>(
       `SELECT ${RECON_COLUMNS} FROM pur_purchase_reconciliation WHERE id = ? AND deleted = 0`,
       [id]
     );
     if (!rows || rows.length === 0) return null;
-    const writeOffs = await query<any>(
+    const writeOffs = await query<PurPurchaseReconciliationWriteoffRow>(
       `SELECT id, reconciliation_id, payable_id, amount, write_off_date, remark, create_time
        FROM pur_purchase_reconciliation_writeoff
        WHERE reconciliation_id = ? ORDER BY write_off_date DESC, id DESC`,
@@ -35,12 +76,12 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
   }
 
   async findByReconciliationNo(reconciliationNo: string): Promise<PurchaseReconciliation | null> {
-    const rows = await query<any>(
+    const rows = await query<PurPurchaseReconciliationRow>(
       `SELECT ${RECON_COLUMNS} FROM pur_purchase_reconciliation WHERE reconciliation_no = ? AND deleted = 0`,
       [reconciliationNo]
     );
     if (!rows || rows.length === 0) return null;
-    const writeOffs = await query<any>(
+    const writeOffs = await query<PurPurchaseReconciliationWriteoffRow>(
       `SELECT id, reconciliation_id, payable_id, amount, write_off_date, remark, create_time
        FROM pur_purchase_reconciliation_writeoff
        WHERE reconciliation_id = ? ORDER BY write_off_date DESC, id DESC`,
@@ -50,14 +91,14 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
   }
 
   async findBySupplierId(supplierId: number): Promise<PurchaseReconciliation[]> {
-    const rows = await query<any>(
+    const rows = await query<PurPurchaseReconciliationRow>(
       `SELECT ${RECON_COLUMNS} FROM pur_purchase_reconciliation
        WHERE supplier_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [supplierId]
     );
     if (!rows || rows.length === 0) return [];
     const reconIds = rows.map((r) => r.id);
-    const allWriteOffs = await query<any>(
+    const allWriteOffs = await query<PurPurchaseReconciliationWriteoffRow>(
       `SELECT id, reconciliation_id, payable_id, amount, write_off_date, remark, create_time
        FROM pur_purchase_reconciliation_writeoff
        WHERE reconciliation_id IN (?) ORDER BY reconciliation_id, write_off_date DESC`,
@@ -75,7 +116,7 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
     filters?: { keyword?: string; supplierId?: number; startDate?: string; endDate?: string }
   ): Promise<PaginatedResult<PurchaseReconciliation>> {
     const where: string[] = ['deleted = 0', 'status = ?'];
-    const values: any[] = [status];
+    const values: SqlValue[] = [status];
     if (filters?.keyword) {
       where.push('(reconciliation_no LIKE ? OR supplier_name LIKE ?)');
       const like = `%${filters.keyword}%`;
@@ -95,14 +136,14 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
     }
     const whereClause = where.join(' AND ');
 
-    const countRows = await query<any>(
+    const countRows = await query<{ total: number }>(
       `SELECT COUNT(*) as total FROM pur_purchase_reconciliation WHERE ${whereClause}`,
       values
     );
     const total = countRows[0]?.total || 0;
 
     const offset = (pagination.page - 1) * pagination.pageSize;
-    const rows = await query<any>(
+    const rows = await query<PurPurchaseReconciliationRow>(
       `SELECT ${RECON_COLUMNS} FROM pur_purchase_reconciliation
        WHERE ${whereClause} ORDER BY create_time DESC LIMIT ? OFFSET ?`,
       [...values, pagination.pageSize, offset]
@@ -121,7 +162,7 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
     }
 
     const reconIds = rows.map((r) => r.id);
-    const allWriteOffs = await query<any>(
+    const allWriteOffs = await query<PurPurchaseReconciliationWriteoffRow>(
       `SELECT id, reconciliation_id, payable_id, amount, write_off_date, remark, create_time
        FROM pur_purchase_reconciliation_writeoff
        WHERE reconciliation_id IN (?) ORDER BY reconciliation_id, write_off_date DESC`,
@@ -149,7 +190,7 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
       recon.reconciliationNo || (await generateDocumentNo('purchase_reconcile'));
 
     return transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO pur_purchase_reconciliation
          (reconciliation_no, status, supplier_id, supplier_name,
           period_start, period_end, receipt_amount, return_amount, net_amount,
@@ -236,7 +277,10 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
     );
   }
 
-  private mapToAggregate(row: any, writeOffs: any[]): PurchaseReconciliation {
+  private mapToAggregate(
+    row: PurPurchaseReconciliationRow,
+    writeOffs: PurPurchaseReconciliationWriteoffRow[]
+  ): PurchaseReconciliation {
     const writeOffProps: PurchaseWriteOffRecordProps[] = (writeOffs || []).map((w) => ({
       id: w.id,
       reconciliationId: w.reconciliation_id,
@@ -250,7 +294,7 @@ export class MysqlPurchaseReconciliationRepository implements IPurchaseReconcili
     const props: PurchaseReconciliationProps = {
       id: row.id,
       reconciliationNo: row.reconciliation_no,
-      status: row.status,
+      status: row.status as PurchaseReconciliationStatusValue,
       supplierId: row.supplier_id,
       supplierName: row.supplier_name || '',
       periodStart: row.period_start ? String(row.period_start) : '',

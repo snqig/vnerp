@@ -103,7 +103,6 @@ export async function batchConvertRequestToPurchaseOrder(
       const result = await convertRequestToPurchaseOrder(id);
       results.push(result);
     } catch (e: any) {
-      console.error(`请购单 ${id} 转采购失败: ${e.message}`);
     }
   }
   return results;

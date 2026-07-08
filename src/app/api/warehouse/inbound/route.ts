@@ -9,14 +9,14 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { InboundApplicationService } from '@/application/services/InboundApplicationService';
-import { MysqlInboundOrderRepository } from '@/infrastructure/repositories/MysqlInboundOrderRepository';
+import { RepositoryRegistry } from '@/infrastructure/RepositoryRegistry';
 import { registerEventHandlers } from '@/application/EventRegistry';
 import { createInboundOrderSchema, updateInboundOrderSchema } from '@/lib/validations/inbound';
 import { ZodError } from 'zod/v4';
 
 function getInboundService(): InboundApplicationService {
   registerEventHandlers();
-  const orderRepo = new MysqlInboundOrderRepository();
+  const orderRepo = RepositoryRegistry.getInboundOrderRepository();
   return new InboundApplicationService(orderRepo);
 }
 

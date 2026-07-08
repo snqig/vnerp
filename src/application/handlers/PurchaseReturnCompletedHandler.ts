@@ -2,6 +2,20 @@ import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { PurchaseReturnCompletedEvent } from '@/domain/purchase/events/PurchaseReturnEvents';
 import { query, execute, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
+
+/** 采购退货明细行 */
+interface PurchaseReturnLineRow {
+  order_line_id: number;
+  material_id: number;
+  quantity: string | number;
+}
+
+/** 退货状态统计行 */
+interface OrderReturnStatusRow {
+  total_lines: number;
+  fully_returned_lines: number | null;
+}
 
 /**
  * 处理采购退货完成事件：
@@ -20,7 +34,7 @@ export class PurchaseReturnCompletedHandler implements EventHandler<PurchaseRetu
       completedBy,
     });
 
-    const returnLines = await query<any>(
+    const returnLines = await query<PurchaseReturnLineRow>(
       `SELECT order_line_id, material_id, quantity
        FROM pur_purchase_return_line
        WHERE return_id = ? AND order_line_id IS NOT NULL`,
@@ -52,8 +66,8 @@ export class PurchaseReturnCompletedHandler implements EventHandler<PurchaseRetu
     });
   }
 
-  private async checkOrderReturnStatus(conn: any, orderId: number): Promise<void> {
-    const rows = await conn.execute(
+  private async checkOrderReturnStatus(conn: PoolConnection, orderId: number): Promise<void> {
+    const [rows] = await conn.execute<RowDataPacket[]>(
       `SELECT
          COUNT(*) AS total_lines,
          SUM(CASE WHEN returned_qty >= order_qty AND order_qty > 0 THEN 1 ELSE 0 END) AS fully_returned_lines
@@ -62,9 +76,9 @@ export class PurchaseReturnCompletedHandler implements EventHandler<PurchaseRetu
       [orderId]
     );
 
-    const [result] = rows as any[];
-    const totalLines = Number(result?.[0]?.total_lines || 0);
-    const fullyReturnedLines = Number(result?.[0]?.fully_returned_lines || 0);
+    const result = rows[0] as unknown as OrderReturnStatusRow | undefined;
+    const totalLines = Number(result?.total_lines || 0);
+    const fullyReturnedLines = Number(result?.fully_returned_lines || 0);
 
     if (totalLines > 0 && fullyReturnedLines === totalLines) {
       secureLog('info', '采购订单所有行已全部退货，标记为已关闭', { orderId });

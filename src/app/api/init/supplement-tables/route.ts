@@ -272,32 +272,6 @@ export const POST = withPermission(async (request: NextRequest) => {
     );
 
     await createTable(
-      'qc_unqualified_handle',
-      `CREATE TABLE IF NOT EXISTS qc_unqualified_handle (
-      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-      handle_no VARCHAR(50) NOT NULL COMMENT '处理单号',
-      inspection_id BIGINT UNSIGNED COMMENT '检验单ID',
-      material_id BIGINT UNSIGNED COMMENT '物料ID',
-      material_code VARCHAR(50) COMMENT '物料编码',
-      material_name VARCHAR(100) COMMENT '物料名称',
-      unqualified_qty DECIMAL(18,4) DEFAULT 0 COMMENT '不合格数量',
-      handle_type TINYINT COMMENT '处理方式: 1-返工, 2-报废, 3-让步接收, 4-退货',
-      handle_status TINYINT DEFAULT 1 COMMENT '处理状态: 1-待处理, 2-处理中, 3-已完成',
-      responsible_dept VARCHAR(100) COMMENT '责任部门',
-      responsible_person VARCHAR(50) COMMENT '责任人',
-      handle_result TEXT COMMENT '处理结果',
-      cost_amount DECIMAL(18,4) DEFAULT 0 COMMENT '损失金额',
-      remark TEXT COMMENT '备注',
-      create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-      update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      create_by BIGINT UNSIGNED,
-      deleted TINYINT DEFAULT 0,
-      PRIMARY KEY (id),
-      UNIQUE KEY uk_handle_no (handle_no)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='不合格品处理单'`
-    );
-
-    await createTable(
       'qc_incoming_inspection',
       `CREATE TABLE IF NOT EXISTS qc_incoming_inspection (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

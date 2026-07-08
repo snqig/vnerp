@@ -140,7 +140,6 @@ export function usePermission() {
         });
       }
     } catch (error) {
-      console.error('加载权限失败:', error);
     }
   }, []);
 

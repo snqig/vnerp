@@ -11,7 +11,7 @@ export class DomainEventOutbox {
   ): Promise<void> {
     for (const event of events) {
       await conn.execute(
-        `INSERT INTO domain_event_outbox (event_type, aggregate_type, aggregate_id, payload, status, created_at)
+        `INSERT INTO domain_event_outbox (event_type, aggregate_type, aggregate_id, payload, status, create_time)
          VALUES (?, ?, ?, ?, 'pending', NOW())`,
         [event.eventType, aggregateType, aggregateId, JSON.stringify(event)]
       );
@@ -24,7 +24,7 @@ export class DomainEventOutbox {
       `SELECT * FROM domain_event_outbox
        WHERE status = 'pending'
          AND (next_execute_at IS NULL OR next_execute_at <= NOW())
-       ORDER BY created_at ASC LIMIT ?`,
+       ORDER BY create_time ASC LIMIT ?`,
       [limit]
     );
     return rows as any[];

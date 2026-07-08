@@ -6,6 +6,7 @@
 import { query, execute, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import { generateDocNo } from '@/lib/global-config';
+import { CalcParamService } from '@/lib/calc-param-service';
 
 // ============================================================
 // 应收管理
@@ -341,11 +342,33 @@ export async function calculateWorkOrderCost(
     );
     const laborCost = parseFloat(laborCostRows[0]?.total_cost) || 0;
 
-    // 4. 计算制造费用（简化：按工时分摊）
-    // 实际应从财务模块获取当月制造费用总额
-    const manufacturingCost = laborCost * 0.5; // 简化计算：人工成本的50%
+    // 4. 计算制造费用 — 优先从事件驱动已归集的实际数据读取
+    // 事件路径（InkCostHandler/ScreenPlateCostHandler）在工单完工时已将实际制造费用累加写入 work_order_costs
+    // 仅当事件路径未写入时，才使用估算系数兜底
+    const existingMfgRows: any = await query(
+      `SELECT manufacturing_cost, material_cost FROM work_order_costs WHERE work_order_id = ?`,
+      [workOrderId]
+    );
+    const existingMfgCost = parseFloat(existingMfgRows[0]?.manufacturing_cost) || 0;
+    const existingEventMaterialCost = parseFloat(existingMfgRows[0]?.material_cost) || 0;
 
-    const totalCost = materialCost + laborCost + manufacturingCost;
+    let manufacturingCost: number;
+    let effectiveMaterialCost = materialCost;
+
+    if (existingMfgCost > 0) {
+      // 事件驱动路径已归集实际制造费用，直接使用
+      manufacturingCost = existingMfgCost;
+      // 如果事件路径也已归集材料成本（油墨计入材料），取较大值避免遗漏
+      if (existingEventMaterialCost > materialCost) {
+        effectiveMaterialCost = existingEventMaterialCost;
+      }
+    } else {
+      // 事件路径无数据，使用配置系数估算兜底
+      const manufacturingCostRatio = await CalcParamService.getDecimal('cost.manufacturing_cost_ratio', 0.5);
+      manufacturingCost = laborCost * manufacturingCostRatio;
+    }
+
+    const totalCost = effectiveMaterialCost + laborCost + manufacturingCost;
     const completedQty = parseFloat(workOrder.completed_qty) || parseFloat(workOrder.plan_qty) || 1;
     const unitCost = totalCost / completedQty;
 
@@ -368,7 +391,7 @@ export async function calculateWorkOrderCost(
           status = 1,
           update_time = NOW()
         WHERE work_order_id = ?`,
-        [materialCost, laborCost, manufacturingCost, totalCost, unitCost, completedQty, workOrderId]
+        [effectiveMaterialCost, laborCost, manufacturingCost, totalCost, unitCost, completedQty, workOrderId]
       );
     } else {
       await execute(
@@ -380,7 +403,7 @@ export async function calculateWorkOrderCost(
         [
           workOrderId,
           workOrder.work_order_no,
-          materialCost,
+          effectiveMaterialCost,
           laborCost,
           manufacturingCost,
           totalCost,
@@ -401,9 +424,10 @@ export async function calculateWorkOrderCost(
       success: true,
       message: `成本计算成功：总成本${totalCost.toFixed(2)}，单位成本${unitCost.toFixed(2)}`,
       cost: {
-        materialCost,
+        materialCost: effectiveMaterialCost,
         laborCost,
         manufacturingCost,
+        manufacturingCostSource: existingMfgCost > 0 ? 'event_driven' : 'estimated',
         totalCost,
         unitCost,
         quantity: completedQty,

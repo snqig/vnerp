@@ -53,6 +53,8 @@ import {
   exportTableToPDF,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
 
@@ -156,7 +158,6 @@ export default function TracePage() {
         setRecords(list);
       }
     } catch (e) {
-      console.error('Failed to fetch records:', e);
     }
   }, [keyword, traceTypeFilter]);
 
@@ -509,55 +510,19 @@ export default function TracePage() {
                   <RefreshCw className="h-4 w-4 mr-2" />
                   {tc('refresh')}
                 </Button>
-                <TableExportToolbar
-                  selectedCount={selectedIds.length}
-                  totalCount={sortedData.length}
-                  onSelectAll={() => setSelectedIds(sortedData.map((r) => r.id))}
-                  onDeselectAll={() => setSelectedIds([])}
-                  onPrint={() => {}}
-                  onExportPDF={() =>
-                    exportTableToPDF(
-                      sortedData,
-                      t('traceRecordsReport'),
-                      [
-                        { key: 'trace_no', header: t('traceNo') },
-                        { key: 'card_no', header: t('cardNo') },
-                        { key: 'work_order_no', header: tc('workOrderNo') },
-                        { key: 'product_code', header: t('productCode') },
-                        { key: 'trace_type', header: tc('type') },
-                        { key: 'operator_name', header: tc('operator') },
-                        { key: 'trace_time', header: t('traceTime') },
-                      ],
-                      t('traceRecordsReport')
-                    )
-                  }
-                  onExportXLS={() =>
-                    exportTableToXLS(sortedData, t('traceRecordsReport'), [
-                      { key: 'trace_no', header: t('traceNo') },
-                      { key: 'card_no', header: t('cardNo') },
-                      { key: 'work_order_no', header: tc('workOrderNo') },
-                      { key: 'product_code', header: t('productCode') },
-                      { key: 'trace_type', header: tc('type') },
-                      { key: 'operator_name', header: tc('operator') },
-                      { key: 'trace_time', header: t('traceTime') },
-                    ])
-                  }
-                  onExportWORD={() =>
-                    exportTableToWORD(
-                      sortedData,
-                      t('traceRecordsReport'),
-                      [
-                        { key: 'trace_no', header: t('traceNo') },
-                        { key: 'card_no', header: t('cardNo') },
-                        { key: 'work_order_no', header: tc('workOrderNo') },
-                        { key: 'product_code', header: t('productCode') },
-                        { key: 'trace_type', header: tc('type') },
-                        { key: 'operator_name', header: tc('operator') },
-                        { key: 'trace_time', header: t('traceTime') },
-                      ],
-                      t('traceRecordsReport')
-                    )
-                  }
+                <GlobalExportToolbar
+                  filename="追溯记录"
+                  title="追溯记录报告"
+                  columns={[
+                    { key: 'trace_no', label: t('traceNo'), width: 18 },
+                    { key: 'card_no', label: t('cardNo'), width: 15 },
+                    { key: 'work_order_no', label: tc('workOrderNo'), width: 15 },
+                    { key: 'product_code', label: t('productCode'), width: 15 },
+                    { key: 'trace_type', label: tc('type'), width: 12 },
+                    { key: 'operator_name', label: tc('operator'), width: 12 },
+                    { key: 'trace_time', label: t('traceTime'), width: 18 },
+                  ]}
+                  data={selectedIds.length > 0 ? sortedData.filter((r) => selectedIds.includes(r.id)) : sortedData}
                 />
               </div>
             </div>

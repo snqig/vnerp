@@ -30,7 +30,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
   ): Promise<void> {
     for (const event of events) {
       await conn.execute(
-        `INSERT INTO domain_event_outbox (event_type, aggregate_type, aggregate_id, payload, status, created_at)
+        `INSERT INTO domain_event_outbox (event_type, aggregate_type, aggregate_id, payload, status, create_time)
          VALUES (?, ?, ?, ?, 'pending', NOW())`,
         [event.eventType, aggregateType, aggregateId, JSON.stringify(event)]
       );
@@ -45,11 +45,11 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
   async fetchPendingEvents(limit: number = 50): Promise<EventOutboxRecord[]> {
     const rows: any[] = await query(
       `SELECT id, event_type, aggregate_type, aggregate_id, payload, status,
-              retry_count, error_message, next_execute_at, created_at, processed_at
+              retry_count, error_message, next_execute_at, create_time, processed_at
        FROM domain_event_outbox
        WHERE status = 'pending'
          AND (next_execute_at IS NULL OR next_execute_at <= NOW())
-       ORDER BY created_at ASC
+       ORDER BY create_time ASC
        LIMIT ?`,
       [limit]
     );
@@ -70,11 +70,11 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
 
       const [rows]: [any[], any] = await conn.query(
         `SELECT id, event_type, aggregate_type, aggregate_id, payload, status,
-                retry_count, error_message, next_execute_at, created_at, processed_at
+                retry_count, error_message, next_execute_at, create_time, processed_at
          FROM domain_event_outbox
          WHERE status = 'pending'
            AND (next_execute_at IS NULL OR next_execute_at <= NOW())
-         ORDER BY created_at ASC
+         ORDER BY create_time ASC
          LIMIT ?
          FOR UPDATE SKIP LOCKED`,
         [limit]
@@ -209,7 +209,7 @@ export class MysqlDomainEventOutboxRepository implements IDomainEventOutboxRepos
       retryCount: row.retry_count || 0,
       errorMessage: row.error_message,
       nextExecuteAt: row.next_execute_at ? new Date(row.next_execute_at) : null,
-      createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+      createdAt: row.create_time ? new Date(row.create_time) : new Date(),
       processedAt: row.processed_at ? new Date(row.processed_at) : null,
     };
   }

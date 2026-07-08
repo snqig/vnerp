@@ -66,6 +66,9 @@ import { useCompanyName } from '@/hooks/useCompanyName';
 import ApiClient from '@/lib/api-client';
 import { logger } from '@/lib/logger';
 import { mockPurchaseOrders, mockSuppliers, USE_MOCK } from '@/lib/mock-data';
+import { authFetch } from '@/lib/auth-fetch';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 interface PurchaseOrder {
   id: number;
@@ -134,18 +137,6 @@ const formatDate = (dateStr: string | null | undefined) => {
 };
 
 export default function PurchaseOrdersPage() {
-const authFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return fetch(url, { ...options, headers });
-};
-
   // 翻译钩子
   const t = useTranslations('Purchase');
   const tc = useTranslations('Common');
@@ -778,29 +769,37 @@ const authFetch = async (url: string, options: RequestInit = {}) => {
                     {tc('delete')}({selectedOrders.length})
                   </Button>
                 )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      <Download className="h-4 w-4 mr-2" />
-                      {tc('export')}
-                      <ChevronDown className="h-3 w-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                      <FileDown className="h-4 w-4 mr-2" />
-                      {t('exportToPDF')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExport('xls')}>
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      {t('exportToExcel')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExport('word')}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      {t('exportToWord')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <GlobalExportToolbar
+                  filename="采购订单"
+                  title="采购订单列表"
+                  landscape
+                  columns={[
+                    { key: 'po_no', label: t('poNo'), width: 18 },
+                    { key: 'supplier_name', label: t('supplier'), width: 20 },
+                    { key: 'order_date', label: t('orderDate'), width: 12, formatter: (v) => formatDate(v) },
+                    { key: 'delivery_date', label: t('expectedDelivery'), width: 12, formatter: (v) => formatDate(v) },
+                    { key: 'total_quantity', label: t('totalQty'), width: 10 },
+                    { key: 'grand_total', label: tc('amount'), width: 12, formatter: (_v, row) => Number(row.grand_total || row.total_amount || 0).toFixed(2) },
+                    {
+                      key: 'status',
+                      label: tc('status'),
+                      width: 10,
+                      formatter: (v) => {
+                        const m: Record<number, string> = {
+                          10: tc('draft'),
+                          20: tc('pending'),
+                          30: tc('approved'),
+                          40: t('partialReceived'),
+                          50: t('completed'),
+                          90: tc('closed'),
+                        };
+                        return m[v] || `${tc('unknown')}(${v})`;
+                      },
+                    },
+                    { key: 'remark', label: tc('remark'), width: 20 },
+                  ]}
+                  data={selectedOrders.length > 0 ? orders.filter((o) => selectedOrders.includes(o.id)) : sortedOrders}
+                />
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                   <DialogTrigger asChild>
                     <Button>

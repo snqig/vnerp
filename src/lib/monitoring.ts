@@ -51,7 +51,6 @@ class PerformanceTracer {
     span.status = status;
 
     if (span.duration > 1000) {
-      console.warn(`[TRACE] Slow operation: ${span.name} took ${span.duration.toFixed(2)}ms`);
     }
   }
 
@@ -283,9 +282,7 @@ export class AlertManager {
     }
 
     if (severity === 'critical') {
-      console.error(`[ALERT] [${type}] ${message}`);
     } else {
-      console.warn(`[ALERT] [${type}] ${message}`);
     }
   }
 

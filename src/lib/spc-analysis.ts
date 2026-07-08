@@ -349,15 +349,17 @@ export async function handleInspectionFailure(
   const unqualifiedNo = `NQ-${Date.now()}-${inspectionId}`;
   await conn.execute(
     `INSERT INTO qc_unqualified (
-      unqualified_no, inspection_id, material_id, batch_no,
-      unqualified_qty, unqualified_type, unqualified_reason,
-      status, create_time
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())`,
+      unqualified_no, inspection_id, material_id, material_code, material_name,
+      quantity, defect_type, defect_desc,
+      handle_status, handle_type, source_type, source_no,
+      handler, remark, create_time
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, NOW())`,
     [
       unqualifiedNo,
       inspectionId,
       inspection.material_id || null,
-      inspection.batch_no || null,
+      null,
+      null,
       inspection.unqualified_qty || 0,
       inspection.inspection_type === 1
         ? '来料不合格'
@@ -365,6 +367,11 @@ export async function handleInspectionFailure(
           ? '过程不合格'
           : '成品不合格',
       inspection.remark || `检验单 ${inspection.inspection_no} 检验不合格，由 ${operatorName} 确认`,
+      inspection.inspection_type === 1 ? 4 : inspection.inspection_type === 2 ? 1 : 2,
+      inspection.source_type || 'inspection',
+      inspection.source_no || inspection.inspection_no || null,
+      operatorName || null,
+      inspection.remark || null,
     ]
   );
 }

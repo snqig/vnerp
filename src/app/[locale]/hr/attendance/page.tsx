@@ -223,7 +223,6 @@ export default function AttendancePage() {
         );
       }
     } catch (error) {
-      console.error('Failed to fetch attendance records:', error);
     } finally {
       setIsLoading(false);
     }

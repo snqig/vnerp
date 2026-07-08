@@ -29,14 +29,12 @@ export async function GET(request: NextRequest) {
         completedToday = Number(rows[0].completed_today || 0);
       }
     } catch (e) {
-      console.error('orderStats failed:', e);
     }
 
     try {
       const rows: any = await query(`SELECT COUNT(*) as total FROM crm_customer WHERE deleted = 0`);
       if (Array.isArray(rows) && rows.length > 0) totalCustomers = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('customerStats failed:', e);
     }
 
     let inventoryAlert = 0;
@@ -48,7 +46,6 @@ export async function GET(request: NextRequest) {
       `);
       if (Array.isArray(rows) && rows.length > 0) inventoryAlert = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('inventoryAlert failed:', e);
     }
 
     let totalEmployees = 0;
@@ -58,7 +55,6 @@ export async function GET(request: NextRequest) {
       );
       if (Array.isArray(rows) && rows.length > 0) totalEmployees = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('employeeStats failed:', e);
     }
 
     let recentOrders: any[] = [];
@@ -72,7 +68,6 @@ export async function GET(request: NextRequest) {
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('recentOrders failed:', e);
     }
 
     const alerts: any[] = [];
@@ -111,7 +106,6 @@ export async function GET(request: NextRequest) {
           time: '刚刚',
         });
     } catch (e) {
-      console.error('alerts failed:', e);
     }
 
     let orderStats: any[] = [];
@@ -123,7 +117,6 @@ export async function GET(request: NextRequest) {
       `);
       orderStats = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('orderStatsChart failed:', e);
     }
 
     return NextResponse.json({
@@ -155,7 +148,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('获取仪表盘数据失败:', error);
     return NextResponse.json({ success: false, message: '获取仪表盘数据失败' }, { status: 500 });
   }
 }

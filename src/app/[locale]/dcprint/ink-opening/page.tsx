@@ -164,7 +164,6 @@ export default function InkOpeningPage() {
         setMaterials(data.data?.list || data.data || []);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 

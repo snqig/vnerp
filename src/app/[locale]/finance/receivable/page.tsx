@@ -32,6 +32,7 @@ import { Label } from '@/components/ui/label';
 import { Plus, Search, RefreshCw, DollarSign, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { authFetch } from '@/lib/auth-fetch';
 
 interface Receivable {
   id: number;
@@ -92,18 +93,6 @@ export default function ReceivablePage() {
   const [detailItem, setDetailItem] = useState<ReceivableDetail | null>(null);
   const [receiptForm, setReceiptForm] = useState({ amount: 0, receipt_date: '', remark: '' });
 
-  const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  }, []);
-
   const fetchData = useCallback(async () => {
     try {
       const params = new URLSearchParams({
@@ -136,7 +125,6 @@ export default function ReceivablePage() {
         setTotal(rawData?.total || list.length || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   }, [page, keyword, statusFilter]);
 

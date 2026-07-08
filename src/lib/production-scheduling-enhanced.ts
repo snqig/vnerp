@@ -1,88 +1,178 @@
+/**
+ * @module 生产排程增强模块
+ * @description 提供基于颜色工序依赖关系的生产排程功能，支持设备自动匹配、时间槽查找、优先级排序和甘特图数据生成。
+ *   排程算法按顺序为每个工单的每道颜色工序分配合适的设备，考虑设备类型匹配、可用时间槽、工序依赖关系和工单优先级。
+ */
+
 import { query, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { CalcParamService } from '@/lib/calc-param-service';
 
+/**
+ * 设备接口
+ * @description 表示一台生产设备的基本信息和工作能力
+ */
 export interface Equipment {
+  /** 设备 ID */
   id: number;
+  /** 设备编码 */
   equipment_code: string;
+  /** 设备名称 */
   equipment_name: string;
+  /** 设备类型 */
   equipment_type: string;
+  /** 所属车间 */
   workshop: string;
+  /** 每小时产能 */
   capacity_per_hour: number;
+  /** 设备当前状态 */
   status: string;
+  /** 最大颜色数 */
   max_colors: number;
+  /** 换线准备时间（分钟） */
   setup_time_minutes: number;
 }
 
+/**
+ * 颜色工序接口
+ * @description 表示生产工单中某一颜色/工艺的工序信息及各道工序之间的依赖关系
+ */
 export interface ColorSequence {
+  /** 工序序号 */
   seq_no: number;
+  /** 颜色名称 */
   color_name: string;
+  /** 网版 ID */
   screen_plate_id: number;
+  /** 油墨配方 ID */
   ink_formula_id: number;
+  /** 预估工时（小时） */
   estimated_duration_hours: number;
+  /** 所需设备类型 */
   equipment_type_required: string;
+  /** 依赖的前置工序序号，无依赖时为 undefined */
   depends_on_seq?: number;
 }
 
+/**
+ * 带颜色工序的工单接口
+ * @description 表示一个包含多道颜色工序的生产工单，用于排程计算
+ */
 export interface WorkOrderWithColors {
+  /** 工单 ID */
   id: number;
+  /** 工单编号 */
   work_order_no: string;
+  /** 产品 ID */
   product_id: number;
+  /** 产品名称 */
   product_name: string;
+  /** 计划生产数量 */
   plan_qty: number;
+  /** 颜色工序列表 */
   color_sequences: ColorSequence[];
+  /** 优先级：urgent > high > normal > low */
   priority: string;
+  /** 截止日期 */
   deadline: string;
 }
 
+/**
+ * 排程时间槽接口
+ * @description 表示某设备在某个时间段内的排程使用情况
+ */
 export interface ScheduleSlot {
+  /** 设备 ID */
   equipment_id: number;
+  /** 设备名称 */
   equipment_name: string;
+  /** 日期 */
   date: string;
+  /** 开始小时（0-23） */
   hour_start: number;
+  /** 结束小时（0-23） */
   hour_end: number;
+  /** 可用产能 */
   available_capacity: number;
+  /** 已排程的工单列表 */
   scheduled_orders: Array<{
+    /** 工单 ID */
     work_order_id: number;
+    /** 工单编号 */
     work_order_no: string;
+    /** 颜色工序序号 */
     color_seq_no: number;
+    /** 排程数量 */
     qty: number;
+    /** 开始时间（小时） */
     start_hour: number;
+    /** 结束时间（小时） */
     end_hour: number;
   }>;
 }
 
+/**
+ * 增强排程结果接口
+ * @description 表示单个工单的完整排程结果，包含每道工序的排程详情、整体时间范围和冲突信息
+ */
 export interface SchedulingResultEnhanced {
+  /** 工单 ID */
   work_order_id: number;
+  /** 工单编号 */
   work_order_no: string;
+  /** 颜色工序排程详情的数组 */
   color_sequences: Array<{
+    /** 工序序号 */
     seq_no: number;
+    /** 颜色名称 */
     color_name: string;
+    /** 分配的设别 ID */
     equipment_id: number;
+    /** 设备名称 */
     equipment_name: string;
+    /** 开始时间（ISO 8601） */
     start_time: string;
+    /** 结束时间（ISO 8601） */
     end_time: string;
+    /** 持续时长（小时） */
     duration_hours: number;
+    /** 排程状态 */
     status: 'scheduled' | 'conflict' | 'unscheduled';
   }>;
+  /** 整体开始时间（第一道已排程工序的开始时间） */
   overall_start: string;
+  /** 整体结束时间（最后一道已排程工序的结束时间） */
   overall_end: string;
+  /** 冲突列表 */
   conflicts: Array<{
+    /** 冲突工序序号 */
     seq_no: number;
+    /** 冲突原因 */
     reason: string;
   }>;
 }
 
-const WORKING_HOURS_PER_DAY = 8;
-const DAYS_AHEAD = 30;
+const WORKING_HOURS_PER_DAY_DEFAULT = 8;
+const DAYS_AHEAD_DEFAULT = 30;
 
+/**
+ * 获取可用设备列表
+ * @description 从数据库查询当前状态为可用（current_status = 1）的设备信息
+ * @param workshop - 可选，按车间筛选设备
+ * @returns 可用设备数组
+ * @throws 数据库查询异常
+ */
 export async function getAvailableEquipment(workshop?: string): Promise<Equipment[]> {
+  const defaultMaxColors = await CalcParamService.getInt('schedule.default_max_colors', 4);
+  const defaultSetupTime = await CalcParamService.getInt('schedule.default_setup_time_minutes', 30);
   let sql = `
     SELECT id, equipment_code, equipment_name, equipment_type, workshop,
-           rated_capacity as capacity_per_hour, current_status as status, 4 as max_colors, 30 as setup_time_minutes
+           rated_capacity as capacity_per_hour, current_status as status,
+           ? as max_colors, ? as setup_time_minutes
     FROM eqp_equipment
     WHERE current_status = 1
   `;
-  const params: any[] = [];
+  const params: any[] = [defaultMaxColors, defaultSetupTime];
   if (workshop) {
     sql += ' AND workshop = ?';
     params.push(workshop);
@@ -93,6 +183,13 @@ export async function getAvailableEquipment(workshop?: string): Promise<Equipmen
   return rows;
 }
 
+/**
+ * 获取工单的颜色工序列表
+ * @description 从数据库查询指定工单关联的颜色工序信息，按工序序号排序
+ * @param workOrderId - 工单 ID
+ * @returns 颜色工序数组，按 seq_no 升序排列
+ * @throws 数据库查询异常
+ */
 export async function getWorkOrderColorSequences(workOrderId: number): Promise<ColorSequence[]> {
   const rows: any = await query(
     `SELECT seq_no, color_name, screen_plate_id, ink_formula_id,
@@ -105,6 +202,25 @@ export async function getWorkOrderColorSequences(workOrderId: number): Promise<C
   return rows;
 }
 
+/**
+ * 按颜色依赖关系计算排程
+ * @description 排程算法核心：为工单的每道颜色工序依次分配合适的设备。
+ *   算法流程：
+ *   1. 按颜色工序序号遍历；
+ *   2. 筛选匹配工序所需设备类型的可用设备；
+ *   3. 若无匹配设备，标记为 conflict；
+ *   4. 若工序有依赖的前序工序，从前序结束时间开始；
+ *   5. 计算实际工期（基于工单数量和设备产能）；
+ *   6. 在适配设备中搜索最早可用时间槽；
+ *   7. 将新排程位置加入已存在排程列表避免重叠；
+ *   8. 记录每道工序的排程结果和冲突信息。
+ *
+ * @param workOrder - 待排程的工单（包含颜色工序信息）
+ * @param equipmentList - 可用设备列表
+ * @param existingSchedules - 已有排程记录，用于避免时间冲突
+ * @param startDate - 排程起始日期，默认为当前日期
+ * @returns 排程结果，包含每道工序的状态、时间安排和冲突
+ */
 export function calculateScheduleWithColorDependencies(
   workOrder: WorkOrderWithColors,
   equipmentList: Equipment[],
@@ -260,6 +376,17 @@ export function calculateScheduleWithColorDependencies(
   return result;
 }
 
+/**
+ * 查找设备的最早可用时间槽
+ * @description 在指定日期范围内搜索设备上连续可用且时长满足要求的时间段。
+ *   工作时段和搜索范围由 sys_calc_param 配置（默认 8:00-16:00，搜索 30 天）。
+ * @param equipment - 目标设备
+ * @param existingSchedules - 已有排程记录
+ * @param afterTime - 搜索起始时间
+ * @param durationHours - 需要的连续时长（小时）
+ * @returns 找到的时间槽起止时间，未找到返回 null
+ * @private
+ */
 function findEarliestSlot(
   equipment: Equipment,
   existingSchedules: ScheduleSlot[],
@@ -267,7 +394,7 @@ function findEarliestSlot(
   durationHours: number
 ): { start: Date; end: Date } | null {
   const candidateStart = new Date(afterTime);
-  const maxSearchDays = DAYS_AHEAD;
+  const maxSearchDays = CalcParamService.getCachedInt('schedule.search_days_ahead', DAYS_AHEAD_DEFAULT);
 
   for (let day = 0; day < maxSearchDays; day++) {
     const dateStr = candidateStart.toISOString().split('T')[0];
@@ -275,8 +402,8 @@ function findEarliestSlot(
       (s) => s.equipment_id === equipment.id && s.date === dateStr
     );
 
-    const workStart = 8;
-    const workEnd = 8 + WORKING_HOURS_PER_DAY;
+    const workStart = CalcParamService.getCachedInt('schedule.work_start_hour', 8);
+    const workEnd = workStart + CalcParamService.getCachedInt('schedule.working_hours_per_day', WORKING_HOURS_PER_DAY_DEFAULT);
 
     for (
       let hour = Math.max(workStart, candidateStart.getHours());
@@ -306,6 +433,22 @@ function findEarliestSlot(
   return null;
 }
 
+/**
+ * 批量自动排程工单
+ * @description 为多个工单批量执行排程计算。处理流程：
+ *   1. 获取所有可用设备；
+ *   2. 逐个加载工单信息及颜色工序；
+ *   3. 无颜色工序的工单自动添加默认工序；
+ *   4. 按优先级（urgent > high > normal > low）和截止日期排序；
+ *   5. 依次为每个工单调用 calculateScheduleWithColorDependencies 进行排程。
+ *
+ * @param workOrderIds - 待排程的工单 ID 数组
+ * @param options - 排程选项
+ * @param options.startDate - 排程起始日期（ISO 字符串），默认为当前日期
+ * @param options.respectDeadline - 是否按截止日期排序，默认为 true
+ * @param options.priorityWeight - 优先级权重（预留参数）
+ * @returns 所有工单的排程结果数组
+ */
 export async function autoScheduleWorkOrders(
   workOrderIds: number[],
   options?: {
@@ -388,6 +531,15 @@ export async function autoScheduleWorkOrders(
   return results;
 }
 
+/**
+ * 保存排程结果到数据库
+ * @description 在事务中批量保存排程结果：
+ *   1. 将已排程的工序写入 prd_schedule_detail 表（使用 UPSERT 处理重复键）；
+ *   2. 更新工单状态为 'producing'。
+ *
+ * @param result - 排程结果
+ * @returns 保存成功返回 true，失败时记录错误日志并返回 false
+ */
 export async function saveScheduleResult(result: SchedulingResultEnhanced): Promise<boolean> {
   try {
     await transaction(async (conn) => {
@@ -430,6 +582,22 @@ export async function saveScheduleResult(result: SchedulingResultEnhanced): Prom
   }
 }
 
+/**
+ * 生成甘特图数据
+ * @description 将排程结果转换为前端甘特图可视化所需的数据格式。
+ *   将每条工序的起止时间转换为相对于日期范围起点的偏移天数和持续天数。
+ *
+ * @param results - 排程结果数组
+ * @param dateRange - 甘特图显示的时间范围
+ * @param dateRange.start - 起始日期
+ * @param dateRange.end - 结束日期
+ * @returns 甘特图数据结构，每条工单包含产品名称和工序时间列表
+ * @example
+ * const ganttData = generateGanttData(scheduleResults, {
+ *   start: new Date('2026-07-01'),
+ *   end: new Date('2026-07-31')
+ * });
+ */
 export function generateGanttData(
   results: SchedulingResultEnhanced[],
   dateRange: { start: Date; end: Date }

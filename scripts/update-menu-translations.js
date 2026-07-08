@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
 
@@ -7,7 +7,7 @@ async function main() {
     host: '127.0.0.1',
     port: 3306,
     user: 'root',
-    password: 'Snqig521223',
+    password: process.env.DB_PASSWORD || '',
     database: 'vnerpdacahng',
     charset: 'utf8mb4',
   });

@@ -278,7 +278,6 @@ export default function WorkOrderPage() {
         setSalesOrders(data.data?.list || (Array.isArray(data.data) ? data.data : []));
       }
     } catch (error) {
-      console.error('Failed to fetch sales orders:', error);
     }
   }, []);
 
@@ -290,7 +289,6 @@ export default function WorkOrderPage() {
         setBomList(data.data?.list || (Array.isArray(data.data) ? data.data : []));
       }
     } catch (error) {
-      console.error('Failed to fetch BOM list:', error);
     }
   }, []);
 

@@ -1,5 +1,22 @@
 import { query, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import type { RowDataPacket } from 'mysql2';
+
+/** 库存行（仅查询所需字段） */
+interface InventoryQtyRow {
+  quantity: string | number;
+  material_name?: string;
+}
+
+/** 库存流水行 */
+interface InventoryLogRow {
+  id: number;
+  material_id: number;
+  warehouse_id: number;
+  batch_no: string | null;
+  operation_type: number;
+  operation_qty: string | number;
+}
 
 export class InventoryValidationService {
   static async checkStock(
@@ -7,7 +24,7 @@ export class InventoryValidationService {
     warehouseId: number,
     requiredQty: number
   ): Promise<{ sufficient: boolean; available: number; message?: string }> {
-    const rows: any = await query(
+    const rows = await query<InventoryQtyRow>(
       'SELECT quantity, material_name FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0',
       [materialId, warehouseId]
     );
@@ -20,7 +37,7 @@ export class InventoryValidationService {
       };
     }
 
-    const available = parseFloat(rows[0].quantity);
+    const available = parseFloat(String(rows[0].quantity));
     const materialName = rows[0].material_name || `物料${materialId}`;
 
     if (available < requiredQty) {
@@ -40,7 +57,7 @@ export class InventoryValidationService {
     batchNo: string,
     requiredQty: number
   ): Promise<{ sufficient: boolean; available: number; message?: string }> {
-    const rows: any = await query(
+    const rows = await query<{ available_qty: string | number; material_name?: string }>(
       'SELECT available_qty, material_name FROM inv_inventory_batch WHERE batch_no = ? AND material_id = ? AND warehouse_id = ? AND deleted = 0',
       [batchNo, materialId, warehouseId]
     );
@@ -53,7 +70,7 @@ export class InventoryValidationService {
       };
     }
 
-    const available = parseFloat(rows[0].available_qty);
+    const available = parseFloat(String(rows[0].available_qty));
     const materialName = rows[0].material_name || `物料${materialId}`;
 
     if (available < requiredQty) {
@@ -122,11 +139,11 @@ export class InventoryValidationService {
     }
 
     await transaction(async (conn) => {
-      const [invRows]: any = await conn.execute(
+      const [invRows] = await conn.execute<RowDataPacket[]>(
         'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
         [params.materialId, params.warehouseId]
       );
-      const beforeQty = invRows.length > 0 ? parseFloat(invRows[0].quantity) : 0;
+      const beforeQty = invRows.length > 0 ? parseFloat(String(invRows[0].quantity)) : 0;
       const absQty = Math.abs(params.quantity);
       const signedQty = this.isStockOutType(operationType)
         ? -absQty
@@ -166,7 +183,7 @@ export class InventoryValidationService {
 
   static async reverseTransaction(originalTransNo: string, operatorId?: number): Promise<void> {
     await transaction(async (conn) => {
-      const [rows]: any = await conn.execute(
+      const [rows] = await conn.execute<RowDataPacket[]>(
         'SELECT id, material_id, warehouse_id, batch_no, operation_type, operation_qty FROM inv_inventory_log WHERE business_no = ? ORDER BY id DESC LIMIT 1',
         [originalTransNo]
       );
@@ -175,19 +192,19 @@ export class InventoryValidationService {
         throw new Error(`流水${originalTransNo}不存在`);
       }
 
-      const original = rows[0];
+      const original = rows[0] as unknown as InventoryLogRow;
       const reverseType = this.isStockInType(original.operation_type)
         ? 2
         : this.isStockOutType(original.operation_type)
           ? 1
           : original.operation_type;
 
-      const [invRows]: any = await conn.execute(
+      const [invRows] = await conn.execute<RowDataPacket[]>(
         'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
         [original.material_id, original.warehouse_id]
       );
-      const beforeQty = invRows.length > 0 ? parseFloat(invRows[0].quantity) : 0;
-      const absQty = Math.abs(parseFloat(original.operation_qty));
+      const beforeQty = invRows.length > 0 ? parseFloat(String(invRows[0].quantity)) : 0;
+      const absQty = Math.abs(parseFloat(String(original.operation_qty)));
       const signedQty = this.isStockOutType(reverseType)
         ? -absQty
         : this.isStockInType(reverseType)

@@ -752,7 +752,6 @@ function StandardCardInputContent() {
           setCustomerList(formattedCustomers);
         }
       } catch (error) {
-        console.error('加载客户列表失败:', error);
       }
     };
     fetchCustomers();
@@ -767,7 +766,6 @@ function StandardCardInputContent() {
           setMaterialList(result.data?.list || result.data || []);
         }
       } catch (error) {
-        console.error('加载材料列表失败:', error);
       }
     };
     const fetchInks = async () => {
@@ -778,7 +776,6 @@ function StandardCardInputContent() {
           setInkList(result.data?.list || result.data || []);
         }
       } catch (error) {
-        console.error('加载油墨列表失败:', error);
       }
     };
     const fetchScreenPlates = async () => {
@@ -789,7 +786,6 @@ function StandardCardInputContent() {
           setScreenPlateList(result.data?.list || result.data || []);
         }
       } catch (error) {
-        console.error('加载网版列表失败:', error);
       }
     };
     const fetchDies = async () => {
@@ -800,7 +796,6 @@ function StandardCardInputContent() {
           setDieList(result.data?.list || result.data || []);
         }
       } catch (error) {
-        console.error('加载刀模列表失败:', error);
       }
     };
     const fetchEmployees = async () => {
@@ -811,7 +806,6 @@ function StandardCardInputContent() {
           setEmployeeList(result.data?.list || result.data || []);
         }
       } catch (error) {
-        console.error('加载员工列表失败:', error);
       }
     };
     fetchMaterials();
@@ -917,7 +911,6 @@ function StandardCardInputContent() {
         });
       }
     } catch (error) {
-      console.error('加载标准卡数据失败:', error);
       toast({ title: '加载数据失败', variant: 'destructive' });
     }
   };
@@ -1035,7 +1028,6 @@ function StandardCardInputContent() {
         return null;
       }
     } catch (error) {
-      console.error('保存失败:', error);
       toast({ title: '保存失败，请检查网络连接', variant: 'destructive' });
       return null;
     } finally {

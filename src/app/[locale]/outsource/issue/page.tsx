@@ -43,6 +43,8 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 interface OutsourceIssue {
   id: number;
@@ -128,7 +130,6 @@ export default function OutsourceIssuePage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -138,7 +139,6 @@ export default function OutsourceIssuePage() {
       const result = await res.json();
       if (result.success) setOutsourceOrders(result.data?.list || []);
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -148,7 +148,6 @@ export default function OutsourceIssuePage() {
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -158,7 +157,6 @@ export default function OutsourceIssuePage() {
       const result = await res.json();
       if (result.success) setMaterials(result.data?.list || result.data || []);
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -272,19 +270,19 @@ export default function OutsourceIssuePage() {
                 <Search className="h-3 w-3" />
               </Button>
             </div>
-            <TableExportToolbar
-              selectedCount={selectedIds.size}
-              totalCount={list.length}
-              onSelectAll={() => setSelectedIds(new Set(list.map((i) => i.id)))}
-              onDeselectAll={() => setSelectedIds(new Set())}
-              onPrint={() => printTable(getExportData(), exportColumns, t('issue'))}
-              onExportPDF={() =>
-                exportTableToPDF(getExportData(), t('issue'), exportColumns, t('issue'))
-              }
-              onExportXLS={() => exportTableToXLS(getExportData(), t('issue'), exportColumns)}
-              onExportWORD={() =>
-                exportTableToWORD(getExportData(), t('issue'), exportColumns, t('issue'))
-              }
+            <GlobalExportToolbar
+              filename="外协发料"
+              title="外协发料"
+              columns={[
+                { key: 'issue_no', label: t('issueNo'), width: 18 },
+                { key: 'outsource_order_no', label: t('orderNo'), width: 15, formatter: (v) => v || '-' },
+                { key: 'warehouse_name', label: tc('warehouse'), width: 12, formatter: (v) => v || '-' },
+                { key: 'issue_date', label: t('issueDate'), width: 12, formatter: (v) => v || '-' },
+                { key: 'items', label: t('issueDetail'), width: 30, formatter: (_v, row) => (row.items || []).map((i: any) => `${i.material_name || '-'}×${i.quantity}`).join(', ') || '-' },
+                { key: 'operator_name', label: t('operatorName'), width: 12, formatter: (v) => v || '-' },
+                { key: 'status', label: tc('status'), width: 10, formatter: (v) => statusMap[v]?.label || '-' },
+              ]}
+              data={selectedIds.size > 0 ? list.filter((i) => selectedIds.has(i.id)) : list}
             />
             <Button
               size="sm"

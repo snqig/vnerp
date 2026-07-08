@@ -135,7 +135,6 @@ export default function ScreenPlatePage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -151,7 +150,6 @@ export default function ScreenPlatePage() {
         setHistoryList(result.data || []);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 

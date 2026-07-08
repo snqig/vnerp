@@ -91,7 +91,6 @@ export default function BatchPage() {
         setTotal(result.data?.total || 0);
       }
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -113,7 +112,6 @@ export default function BatchPage() {
         if (matResult.success) setMaterials(matResult.data?.list || []);
         if (whResult.success) setWarehouses(whResult.data?.list || whResult.data || []);
       } catch (e) {
-        console.error(e);
       }
     };
     loadOptions();

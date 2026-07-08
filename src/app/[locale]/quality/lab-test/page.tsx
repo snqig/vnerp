@@ -40,6 +40,8 @@ import {
   exportTableToPDF,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
 
@@ -121,7 +123,6 @@ export default function LabTestPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -206,52 +207,18 @@ export default function LabTestPage() {
                 <Plus className="h-4 w-4 mr-2" />
                 {t('newTest')}
               </Button>
-              <TableExportToolbar
-                selectedCount={selectedIds.length}
-                totalCount={sortedData.length}
-                onSelectAll={() => setSelectedIds(sortedData.filter((i) => i.id).map((i) => i.id!))}
-                onDeselectAll={() => setSelectedIds([])}
-                onPrint={() => {}}
-                onExportPDF={() =>
-                  exportTableToPDF(
-                    sortedData,
-                    t('labTestReport'),
-                    [
-                      { key: 'test_no', header: t('testNo') },
-                      { key: 'product_name', header: tc('productName') },
-                      { key: 'batch_no', header: tc('batchNo') },
-                      { key: 'test_type', header: t('testType') },
-                      { key: 'conclusion', header: t('conclusion') },
-                      { key: 'status', header: tc('status') },
-                    ],
-                    t('labTestReport')
-                  )
-                }
-                onExportXLS={() =>
-                  exportTableToXLS(sortedData, t('labTestReport'), [
-                    { key: 'test_no', header: t('testNo') },
-                    { key: 'product_name', header: tc('productName') },
-                    { key: 'batch_no', header: tc('batchNo') },
-                    { key: 'test_type', header: t('testType') },
-                    { key: 'conclusion', header: t('conclusion') },
-                    { key: 'status', header: tc('status') },
-                  ])
-                }
-                onExportWORD={() =>
-                  exportTableToWORD(
-                    sortedData,
-                    t('labTestReport'),
-                    [
-                      { key: 'test_no', header: t('testNo') },
-                      { key: 'product_name', header: tc('productName') },
-                      { key: 'batch_no', header: tc('batchNo') },
-                      { key: 'test_type', header: t('testType') },
-                      { key: 'conclusion', header: t('conclusion') },
-                      { key: 'status', header: tc('status') },
-                    ],
-                    t('labTestReport')
-                  )
-                }
+              <GlobalExportToolbar
+                filename="实验室检验报告"
+                title="实验室检验报告"
+                columns={[
+                  { key: 'test_no', label: t('testNo'), width: 18 },
+                  { key: 'product_name', label: tc('productName'), width: 20 },
+                  { key: 'batch_no', label: tc('batchNo'), width: 15 },
+                  { key: 'test_type', label: t('testType'), width: 12 },
+                  { key: 'conclusion', label: t('conclusion'), width: 12 },
+                  { key: 'status', label: tc('status'), width: 12 },
+                ]}
+                data={selectedIds.length > 0 ? sortedData.filter((i) => i.id && selectedIds.includes(i.id)) : sortedData}
               />
             </div>
 

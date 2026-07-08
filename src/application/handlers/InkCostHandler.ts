@@ -56,8 +56,16 @@ export class InkCostHandler implements EventHandler<WorkOrderCompletedEvent> {
   ): Promise<InkCostCalculationResult> {
     const inkUsages: InkUsageRecord[] = [];
 
-    const usageRows: any[] = (await query(
-      `SELECT 
+    const usageRows = await query<{
+      inkId: number;
+      inkCode: string | null;
+      inkName: string | null;
+      colorName: string | null;
+      usageQty: string | number;
+      unitPrice: string | number | null;
+      supplier_id: number | null;
+    }>(
+      `SELECT
         iu.ink_id as inkId,
         bi.ink_code as inkCode,
         bi.ink_name as inkName,
@@ -70,19 +78,19 @@ export class InkCostHandler implements EventHandler<WorkOrderCompletedEvent> {
        WHERE iu.work_order_id = ?
        AND iu.deleted = 0`,
       [workOrderId]
-    )) as any[];
+    );
 
     let totalInkCost = 0;
 
     for (const row of usageRows) {
-      const usageQty = parseFloat(row.usageQty || 0);
-      const unitPrice = parseFloat(row.unitPrice || 0);
+      const usageQty = parseFloat(String(row.usageQty || 0));
+      const unitPrice = parseFloat(String(row.unitPrice || 0));
       const totalCost = usageQty * unitPrice;
 
       inkUsages.push({
         inkId: row.inkId,
-        inkCode: row.inkCode,
-        inkName: row.inkName,
+        inkCode: row.inkCode ?? '',
+        inkName: row.inkName ?? '',
         colorName: row.colorName || '',
         usageQty,
         unitPrice,
@@ -110,8 +118,12 @@ export class InkCostHandler implements EventHandler<WorkOrderCompletedEvent> {
 
   private async calculateInkCostFromFormula(workOrderId: number): Promise<number> {
     // 从工艺配方计算标准油墨成本
-    const formulaRows: any[] = (await query(
-      `SELECT 
+    const formulaRows = await query<{
+      planned_qty: string | number;
+      quantity_per_piece: string | number;
+      unit_price: string | number;
+    }>(
+      `SELECT
         wo.planned_qty,
         wf.quantity_per_piece,
         bi.unit_price
@@ -124,13 +136,13 @@ export class InkCostHandler implements EventHandler<WorkOrderCompletedEvent> {
        WHERE wo.id = ?
        LIMIT 1`,
       [workOrderId]
-    )) as any[];
+    );
 
     if (formulaRows.length > 0) {
       const row = formulaRows[0];
-      const plannedQty = parseFloat(row.planned_qty || 0);
-      const qtyPerPiece = parseFloat(row.quantity_per_piece || 0);
-      const unitPrice = parseFloat(row.unit_price || 0);
+      const plannedQty = parseFloat(String(row.planned_qty || 0));
+      const qtyPerPiece = parseFloat(String(row.quantity_per_piece || 0));
+      const unitPrice = parseFloat(String(row.unit_price || 0));
 
       return plannedQty * qtyPerPiece * unitPrice;
     }

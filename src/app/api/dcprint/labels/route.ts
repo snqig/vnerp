@@ -1,4 +1,5 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
+import { escapeId } from 'mysql2';
 import { query, execute, queryOne } from '@/lib/db';
 import {
   successResponse,
@@ -252,34 +253,34 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   const updateFields: string[] = [];
   const params: any[] = [];
 
-  const fields = [
-    'qrCode',
-    'purchaseOrderNo',
-    'supplierName',
-    'receiveDate',
-    'materialCode',
-    'materialName',
-    'specification',
-    'unit',
-    'batchNo',
-    'quantity',
-    'packageQty',
-    'width',
-    'lengthPerRoll',
-    'remark',
-    'colorCode',
-    'mixRemark',
-    'warehouseId',
-    'locationId',
-    'isMainMaterial',
-    'isUsed',
-    'isCut',
-    'status',
-  ];
+  const fieldColumnMap: Record<string, string> = {
+    qrCode: 'qr_code',
+    purchaseOrderNo: 'purchase_order_no',
+    supplierName: 'supplier_name',
+    receiveDate: 'receive_date',
+    materialCode: 'material_code',
+    materialName: 'material_name',
+    specification: 'specification',
+    unit: 'unit',
+    batchNo: 'batch_no',
+    quantity: 'quantity',
+    packageQty: 'package_qty',
+    width: 'width',
+    lengthPerRoll: 'length_per_roll',
+    remark: 'remark',
+    colorCode: 'color_code',
+    mixRemark: 'mix_remark',
+    warehouseId: 'warehouse_id',
+    locationId: 'location_id',
+    isMainMaterial: 'is_main_material',
+    isUsed: 'is_used',
+    isCut: 'is_cut',
+    status: 'status',
+  };
 
-  fields.forEach((field) => {
+  Object.entries(fieldColumnMap).forEach(([field, column]) => {
     if (body[field] !== undefined) {
-      updateFields.push(`${snakeCase(field)} = ?`);
+      updateFields.push(`${escapeId(column)} = ?`);
       params.push(body[field]);
     }
   });
@@ -312,11 +313,6 @@ export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
   return successResponse(null, '物料标签删除成功');
 }, { logTitle: '删除物料标签', logType: 'business' });
 
-// 辅助函数：驼峰转蛇形
-function snakeCase(str: string): string {
-  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-}
-
 // 辅助函数：分页查询
 async function queryPaginated<T>(
   sql: string,
@@ -329,7 +325,7 @@ async function queryPaginated<T>(
 
   try {
     const [data, countResult] = await Promise.all([
-      query<T[]>(`${sql} LIMIT ${pageSize} OFFSET ${offset}`, params),
+      query<T[]>(`${sql} LIMIT ? OFFSET ?`, [...params, pageSize, offset]),
       queryOne<{ total: number }>(countSql, params),
     ]);
 
@@ -342,7 +338,6 @@ async function queryPaginated<T>(
       },
     };
   } catch (error) {
-    console.error('分页查询失败:', error);
     return {
       list: [],
       pagination: {

@@ -5,7 +5,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { query, execute } from '@/lib/db';
+import { query, execute, type SqlValue } from '@/lib/db';
 import { maskSensitiveData } from '@/lib/logger';
 
 // ============================================================
@@ -17,12 +17,12 @@ export interface AuditLogEntry {
   type: string;
   title?: string;
   content?: string;
-  beforeData?: Record<string, any> | null;
-  afterData?: Record<string, any> | null;
+  beforeData?: unknown;
+  afterData?: unknown;
   requestUrl?: string;
   requestMethod?: string;
-  requestParam?: Record<string, any> | null;
-  responseResult?: Record<string, any> | null;
+  requestParam?: unknown;
+  responseResult?: unknown;
   status?: number;
   errorMsg?: string;
   durationMs?: number;
@@ -102,7 +102,7 @@ export interface DocumentCancelEntry {
   cancelStatus?: string;
   cancelBy?: string;
   cancelById?: number;
-  snapshotData?: Record<string, any>;
+  snapshotData?: Record<string, unknown>;
 }
 
 // ============================================================
@@ -154,7 +154,7 @@ function getUserAgent(request?: NextRequest): string {
   return request.headers.get('user-agent') || 'unknown';
 }
 
-function safeJsonStringify(data: any): string | null {
+function safeJsonStringify(data: unknown): string | null {
   if (data === null || data === undefined) return null;
   try {
     return JSON.stringify(maskSensitiveData(data));
@@ -213,8 +213,7 @@ export async function logOperation(entry: AuditLogEntry, request?: NextRequest):
         entry.durationMs || 0,
       ]
     );
-  } catch (error: any) {
-    console.error('[AuditLogger] 操作日志记录失败:', error.message);
+  } catch {
   }
 }
 
@@ -264,8 +263,7 @@ export async function logLogin(
     if (status === 0) {
       await checkAbnormalLogin(username, ip, errorMsg || '登录失败');
     }
-  } catch (error: any) {
-    console.error('[AuditLogger] 登录日志记录失败:', error.message);
+  } catch {
   }
 }
 
@@ -279,10 +277,10 @@ async function checkAbnormalLogin(
 ): Promise<void> {
   try {
     // 检查最近30分钟内该用户的失败次数
-    const rows: any = await query(
-      `SELECT COUNT(*) as fail_count 
-       FROM sys_login_log 
-       WHERE username = ? AND status = 0 
+    const rows = await query<{ fail_count: number }>(
+      `SELECT COUNT(*) as fail_count
+       FROM sys_login_log
+       WHERE username = ? AND status = 0
        AND create_time > DATE_SUB(NOW(), INTERVAL 30 MINUTE)`,
       [username]
     );
@@ -306,9 +304,9 @@ async function checkAbnormalLogin(
     }
 
     // 检查异地登录（简化版：与前一次成功登录IP对比）
-    const lastLogin: any = await query(
-      `SELECT ip FROM sys_login_log 
-       WHERE username = ? AND status = 1 
+    const lastLogin = await query<{ ip: string }>(
+      `SELECT ip FROM sys_login_log
+       WHERE username = ? AND status = 1
        ORDER BY create_time DESC LIMIT 1`,
       [username]
     );
@@ -321,8 +319,7 @@ async function checkAbnormalLogin(
         [username, ip, 'location_change', 1, `异地登录: 上次IP ${lastLogin[0].ip}, 本次IP ${ip}`]
       );
     }
-  } catch (error: any) {
-    console.error('[AuditLogger] 异常登录检查失败:', error.message);
+  } catch {
   }
 }
 
@@ -367,8 +364,7 @@ export async function logStockFlow(entry: StockFlowEntry): Promise<void> {
         entry.remark || '',
       ]
     );
-  } catch (error: any) {
-    console.error('[AuditLogger] 库存流水记录失败:', error.message);
+  } catch {
   }
 }
 
@@ -413,8 +409,7 @@ export async function logFinanceFlow(entry: FinanceFlowEntry): Promise<void> {
         entry.remark || '',
       ]
     );
-  } catch (error: any) {
-    console.error('[AuditLogger] 财务流水记录失败:', error.message);
+  } catch {
   }
 }
 
@@ -446,8 +441,7 @@ export async function logDataChange(entry: DataChangeEntry): Promise<void> {
         entry.ip || user.ip || '',
       ]
     );
-  } catch (error: any) {
-    console.error('[AuditLogger] 数据变更记录失败:', error.message);
+  } catch {
   }
 }
 
@@ -487,8 +481,7 @@ export async function logDocumentCancel(entry: DocumentCancelEntry): Promise<voi
       beforeData: entry.snapshotData,
       status: 1,
     });
-  } catch (error: any) {
-    console.error('[AuditLogger] 单据作废记录失败:', error.message);
+  } catch {
   }
 }
 
@@ -510,8 +503,8 @@ export async function logObjectChanges(
   tableName: string,
   recordId: number,
   recordNo: string,
-  oldData: Record<string, any>,
-  newData: Record<string, any>,
+  oldData: Record<string, unknown>,
+  newData: Record<string, unknown>,
   module: string,
   fieldsMapping?: Record<string, string>
 ): Promise<void> {
@@ -633,8 +626,7 @@ export async function logInventoryChange(params: {
       createById: user.userId || params.operatorId || 0,
       remark: `${params.operationType}: ${params.quantity}`,
     });
-  } catch (error: any) {
-    console.error('[AuditLogger] 库存变更记录失败:', error.message);
+  } catch {
   }
 }
 
@@ -646,7 +638,7 @@ export async function logDeleteAction(
   documentType: string,
   recordId: number,
   recordNo: string,
-  snapshotData: Record<string, any>,
+  snapshotData: Record<string, unknown>,
   request?: NextRequest
 ): Promise<void> {
   await logOperation(
@@ -679,11 +671,11 @@ export async function queryOperateLogs(params: {
   endTime?: string;
   page?: number;
   pageSize?: number;
-}): Promise<{ list: any[]; total: number }> {
+}): Promise<{ list: Record<string, unknown>[]; total: number }> {
   const { module, type, username, status, startTime, endTime, page = 1, pageSize = 20 } = params;
 
   let where = 'WHERE 1=1';
-  const queryParams: any[] = [];
+  const queryParams: SqlValue[] = [];
 
   if (module) {
     where += ' AND module = ?';
@@ -710,14 +702,14 @@ export async function queryOperateLogs(params: {
     queryParams.push(endTime);
   }
 
-  const countRows: any = await query(
+  const countRows = await query<{ total: number }>(
     `SELECT COUNT(*) as total FROM sys_operate_log ${where}`,
     queryParams
   );
   const total = countRows[0]?.total || 0;
 
-  const list: any = await query(
-    `SELECT * FROM sys_operate_log ${where} 
+  const list = await query<Record<string, unknown>>(
+    `SELECT * FROM sys_operate_log ${where}
      ORDER BY create_time DESC LIMIT ? OFFSET ?`,
     [...queryParams, pageSize, (page - 1) * pageSize]
   );
@@ -735,11 +727,11 @@ export async function queryLoginLogs(params: {
   endTime?: string;
   page?: number;
   pageSize?: number;
-}): Promise<{ list: any[]; total: number }> {
+}): Promise<{ list: Record<string, unknown>[]; total: number }> {
   const { username, status, startTime, endTime, page = 1, pageSize = 20 } = params;
 
   let where = 'WHERE 1=1';
-  const queryParams: any[] = [];
+  const queryParams: SqlValue[] = [];
 
   if (username) {
     where += ' AND username = ?';
@@ -758,14 +750,14 @@ export async function queryLoginLogs(params: {
     queryParams.push(endTime);
   }
 
-  const countRows: any = await query(
+  const countRows = await query<{ total: number }>(
     `SELECT COUNT(*) as total FROM sys_login_log ${where}`,
     queryParams
   );
   const total = countRows[0]?.total || 0;
 
-  const list: any = await query(
-    `SELECT * FROM sys_login_log ${where} 
+  const list = await query<Record<string, unknown>>(
+    `SELECT * FROM sys_login_log ${where}
      ORDER BY create_time DESC LIMIT ? OFFSET ?`,
     [...queryParams, pageSize, (page - 1) * pageSize]
   );
@@ -786,7 +778,7 @@ export async function queryStockFlows(params: {
   endTime?: string;
   page?: number;
   pageSize?: number;
-}): Promise<{ list: any[]; total: number }> {
+}): Promise<{ list: Record<string, unknown>[]; total: number }> {
   const {
     businessType,
     warehouseId,
@@ -800,7 +792,7 @@ export async function queryStockFlows(params: {
   } = params;
 
   let where = 'WHERE 1=1';
-  const queryParams: any[] = [];
+  const queryParams: SqlValue[] = [];
 
   if (businessType) {
     where += ' AND business_type = ?';
@@ -831,14 +823,14 @@ export async function queryStockFlows(params: {
     queryParams.push(endTime);
   }
 
-  const countRows: any = await query(
+  const countRows = await query<{ total: number }>(
     `SELECT COUNT(*) as total FROM stock_flow ${where}`,
     queryParams
   );
   const total = countRows[0]?.total || 0;
 
-  const list: any = await query(
-    `SELECT * FROM stock_flow ${where} 
+  const list = await query<Record<string, unknown>>(
+    `SELECT * FROM stock_flow ${where}
      ORDER BY create_time DESC LIMIT ? OFFSET ?`,
     [...queryParams, pageSize, (page - 1) * pageSize]
   );
@@ -859,7 +851,7 @@ export async function queryFinanceFlows(params: {
   endTime?: string;
   page?: number;
   pageSize?: number;
-}): Promise<{ list: any[]; total: number }> {
+}): Promise<{ list: Record<string, unknown>[]; total: number }> {
   const {
     type,
     customerId,
@@ -873,7 +865,7 @@ export async function queryFinanceFlows(params: {
   } = params;
 
   let where = 'WHERE 1=1';
-  const queryParams: any[] = [];
+  const queryParams: SqlValue[] = [];
 
   if (type) {
     where += ' AND type = ?';
@@ -904,14 +896,14 @@ export async function queryFinanceFlows(params: {
     queryParams.push(endTime);
   }
 
-  const countRows: any = await query(
+  const countRows = await query<{ total: number }>(
     `SELECT COUNT(*) as total FROM finance_flow ${where}`,
     queryParams
   );
   const total = countRows[0]?.total || 0;
 
-  const list: any = await query(
-    `SELECT * FROM finance_flow ${where} 
+  const list = await query<Record<string, unknown>>(
+    `SELECT * FROM finance_flow ${where}
      ORDER BY create_time DESC LIMIT ? OFFSET ?`,
     [...queryParams, pageSize, (page - 1) * pageSize]
   );
@@ -938,15 +930,15 @@ export async function generateAuditReport(params: {
     avgDuration: number;
     uniqueUsers: number;
   };
-  moduleStats: any[];
-  typeStats: any[];
-  userStats: any[];
-  dailyStats: any[];
+  moduleStats: Record<string, unknown>[];
+  typeStats: Record<string, unknown>[];
+  userStats: Record<string, unknown>[];
+  dailyStats: Record<string, unknown>[];
 }> {
   const { startTime, endTime, module } = params;
 
   let where = 'WHERE create_time >= ? AND create_time <= ?';
-  const queryParams: any[] = [startTime, endTime];
+  const queryParams: SqlValue[] = [startTime, endTime];
 
   if (module) {
     where += ' AND module = ?';
@@ -954,8 +946,14 @@ export async function generateAuditReport(params: {
   }
 
   // 汇总统计
-  const summaryRows: any = await query(
-    `SELECT 
+  const summaryRows = await query<{
+    total_operations: number;
+    success_count: number;
+    fail_count: number;
+    avg_duration: number;
+    unique_users: number;
+  }>(
+    `SELECT
       COUNT(*) as total_operations,
       SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as success_count,
       SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) as fail_count,
@@ -968,8 +966,8 @@ export async function generateAuditReport(params: {
   const summary = summaryRows[0];
 
   // 模块统计
-  const moduleStats: any = await query(
-    `SELECT 
+  const moduleStats = await query<Record<string, unknown>>(
+    `SELECT
       module,
       COUNT(*) as count,
       SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as success,
@@ -981,8 +979,8 @@ export async function generateAuditReport(params: {
   );
 
   // 类型统计
-  const typeStats: any = await query(
-    `SELECT 
+  const typeStats = await query<Record<string, unknown>>(
+    `SELECT
       type,
       COUNT(*) as count,
       SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as success,
@@ -994,8 +992,8 @@ export async function generateAuditReport(params: {
   );
 
   // 用户统计
-  const userStats: any = await query(
-    `SELECT 
+  const userStats = await query<Record<string, unknown>>(
+    `SELECT
       username,
       COUNT(*) as count,
       SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as success,
@@ -1008,8 +1006,8 @@ export async function generateAuditReport(params: {
   );
 
   // 每日统计
-  const dailyStats: any = await query(
-    `SELECT 
+  const dailyStats = await query<Record<string, unknown>>(
+    `SELECT
       DATE(create_time) as date,
       COUNT(*) as count,
       SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as success,

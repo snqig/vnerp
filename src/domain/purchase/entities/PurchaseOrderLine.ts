@@ -137,14 +137,15 @@ export class PurchaseOrderLine {
     return this._receivedQty >= this._orderQty;
   }
 
-  receive(quantity: number): void {
+  receive(quantity: number, tolerancePercent: number = 0): void {
     if (quantity <= 0) {
       throw new DomainError('入库数量必须大于0');
     }
     const newReceivedQty = this._receivedQty + quantity;
-    if (newReceivedQty > this._orderQty) {
+    const maxAllowed = this._orderQty * (1 + tolerancePercent / 100);
+    if (newReceivedQty > maxAllowed) {
       throw new DomainError(
-        `入库数量超限: 行${this.lineNo} 订购${this._orderQty}, 已收${this._receivedQty}, 本次${quantity}`
+        `入库数量超限: 行${this.lineNo} 订购${this._orderQty}, 已收${this._receivedQty}, 本次${quantity}, 容差${tolerancePercent}%, 允许上限${maxAllowed.toFixed(2)}`
       );
     }
     this._receivedQty = newReceivedQty;

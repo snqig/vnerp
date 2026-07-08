@@ -49,6 +49,8 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 import { formatDate } from '@/lib/date-utils';
 import { useTranslations } from 'next-intl';
 
@@ -202,7 +204,6 @@ export default function SampleManagementPage() {
         setTotal(result.pagination?.total || result.data?.total || sampleList.length);
       }
     } catch (e) {
-      console.error('Failed to fetch sample list:', e);
     } finally {
       setLoading(false);
     }
@@ -350,19 +351,18 @@ export default function SampleManagementPage() {
                 </Select>
               </div>
               <div className="flex gap-2 items-center">
-                <TableExportToolbar
-                  selectedCount={selectedIds.size}
-                  totalCount={list.length}
-                  onSelectAll={toggleSelectAll}
-                  onDeselectAll={() => setSelectedIds(new Set())}
-                  onPrint={() => printTable(getExportData(), exportColumns, t('sampleList'))}
-                  onExportPDF={() =>
-                    exportTableToPDF(getExportData(), t('sampleList'), exportColumns, t('sampleList'))
-                  }
-                  onExportXLS={() => exportTableToXLS(getExportData(), t('sampleList'), exportColumns)}
-                  onExportWORD={() =>
-                    exportTableToWORD(getExportData(), t('sampleList'), exportColumns, t('sampleList'))
-                  }
+                <GlobalExportToolbar
+                  filename="样品列表"
+                  title="样品列表"
+                  columns={[
+                    { key: 'order_no', label: t('sampleNo'), width: 18 },
+                    { key: 'product_name', label: t('productName'), width: 25 },
+                    { key: 'customer_name', label: tc('customer'), width: 20 },
+                    { key: 'notify_date', label: t('notifyDate'), width: 12, formatter: (v) => formatDate(v) },
+                    { key: 'customer_require_date', label: t('requireDeliveryDate'), width: 12, formatter: (v) => formatDate(v) },
+                    { key: 'delivery_status', label: tc('status'), width: 12, formatter: (v) => t(statusLabelMap[v] || v) },
+                  ]}
+                  data={selectedIds.size > 0 ? sortedList.filter((s) => selectedIds.has(s.id)) : sortedList}
                 />
                 <Button onClick={handleOpenAdd}>
                   <Plus className="h-4 w-4 mr-2" />

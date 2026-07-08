@@ -102,13 +102,11 @@ export default function UserManagementPage() {
       });
       const res = await authFetch('/api/system/user?' + params);
       if (!res.ok) {
-        console.error('API请求失败，状态码:', res.status);
         // 使用模拟数据
         useMockData();
         return;
       }
       const result = await res.json();
-      console.log('用户列表API响应:', result);
       
       // 支持多种数据响应格式
       if (result.success || result.code === 200 || result.code === 0) {
@@ -129,23 +127,18 @@ export default function UserManagementPage() {
         
         // 如果数据为空，使用模拟数据
         if (rawList.length === 0) {
-          console.log('API返回空数据，使用模拟数据');
           useMockData();
           return;
         }
         
-        console.log('解析后的用户列表:', rawList);
-        console.log('解析后的总数:', totalCount);
         
         setList(rawList);
         setTotal(totalCount);
       } else {
         // API没有返回成功标志，使用模拟数据
-        console.log('API响应不成功，使用模拟数据');
         useMockData();
       }
     } catch (e) {
-      console.error('获取用户列表失败:', e);
       // 出错时使用模拟数据
       useMockData();
     }
@@ -298,19 +291,16 @@ export default function UserManagementPage() {
     
     setList(mockUsers);
     setTotal(mockUsers.length);
-    console.log('已加载模拟用户数据:', mockUsers);
   };
 
   const fetchRoles = async () => {
     try {
       const res = await authFetch('/api/system/roles');
       if (!res.ok) {
-        console.error('获取角色列表API请求失败，状态码:', res.status);
         useMockRoles();
         return;
       }
       const result = await res.json();
-      console.log('角色列表API响应:', result);
       
       if (result.success || result.code === 200 || result.code === 0) {
         const rawData = result.data || result;
@@ -323,7 +313,6 @@ export default function UserManagementPage() {
             rawList = [];
           }
         }
-        console.log('解析后的角色列表:', rawList);
         if (rawList.length === 0) {
           useMockRoles();
           return;
@@ -333,7 +322,6 @@ export default function UserManagementPage() {
         useMockRoles();
       }
     } catch (e) {
-      console.error('获取角色列表失败:', e);
       useMockRoles();
     }
   };
@@ -352,19 +340,16 @@ export default function UserManagementPage() {
       { id: 10, role_name: '财务', role_code: 'accountant' }
     ];
     setRoles(mockRoles);
-    console.log('已加载模拟角色数据:', mockRoles);
   };
 
   const fetchDepartments = async () => {
     try {
       const res = await authFetch('/api/organization/department');
       if (!res.ok) {
-        console.error('获取部门列表API请求失败，状态码:', res.status);
         useMockDepartments();
         return;
       }
       const result = await res.json();
-      console.log('部门列表API响应:', result);
       
       if (result.success || result.code === 200 || result.code === 0) {
         const rawData = result.data || result;
@@ -377,7 +362,6 @@ export default function UserManagementPage() {
             rawList = [];
           }
         }
-        console.log('解析后的部门列表:', rawList);
         if (rawList.length === 0) {
           useMockDepartments();
           return;
@@ -387,7 +371,6 @@ export default function UserManagementPage() {
         useMockDepartments();
       }
     } catch (e) {
-      console.error('获取部门列表失败:', e);
       useMockDepartments();
     }
   };
@@ -404,19 +387,16 @@ export default function UserManagementPage() {
       { id: 8, dept_name: '财务行政部' }
     ];
     setDepartments(mockDepartments);
-    console.log('已加载模拟部门数据:', mockDepartments);
   };
 
   const fetchEmployees = async () => {
     try {
       const res = await authFetch('/api/organization/employee?pageSize=9999');
       if (!res.ok) {
-        console.error('获取员工列表API请求失败，状态码:', res.status);
         useMockEmployees();
         return;
       }
       const result = await res.json();
-      console.log('员工列表API响应:', result);
       
       if (result.success || result.code === 200 || result.code === 0) {
         const rawData = result.data || result;
@@ -429,7 +409,6 @@ export default function UserManagementPage() {
             rawList = [];
           }
         }
-        console.log('解析后的员工列表:', rawList);
         if (rawList.length === 0) {
           useMockEmployees();
           return;
@@ -439,7 +418,6 @@ export default function UserManagementPage() {
         useMockEmployees();
       }
     } catch (e) {
-      console.error('获取员工列表失败:', e);
       useMockEmployees();
     }
   };
@@ -458,7 +436,6 @@ export default function UserManagementPage() {
       { id: 10, name: '吴芳', employee_no: 'E010' }
     ];
     setEmployees(mockEmployees);
-    console.log('已加载模拟员工数据:', mockEmployees);
   };
 
   useEffect(() => {

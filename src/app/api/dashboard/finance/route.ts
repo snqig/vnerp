@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
         overview.totalPayable = Number(payRows[0].total || 0);
       overview.netProfit = overview.totalReceivable - overview.totalPayable;
     } catch (e) {
-      console.error('finance overview failed:', e);
     }
 
     try {
@@ -46,7 +45,6 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(expRows) && expRows.length > 0)
         overview.monthExpense = Number(expRows[0].total || 0);
     } catch (e) {
-      console.error('finance monthly failed:', e);
     }
 
     let revenueTrend: any[] = [];
@@ -58,7 +56,6 @@ export async function GET(request: NextRequest) {
       `);
       revenueTrend = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('finance revenueTrend failed:', e);
     }
 
     let expenseTrend: any[] = [];
@@ -70,7 +67,6 @@ export async function GET(request: NextRequest) {
       `);
       expenseTrend = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('finance expenseTrend failed:', e);
     }
 
     let receivableAging: any[] = [];
@@ -89,7 +85,6 @@ export async function GET(request: NextRequest) {
       `);
       receivableAging = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('finance aging failed:', e);
     }
 
     let recentTransactions: any[] = [];
@@ -106,7 +101,6 @@ export async function GET(request: NextRequest) {
         .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 10);
     } catch (e) {
-      console.error('finance recent failed:', e);
     }
 
     let topPayables: any[] = [];
@@ -119,7 +113,6 @@ export async function GET(request: NextRequest) {
       `);
       topPayables = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('finance topPayables failed:', e);
     }
 
     return NextResponse.json({
@@ -134,7 +127,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('获取财务看板数据失败:', error);
     return NextResponse.json({ success: false, message: '获取财务看板数据失败' }, { status: 500 });
   }
 }

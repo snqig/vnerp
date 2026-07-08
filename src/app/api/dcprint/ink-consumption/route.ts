@@ -54,7 +54,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       params
     );
   } catch (e) {
-    console.error('Workorder analysis failed:', e);
   }
 
   let inkTypeSummary: any[] = [];
@@ -78,7 +77,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       params
     );
   } catch (e) {
-    console.error('Ink type summary failed:', e);
   }
 
   let topWasteItems: any[] = [];
@@ -105,7 +103,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       params
     );
   } catch (e) {
-    console.error('Top waste items failed:', e);
   }
 
   let dailyTrend: any[] = [];
@@ -126,7 +123,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       params
     );
   } catch (e) {
-    console.error('Daily trend failed:', e);
   }
 
   const summary: any = {
@@ -171,7 +167,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
           : 0;
     }
   } catch (e) {
-    console.error('Summary calc failed:', e);
   }
 
   return successResponse({

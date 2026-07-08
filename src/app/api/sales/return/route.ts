@@ -11,13 +11,13 @@ import { query, execute, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { ReturnOrderApplicationService } from '@/application/services/ReturnOrderApplicationService';
 import { MysqlReturnOrderRepository } from '@/infrastructure/repositories/MysqlReturnOrderRepository';
-import { MysqlInboundOrderRepository } from '@/infrastructure/repositories/MysqlInboundOrderRepository';
 import { MysqlReceivableRepository } from '@/infrastructure/repositories/MysqlReceivableRepository';
+import { RepositoryRegistry } from '@/infrastructure/RepositoryRegistry';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 
 const returnService = new ReturnOrderApplicationService(
   new MysqlReturnOrderRepository(),
-  new MysqlInboundOrderRepository(),
+  RepositoryRegistry.getInboundOrderRepository(),
   new MysqlReceivableRepository()
 );
 

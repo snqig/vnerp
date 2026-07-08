@@ -48,6 +48,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { getPermissionModules, Permission } from '@/hooks/usePermission';
 import { useTranslations } from 'next-intl';
+import { authFetch } from '@/lib/auth-fetch';
 
 // 角色接口
 interface Role {
@@ -108,18 +109,6 @@ export default function RolesPage() {
   const [customers, setCustomers] = useState<{ id: number; name: string }[]>([]);
   const [suppliers, setSuppliers] = useState<{ id: number; name: string }[]>([]);
 
-  const authFetch = useCallback(async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  }, []);
-
   // 获取角色列表
   const fetchRoles = useCallback(async () => {
     setLoading(true);
@@ -134,7 +123,6 @@ export default function RolesPage() {
         setRoles(Array.isArray(result.data) ? result.data : (result.data?.list || []));
       }
     } catch (error) {
-      console.error('获取角色列表失败:', error);
       toast({ title: tc('fetchRoleListFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -153,7 +141,6 @@ export default function RolesPage() {
         return data;
       }
     } catch (error) {
-      console.error('获取菜单列表失败:', error);
     }
     return [];
   }, []);
@@ -180,7 +167,6 @@ export default function RolesPage() {
         }
       }
     } catch (error) {
-      console.error('获取角色权限失败:', error);
       setSelectedMenus([]);
       setSelectedPermissions([]);
     }
@@ -211,7 +197,6 @@ export default function RolesPage() {
         toast({ title: result.message || tc('saveFailed'), variant: 'destructive' });
       }
     } catch (error) {
-      console.error('保存角色失败:', error);
       toast({ title: tc('saveRoleFailed'), variant: 'destructive' });
     }
   };
@@ -233,7 +218,6 @@ export default function RolesPage() {
         toast({ title: result.message || tc('deleteFailed'), variant: 'destructive' });
       }
     } catch (error) {
-      console.error('删除角色失败:', error);
       toast({ title: tc('deleteRoleFailed'), variant: 'destructive' });
     }
   };
@@ -282,7 +266,6 @@ export default function RolesPage() {
           }),
         });
       } catch (e) {
-        console.error('保存数据权限失败:', e);
       }
 
       toast({ title: tc('permissionSetSuccess') });
@@ -292,10 +275,8 @@ export default function RolesPage() {
       try {
         await authFetch('/api/auth/cache/clear', { method: 'POST' });
       } catch (e) {
-        console.error('清除缓存失败:', e);
       }
     } catch (error) {
-      console.error('保存权限失败:', error);
       toast({ title: tc('savePermissionFailed'), variant: 'destructive' });
     }
   };
@@ -337,7 +318,6 @@ export default function RolesPage() {
         setDataScopeConfig(scopeResult.data || {});
       }
     } catch (e) {
-      console.error('加载数据权限失败:', e);
     }
 
     // 加载仓库列表
@@ -348,7 +328,6 @@ export default function RolesPage() {
         setWarehouses((whResult.data || []).map((w: any) => ({ id: w.id, name: w.warehouse_name || w.name })));
       }
     } catch (e) {
-      console.error('加载仓库列表失败:', e);
     }
 
     // 加载客户列表
@@ -359,7 +338,6 @@ export default function RolesPage() {
         setCustomers((Array.isArray(custResult.data) ? custResult.data : (custResult.data?.list || [])).map((c: any) => ({ id: c.id, name: c.customer_name || c.name })));
       }
     } catch (e) {
-      console.error('加载客户列表失败:', e);
     }
 
     // 加载供应商列表
@@ -370,7 +348,6 @@ export default function RolesPage() {
         setSuppliers((Array.isArray(supResult.data) ? supResult.data : (supResult.data?.list || [])).map((s: any) => ({ id: s.id, name: s.supplier_name || s.name })));
       }
     } catch (e) {
-      console.error('加载供应商列表失败:', e);
     }
 
     setPermissionDialogOpen(true);

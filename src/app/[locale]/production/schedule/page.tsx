@@ -304,7 +304,6 @@ export default function ProductionSchedulePage() {
         });
       }
     } catch (error) {
-      console.error('获取排程数据失败:', error);
     } finally {
       setLoading(false);
     }
@@ -328,7 +327,6 @@ export default function ProductionSchedulePage() {
         );
       }
     } catch (error) {
-      console.error('获取产能数据失败:', error);
     }
   };
 
@@ -341,7 +339,6 @@ export default function ProductionSchedulePage() {
         setWorkOrders(data.data?.list || []);
       }
     } catch (error) {
-      console.error('获取工单失败:', error);
     }
   };
 
@@ -526,7 +523,6 @@ export default function ProductionSchedulePage() {
           setIsEditOpen(false);
         } else alert(result.message || tc('updateFailed'));
       } catch (error) {
-        console.error('更新排程失败:', error);
         alert(tc('updateFailed'));
       }
   };
@@ -543,7 +539,6 @@ export default function ProductionSchedulePage() {
         fetchSchedules();
       } else alert(result.message || tc('error'));
     } catch (error) {
-      console.error('状态更新失败:', error);
       alert(tc('error'));
     } finally {
       setLoading(false);
@@ -577,7 +572,6 @@ export default function ProductionSchedulePage() {
         alert(result.message || t('autoScheduleFailed'));
       }
     } catch (error) {
-      console.error('自动排程失败:', error);
         alert(t('autoScheduleFailed'));
     } finally {
       setAutoScheduleLoading(false);

@@ -91,7 +91,6 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       'qc_process_inspection',
       'qc_final_inspection',
       'qc_unqualified',
-      'qc_unqualified_handle',
       'base_ink',
       'bom_alternative',
       'bom_line',
@@ -380,7 +379,6 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
             roleId,
           ]);
         } catch (e) {
-          console.error('[初始化] 用户角色关联失败:', e);
         }
       }
     }

@@ -18,6 +18,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 interface DashboardData {
   period: string;
@@ -78,7 +80,6 @@ export default function ReportsPage() {
         setDashboardData(result.data);
       }
     } catch (error) {
-      console.error('获取仪表盘数据失败:', error);
     } finally {
       setLoading(false);
     }
@@ -153,6 +154,36 @@ export default function ReportsPage() {
           <TabsTrigger value="inventory">库存周转</TabsTrigger>
           <TabsTrigger value="costs">生产成本</TabsTrigger>
         </TabsList>
+
+        <div className="flex justify-end mb-2">
+          <GlobalExportToolbar
+            filename="运营报表总览"
+            title="企业运营核心指标报表"
+            subtitle={`统计周期: ${data?.period || '近30天'}`}
+            columns={[
+              { key: 'category', label: '指标分类', width: 15 },
+              { key: 'metric', label: '指标名称', width: 20 },
+              { key: 'value', label: '数值', width: 15 },
+              { key: 'unit', label: '单位', width: 8 },
+              { key: 'trend', label: '趋势', width: 10 },
+            ] as ExportColumn[]}
+            data={data ? [
+              { category: '销售订单', metric: '总订单数', value: data.orderMetrics.totalOrders, unit: '个', trend: '' },
+              { category: '销售订单', metric: '已完成数', value: data.orderMetrics.completedOrders, unit: '个', trend: '' },
+              { category: '销售订单', metric: '总金额', value: data.orderMetrics.totalAmount, unit: '元', trend: '' },
+              { category: '销售订单', metric: '完成率', value: `${data.orderMetrics.completionRate.toFixed(1)}%`, unit: '%', trend: '' },
+              { category: '生产', metric: '工单总数', value: data.productionMetrics.totalWorkOrders, unit: '个', trend: '' },
+              { category: '生产', metric: '完成数', value: data.productionMetrics.completedWorkOrders, unit: '个', trend: '' },
+              { category: '生产', metric: '在制数', value: data.productionMetrics.inProgressWorkOrders, unit: '个', trend: '' },
+              { category: '库存', metric: '库存预警', value: data.inventoryMetrics?.lowStockCount || 0, unit: '个', trend: '' },
+              { category: '采购', metric: '采购总额', value: data.purchaseMetrics?.totalPurchaseAmount || 0, unit: '元', trend: '' },
+              { category: '财务', metric: '应收总额', value: data.financeMetrics?.pendingReceivable || 0, unit: '元', trend: '' },
+              { category: '财务', metric: '应付总额', value: data.financeMetrics?.pendingPayable || 0, unit: '元', trend: '' },
+            ] : []}
+            landscape={true}
+            footer="本报表由 ERP 系统自动生成。"
+          />
+        </div>
 
         <TabsContent value="overview" className="space-y-6">
           {/* 核心指标卡片 */}

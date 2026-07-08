@@ -32,6 +32,8 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 interface ReportItem {
   id: number;
@@ -74,7 +76,6 @@ export default function FinanceReportPage() {
         setTotal(result.data?.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   }, [page, periodType]);
 
@@ -92,7 +93,6 @@ export default function FinanceReportPage() {
         });
       }
     } catch (e) {
-      console.error(e);
     }
   }, []);
 
@@ -180,10 +180,22 @@ export default function FinanceReportPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t('incomeExpenseDetail')}</CardTitle>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-1" />
-              {tc('export')}
-            </Button>
+            <GlobalExportToolbar
+              filename="财务收支报表"
+              title="财务收支明细报表"
+              subtitle={periodType || ''}
+              columns={[
+                { key: 'period', label: '期间', width: 18 },
+                { key: 'type', label: '类型', width: 12 },
+                { key: 'category', label: '类别', width: 15 },
+                { key: 'revenue', label: '收入', width: 12, formatter: (v) => Number(v || 0).toFixed(2) },
+                { key: 'cost', label: '成本', width: 12, formatter: (v) => Number(v || 0).toFixed(2) },
+                { key: 'profit', label: '利润', width: 12, formatter: (v) => Number(v || 0).toFixed(2) },
+                { key: 'profit_rate', label: '利润率', width: 10, formatter: (v) => `${(Number(v || 0)).toFixed(1)}%` },
+              ] as ExportColumn[]}
+              data={list}
+              footer="本报表由 ERP 系统自动生成，仅供参考。"
+            />
           </CardHeader>
           <CardContent className="p-0">
             <Table>

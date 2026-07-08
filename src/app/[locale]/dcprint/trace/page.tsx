@@ -98,7 +98,6 @@ export default function TracePage() {
         setRecords(result.data.list || []);
       }
     } catch (error) {
-      console.error('Failed to fetch records:', error);
     }
   };
 

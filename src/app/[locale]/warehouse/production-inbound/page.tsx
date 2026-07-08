@@ -79,7 +79,6 @@ export default function ProductionInboundPage() {
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
     } catch (e) {
-      console.error(e);
     }
   };
   useEffect(() => {

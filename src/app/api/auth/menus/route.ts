@@ -1,4 +1,4 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
@@ -7,31 +7,7 @@ import {
   setCachedPermissions,
   clearCachedPermissions,
 } from '@/lib/auth-cache';
-
-function buildMenuTree(menus: any[], parentId: number = 0): any[] {
-  const tree: any[] = [];
-
-  for (const menu of menus) {
-    if (menu.parent_id === parentId) {
-      const children = buildMenuTree(menus, menu.id);
-      const menuItem = {
-        id: menu.id,
-        name: menu.menu_name,
-        code: menu.menu_code,
-        type: menu.menu_type,
-        icon: menu.icon,
-        path: menu.path,
-        component: menu.component,
-        permission: menu.permission,
-        sortOrder: menu.sort_order,
-        children: children.length > 0 ? children : [],
-      };
-      tree.push(menuItem);
-    }
-  }
-
-  return tree;
-}
+import { buildMenuTree, extractPermissions } from '@/lib/menu-tree';
 
 let isVisibleColumnExists: boolean | null = null;
 
@@ -96,9 +72,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 
   const menuTree = buildMenuTree(menus as any[]);
 
-  const permissions = [
-    ...new Set((menus as any[]).filter((m) => m.permission).map((m) => m.permission)),
-  ];
+  const permissions = extractPermissions(menus as any[]);
 
   setCachedPermissions(userInfo.userId, permissions, menuTree);
 

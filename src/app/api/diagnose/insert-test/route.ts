@@ -1,7 +1,8 @@
-import { NextRequest } from 'next/server';
-import { execute, query, transaction } from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
+import { transaction } from '@/lib/db';
+import { withPermission } from '@/lib/api-permissions';
 
-export async function POST(request: NextRequest) {
+export const POST = withPermission(async (request: NextRequest) => {
   try {
     const result = await transaction(async (conn) => {
       const errors: string[] = [];
@@ -38,14 +39,14 @@ export async function POST(request: NextRequest) {
       return results;
     });
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       results: result
     });
   } catch (error: any) {
-    return Response.json({
+    return NextResponse.json({
       success: false,
       error: error.message
     }, { status: 500 });
   }
-}
+});

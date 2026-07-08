@@ -42,7 +42,6 @@ export function UserSelect({
           setUsers(list.filter((u: UserItem) => u.status === 1));
         }
       } catch (e) {
-        console.error('获取用户列表失败:', e);
       }
     };
     fetchUsers();

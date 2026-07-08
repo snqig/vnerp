@@ -1,6 +1,6 @@
-const mysql = require('mysql2/promise');
+﻿const mysql = require('mysql2/promise');
 async function main() {
-  const c = await mysql.createConnection({ host: '127.0.0.1', user: 'root', password: 'Snqig521223', database: 'vnerpdacahng' });
+  const c = await mysql.createConnection({ host: '127.0.0.1', user: 'root', password: process.env.DB_PASSWORD || '', database: 'vnerpdacahng' });
   const [cols] = await c.execute("DESCRIBE sys_config");
   console.log('sys_config columns:', cols.map(r => r.Field));
   const [rows] = await c.execute("SELECT * FROM sys_config LIMIT 5");

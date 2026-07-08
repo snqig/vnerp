@@ -20,7 +20,7 @@ async function login(page: any) {
   await page.fill('input#username', TEST_USERS.admin.username);
   await page.fill('input#password', TEST_USERS.admin.password);
   await page.getByRole('button', { name: 'Login' }).click();
-  await page.waitForURL('**/en', { timeout: 60000 });
+  await page.waitForURL('**/en/dashboard', { timeout: 60000 });
   await page.waitForTimeout(2000);
 }
 

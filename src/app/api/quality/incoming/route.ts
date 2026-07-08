@@ -220,7 +220,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
         [result.id, batchNo]
       );
       await conn.execute(
-        `UPDATE inv_inbound_order SET inspection_status = 1, inspection_id = ? WHERE order_no IN (SELECT ref_no FROM qrcode_record WHERE batch_no = ? AND qr_type = 'material' AND deleted = 0) AND deleted = 0`,
+        `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 1, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
         [result.id, batchNo]
       );
     }).catch(() => {});
@@ -231,7 +231,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
         [result.id, batchNo]
       );
       await conn.execute(
-        `UPDATE inv_inbound_order SET inspection_status = 2, inspection_id = ? WHERE order_no IN (SELECT ref_no FROM qrcode_record WHERE batch_no = ? AND qr_type = 'material' AND deleted = 0) AND deleted = 0`,
+        `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 2, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
         [result.id, batchNo]
       );
     }).catch(() => {});
@@ -298,7 +298,7 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
         [id, updateData.batchNo]
       );
       await conn.execute(
-        `UPDATE inv_inbound_order SET inspection_status = 1, inspection_id = ? WHERE order_no IN (SELECT ref_no FROM qrcode_record WHERE batch_no = ? AND qr_type = 'material' AND deleted = 0) AND deleted = 0`,
+        `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 1, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
         [id, updateData.batchNo]
       );
     }).catch(() => {});
@@ -312,7 +312,7 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
         [id, updateData.batchNo]
       );
       await conn.execute(
-        `UPDATE inv_inbound_order SET inspection_status = 2, inspection_id = ? WHERE order_no IN (SELECT ref_no FROM qrcode_record WHERE batch_no = ? AND qr_type = 'material' AND deleted = 0) AND deleted = 0`,
+        `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 2, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
         [id, updateData.batchNo]
       );
     }).catch(() => {});

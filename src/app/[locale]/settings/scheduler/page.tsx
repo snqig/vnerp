@@ -68,7 +68,6 @@ export default function SchedulerPage() {
         setTotal(result.data?.total || 0);
       }
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -129,7 +128,6 @@ export default function SchedulerPage() {
         setLogOpen(true);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 

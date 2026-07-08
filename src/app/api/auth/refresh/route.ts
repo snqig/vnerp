@@ -1,4 +1,4 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { SignJWT } from 'jose';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { verifyRefreshToken, storeRefreshToken, removeRefreshToken } from '@/lib/token-blacklist';
@@ -6,7 +6,11 @@ import { query } from '@/lib/db';
 import { getRedisClientIfAvailable, getCacheManager } from '@/infrastructure/cache/CacheManager';
 
 import { withPermission } from '@/lib/api-permissions';
-const SECRET_KEY = process.env.JWT_SECRET || 'dev-only-secret-key';
+const SECRET_KEY = process.env.JWT_SECRET;
+
+if (!SECRET_KEY) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 
 const REFRESH_LOCK_TTL_SEC = 5;
 
@@ -104,13 +108,32 @@ export const POST = withPermission(async (request: NextRequest) => {
     // 删除旧的 refresh token
     await removeRefreshToken(refreshToken);
 
-    return successResponse(
+    const response = successResponse(
       {
         token: newToken,
         refreshToken: newRefreshToken,
       },
       'Token 刷新成功'
     );
+
+    // 同步刷新 httpOnly cookie：access_token + refresh_token
+    // 与 login 路由保持一致，确保 SSR 预取和 middleware 鉴权使用最新 token
+    response.cookies.set('access_token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60, // 24h
+    });
+    response.cookies.set('refresh_token', newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60, // 7d
+    });
+
+    return response;
   } finally {
     await releaseRefreshLock(refreshToken);
   }

@@ -5,15 +5,11 @@ import { withPermission } from '@/lib/api-permissions';
 import { jwtVerify } from 'jose';
 import { secureLog } from '@/lib/logger';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const SECRET_KEY = process.env.JWT_SECRET;
 
-if (!JWT_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET must be set in production environment');
-  }
+if (!SECRET_KEY) {
+  throw new Error('JWT_SECRET environment variable is required');
 }
-
-const SECRET_KEY = JWT_SECRET || 'dev-only-secret-key';
 
 // 菜单排序项接口
 interface MenuSortItem {
@@ -27,7 +23,6 @@ async function verifyToken(token: string) {
     const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET_KEY));
     return payload;
   } catch (error) {
-    console.error('Token verification error:', error);
     return null;
   }
 }

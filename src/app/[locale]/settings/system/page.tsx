@@ -98,7 +98,6 @@ export default function SystemConfigPage() {
         setActiveCategory(result.data.categories[0] || '单据编码规则');
       }
     } catch (e) {
-      console.error(e);
       toast({ title: '加载配置失败', variant: 'destructive' });
     } finally {
       setLoading(false);

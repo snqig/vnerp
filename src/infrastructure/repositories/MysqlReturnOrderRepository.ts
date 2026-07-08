@@ -1,8 +1,60 @@
+import mysql from 'mysql2/promise';
 import { IReturnOrderRepository } from '@/domain/sales/repositories/IReturnOrderRepository';
 import { ReturnOrder, ReturnOrderProps } from '@/domain/sales/aggregates/ReturnOrder';
 import { ReturnOrderLineProps } from '@/domain/sales/entities/ReturnOrderLine';
+import { ReturnOrderStatusValue } from '@/domain/sales/value-objects/ReturnOrderStatus';
 import { query, execute, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
+
+/** sal_return 表行类型 */
+interface SalReturnRow {
+  id: number;
+  return_no: string;
+  status: number;
+  order_id: number;
+  order_no: string | null;
+  customer_id: number;
+  customer_name: string | null;
+  warehouse_id: number;
+  delivery_id: number | null;
+  delivery_no: string | null;
+  reason: string;
+  return_date: string | null;
+  total_amount: number | string | null;
+  approve_by: number | null;
+  approve_time: string | null;
+  complete_by: number | null;
+  complete_time: string | null;
+  inbound_order_id: number | null;
+  inbound_order_no: string | null;
+  receivable_id: number | null;
+  receivable_no: string | null;
+  remark: string | null;
+  create_by: number | null;
+  create_time: string | null;
+  update_time: string | null;
+  deleted: number;
+}
+
+/** sal_return_detail 表行类型 */
+interface SalReturnDetailRow {
+  id: number;
+  return_id: number;
+  line_no: number;
+  delivery_detail_id: number | null;
+  order_detail_id: number | null;
+  material_id: number;
+  material_code: string | null;
+  material_name: string | null;
+  material_spec: string | null;
+  unit: string | null;
+  quantity: number | string;
+  unit_price: number | string;
+  amount: number | string;
+  batch_no: string | null;
+  remark: string | null;
+  deleted: number;
+}
 
 const MAIN_COLUMNS = `id, return_no, status, order_id, order_no, customer_id, customer_name,
                       warehouse_id, delivery_id, delivery_no, reason, return_date, total_amount,
@@ -16,7 +68,7 @@ const DETAIL_COLUMNS = `id, return_id, line_no, delivery_detail_id, order_detail
 
 export class MysqlReturnOrderRepository implements IReturnOrderRepository {
   async findById(id: number): Promise<ReturnOrder | null> {
-    const rows = await query<any>(
+    const rows = await query<SalReturnRow>(
       `SELECT ${MAIN_COLUMNS} FROM sal_return WHERE id = ? AND deleted = 0`,
       [id]
     );
@@ -26,7 +78,7 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
   }
 
   async findByReturnNo(returnNo: string): Promise<ReturnOrder | null> {
-    const rows = await query<any>(
+    const rows = await query<SalReturnRow>(
       `SELECT ${MAIN_COLUMNS} FROM sal_return WHERE return_no = ? AND deleted = 0`,
       [returnNo]
     );
@@ -36,7 +88,7 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
   }
 
   async findByOrderId(orderId: number): Promise<ReturnOrder[]> {
-    const rows = await query<any>(
+    const rows = await query<SalReturnRow>(
       `SELECT ${MAIN_COLUMNS} FROM sal_return WHERE order_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [orderId]
     );
@@ -44,7 +96,7 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
   }
 
   async findByCustomerId(customerId: number): Promise<ReturnOrder[]> {
-    const rows = await query<any>(
+    const rows = await query<SalReturnRow>(
       `SELECT ${MAIN_COLUMNS} FROM sal_return WHERE customer_id = ? AND deleted = 0 ORDER BY create_time DESC`,
       [customerId]
     );
@@ -52,7 +104,7 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
   }
 
   async findByStatus(status: number): Promise<ReturnOrder[]> {
-    const rows = await query<any>(
+    const rows = await query<SalReturnRow>(
       `SELECT ${MAIN_COLUMNS} FROM sal_return WHERE status = ? AND deleted = 0 ORDER BY create_time DESC`,
       [status]
     );
@@ -63,7 +115,7 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
     const returnNo = returnOrder.returnNo || (await generateDocumentNo('return_order'));
 
     return transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO sal_return
          (return_no, status, order_id, order_no, customer_id, customer_name,
           warehouse_id, delivery_id, delivery_no, reason, return_date, total_amount,
@@ -162,20 +214,20 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
     );
   }
 
-  private async findLines(returnId: number): Promise<any[]> {
-    return query<any>(
+  private async findLines(returnId: number): Promise<SalReturnDetailRow[]> {
+    return query<SalReturnDetailRow>(
       `SELECT ${DETAIL_COLUMNS} FROM sal_return_detail WHERE return_id = ? AND deleted = 0 ORDER BY line_no`,
       [returnId]
     );
   }
 
-  private mapToAggregate(row: any, lines: any[]): ReturnOrder {
+  private mapToAggregate(row: SalReturnRow, lines: SalReturnDetailRow[]): ReturnOrder {
     const lineProps: ReturnOrderLineProps[] = lines.map((l) => ({
       id: l.id,
       returnId: l.return_id,
       lineNo: l.line_no,
-      deliveryDetailId: l.delivery_detail_id,
-      orderDetailId: l.order_detail_id,
+      deliveryDetailId: l.delivery_detail_id ?? undefined,
+      orderDetailId: l.order_detail_id ?? undefined,
       materialId: l.material_id,
       materialCode: l.material_code || '',
       materialName: l.material_name || '',
@@ -191,30 +243,30 @@ export class MysqlReturnOrderRepository implements IReturnOrderRepository {
     const props: ReturnOrderProps = {
       id: row.id,
       returnNo: row.return_no,
-      status: row.status,
+      status: row.status as ReturnOrderStatusValue,
       orderId: row.order_id,
       orderNo: row.order_no || '',
       customerId: row.customer_id,
       customerName: row.customer_name || '',
       warehouseId: row.warehouse_id,
-      deliveryId: row.delivery_id,
+      deliveryId: row.delivery_id ?? undefined,
       deliveryNo: row.delivery_no || '',
       reason: row.reason || '',
       returnDate: row.return_date ? new Date(row.return_date).toISOString().slice(0, 10) : '',
       totalAmount: Number(row.total_amount || 0),
       lines: lineProps,
-      approveBy: row.approve_by,
+      approveBy: row.approve_by ?? undefined,
       approveTime: row.approve_time ? new Date(row.approve_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
-      completeBy: row.complete_by,
+      completeBy: row.complete_by ?? undefined,
       completeTime: row.complete_time ? new Date(row.complete_time).toISOString().slice(0, 19).replace('T', ' ') : undefined,
-      inboundOrderId: row.inbound_order_id,
+      inboundOrderId: row.inbound_order_id ?? undefined,
       inboundOrderNo: row.inbound_order_no || undefined,
-      receivableId: row.receivable_id,
+      receivableId: row.receivable_id ?? undefined,
       receivableNo: row.receivable_no || undefined,
       remark: row.remark || '',
-      createBy: row.create_by,
-      createTime: row.create_time,
-      updateTime: row.update_time,
+      createBy: row.create_by ?? undefined,
+      createTime: row.create_time ?? undefined,
+      updateTime: row.update_time ?? undefined,
     };
     return ReturnOrder.reconstitute(props);
   }

@@ -99,7 +99,6 @@ export default function OutsourceSettlementPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -109,7 +108,6 @@ export default function OutsourceSettlementPage() {
       const result = await res.json();
       if (result.success) setOutsourceOrders(result.data?.list || []);
     } catch (e) {
-      console.error(e);
     }
   };
 

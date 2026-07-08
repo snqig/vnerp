@@ -115,6 +115,11 @@ export function resetCacheManagerForTest(): void {
  */
 export function getRedisClientIfAvailable(): import('ioredis').default | null {
   if (globalCache && globalCache instanceof RedisCacheManager) {
+    // Redis 未连接时返回 null，调用方（如 rate-limit）应降级到内存方案，
+    // 避免对断开的客户端发命令导致每条命令挂起数秒
+    if (!(globalCache as RedisCacheManager).isConnected()) {
+      return null;
+    }
     return (globalCache as RedisCacheManager).rawClient();
   }
   return null;

@@ -268,7 +268,6 @@ export default function FinancePage() {
         setCustomers(data.data?.list || data.data || []);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -280,7 +279,6 @@ export default function FinancePage() {
         setSuppliers(data.data?.list || data.data || []);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 

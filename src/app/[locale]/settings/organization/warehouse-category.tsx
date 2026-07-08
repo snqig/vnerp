@@ -116,7 +116,6 @@ export function WarehouseCategoryManager() {
         });
       }
     } catch (error) {
-      console.error('获取仓库分类失败:', error);
       toast.error('获取仓库分类失败');
     } finally {
       setLoading(false);
@@ -172,7 +171,6 @@ export function WarehouseCategoryManager() {
         toast.error(result.message || '操作失败');
       }
     } catch (error) {
-      console.error('保存分类失败:', error);
       toast.error('保存分类失败');
     }
   };
@@ -192,7 +190,6 @@ export function WarehouseCategoryManager() {
         toast.error(result.message || '删除失败');
       }
     } catch (error) {
-      console.error('删除分类失败:', error);
       toast.error('删除分类失败');
     }
   };

@@ -67,7 +67,6 @@ function EmployeeQueryContent() {
         setError('未找到该员工信息');
       }
     } catch (error) {
-      console.error('获取员工信息失败:', error);
       setError('获取员工信息失败');
     } finally {
       setLoading(false);

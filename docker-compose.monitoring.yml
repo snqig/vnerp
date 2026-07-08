@@ -1,0 +1,182 @@
+# ============================================================
+# 监控栈编排 — Prometheus + Grafana + Exporters
+# 依赖：docker-compose.prod.yml 中的 vnerp-network 网络
+# 启动：docker compose -f docker-compose.monitoring.yml --env-file .env.production up -d
+# ============================================================
+
+version: '3.8'
+
+services:
+  # ============================================================
+  # Prometheus — 指标采集 + 存储 + 告警评估
+  # ============================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: vnerp-prometheus
+    restart: always
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    expose:
+      - "9090"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - vnerp-network
+
+  # ============================================================
+  # Alertmanager — 告警路由与通知
+  # ============================================================
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: vnerp-alertmanager
+    restart: always
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    expose:
+      - "9093"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - vnerp-network
+
+  # ============================================================
+  # Grafana — 可视化仪表盘
+  # ============================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: vnerp-grafana
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: "https://erp.your-domain.com/grafana"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    expose:
+      - "3000"
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - vnerp-network
+
+  # ============================================================
+  # Exporters — 指标采集器
+  # ============================================================
+
+  # 主机指标（CPU/内存/磁盘/网络）
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: vnerp-node-exporter
+    restart: always
+    pid: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    expose:
+      - "9100"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - vnerp-network
+
+  # MySQL 指标
+  mysqld-exporter:
+    image: prom/mysqld-exporter:latest
+    container_name: vnerp-mysqld-exporter
+    restart: always
+    environment:
+      DATA_SOURCE_NAME: "exporter:${MYSQL_EXPORTER_PASSWORD:-exporterpw}@tcp(mysql:3306)/"
+    expose:
+      - "9104"
+    depends_on:
+      - prometheus
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - vnerp-network
+
+  # Redis 指标
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: vnerp-redis-exporter
+    restart: always
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+      REDIS_PASSWORD: "${REDIS_PASSWORD:-}"
+    expose:
+      - "9121"
+    depends_on:
+      - prometheus
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - vnerp-network
+
+  # HTTP 黑盒探针（检测 App 健康检查）
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: vnerp-blackbox-exporter
+    restart: always
+    expose:
+      - "9115"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - vnerp-network
+
+volumes:
+  prometheus_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  vnerp-network:
+    external: true
+    name: vnerp-network

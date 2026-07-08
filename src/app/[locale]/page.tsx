@@ -158,7 +158,6 @@ export default function DashboardPage() {
           });
         }
       } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
       } finally {
         setLoading(false);
       }

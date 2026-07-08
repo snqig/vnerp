@@ -152,7 +152,6 @@ export default function TransferPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -164,7 +163,6 @@ export default function TransferPage() {
         setWarehouses(result.data?.map((w: any) => ({ id: w.id, name: w.name })) || []);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -177,7 +175,6 @@ export default function TransferPage() {
         setLocations(locationsList);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -275,7 +272,6 @@ export default function TransferPage() {
         setShowOutboundDialog(true);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -316,7 +312,6 @@ export default function TransferPage() {
         setShowInboundDialog(true);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 
@@ -331,7 +326,6 @@ export default function TransferPage() {
         setShowDetailDialog(true);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 

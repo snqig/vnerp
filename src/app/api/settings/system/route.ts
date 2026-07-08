@@ -790,7 +790,6 @@ async function ensureConfigTableColumns(): Promise<void> {
       try {
         await execute(`ALTER TABLE sys_config ADD COLUMN ${colName} ${colDef}`);
       } catch (e: any) {
-        console.warn(`Add column ${colName} failed:`, e.message);
       }
     }
   }

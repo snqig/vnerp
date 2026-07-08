@@ -56,7 +56,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         otd.totalOrders > 0 ? Math.round((otd.onTimeOrders / otd.totalOrders) * 10000) / 100 : 0;
     }
   } catch (e) {
-    console.error('OTD calc failed:', e);
   }
 
   // ========================================
@@ -91,7 +90,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     inventoryTurnover.daysOnHand =
       inventoryTurnover.rate > 0 ? Math.round(365 / inventoryTurnover.rate) : 0;
   } catch (e) {
-    console.error('Inventory turnover calc failed:', e);
   }
 
   // ========================================
@@ -140,7 +138,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         Math.round(((oee.availability * oee.performance * oee.quality) / 10000) * 100) / 100;
     }
   } catch (e) {
-    console.error('OEE calc failed:', e);
   }
 
   // ========================================
@@ -178,7 +175,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         ? Math.round((qualityRate.incomingPassed / qualityRate.incomingTotal) * 10000) / 100
         : 0;
   } catch (e) {
-    console.error('Quality incoming calc failed:', e);
   }
 
   try {
@@ -199,7 +195,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         ? Math.round((qualityRate.processPassed / qualityRate.processTotal) * 10000) / 100
         : 0;
   } catch (e) {
-    console.error('Quality process calc failed:', e);
   }
 
   try {
@@ -220,7 +215,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         ? Math.round((qualityRate.finalPassed / qualityRate.finalTotal) * 10000) / 100
         : 0;
   } catch (e) {
-    console.error('Quality final calc failed:', e);
   }
 
   const totalInspections =
@@ -268,7 +262,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       });
     }
   } catch (e) {
-    console.error('Supplier score calc failed:', e);
   }
 
   // ========================================
@@ -301,7 +294,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       }));
     }
   } catch (e) {
-    console.error('Customer credit calc failed:', e);
   }
 
   // ========================================
@@ -346,7 +338,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         ? Math.round((fifoCompliance.fifoFollowed / fifoCompliance.totalOutbound) * 10000) / 100
         : 100;
   } catch (e) {
-    console.error('FIFO compliance calc failed:', e);
   }
 
   // ========================================
@@ -375,7 +366,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     departmentEfficiency.contractReviewAvgDays =
       Math.round(Number(reviewRows[0]?.avg_days || 0) * 100) / 100;
   } catch (e) {
-    console.error('Department efficiency calc failed:', e);
   }
 
   try {
@@ -394,7 +384,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     departmentEfficiency.sampleToMassAvgDays =
       Math.round(Number(conversionRows[0]?.avg_days || 0) * 100) / 100;
   } catch (e) {
-    console.error('Sample conversion calc failed:', e);
   }
 
   // ========================================
@@ -433,7 +422,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         ) / 100;
     }
   } catch (e) {
-    console.error('Ink consumption rate calc failed:', e);
   }
 
   try {
@@ -456,7 +444,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     );
     inkConsumptionRate.byWorkOrder = Array.isArray(inkByWO) ? inkByWO : [];
   } catch (e) {
-    console.error('Ink by work order calc failed:', e);
   }
 
   // ========================================
@@ -494,7 +481,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         Math.round((paperUtilizationRate.outputQty / paperUtilizationRate.inputQty) * 10000) / 100;
     }
   } catch (e) {
-    console.error('Paper utilization rate calc failed:', e);
   }
 
   try {
@@ -517,7 +503,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     );
     paperUtilizationRate.byProcess = Array.isArray(paperByProcess) ? paperByProcess : [];
   } catch (e) {
-    console.error('Paper by process calc failed:', e);
   }
 
   // ========================================
@@ -557,7 +542,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         100;
     }
   } catch (e) {
-    console.error('Surplus ink reuse rate calc failed:', e);
   }
 
   // ========================================
@@ -616,7 +600,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
           : 0;
     }
   } catch (e) {
-    console.error('Setup time calc failed:', e);
   }
 
   // ========================================
@@ -645,7 +628,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         ? Math.round((ftq.passedFirstPiece / ftq.totalFirstPiece) * 10000) / 100
         : 0;
   } catch (e) {
-    console.error('FTQ calc failed:', e);
   }
 
   // ========================================
@@ -685,7 +667,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
           ) / 100
         : 0;
   } catch (e) {
-    console.error('Stale inventory rate calc failed:', e);
   }
 
   // ========================================
@@ -718,7 +699,6 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     oeeLossAnalysis.setupLoss = Number(lossRows[0]?.setup_count || 0);
     oeeLossAnalysis.idleLoss = Number(lossRows[0]?.idle_count || 0);
   } catch (e) {
-    console.error('OEE loss analysis calc failed:', e);
   }
 
   return successResponse({

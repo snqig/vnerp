@@ -144,7 +144,6 @@ export function measureRender(componentName: string) {
     return () => {
       const duration = performance.now() - start;
       if (duration > 16) {
-        console.warn(`[Performance] ${componentName} render took ${duration.toFixed(2)}ms`);
       }
     };
   }

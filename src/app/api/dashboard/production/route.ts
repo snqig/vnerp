@@ -14,7 +14,6 @@ export async function GET(request: NextRequest) {
       `);
       if (Array.isArray(rows) && rows.length > 0) orderStats = rows[0];
     } catch (e) {
-      console.error('orderStats query failed:', e);
     }
 
     let equipStats: any = { total: 0, running: 0, idle: 0, maintenance: 0, error_count: 0 };
@@ -30,7 +29,6 @@ export async function GET(request: NextRequest) {
       `);
       if (Array.isArray(rows) && rows.length > 0) equipStats = rows[0];
     } catch (e) {
-      console.error('equipStats query failed:', e);
     }
 
     let equipmentList: any[] = [];
@@ -43,7 +41,6 @@ export async function GET(request: NextRequest) {
       `);
       equipmentList = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('equipmentList query failed:', e);
     }
 
     let qualityRate = 96.8;
@@ -60,7 +57,6 @@ export async function GET(request: NextRequest) {
         if (totalInspect > 0) qualityRate = Math.round((passedInspect / totalInspect) * 1000) / 10;
       }
     } catch (e) {
-      console.error('qualityStats query failed, using default');
     }
 
     let recentOrders: any[] = [];
@@ -77,7 +73,6 @@ export async function GET(request: NextRequest) {
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('recentOrders query failed:', e);
     }
 
     let inkStats: any = { total_opened: 0, in_use: 0, expired: 0, expiring_soon: 0 };
@@ -92,7 +87,6 @@ export async function GET(request: NextRequest) {
       `);
       if (Array.isArray(rows) && rows.length > 0) inkStats = rows[0];
     } catch (e) {
-      console.error('inkStats query failed:', e);
     }
 
     const dieStats: any = { total: 0, normal: 0, warning: 0, locked: 0, scrapped: 0 };
@@ -113,7 +107,6 @@ export async function GET(request: NextRequest) {
         dieStats.normal = dieStats.total - dieStats.warning - dieStats.locked - dieStats.scrapped;
       }
     } catch (e) {
-      console.error('dieStats query failed:', e);
     }
 
     const totalEquip = Number(equipStats?.total || 0);
@@ -179,7 +172,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('获取生产看板数据失败:', error);
     return NextResponse.json({ success: false, message: '获取生产看板数据失败' }, { status: 500 });
   }
 }

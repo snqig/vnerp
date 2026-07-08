@@ -409,7 +409,6 @@ export async function expandBomBatch(
       const result = await expandBom(productId, quantity, config);
       results.push(result);
     } catch (error) {
-      console.error(`展开BOM失败：产品ID ${productId}`, error);
       throw error;
     }
   }

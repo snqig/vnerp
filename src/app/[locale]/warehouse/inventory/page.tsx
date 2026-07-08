@@ -42,23 +42,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { AdvancedSearch, FilterField, ActiveFilter } from '@/components/ui/advanced-search';
 import { BatchToolbar, BatchAction } from '@/components/ui/batch-toolbar';
 import { useToast } from '@/hooks/use-toast';
+import { authFetch } from '@/lib/auth-fetch';
 
 export default function InventoryPage() {
   // 添加翻译钩子
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
-
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>),
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return fetch(url, { ...options, headers });
-  };
 
   const [inventoryItems, setInventoryItems] = useState<any[]>([]);
   const [warehouseStats, setWarehouseStats] = useState<any[]>([]);
@@ -232,7 +221,6 @@ export default function InventoryPage() {
         setWarehouses(list);
       }
     } catch (error) {
-      console.error('Failed to fetch warehouses:', error);
     }
   };
 
@@ -285,7 +273,6 @@ export default function InventoryPage() {
         setWarehouseStats(stats);
       }
     } catch (error) {
-      console.error('Failed to fetch inventory:', error);
     } finally {
       setLoading(false);
     }

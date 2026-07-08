@@ -13,7 +13,14 @@ import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutb
 import { DomainEvent } from '@/domain/shared/DomainTypes';
 import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import type { ColorStandardItemProps } from '@/domain/standard-card/entities/ColorStandardItem';
+import type { ProcessStandardItemProps } from '@/domain/standard-card/entities/ProcessStandardItem';
+import type { QualityStandardItemProps } from '@/domain/standard-card/entities/QualityStandardItem';
+import type { StandardCardMaterialProps } from '@/domain/standard-card/entities/StandardCardMaterial';
+import type { StandardCardInkProps } from '@/domain/standard-card/entities/StandardCardInk';
+import type { StandardCardToolingProps } from '@/domain/standard-card/entities/StandardCardTooling';
 
+/** DTO 用于传递明细项数据（结构化但未严格校验，运行时由实体构造器验证） */
 export interface CreateStandardCardDTO {
   name: string;
   type: StandardCardType;
@@ -24,12 +31,12 @@ export interface CreateStandardCardDTO {
   spec?: string;
   effectiveDate?: string;
   qualityRequirement?: string;
-  colorItems?: any[];
-  processItems?: any[];
-  qualityItems?: any[];
-  materials?: any[];
-  inks?: any[];
-  toolings?: any[];
+  colorItems?: ColorStandardItemProps[];
+  processItems?: ProcessStandardItemProps[];
+  qualityItems?: QualityStandardItemProps[];
+  materials?: StandardCardMaterialProps[];
+  inks?: StandardCardInkProps[];
+  toolings?: StandardCardToolingProps[];
   remark?: string;
   userId: number;
 }
@@ -52,6 +59,106 @@ export interface StandardCardQueryDTO {
   effectiveDateTo?: string;
   page?: number;
   pageSize?: number;
+}
+
+/** 数据库行类型（snake_case） */
+interface ColorItemRow {
+  id: number;
+  color_name: string;
+  pantone_code?: string;
+  cmyk_value?: string;
+  rgb_value?: string;
+  color_sample_image?: string;
+  tolerance?: string;
+  remark?: string;
+}
+
+interface ProcessItemRow {
+  id: number;
+  process_id?: number;
+  process_name?: string;
+  process_order?: number;
+  parameter_name?: string;
+  standard_value?: string;
+  tolerance?: string;
+  unit?: string;
+  standard_time?: string;
+  machine_type?: string;
+  description?: string;
+  remark?: string;
+}
+
+interface QualityItemRow {
+  id: number;
+  inspection_item?: string;
+  standard_value?: string;
+  tolerance?: string;
+  inspection_method?: string;
+  is_key?: number;
+  defect_level?: string;
+  remark?: string;
+}
+
+interface MaterialRow {
+  id: number;
+  material_id?: number;
+  material_code?: string;
+  material_name?: string;
+  spec?: string;
+  unit_consumption?: string;
+  loss_rate?: string;
+  remark?: string;
+}
+
+interface InkRow {
+  id: number;
+  ink_id?: number;
+  ink_code?: string;
+  ink_name?: string;
+  color_name?: string;
+  ratio?: string;
+  unit_consumption?: string;
+  remark?: string;
+}
+
+interface ToolingRow {
+  id: number;
+  die_mold_id?: number;
+  screen_plate_id?: number;
+  remark?: string;
+}
+
+interface AttachmentRow {
+  id: number;
+  file_name?: string;
+  file_path?: string;
+  file_size?: number;
+  version?: string;
+  remark?: string;
+  uploaded_by?: number;
+  uploaded_at?: Date;
+}
+
+interface VersionLogRow {
+  id: number;
+  version?: string;
+  change_type?: string;
+  change_content?: string;
+  changed_by?: number;
+  changed_by_name?: string;
+  changed_at?: Date;
+}
+
+/** 明细项返回结构 */
+interface StandardCardDetailItems {
+  colorItems: Array<Record<string, unknown>>;
+  processItems: Array<Record<string, unknown>>;
+  qualityItems: Array<Record<string, unknown>>;
+  materials: Array<Record<string, unknown>>;
+  inks: Array<Record<string, unknown>>;
+  toolings: Array<Record<string, unknown>>;
+  attachments: Array<Record<string, unknown>>;
+  versionLogs: Array<Record<string, unknown>>;
 }
 
 export class StandardCardApplicationService {
@@ -86,34 +193,36 @@ export class StandardCardApplicationService {
     if (dto.colorItems) {
       const { ColorStandardItem } =
         await import('@/domain/standard-card/entities/ColorStandardItem');
-      card.setColorItems(dto.colorItems.map((item: any) => new ColorStandardItem(item)));
+      card.setColorItems(dto.colorItems.map((item) => new ColorStandardItem(item)));
     }
     if (dto.processItems) {
       const { ProcessStandardItem } =
         await import('@/domain/standard-card/entities/ProcessStandardItem');
-      card.setProcessItems(dto.processItems.map((item: any) => new ProcessStandardItem(item)));
+      card.setProcessItems(dto.processItems.map((item) => new ProcessStandardItem(item)));
     }
     if (dto.qualityItems) {
       const { QualityStandardItem } =
         await import('@/domain/standard-card/entities/QualityStandardItem');
-      card.setQualityItems(dto.qualityItems.map((item: any) => new QualityStandardItem(item)));
+      card.setQualityItems(dto.qualityItems.map((item) => new QualityStandardItem(item)));
     }
     if (dto.materials) {
       const { StandardCardMaterial } =
         await import('@/domain/standard-card/entities/StandardCardMaterial');
-      card.setMaterials(dto.materials.map((item: any) => new StandardCardMaterial(item)));
+      card.setMaterials(dto.materials.map((item) => new StandardCardMaterial(item)));
     }
     if (dto.inks) {
       const { StandardCardInk } = await import('@/domain/standard-card/entities/StandardCardInk');
-      card.setInks(dto.inks.map((item: any) => new StandardCardInk(item)));
+      card.setInks(dto.inks.map((item) => new StandardCardInk(item)));
     }
     if (dto.toolings) {
       const { StandardCardTooling } =
         await import('@/domain/standard-card/entities/StandardCardTooling');
-      card.setToolings(dto.toolings.map((item: any) => new StandardCardTooling(item)));
+      card.setToolings(dto.toolings.map((item) => new StandardCardTooling(item)));
     }
 
     const id = await repo.save(card);
+    // id 字段为 readonly，仅在此处通过类型断言赋值以记录持久化主键
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (card as any).id = id;
 
     await this.saveDetailItems(id, dto);
@@ -167,35 +276,31 @@ export class StandardCardApplicationService {
     if (dto.colorItems) {
       const { ColorStandardItem } =
         await import('@/domain/standard-card/entities/ColorStandardItem');
-      updatedCard.setColorItems(dto.colorItems.map((item: any) => new ColorStandardItem(item)));
+      updatedCard.setColorItems(dto.colorItems.map((item) => new ColorStandardItem(item)));
     }
     if (dto.processItems) {
       const { ProcessStandardItem } =
         await import('@/domain/standard-card/entities/ProcessStandardItem');
-      updatedCard.setProcessItems(
-        dto.processItems.map((item: any) => new ProcessStandardItem(item))
-      );
+      updatedCard.setProcessItems(dto.processItems.map((item) => new ProcessStandardItem(item)));
     }
     if (dto.qualityItems) {
       const { QualityStandardItem } =
         await import('@/domain/standard-card/entities/QualityStandardItem');
-      updatedCard.setQualityItems(
-        dto.qualityItems.map((item: any) => new QualityStandardItem(item))
-      );
+      updatedCard.setQualityItems(dto.qualityItems.map((item) => new QualityStandardItem(item)));
     }
     if (dto.materials) {
       const { StandardCardMaterial } =
         await import('@/domain/standard-card/entities/StandardCardMaterial');
-      updatedCard.setMaterials(dto.materials.map((item: any) => new StandardCardMaterial(item)));
+      updatedCard.setMaterials(dto.materials.map((item) => new StandardCardMaterial(item)));
     }
     if (dto.inks) {
       const { StandardCardInk } = await import('@/domain/standard-card/entities/StandardCardInk');
-      updatedCard.setInks(dto.inks.map((item: any) => new StandardCardInk(item)));
+      updatedCard.setInks(dto.inks.map((item) => new StandardCardInk(item)));
     }
     if (dto.toolings) {
       const { StandardCardTooling } =
         await import('@/domain/standard-card/entities/StandardCardTooling');
-      updatedCard.setToolings(dto.toolings.map((item: any) => new StandardCardTooling(item)));
+      updatedCard.setToolings(dto.toolings.map((item) => new StandardCardTooling(item)));
     }
 
     await repo.update(updatedCard);
@@ -329,23 +434,20 @@ export class StandardCardApplicationService {
 
     const newCard = card.createNewVersion(StandardCard.generateVersion(card.version), userId);
     const newId = await repo.save(newCard);
+    // id 字段为 readonly，仅在此处通过类型断言赋值以记录持久化主键
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (newCard as any).id = newId;
 
     const {
       ColorStandardItemRepository,
-      ProcessStandardItemRepository,
-      QualityStandardItemRepository,
-      StandardCardMaterialRepository,
-      StandardCardInkRepository,
-      StandardCardToolingRepository,
     } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
 
     const colorRepo = new ColorStandardItemRepository();
-    const colorItems = await colorRepo.findByStandardCardId(id);
+    const colorItems = (await colorRepo.findByStandardCardId(id)) as ColorItemRow[];
     if (colorItems.length > 0) {
       await colorRepo.saveBatch(
         newId,
-        colorItems.map((item: any) => ({
+        colorItems.map((item) => ({
           colorName: item.color_name,
           pantoneCode: item.pantone_code,
           cmykValue: item.cmyk_value,
@@ -449,7 +551,7 @@ export class StandardCardApplicationService {
     await repo.delete(id);
   }
 
-  async getDetailItems(standardCardId: number): Promise<any> {
+  async getDetailItems(standardCardId: number): Promise<StandardCardDetailItems> {
     const {
       ColorStandardItemRepository,
       ProcessStandardItemRepository,
@@ -482,7 +584,7 @@ export class StandardCardApplicationService {
     ]);
 
     return {
-      colorItems: colorItems.map((item: any) => ({
+      colorItems: (colorItems as ColorItemRow[]).map((item) => ({
         id: item.id,
         colorName: item.color_name,
         pantoneCode: item.pantone_code,
@@ -492,7 +594,7 @@ export class StandardCardApplicationService {
         tolerance: item.tolerance,
         remark: item.remark,
       })),
-      processItems: processItems.map((item: any) => ({
+      processItems: (processItems as ProcessItemRow[]).map((item) => ({
         id: item.id,
         processId: item.process_id,
         processName: item.process_name,
@@ -506,7 +608,7 @@ export class StandardCardApplicationService {
         description: item.description,
         remark: item.remark,
       })),
-      qualityItems: qualityItems.map((item: any) => ({
+      qualityItems: (qualityItems as QualityItemRow[]).map((item) => ({
         id: item.id,
         inspectionItem: item.inspection_item,
         standardValue: item.standard_value,
@@ -516,7 +618,7 @@ export class StandardCardApplicationService {
         defectLevel: item.defect_level,
         remark: item.remark,
       })),
-      materials: materials.map((item: any) => ({
+      materials: (materials as MaterialRow[]).map((item) => ({
         id: item.id,
         materialId: item.material_id,
         materialCode: item.material_code,
@@ -526,7 +628,7 @@ export class StandardCardApplicationService {
         lossRate: item.loss_rate,
         remark: item.remark,
       })),
-      inks: inks.map((item: any) => ({
+      inks: (inks as InkRow[]).map((item) => ({
         id: item.id,
         inkId: item.ink_id,
         inkCode: item.ink_code,
@@ -536,13 +638,13 @@ export class StandardCardApplicationService {
         unitConsumption: item.unit_consumption,
         remark: item.remark,
       })),
-      toolings: toolings.map((item: any) => ({
+      toolings: (toolings as ToolingRow[]).map((item) => ({
         id: item.id,
         dieMoldId: item.die_mold_id,
         screenPlateId: item.screen_plate_id,
         remark: item.remark,
       })),
-      attachments: attachments.map((item: any) => ({
+      attachments: (attachments as AttachmentRow[]).map((item) => ({
         id: item.id,
         fileName: item.file_name,
         filePath: item.file_path,
@@ -552,7 +654,7 @@ export class StandardCardApplicationService {
         uploadedBy: item.uploaded_by,
         uploadedAt: item.uploaded_at,
       })),
-      versionLogs: versionLogs.map((item: any) => ({
+      versionLogs: (versionLogs as VersionLogRow[]).map((item) => ({
         id: item.id,
         version: item.version,
         changeType: item.change_type,
@@ -570,7 +672,10 @@ export class StandardCardApplicationService {
     });
   }
 
-  private async saveDetailItems(standardCardId: number, dto: any): Promise<void> {
+  private async saveDetailItems(
+    standardCardId: number,
+    dto: CreateStandardCardDTO
+  ): Promise<void> {
     const {
       ColorStandardItemRepository,
       ProcessStandardItemRepository,

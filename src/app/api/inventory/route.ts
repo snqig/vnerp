@@ -370,7 +370,6 @@ export const POST = withPermission(async (request: NextRequest) => {
               ]
             );
           } catch (e) {
-            console.error('[库存] 出库批次分配记录写入失败:', e);
           }
 
           return { batchNo, quantity, batch, isFifoRecommended };

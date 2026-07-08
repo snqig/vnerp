@@ -23,7 +23,6 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0)
         overview.totalInspections = Number(rows[0].total || 0);
     } catch (e) {
-      console.error('quality overview failed:', e);
     }
 
     try {
@@ -46,7 +45,6 @@ export async function GET(request: NextRequest) {
             : 0;
       }
     } catch (e) {
-      console.error('quality detail failed:', e);
     }
 
     let byType: any[] = [];
@@ -58,7 +56,6 @@ export async function GET(request: NextRequest) {
       `);
       byType = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('quality byType failed:', e);
     }
 
     let defectTrend: any[] = [];
@@ -71,7 +68,6 @@ export async function GET(request: NextRequest) {
       `);
       defectTrend = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('quality defectTrend failed:', e);
     }
 
     let topDefects: any[] = [];
@@ -82,7 +78,6 @@ export async function GET(request: NextRequest) {
       `);
       topDefects = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('quality topDefects failed:', e);
     }
 
     let recentInspections: any[] = [];
@@ -93,7 +88,6 @@ export async function GET(request: NextRequest) {
       `);
       recentInspections = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('quality recent failed:', e);
     }
 
     let processQuality: any[] = [];
@@ -108,7 +102,6 @@ export async function GET(request: NextRequest) {
       `);
       processQuality = Array.isArray(rows) ? rows : [];
     } catch (e) {
-      console.error('quality processQuality failed:', e);
     }
 
     return NextResponse.json({
@@ -116,7 +109,6 @@ export async function GET(request: NextRequest) {
       data: { overview, byType, defectTrend, topDefects, recentInspections, processQuality },
     });
   } catch (error) {
-    console.error('获取质量看板数据失败:', error);
     return NextResponse.json({ success: false, message: '获取质量看板数据失败' }, { status: 500 });
   }
 }

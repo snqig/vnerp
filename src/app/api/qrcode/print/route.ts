@@ -57,7 +57,6 @@ export async function POST(request: NextRequest) {
 
     return successResponse(printResult, '打印任务已创建');
   } catch (error: any) {
-    console.error('创建打印任务失败:', error);
     return errorResponse('创建打印任务失败: ' + error.message, 500);
   }
 }
@@ -81,7 +80,6 @@ export async function GET(request: NextRequest) {
 
     return successResponse(records, '获取打印记录成功');
   } catch (error: any) {
-    console.error('获取打印记录失败:', error);
     return errorResponse('获取打印记录失败: ' + error.message, 500);
   }
 }

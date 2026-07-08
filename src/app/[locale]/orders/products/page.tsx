@@ -231,7 +231,6 @@ export default function ProductsPage() {
         toast.error(result.message || t('fetchProductListFailed'));
       }
     } catch (error) {
-      console.error(t('fetchProductListFailed'), error);
       toast.error(t('fetchProductListFailed'));
     } finally {
       setLoading(false);
@@ -246,7 +245,6 @@ export default function ProductsPage() {
         setCategories(result.data || []);
       }
     } catch (error) {
-      console.error('获取分类失败:', error);
     }
   }, []);
 
@@ -291,7 +289,6 @@ export default function ProductsPage() {
         toast.info(t('noBomDataForProduct'));
       }
     } catch (error) {
-      console.error(t('fetchBomFailed'), error);
       toast.error(t('fetchBomFailed'));
       setBomHeader(null);
       setBomLines([]);
@@ -326,7 +323,6 @@ export default function ProductsPage() {
         toast.info(t('noVersionHistory'));
       }
     } catch (error) {
-      console.error(t('fetchVersionHistoryFailed'), error);
       toast.error(t('fetchVersionHistoryFailed'));
       setBomHeader(null);
       setVersionHistory([]);
@@ -378,7 +374,6 @@ export default function ProductsPage() {
         toast.error(result.message || t('updateFailed'));
       }
     } catch (error) {
-      console.error(t('productUpdateFailed'), error);
       toast.error(t('productUpdateFailed'));
     }
   };

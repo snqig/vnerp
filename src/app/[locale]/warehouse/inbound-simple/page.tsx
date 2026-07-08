@@ -35,14 +35,11 @@ export default function SimpleInboundPage() {
 
         if (result.success) {
           const list = result.data?.list || result.data || [];
-          console.log('获取到数据:', list.length, '条');
           setRecords(list);
         } else {
-          console.log('API返回失败:', result.message);
           setError(result.message);
         }
       } catch (e: any) {
-        console.log('请求异常:', e.message);
         setError(e.message);
       } finally {
         setLoading(false);

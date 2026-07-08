@@ -1,11 +1,11 @@
-const mysql = require('mysql2/promise');
+﻿const mysql = require('mysql2/promise');
 
 // 数据库配置
 const dbConfig = {
   host: '127.0.0.1',
   port: 3306,
   user: 'root',
-  password: 'Snqig521223',
+  password: process.env.DB_PASSWORD || '',
   database: 'vnerpdacahng',
   charset: 'utf8mb4',
 };

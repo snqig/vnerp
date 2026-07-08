@@ -84,7 +84,6 @@ export default function MaterialReturnPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
   const fetchWarehouses = async () => {
@@ -93,7 +92,6 @@ export default function MaterialReturnPage() {
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
     } catch (e) {
-      console.error(e);
     }
   };
   useEffect(() => {

@@ -83,7 +83,6 @@ export default function MaterialIssuePage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
   const fetchWarehouses = async () => {
@@ -98,7 +97,6 @@ export default function MaterialIssuePage() {
           }))
         );
     } catch (e) {
-      console.error(e);
     }
   };
   useEffect(() => {

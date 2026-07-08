@@ -1,6 +1,6 @@
-const mysql = require('mysql2/promise');
+﻿const mysql = require('mysql2/promise');
 async function main() {
-  const c = await mysql.createConnection({ host: '127.0.0.1', user: 'root', password: 'Snqig521223', database: 'vnerpdacahng' });
+  const c = await mysql.createConnection({ host: '127.0.0.1', user: 'root', password: process.env.DB_PASSWORD || '', database: 'vnerpdacahng' });
   await c.execute("UPDATE pur_supplier SET credit_level='S' WHERE id=1");
   await c.execute("UPDATE pur_supplier SET credit_level='A' WHERE id=2");
   await c.execute("UPDATE pur_supplier SET credit_level='B' WHERE id=3");

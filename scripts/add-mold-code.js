@@ -1,10 +1,10 @@
-const mysql = require('mysql2/promise');
+﻿const mysql = require('mysql2/promise');
 
 const dbConfig = {
   host: '127.0.0.1',
   port: 3306,
   user: 'root',
-  password: 'Snqig521223',
+  password: process.env.DB_PASSWORD || '',
   database: 'vnerpdacahng',
 };
 

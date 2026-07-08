@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ERP系统全模块模拟数据插入脚本 V3
  * 根据实际数据库表结构调整
  * 包含：客户管理、采购申请、仓库管理、生产管理、打样管理、人事管理
@@ -10,7 +10,7 @@ const mysql = require('mysql2/promise');
 const dbConfig = {
   host: '127.0.0.1',
   user: 'root',
-  password: 'Snqig521223',
+  password: process.env.DB_PASSWORD || '',
   database: 'vnerpdacahng',
   port: 3306,
   multipleStatements: true

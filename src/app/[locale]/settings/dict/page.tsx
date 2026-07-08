@@ -63,7 +63,6 @@ export default function DictPage() {
         }
       }
     } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }

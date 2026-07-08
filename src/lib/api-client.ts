@@ -1,57 +1,36 @@
 'use client';
 
+import { authFetch } from '@/lib/auth-fetch';
+
 const API_BASE = '';
 
 /**
- * 统一的API请求客户端，自动添加认证token
+ * 统一的API请求客户端，委托 authFetch 处理认证令牌、CSRF 和 401 无感刷新
  */
 export class ApiClient {
-  static getToken(): string | null {
-    return typeof window !== 'undefined'
-      ? localStorage.getItem('token') || sessionStorage.getItem('token')
-      : null;
-  }
-
-  static getDefaultHeaders(): HeadersInit {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    const token = this.getToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    // CSRF token：非安全方法需附带 X-CSRF-Token header
-    if (typeof document !== 'undefined') {
-      const csrfMatch = document.cookie.match(/(^| )csrf_token=([^;]+)/);
-      if (csrfMatch) {
-        headers['X-CSRF-Token'] = csrfMatch[2];
-      }
-    }
-
-    return headers;
-  }
-
-  static async get<T = any>(url: string, params?: Record<string, any>): Promise<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static async get<T = any>(url: string, params?: Record<string, string | number | boolean | null | undefined>): Promise<T> {
     const queryString = params
       ? '?' +
-        new URLSearchParams(Object.entries(params).filter(([_, v]) => v != null) as any).toString()
+        new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
       : '';
 
-    const response = await fetch(`${API_BASE}${url}${queryString}`, {
+    const response = await authFetch(`${API_BASE}${url}${queryString}`, {
       method: 'GET',
-      headers: this.getDefaultHeaders(),
       credentials: 'include',
     });
 
     return this.handleResponse<T>(response);
   }
 
-  static async post<T = any>(url: string, data?: any): Promise<T> {
-    const response = await fetch(`${API_BASE}${url}`, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static async post<T = any>(url: string, data?: unknown): Promise<T> {
+    const response = await authFetch(`${API_BASE}${url}`, {
       method: 'POST',
-      headers: this.getDefaultHeaders(),
       body: data ? JSON.stringify(data) : undefined,
       credentials: 'include',
     });
@@ -59,10 +38,10 @@ export class ApiClient {
     return this.handleResponse<T>(response);
   }
 
-  static async put<T = any>(url: string, data?: any): Promise<T> {
-    const response = await fetch(`${API_BASE}${url}`, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static async put<T = any>(url: string, data?: unknown): Promise<T> {
+    const response = await authFetch(`${API_BASE}${url}`, {
       method: 'PUT',
-      headers: this.getDefaultHeaders(),
       body: data ? JSON.stringify(data) : undefined,
       credentials: 'include',
     });
@@ -70,12 +49,18 @@ export class ApiClient {
     return this.handleResponse<T>(response);
   }
 
-  static async delete<T = any>(url: string, params?: Record<string, any>): Promise<T> {
-    const queryString = params ? '?' + new URLSearchParams(params as any).toString() : '';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static async delete<T = any>(url: string, params?: Record<string, string | number | boolean | null | undefined>): Promise<T> {
+    const queryString = params
+      ? '?' + new URLSearchParams(
+        Object.entries(params)
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => [k, String(v)])
+      ).toString()
+      : '';
 
-    const response = await fetch(`${API_BASE}${url}${queryString}`, {
+    const response = await authFetch(`${API_BASE}${url}${queryString}`, {
       method: 'DELETE',
-      headers: this.getDefaultHeaders(),
       credentials: 'include',
     });
 
@@ -85,13 +70,7 @@ export class ApiClient {
   private static async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       if (response.status === 401) {
-        // 认证失败，清除token
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
-          sessionStorage.removeItem('token');
-          localStorage.removeItem('user');
-          sessionStorage.removeItem('user');
-        }
+        // authFetch 刷新失败已触发 clearAuthAndRedirect，此处仅抛错中断调用方
         throw new Error('未登录或登录已过期');
       }
 

@@ -60,6 +60,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { authFetch } from '@/lib/auth-fetch';
 
 // 图标映射
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -246,14 +247,12 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
           // 只在首次缺失时打印一次警告
           if (!warnedKeys.has(menu.code)) {
             warnedKeys.add(menu.code);
-            console.warn(`[i18n:Nav] ⚠ 菜单翻译缺失: code="${menu.code}", 原始名称="${menu.name}"`);
           }
         }
       } catch {
         // 只在首次异常时打印一次警告
         if (!warnedKeys.has(menu.code)) {
           warnedKeys.add(menu.code);
-          console.warn(`[i18n:Nav] ⚠️ 菜单翻译异常: code="${menu.code}"`);
         }
       }
     }
@@ -303,23 +302,13 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
 
   // 防抖保存到数据库
   const debouncedSaveToDatabase = useCallback((orders: MenuItem[]) => {
-    // 与AuthContext保持一致的令牌获取逻辑
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    if (!token) {
-      return;
-    }
-
     const orderData = orders.map((m, index) => ({
       id: m.id,
       sort_order: index + 1,
     }));
 
-    fetch('/api/menu/sort-order', {
+    authFetch('/api/menu/sort-order', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify({ orders: orderData }),
     }).catch(() => {});
   }, []);
@@ -618,9 +607,27 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
             <ScrollArea className="flex-1 h-[calc(100vh-8rem)]">
               <nav className="p-3">
                 {isLoading ? (
-                  <div className="flex items-center justify-center py-8 text-muted-foreground">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                  </div>
+                  collapsed ? (
+                    <div className="space-y-1" aria-busy="true">
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="flex justify-center px-3 py-2.5 animate-pulse">
+                          <div className="w-5 h-5 rounded bg-muted" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-1" aria-busy="true" aria-label="Loading menu">
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="flex items-center gap-3 px-3 py-2.5 animate-pulse">
+                          <div className="w-5 h-5 rounded bg-muted flex-shrink-0" />
+                          <div
+                            className="h-3 rounded bg-muted"
+                            style={{ width: `${60 + i * 5}%` }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )
                 ) : !Array.isArray(orderedMenus) || orderedMenus.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground text-sm">{tc('noMenuPermission')}</div>
                 ) : (

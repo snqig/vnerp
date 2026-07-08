@@ -64,6 +64,8 @@ import {
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
+import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
+import type { ExportColumn } from '@/lib/global-export-service';
 
 // 客户列表项接口（基于 crm_customer 表）
 interface CustomerListItem {
@@ -211,10 +213,8 @@ export default function CustomersPage() {
         setCustomers(formattedCustomers);
         setTotalCount(result.pagination?.total || result.data?.total || 0);
       } else {
-        console.error(t('loadDataFailed'), result.message);
       }
     } catch (error) {
-      console.error(t('loadDataFailed'), error);
     } finally {
       setLoading(false);
     }
@@ -285,7 +285,6 @@ export default function CustomersPage() {
         alert(tc('deleteFailed') + ': ' + result.message);
       }
     } catch (error) {
-      console.error(tc('deleteFailed'), error);
       alert(t('deleteNetworkError'));
     }
   };
@@ -330,7 +329,6 @@ export default function CustomersPage() {
         alert(t('saveFailed') + ': ' + result.message);
       }
     } catch (error) {
-      console.error(t('saveFailed'), error);
       alert(t('saveNetworkError'));
     }
   };
@@ -549,113 +547,20 @@ export default function CustomersPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>{t('customerList')}</CardTitle>
-            <TableExportToolbar
-              selectedCount={selectedIds.size}
-              totalCount={filteredCustomers.length}
-              onSelectAll={() => setSelectedIds(new Set(filteredCustomers.map((c) => c.id)))}
-              onDeselectAll={() => setSelectedIds(new Set())}
-              onPrint={() =>
-                printTable(
-                  filteredCustomers.map((c) => ({
-                    [t('customerCode')]: c.customerCode,
-                    [t('customerName')]: c.customerName,
-                    [t('type')]: t(CUSTOMER_TYPE_LABEL_KEYS[c.customerType] || 'typeEnterprise'),
-                    [t('contactPerson')]: c.contactName,
-                    [t('contactPhone')]: c.contactPhone,
-                    [t('address')]: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                    [t('followUpStatus')]: t(FOLLOW_UP_STATUS_LABEL_KEYS[c.followUpStatus] || 'statusPotential'),
-                    [tc('status')]: tc(STATUS_LABEL_KEYS[c.status] || 'enabled'),
-                  })),
-                  [
-                    { key: t('customerCode'), header: t('customerCode') },
-                    { key: t('customerName'), header: t('customerName') },
-                    { key: t('type'), header: t('type') },
-                    { key: t('contactPerson'), header: t('contactPerson') },
-                    { key: t('contactPhone'), header: t('contactPhone') },
-                    { key: t('address'), header: t('address') },
-                    { key: t('followUpStatus'), header: t('followUpStatus') },
-                    { key: tc('status'), header: tc('status') },
-                  ],
-                  t('customerList')
-                )
-              }
-              onExportPDF={() =>
-                exportTableToPDF(
-                  filteredCustomers.map((c) => ({
-                    [t('customerCode')]: c.customerCode,
-                    [t('customerName')]: c.customerName,
-                    [t('type')]: t(CUSTOMER_TYPE_LABEL_KEYS[c.customerType] || 'typeEnterprise'),
-                    [t('contactPerson')]: c.contactName,
-                    [t('contactPhone')]: c.contactPhone,
-                    [t('address')]: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                    [t('followUpStatus')]: t(FOLLOW_UP_STATUS_LABEL_KEYS[c.followUpStatus] || 'statusPotential'),
-                    [tc('status')]: tc(STATUS_LABEL_KEYS[c.status] || 'enabled'),
-                  })),
-                  t('customerList'),
-                  [
-                    { key: t('customerCode'), header: t('customerCode') },
-                    { key: t('customerName'), header: t('customerName') },
-                    { key: t('type'), header: t('type') },
-                    { key: t('contactPerson'), header: t('contactPerson') },
-                    { key: t('contactPhone'), header: t('contactPhone') },
-                    { key: t('address'), header: t('address') },
-                    { key: t('followUpStatus'), header: t('followUpStatus') },
-                    { key: tc('status'), header: tc('status') },
-                  ],
-                  t('customerList')
-                )
-              }
-              onExportXLS={() =>
-                exportTableToXLS(
-                  filteredCustomers.map((c) => ({
-                    [t('customerCode')]: c.customerCode,
-                    [t('customerName')]: c.customerName,
-                    [t('type')]: t(CUSTOMER_TYPE_LABEL_KEYS[c.customerType] || 'typeEnterprise'),
-                    [t('contactPerson')]: c.contactName,
-                    [t('contactPhone')]: c.contactPhone,
-                    [t('address')]: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                    [t('followUpStatus')]: t(FOLLOW_UP_STATUS_LABEL_KEYS[c.followUpStatus] || 'statusPotential'),
-                    [tc('status')]: tc(STATUS_LABEL_KEYS[c.status] || 'enabled'),
-                  })),
-                  t('customerList'),
-                  [
-                    { key: t('customerCode'), header: t('customerCode') },
-                    { key: t('customerName'), header: t('customerName') },
-                    { key: t('type'), header: t('type') },
-                    { key: t('contactPerson'), header: t('contactPerson') },
-                    { key: t('contactPhone'), header: t('contactPhone') },
-                    { key: t('address'), header: t('address') },
-                    { key: t('followUpStatus'), header: t('followUpStatus') },
-                    { key: tc('status'), header: tc('status') },
-                  ]
-                )
-              }
-              onExportWORD={() =>
-                exportTableToWORD(
-                  filteredCustomers.map((c) => ({
-                    [t('customerCode')]: c.customerCode,
-                    [t('customerName')]: c.customerName,
-                    [t('type')]: t(CUSTOMER_TYPE_LABEL_KEYS[c.customerType] || 'typeEnterprise'),
-                    [t('contactPerson')]: c.contactName,
-                    [t('contactPhone')]: c.contactPhone,
-                    [t('address')]: `${c.province || ''}${c.city || ''}${c.district || ''}${c.address || ''}`,
-                    [t('followUpStatus')]: t(FOLLOW_UP_STATUS_LABEL_KEYS[c.followUpStatus] || 'statusPotential'),
-                    [tc('status')]: tc(STATUS_LABEL_KEYS[c.status] || 'enabled'),
-                  })),
-                  t('customerList'),
-                  [
-                    { key: t('customerCode'), header: t('customerCode') },
-                    { key: t('customerName'), header: t('customerName') },
-                    { key: t('type'), header: t('type') },
-                    { key: t('contactPerson'), header: t('contactPerson') },
-                    { key: t('contactPhone'), header: t('contactPhone') },
-                    { key: t('address'), header: t('address') },
-                    { key: t('followUpStatus'), header: t('followUpStatus') },
-                    { key: tc('status'), header: tc('status') },
-                  ],
-                  t('customerList')
-                )
-              }
+            <GlobalExportToolbar
+              filename="客户列表"
+              title="客户列表"
+              columns={[
+                { key: 'customerCode', label: t('customerCode'), width: 15 },
+                { key: 'customerName', label: t('customerName'), width: 25 },
+                { key: 'customerType', label: t('type'), width: 10, formatter: (v) => t(CUSTOMER_TYPE_LABEL_KEYS[v] || 'typeEnterprise') },
+                { key: 'contactName', label: t('contactPerson'), width: 12 },
+                { key: 'contactPhone', label: t('contactPhone'), width: 15 },
+                { key: 'address', label: t('address'), width: 30, formatter: (_v, row) => `${row.province || ''}${row.city || ''}${row.district || ''}${row.address || ''}` },
+                { key: 'followUpStatus', label: t('followUpStatus'), width: 12, formatter: (v) => t(FOLLOW_UP_STATUS_LABEL_KEYS[v] || 'statusPotential') },
+                { key: 'status', label: tc('status'), width: 10, formatter: (v) => tc(STATUS_LABEL_KEYS[v] || 'enabled') },
+              ]}
+              data={selectedIds.size > 0 ? filteredCustomers.filter((c) => selectedIds.has(c.id)) : filteredCustomers}
             />
           </CardHeader>
           <CardContent>

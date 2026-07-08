@@ -1,7 +1,26 @@
+import mysql from 'mysql2/promise';
 import { IReceivableRepository } from '@/domain/finance/repositories/IReceivableRepository';
 import { Receivable, ReceivableProps } from '@/domain/finance/aggregates/Receivable';
 import { query, execute, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
+
+/** fin_receivable 表行类型 */
+interface FinReceivableRow {
+  id: number;
+  receivable_no: string;
+  source_type: number | null;
+  source_id: number | null;
+  source_no: string | null;
+  customer_id: number;
+  amount: number | string;
+  received_amount: number | string | null;
+  balance: number | string | null;
+  due_date: string | null;
+  status: number;
+  remark: string | null;
+  create_time: string | null;
+  update_time: string | null;
+}
 
 const COLUMNS = `id, receivable_no, source_type, source_id, source_no, customer_id,
                  amount, received_amount, balance, due_date, status, remark,
@@ -9,7 +28,7 @@ const COLUMNS = `id, receivable_no, source_type, source_id, source_no, customer_
 
 export class MysqlReceivableRepository implements IReceivableRepository {
   async findById(id: number): Promise<Receivable | null> {
-    const rows = await query<any>(
+    const rows = await query<FinReceivableRow>(
       `SELECT ${COLUMNS} FROM fin_receivable WHERE id = ?`,
       [id]
     );
@@ -18,7 +37,7 @@ export class MysqlReceivableRepository implements IReceivableRepository {
   }
 
   async findByReceivableNo(receivableNo: string): Promise<Receivable | null> {
-    const rows = await query<any>(
+    const rows = await query<FinReceivableRow>(
       `SELECT ${COLUMNS} FROM fin_receivable WHERE receivable_no = ?`,
       [receivableNo]
     );
@@ -27,7 +46,7 @@ export class MysqlReceivableRepository implements IReceivableRepository {
   }
 
   async findByCustomerId(customerId: number): Promise<Receivable[]> {
-    const rows = await query<any>(
+    const rows = await query<FinReceivableRow>(
       `SELECT ${COLUMNS} FROM fin_receivable WHERE customer_id = ? ORDER BY create_time DESC`,
       [customerId]
     );
@@ -35,7 +54,7 @@ export class MysqlReceivableRepository implements IReceivableRepository {
   }
 
   async findByStatus(status: number): Promise<Receivable[]> {
-    const rows = await query<any>(
+    const rows = await query<FinReceivableRow>(
       `SELECT ${COLUMNS} FROM fin_receivable WHERE status = ? ORDER BY create_time DESC`,
       [status]
     );
@@ -44,7 +63,7 @@ export class MysqlReceivableRepository implements IReceivableRepository {
 
   async findOverdue(date?: string): Promise<Receivable[]> {
     const checkDate = date || new Date().toISOString().slice(0, 10);
-    const rows = await query<any>(
+    const rows = await query<FinReceivableRow>(
       `SELECT ${COLUMNS} FROM fin_receivable
        WHERE due_date < ? AND status IN (1, 2)
        ORDER BY due_date ASC`,
@@ -58,7 +77,7 @@ export class MysqlReceivableRepository implements IReceivableRepository {
       receivable.receivableNo || (await generateDocumentNo('receivable'));
 
     return transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result] = await conn.execute<mysql.ResultSetHeader>(
         `INSERT INTO fin_receivable
          (receivable_no, source_type, source_id, source_no, customer_id,
           amount, received_amount, balance, due_date, status, remark)
@@ -118,12 +137,12 @@ export class MysqlReceivableRepository implements IReceivableRepository {
     await execute(`DELETE FROM fin_receivable WHERE id = ?`, [id]);
   }
 
-  private mapToAggregate(row: any): Receivable {
+  private mapToAggregate(row: FinReceivableRow): Receivable {
     const props: ReceivableProps = {
       id: row.id,
       receivableNo: row.receivable_no,
-      sourceType: row.source_type,
-      sourceId: row.source_id,
+      sourceType: row.source_type ?? undefined,
+      sourceId: row.source_id ?? undefined,
       sourceNo: row.source_no || '',
       customerId: row.customer_id,
       amount: Number(row.amount),
@@ -132,8 +151,8 @@ export class MysqlReceivableRepository implements IReceivableRepository {
       dueDate: row.due_date || '',
       status: row.status,
       remark: row.remark || '',
-      createTime: row.create_time,
-      updateTime: row.update_time,
+      createTime: row.create_time ?? undefined,
+      updateTime: row.update_time ?? undefined,
     };
     return Receivable.reconstitute(props);
   }

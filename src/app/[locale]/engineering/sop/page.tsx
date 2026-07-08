@@ -143,7 +143,6 @@ export default function SOPManagementPage() {
         setTotal(result.data.total || 0);
       }
     } catch (e) {
-      console.error(e);
     }
   };
 

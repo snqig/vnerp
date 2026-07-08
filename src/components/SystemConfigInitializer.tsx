@@ -10,13 +10,11 @@ export default function SystemConfigInitializer() {
         const res = await fetch('/api/system/config?pageSize=200');
 
         if (!res.ok) {
-          console.warn('系统全局配置加载失败，HTTP状态:', res.status);
           return;
         }
 
         const contentType = res.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
-          console.warn('系统全局配置返回非JSON响应');
           return;
         }
 
@@ -50,10 +48,8 @@ export default function SystemConfigInitializer() {
           });
 
           setConfig(configMap);
-          console.log('✅ 系统全局配置加载成功');
         }
       } catch (error) {
-        console.error('❌ 系统全局配置加载失败:', error);
       }
     };
 
