@@ -32,7 +32,7 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
       <div className="flex items-center justify-center h-full min-h-[200px] bg-white/5 rounded-lg">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-2"></div>
-          <p className="text-white/50 text-sm">加载图表中...</p>
+          <p className="text-white/50 text-sm">{tc('text_tszxco')}</p>
         </div>
       </div>
     );
@@ -42,12 +42,12 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
     return (
       <div className="flex items-center justify-center h-full min-h-[200px] bg-red-500/10 rounded-lg">
         <div className="text-center">
-          <p className="text-red-400 text-sm mb-2">图表加载失败</p>
-          <button 
+          <p className="text-red-400 text-sm mb-2">{tc('text_7swziz')}</p>
+          <button
             onClick={() => window.location.reload()}
             className="text-cyan-400 hover:text-cyan-300 text-sm underline"
           >
-            点击重试
+            {tc('text_ekjr0q')}
           </button>
         </div>
       </div>
@@ -56,6 +56,7 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
 
   return (
     <div className="relative w-full h-full">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
         alt={title || '图表'}
@@ -68,26 +69,32 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
   );
 }
 
-export function ChartPlaceholder({ title, type = 'loading' }: { title?: string; type?: 'loading' | 'empty' | 'error' }) {
+export function ChartPlaceholder({
+  title,
+  type = 'loading',
+}: {
+  title?: string;
+  type?: 'loading' | 'empty' | 'error';
+}) {
   return (
     <div className="flex items-center justify-center h-full min-h-[200px] bg-white/5 rounded-lg">
       <div className="text-center">
         {type === 'loading' && (
           <>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-2"></div>
-            <p className="text-white/50 text-sm">加载图表中...</p>
+            <p className="text-white/50 text-sm">{tc('text_tszxco')}</p>
           </>
         )}
         {type === 'empty' && (
           <>
             <div className="text-white/30 text-4xl mb-2">📊</div>
-            <p className="text-white/40 text-sm">暂无数据</p>
+            <p className="text-white/40 text-sm">{tc('text_dcv57g')}</p>
           </>
         )}
         {type === 'error' && (
           <>
             <div className="text-red-400 text-4xl mb-2">⚠️</div>
-            <p className="text-red-400 text-sm">图表加载失败</p>
+            <p className="text-red-400 text-sm">{tc('text_7swziz')}</p>
           </>
         )}
       </div>
@@ -95,7 +102,13 @@ export function ChartPlaceholder({ title, type = 'loading' }: { title?: string; 
   );
 }
 
-export function ChartGrid({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+export function ChartGrid({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${className}`}>
       {children}
@@ -103,14 +116,14 @@ export function ChartGrid({ children, className = '' }: { children: React.ReactN
   );
 }
 
-export function ChartCard({ 
-  title, 
-  children, 
+export function ChartCard({
+  title,
+  children,
   icon,
-  className = '' 
-}: { 
-  title: string; 
-  children: React.ReactNode; 
+  className = '',
+}: {
+  title: string;
+  children: React.ReactNode;
   icon?: React.ReactNode;
   className?: string;
 }) {
@@ -123,9 +136,7 @@ export function ChartCard({
         {icon}
         <span className="text-sm font-medium text-white/80">{title}</span>
       </div>
-      <div className="p-4 h-[300px]">
-        {children}
-      </div>
+      <div className="p-4 h-[300px]">{children}</div>
     </div>
   );
 }

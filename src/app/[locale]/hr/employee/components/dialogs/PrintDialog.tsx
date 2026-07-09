@@ -13,8 +13,6 @@ import { Printer } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Employee } from '../../types';
 
-/* eslint-disable @next/next/no-img-element */
-
 interface PrintDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -68,6 +66,7 @@ export function PrintDialog({
                   <div className="qr-section">
                     {qrCodeUrl && (
                       <>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={qrCodeUrl} alt={tc('qrCode')} className="qr-code" />
                       </>
                     )}

@@ -95,11 +95,9 @@ export default function EmployeePage() {
 
   // 计算统计数据
   const calculateStats = useCallback((data: Employee[]) => {
-    logger.info(
-      { module: 'Hr', action: 'calculateStats' },
-      '开始计算员工统计数据',
-      { employeeCount: data.length }
-    );
+    logger.info({ module: 'Hr', action: 'calculateStats' }, '开始计算员工统计数据', {
+      employeeCount: data.length,
+    });
     const total = data.length;
     const male = data.filter((e) => e.gender === 1).length;
     const female = data.filter((e) => e.gender === 2).length;
@@ -108,16 +106,18 @@ export default function EmployeePage() {
 
     const education: Record<string, number> = {};
     data.forEach((e) => {
-      const edu = e.education || t("notFilled");
+      const edu = e.education || t('notFilled');
       education[edu] = (education[edu] || 0) + 1;
     });
 
     setStats({ total, male, female, avgAge, education });
-    logger.info(
-      { module: 'Hr', action: 'calculateStats' },
-      '员工统计数据计算完成',
-      { total, male, female, avgAge, education }
-    );
+    logger.info({ module: 'Hr', action: 'calculateStats' }, '员工统计数据计算完成', {
+      total,
+      male,
+      female,
+      avgAge,
+      education,
+    });
   }, []);
 
   // 排序函数
@@ -156,21 +156,16 @@ export default function EmployeePage() {
 
   // 获取员工列表
   const fetchEmployees = useCallback(async () => {
-    logger.info(
-      { module: 'Hr', action: 'fetchEmployees' },
-      '开始获取员工列表',
-      { keyword: debouncedSearch || '(全部)' }
-    );
+    logger.info({ module: 'Hr', action: 'fetchEmployees' }, '开始获取员工列表', {
+      keyword: debouncedSearch || '(全部)',
+    });
     setLoading(true);
     try {
       let employeeList: Employee[];
 
       if (USE_MOCK_HR_DATA) {
         // 使用模拟数据
-        logger.info(
-          { module: 'Hr', action: 'fetchEmployees' },
-          '使用 mock 数据'
-        );
+        logger.info({ module: 'Hr', action: 'fetchEmployees' }, '使用 mock 数据');
         const mockResponse = mockApiListResponse(mockEmployees);
         employeeList = mockEmployees;
       } else {
@@ -180,7 +175,7 @@ export default function EmployeePage() {
         const response = await authFetch(url);
         const result = await response.json();
         if (result.success) {
-          employeeList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+          employeeList = Array.isArray(result.data) ? result.data : result.data?.list || [];
         } else {
           throw new Error('API returned unsuccessful');
         }
@@ -188,18 +183,14 @@ export default function EmployeePage() {
 
       setEmployees(employeeList);
       calculateStats(employeeList);
-      logger.info(
-        { module: 'Hr', action: 'fetchEmployees' },
-        '员工列表获取成功',
-        { count: employeeList.length }
-      );
+      logger.info({ module: 'Hr', action: 'fetchEmployees' }, '员工列表获取成功', {
+        count: employeeList.length,
+      });
     } catch (error) {
-      logger.error(
-        { module: 'Hr', action: 'fetchEmployees' },
-        '获取员工列表失败',
-        { error: (error as Error).message }
-      );
-      toast.error(t("fetchEmployeesFailed"));
+      logger.error({ module: 'Hr', action: 'fetchEmployees' }, '获取员工列表失败', {
+        error: (error as Error).message,
+      });
+      toast.error(t('fetchEmployeesFailed'));
     } finally {
       setLoading(false);
     }
@@ -218,22 +209,18 @@ export default function EmployeePage() {
         const response = await fetch('/api/organization/department');
         const result = await response.json();
         if (result.success) {
-          deptList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+          deptList = Array.isArray(result.data) ? result.data : result.data?.list || [];
         }
       }
 
       setDepartments(deptList);
-      logger.info(
-        { module: 'Hr', action: 'fetchDepartments' },
-        '部门列表获取成功',
-        { count: deptList.length }
-      );
+      logger.info({ module: 'Hr', action: 'fetchDepartments' }, '部门列表获取成功', {
+        count: deptList.length,
+      });
     } catch (error) {
-      logger.error(
-        { module: 'Hr', action: 'fetchDepartments' },
-        '获取部门列表失败',
-        { error: (error as Error).message }
-      );
+      logger.error({ module: 'Hr', action: 'fetchDepartments' }, '获取部门列表失败', {
+        error: (error as Error).message,
+      });
     }
   }, []);
 
@@ -250,22 +237,18 @@ export default function EmployeePage() {
         const response = await authFetch('/api/organization/role');
         const result = await response.json();
         if (result.success) {
-          roleList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+          roleList = Array.isArray(result.data) ? result.data : result.data?.list || [];
         }
       }
 
       setRoles(roleList);
-      logger.info(
-        { module: 'Hr', action: 'fetchRoles' },
-        '角色列表获取成功',
-        { count: roleList.length }
-      );
+      logger.info({ module: 'Hr', action: 'fetchRoles' }, '角色列表获取成功', {
+        count: roleList.length,
+      });
     } catch (error) {
-      logger.error(
-        { module: 'Hr', action: 'fetchRoles' },
-        '获取角色列表失败',
-        { error: (error as Error).message }
-      );
+      logger.error({ module: 'Hr', action: 'fetchRoles' }, '获取角色列表失败', {
+        error: (error as Error).message,
+      });
     }
   }, []);
 
@@ -284,18 +267,17 @@ export default function EmployeePage() {
 
     // 验证文件类型
     if (!file.type.startsWith('image/')) {
-      toast.error(t("uploadImageOnly"));
+      toast.error(t('uploadImageOnly'));
       return;
     }
 
     // 验证文件大小 (最大 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      logger.warn(
-        { module: 'Hr', action: 'handleUpload' },
-        '图片大小超出限制',
-        { fileName: file.name, fileSize: file.size }
-      );
-      toast.error(t("imageSizeLimit"));
+      logger.warn({ module: 'Hr', action: 'handleUpload' }, '图片大小超出限制', {
+        fileName: file.name,
+        fileSize: file.size,
+      });
+      toast.error(t('imageSizeLimit'));
       return;
     }
 
@@ -304,11 +286,10 @@ export default function EmployeePage() {
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
-      logger.info(
-        { module: 'Hr', action: 'handleUpload' },
-        '开始上传员工照片',
-        { fileName: file.name, fileSize: file.size }
-      );
+      logger.info({ module: 'Hr', action: 'handleUpload' }, '开始上传员工照片', {
+        fileName: file.name,
+        fileSize: file.size,
+      });
 
       const response = await authFetch('/api/upload', {
         method: 'POST',
@@ -318,27 +299,19 @@ export default function EmployeePage() {
       const result = await response.json();
       if (result.success) {
         setForm({ ...form, photo: result.url });
-        logger.info(
-          { module: 'Hr', action: 'handleUpload' },
-          '照片上传成功',
-          { url: result.url }
-        );
-        toast.success(t("uploadSuccess"));
+        logger.info({ module: 'Hr', action: 'handleUpload' }, '照片上传成功', { url: result.url });
+        toast.success(t('uploadSuccess'));
       } else {
-        logger.warn(
-          { module: 'Hr', action: 'handleUpload' },
-          '照片上传失败',
-          { message: result.message }
-        );
-        toast.error(result.message || t("uploadFailed"));
+        logger.warn({ module: 'Hr', action: 'handleUpload' }, '照片上传失败', {
+          message: result.message,
+        });
+        toast.error(result.message || t('uploadFailed'));
       }
     } catch (error) {
-      logger.error(
-        { module: 'Hr', action: 'handleUpload' },
-        '上传照片异常',
-        { error: (error as Error).message }
-      );
-      toast.error(t("uploadPhotoFailed"));
+      logger.error({ module: 'Hr', action: 'handleUpload' }, '上传照片异常', {
+        error: (error as Error).message,
+      });
+      toast.error(t('uploadPhotoFailed'));
     } finally {
       setUploadingPhoto(false);
       // 清空 input 以便可以重复选择同一文件
@@ -350,29 +323,24 @@ export default function EmployeePage() {
 
   // 删除照片
   const handleRemovePhoto = () => {
-    logger.info(
-      { module: 'Hr', action: 'handleRemovePhoto' },
-      '删除员工照片',
-      { employeeName: form.name }
-    );
+    logger.info({ module: 'Hr', action: 'handleRemovePhoto' }, '删除员工照片', {
+      employeeName: form.name,
+    });
     setForm({ ...form, photo: undefined });
   };
 
   // 保存员工
   const saveEmployee = async () => {
-    logger.info(
-      { module: 'Hr', action: 'saveEmployee' },
-      `开始${editing ? '编辑' : '新增'}员工`,
-      { employeeName: form.name, employeeNo: form.employee_no, editing }
-    );
+    logger.info({ module: 'Hr', action: 'saveEmployee' }, `开始${editing ? '编辑' : '新增'}员工`, {
+      employeeName: form.name,
+      employeeNo: form.employee_no,
+      editing,
+    });
     try {
       // 验证必填字段
       if (!form.name) {
-        logger.warn(
-          { module: 'Hr', action: 'saveEmployee' },
-          '员工姓名未填写'
-        );
-        toast.error(t("enterEmployeeName"));
+        logger.warn({ module: 'Hr', action: 'saveEmployee' }, '员工姓名未填写');
+        toast.error(t('enterEmployeeName'));
         return;
       }
 
@@ -394,7 +362,7 @@ export default function EmployeePage() {
           `员工${editing ? '更新' : '创建'}成功`,
           { employeeName: submitData.name, employeeNo: submitData.employee_no }
         );
-        toast.success(editing ? t("updateSuccess") : t("createSuccess"));
+        toast.success(editing ? t('updateSuccess') : t('createSuccess'));
         setDialogOpen(false);
         fetchEmployees();
       } else {
@@ -406,29 +374,22 @@ export default function EmployeePage() {
         toast.error(result.message || tc('error'));
       }
     } catch (error) {
-      logger.error(
-        { module: 'Hr', action: 'saveEmployee' },
-        '保存员工异常',
-        { error: (error as Error).message }
-      );
-      toast.error(t("saveFailed"));
+      logger.error({ module: 'Hr', action: 'saveEmployee' }, '保存员工异常', {
+        error: (error as Error).message,
+      });
+      toast.error(t('saveFailed'));
     }
   };
 
   // 删除员工
   const deleteEmployee = async (id: number) => {
-    const employee = employees.find(e => e.id === id);
-    logger.info(
-      { module: 'Hr', action: 'deleteEmployee' },
-      '请求删除员工',
-      { employeeId: id, employeeName: employee?.name }
-    );
-    if (!confirm(t("deleteConfirm"))) {
-      logger.info(
-        { module: 'Hr', action: 'deleteEmployee' },
-        '用户取消删除',
-        { employeeId: id }
-      );
+    const employee = employees.find((e) => e.id === id);
+    logger.info({ module: 'Hr', action: 'deleteEmployee' }, '请求删除员工', {
+      employeeId: id,
+      employeeName: employee?.name,
+    });
+    if (!confirm(t('deleteConfirm'))) {
+      logger.info({ module: 'Hr', action: 'deleteEmployee' }, '用户取消删除', { employeeId: id });
       return;
     }
     try {
@@ -437,28 +398,25 @@ export default function EmployeePage() {
       });
       const result = await response.json();
       if (result.success) {
-        logger.info(
-          { module: 'Hr', action: 'deleteEmployee' },
-          '员工删除成功',
-          { employeeId: id, employeeName: employee?.name }
-        );
-        toast.success(t("deleteSuccess"));
+        logger.info({ module: 'Hr', action: 'deleteEmployee' }, '员工删除成功', {
+          employeeId: id,
+          employeeName: employee?.name,
+        });
+        toast.success(t('deleteSuccess'));
         fetchEmployees();
       } else {
-        logger.warn(
-          { module: 'Hr', action: 'deleteEmployee' },
-          '员工删除失败',
-          { employeeId: id, message: result.message }
-        );
-        toast.error(result.message || tc("deleteFailed"));
+        logger.warn({ module: 'Hr', action: 'deleteEmployee' }, '员工删除失败', {
+          employeeId: id,
+          message: result.message,
+        });
+        toast.error(result.message || tc('deleteFailed'));
       }
     } catch (error) {
-      logger.error(
-        { module: 'Hr', action: 'deleteEmployee' },
-        '删除员工异常',
-        { employeeId: id, error: (error as Error).message }
-      );
-      toast.error(t("deleteFailed"));
+      logger.error({ module: 'Hr', action: 'deleteEmployee' }, '删除员工异常', {
+        employeeId: id,
+        error: (error as Error).message,
+      });
+      toast.error(t('deleteFailed'));
     }
   };
 
@@ -484,23 +442,27 @@ export default function EmployeePage() {
         ? employees.filter((emp) => selectedEmployees.includes(emp.id))
         : employees;
 
-    logger.info(
-      { module: 'Hr', action: 'handlePrintList' },
-      '开始打印员工列表',
-      { totalCount: dataToPrint.length, selectedCount: selectedEmployees.length }
-    );
+    logger.info({ module: 'Hr', action: 'handlePrintList' }, '开始打印员工列表', {
+      totalCount: dataToPrint.length,
+      selectedCount: selectedEmployees.length,
+    });
 
     if (dataToPrint.length === 0) {
       logger.warn({ module: 'Hr', action: 'handlePrintList' }, '没有数据可打印');
-      toast.error(t("noDataToPrint"));
+      toast.error(t('noDataToPrint'));
       return;
     }
 
-    const statusLabels: Record<number, string> = { 1: t("statusActive"), 0: t("statusInactive"), 2: t("statusProbation"), 3: t("statusResigned") };
+    const statusLabels: Record<number, string> = {
+      1: t('statusActive'),
+      0: t('statusInactive'),
+      2: t('statusProbation'),
+      3: t('statusResigned'),
+    };
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       logger.error({ module: 'Hr', action: 'handlePrintList' }, '无法打开打印窗口');
-      toast.error(t("cannotOpenPrintWindow"));
+      toast.error(t('cannotOpenPrintWindow'));
       return;
     }
 
@@ -511,7 +473,7 @@ export default function EmployeePage() {
         <td>${index + 1}</td>
         <td>${emp.employee_no}</td>
         <td>${emp.name}</td>
-        <td>${emp.gender === 1 ? t("maleShort") : t("femaleShort")}</td>
+        <td>${emp.gender === 1 ? t('maleShort') : t('femaleShort')}</td>
         <td>${emp.age || '-'}</td>
         <td>${emp.dept_name}</td>
         <td>${emp.section || '-'}</td>
@@ -549,24 +511,20 @@ export default function EmployeePage() {
       </body></html>`;
     printWindow.document.write(html);
     printWindow.document.close();
-    logger.info(
-      { module: 'Hr', action: 'handlePrintList' },
-      '打印列表窗口已打开',
-      { count: dataToPrint.length }
-    );
-    toast.success(t("printingRecords", { count: dataToPrint.length }));
+    logger.info({ module: 'Hr', action: 'handlePrintList' }, '打印列表窗口已打开', {
+      count: dataToPrint.length,
+    });
+    toast.success(t('printingRecords', { count: dataToPrint.length }));
   };
 
   // 批量打印
   const handleBatchPrint = () => {
-    logger.info(
-      { module: 'Hr', action: 'handleBatchPrint' },
-      '打开批量打印对话框',
-      { selectedCount: selectedEmployees.length }
-    );
+    logger.info({ module: 'Hr', action: 'handleBatchPrint' }, '打开批量打印对话框', {
+      selectedCount: selectedEmployees.length,
+    });
     if (selectedEmployees.length === 0) {
       logger.warn({ module: 'Hr', action: 'handleBatchPrint' }, '未选择员工');
-      toast.error(t("selectEmployeesFirst"));
+      toast.error(t('selectEmployeesFirst'));
       return;
     }
     setBatchPrintDialogOpen(true);
@@ -579,31 +537,30 @@ export default function EmployeePage() {
         ? employees.filter((emp) => selectedEmployees.includes(emp.id))
         : employees;
 
-    logger.info(
-      { module: 'Hr', action: 'exportToExcel' },
-      '开始导出Excel',
-      { totalCount: dataToExport.length, selectedCount: selectedEmployees.length }
-    );
+    logger.info({ module: 'Hr', action: 'exportToExcel' }, '开始导出Excel', {
+      totalCount: dataToExport.length,
+      selectedCount: selectedEmployees.length,
+    });
 
     if (dataToExport.length === 0) {
       logger.warn({ module: 'Hr', action: 'exportToExcel' }, '没有数据可导出');
-      toast.error(t("noDataToExport"));
+      toast.error(t('noDataToExport'));
       return;
     }
 
     // 创建CSV内容
     const headers = [
-      t("employeeNo"),
-      t("name"),
-      t("gender"),
-      t("age"),
-      t("department"),
-      t("section"),
-      t("position"),
-      t("education"),
-      t("entryDate"),
-      t("nativePlace"),
-      t("contact"),
+      t('employeeNo'),
+      t('name'),
+      t('gender'),
+      t('age'),
+      t('department'),
+      t('section'),
+      t('position'),
+      t('education'),
+      t('entryDate'),
+      t('nativePlace'),
+      t('contact'),
       tc('status'),
     ];
     const rows = dataToExport.map((emp) => [
@@ -618,7 +575,13 @@ export default function EmployeePage() {
       emp.entry_date,
       emp.native_place || '',
       emp.phone,
-      emp.status === 1 ? t("statusActive") : emp.status === 2 ? t("statusProbation") : emp.status === 3 ? t("statusResigned") : t("statusInactive"),
+      emp.status === 1
+        ? t('statusActive')
+        : emp.status === 2
+          ? t('statusProbation')
+          : emp.status === 3
+            ? t('statusResigned')
+            : t('statusInactive'),
     ]);
 
     const csvContent = [
@@ -632,16 +595,17 @@ export default function EmployeePage() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `${tc("employeeList")}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute(
+      'download',
+      `${tc('employeeList')}_${new Date().toISOString().split('T')[0]}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    logger.info(
-      { module: 'Hr', action: 'exportToExcel' },
-      'Excel导出成功',
-      { count: dataToExport.length }
-    );
-    toast.success(t("exportSuccess", { count: dataToExport.length }));
+    logger.info({ module: 'Hr', action: 'exportToExcel' }, 'Excel导出成功', {
+      count: dataToExport.length,
+    });
+    toast.success(t('exportSuccess', { count: dataToExport.length }));
   };
 
   // 导出PDF
@@ -651,22 +615,21 @@ export default function EmployeePage() {
         ? employees.filter((emp) => selectedEmployees.includes(emp.id))
         : employees;
 
-    logger.info(
-      { module: 'Hr', action: 'exportToPDF' },
-      '开始导出PDF',
-      { totalCount: dataToExport.length, selectedCount: selectedEmployees.length }
-    );
+    logger.info({ module: 'Hr', action: 'exportToPDF' }, '开始导出PDF', {
+      totalCount: dataToExport.length,
+      selectedCount: selectedEmployees.length,
+    });
 
     if (dataToExport.length === 0) {
       logger.warn({ module: 'Hr', action: 'exportToPDF' }, '没有数据可导出');
-      toast.error(t("noDataToExport"));
+      toast.error(t('noDataToExport'));
       return;
     }
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       logger.error({ module: 'Hr', action: 'exportToPDF' }, '无法打开PDF弹出窗口');
-      toast.error(t("allowPopupPdf"));
+      toast.error(t('allowPopupPdf'));
       return;
     }
 
@@ -719,7 +682,7 @@ export default function EmployeePage() {
                 <td>${index + 1}</td>
                 <td>${emp.employee_no}</td>
                 <td>${emp.name}</td>
-                <td>${emp.gender === 1 ? t("maleShort") : t("femaleShort")}</td>
+                <td>${emp.gender === 1 ? t('maleShort') : t('femaleShort')}</td>
                 <td>${emp.age || '-'}</td>
                 <td>${emp.dept_name}</td>
                 <td>${emp.section || '-'}</td>
@@ -727,7 +690,7 @@ export default function EmployeePage() {
                 <td>${emp.education || '-'}</td>
                 <td>${emp.entry_date}</td>
                 <td>${emp.phone}</td>
-                <td>${emp.status === 1 ? t("statusActive") : emp.status === 2 ? t("statusProbation") : emp.status === 3 ? t("statusResigned") : t("statusInactive")}</td>
+                <td>${emp.status === 1 ? t('statusActive') : emp.status === 2 ? t('statusProbation') : emp.status === 3 ? t('statusResigned') : t('statusInactive')}</td>
               </tr>
             `
               )
@@ -747,28 +710,24 @@ export default function EmployeePage() {
 
     printWindow.document.write(html);
     printWindow.document.close();
-    logger.info(
-      { module: 'Hr', action: 'exportToPDF' },
-      'PDF导出成功',
-      { count: dataToExport.length }
-    );
-    toast.success(t("preparingPdf", { count: dataToExport.length }));
+    logger.info({ module: 'Hr', action: 'exportToPDF' }, 'PDF导出成功', {
+      count: dataToExport.length,
+    });
+    toast.success(t('preparingPdf', { count: dataToExport.length }));
   };
 
   // 批量打印全部
   const handleBatchPrintAll = () => {
     const selectedEmps = employees.filter((emp) => selectedEmployees.includes(emp.id));
 
-    logger.info(
-      { module: 'Hr', action: 'handleBatchPrintAll' },
-      '开始批量打印员工上岗证',
-      { count: selectedEmps.length }
-    );
+    logger.info({ module: 'Hr', action: 'handleBatchPrintAll' }, '开始批量打印员工上岗证', {
+      count: selectedEmps.length,
+    });
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       logger.error({ module: 'Hr', action: 'handleBatchPrintAll' }, '无法打开批量打印窗口');
-      toast.error(t("allowPopup"));
+      toast.error(t('allowPopup'));
       return;
     }
 
@@ -781,30 +740,30 @@ export default function EmployeePage() {
           <div class="card-title">{tc("employeeCard")}</div>
         </div>
         <div class="photo-area">
-          ${emp.photo ? `<img src="${emp.photo}" alt="${emp.name}" />` : `<span class="photo-text">${tc("photo")}</span>`}
+          ${emp.photo ? `<img src="${emp.photo}" alt="${emp.name}" />` : `<span class="photo-text">${tc('photo')}</span>`}
         </div>
         <div class="content-row">
           <div class="left-section">
             <div class="qr-section">
-              <img src="${qrCodeUrl || ''}" alt="${tc("qrCode")}" class="qr-code" />
+              <img src="${qrCodeUrl || ''}" alt="${tc('qrCode')}" class="qr-code" />
             </div>
           </div>
           <div class="right-section">
             <div class="info-section">
               <div class="info-row">
-                <span class="info-label">${tc("name")}</span>
+                <span class="info-label">${tc('name')}</span>
                 <span class="info-value">${emp.name}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">${tc("gender")}</span>
-                <span class="info-value">${emp.gender === 1 ? t("maleShort") : t("femaleShort")}</span>
+                <span class="info-label">${tc('gender')}</span>
+                <span class="info-value">${emp.gender === 1 ? t('maleShort') : t('femaleShort')}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">${tc("department")}</span>
+                <span class="info-label">${tc('department')}</span>
                 <span class="info-value">${emp.dept_name}</span>
               </div>
               <div class="info-row">
-                <span class="info-label">${tc("position")}</span>
+                <span class="info-label">${tc('position')}</span>
                 <span class="info-value">${emp.position || '-'}</span>
               </div>
             </div>
@@ -877,21 +836,18 @@ export default function EmployeePage() {
       printWindow.print();
     }, 500);
 
-    logger.info(
-      { module: 'Hr', action: 'handleBatchPrintAll' },
-      '批量打印窗口已打开',
-      { count: selectedEmps.length }
-    );
-    toast.success(t("printWindowOpened"));
+    logger.info({ module: 'Hr', action: 'handleBatchPrintAll' }, '批量打印窗口已打开', {
+      count: selectedEmps.length,
+    });
+    toast.success(t('printWindowOpened'));
   };
 
   // 生成员工查询二维码
   const generateEmployeeQR = async (employee: Employee) => {
-    logger.info(
-      { module: 'Hr', action: 'generateEmployeeQR' },
-      '开始生成员工二维码',
-      { employeeId: employee.id, employeeName: employee.name }
-    );
+    logger.info({ module: 'Hr', action: 'generateEmployeeQR' }, '开始生成员工二维码', {
+      employeeId: employee.id,
+      employeeName: employee.name,
+    });
     try {
       const queryUrl = `${window.location.origin}/hr/employee/query?id=${employee.id}`;
       const url = await QRCode.toDataURL(queryUrl, {
@@ -905,18 +861,16 @@ export default function EmployeePage() {
       setQrCodeUrl(url);
       setSelectedEmployee(employee);
       setPrintDialogOpen(true);
-      logger.info(
-        { module: 'Hr', action: 'generateEmployeeQR' },
-        '员工二维码生成成功',
-        { employeeId: employee.id, queryUrl }
-      );
+      logger.info({ module: 'Hr', action: 'generateEmployeeQR' }, '员工二维码生成成功', {
+        employeeId: employee.id,
+        queryUrl,
+      });
     } catch (error) {
-      logger.error(
-        { module: 'Hr', action: 'generateEmployeeQR' },
-        '生成二维码失败',
-        { employeeId: employee.id, error: (error as Error).message }
-      );
-      toast.error(t("generateQRFailed"));
+      logger.error({ module: 'Hr', action: 'generateEmployeeQR' }, '生成二维码失败', {
+        employeeId: employee.id,
+        error: (error as Error).message,
+      });
+      toast.error(t('generateQRFailed'));
     }
   };
 
@@ -931,7 +885,7 @@ export default function EmployeePage() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       logger.error({ module: 'Hr', action: 'handlePrint' }, '无法打开打印窗口');
-      toast.error(t("allowPopup"));
+      toast.error(t('allowPopup'));
       return;
     }
 
@@ -1132,25 +1086,25 @@ export default function EmployeePage() {
       3: 'bg-red-100 text-red-800',
     };
     const labels: Record<number, string> = {
-      1: t("statusActive"),
-      0: t("statusInactive"),
-      2: t("statusProbation"),
-      3: t("statusResigned"),
+      1: t('statusActive'),
+      0: t('statusInactive'),
+      2: t('statusProbation'),
+      3: t('statusResigned'),
     };
     return <Badge className={styles[status] || styles[1]}>{labels[status] || tc('unknown')}</Badge>;
   };
 
   return (
-    <MainLayout title={tc("employeeProfile")}>
+    <MainLayout title={tc('employeeProfile')}>
       <div className="space-y-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <UserCircle className="w-5 h-5" />
-                {tc("employeeProfile")}
+                {tc('employeeProfile')}
               </CardTitle>
-              <CardDescription>{tc("manageEmployeeInfo")}</CardDescription>
+              <CardDescription>{tc('manageEmployeeInfo')}</CardDescription>
             </div>
             <Button
               onClick={() => {
@@ -1161,7 +1115,7 @@ export default function EmployeePage() {
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              {tc("addEmployee")}
+              {tc('addEmployee')}
             </Button>
           </CardHeader>
           <CardContent>
@@ -1169,7 +1123,7 @@ export default function EmployeePage() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder={tc("searchPlaceholder")}
+                  placeholder={tc('searchPlaceholder')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && fetchEmployees()}
@@ -1178,11 +1132,11 @@ export default function EmployeePage() {
               </div>
               <Button variant="outline" onClick={fetchEmployees}>
                 <RefreshCw className="w-4 h-4 mr-2" />
-                {tc("refresh")}
+                {tc('refresh')}
               </Button>
               <Button variant="outline" onClick={handlePrintList}>
                 <Printer className="w-4 h-4 mr-2" />
-                {tc("print")}
+                {tc('print')}
               </Button>
               <GlobalExportToolbar
                 filename="员工列表"
@@ -1191,7 +1145,12 @@ export default function EmployeePage() {
                 columns={[
                   { key: 'employee_no', label: tc('employeeNo'), width: 15 },
                   { key: 'name', label: tc('name'), width: 12 },
-                  { key: 'gender', label: tc('gender'), width: 8, formatter: (v) => (v === 1 ? tc('maleShort') : tc('femaleShort')) },
+                  {
+                    key: 'gender',
+                    label: tc('gender'),
+                    width: 8,
+                    formatter: (v) => (v === 1 ? tc('maleShort') : tc('femaleShort')),
+                  },
                   { key: 'age', label: tc('age'), width: 6 },
                   { key: 'dept_name', label: tc('department'), width: 15 },
                   { key: 'section', label: tc('section'), width: 12 },
@@ -1215,7 +1174,11 @@ export default function EmployeePage() {
                     },
                   },
                 ]}
-                data={selectedEmployees.length > 0 ? employees.filter((emp) => selectedEmployees.includes(emp.id)) : sortedEmployees()}
+                data={
+                  selectedEmployees.length > 0
+                    ? employees.filter((emp) => selectedEmployees.includes(emp.id))
+                    : sortedEmployees()
+                }
               />
             </div>
 
@@ -1225,7 +1188,7 @@ export default function EmployeePage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-blue-600 font-medium">{tc("totalCount")}</p>
+                      <p className="text-sm text-blue-600 font-medium">{tc('totalCount')}</p>
                       <p className="text-2xl font-bold text-blue-800">{stats.total}</p>
                     </div>
                     <Users className="w-8 h-8 text-blue-400" />
@@ -1236,14 +1199,14 @@ export default function EmployeePage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-green-600 font-medium">{tc("male")}</p>
+                      <p className="text-sm text-green-600 font-medium">{tc('male')}</p>
                       <p className="text-2xl font-bold text-green-800">{stats.male}</p>
                       <p className="text-xs text-green-500">
                         {stats.total > 0 ? ((stats.male / stats.total) * 100).toFixed(1) : 0}%
                       </p>
                     </div>
                     <div className="w-8 h-8 rounded-full bg-green-400 flex items-center justify-center text-white font-bold">
-                      {tc("maleShort")}
+                      {tc('maleShort')}
                     </div>
                   </div>
                 </CardContent>
@@ -1252,14 +1215,14 @@ export default function EmployeePage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-pink-600 font-medium">{tc("female")}</p>
+                      <p className="text-sm text-pink-600 font-medium">{tc('female')}</p>
                       <p className="text-2xl font-bold text-pink-800">{stats.female}</p>
                       <p className="text-xs text-pink-500">
                         {stats.total > 0 ? ((stats.female / stats.total) * 100).toFixed(1) : 0}%
                       </p>
                     </div>
                     <div className="w-8 h-8 rounded-full bg-pink-400 flex items-center justify-center text-white font-bold">
-                      {tc("femaleShort")}
+                      {tc('femaleShort')}
                     </div>
                   </div>
                 </CardContent>
@@ -1268,9 +1231,9 @@ export default function EmployeePage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-purple-600 font-medium">{tc("avgAge")}</p>
+                      <p className="text-sm text-purple-600 font-medium">{tc('avgAge')}</p>
                       <p className="text-2xl font-bold text-purple-800">{stats.avgAge}</p>
-                      <p className="text-xs text-purple-500">{tc("ageUnit")}</p>
+                      <p className="text-xs text-purple-500">{tc('ageUnit')}</p>
                     </div>
                     <Calendar className="w-8 h-8 text-purple-400" />
                   </div>
@@ -1283,14 +1246,15 @@ export default function EmployeePage() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <GraduationCap className="w-4 h-4" />
-                  {tc("educationDistribution")}
+                  {tc('educationDistribution')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(stats.education).map(([edu, count]) => (
                     <Badge key={edu} variant="secondary" className="px-3 py-1">
-                      {edu}: {count}{tc("personUnit")}
+                      {edu}: {count}
+                      {tc('personUnit')}
                     </Badge>
                   ))}
                 </div>
@@ -1306,19 +1270,19 @@ export default function EmployeePage() {
                 {selectedEmployees.length > 0 && (
                   <div className="flex items-center gap-2 mb-4 p-2 bg-blue-50 rounded-lg">
                     <span className="text-sm text-blue-600">
-                      {tc("selectedCount", { count: selectedEmployees.length })}
+                      {tc('selectedCount', { count: selectedEmployees.length })}
                     </span>
                     <Button variant="outline" size="sm" onClick={handleBatchPrint} className="ml-2">
                       <Printer className="w-4 h-4 mr-2" />
-                      {tc("batchPrintCard")}
+                      {tc('batchPrintCard')}
                     </Button>
                     <Button variant="outline" size="sm" onClick={exportToExcel}>
                       <FileSpreadsheet className="w-4 h-4 mr-2" />
-                      {tc("exportExcel")}
+                      {tc('exportExcel')}
                     </Button>
                     <Button variant="outline" size="sm" onClick={exportToPDF}>
                       <FileText className="w-4 h-4 mr-2" />
-                      {tc("exportPDF")}
+                      {tc('exportPDF')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -1326,7 +1290,7 @@ export default function EmployeePage() {
                       onClick={() => setSelectedEmployees([])}
                       className="ml-auto text-muted-foreground"
                     >
-                      {tc("clearSelection")}
+                      {tc('clearSelection')}
                     </Button>
                   </div>
                 )}
@@ -1346,7 +1310,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('id')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("serialNo")}
+                          {tc('serialNo')}
                           {sortConfig.key === 'id' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1355,13 +1319,13 @@ export default function EmployeePage() {
                             ))}
                         </div>
                       </TableHead>
-                      <TableHead>{tc("photo")}</TableHead>
+                      <TableHead>{tc('photo')}</TableHead>
                       <TableHead
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => handleSort('employee_no')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("employeeNo")}
+                          {tc('employeeNo')}
                           {sortConfig.key === 'employee_no' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1375,7 +1339,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('name')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("name")}
+                          {tc('name')}
                           {sortConfig.key === 'name' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1389,7 +1353,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('gender')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("gender")}
+                          {tc('gender')}
                           {sortConfig.key === 'gender' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1403,7 +1367,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('age')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("age")}
+                          {tc('age')}
                           {sortConfig.key === 'age' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1417,7 +1381,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('dept_name')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("department")}
+                          {tc('department')}
                           {sortConfig.key === 'dept_name' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1431,7 +1395,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('section')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("section")}
+                          {tc('section')}
                           {sortConfig.key === 'section' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1445,7 +1409,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('position')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("position")}
+                          {tc('position')}
                           {sortConfig.key === 'position' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1459,7 +1423,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('entry_date')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("entryDate")}
+                          {tc('entryDate')}
                           {sortConfig.key === 'entry_date' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1473,7 +1437,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('education')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("education")}
+                          {tc('education')}
                           {sortConfig.key === 'education' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1487,7 +1451,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('native_place')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("nativePlace")}
+                          {tc('nativePlace')}
                           {sortConfig.key === 'native_place' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1501,7 +1465,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('phone')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("contact")}
+                          {tc('contact')}
                           {sortConfig.key === 'phone' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1515,7 +1479,7 @@ export default function EmployeePage() {
                         onClick={() => handleSort('status')}
                       >
                         <div className="flex items-center gap-1">
-                          {tc("status")}
+                          {tc('status')}
                           {sortConfig.key === 'status' &&
                             (sortConfig.direction === 'asc' ? (
                               <ArrowUp className="w-3 h-3" />
@@ -1524,7 +1488,7 @@ export default function EmployeePage() {
                             ))}
                         </div>
                       </TableHead>
-                      <TableHead className="text-right">{tc("operation")}</TableHead>
+                      <TableHead className="text-right">{tc('operation')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1541,6 +1505,7 @@ export default function EmployeePage() {
                         </TableCell>
                         <TableCell>
                           {emp.photo ? (
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={emp.photo}
                               alt={emp.name}
@@ -1554,7 +1519,9 @@ export default function EmployeePage() {
                         </TableCell>
                         <TableCell className="font-medium">{emp.employee_no}</TableCell>
                         <TableCell>{emp.name}</TableCell>
-                        <TableCell>{emp.gender === 1 ? t("maleShort") : t("femaleShort")}</TableCell>
+                        <TableCell>
+                          {emp.gender === 1 ? t('maleShort') : t('femaleShort')}
+                        </TableCell>
                         <TableCell>{emp.age || '-'}</TableCell>
                         <TableCell>{emp.dept_name}</TableCell>
                         <TableCell>{emp.section || '-'}</TableCell>
@@ -1570,7 +1537,7 @@ export default function EmployeePage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => generateEmployeeQR(emp)}
-                              title={tc("printCard")}
+                              title={tc('printCard')}
                             >
                               <Printer className="w-4 h-4 text-blue-500" />
                             </Button>

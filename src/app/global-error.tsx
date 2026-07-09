@@ -12,14 +12,48 @@ export default function GlobalError({
   return (
     <html lang="zh-CN">
       <body style={{ margin: 0, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#f5f7fa' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center', maxWidth: '400px', padding: '24px' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '100vh',
+            backgroundColor: '#f5f7fa',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px',
+              textAlign: 'center',
+              maxWidth: '400px',
+              padding: '24px',
+            }}
+          >
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#fff',
+              }}
+            >
               <AlertCircle style={{ width: '24px', height: '24px', color: '#f5222d' }} />
             </div>
             <div>
-              <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: '#1f2329' }}>系统发生严重错误</h2>
-              <p style={{ fontSize: '14px', color: '#86909c' }}>{error.message || '请稍后重试或联系管理员'}</p>
+              <h2
+                style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: '#1f2329' }}
+              >
+                {tc('text_4cy8sw')}
+              </h2>
+              <p style={{ fontSize: '14px', color: '#86909c' }}>
+                {error.message || '请稍后重试或联系管理员'}
+              </p>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
@@ -38,8 +72,9 @@ export default function GlobalError({
                 }}
               >
                 <RefreshCw style={{ width: '16px', height: '16px' }} />
-                重试
+                {tc('text_pkfc')}
               </button>
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
                 href="/"
                 style={{
@@ -57,7 +92,7 @@ export default function GlobalError({
                 }}
               >
                 <Home style={{ width: '16px', height: '16px' }} />
-                返回首页
+                {tc('text_iijhd5')}
               </a>
             </div>
           </div>

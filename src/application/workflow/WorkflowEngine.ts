@@ -181,9 +181,8 @@ export class WorkflowEngine {
 
       // 如果有会签节点（multi），同时创建多个任务
       // 注意：approval_mode 类型为 'and' | 'or'，此处保留对 'multi' 的判断以兼容历史数据
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (
-        (firstApproveNode.approval_mode as any) === 'multi' ||
+        (firstApproveNode.approval_mode as string) === 'multi' ||
         firstApproveNode.approver_type === 'multi'
       ) {
         const additionalApprovers = await this.getAdditionalApprovers(firstApproveNode, amount);

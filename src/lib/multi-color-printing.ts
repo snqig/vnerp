@@ -3,7 +3,7 @@
  * 丝网印刷特色支持：色序管理、网版匹配、油墨消耗计算
  */
 
-import { query, transaction } from '@/lib/db';
+import { query, execute, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import { CalcParamService } from '@/lib/calc-param-service';
 
@@ -66,7 +66,8 @@ export function calculateInkConsumption(
   quantity: number,
   lossRate?: number // 损耗率，默认从 sys_calc_param 读取（默认 0.15）
 ): number {
-  const effectiveLossRate = lossRate ?? CalcParamService.getCachedDecimal('printing.default_loss_rate', 0.15);
+  const effectiveLossRate =
+    lossRate ?? CalcParamService.getCachedDecimal('printing.default_loss_rate', 0.15);
   // 厚度转换: μm → cm (1μm = 0.0001cm)
   const thicknessCm = inkThickness * 0.0001;
   // 体积 = 面积 × 厚度
@@ -111,7 +112,9 @@ export async function calculateMultiColorInkConsumption(
 
     const inkDensity = formula.ink_density || 1.2; // 默认密度 g/cm³
     const inkThickness = formula.default_thickness || 15; // 默认厚度 μm
-    const lossRate = formula.default_loss_rate ?? CalcParamService.getCachedDecimal('printing.default_loss_rate', 0.15);
+    const lossRate =
+      formula.default_loss_rate ??
+      CalcParamService.getCachedDecimal('printing.default_loss_rate', 0.15);
     const unitPrice = formula.unit_price || 0;
 
     const theoreticalConsumption = calculateInkConsumption(
@@ -393,11 +396,6 @@ export async function createMultiColorWorkOrder(
 // ============================================================
 // 辅助函数
 // ============================================================
-
-function execute(sql: string, params: any[]): Promise<any> {
-  const { execute: dbExecute } = require('@/lib/db');
-  return dbExecute(sql, params);
-}
 
 /**
  * 获取工单色序详情（含网版、油墨信息）

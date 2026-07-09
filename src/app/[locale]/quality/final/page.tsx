@@ -1179,6 +1179,7 @@ export default function QualityFinalPage() {
               <div className="space-y-6 py-4">
                 <div className="flex justify-center">
                   {qrCodeDataUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={qrCodeDataUrl}
                       alt="QR Code"

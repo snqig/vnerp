@@ -22,8 +22,6 @@ import { Upload, X, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Employee, Department, Role } from '../../types';
 
-/* eslint-disable @next/next/no-img-element */
-
 interface EmployeeFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -79,6 +77,7 @@ export function EmployeeFormDialog({
               />
               {form.photo ? (
                 <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={form.photo}
                     alt={tc('employeePhoto')}

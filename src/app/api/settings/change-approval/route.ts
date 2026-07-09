@@ -28,7 +28,7 @@ const APPROVAL_REQUIRED_MODULES = [
   tc('text_l8g7k2'),
 ];
 
-export const GET = withPermission(async (request: NextRequest, _userInfo) => {
+export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status') || 'all';
   const moduleName = searchParams.get('module') || 'all';
@@ -57,7 +57,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 });
 
 export const POST = withPermission(
-  async (request: NextRequest, _userInfo) => {
+  async (request: NextRequest, userInfo) => {
     const body: ChangeRequest = await request.json();
 
     if (!body.module || !body.config_key || !body.new_value) {
@@ -131,7 +131,7 @@ export const POST = withPermission(
 );
 
 export const PUT = withPermission(
-  async (request: NextRequest, _userInfo) => {
+  async (request: NextRequest, userInfo) => {
     const body = await request.json();
     const { id, action, approver_id, approver_name } = body;
 

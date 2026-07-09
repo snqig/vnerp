@@ -605,6 +605,7 @@ export default function ProductLabelPage() {
                   </div>
                   <div className="flex items-center">
                     {qrDataUrls[item.id] && (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={qrDataUrls[item.id]} alt="QR" style={{ width: 90, height: 90 }} />
                     )}
                   </div>

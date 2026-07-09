@@ -78,6 +78,8 @@ i18n-missing.json
 
 # 临时 eslint 诊断输出
 eslint_errors.json
+eslint_full_report.json
+eslint_current_report.json
 
 # 调试脚本与测试截图（根目录）
 /test-*.js

@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element */
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link, usePathname } from '@/i18n/navigation';
 import {
@@ -268,7 +269,16 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
     const safeMenus = Array.isArray(menus) ? menus : [];
 
     // 深度比较：内容没变就跳过
-    const snapshot = JSON.stringify(safeMenus.map((m: MenuItem) => ({ id: m.id, name: m.name, code: m.code, path: m.path, sort_order: m.sort_order, childrenCount: m.children?.length })));
+    const snapshot = JSON.stringify(
+      safeMenus.map((m: MenuItem) => ({
+        id: m.id,
+        name: m.name,
+        code: m.code,
+        path: m.path,
+        sort_order: m.sort_order,
+        childrenCount: m.children?.length,
+      }))
+    );
     if (snapshot === menusSnapshotRef.current) return;
     menusSnapshotRef.current = snapshot;
 
@@ -394,30 +404,33 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
   };
 
   // 点击菜单项：确保父菜单展开 + 移动端关闭侧边栏
-  const handleMenuClick = useCallback((menuPath?: string) => {
-    // 确保父菜单保持展开
-    if (menuPath) {
-      setExpandedMenus((prev) => {
-        for (const menu of orderedMenus) {
-          if (menu.children) {
-            for (const child of menu.children) {
-              if (child.path === menuPath) {
-                if (!prev.includes(menu.code)) {
-                  return [...prev, menu.code];
+  const handleMenuClick = useCallback(
+    (menuPath?: string) => {
+      // 确保父菜单保持展开
+      if (menuPath) {
+        setExpandedMenus((prev) => {
+          for (const menu of orderedMenus) {
+            if (menu.children) {
+              for (const child of menu.children) {
+                if (child.path === menuPath) {
+                  if (!prev.includes(menu.code)) {
+                    return [...prev, menu.code];
+                  }
+                  return prev; // 无变化，不触发重渲染
                 }
-                return prev; // 无变化，不触发重渲染
               }
             }
           }
-        }
-        return prev;
-      });
-    }
-    // 移动端延迟关闭侧边栏
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setTimeout(() => setCollapsed(true), 300);
-    }
-  }, [orderedMenus]);
+          return prev;
+        });
+      }
+      // 移动端延迟关闭侧边栏
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+        setTimeout(() => setCollapsed(true), 300);
+      }
+    },
+    [orderedMenus]
+  );
 
   // 获取图标组件
   const getIcon = (iconName?: string) => {
@@ -534,7 +547,11 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
         onClick={() => setCollapsed(!collapsed)}
         aria-label={collapsed ? 'Open menu' : 'Close menu'}
       >
-        {collapsed ? <Menu className="w-5 h-5" aria-hidden="true" /> : <X className="w-5 h-5" aria-hidden="true" />}
+        {collapsed ? (
+          <Menu className="w-5 h-5" aria-hidden="true" />
+        ) : (
+          <X className="w-5 h-5" aria-hidden="true" />
+        )}
       </Button>
 
       {/* 侧边栏 */}
@@ -629,7 +646,9 @@ export function Sidebar({ navigationMode = 'sidebar' }: SidebarProps) {
                     </div>
                   )
                 ) : !Array.isArray(orderedMenus) || orderedMenus.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground text-sm">{tc('noMenuPermission')}</div>
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    {tc('noMenuPermission')}
+                  </div>
                 ) : (
                   <DndContext
                     sensors={sensors}

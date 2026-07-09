@@ -15,8 +15,6 @@ import { useTranslations } from 'next-intl';
 import QRCode from 'qrcode';
 import type { Employee } from '../../types';
 
-/* eslint-disable @next/next/no-img-element */
-
 // 批量打印卡片组件
 function BatchPrintCard({ employee, index }: { employee: Employee; index: number }) {
   const tc = useTranslations('Common');
@@ -60,6 +58,7 @@ function BatchPrintCard({ employee, index }: { employee: Employee; index: number
         </div>
         {qrUrl && (
           <div className="w-16 h-16">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={qrUrl} alt={tc('qrCode')} className="w-full h-full" />
           </div>
         )}

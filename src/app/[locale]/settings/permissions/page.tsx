@@ -38,96 +38,94 @@ import {
 const permissionModules = [
   {
     id: 'dashboard',
-    name: '仪表盘',
+    name: tc('text_c7ysa'),
     icon: 'LayoutDashboard',
-    permissions: [
-      { id: 'dashboard_view', name: '查看仪表盘', description: '查看系统仪表盘和数据概览' },
-    ],
+    permissions: [{ id: 'dashboard_view', name: tc('text_4lte3w'), description: tc('text_q0b5s') }],
   },
   {
     id: 'business',
-    name: '业务管理',
+    name: tc('text_a7c0wc'),
     icon: 'Briefcase',
     permissions: [
-      { id: 'business_order_view', name: '查看订单', description: '查看客户订单列表和详情' },
-      { id: 'business_order_create', name: '创建订单', description: '创建新的客户订单' },
-      { id: 'business_order_edit', name: '编辑订单', description: '修改订单信息' },
-      { id: 'business_order_delete', name: '删除订单', description: '删除订单记录' },
-      { id: 'business_customer_view', name: '查看客户', description: '查看客户档案' },
-      { id: 'business_customer_manage', name: '管理客户', description: '创建和编辑客户信息' },
+      { id: 'business_order_view', name: tc('text_dlur7d'), description: tc('text_2tryno') },
+      { id: 'business_order_create', name: tc('text_are5wy'), description: tc('text_z6a7ob') },
+      { id: 'business_order_edit', name: tc('text_gmqzji'), description: tc('text_fklrak') },
+      { id: 'business_order_delete', name: tc('text_azljxz'), description: tc('text_naqi90') },
+      { id: 'business_customer_view', name: tc('text_dlmo7v'), description: tc('text_q0q74') },
+      { id: 'business_customer_manage', name: tc('text_g2skre'), description: tc('text_6l7mgb') },
     ],
   },
   {
     id: 'sample',
-    name: '打样中心',
+    name: tc('text_cu3n96'),
     icon: 'FlaskConical',
     permissions: [
-      { id: 'sample_view', name: '查看打样', description: '查看打样工单' },
-      { id: 'sample_create', name: '创建打样', description: '创建新的打样工单' },
-      { id: 'sample_edit', name: '编辑打样', description: '修改打样信息' },
-      { id: 'sample_approve', name: '审批打样', description: '审批打样申请' },
-      { id: 'sample_standard_card', name: '标准卡管理', description: '管理标准卡（流程卡）' },
+      { id: 'sample_view', name: tc('text_dlnudm'), description: tc('text_1l89ay') },
+      { id: 'sample_create', name: tc('text_ar7937'), description: tc('text_yzs6vt') },
+      { id: 'sample_edit', name: tc('text_gmk2pr'), description: tc('text_ag3h4t') },
+      { id: 'sample_approve', name: tc('text_byyerg'), description: tc('text_2v442o') },
+      { id: 'sample_standard_card', name: tc('text_8rr715'), description: tc('text_7i925') },
     ],
   },
   {
     id: 'purchase',
-    name: '采购管理',
+    name: tc('text_iz76ff'),
     icon: 'ShoppingCart',
     permissions: [
-      { id: 'purchase_order_view', name: '查看采购单', description: '查看采购订单' },
-      { id: 'purchase_order_create', name: '创建采购单', description: '创建新的采购订单' },
-      { id: 'purchase_order_approve', name: '审批采购单', description: '审批采购申请' },
-      { id: 'purchase_supplier_view', name: '查看供应商', description: '查看供应商信息' },
-      { id: 'purchase_supplier_manage', name: '管理供应商', description: '创建和编辑供应商' },
-      { id: 'purchase_request_view', name: '查看请购单', description: '查看采购申请' },
-      { id: 'purchase_request_create', name: '创建请购单', description: '创建采购申请' },
+      { id: 'purchase_order_view', name: tc('text_4c07g7'), description: tc('text_7qbq7z') },
+      { id: 'purchase_order_create', name: tc('text_lj6hg0'), description: tc('text_suopys') },
+      { id: 'purchase_order_approve', name: tc('text_g57efr'), description: tc('text_39rkrm') },
+      { id: 'purchase_supplier_view', name: tc('text_4lx1mh'), description: tc('text_p5qu8b') },
+      { id: 'purchase_supplier_manage', name: tc('text_151x7s'), description: tc('text_dl1usb') },
+      { id: 'purchase_request_view', name: tc('text_4cuutj'), description: tc('text_7q881c') },
+      { id: 'purchase_request_create', name: tc('text_lk14tc'), description: tc('text_s8dzyv') },
     ],
   },
   {
     id: 'warehouse',
-    name: '仓库管理',
+    name: tc('text_acd50l'),
     icon: 'Warehouse',
     permissions: [
-      { id: 'warehouse_inventory_view', name: '查看库存', description: '查看库存信息' },
-      { id: 'warehouse_inbound', name: '入库操作', description: '执行入库操作' },
-      { id: 'warehouse_outbound', name: '出库操作', description: '执行出库操作' },
-      { id: 'warehouse_transfer', name: '库存调拨', description: '执行库存调拨' },
-      { id: 'warehouse_inventory_check', name: '库存盘点', description: '执行库存盘点' },
+      { id: 'warehouse_inventory_view', name: tc('text_dln4vf'), description: tc('text_1293dl') },
+      { id: 'warehouse_inbound', name: tc('text_anx7ct'), description: tc('text_uktq2m') },
+      { id: 'warehouse_outbound', name: tc('text_aqkceg'), description: tc('text_ui6l0z') },
+      { id: 'warehouse_transfer', name: tc('text_cbhbu2'), description: tc('text_sx9lld') },
+      { id: 'warehouse_inventory_check', name: tc('text_cbdsxy'), description: tc('text_sxd4hh') },
     ],
   },
   {
     id: 'production',
-    name: '生产管理',
+    name: tc('text_f3xa0d'),
     icon: 'Factory',
     permissions: [
-      { id: 'production_order_view', name: '查看生产单', description: '查看生产工单' },
-      { id: 'production_order_create', name: '创建生产单', description: '创建生产工单' },
-      { id: 'production_order_schedule', name: '生产排程', description: '安排生产计划' },
-      { id: 'production_report_view', name: '查看报工', description: '查看生产报工' },
-      { id: 'production_report_create', name: '生产报工', description: '执行生产报工' },
+      { id: 'production_order_view', name: tc('text_4ghy1l'), description: tc('text_3uu1q6') },
+      { id: 'production_order_create', name: tc('text_lno81e'), description: tc('text_w3s6a1') },
+      { id: 'production_order_schedule', name: tc('text_f3t7vl'), description: tc('text_7nzkgu') },
+      { id: 'production_report_view', name: tc('text_dlnuau'), description: tc('text_3uuwwe') },
+      { id: 'production_report_create', name: tc('text_f3swnc'), description: tc('text_q4y0s3') },
     ],
   },
   {
     id: 'quality',
-    name: '品质管理',
+    name: tc('text_ba41n0'),
     icon: 'CheckSquare',
     permissions: [
-      { id: 'quality_inspection_view', name: '查看检验', description: '查看检验记录' },
-      { id: 'quality_inspection_create', name: '执行检验', description: '执行来料/过程/成品检验' },
-      { id: 'quality_ncr_view', name: '查看不合格', description: '查看不合格品记录' },
-      { id: 'quality_ncr_manage', name: '管理不合格', description: '处理不合格品' },
-      { id: 'quality_report_view', name: '查看质量报告', description: '查看质量统计报告' },
+      { id: 'quality_inspection_view', name: tc('text_dlp7o2'), description: tc('text_2lzvw7') },
+      { id: 'quality_inspection_create', name: tc('text_czafdd'), description: tc('text_thvbla') },
+      { id: 'quality_ncr_view', name: tc('text_4m6xl1'), description: tc('text_cs0d2t') },
+      { id: 'quality_ncr_manage', name: tc('text_14s198'), description: tc('text_uhjof6') },
+      { id: 'quality_report_view', name: tc('text_75ttde'), description: tc('text_3m98a4') },
     ],
   },
   {
     id: 'settings',
-    name: '系统设置',
+    name: tc('text_gar1ro'),
     icon: 'Settings',
     permissions: [
-      { id: 'settings_organization', name: '组织设置', description: '管理企业组织和部门' },
-      { id: 'settings_permissions', name: '权限管理', description: '配置角色和权限' },
-      { id: 'settings_system', name: '系统配置', description: '系统参数配置' },
-      { id: 'settings_audit', name: '审计日志', description: '查看系统操作日志' },
+      { id: 'settings_organization', name: tc('text_giucz7'), description: tc('text_njdkkr') },
+      { id: 'settings_permissions', name: tc('text_dnhnle'), description: tc('text_t7q32g') },
+      { id: 'settings_system', name: tc('text_garzt1'), description: tc('text_t1z5v7') },
+      { id: 'settings_audit', name: tc('text_c4zzjm'), description: tc('text_i1m4jv') },
     ],
   },
 ];
@@ -136,18 +134,18 @@ const permissionModules = [
 const roles = [
   {
     id: 'admin',
-    name: '系统管理员',
+    name: tc('text_7z3p2n'),
     code: 'ADMIN',
-    description: '系统最高权限，可访问所有功能',
+    description: tc('text_c1l5oe'),
     userCount: 2,
     isSystem: true,
     permissions: permissionModules.flatMap((m) => m.permissions.map((p) => p.id)),
   },
   {
     id: 'sales_mgr',
-    name: '业务经理',
+    name: tc('text_a7ckda'),
     code: 'SALES_MGR',
-    description: '业务部管理权限',
+    description: tc('text_jk6xn1'),
     userCount: 1,
     isSystem: false,
     permissions: [
@@ -165,9 +163,9 @@ const roles = [
   },
   {
     id: 'prod_mgr',
-    name: '生产主管',
+    name: tc('text_f3plim'),
     code: 'PROD_MGR',
-    description: '生产部管理权限',
+    description: tc('text_3anj8y'),
     userCount: 2,
     isSystem: false,
     permissions: [
@@ -183,9 +181,9 @@ const roles = [
   },
   {
     id: 'qc_mgr',
-    name: '品质主管',
+    name: tc('text_b9wd59'),
     code: 'QC_MGR',
-    description: '品质部管理权限',
+    description: tc('text_zdar2l'),
     userCount: 1,
     isSystem: false,
     permissions: [
@@ -199,9 +197,9 @@ const roles = [
   },
   {
     id: 'purchase_mgr',
-    name: '采购经理',
+    name: tc('text_iz7pwd'),
     code: 'PUR_MGR',
-    description: '采购部管理权限',
+    description: tc('text_px7jsc'),
     userCount: 1,
     isSystem: false,
     permissions: [
@@ -217,9 +215,9 @@ const roles = [
   },
   {
     id: 'warehouse_mgr',
-    name: '仓库主管',
+    name: tc('text_ac5giu'),
     code: 'WH_MGR',
-    description: '仓库部管理权限',
+    description: tc('text_nwgosa'),
     userCount: 1,
     isSystem: false,
     permissions: [
@@ -233,9 +231,9 @@ const roles = [
   },
   {
     id: 'user',
-    name: '普通员工',
+    name: tc('text_dim3g9'),
     code: 'USER',
-    description: '基础操作权限',
+    description: tc('text_51s0pq'),
     userCount: 45,
     isSystem: false,
     permissions: [
@@ -286,11 +284,11 @@ export default function PermissionsSettingsPage() {
   // 全选/取消全选模块权限
   const toggleModulePermissions = (moduleId: string, checked: boolean) => {
     if (selectedRole.isSystem) return;
-    const module = permissionModules.find((m) => m.id === moduleId);
-    if (!module) return;
+    const moduleData = permissionModules.find((m) => m.id === moduleId);
+    if (!moduleData) return;
 
     const newPerms = { ...rolePermissions };
-    module.permissions.forEach((perm) => {
+    moduleData.permissions.forEach((perm) => {
       newPerms[perm.id] = checked;
     });
     setRolePermissions(newPerms);
@@ -309,8 +307,8 @@ export default function PermissionsSettingsPage() {
       <div className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 lg:w-[300px]">
-            <TabsTrigger value="roles">角色权限</TabsTrigger>
-            <TabsTrigger value="users">用户权限</TabsTrigger>
+            <TabsTrigger value="roles">{tc('text_hxen9p')}</TabsTrigger>
+            <TabsTrigger value="users">{tc('text_f6uwfw')}</TabsTrigger>
           </TabsList>
 
           {/* 角色权限 */}
@@ -322,9 +320,9 @@ export default function PermissionsSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Shield className="h-5 w-5" />
-                      系统角色
+                      {tc('text_gaqqlg')}
                     </CardTitle>
-                    <CardDescription>选择角色配置权限</CardDescription>
+                    <CardDescription>{tc('text_frsgjy')}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
@@ -342,7 +340,7 @@ export default function PermissionsSettingsPage() {
                             <div className="font-medium">{role.name}</div>
                             {role.isSystem && (
                               <Badge variant="secondary" className="text-xs">
-                                系统
+                                {tc('text_lydg')}
                               </Badge>
                             )}
                           </div>
@@ -354,7 +352,8 @@ export default function PermissionsSettingsPage() {
                               {role.code}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
-                              {role.userCount} 人
+                              {role.userCount}
+                              {tc('text_fju')}
                             </span>
                           </div>
                         </div>
@@ -371,19 +370,21 @@ export default function PermissionsSettingsPage() {
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         <Settings className="h-5 w-5" />
-                        权限配置
+                        {tc('text_dnlejy')}
                       </CardTitle>
                       <CardDescription>
-                        配置 {selectedRole.name} 的操作权限
+                        {tc('text_pewx')}
+                        {selectedRole.name}
+                        {tc('text_krsk2o')}
                         {selectedRole.isSystem && (
-                          <span className="text-orange-600 ml-2">(系统角色不可编辑)</span>
+                          <span className="text-orange-600 ml-2">{tc('text_o8kqbk')}</span>
                         )}
                       </CardDescription>
                     </div>
                     {!selectedRole.isSystem && (
                       <Button onClick={savePermissions}>
                         <Save className="h-4 w-4 mr-2" />
-                        保存权限
+                        {tc('text_agioco')}
                       </Button>
                     )}
                   </CardHeader>
@@ -395,7 +396,9 @@ export default function PermissionsSettingsPage() {
                             <h4 className="font-semibold text-lg">{module.name}</h4>
                             {!selectedRole.isSystem && (
                               <div className="flex items-center gap-2">
-                                <Label className="text-sm text-muted-foreground">{tc("selectAll")}</Label>
+                                <Label className="text-sm text-muted-foreground">
+                                  {tc('selectAll')}
+                                </Label>
                                 <Switch
                                   checked={module.permissions.every((p) => rolePermissions[p.id])}
                                   onCheckedChange={(checked) =>
@@ -446,16 +449,16 @@ export default function PermissionsSettingsPage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
-                    用户权限分配
+                    {tc('text_y9wjst')}
                   </CardTitle>
-                  <CardDescription>为特定用户分配额外权限或限制权限</CardDescription>
+                  <CardDescription>{tc('text_yks3aq')}</CardDescription>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-12 text-muted-foreground">
                   <UserCog className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>用户级权限配置功能开发中...</p>
-                  <p className="text-sm mt-2">您可以通过角色管理来控制用户权限</p>
+                  <p>{tc('text_yl8cd2')}</p>
+                  <p className="text-sm mt-2">{tc('text_pf7uo')}</p>
                 </div>
               </CardContent>
             </Card>

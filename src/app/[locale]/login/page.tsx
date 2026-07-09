@@ -19,8 +19,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
 
-/* eslint-disable @next/next/no-img-element */
-
 interface PupilProps {
   size?: number;
   maxDistance?: number;
@@ -389,6 +387,7 @@ export default function LoginPage() {
       <div className="relative hidden lg:flex flex-col justify-between bg-gradient-to-br from-primary/90 via-primary to-primary/80 p-12 text-primary-foreground">
         <div className="relative z-20">
           <div className="flex items-center gap-3 text-lg font-semibold">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/loginlogo.png" alt={companyName} className="h-10 w-auto" />
             <span>{companyName}</span>
           </div>
@@ -695,6 +694,7 @@ export default function LoginPage() {
       <div className="flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-[420px]">
           <div className="lg:hidden flex items-center justify-center gap-3 text-lg font-semibold mb-12">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/loginlogo.png" alt={companyName} className="h-10 w-auto" />
             <span>{companyName}</span>
           </div>

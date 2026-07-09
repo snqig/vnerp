@@ -3,6 +3,7 @@
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 interface ErrorFallbackProps {
   error: Error & { digest?: string };
@@ -16,7 +17,10 @@ export function ErrorFallback({ error, reset, showHomeLink = false }: ErrorFallb
   return (
     <div className="flex items-center justify-center min-h-[400px] w-full">
       <div className="flex flex-col items-center gap-4 text-center max-w-md">
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f5f7fa' }}>
+        <div
+          className="w-12 h-12 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: '#f5f7fa' }}
+        >
           <AlertCircle className="w-6 h-6" style={{ color: '#f5222d' }} />
         </div>
         <div>
@@ -37,12 +41,12 @@ export function ErrorFallback({ error, reset, showHomeLink = false }: ErrorFallb
             {t('retry')}
           </Button>
           {showHomeLink && (
-            <a href="/">
+            <Link href="/">
               <Button variant="outline" className="gap-2">
                 <Home className="w-4 h-4" />
                 {t('backToHome')}
               </Button>
-            </a>
+            </Link>
           )}
         </div>
       </div>

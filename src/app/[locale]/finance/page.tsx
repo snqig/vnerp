@@ -200,7 +200,7 @@ export default function FinancePage() {
           setSummary((prev) => ({ ...prev, receivable: data.data.summary }));
         }
       }
-    } catch {
+    } catch (e) {
       toast.error('获取应收列表失败');
     } finally {
       setLoading(false);
@@ -222,7 +222,7 @@ export default function FinancePage() {
           setSummary((prev) => ({ ...prev, payable: data.data.summary }));
         }
       }
-    } catch {
+    } catch (e) {
       toast.error('获取应付列表失败');
     } finally {
       setLoading(false);
@@ -237,7 +237,7 @@ export default function FinancePage() {
       if (data.success) {
         setReceipts(data.data?.list || []);
       }
-    } catch {
+    } catch (e) {
       toast.error('获取收款记录失败');
     } finally {
       setLoading(false);
@@ -252,7 +252,7 @@ export default function FinancePage() {
       if (data.success) {
         setPayments(data.data?.list || []);
       }
-    } catch {
+    } catch (e) {
       toast.error('获取付款记录失败');
     } finally {
       setLoading(false);
@@ -266,7 +266,7 @@ export default function FinancePage() {
       if (data.success) {
         setCustomers(data.data?.list || data.data || []);
       }
-    } catch {}
+    } catch (e) {}
   };
 
   const fetchSuppliers = async () => {
@@ -276,7 +276,7 @@ export default function FinancePage() {
       if (data.success) {
         setSuppliers(data.data?.list || data.data || []);
       }
-    } catch {}
+    } catch (e) {}
   };
 
   useEffect(() => {
@@ -317,7 +317,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch {
+    } catch (e) {
       toast.error('创建应收单失败');
     }
   };
@@ -348,7 +348,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch {
+    } catch (e) {
       toast.error('创建应付单失败');
     }
   };
@@ -386,7 +386,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch {
+    } catch (e) {
       toast.error('创建收款记录失败');
     }
   };
@@ -424,7 +424,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch {
+    } catch (e) {
       toast.error('创建付款记录失败');
     }
   };
@@ -440,7 +440,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '删除失败');
       }
-    } catch {
+    } catch (e) {
       toast.error('删除失败');
     }
   };
@@ -456,7 +456,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '删除失败');
       }
-    } catch {
+    } catch (e) {
       toast.error('删除失败');
     }
   };
@@ -474,7 +474,7 @@ export default function FinancePage() {
         setDetailType(type);
         setDetailDialogOpen(true);
       }
-    } catch {
+    } catch (e) {
       toast.error('获取详情失败');
     }
   };

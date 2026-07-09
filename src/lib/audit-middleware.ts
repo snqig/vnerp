@@ -13,17 +13,17 @@ import { maskSensitiveData } from '@/lib/logger';
 // ============================================================
 
 const MODULE_MAPPING: Record<string, string> = {
-  '/api/purchase': '采购管理',
-  '/api/sales': '销售管理',
-  '/api/warehouse': '库存管理',
-  '/api/production': '生产管理',
-  '/api/finance': '财务管理',
-  '/api/quality': '质量管理',
-  '/api/dcprint': '印前管理',
-  '/api/hr': '人事管理',
-  '/api/system': '系统管理',
-  '/api/report': '报表中心',
-  '/api/dashboard': '数据看板',
+  '/api/purchase': tc('text_iz76ff'),
+  '/api/sales': tc('text_j5mp0z'),
+  '/api/warehouse': tc('text_cbemwa'),
+  '/api/production': tc('text_f3xa0d'),
+  '/api/finance': tc('text_i5j98k'),
+  '/api/quality': tc('text_iew8do'),
+  '/api/dcprint': tc('text_aviioy'),
+  '/api/hr': tc('text_a9kn6e'),
+  '/api/system': tc('text_gao8uh'),
+  '/api/report': tc('text_d09qzd'),
+  '/api/dashboard': tc('text_d7qb82'),
 };
 
 // ============================================================
@@ -31,18 +31,24 @@ const MODULE_MAPPING: Record<string, string> = {
 // ============================================================
 
 const METHOD_TYPE_MAPPING: Record<string, string> = {
-  GET: '查询',
-  POST: '新增',
-  PUT: '修改',
-  PATCH: '修改',
-  DELETE: '删除',
+  GET: tc('text_iftp'),
+  POST: tc('text_hs6m'),
+  PUT: tc('text_e5fv'),
+  PATCH: tc('text_e5fv'),
+  DELETE: tc('text_eslg'),
 };
 
 // ============================================================
 // 需要记录详细请求/响应的模块（白名单）
 // ============================================================
 
-const DETAIL_LOG_MODULES = ['采购管理', '销售管理', '库存管理', '生产管理', '财务管理'];
+const DETAIL_LOG_MODULES = [
+  tc('text_iz76ff'),
+  tc('text_j5mp0z'),
+  tc('text_cbemwa'),
+  tc('text_f3xa0d'),
+  tc('text_i5j98k'),
+];
 
 // ============================================================
 // 辅助函数
@@ -52,19 +58,19 @@ function getModuleFromUrl(url: string): string {
   for (const [prefix, module] of Object.entries(MODULE_MAPPING)) {
     if (url.includes(prefix)) return module;
   }
-  return '系统管理';
+  return tc('text_gao8uh');
 }
 
 function getOperationType(method: string, url: string): string {
   // 根据URL中的action参数判断特殊操作
-  if (url.includes('action=audit')) return '审核';
-  if (url.includes('action=cancel')) return '作废';
-  if (url.includes('action=approve')) return '审核';
-  if (url.includes('action=reject')) return '反审';
-  if (url.includes('action=import')) return '导入';
-  if (url.includes('action=export')) return '导出';
-  if (url.includes('action=print')) return '打印';
-  if (url.includes('action=submit')) return '提交';
+  if (url.includes('action=audit')) return tc('text_g5o7');
+  if (url.includes('action=cancel')) return tc('text_e0n7');
+  if (url.includes('action=approve')) return tc('text_g5o7');
+  if (url.includes('action=reject')) return tc('text_er90');
+  if (url.includes('action=import')) return tc('text_g3c9');
+  if (url.includes('action=export')) return tc('text_g3ge');
+  if (url.includes('action=print')) return tc('text_h6kd');
+  if (url.includes('action=submit')) return tc('text_heqc');
 
   return METHOD_TYPE_MAPPING[method] || method;
 }
@@ -137,7 +143,7 @@ export function withAudit(
     const startTime = Date.now();
     const url = request.url;
     const method = request.method;
-    const module = options?.module || getModuleFromUrl(url);
+    const moduleName = options?.module || getModuleFromUrl(url);
     const type = options?.type || getOperationType(method, url);
 
     // 设置用户上下文（从请求头或token中获取）
@@ -187,11 +193,7 @@ export function withAudit(
       // 判断操作是否成功
       if (responseData && typeof responseData === 'object') {
         const resp = responseData as { code?: number; message?: string; msg?: string };
-        if (
-          resp.code !== undefined &&
-          resp.code !== 200 &&
-          resp.code !== 0
-        ) {
+        if (resp.code !== undefined && resp.code !== 200 && resp.code !== 0) {
           status = 0;
           errorMsg = resp.message || resp.msg || '操作失败';
         }
@@ -211,15 +213,16 @@ export function withAudit(
 
       // 只对关键操作记录详细日志
       const shouldLogDetail =
-        DETAIL_LOG_MODULES.includes(module) || ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
+        DETAIL_LOG_MODULES.includes(moduleName) ||
+        ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
 
       if (shouldLogDetail) {
         await logOperation(
           {
-            module,
+            module: moduleName,
             type,
             title: options?.title || `${method} ${url.split('?')[0]}`,
-            content: options?.customContent || `${module} - ${type}操作`,
+            content: options?.customContent || `${moduleName} - ${type}操作`,
             requestUrl: url.split('?')[0],
             requestMethod: method,
             requestParam: requestParam ? maskSensitiveData(requestParam) : null,
