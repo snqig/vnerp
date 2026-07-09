@@ -77,6 +77,9 @@ Thumbs.db
 # 临时生成的 i18n 缺失清单
 i18n-missing.json
 
+# 临时 eslint 诊断输出
+eslint_errors.json
+
 # 调试脚本与测试截图（根目录）
 /test-*.js
 /test-*.ps1
