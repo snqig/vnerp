@@ -11,6 +11,11 @@
  */
 import { query, execute, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
+import {
+  FormulaVersionActivatedEvent,
+  FormulaVersionCancelledEvent,
+} from '@/domain/dcprint/events/FormulaVersionEvents';
 
 // ===== 类型定义 =====
 
@@ -429,6 +434,20 @@ export async function activateVersion(id: number, operatorId: number): Promise<v
 
     // 计算成本快照
     await calculateAndSnapshotCost(conn, id);
+
+    const [costRows]: any = await conn.execute(
+      'SELECT theoretical_cost FROM dcprint_ink_formula_version WHERE id = ?',
+      [id]
+    );
+    await getDomainEventOutbox().saveEvents(conn, 'InkFormulaVersion', id, [
+      new FormulaVersionActivatedEvent({
+        versionId: id,
+        colorId: version.color_id,
+        versionNo: version.version_no,
+        activatedBy: operatorId,
+        theoreticalCost: costRows[0]?.theoretical_cost ?? null,
+      }),
+    ]);
   });
 
   secureLog('info', 'Formula version activated', { id, operatorId });
@@ -443,12 +462,24 @@ export async function cancelVersion(id: number, operatorId: number, reason: stri
     throw new Error('只有已生效版本可以作废');
   }
 
-  await execute(
-    `UPDATE dcprint_ink_formula_version
-     SET status = 3, cancel_by = ?, cancel_reason = ?, cancel_time = NOW(), update_by = ?
-     WHERE id = ?`,
-    [operatorId, reason, operatorId, id]
-  );
+  await transaction(async (conn) => {
+    await conn.execute(
+      `UPDATE dcprint_ink_formula_version
+       SET status = 3, cancel_by = ?, cancel_reason = ?, cancel_time = NOW(), update_by = ?
+       WHERE id = ?`,
+      [operatorId, reason, operatorId, id]
+    );
+
+    await getDomainEventOutbox().saveEvents(conn, 'InkFormulaVersion', id, [
+      new FormulaVersionCancelledEvent({
+        versionId: id,
+        colorId: version.color_id,
+        versionNo: version.version_no,
+        cancelledBy: operatorId,
+        reason,
+      }),
+    ]);
+  });
 
   secureLog('info', 'Formula version cancelled', { id, operatorId, reason });
 }
@@ -545,6 +576,55 @@ export async function deleteVersion(id: number): Promise<void> {
   await transaction(async (conn) => {
     await conn.execute('UPDATE dcprint_ink_formula_version SET is_deleted = 1 WHERE id = ?', [id]);
     await conn.execute('DELETE FROM dcprint_ink_formula_item WHERE version_id = ?', [id]);
+  });
+}
+
+// 独立更新草稿版本明细（对应 API：POST /version/:id/items）
+export async function updateVersionItems(
+  id: number,
+  items: FormulaItem[],
+  operatorId: number
+): Promise<void> {
+  const version = await getVersionDetail(id);
+  if (!version) {
+    throw new Error('版本不存在');
+  }
+  if (version.status !== 1) {
+    throw new Error('只有草稿版本可以编辑明细');
+  }
+  if (!Array.isArray(items)) {
+    throw new Error('items 必须为数组');
+  }
+
+  await transaction(async (conn) => {
+    await conn.execute('DELETE FROM dcprint_ink_formula_item WHERE version_id = ?', [id]);
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      await conn.execute(
+        `INSERT INTO dcprint_ink_formula_item
+         (version_id, material_id, material_code, material_name, ink_type, brand, ratio, weight, unit, add_order, process_remark, sort, is_base)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          item.material_id || null,
+          item.material_code,
+          item.material_name,
+          item.ink_type || null,
+          item.brand || null,
+          item.ratio,
+          item.weight || null,
+          item.unit || 'kg',
+          item.add_order || 0,
+          item.process_remark || null,
+          item.sort || i + 1,
+          item.is_base || 0,
+        ]
+      );
+    }
+    await conn.execute(
+      'UPDATE dcprint_ink_formula_version SET update_by = ?, cost_calc_status = 0 WHERE id = ?',
+      [operatorId, id]
+    );
   });
 }
 
