@@ -3,7 +3,7 @@ import { query, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -30,100 +30,109 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const {
-    product_id,
-    product_code,
-    product_name,
-    process_code,
-    process_name,
-    version,
-    sop_type,
-    content,
-    file_url,
-    workshop,
-    equipment_type,
-    effective_date,
-    remark,
-  } = body;
-
-  if (!product_name) return errorResponse('产品名称不能为空', 400, 400);
-
-  const now = new Date();
-  const sopNo =
-    'SOP' +
-    now.getFullYear() +
-    String(now.getMonth() + 1).padStart(2, '0') +
-    String(now.getDate()).padStart(2, '0') +
-    String(Math.floor(Math.random() * 10000)).padStart(4, '0');
-
-  const result: any = await execute(
-    `INSERT INTO eng_sop (sop_no, sop_name, product_id, product_code, product_name, process_code, process_name, version, sop_type, content, file_url, workshop, equipment_type, effective_date, remark)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      sopNo,
-      (process_name || '') + '-' + (product_name || ''),
-      product_id || null,
-      product_code || null,
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const {
+      product_id,
+      product_code,
       product_name,
-      process_code || null,
-      process_name || null,
-      version || 'V1.0',
-      sop_type || 'printing',
-      content || null,
-      file_url || null,
-      workshop || null,
-      equipment_type || null,
-      effective_date || null,
-      remark || null,
-    ]
-  );
+      process_code,
+      process_name,
+      version,
+      sop_type,
+      content,
+      file_url,
+      workshop,
+      equipment_type,
+      effective_date,
+      remark,
+    } = body;
 
-  return successResponse({ id: result.insertId, sop_no: sopNo }, 'SOP创建成功');
-}, { logTitle: '创建SOP', logType: 'business' });
+    if (!product_name) return errorResponse('产品名称不能为空', 400, 400);
 
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, ...fields } = body;
-  if (!id) return errorResponse('ID不能为空', 400, 400);
+    const now = new Date();
+    const sopNo =
+      'SOP' +
+      now.getFullYear() +
+      String(now.getMonth() + 1).padStart(2, '0') +
+      String(now.getDate()).padStart(2, '0') +
+      String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-  const updateFields: string[] = [];
-  const updateValues: any[] = [];
-  const allowedFields = [
-    'sop_name',
-    'version',
-    'sop_type',
-    'content',
-    'file_url',
-    'workshop',
-    'equipment_type',
-    'status',
-    'effective_date',
-    'expire_date',
-    'approver',
-    'approve_time',
-    'remark',
-  ];
-  for (const field of allowedFields) {
-    if (fields[field] !== undefined) {
-      updateFields.push(`${field} = ?`);
-      updateValues.push(fields[field]);
+    const result: any = await execute(
+      `INSERT INTO eng_sop (sop_no, sop_name, product_id, product_code, product_name, process_code, process_name, version, sop_type, content, file_url, workshop, equipment_type, effective_date, remark)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        sopNo,
+        (process_name || '') + '-' + (product_name || ''),
+        product_id || null,
+        product_code || null,
+        product_name,
+        process_code || null,
+        process_name || null,
+        version || 'V1.0',
+        sop_type || 'printing',
+        content || null,
+        file_url || null,
+        workshop || null,
+        equipment_type || null,
+        effective_date || null,
+        remark || null,
+      ]
+    );
+
+    return successResponse({ id: result.insertId, sop_no: sopNo }, 'SOP创建成功');
+  },
+  { logTitle: '创建SOP', logType: 'business' }
+);
+
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { id, ...fields } = body;
+    if (!id) return errorResponse('ID不能为空', 400, 400);
+
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+    const allowedFields = [
+      'sop_name',
+      'version',
+      'sop_type',
+      'content',
+      'file_url',
+      'workshop',
+      'equipment_type',
+      'status',
+      'effective_date',
+      'expire_date',
+      'approver',
+      'approve_time',
+      'remark',
+    ];
+    for (const field of allowedFields) {
+      if (fields[field] !== undefined) {
+        updateFields.push(`${field} = ?`);
+        updateValues.push(fields[field]);
+      }
     }
-  }
-  if (updateFields.length > 0) {
-    await execute(`UPDATE eng_sop SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`, [
-      ...updateValues,
-      id,
-    ]);
-  }
-  return successResponse(null, '更新成功');
-}, { logTitle: '更新SOP', logType: 'business' });
+    if (updateFields.length > 0) {
+      await execute(`UPDATE eng_sop SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`, [
+        ...updateValues,
+        id,
+      ]);
+    }
+    return successResponse(null, '更新成功');
+  },
+  { logTitle: '更新SOP', logType: 'business' }
+);
 
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  if (!id) return errorResponse('ID不能为空', 400, 400);
-  await execute('UPDATE eng_sop SET deleted = 1 WHERE id = ?', [id]);
-  return successResponse(null, '删除成功');
-}, { logTitle: '删除SOP', logType: 'business' });
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return errorResponse('ID不能为空', 400, 400);
+    await execute('UPDATE eng_sop SET deleted = 1 WHERE id = ?', [id]);
+    return successResponse(null, '删除成功');
+  },
+  { logTitle: '删除SOP', logType: 'business' }
+);

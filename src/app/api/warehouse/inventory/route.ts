@@ -4,7 +4,7 @@ import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { logger, generateTraceId } from '@/lib/logger';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const traceId = generateTraceId();
   const ctx = { module: 'inventory', action: 'list', traceId };
 
@@ -16,7 +16,14 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const warehouseId = searchParams.get('warehouseId');
   const lowStock = searchParams.get('lowStock');
 
-  logger.stepStart(ctx, '查询库存列表', { keyword, categoryId, warehouseId, lowStock, page, pageSize });
+  logger.stepStart(ctx, '查询库存列表', {
+    keyword,
+    categoryId,
+    warehouseId,
+    lowStock,
+    page,
+    pageSize,
+  });
 
   let sql = `
     SELECT m.*, w.warehouse_name, mc.category_name,

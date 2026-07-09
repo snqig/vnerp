@@ -51,22 +51,49 @@ interface RecentWorkOrder {
 }
 
 const STATUS_MAP: Record<string, { labelKey: string; className: string }> = {
-  1: { labelKey: 'statusPending', className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30' },
-  2: { labelKey: 'statusConfirmed', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
+  1: {
+    labelKey: 'statusPending',
+    className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
+  },
+  2: {
+    labelKey: 'statusConfirmed',
+    className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+  },
   3: {
     labelKey: 'statusPartialShip',
     className: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
   },
-  4: { labelKey: 'statusCompleted', className: 'bg-green-500/20 text-green-300 border border-green-500/30' },
-  5: { labelKey: 'statusCancelled', className: 'bg-red-500/20 text-red-300 border border-red-500/30' },
+  4: {
+    labelKey: 'statusCompleted',
+    className: 'bg-green-500/20 text-green-300 border border-green-500/30',
+  },
+  5: {
+    labelKey: 'statusCancelled',
+    className: 'bg-red-500/20 text-red-300 border border-red-500/30',
+  },
 };
 
 const WORK_ORDER_STATUS_MAP: Record<string, { labelKey: string; className: string }> = {
-  1: { labelKey: 'statusDraft', className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30' },
-  2: { labelKey: 'statusConfirmed', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
-  3: { labelKey: 'statusInProduction', className: 'bg-orange-500/20 text-orange-300 border border-orange-500/30' },
-  4: { labelKey: 'statusCompleted', className: 'bg-green-500/20 text-green-300 border border-green-500/30' },
-  5: { labelKey: 'statusCancelled', className: 'bg-red-500/20 text-red-300 border border-red-500/30' },
+  1: {
+    labelKey: 'statusDraft',
+    className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
+  },
+  2: {
+    labelKey: 'statusConfirmed',
+    className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+  },
+  3: {
+    labelKey: 'statusInProduction',
+    className: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
+  },
+  4: {
+    labelKey: 'statusCompleted',
+    className: 'bg-green-500/20 text-green-300 border border-green-500/30',
+  },
+  5: {
+    labelKey: 'statusCancelled',
+    className: 'bg-red-500/20 text-red-300 border border-red-500/30',
+  },
 };
 
 export default function DashboardPage() {
@@ -109,7 +136,9 @@ export default function DashboardPage() {
               product: o.items?.[0]?.material_name || '-',
               quantity:
                 o.items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0,
-              status: STATUS_MAP[o.status]?.labelKey ? t(STATUS_MAP[o.status].labelKey) : t('unknown'),
+              status: STATUS_MAP[o.status]?.labelKey
+                ? t(STATUS_MAP[o.status].labelKey)
+                : t('unknown'),
               statusClass: STATUS_MAP[o.status]?.className || '',
               delivery: o.delivery_date || '-',
             }))
@@ -139,7 +168,9 @@ export default function DashboardPage() {
                 id: wo.work_order_no,
                 product: wo.product_name || '-',
                 quantity: wo.quantity || 0,
-                status: WORK_ORDER_STATUS_MAP[wo.status]?.labelKey ? t(WORK_ORDER_STATUS_MAP[wo.status].labelKey) : t('unknown'),
+                status: WORK_ORDER_STATUS_MAP[wo.status]?.labelKey
+                  ? t(WORK_ORDER_STATUS_MAP[wo.status].labelKey)
+                  : t('unknown'),
                 statusClass: WORK_ORDER_STATUS_MAP[wo.status]?.className || '',
                 date: wo.create_time?.substring(0, 10) || '-',
               }))
@@ -157,7 +188,7 @@ export default function DashboardPage() {
             totalValue,
           });
         }
-      } catch (error) {
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -399,12 +430,24 @@ export default function DashboardPage() {
                     style={{ background: 'rgba(15, 23, 42, 0.9)' }}
                   >
                     <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{t('orderNo')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{t('customer')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{t('product')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{t('quantity')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{t('status')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{t('deliveryDate')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {t('orderNo')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {t('customer')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {t('product')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {t('quantity')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {t('status')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {t('deliveryDate')}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -458,10 +501,18 @@ export default function DashboardPage() {
                     style={{ background: 'rgba(15, 23, 42, 0.9)' }}
                   >
                     <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{t('workOrderNo')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{t('product')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{t('quantity')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{t('status')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {t('workOrderNo')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {t('product')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {t('quantity')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {t('status')}
+                      </th>
                       <th className="text-left py-2 px-3 text-white/60 font-medium">{t('date')}</th>
                     </tr>
                   </thead>

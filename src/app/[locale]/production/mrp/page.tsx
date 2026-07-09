@@ -170,7 +170,10 @@ export default function MRPPage() {
       label: tc('normal'),
       className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
     },
-    low: { label: tc('low'), className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' },
+    low: {
+      label: tc('low'),
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
+    },
   };
 
   const [activeTab, setActiveTab] = useState('mrp-run');
@@ -223,8 +226,7 @@ export default function MRPPage() {
           }))
         );
       }
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   const fetchWarehouses = useCallback(async () => {
@@ -241,8 +243,7 @@ export default function MRPPage() {
           }))
         );
       }
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   const fetchMaterials = useCallback(async () => {
@@ -260,8 +261,7 @@ export default function MRPPage() {
           }))
         );
       }
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -286,7 +286,7 @@ export default function MRPPage() {
       if (data.success || data.data) {
         setMrpResult(data.data || data);
       }
-    } catch (e) {
+    } catch {
     } finally {
       setMrpLoading(false);
     }
@@ -303,7 +303,7 @@ export default function MRPPage() {
       if (data.success || data.data) {
         setBomTree(data.data || data);
       }
-    } catch (e) {
+    } catch {
     } finally {
       setBomLoading(false);
     }
@@ -320,7 +320,7 @@ export default function MRPPage() {
       if (data.success || data.data) {
         setTimeBuckets(Array.isArray(data.data) ? data.data : []);
       }
-    } catch (e) {
+    } catch {
     } finally {
       setBucketLoading(false);
     }
@@ -421,9 +421,7 @@ export default function MRPPage() {
                         <Switch checked={autoGeneratePR} onCheckedChange={setAutoGeneratePR} />
                         <div>
                           <Label className="cursor-pointer">{t('autoGeneratePR')}</Label>
-                          <p className="text-xs text-muted-foreground">
-                            {t('autoGeneratePRDesc')}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{t('autoGeneratePRDesc')}</p>
                         </div>
                       </div>
                     </div>
@@ -460,7 +458,9 @@ export default function MRPPage() {
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">{t('involvedMaterials')}</CardTitle>
+                          <CardTitle className="text-sm font-medium">
+                            {t('involvedMaterials')}
+                          </CardTitle>
                           <Layers className="h-4 w-4 text-blue-600" />
                         </CardHeader>
                         <CardContent>
@@ -471,7 +471,9 @@ export default function MRPPage() {
                       </Card>
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">{t('shortageItems')}</CardTitle>
+                          <CardTitle className="text-sm font-medium">
+                            {t('shortageItems')}
+                          </CardTitle>
                           <AlertTriangle className="h-4 w-4 text-red-600" />
                         </CardHeader>
                         <CardContent>
@@ -493,7 +495,9 @@ export default function MRPPage() {
                       </Card>
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">{t('plannedAmount')}</CardTitle>
+                          <CardTitle className="text-sm font-medium">
+                            {t('plannedAmount')}
+                          </CardTitle>
                           <FileSpreadsheet className="h-4 w-4 text-green-600" />
                         </CardHeader>
                         <CardContent>
@@ -516,7 +520,8 @@ export default function MRPPage() {
                           <div className="flex gap-4 flex-wrap">
                             {mrpResult.purchase_requests.map((pr, idx) => (
                               <Badge key={idx} variant="outline" className="text-sm py-1 px-3">
-                                {pr.request_no} ({pr.item_count}项)
+                                {pr.request_no} ({pr.item_count}
+                                {tc('text_pxow')}
                               </Badge>
                             ))}
                           </div>
@@ -536,7 +541,9 @@ export default function MRPPage() {
                               <TableRow>
                                 <TableHead>{t('materialCode')}</TableHead>
                                 <TableHead>{t('materialName')}</TableHead>
-                                <TableHead className="text-right">{t('grossRequirement')}</TableHead>
+                                <TableHead className="text-right">
+                                  {t('grossRequirement')}
+                                </TableHead>
                                 <TableHead className="text-right">{t('onHand')}</TableHead>
                                 <TableHead className="text-right">{t('allocated')}</TableHead>
                                 <TableHead className="text-right">{t('inTransit')}</TableHead>
@@ -850,7 +857,7 @@ export default function MRPPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>{tc("warehouse")}</Label>
+                      <Label>{tc('warehouse')}</Label>
                       <Select value={bucketWarehouseId} onValueChange={setBucketWarehouseId}>
                         <SelectTrigger>
                           <SelectValue placeholder="选择仓库" />
@@ -1001,12 +1008,20 @@ export default function MRPPage() {
                             <TableHeader>
                               <TableRow>
                                 <TableHead>{t('date')}</TableHead>
-                                <TableHead className="text-right">{t('grossRequirement')}</TableHead>
-                                <TableHead className="text-right">{t('scheduledReceipt')}</TableHead>
+                                <TableHead className="text-right">
+                                  {t('grossRequirement')}
+                                </TableHead>
+                                <TableHead className="text-right">
+                                  {t('scheduledReceipt')}
+                                </TableHead>
                                 <TableHead className="text-right">{t('onHand')}</TableHead>
                                 <TableHead className="text-right">{t('netRequirement')}</TableHead>
-                                <TableHead className="text-right">{t('plannedOrderRelease')}</TableHead>
-                                <TableHead className="text-right">{t('plannedOrderReceipt')}</TableHead>
+                                <TableHead className="text-right">
+                                  {t('plannedOrderRelease')}
+                                </TableHead>
+                                <TableHead className="text-right">
+                                  {t('plannedOrderReceipt')}
+                                </TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>

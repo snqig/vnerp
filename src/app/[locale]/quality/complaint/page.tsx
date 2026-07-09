@@ -153,8 +153,7 @@ export default function Complaint8DPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -176,7 +175,7 @@ export default function Complaint8DPage() {
       } else {
         toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -195,7 +194,7 @@ export default function Complaint8DPage() {
       } else {
         toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -209,7 +208,7 @@ export default function Complaint8DPage() {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -241,7 +240,7 @@ export default function Complaint8DPage() {
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder={tc("searchProductName")}
+                    placeholder={tc('searchProductName')}
                     className="pl-8 w-48"
                     value={searchProduct}
                     onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -282,11 +281,25 @@ export default function Complaint8DPage() {
                   { key: 'complaint_no', label: t('complaintNo'), width: 18 },
                   { key: 'customer_name', label: tc('customerName'), width: 20 },
                   { key: 'product_name', label: tc('productName'), width: 20 },
-                  { key: 'defect_type', label: t('defectType'), width: 12, formatter: (v) => t(defectTypeMap[v] || v) },
+                  {
+                    key: 'defect_type',
+                    label: t('defectType'),
+                    width: 12,
+                    formatter: (v) => t(defectTypeMap[v] || v),
+                  },
                   { key: 'defect_qty', label: t('defectQty'), width: 10 },
-                  { key: 'status', label: tc('status'), width: 12, formatter: (v) => t(statusMap[v]?.label || tc('unknown')) },
+                  {
+                    key: 'status',
+                    label: tc('status'),
+                    width: 12,
+                    formatter: (v) => t(statusMap[v]?.label || tc('unknown')),
+                  },
                 ]}
-                data={selectedIds.length > 0 ? sortedData.filter((i) => i.id && selectedIds.includes(i.id)) : sortedData}
+                data={
+                  selectedIds.length > 0
+                    ? sortedData.filter((i) => i.id && selectedIds.includes(i.id))
+                    : sortedData
+                }
               />
             </div>
 
@@ -307,7 +320,7 @@ export default function Complaint8DPage() {
                       }
                     />
                   </TableHead>
-                  <TableHead className="w-12 text-center">{tc("serialNo")}</TableHead>
+                  <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
                   <SortableTableHeader
                     field="complaint_no"
                     sortField={sortField}
@@ -316,7 +329,7 @@ export default function Complaint8DPage() {
                   >
                     {t('complaintNo')}
                   </SortableTableHeader>
-                  <TableHead>{tc("source")}</TableHead>
+                  <TableHead>{tc('source')}</TableHead>
                   <SortableTableHeader
                     field="customer_name"
                     sortField={sortField}
@@ -345,7 +358,7 @@ export default function Complaint8DPage() {
                     {tc('status')}
                   </SortableTableHeader>
                   <TableHead>{t('registerDate')}</TableHead>
-                  <TableHead>{tc("actions")}</TableHead>
+                  <TableHead>{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -427,7 +440,9 @@ export default function Complaint8DPage() {
             </Table>
 
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">{tc('totalRecords', { count: total })}</span>
+              <span className="text-sm text-muted-foreground">
+                {tc('totalRecords', { count: total })}
+              </span>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -586,7 +601,7 @@ export default function Complaint8DPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   rows={2}
                   value={editItem.remark || ''}
@@ -600,7 +615,7 @@ export default function Complaint8DPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -608,7 +623,9 @@ export default function Complaint8DPage() {
         <Dialog open={show8DDialog} onOpenChange={setShow8DDialog}>
           <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>{t('8DReport')} - {editItem.complaint_no}</DialogTitle>
+              <DialogTitle>
+                {t('8DReport')} - {editItem.complaint_no}
+              </DialogTitle>
             </DialogHeader>
             <Tabs value={active8DTab} onValueChange={setActive8DTab}>
               <TabsList className="grid grid-cols-8">

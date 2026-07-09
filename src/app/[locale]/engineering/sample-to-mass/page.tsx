@@ -66,7 +66,6 @@ interface TransferRecord {
 }
 
 export default function SampleToMassPage() {
-
   const t = useTranslations('Engineering');
   const tc = useTranslations('Common');
 
@@ -102,8 +101,7 @@ export default function SampleToMassPage() {
       if (result.success) {
         setCustomers(result.data?.list || result.data || []);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchData = async () => {
@@ -120,8 +118,7 @@ export default function SampleToMassPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -145,7 +142,7 @@ export default function SampleToMassPage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -159,7 +156,7 @@ export default function SampleToMassPage() {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -178,7 +175,7 @@ export default function SampleToMassPage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -322,7 +319,9 @@ export default function SampleToMassPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? t('editTransferRecord') : t('newTransferRecord')}</DialogTitle>
+              <DialogTitle>
+                {editItem.id ? t('editTransferRecord') : t('newTransferRecord')}
+              </DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div>

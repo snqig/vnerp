@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     let orderStats: any = { total_orders: 0, active_orders: 0, completed_today: 0 };
     try {
@@ -13,8 +13,7 @@ export async function GET(request: NextRequest) {
         FROM prd_process_card WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) orderStats = rows[0];
-    } catch (e) {
-    }
+    } catch {}
 
     let equipStats: any = { total: 0, running: 0, idle: 0, maintenance: 0, error_count: 0 };
     try {
@@ -28,8 +27,7 @@ export async function GET(request: NextRequest) {
         FROM eqp_equipment WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) equipStats = rows[0];
-    } catch (e) {
-    }
+    } catch {}
 
     let equipmentList: any[] = [];
     try {
@@ -40,8 +38,7 @@ export async function GET(request: NextRequest) {
         FROM eqp_equipment WHERE deleted = 0 AND status = 1 ORDER BY equipment_code
       `);
       equipmentList = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let qualityRate = 96.8;
     try {
@@ -56,8 +53,7 @@ export async function GET(request: NextRequest) {
         const passedInspect = Number(rows[0].passed || 0);
         if (totalInspect > 0) qualityRate = Math.round((passedInspect / totalInspect) * 1000) / 10;
       }
-    } catch (e) {
-    }
+    } catch {}
 
     let recentOrders: any[] = [];
     try {
@@ -72,8 +68,7 @@ export async function GET(request: NextRequest) {
         ORDER BY pc.update_time DESC LIMIT 10
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let inkStats: any = { total_opened: 0, in_use: 0, expired: 0, expiring_soon: 0 };
     try {
@@ -86,8 +81,7 @@ export async function GET(request: NextRequest) {
         FROM ink_opening_record WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) inkStats = rows[0];
-    } catch (e) {
-    }
+    } catch {}
 
     const dieStats: any = { total: 0, normal: 0, warning: 0, locked: 0, scrapped: 0 };
     try {
@@ -106,8 +100,7 @@ export async function GET(request: NextRequest) {
         dieStats.scrapped = rows[0].scrapped || 0;
         dieStats.normal = dieStats.total - dieStats.warning - dieStats.locked - dieStats.scrapped;
       }
-    } catch (e) {
-    }
+    } catch {}
 
     const totalEquip = Number(equipStats?.total || 0);
     const runningEquip = Number(equipStats?.running || 0);
@@ -171,7 +164,7 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: '获取生产看板数据失败' }, { status: 500 });
   }
 }

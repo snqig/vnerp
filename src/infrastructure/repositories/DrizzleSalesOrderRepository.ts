@@ -49,7 +49,7 @@ function logOp(
   result: unknown,
   durationMs: number
 ) {
-  console.log(
+  console.warn(
     `[DrizzleSalesRepo] ${method} (${durationMs}ms)\n` +
       `  TABLE: ${table}\n` +
       `  CONDITIONS: ${conditions}\n` +
@@ -75,7 +75,15 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     });
 
     if (!order) {
-      logOp('findById', 'sal_order', `id=${id} AND deleted=false`, sqlDesc, { id }, 'null (not found)', nowMs() - t0);
+      logOp(
+        'findById',
+        'sal_order',
+        `id=${id} AND deleted=false`,
+        sqlDesc,
+        { id },
+        'null (not found)',
+        nowMs() - t0
+      );
       return null;
     }
 
@@ -86,7 +94,15 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     });
 
     const result = SalesOrder.reconstitute(this.mapToProps(order, details));
-    logOp('findById', 'sal_order + sal_order_detail', `id=${id} AND deleted=false`, `${sqlDesc}; ${detailsSqlDesc}`, { id }, `order+${details.length} details`, nowMs() - t0);
+    logOp(
+      'findById',
+      'sal_order + sal_order_detail',
+      `id=${id} AND deleted=false`,
+      `${sqlDesc}; ${detailsSqlDesc}`,
+      { id },
+      `order+${details.length} details`,
+      nowMs() - t0
+    );
     return result;
   }
 
@@ -108,12 +124,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
 
     if (filters?.keyword) {
       const kw = `%${filters.keyword}%`;
-      conditions.push(
-        or(
-          like(salOrder.orderNo, kw),
-          like(salOrder.contactName, kw)
-        )!
-      );
+      conditions.push(or(like(salOrder.orderNo, kw), like(salOrder.contactName, kw))!);
     }
 
     if (filters?.customerId) {
@@ -129,10 +140,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
 
     const where = and(...conditions);
 
-    const totalRow = await drizzleDb
-      .select({ total: count() })
-      .from(salOrder)
-      .where(where);
+    const totalRow = await drizzleDb.select({ total: count() }).from(salOrder).where(where);
     const total = totalRow[0]?.total ?? 0;
 
     const orders = await drizzleDb
@@ -217,12 +225,25 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         order.orderDate || null,
         order.customerId,
         order.customerName || null,
-        null, null, null,
-        order.totalAmount, 0, order.totalAmount, 0,
-        'CNY', 1.0, null, order.deliveryDate || null, null,
-        order.status.toDbCode(), order.remark || null, order.createBy || null,
+        null,
+        null,
+        null,
+        order.totalAmount,
+        0,
+        order.totalAmount,
+        0,
+        'CNY',
+        1.0,
+        null,
+        order.deliveryDate || null,
+        null,
+        order.status.toDbCode(),
+        order.remark || null,
+        order.createBy || null,
       ];
-      console.log(`[DrizzleSalesRepo] save (entry)\n  TABLE: sal_order (INSERT)\n  CONDITIONS: N/A (new row)\n  SQL: ${orderSql}\n  PARAMS: ${JSON.stringify(orderParams)}`);
+      console.warn(
+        `[DrizzleSalesRepo] save (entry)\n  TABLE: sal_order (INSERT)\n  CONDITIONS: N/A (new row)\n  SQL: ${orderSql}\n  PARAMS: ${JSON.stringify(orderParams)}`
+      );
 
       const [orderResult]: any = await conn.execute(
         `INSERT INTO sal_order
@@ -251,7 +272,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
           null,
           line.remark || null,
         ];
-        console.log(
+        console.warn(
           `[DrizzleSalesRepo] save (line)\n` +
             `  TABLE: sal_order_detail (INSERT)\n` +
             `  CONDITIONS: N/A (new row, order_id=${orderId})\n` +
@@ -270,7 +291,15 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
       return { id: orderId, orderNo };
     });
 
-    logOp('save', 'sal_order (INSERT) + sal_order_detail (INSERT)', 'N/A (new row)', `INSERT INTO sal_order (...) + ${order.lines.length} detail inserts (in transaction)`, { orderNo, customerId: order.customerId, lineCount: order.lines.length }, result, nowMs() - t0);
+    logOp(
+      'save',
+      'sal_order (INSERT) + sal_order_detail (INSERT)',
+      'N/A (new row)',
+      `INSERT INTO sal_order (...) + ${order.lines.length} detail inserts (in transaction)`,
+      { orderNo, customerId: order.customerId, lineCount: order.lines.length },
+      result,
+      nowMs() - t0
+    );
     return result;
   }
 
@@ -285,12 +314,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
     const result = await drizzleDb
       .update(salOrder)
       .set({ status: dbStatus, updateTime: new Date() })
-      .where(
-        and(
-          eq(salOrder.id, id),
-          eq(salOrder.status, dbCurrentStatus)
-        )
-      );
+      .where(and(eq(salOrder.id, id), eq(salOrder.status, dbCurrentStatus)));
 
     const affected = (result[0] as any)?.affectedRows > 0;
     logOp(
@@ -332,10 +356,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
    */
   async updateAuditInfo(id: number, auditBy: number, auditTime: string): Promise<void> {
     const t0 = nowMs();
-    await drizzleDb
-      .update(salOrder)
-      .set({ updateTime: new Date() })
-      .where(eq(salOrder.id, id));
+    await drizzleDb.update(salOrder).set({ updateTime: new Date() }).where(eq(salOrder.id, id));
     logOp(
       'updateAuditInfo',
       'sal_order (UPDATE)',

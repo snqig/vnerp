@@ -78,8 +78,7 @@ export default function ProductionInboundPage() {
       const res = await authFetch('/api/warehouse?status=1&all=true');
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
-    } catch (e) {
-    }
+    } catch {}
   };
   useEffect(() => {
     fetchWarehouses();
@@ -99,7 +98,7 @@ export default function ProductionInboundPage() {
       } else {
         toast({ title: '失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -114,20 +113,22 @@ export default function ProductionInboundPage() {
         toast({ title: '更新成功' });
         refresh();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
     try {
-      const res = await authFetch('/api/warehouse/production-inbound?id=' + id, { method: 'DELETE' });
+      const res = await authFetch('/api/warehouse/production-inbound?id=' + id, {
+        method: 'DELETE',
+      });
       const result = await res.json();
       if (result.success) {
         toast({ title: '删除成功' });
         refresh();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -141,7 +142,7 @@ export default function ProductionInboundPage() {
             <>
               <div className="flex items-center gap-2">
                 <Input
-                  placeholder={tc("searchOrderNo")}
+                  placeholder={tc('searchOrderNo')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-36 h-8 text-sm"
@@ -158,7 +159,7 @@ export default function ProductionInboundPage() {
                 }}
               >
                 <Plus className="h-3 w-3 mr-1" />
-                新增入库
+                {tc('text_d73pks')}
               </Button>
             </>
           }
@@ -168,14 +169,14 @@ export default function ProductionInboundPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">入库单号</TableHead>
-                  <TableHead className="text-xs">工单号</TableHead>
-                  <TableHead className="text-xs">{tc("warehouse")}</TableHead>
-                  <TableHead className="text-xs">入库日期</TableHead>
-                  <TableHead className="text-xs">质检状态</TableHead>
-                  <TableHead className="text-xs">操作人</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('text_anu9ao')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_e5qlj')}</TableHead>
+                  <TableHead className="text-xs">{tc('warehouse')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_anxiqw')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_i8u3s3')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_f5g8b')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -201,7 +202,7 @@ export default function ProductionInboundPage() {
                             className="h-6 text-xs px-2"
                             onClick={() => handleStatusChange(item.id, 2)}
                           >
-                            确认入库
+                            {tc('text_froe9w')}
                           </Button>
                         )}
                         <Button
@@ -230,7 +231,7 @@ export default function ProductionInboundPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                      暂无记录
+                      {tc('text_dd1mmb')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -266,7 +267,7 @@ export default function ProductionInboundPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{tc("warehouse")}</Label>
+                <Label>{tc('warehouse')}</Label>
                 <Select
                   value={String(editItem.warehouse_id || '')}
                   onValueChange={(v) => {
@@ -291,7 +292,7 @@ export default function ProductionInboundPage() {
                 </Select>
               </div>
               <div>
-                <Label>入库日期</Label>
+                <Label>{tc('text_anxiqw')}</Label>
                 <Input
                   type="date"
                   value={editItem.inbound_date || ''}
@@ -299,14 +300,14 @@ export default function ProductionInboundPage() {
                 />
               </div>
               <div>
-                <Label>工单号</Label>
+                <Label>{tc('text_e5qlj')}</Label>
                 <Input
                   value={editItem.work_order_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, work_order_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>操作人</Label>
+                <Label>{tc('text_f5g8b')}</Label>
                 <UserSelect
                   value={editItem.operator_name || ''}
                   onChange={(v) => setEditItem({ ...editItem, operator_name: v })}
@@ -315,9 +316,9 @@ export default function ProductionInboundPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

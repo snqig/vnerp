@@ -48,7 +48,7 @@ async function refreshAccessToken(): Promise<string | null> {
         storage.setItem('refreshToken', json.data.refreshToken);
       }
       return json.data.token as string;
-    } catch (err) {
+    } catch {
       return null;
     } finally {
       refreshPromise = null;

@@ -1,10 +1,19 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Employee } from '../../types';
+
+/* eslint-disable @next/next/no-img-element */
 
 interface PrintDialogProps {
   open: boolean;
@@ -33,15 +42,15 @@ export function PrintDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-lg" resizable>
           <DialogHeader>
-            <DialogTitle>{tc("cardPreview")}</DialogTitle>
-            <DialogDescription>{tc("clickToPrint")}</DialogDescription>
+            <DialogTitle>{tc('cardPreview')}</DialogTitle>
+            <DialogDescription>{tc('clickToPrint')}</DialogDescription>
           </DialogHeader>
           <div className="flex justify-center py-4 overflow-auto">
             {/* 上岗证卡片 - 打印内容 */}
             <div ref={printRef} className="card" style={{ minWidth: '320px' }}>
               <div className="header">
                 <div className="company-name">{companyName}</div>
-                <div className="card-title">{tc("employeeCard")}</div>
+                <div className="card-title">{tc('employeeCard')}</div>
               </div>
               <div className="photo-area">
                 {selectedEmployee?.photo ? (
@@ -51,7 +60,7 @@ export function PrintDialog({
                     className="w-full h-full object-cover rounded-lg"
                   />
                 ) : (
-                  <span className="photo-text">{tc("photo")}</span>
+                  <span className="photo-text">{tc('photo')}</span>
                 )}
               </div>
               <div className="content-row">
@@ -59,7 +68,7 @@ export function PrintDialog({
                   <div className="qr-section">
                     {qrCodeUrl && (
                       <>
-                        <img src={qrCodeUrl} alt={tc("qrCode")} className="qr-code" />
+                        <img src={qrCodeUrl} alt={tc('qrCode')} className="qr-code" />
                       </>
                     )}
                   </div>
@@ -67,21 +76,21 @@ export function PrintDialog({
                 <div className="right-section">
                   <div className="info-section">
                     <div className="info-row">
-                      <span className="info-label">{tc("name")}</span>
+                      <span className="info-label">{tc('name')}</span>
                       <span className="info-value">{selectedEmployee?.name}</span>
                     </div>
                     <div className="info-row">
-                      <span className="info-label">{tc("gender")}</span>
+                      <span className="info-label">{tc('gender')}</span>
                       <span className="info-value">
-                        {selectedEmployee?.gender === 1 ? t("maleShort") : t("femaleShort")}
+                        {selectedEmployee?.gender === 1 ? t('maleShort') : t('femaleShort')}
                       </span>
                     </div>
                     <div className="info-row">
-                      <span className="info-label">{tc("department")}</span>
+                      <span className="info-label">{tc('department')}</span>
                       <span className="info-value">{selectedEmployee?.dept_name}</span>
                     </div>
                     <div className="info-row">
-                      <span className="info-label">{tc("position")}</span>
+                      <span className="info-label">{tc('position')}</span>
                       <span className="info-value">{selectedEmployee?.position || '-'}</span>
                     </div>
                   </div>
@@ -92,11 +101,11 @@ export function PrintDialog({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              {tc("cancel")}
+              {tc('cancel')}
             </Button>
             <Button onClick={onPrint} className="bg-blue-600 hover:bg-blue-700">
               <Printer className="w-4 h-4 mr-2" />
-              {tc("printCard")}
+              {tc('printCard')}
             </Button>
           </DialogFooter>
         </DialogContent>

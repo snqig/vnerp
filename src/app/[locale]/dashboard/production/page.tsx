@@ -69,7 +69,10 @@ const STATUS_MAP: Record<string, { labelKey: string; className: string }> = {
     labelKey: 'running',
     className: 'bg-green-500/20 text-green-300 border border-green-500/30',
   },
-  idle: { labelKey: 'standby', className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
+  idle: {
+    labelKey: 'standby',
+    className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+  },
   maintenance: {
     labelKey: 'underMaintenance',
     className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
@@ -79,7 +82,10 @@ const STATUS_MAP: Record<string, { labelKey: string; className: string }> = {
 
 const PRIORITY_MAP: Record<string, { labelKey: string; className: string }> = {
   high: { labelKey: 'high', className: 'bg-red-500/20 text-red-300 border border-red-500/30' },
-  medium: { labelKey: 'medium', className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30' },
+  medium: {
+    labelKey: 'medium',
+    className: 'bg-amber-500/20 text-amber-300 border border-amber-500/30',
+  },
   low: { labelKey: 'low', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
 };
 
@@ -243,7 +249,7 @@ export default function ProductionDashboard() {
             staffStatus: d.personnel || { total: 0, onDuty: 0, onLeave: 0, attendance: 0 },
           });
         }
-      } catch (e) {
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -516,8 +522,8 @@ export default function ProductionDashboard() {
                               </p>
                             </div>
                             <span className={`px-2 py-0.5 rounded text-[10px] ${cfg.className}`}>
-                               {tc(cfg.labelKey)}
-                             </span>
+                              {tc(cfg.labelKey)}
+                            </span>
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
@@ -531,7 +537,9 @@ export default function ProductionDashboard() {
                               />
                             </div>
                             <div className="flex items-center justify-between text-[10px] text-white/30">
-                              <span>{t('operator')}: {eq.operator}</span>
+                              <span>
+                                {t('operator')}: {eq.operator}
+                              </span>
                               <span>
                                 {t('runtime')}: {Math.floor(eq.runtime / 60)}h{eq.runtime % 60}m
                               </span>
@@ -550,7 +558,9 @@ export default function ProductionDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <Package className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">{t('workOrderProductionProgress')}</span>
+              <span className="text-sm font-medium text-white/80">
+                {t('workOrderProductionProgress')}
+              </span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
@@ -571,9 +581,9 @@ export default function ProductionDashboard() {
                                 {order.orderNo}
                               </span>
                               <span
-                                                              className={`px-1.5 py-0.5 rounded text-[10px] ${priCfg.className}`}
-                                                              >
-                                                                {tc(priCfg.labelKey)}
+                                className={`px-1.5 py-0.5 rounded text-[10px] ${priCfg.className}`}
+                              >
+                                {tc(priCfg.labelKey)}
                               </span>
                               {order.status === 'completed' && (
                                 <span className="px-1.5 py-0.5 rounded text-[10px] bg-green-500/20 text-green-300 border border-green-500/30">
@@ -582,8 +592,8 @@ export default function ProductionDashboard() {
                               )}
                             </div>
                             <span className="text-[10px] text-white/40">
-                               {tc('estimated')}: {order.estimatedComplete || '-'}
-                             </span>
+                              {tc('estimated')}: {order.estimatedComplete || '-'}
+                            </span>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                             <div>

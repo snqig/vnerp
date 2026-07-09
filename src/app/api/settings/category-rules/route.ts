@@ -26,39 +26,40 @@ interface CategoryRuleConfig {
 const CATEGORY_RULES: Record<string, CategoryRuleConfig> = {
   warehouse: {
     code_pattern: '^WH-CAT-\\d{3,}$',
-    code_pattern_desc: 'WH-CAT-XXX（3位以上数字）',
+    code_pattern_desc: tc('text_q3eelc'),
     max_depth: 3,
     status_values: [0, 1],
-    status_labels: { 0: '禁用', 1: '启用' },
+    status_labels: { 0: tc('text_lb5z'), 1: tc('text_eymx') },
   },
   material: {
     code_pattern: '^MAT-CAT-\\d{3,}$',
-    code_pattern_desc: 'MAT-CAT-XXX（3位以上数字）',
+    code_pattern_desc: tc('text_r3668f'),
     max_depth: 4,
     status_values: [0, 1],
-    status_labels: { 0: '禁用', 1: '启用' },
+    status_labels: { 0: tc('text_lb5z'), 1: tc('text_eymx') },
   },
 };
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const categoryType = searchParams.get('type') || 'all';
   const autoFix = searchParams.get('autoFix') === 'true';
 
   const violations: RuleViolation[] = [];
 
-  const typesToCheck = categoryType === 'all'
-    ? Object.keys(CATEGORY_RULES)
-    : [categoryType].filter(t => t in CATEGORY_RULES);
+  const typesToCheck =
+    categoryType === 'all'
+      ? Object.keys(CATEGORY_RULES)
+      : [categoryType].filter((t) => t in CATEGORY_RULES);
 
   for (const type of typesToCheck) {
     const rules = CATEGORY_RULES[type];
     const tableName = type === 'warehouse' ? 'sys_warehouse_category' : 'inv_material_category';
 
     try {
-      const rows = await query(
+      const rows = (await query(
         `SELECT id, code, name, status, parent_id FROM ${escapeId(tableName)} WHERE deleted = 0`
-      ) as any[];
+      )) as any[];
 
       const codeRegex = new RegExp(rules.code_pattern);
 
@@ -81,7 +82,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
             table: tableName,
             field: 'status',
             current_value: String(row.status),
-            expected_pattern: rules.status_values.map(v => rules.status_labels[v]).join('/'),
+            expected_pattern: rules.status_values.map((v) => rules.status_labels[v]).join('/'),
             record_id: row.id,
             record_name: row.name,
             severity: 'error',
@@ -152,8 +153,8 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 
   return successResponse({
     total: violations.length,
-    errors: violations.filter(v => v.severity === 'error').length,
-    warnings: violations.filter(v => v.severity === 'warning').length,
+    errors: violations.filter((v) => v.severity === 'error').length,
+    warnings: violations.filter((v) => v.severity === 'warning').length,
     violations,
     rules: CATEGORY_RULES,
   });

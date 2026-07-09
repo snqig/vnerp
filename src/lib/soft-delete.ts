@@ -524,7 +524,7 @@ export async function batchCancel(
 // 导出
 // ============================================================
 
-export default {
+const softDeleteUtils = {
   cancelDocument,
   restoreDocument,
   physicalDelete,
@@ -532,3 +532,5 @@ export default {
   batchCancel,
   CANCELLABLE_DOCUMENTS,
 };
+
+export default softDeleteUtils;

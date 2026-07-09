@@ -1,9 +1,5 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-  paginatedResponse,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, paginatedResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { query, transaction } from '@/lib/db';
 import {
@@ -15,43 +11,55 @@ import {
   compareVersions,
 } from '@/lib/standard-card-service';
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { card_data, template_id, copy_from_id } = body;
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { card_data, template_id, copy_from_id } = body;
 
-  if (!card_data) return errorResponse('请提供工艺卡数据', 400, 400);
+    if (!card_data) return errorResponse('请提供工艺卡数据', 400, 400);
 
-  const result = await transaction(async (conn) => {
-    return await createCardWithVersion(conn, card_data, template_id, copy_from_id);
-  });
-
-  return successResponse(result);
-}, { logTitle: '创建工艺卡', logType: 'business' });
-
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { action } = body;
-
-  if (action === 'approve') {
-    const { card_id, version, approver_name } = body;
-    if (!card_id || !version) return errorResponse('请提供工艺卡ID和版本号', 400, 400);
-    await transaction(async (conn) => {
-      await approveCardVersion(conn, card_id, version, approver_name || 'system');
+    const result = await transaction(async (conn) => {
+      return await createCardWithVersion(conn, card_data, template_id, copy_from_id);
     });
-    return successResponse({ message: '审批成功' });
-  }
 
-  const { card_id, updates, change_description } = body;
-  if (!card_id || !updates) return errorResponse('请提供工艺卡ID和更新数据', 400, 400);
+    return successResponse(result);
+  },
+  { logTitle: '创建工艺卡', logType: 'business' }
+);
 
-  const result = await transaction(async (conn) => {
-    return await updateCardWithVersion(conn, card_id, updates, 'system', change_description || '');
-  });
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { action } = body;
 
-  return successResponse(result);
-}, { logTitle: '更新工艺卡', logType: 'business' });
+    if (action === 'approve') {
+      const { card_id, version, approver_name } = body;
+      if (!card_id || !version) return errorResponse('请提供工艺卡ID和版本号', 400, 400);
+      await transaction(async (conn) => {
+        await approveCardVersion(conn, card_id, version, approver_name || 'system');
+      });
+      return successResponse({ message: '审批成功' });
+    }
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+    const { card_id, updates, change_description } = body;
+    if (!card_id || !updates) return errorResponse('请提供工艺卡ID和更新数据', 400, 400);
+
+    const result = await transaction(async (conn) => {
+      return await updateCardWithVersion(
+        conn,
+        card_id,
+        updates,
+        'system',
+        change_description || ''
+      );
+    });
+
+    return successResponse(result);
+  },
+  { logTitle: '更新工艺卡', logType: 'business' }
+);
+
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action') || 'list';
 

@@ -4,7 +4,7 @@ import { getTrPrefix, generateDocNo } from '@/lib/global-config';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
   const cardNo = searchParams.get('cardNo');
@@ -74,27 +74,30 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   });
 });
 
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, processStatus, currentProcess, operatorId, operatorName, remark, cardNo } = body;
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { id, processStatus, currentProcess, operatorId, operatorName, remark, cardNo } = body;
 
-  await query(
-    `UPDATE prd_process_card 
+    await query(
+      `UPDATE prd_process_card 
      SET burdening_status = ?, update_time = NOW() 
      WHERE id = ?`,
-    [processStatus, id]
-  );
+      [processStatus, id]
+    );
 
-  await query(
-    `INSERT INTO inv_trace_record (
+    await query(
+      `INSERT INTO inv_trace_record (
       trace_no, card_id, card_no, trace_type,
       operator_id, operator_name, trace_time, remark, create_time
     ) VALUES (
       ?,
       ?, ?, ?, ?, ?, NOW(), ?, NOW()
     )`,
-    [generateDocNo(getTrPrefix()), id, cardNo, currentProcess, operatorId, operatorName, remark]
-  );
+      [generateDocNo(getTrPrefix()), id, cardNo, currentProcess, operatorId, operatorName, remark]
+    );
 
-  return successResponse(null, '流程更新成功');
-}, { logTitle: '更新生产流程', logType: 'business' });
+    return successResponse(null, '流程更新成功');
+  },
+  { logTitle: '更新生产流程', logType: 'business' }
+);

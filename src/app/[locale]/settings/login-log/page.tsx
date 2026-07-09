@@ -54,24 +54,23 @@ export default function LoginLogPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
   useEffect(() => {
     fetchData();
   }, [page]);
 
   const handleClear = async () => {
-    if (!confirm(tc("confirmClearLoginLogs"))) return;
+    if (!confirm(tc('confirmClearLoginLogs'))) return;
     try {
       const res = await authFetch('/api/system/login-log', { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: tc("clearSuccess") });
+        toast({ title: tc('clearSuccess') });
         fetchData();
       }
-    } catch (e) {
-      toast({ title: tc("failed"), variant: 'destructive' });
+    } catch {
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
@@ -79,11 +78,11 @@ export default function LoginLogPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t("loginLog")}</h1>
+          <h1 className="text-2xl font-bold">{t('loginLog')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchUsername")}
+                placeholder={tc('searchUsername')}
                 value={searchUser}
                 onChange={(e) => setSearchUser(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -93,7 +92,7 @@ export default function LoginLogPage() {
               </Button>
             </div>
             <Button size="sm" variant="destructive" onClick={handleClear}>
-              {tc("clearLogs")}
+              {tc('clearLogs')}
             </Button>
           </div>
         </div>
@@ -102,14 +101,14 @@ export default function LoginLogPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">{tc("username")}</TableHead>
-                  <TableHead className="text-xs">{tc("loginTime")}</TableHead>
-                  <TableHead className="text-xs">{tc("ipAddress")}</TableHead>
-                  <TableHead className="text-xs">{tc("loginLocation")}</TableHead>
-                  <TableHead className="text-xs">{tc("browser")}</TableHead>
-                  <TableHead className="text-xs">{tc("os")}</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("message")}</TableHead>
+                  <TableHead className="text-xs">{tc('username')}</TableHead>
+                  <TableHead className="text-xs">{tc('loginTime')}</TableHead>
+                  <TableHead className="text-xs">{tc('ipAddress')}</TableHead>
+                  <TableHead className="text-xs">{tc('loginLocation')}</TableHead>
+                  <TableHead className="text-xs">{tc('browser')}</TableHead>
+                  <TableHead className="text-xs">{tc('os')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('message')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -126,7 +125,7 @@ export default function LoginLogPage() {
                         variant={item.status === 1 ? 'default' : 'destructive'}
                         className="text-xs"
                       >
-                        {item.status === 1 ? tc("success") : tc("failed")}
+                        {item.status === 1 ? tc('success') : tc('failed')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs max-w-32 truncate">{item.msg || '-'}</TableCell>
@@ -135,7 +134,7 @@ export default function LoginLogPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-gray-400 py-8">
-                      {tc("noRecords")}
+                      {tc('noRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -144,7 +143,7 @@ export default function LoginLogPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{tc("totalItems", { count: total })}</span>
+          <span className="text-sm text-gray-500">{tc('totalItems', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -152,7 +151,7 @@ export default function LoginLogPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc("prevPage")}
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -160,7 +159,7 @@ export default function LoginLogPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc("nextPage")}
+              {tc('nextPage')}
             </Button>
           </div>
         </div>

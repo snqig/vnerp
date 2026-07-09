@@ -3,7 +3,7 @@ import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action') || 'list';
   const colorName = searchParams.get('colorName') || '';
@@ -113,10 +113,10 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
     if (pantoneCode && ink.pantone_code) {
       if (ink.pantone_code === pantoneCode) {
         matchScore += 50;
-        matchReasons.push('Pantone色号完全匹配');
+        matchReasons.push(tc('text_l9t79g'));
       } else if (ink.pantone_code.substring(0, 3) === pantoneCode.substring(0, 3)) {
         matchScore += 30;
-        matchReasons.push('Pantone色号相近');
+        matchReasons.push(tc('text_eb9ygj'));
       }
     }
 
@@ -126,21 +126,21 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
         colorName.includes(ink.dispatch_color_name)
       ) {
         matchScore += 30;
-        matchReasons.push('颜色名称匹配');
+        matchReasons.push(tc('text_hglcc3'));
       }
     }
 
     if (ink.available_qty >= 5) {
       matchScore += 10;
-      matchReasons.push('可用量充足');
+      matchReasons.push(tc('text_blexlo'));
     }
 
     if (ink.days_until_expiry && ink.days_until_expiry > 30) {
       matchScore += 10;
-      matchReasons.push('有效期充裕');
+      matchReasons.push(tc('text_a454xc'));
     } else if (ink.days_until_expiry && ink.days_until_expiry > 7) {
       matchScore += 5;
-      matchReasons.push('有效期即将到期，优先使用');
+      matchReasons.push(tc('text_3pjx6l'));
     }
 
     if (matchScore > 0) {
@@ -182,7 +182,7 @@ async function getSurplusDetail(batchNo: string) {
   );
 
   if (batchRows.length === 0) {
-    return errorResponse('批次不存在', 404, 404);
+    return errorResponse(tc('text_rbfprf'), 404, 404);
   }
 
   const batch = batchRows[0];
@@ -230,73 +230,76 @@ async function getSurplusDetail(batchNo: string) {
   });
 }
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const {
-    batch_no,
-    return_weight,
-    unit,
-    workorder_no,
-    operator_id,
-    operator_name,
-    location_id,
-    location_name,
-    remark,
-  } = body;
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const {
+      batch_no,
+      return_weight,
+      unit,
+      workorder_no,
+      operator_id,
+      operator_name,
+      location_id,
+      location_name,
+      remark,
+    } = body;
 
-  if (!batch_no || !return_weight || Number(return_weight) <= 0) {
-    return errorResponse('缺少必填字段: batch_no, return_weight', 400, 400);
-  }
-
-  const result = await transaction(async (conn) => {
-    const [batchRows]: any = await conn.execute(
-      'SELECT id, available_qty, material_name, status, expire_date FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0 FOR UPDATE',
-      [batch_no]
-    );
-
-    if (batchRows.length === 0) {
-      throw new Error(`油墨批次 ${batch_no} 不存在`);
+    if (!batch_no || !return_weight || Number(return_weight) <= 0) {
+      return errorResponse('缺少必填字段: batch_no, return_weight', 400, 400);
     }
 
-    const batch = batchRows[0];
+    const result = await transaction(async (conn) => {
+      const [batchRows]: any = await conn.execute(
+        'SELECT id, available_qty, material_name, status, expire_date FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0 FOR UPDATE',
+        [batch_no]
+      );
 
-    if (batch.expire_date && new Date(batch.expire_date) < new Date()) {
-      throw new Error(`油墨批次 ${batch_no} 已过期，不能退回`);
-    }
+      if (batchRows.length === 0) {
+        throw new Error(`油墨批次 ${batch_no} 不存在`);
+      }
 
-    await conn.execute(
-      'UPDATE inv_inventory_batch SET available_qty = available_qty + ? WHERE id = ?',
-      [return_weight, batch.id]
-    );
+      const batch = batchRows[0];
 
-    const now = new Date();
-    const usageNo =
-      'IU' +
-      now.getFullYear() +
-      String(now.getMonth() + 1).padStart(2, '0') +
-      String(now.getDate()).padStart(2, '0') +
-      String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+      if (batch.expire_date && new Date(batch.expire_date) < new Date()) {
+        throw new Error(`油墨批次 ${batch_no} 已过期，不能退回`);
+      }
 
-    const [insertResult]: any = await conn.execute(
-      `INSERT INTO ink_usage (usage_no, usage_type, batch_no, workorder_no, color_name, weight, unit, operator_id, operator_name, location_id, location_name, status, remark)
+      await conn.execute(
+        'UPDATE inv_inventory_batch SET available_qty = available_qty + ? WHERE id = ?',
+        [return_weight, batch.id]
+      );
+
+      const now = new Date();
+      const usageNo =
+        'IU' +
+        now.getFullYear() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0') +
+        String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+
+      const [insertResult]: any = await conn.execute(
+        `INSERT INTO ink_usage (usage_no, usage_type, batch_no, workorder_no, color_name, weight, unit, operator_id, operator_name, location_id, location_name, status, remark)
        VALUES (?, 'return', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-      [
-        usageNo,
-        batch_no,
-        workorder_no || null,
-        batch.material_name || '',
-        return_weight,
-        unit || 'kg',
-        operator_id || null,
-        operator_name || null,
-        location_id || null,
-        location_name || null,
-        remark || '余墨退回',
-      ]
-    );
+        [
+          usageNo,
+          batch_no,
+          workorder_no || null,
+          batch.material_name || '',
+          return_weight,
+          unit || 'kg',
+          operator_id || null,
+          operator_name || null,
+          location_id || null,
+          location_name || null,
+          remark || '余墨退回',
+        ]
+      );
 
-    return { id: insertResult.insertId, usage_no: usageNo, batch_no, return_weight };
-  });
+      return { id: insertResult.insertId, usage_no: usageNo, batch_no, return_weight };
+    });
 
-  return successResponse(result, '余墨退回成功');
-}, { logTitle: '余墨退回', logType: 'business' });
+    return successResponse(result, '余墨退回成功');
+  },
+  { logTitle: '余墨退回', logType: 'business' }
+);

@@ -77,32 +77,36 @@ interface HistoryRecord {
   created_at: string;
 }
 
-const typeMap: Record<number, string> = { 1: '丝网版', 2: '胶印版', 3: '柔版', 4: '凹版' };
+const typeMap: Record<number, string> = {
+  1: tc('text_c267o'),
+  2: tc('text_jatse'),
+  3: tc('text_iad0'),
+  4: tc('text_ekj3'),
+};
 const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: '新制', variant: 'default' },
-  2: { label: '可用', variant: 'default' },
-  3: { label: '已曝光', variant: 'secondary' },
-  4: { label: '生产中', variant: 'default' },
-  5: { label: '清洗中', variant: 'outline' },
-  6: { label: '已再生', variant: 'secondary' },
-  7: { label: '损坏', variant: 'destructive' },
-  8: { label: '已报废', variant: 'destructive' },
+  1: { label: tc('text_hqx2'), variant: 'default' },
+  2: { label: tc('text_ex3t'), variant: 'default' },
+  3: { label: tc('text_e9bb2'), variant: 'secondary' },
+  4: { label: tc('text_hjdtx'), variant: 'default' },
+  5: { label: tc('text_gn457'), variant: 'outline' },
+  6: { label: tc('text_e5vvo'), variant: 'secondary' },
+  7: { label: tc('text_hdqo'), variant: 'destructive' },
+  8: { label: tc('text_e8o3w'), variant: 'destructive' },
 };
 const actionMap: Record<string, string> = {
-  Created: '创建',
-  Exposed: '曝光',
-  Printed: '印刷',
-  Cleaned: '清洗',
-  Reclaimed: '再生',
-  Scrapped: '报废',
-  TensionAdjusted: '张力调整',
+  Created: tc('text_ehj3'),
+  Exposed: tc('text_hxxo'),
+  Printed: tc('text_en5z'),
+  Cleaned: tc('text_jb8y'),
+  Reclaimed: tc('text_eiia'),
+  Scrapped: tc('text_haqi'),
+  TensionAdjusted: tc('text_ccpaq4'),
 };
 
 export default function ScreenPlatePage() {
-
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -134,8 +138,7 @@ export default function ScreenPlatePage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -149,8 +152,7 @@ export default function ScreenPlatePage() {
       if (result.success) {
         setHistoryList(result.data || []);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const handleSave = async () => {
@@ -169,7 +171,7 @@ export default function ScreenPlatePage() {
       } else {
         toast({ title: '失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -183,7 +185,7 @@ export default function ScreenPlatePage() {
         toast({ title: '删除成功' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -224,7 +226,7 @@ export default function ScreenPlatePage() {
       } else {
         toast({ title: '失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -233,21 +235,21 @@ export default function ScreenPlatePage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">网版管理</h1>
+          <h1 className="text-2xl font-bold">{tc('text_gjfp3w')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("code")}
+                placeholder={tc('code')}
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
                 className="w-28 h-8 text-sm"
               />
               <Select value={searchStatus} onValueChange={setSearchStatus}>
                 <SelectTrigger className="w-24 h-8 text-sm">
-                  <SelectValue placeholder={tc("status")} />
+                  <SelectValue placeholder={tc('status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{tc("all")}</SelectItem>
+                  <SelectItem value="">{tc('all')}</SelectItem>
                   {Object.entries(statusMap).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
                       {v.label}
@@ -267,7 +269,7 @@ export default function ScreenPlatePage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增网版
+              {tc('text_d7bmo5')}
             </Button>
           </div>
         </div>
@@ -277,17 +279,17 @@ export default function ScreenPlatePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">网版编码</TableHead>
-                  <TableHead className="text-xs">网版名称</TableHead>
-                  <TableHead className="text-xs">{tc("type")}</TableHead>
-                  <TableHead className="text-xs">目数</TableHead>
-                  <TableHead className="text-xs">{tc("size")}</TableHead>
-                  <TableHead className="text-xs">{tc("customer")}</TableHead>
-                  <TableHead className="text-xs">已用/最大</TableHead>
-                  <TableHead className="text-xs">再生次数</TableHead>
-                  <TableHead className="text-xs">张力</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('text_gjgb2a')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_gj8zx6')}</TableHead>
+                  <TableHead className="text-xs">{tc('type')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_ksaq')}</TableHead>
+                  <TableHead className="text-xs">{tc('size')}</TableHead>
+                  <TableHead className="text-xs">{tc('customer')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_qylaao')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_aryty9')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_gmt7')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -330,7 +332,7 @@ export default function ScreenPlatePage() {
                               setEditItem(item);
                               setShowDialog(true);
                             }}
-                            title={tc("edit")}
+                            title={tc('edit')}
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -348,7 +350,7 @@ export default function ScreenPlatePage() {
                             variant="ghost"
                             className="h-6 w-6 p-0 text-red-600"
                             onClick={() => handleDelete(item.id)}
-                            title={tc("delete")}
+                            title={tc('delete')}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -360,7 +362,7 @@ export default function ScreenPlatePage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center text-gray-400 py-8">
-                      暂无记录
+                      {tc('text_dd1mmb')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -370,7 +372,11 @@ export default function ScreenPlatePage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">
+            {tc('text_g35')}
+            {total}
+            {tc('text_kf5')}
+          </span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -378,7 +384,7 @@ export default function ScreenPlatePage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('text_btlof')}
             </Button>
             <Button
               size="sm"
@@ -386,7 +392,7 @@ export default function ScreenPlatePage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('text_btmf4')}
             </Button>
           </div>
         </div>
@@ -398,21 +404,21 @@ export default function ScreenPlatePage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>网版编码</Label>
+                <Label>{tc('text_gjgb2a')}</Label>
                 <Input
                   value={editItem.plate_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, plate_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>网版名称</Label>
+                <Label>{tc('text_gj8zx6')}</Label>
                 <Input
                   value={editItem.plate_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, plate_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("type")}</Label>
+                <Label>{tc('type')}</Label>
                 <Select
                   value={String(editItem.plate_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, plate_type: Number(v) })}
@@ -421,43 +427,43 @@ export default function ScreenPlatePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">丝网版</SelectItem>
-                    <SelectItem value="2">胶印版</SelectItem>
-                    <SelectItem value="3">柔版</SelectItem>
-                    <SelectItem value="4">凹版</SelectItem>
+                    <SelectItem value="1">{tc('text_c267o')}</SelectItem>
+                    <SelectItem value="2">{tc('text_jatse')}</SelectItem>
+                    <SelectItem value="3">{tc('text_iad0')}</SelectItem>
+                    <SelectItem value="4">{tc('text_ekj3')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>目数</Label>
+                <Label>{tc('text_ksaq')}</Label>
                 <Input
                   value={editItem.mesh_count || ''}
                   onChange={(e) => setEditItem({ ...editItem, mesh_count: e.target.value })}
                 />
               </div>
               <div>
-                <Label>丝网材质</Label>
+                <Label>{tc('text_adu9bg')}</Label>
                 <Input
                   value={editItem.mesh_material || ''}
                   onChange={(e) => setEditItem({ ...editItem, mesh_material: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("size")}</Label>
+                <Label>{tc('size')}</Label>
                 <Input
                   value={editItem.size || ''}
                   onChange={(e) => setEditItem({ ...editItem, size: e.target.value })}
                 />
               </div>
               <div>
-                <Label>框类型</Label>
+                <Label>{tc('text_fvhh2')}</Label>
                 <Input
                   value={editItem.frame_type || ''}
                   onChange={(e) => setEditItem({ ...editItem, frame_type: e.target.value })}
                 />
               </div>
               <div>
-                <Label>张力值(N/cm)</Label>
+                <Label>{tc('text_tt1rt5')}</Label>
                 <Input
                   type="number"
                   value={editItem.tension_value ?? ''}
@@ -467,7 +473,7 @@ export default function ScreenPlatePage() {
                 />
               </div>
               <div>
-                <Label>最大使用次数</Label>
+                <Label>{tc('text_cxnt0h')}</Label>
                 <Input
                   type="number"
                   value={editItem.max_use_count ?? ''}
@@ -477,7 +483,7 @@ export default function ScreenPlatePage() {
                 />
               </div>
               <div>
-                <Label>{tc("status")}</Label>
+                <Label>{tc('status')}</Label>
                 <Select
                   value={String(editItem.status ?? 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, status: Number(v) })}
@@ -495,14 +501,14 @@ export default function ScreenPlatePage() {
                 </Select>
               </div>
               <div className="col-span-2">
-                <Label>存放位置</Label>
+                <Label>{tc('text_bxzajr')}</Label>
                 <Input
                   value={editItem.storage_location || ''}
                   onChange={(e) => setEditItem({ ...editItem, storage_location: e.target.value })}
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -511,9 +517,9 @@ export default function ScreenPlatePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -521,23 +527,23 @@ export default function ScreenPlatePage() {
         <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
           <DialogContent className="max-w-4xl" resizable>
             <DialogHeader>
-              <DialogTitle>网版生命周期记录</DialogTitle>
+              <DialogTitle>{tc('text_p82rm7')}</DialogTitle>
             </DialogHeader>
             <Tabs defaultValue="list">
               <TabsList>
-                <TabsTrigger value="list">历史记录</TabsTrigger>
-                <TabsTrigger value="add">新增记录</TabsTrigger>
+                <TabsTrigger value="list">{tc('text_aw7utt')}</TabsTrigger>
+                <TabsTrigger value="add">{tc('text_d7dmoj')}</TabsTrigger>
               </TabsList>
               <TabsContent value="list">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">操作类型</TableHead>
-                      <TableHead className="text-xs">张力值</TableHead>
-                      <TableHead className="text-xs">寿命增加</TableHead>
-                      <TableHead className="text-xs">{tc("remark")}</TableHead>
-                      <TableHead className="text-xs">操作人</TableHead>
-                      <TableHead className="text-xs">{tc("time")}</TableHead>
+                      <TableHead className="text-xs">{tc('text_d1x8m7')}</TableHead>
+                      <TableHead className="text-xs">{tc('text_ec2zl')}</TableHead>
+                      <TableHead className="text-xs">{tc('text_byix7k')}</TableHead>
+                      <TableHead className="text-xs">{tc('remark')}</TableHead>
+                      <TableHead className="text-xs">{tc('text_f5g8b')}</TableHead>
+                      <TableHead className="text-xs">{tc('time')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -560,7 +566,7 @@ export default function ScreenPlatePage() {
                     {historyList.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-gray-400 py-8">
-                          暂无记录
+                          {tc('text_dd1mmb')}
                         </TableCell>
                       </TableRow>
                     )}
@@ -570,10 +576,10 @@ export default function ScreenPlatePage() {
               <TabsContent value="add">
                 <div className="space-y-4">
                   <div>
-                    <Label>操作类型</Label>
+                    <Label>{tc('text_d1x8m7')}</Label>
                     <Select value={lifeAction} onValueChange={setLifeAction}>
                       <SelectTrigger>
-                        <SelectValue placeholder={tc("pleaseSelect")} />
+                        <SelectValue placeholder={tc('pleaseSelect')} />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(actionMap).map(([k, v]) => (
@@ -585,7 +591,7 @@ export default function ScreenPlatePage() {
                     </Select>
                   </div>
                   <div>
-                    <Label>张力值 (N/cm)</Label>
+                    <Label>{tc('text_6he839')}</Label>
                     <Input
                       type="number"
                       value={lifeTension}
@@ -593,7 +599,7 @@ export default function ScreenPlatePage() {
                     />
                   </div>
                   <div>
-                    <Label>寿命增加次数</Label>
+                    <Label>{tc('text_ecll9t')}</Label>
                     <Input
                       type="number"
                       value={lifeIncrement}
@@ -601,12 +607,12 @@ export default function ScreenPlatePage() {
                     />
                   </div>
                   <div>
-                    <Label>{tc("remark")}</Label>
+                    <Label>{tc('remark')}</Label>
                     <Textarea value={lifeRemark} onChange={(e) => setLifeRemark(e.target.value)} />
                   </div>
                   <Button onClick={handleAddLifeRecord}>
                     <Activity className="h-3 w-3 mr-1" />
-                    提交记录
+                    {tc('text_cxej5l')}
                   </Button>
                 </div>
               </TabsContent>

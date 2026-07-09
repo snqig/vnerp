@@ -3,7 +3,7 @@ import { query, execute } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const days = Number(searchParams.get('days') || 90);
 

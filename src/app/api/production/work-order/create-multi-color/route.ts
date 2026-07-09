@@ -4,31 +4,34 @@ import { withPermission } from '@/lib/api-permissions';
 import { createMultiColorWorkOrder } from '@/lib/multi-color-printing';
 
 // 从工艺卡创建多色套印工单
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { standardCardId, salesOrderId, planQty, printArea, substrateType } = body;
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { standardCardId, salesOrderId, planQty, printArea, substrateType } = body;
 
-  if (!standardCardId || !salesOrderId || !planQty) {
-    return errorResponse('缺少必要参数: standardCardId, salesOrderId, planQty', 400, 400);
-  }
+    if (!standardCardId || !salesOrderId || !planQty) {
+      return errorResponse('缺少必要参数: standardCardId, salesOrderId, planQty', 400, 400);
+    }
 
-  const result = await createMultiColorWorkOrder(
-    Number(standardCardId),
-    Number(salesOrderId),
-    Number(planQty),
-    Number(printArea) || 100,
-    substrateType || 'paper'
-  );
+    const result = await createMultiColorWorkOrder(
+      Number(standardCardId),
+      Number(salesOrderId),
+      Number(planQty),
+      Number(printArea) || 100,
+      substrateType || 'paper'
+    );
 
-  if (!result.success) {
-    return errorResponse(result.message, 400, 400);
-  }
+    if (!result.success) {
+      return errorResponse(result.message, 400, 400);
+    }
 
-  return successResponse(
-    {
-      workOrderId: result.workOrderId,
-      colorSequences: result.colorSequences,
-    },
-    result.message
-  );
-}, { logTitle: '创建多色套印工单', logType: 'business' });
+    return successResponse(
+      {
+        workOrderId: result.workOrderId,
+        colorSequences: result.colorSequences,
+      },
+      result.message
+    );
+  },
+  { logTitle: '创建多色套印工单', logType: 'business' }
+);

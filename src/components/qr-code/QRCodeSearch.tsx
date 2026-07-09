@@ -83,7 +83,7 @@ export function QRCodeSearch({
       } else {
         toast({ title: '搜索失败', description: result.message, variant: 'destructive' });
       }
-    } catch (error) {
+    } catch {
       toast({ title: '搜索失败', variant: 'destructive' });
     } finally {
       setIsSearching(false);
@@ -108,7 +108,7 @@ export function QRCodeSearch({
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Search className="h-5 w-5" />
-          二维码查询
+          {tc('text_viu0zu')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -121,21 +121,21 @@ export function QRCodeSearch({
               onClick={() => setSearchType('qr_code')}
             >
               <ScanLine className="h-4 w-4 mr-1" />
-              二维码
+              {tc('text_c4ffd')}
             </Button>
             <Button
               variant={searchType === 'ref_no' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSearchType('ref_no')}
             >
-              单号
+              {tc('text_emv6')}
             </Button>
             <Button
               variant={searchType === 'batch_no' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSearchType('batch_no')}
             >
-              批次
+              {tc('text_hc5k')}
             </Button>
             <Button
               variant={searchType === 'material' ? 'default' : 'outline'}
@@ -143,7 +143,7 @@ export function QRCodeSearch({
               onClick={() => setSearchType('material')}
             >
               <List className="h-4 w-4 mr-1" />
-              物料
+              {tc('text_k0nk')}
             </Button>
           </div>
         </div>
@@ -175,21 +175,21 @@ export function QRCodeSearch({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">选择</TableHead>
-                  <TableHead>二维码编码</TableHead>
-                  <TableHead>类型</TableHead>
-                  <TableHead>关联单号</TableHead>
-                  <TableHead>物料名称</TableHead>
-                  <TableHead>数量</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead>操作</TableHead>
+                  <TableHead className="w-12">{tc('text_p1j4')}</TableHead>
+                  <TableHead>{tc('text_viq6ws')}</TableHead>
+                  <TableHead>{tc('text_lnjk')}</TableHead>
+                  <TableHead>{tc('text_at16ir')}</TableHead>
+                  <TableHead>{tc('text_eusfkj')}</TableHead>
+                  <TableHead>{tc('text_i1y7')}</TableHead>
+                  <TableHead>{tc('text_k1e3')}</TableHead>
+                  <TableHead>{tc('text_hkxb')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {results.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      未找到相关记录
+                      {tc('text_8m9e9o')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -230,7 +230,7 @@ export function QRCodeSearch({
                               size="sm"
                               onClick={() => onTrace(record.qr_code)}
                             >
-                              追溯
+                              {tc('text_p3ki')}
                             </Button>
                           )}
                         </div>

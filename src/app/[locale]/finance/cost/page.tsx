@@ -78,8 +78,7 @@ export default function CostPage() {
         setList(result.data?.list || []);
         setTotal(result.data?.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, [page, keyword, typeFilter]);
 
   const fetchSummary = useCallback(async () => {
@@ -89,8 +88,7 @@ export default function CostPage() {
       if (result.success && result.data) {
         setSummary(result.data.cost_summary || summary);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -126,7 +124,7 @@ export default function CostPage() {
                 <SelectValue placeholder={t('costType')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{tc("all")}</SelectItem>
+                <SelectItem value="all">{tc('all')}</SelectItem>
                 <SelectItem value="material">{t('materialCost')}</SelectItem>
                 <SelectItem value="labor">{t('laborCost')}</SelectItem>
                 <SelectItem value="overhead">{t('overheadCost')}</SelectItem>
@@ -181,10 +179,10 @@ export default function CostPage() {
                   <TableHead>{t('costNo')}</TableHead>
                   <TableHead>{t('costType')}</TableHead>
                   <TableHead>{t('sourceNo')}</TableHead>
-                  <TableHead>{tc("department")}</TableHead>
-                  <TableHead className="text-right">{tc("amount")}</TableHead>
-                  <TableHead>{tc("date")}</TableHead>
-                  <TableHead>{t("description")}</TableHead>
+                  <TableHead>{tc('department')}</TableHead>
+                  <TableHead className="text-right">{tc('amount')}</TableHead>
+                  <TableHead>{tc('date')}</TableHead>
+                  <TableHead>{t('description')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -199,7 +197,9 @@ export default function CostPage() {
                     <TableRow key={c.id}>
                       <TableCell className="font-mono text-sm">{c.cost_no}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{t(costTypeMap[c.cost_type]) || c.cost_type}</Badge>
+                        <Badge variant="outline">
+                          {t(costTypeMap[c.cost_type]) || c.cost_type}
+                        </Badge>
                       </TableCell>
                       <TableCell className="font-mono text-sm">{c.source_no}</TableCell>
                       <TableCell>{c.department}</TableCell>

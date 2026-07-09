@@ -4,12 +4,18 @@ import { withPermission } from '@/lib/api-permissions';
 import { getInventoryLogs } from '@/lib/inventory-sync';
 
 // 获取库存流水
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
 
-  const materialId = searchParams.get('materialId') ? parseInt(searchParams.get('materialId')!) : undefined;
-  const warehouseId = searchParams.get('warehouseId') ? parseInt(searchParams.get('warehouseId')!) : undefined;
-  const operationType = searchParams.get('operationType') ? parseInt(searchParams.get('operationType')!) : undefined;
+  const materialId = searchParams.get('materialId')
+    ? parseInt(searchParams.get('materialId')!)
+    : undefined;
+  const warehouseId = searchParams.get('warehouseId')
+    ? parseInt(searchParams.get('warehouseId')!)
+    : undefined;
+  const operationType = searchParams.get('operationType')
+    ? parseInt(searchParams.get('operationType')!)
+    : undefined;
   const startDate = searchParams.get('startDate') || undefined;
   const endDate = searchParams.get('endDate') || undefined;
   const page = parseInt(searchParams.get('page') || '1');

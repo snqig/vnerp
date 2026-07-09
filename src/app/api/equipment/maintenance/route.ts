@@ -14,7 +14,7 @@ import { withPermission } from '@/lib/api-permissions';
  * DELETE /api/equipment/maintenance?id=N          — 删除维保记录
  */
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
 
   const id = searchParams.get('id');

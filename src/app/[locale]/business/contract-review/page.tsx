@@ -76,7 +76,6 @@ interface ContractReviewRecord {
 }
 
 export default function ContractReviewPage() {
-
   const t = useTranslations('Business');
   const tc = useTranslations('Common');
 
@@ -143,8 +142,7 @@ export default function ContractReviewPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, [page, searchCustomer, searchProduct, searchStatus]);
 
   useEffect(() => {
@@ -207,7 +205,7 @@ export default function ContractReviewPage() {
       } else {
         toast({ title: '失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -226,7 +224,7 @@ export default function ContractReviewPage() {
       } else {
         toast({ title: '失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -240,7 +238,7 @@ export default function ContractReviewPage() {
         toast({ title: '删除成功' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -266,7 +264,7 @@ export default function ContractReviewPage() {
       } else {
         toast({ title: '上传失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '上传失败', variant: 'destructive' });
     } finally {
       setUploading(false);
@@ -296,7 +294,7 @@ export default function ContractReviewPage() {
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder={tc("searchProductName")}
+                    placeholder={tc('searchProductName')}
                     className="pl-8 w-48"
                     value={searchProduct}
                     onChange={(e) => setSearchProduct(e.target.value)}
@@ -307,7 +305,7 @@ export default function ContractReviewPage() {
                     <SelectValue placeholder="状态筛选" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
+                    <SelectItem value="all">{tc('text_avez63')}</SelectItem>
                     {Object.entries(statusMap).map(([k, v]) => (
                       <SelectItem key={k} value={k}>
                         {v.label}
@@ -331,10 +329,22 @@ export default function ContractReviewPage() {
                     { key: 'quantity', label: t('quantity'), width: 10 },
                     { key: 'amount', label: t('amount'), width: 12 },
                     { key: 'delivery_date', label: t('deliveryDate'), width: 12 },
-                    { key: 'sample_status', label: t('sampleStatus'), width: 12, formatter: (v) => sampleStatusMap[v]?.label || tc('unknown') },
-                    { key: 'status', label: t('reviewStatus'), width: 12, formatter: (v) => statusMap[v]?.label || tc('unknown') },
+                    {
+                      key: 'sample_status',
+                      label: t('sampleStatus'),
+                      width: 12,
+                      formatter: (v) => sampleStatusMap[v]?.label || tc('unknown'),
+                    },
+                    {
+                      key: 'status',
+                      label: t('reviewStatus'),
+                      width: 12,
+                      formatter: (v) => statusMap[v]?.label || tc('unknown'),
+                    },
                   ]}
-                  data={selectedIds.size > 0 ? list.filter((i) => i.id && selectedIds.has(i.id)) : list}
+                  data={
+                    selectedIds.size > 0 ? list.filter((i) => i.id && selectedIds.has(i.id)) : list
+                  }
                 />
                 <Button
                   onClick={() => {
@@ -361,12 +371,12 @@ export default function ContractReviewPage() {
                   <TableHead>{tc('orderNo')}</TableHead>
                   <TableHead>{tc('customerName')}</TableHead>
                   <TableHead>{tc('productName')}</TableHead>
-                  <TableHead>{tc("quantity")}</TableHead>
-                  <TableHead>{tc("amount")}</TableHead>
+                  <TableHead>{tc('quantity')}</TableHead>
+                  <TableHead>{tc('amount')}</TableHead>
                   <TableHead>{t('deliveryDate')}</TableHead>
                   <TableHead>{t('sampleStatus')}</TableHead>
                   <TableHead>{t('reviewStatus')}</TableHead>
-                  <TableHead>{tc("actions")}</TableHead>
+                  <TableHead>{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -400,7 +410,7 @@ export default function ContractReviewPage() {
                     <TableCell>
                       <div className="flex gap-1">
                         <Button size="sm" variant="outline" onClick={() => openReview(item)}>
-                          评审
+                          {tc('text_o9y5')}
                         </Button>
                         <Button
                           size="sm"
@@ -422,7 +432,7 @@ export default function ContractReviewPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
-                      暂无数据
+                      {tc('text_dcv57g')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -431,7 +441,10 @@ export default function ContractReviewPage() {
 
             <div className="flex items-center justify-between mt-4">
               <span className="text-sm text-muted-foreground">
-                共 {total} 条{selectedIds.size > 0 && `，已选 ${selectedIds.size} 条`}
+                {tc('text_g35')}
+                {total}
+                {tc('text_kf5')}
+                {selectedIds.size > 0 && `，已选 ${selectedIds.size} 条`}
               </span>
               <div className="flex gap-2">
                 <Button
@@ -440,7 +453,7 @@ export default function ContractReviewPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  上一页
+                  {tc('text_btlof')}
                 </Button>
                 <Button
                   variant="outline"
@@ -448,7 +461,7 @@ export default function ContractReviewPage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  下一页
+                  {tc('text_btmf4')}
                 </Button>
               </div>
             </div>
@@ -462,35 +475,35 @@ export default function ContractReviewPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div>
-                <Label>订单号</Label>
+                <Label>{tc('text_kuwys')}</Label>
                 <Input
                   value={editItem.order_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, order_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>客户名称 *</Label>
+                <Label>{tc('text_555b6m')}</Label>
                 <Input
                   value={editItem.customer_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, customer_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>产品编码</Label>
+                <Label>{tc('text_aa5vdx')}</Label>
                 <Input
                   value={editItem.product_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, product_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>产品名称 *</Label>
+                <Label>{tc('text_2kytaf')}</Label>
                 <Input
                   value={editItem.product_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, product_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("quantity")}</Label>
+                <Label>{tc('quantity')}</Label>
                 <Input
                   type="number"
                   value={editItem.quantity || 0}
@@ -498,7 +511,7 @@ export default function ContractReviewPage() {
                 />
               </div>
               <div>
-                <Label>{tc("amount")}</Label>
+                <Label>{tc('amount')}</Label>
                 <Input
                   type="number"
                   value={editItem.amount || 0}
@@ -506,7 +519,7 @@ export default function ContractReviewPage() {
                 />
               </div>
               <div>
-                <Label>交货日期</Label>
+                <Label>{tc('text_ai8ysd')}</Label>
                 <Input
                   type="date"
                   value={editItem.delivery_date || ''}
@@ -514,7 +527,7 @@ export default function ContractReviewPage() {
                 />
               </div>
               <div>
-                <Label>样品状态</Label>
+                <Label>{tc('text_di6511')}</Label>
                 <Select
                   value={editItem.sample_status || 'pending'}
                   onValueChange={(v) => setEditItem({ ...editItem, sample_status: v })}
@@ -532,7 +545,7 @@ export default function ContractReviewPage() {
                 </Select>
               </div>
               <div className="col-span-2">
-                <Label>质量要求</Label>
+                <Label>{tc('text_ieyjt4')}</Label>
                 <Textarea
                   rows={2}
                   value={editItem.quality_requirement || ''}
@@ -542,7 +555,7 @@ export default function ContractReviewPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   rows={2}
                   value={editItem.remark || ''}
@@ -552,9 +565,9 @@ export default function ContractReviewPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -562,34 +575,37 @@ export default function ContractReviewPage() {
         <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
           <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>合同评审 - {editItem.review_no}</DialogTitle>
+              <DialogTitle>
+                {tc('text_jf0lke')}
+                {editItem.review_no}
+              </DialogTitle>
             </DialogHeader>
             <div className="mb-4 grid grid-cols-3 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground">客户：</span>
+                <span className="text-muted-foreground">{tc('text_dxa79')}</span>
                 {editItem.customer_name}
               </div>
               <div>
-                <span className="text-muted-foreground">产品：</span>
+                <span className="text-muted-foreground">{tc('text_byjq8')}</span>
                 {editItem.product_name}
               </div>
               <div>
-                <span className="text-muted-foreground">数量：</span>
+                <span className="text-muted-foreground">{tc('text_fl2u3')}</span>
                 {editItem.quantity}
               </div>
             </div>
             <Tabs value={activeReviewTab} onValueChange={setActiveReviewTab}>
               <TabsList className="grid grid-cols-5">
-                <TabsTrigger value="biz">业务部</TabsTrigger>
-                <TabsTrigger value="eng">工程技术部</TabsTrigger>
-                <TabsTrigger value="quality">品质部</TabsTrigger>
-                <TabsTrigger value="prod">生产部</TabsTrigger>
-                <TabsTrigger value="purchase">采购部</TabsTrigger>
+                <TabsTrigger value="biz">{tc('text_buoe9')}</TabsTrigger>
+                <TabsTrigger value="eng">{tc('text_rs1ifn')}</TabsTrigger>
+                <TabsTrigger value="quality">{tc('text_d3pkx')}</TabsTrigger>
+                <TabsTrigger value="prod">{tc('text_hjr0g')}</TabsTrigger>
+                <TabsTrigger value="purchase">{tc('text_m1hlu')}</TabsTrigger>
               </TabsList>
               <TabsContent value="biz" className="space-y-4 mt-4">
-                <h3 className="font-semibold">业务部评审意见</h3>
+                <h3 className="font-semibold">{tc('text_hmiy1c')}</h3>
                 <div>
-                  <Label>评审意见</Label>
+                  <Label>{tc('text_i0itv3')}</Label>
                   <Textarea
                     rows={4}
                     value={editItem.biz_opinion || ''}
@@ -599,9 +615,9 @@ export default function ContractReviewPage() {
                 </div>
               </TabsContent>
               <TabsContent value="eng" className="space-y-4 mt-4">
-                <h3 className="font-semibold">工程技术部评审意见</h3>
+                <h3 className="font-semibold">{tc('text_b0b1s2')}</h3>
                 <div>
-                  <Label>工程可行性评估</Label>
+                  <Label>{tc('text_60nmk0')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.engineering_feasibility || ''}
@@ -612,7 +628,7 @@ export default function ContractReviewPage() {
                   />
                 </div>
                 <div>
-                  <Label>评审意见</Label>
+                  <Label>{tc('text_i0itv3')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.eng_opinion || ''}
@@ -622,9 +638,9 @@ export default function ContractReviewPage() {
                 </div>
               </TabsContent>
               <TabsContent value="quality" className="space-y-4 mt-4">
-                <h3 className="font-semibold">品质部评审意见</h3>
+                <h3 className="font-semibold">{tc('text_xfmrgw')}</h3>
                 <div>
-                  <Label>质量要求评估</Label>
+                  <Label>{tc('text_anxbqs')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.quality_requirement || ''}
@@ -635,7 +651,7 @@ export default function ContractReviewPage() {
                   />
                 </div>
                 <div>
-                  <Label>评审意见</Label>
+                  <Label>{tc('text_i0itv3')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.quality_opinion || ''}
@@ -645,9 +661,9 @@ export default function ContractReviewPage() {
                 </div>
               </TabsContent>
               <TabsContent value="prod" className="space-y-4 mt-4">
-                <h3 className="font-semibold">生产部评审意见</h3>
+                <h3 className="font-semibold">{tc('text_58biun')}</h3>
                 <div>
-                  <Label>产能评估</Label>
+                  <Label>{tc('text_agp1uq')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.production_capacity || ''}
@@ -658,7 +674,7 @@ export default function ContractReviewPage() {
                   />
                 </div>
                 <div>
-                  <Label>评审意见</Label>
+                  <Label>{tc('text_i0itv3')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.prod_opinion || ''}
@@ -668,9 +684,9 @@ export default function ContractReviewPage() {
                 </div>
               </TabsContent>
               <TabsContent value="purchase" className="space-y-4 mt-4">
-                <h3 className="font-semibold">采购部评审意见</h3>
+                <h3 className="font-semibold">{tc('text_nzjk6n')}</h3>
                 <div>
-                  <Label>物料供应评估</Label>
+                  <Label>{tc('text_1y636z')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.material_availability || ''}
@@ -681,7 +697,7 @@ export default function ContractReviewPage() {
                   />
                 </div>
                 <div>
-                  <Label>评审意见</Label>
+                  <Label>{tc('text_i0itv3')}</Label>
                   <Textarea
                     rows={3}
                     value={editItem.purchase_opinion || ''}
@@ -694,7 +710,7 @@ export default function ContractReviewPage() {
             <div className="border-t pt-4 mt-4 space-y-3">
               <h3 className="font-semibold flex items-center gap-2">
                 <Upload className="h-4 w-4" />
-                附件上传
+                {tc('text_ja8tu0')}
               </h3>
               <div className="flex items-center gap-2">
                 <Input
@@ -742,9 +758,9 @@ export default function ContractReviewPage() {
             </div>
             <DialogFooter className="mt-4">
               <Button variant="outline" onClick={() => setShowReviewDialog(false)}>
-                关闭
+                {tc('text_eod6')}
               </Button>
-              <Button onClick={handleSaveReview}>保存评审意见</Button>
+              <Button onClick={handleSaveReview}>{tc('text_v1sw52')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

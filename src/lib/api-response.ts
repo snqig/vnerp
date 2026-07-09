@@ -120,19 +120,25 @@ export function withErrorHandler<T extends (...args: unknown[]) => Promise<NextR
 
 // 带认证和错误处理的包装器
 export function withAuthAndErrorHandler(
-  handler: (request: NextRequest, context: { params: Promise<Record<string, string>> }) => Promise<NextResponse>,
+  handler: (
+    request: NextRequest,
+    context: { params: Promise<Record<string, string>> }
+  ) => Promise<NextResponse>,
   errorMessage = '操作失败'
 ) {
-  return async (request: NextRequest, context: { params: Promise<Record<string, string>> }): Promise<NextResponse> => {
+  return async (
+    request: NextRequest,
+    context: { params: Promise<Record<string, string>> }
+  ): Promise<NextResponse> => {
     try {
       // 从请求中获取认证信息
       const authHeader = request.headers.get('authorization');
       const token = authHeader?.replace('Bearer ', '');
-      
+
       if (!token) {
         return commonErrors.unauthorized('未授权，请先登录');
       }
-      
+
       return await handler(request, context);
     } catch (error) {
       const message = error instanceof Error ? error.message : errorMessage;
@@ -185,6 +191,5 @@ export async function logOperation(params: {
         params.status ?? 1,
       ]
     );
-  } catch (e) {
-  }
+  } catch {}
 }

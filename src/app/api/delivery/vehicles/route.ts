@@ -65,7 +65,7 @@ function buildQueryConditions(params: { status: string | null; keyword: string |
 }
 
 // GET - 获取车辆列表或单个车辆
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -103,157 +103,166 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // POST - 创建车辆
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body: Vehicle = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body: Vehicle = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, ['vehicle_no', 'vehicle_type']);
+    // 验证必填字段
+    const validation = validateRequestBody(body, ['vehicle_no', 'vehicle_type']);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  // 检查车牌号是否已存在
-  const existing = await queryOne<{ id: number }>(
-    'SELECT id FROM delivery_vehicle WHERE vehicle_no = ? AND deleted = 0',
-    [body.vehicle_no]
-  );
+    // 检查车牌号是否已存在
+    const existing = await queryOne<{ id: number }>(
+      'SELECT id FROM delivery_vehicle WHERE vehicle_no = ? AND deleted = 0',
+      [body.vehicle_no]
+    );
 
-  if (existing) {
-    return errorResponse('车牌号已存在', 409, 409);
-  }
+    if (existing) {
+      return errorResponse('车牌号已存在', 409, 409);
+    }
 
-  const result = await execute(
-    `INSERT INTO delivery_vehicle (
+    const result = await execute(
+      `INSERT INTO delivery_vehicle (
       vehicle_no, vehicle_type, brand, model, color, engine_no, frame_no,
       buy_date, mileage, fuel_type, capacity, status, driver_id, driver_name,
       driver_phone, insurance_expire, annual_inspect_expire, remark
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      body.vehicle_no,
-      body.vehicle_type,
-      body.brand ?? null,
-      body.model ?? null,
-      body.color ?? null,
-      body.engine_no ?? null,
-      body.frame_no ?? null,
-      body.buy_date ?? null,
-      body.mileage ?? 0,
-      body.fuel_type ?? null,
-      body.capacity ?? null,
-      body.status ?? 1,
-      body.driver_id ?? null,
-      body.driver_name ?? null,
-      body.driver_phone ?? null,
-      body.insurance_expire ?? null,
-      body.annual_inspect_expire ?? null,
-      body.remark ?? null,
-    ]
-  );
+      [
+        body.vehicle_no,
+        body.vehicle_type,
+        body.brand ?? null,
+        body.model ?? null,
+        body.color ?? null,
+        body.engine_no ?? null,
+        body.frame_no ?? null,
+        body.buy_date ?? null,
+        body.mileage ?? 0,
+        body.fuel_type ?? null,
+        body.capacity ?? null,
+        body.status ?? 1,
+        body.driver_id ?? null,
+        body.driver_name ?? null,
+        body.driver_phone ?? null,
+        body.insurance_expire ?? null,
+        body.annual_inspect_expire ?? null,
+        body.remark ?? null,
+      ]
+    );
 
-  return successResponse({ id: result.insertId }, '车辆创建成功');
-}, { logTitle: '创建车辆', logType: 'business' });
+    return successResponse({ id: result.insertId }, '车辆创建成功');
+  },
+  { logTitle: '创建车辆', logType: 'business' }
+);
 
 // PUT - 更新车辆
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return commonErrors.badRequest('缺少车辆ID');
-  }
+    if (!id) {
+      return commonErrors.badRequest('缺少车辆ID');
+    }
 
-  const body: Vehicle = await request.json();
+    const body: Vehicle = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, ['vehicle_no', 'vehicle_type']);
+    // 验证必填字段
+    const validation = validateRequestBody(body, ['vehicle_no', 'vehicle_type']);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const vehicleId = parseInt(id);
+    const vehicleId = parseInt(id);
 
-  // 检查车辆是否存在
-  const existingVehicle = await queryOne<{ id: number }>(
-    'SELECT id FROM delivery_vehicle WHERE id = ? AND deleted = 0',
-    [vehicleId]
-  );
+    // 检查车辆是否存在
+    const existingVehicle = await queryOne<{ id: number }>(
+      'SELECT id FROM delivery_vehicle WHERE id = ? AND deleted = 0',
+      [vehicleId]
+    );
 
-  if (!existingVehicle) {
-    return commonErrors.notFound('车辆不存在');
-  }
+    if (!existingVehicle) {
+      return commonErrors.notFound('车辆不存在');
+    }
 
-  // 检查车牌号是否已被其他车辆使用
-  const codeExists = await queryOne<{ id: number }>(
-    'SELECT id FROM delivery_vehicle WHERE vehicle_no = ? AND id != ? AND deleted = 0',
-    [body.vehicle_no, vehicleId]
-  );
+    // 检查车牌号是否已被其他车辆使用
+    const codeExists = await queryOne<{ id: number }>(
+      'SELECT id FROM delivery_vehicle WHERE vehicle_no = ? AND id != ? AND deleted = 0',
+      [body.vehicle_no, vehicleId]
+    );
 
-  if (codeExists) {
-    return errorResponse('车牌号已存在', 409, 409);
-  }
+    if (codeExists) {
+      return errorResponse('车牌号已存在', 409, 409);
+    }
 
-  const result = await execute(
-    `UPDATE delivery_vehicle SET
+    const result = await execute(
+      `UPDATE delivery_vehicle SET
       vehicle_no = ?, vehicle_type = ?, brand = ?, model = ?, color = ?,
       engine_no = ?, frame_no = ?, buy_date = ?, mileage = ?, fuel_type = ?,
       capacity = ?, status = ?, driver_id = ?, driver_name = ?, driver_phone = ?,
       insurance_expire = ?, annual_inspect_expire = ?, remark = ?
     WHERE id = ? AND deleted = 0`,
-    [
-      body.vehicle_no,
-      body.vehicle_type,
-      body.brand ?? null,
-      body.model ?? null,
-      body.color ?? null,
-      body.engine_no ?? null,
-      body.frame_no ?? null,
-      body.buy_date ?? null,
-      body.mileage ?? 0,
-      body.fuel_type ?? null,
-      body.capacity ?? null,
-      body.status ?? 1,
-      body.driver_id ?? null,
-      body.driver_name ?? null,
-      body.driver_phone ?? null,
-      body.insurance_expire ?? null,
-      body.annual_inspect_expire ?? null,
-      body.remark ?? null,
-      vehicleId,
-    ]
-  );
+      [
+        body.vehicle_no,
+        body.vehicle_type,
+        body.brand ?? null,
+        body.model ?? null,
+        body.color ?? null,
+        body.engine_no ?? null,
+        body.frame_no ?? null,
+        body.buy_date ?? null,
+        body.mileage ?? 0,
+        body.fuel_type ?? null,
+        body.capacity ?? null,
+        body.status ?? 1,
+        body.driver_id ?? null,
+        body.driver_name ?? null,
+        body.driver_phone ?? null,
+        body.insurance_expire ?? null,
+        body.annual_inspect_expire ?? null,
+        body.remark ?? null,
+        vehicleId,
+      ]
+    );
 
-  if (result.affectedRows === 0) {
-    return commonErrors.notFound('车辆不存在');
-  }
+    if (result.affectedRows === 0) {
+      return commonErrors.notFound('车辆不存在');
+    }
 
-  return successResponse(null, '车辆更新成功');
-}, { logTitle: '更新车辆', logType: 'business' });
+    return successResponse(null, '车辆更新成功');
+  },
+  { logTitle: '更新车辆', logType: 'business' }
+);
 
 // DELETE - 删除车辆（软删除）
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return commonErrors.badRequest('缺少车辆ID');
-  }
+    if (!id) {
+      return commonErrors.badRequest('缺少车辆ID');
+    }
 
-  const vehicleId = parseInt(id);
+    const vehicleId = parseInt(id);
 
-  // 检查车辆是否存在
-  const existingVehicle = await queryOne<{ id: number }>(
-    'SELECT id FROM delivery_vehicle WHERE id = ? AND deleted = 0',
-    [vehicleId]
-  );
+    // 检查车辆是否存在
+    const existingVehicle = await queryOne<{ id: number }>(
+      'SELECT id FROM delivery_vehicle WHERE id = ? AND deleted = 0',
+      [vehicleId]
+    );
 
-  if (!existingVehicle) {
-    return commonErrors.notFound('车辆不存在');
-  }
+    if (!existingVehicle) {
+      return commonErrors.notFound('车辆不存在');
+    }
 
-  // 软删除
-  await execute('UPDATE delivery_vehicle SET deleted = 1 WHERE id = ?', [vehicleId]);
+    // 软删除
+    await execute('UPDATE delivery_vehicle SET deleted = 1 WHERE id = ?', [vehicleId]);
 
-  return successResponse(null, '车辆删除成功');
-}, { logTitle: '删除车辆', logType: 'business' });
+    return successResponse(null, '车辆删除成功');
+  },
+  { logTitle: '删除车辆', logType: 'business' }
+);

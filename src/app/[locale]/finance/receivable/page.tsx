@@ -106,7 +106,7 @@ export default function ReceivablePage() {
       if (result.success) {
         // 统一处理API返回的数据结构
         const rawData = result.data;
-        const rawList = Array.isArray(rawData) ? rawData : (rawData?.list || []);
+        const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
         const list = rawList.map((item: any) => ({
           id: item.id,
           receivable_no: item.receivableNo || item.receivable_no,
@@ -124,8 +124,7 @@ export default function ReceivablePage() {
         setList(list);
         setTotal(rawData?.total || list.length || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, [page, keyword, statusFilter]);
 
   useEffect(() => {
@@ -140,7 +139,7 @@ export default function ReceivablePage() {
         setDetailItem(result.data);
         setShowDialog(true);
       }
-    } catch (e) {
+    } catch {
       toast({ title: '获取详情失败', variant: 'destructive' });
     }
   };
@@ -165,7 +164,7 @@ export default function ReceivablePage() {
       } else {
         toast({ title: '收款失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -198,7 +197,7 @@ export default function ReceivablePage() {
                 <SelectValue placeholder={t('statusFilter')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{tc("all")}</SelectItem>
+                <SelectItem value="all">{tc('all')}</SelectItem>
                 <SelectItem value="1">{t('notReceived')}</SelectItem>
                 <SelectItem value="2">{t('partialReceived')}</SelectItem>
                 <SelectItem value="3">{t('fullyReceived')}</SelectItem>
@@ -221,10 +220,10 @@ export default function ReceivablePage() {
                   <TableHead>{t('customerName')}</TableHead>
                   <TableHead className="text-right">{t('receivableAmount')}</TableHead>
                   <TableHead className="text-right">{t('receivedAmount')}</TableHead>
-                  <TableHead className="text-right">{tc("balance")}</TableHead>
+                  <TableHead className="text-right">{tc('balance')}</TableHead>
                   <TableHead>{t('dueDate')}</TableHead>
-                  <TableHead>{tc("status")}</TableHead>
-                  <TableHead>{tc("actions")}</TableHead>
+                  <TableHead>{tc('status')}</TableHead>
+                  <TableHead>{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -349,7 +348,7 @@ export default function ReceivablePage() {
                       </div>
                     </div>
                     <div>
-                      <Label>{tc("remark")}</Label>
+                      <Label>{tc('remark')}</Label>
                       <Input
                         value={receiptForm.remark}
                         onChange={(e) => setReceiptForm({ ...receiptForm, remark: e.target.value })}

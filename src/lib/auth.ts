@@ -105,7 +105,7 @@ export async function verifyToken(token: string): Promise<UserInfo | null> {
       permissions: [],
       iat: iatMs,
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }

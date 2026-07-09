@@ -122,8 +122,7 @@ export default function LabTestPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -146,7 +145,7 @@ export default function LabTestPage() {
       } else {
         toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -160,7 +159,7 @@ export default function LabTestPage() {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -175,7 +174,7 @@ export default function LabTestPage() {
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder={tc("searchProductName")}
+                    placeholder={tc('searchProductName')}
                     className="pl-8 w-60"
                     value={searchProduct}
                     onChange={(e) => setSearchProduct(e.target.value)}
@@ -218,7 +217,11 @@ export default function LabTestPage() {
                   { key: 'conclusion', label: t('conclusion'), width: 12 },
                   { key: 'status', label: tc('status'), width: 12 },
                 ]}
-                data={selectedIds.length > 0 ? sortedData.filter((i) => i.id && selectedIds.includes(i.id)) : sortedData}
+                data={
+                  selectedIds.length > 0
+                    ? sortedData.filter((i) => i.id && selectedIds.includes(i.id))
+                    : sortedData
+                }
               />
             </div>
 
@@ -237,7 +240,7 @@ export default function LabTestPage() {
                       }
                     />
                   </TableHead>
-                  <TableHead className="w-12 text-center">{tc("serialNo")}</TableHead>
+                  <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
                   <SortableTableHeader
                     field="test_no"
                     sortField={sortField}
@@ -275,7 +278,7 @@ export default function LabTestPage() {
                   >
                     {tc('status')}
                   </SortableTableHeader>
-                  <TableHead>{tc("actions")}</TableHead>
+                  <TableHead>{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -350,7 +353,9 @@ export default function LabTestPage() {
             </Table>
 
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">{tc('totalRecords', { count: total })}</span>
+              <span className="text-sm text-muted-foreground">
+                {tc('totalRecords', { count: total })}
+              </span>
               <div className="flex gap-2">
                 <Button
                   variant="outline"

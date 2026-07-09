@@ -9,13 +9,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -67,7 +81,7 @@ export default function SchedulerPage() {
         setList(result.data?.list || []);
         setTotal(result.data?.total || 0);
       }
-    } catch (e) {
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -91,12 +105,19 @@ export default function SchedulerPage() {
       if (result.success) {
         toast({ title: '任务创建成功' });
         setCreateOpen(false);
-        setForm({ task_name: '', task_type: 'inventory_alert', task_group: 'default', cron_expression: '', description: '', config: '' });
+        setForm({
+          task_name: '',
+          task_type: 'inventory_alert',
+          task_group: 'default',
+          cron_expression: '',
+          description: '',
+          config: '',
+        });
         fetchData();
       } else {
         toast({ title: result.message || '创建失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '创建失败', variant: 'destructive' });
     }
   };
@@ -114,7 +135,7 @@ export default function SchedulerPage() {
       } else {
         toast({ title: result.message || '操作失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '操作失败', variant: 'destructive' });
     }
   };
@@ -127,14 +148,13 @@ export default function SchedulerPage() {
         setLogs(result.data?.logs || []);
         setLogOpen(true);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const taskTypeMap: Record<string, string> = {
-    'inventory_alert': '库存预警',
-    'data_cleanup': '数据清理',
-    'report_generation': '报表生成',
+    inventory_alert: '库存预警',
+    data_cleanup: '数据清理',
+    report_generation: '报表生成',
   };
 
   return (
@@ -146,9 +166,7 @@ export default function SchedulerPage() {
               <Clock className="w-6 h-6" />
               {t('schedulerManagement')}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('schedulerManagementDesc')}
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">{t('schedulerManagementDesc')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={fetchData}>
@@ -195,10 +213,14 @@ export default function SchedulerPage() {
                     <TableRow key={item.id}>
                       <TableCell className="font-medium text-sm">{item.task_name}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{taskTypeMap[item.task_type] || item.task_type}</Badge>
+                        <Badge variant="outline">
+                          {taskTypeMap[item.task_type] || item.task_type}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-sm">{item.task_group || '-'}</TableCell>
-                      <TableCell className="font-mono text-xs">{item.cron_expression || '-'}</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {item.cron_expression || '-'}
+                      </TableCell>
                       <TableCell>
                         {item.status === 'active' ? (
                           <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">
@@ -209,25 +231,47 @@ export default function SchedulerPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-xs">{item.last_execute_time || '-'}</TableCell>
-                      <TableCell className="text-xs max-w-[200px] truncate">{item.last_result || '-'}</TableCell>
+                      <TableCell className="text-xs max-w-[200px] truncate">
+                        {item.last_result || '-'}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button size="sm" variant="ghost" className="h-7" onClick={() => handleAction(item.id, 'execute')}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7"
+                            onClick={() => handleAction(item.id, 'execute')}
+                          >
                             <Play className="h-3 w-3 mr-1" />
                             {t('execute')}
                           </Button>
                           {item.status === 'active' ? (
-                            <Button size="sm" variant="ghost" className="h-7 text-yellow-600" onClick={() => handleAction(item.id, 'pause')}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-yellow-600"
+                              onClick={() => handleAction(item.id, 'pause')}
+                            >
                               <Pause className="h-3 w-3 mr-1" />
                               {t('pause')}
                             </Button>
                           ) : (
-                            <Button size="sm" variant="ghost" className="h-7 text-green-600" onClick={() => handleAction(item.id, 'resume')}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-green-600"
+                              onClick={() => handleAction(item.id, 'resume')}
+                            >
                               <Play className="h-3 w-3 mr-1" />
                               {t('resume')}
                             </Button>
                           )}
-                          <Button size="sm" variant="ghost" className="h-7" onClick={() => viewLogs(item.id)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7"
+                            onClick={() => viewLogs(item.id)}
+                          >
                             <Eye className="h-3 w-3 mr-1" />
                             {t('logs')}
                           </Button>
@@ -242,12 +286,24 @@ export default function SchedulerPage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{tc('total')} {total}</span>
+          <span className="text-sm text-muted-foreground">
+            {tc('total')} {total}
+          </span>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
               {tc('prevPage') || '上一页'}
             </Button>
-            <Button size="sm" variant="outline" disabled={page * 20 >= total} onClick={() => setPage((p) => p + 1)}>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page * 20 >= total}
+              onClick={() => setPage((p) => p + 1)}
+            >
               {tc('nextPage') || '下一页'}
             </Button>
           </div>
@@ -264,30 +320,49 @@ export default function SchedulerPage() {
           <div className="space-y-3">
             <div className="space-y-1">
               <Label>{t('taskName')} *</Label>
-              <Input value={form.task_name} onChange={(e) => setForm(f => ({ ...f, task_name: e.target.value }))} />
+              <Input
+                value={form.task_name}
+                onChange={(e) => setForm((f) => ({ ...f, task_name: e.target.value }))}
+              />
             </div>
             <div className="space-y-1">
               <Label>{t('taskType')} *</Label>
-              <Select value={form.task_type} onValueChange={(v) => setForm(f => ({ ...f, task_type: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={form.task_type}
+                onValueChange={(v) => setForm((f) => ({ ...f, task_type: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="inventory_alert">{taskTypeMap['inventory_alert']}</SelectItem>
                   <SelectItem value="data_cleanup">{taskTypeMap['data_cleanup']}</SelectItem>
-                  <SelectItem value="report_generation">{taskTypeMap['report_generation']}</SelectItem>
+                  <SelectItem value="report_generation">
+                    {taskTypeMap['report_generation']}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
               <Label>Cron {t('expression')}</Label>
-              <Input value={form.cron_expression} onChange={(e) => setForm(f => ({ ...f, cron_expression: e.target.value }))} placeholder="0 0 * * *" />
+              <Input
+                value={form.cron_expression}
+                onChange={(e) => setForm((f) => ({ ...f, cron_expression: e.target.value }))}
+                placeholder="0 0 * * *"
+              />
             </div>
             <div className="space-y-1">
               <Label>{tc('remark')}</Label>
-              <Textarea value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} />
+              <Textarea
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>{tc('cancel')}</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              {tc('cancel')}
+            </Button>
             <Button onClick={handleCreate}>{tc('confirm')}</Button>
           </DialogFooter>
         </DialogContent>
@@ -323,21 +398,31 @@ export default function SchedulerPage() {
                     <TableCell className="text-xs">{log.end_time || '-'}</TableCell>
                     <TableCell>
                       {log.status === 'success' ? (
-                        <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300 text-xs">成功</Badge>
+                        <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300 text-xs">
+                          {tc('text_h4sv')}
+                        </Badge>
                       ) : log.status === 'failed' ? (
-                        <Badge variant="destructive" className="text-xs">失败</Badge>
+                        <Badge variant="destructive" className="text-xs">
+                          {tc('text_fy1g')}
+                        </Badge>
                       ) : (
-                        <Badge variant="secondary" className="text-xs">运行中</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {tc('text_lpxkh')}
+                        </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs max-w-[300px] truncate">{log.result || '-'}</TableCell>
+                    <TableCell className="text-xs max-w-[300px] truncate">
+                      {log.result || '-'}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setLogOpen(false)}>{tc('close')}</Button>
+            <Button variant="outline" onClick={() => setLogOpen(false)}>
+              {tc('close')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

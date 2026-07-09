@@ -4,7 +4,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { autoSchedule, getCapacityLoad, type SchedulingResult } from '@/lib/production-scheduling';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
 
   // 自动排产：基于优先级评分 + 物料可用性 + 日期冲突检测，生成排产建议
@@ -91,7 +91,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 export const POST = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (request: NextRequest, _userInfo) => {
     const body = await request.json();
 
     // 应用排产建议：将 autoSchedule 的结果写回工单的计划日期
@@ -193,7 +193,7 @@ export const POST = withPermission(
 );
 
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (request: NextRequest, _userInfo) => {
     const body = await request.json();
     const { id, ...fields } = body;
     if (!id) return errorResponse('ID不能为空', 400, 400);
@@ -231,7 +231,7 @@ export const PUT = withPermission(
 );
 
 export const DELETE = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (request: NextRequest, _userInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) return errorResponse('ID不能为空', 400, 400);

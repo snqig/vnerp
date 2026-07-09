@@ -35,23 +35,23 @@ interface TransferItem {
 }
 
 const TYPE_MAP: Record<number, string> = {
-  1: '库位调拨',
-  2: '仓库调拨',
+  1: tc('text_c9ptr3'),
+  2: tc('text_acftyd'),
 };
 
 const STATUS_MAP: Record<number, string> = {
-  0: '草稿',
-  1: '待审批',
-  2: '已出库',
-  3: '已入库',
-  4: '已取消',
+  0: tc('text_n02e'),
+  1: tc('text_efsql'),
+  2: tc('text_e5u17'),
+  3: tc('text_e5qgw'),
+  4: tc('text_e68dg'),
 };
 
 function generateTransferNo(): string {
   return generateDocNo(getTrPrefix());
 }
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -103,7 +103,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
+export const POST = withPermission(async (request: NextRequest, _userInfo) => {
   const body = await request.json();
   const {
     type = 1,
@@ -186,7 +186,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
   );
 });
 
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
+export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
   const body = await request.json();
   const { id, action, approver_id } = body;
 
@@ -205,10 +205,9 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
       if (transfer.status !== 0) {
         return errorResponse('只有草稿状态的调拨单才能提交审批', 400, 400);
       }
-      await execute(
-        `UPDATE inv_transfer_order SET status = 1, update_time = NOW() WHERE id = ?`,
-        [id]
-      );
+      await execute(`UPDATE inv_transfer_order SET status = 1, update_time = NOW() WHERE id = ?`, [
+        id,
+      ]);
       return successResponse(null, '调拨单已提交审批');
 
     case 'approve':
@@ -256,7 +255,7 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   }
 });
 
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
+export const DELETE = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 

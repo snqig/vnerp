@@ -100,12 +100,18 @@ export default function PurchaseRequestPage() {
 
   const priorityMap: Record<number, { label: string; color: string }> = {
     0: { label: tc('low'), color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-    1: { label: tc('medium'), color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200' },
+    1: {
+      label: tc('medium'),
+      color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
+    },
     2: {
       label: tc('high'),
       color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200',
     },
-    3: { label: tc('critical'), color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' },
+    3: {
+      label: tc('critical'),
+      color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200',
+    },
   };
 
   const statusMapCN: Record<number, string> = {
@@ -188,13 +194,13 @@ export default function PurchaseRequestPage() {
       const result = await response.json();
 
       if (result.success) {
-        const data = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const data = Array.isArray(result.data) ? result.data : result.data?.list || [];
         setRequests(data);
         setTotal(result.pagination?.total || result.data?.total || data.length);
       } else {
         toast.error(result.message || t('fetchFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('fetchFailed'));
     } finally {
       setLoading(false);
@@ -216,7 +222,7 @@ export default function PurchaseRequestPage() {
       } else {
         toast.error(result.message || tc('deleteFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(tc('deleteFailed'));
     }
   };
@@ -476,15 +482,39 @@ export default function PurchaseRequestPage() {
                 title="采购申请列表"
                 columns={[
                   { key: 'request_no', label: t('requestNo'), width: 18 },
-                  { key: 'request_date', label: t('requestDate'), width: 12, formatter: (v) => formatDate(v) },
+                  {
+                    key: 'request_date',
+                    label: t('requestDate'),
+                    width: 12,
+                    formatter: (v) => formatDate(v),
+                  },
                   { key: 'request_dept', label: t('requestDept'), width: 12 },
                   { key: 'requester_name', label: t('requester'), width: 12 },
                   { key: 'request_type', label: tc('type'), width: 10 },
-                  { key: 'priority', label: tc('priority'), width: 10, formatter: (v) => priorityMapCN[v] || tc('medium') },
-                  { key: 'total_amount', label: tc('amount'), width: 12, formatter: (v, row) => formatAmount(v, row.currency) },
-                  { key: 'status', label: tc('status'), width: 10, formatter: (v) => statusMapCN[v] || tc('unknown') },
+                  {
+                    key: 'priority',
+                    label: tc('priority'),
+                    width: 10,
+                    formatter: (v) => priorityMapCN[v] || tc('medium'),
+                  },
+                  {
+                    key: 'total_amount',
+                    label: tc('amount'),
+                    width: 12,
+                    formatter: (v, row) => formatAmount(v, row.currency),
+                  },
+                  {
+                    key: 'status',
+                    label: tc('status'),
+                    width: 10,
+                    formatter: (v) => statusMapCN[v] || tc('unknown'),
+                  },
                 ]}
-                data={selectedIds.length > 0 ? requests.filter((r) => selectedIds.includes(r.id)) : sortedRequests}
+                data={
+                  selectedIds.length > 0
+                    ? requests.filter((r) => selectedIds.includes(r.id))
+                    : sortedRequests
+                }
               />
             </div>
           </div>
@@ -556,7 +586,8 @@ export default function PurchaseRequestPage() {
                   onClick={() => handleSort('request_date')}
                 >
                   <span className="inline-flex items-center">
-                    {t('requestDate')}{getSortIcon('request_date')}
+                    {t('requestDate')}
+                    {getSortIcon('request_date')}
                   </span>
                 </TableHead>
                 <TableHead
@@ -564,7 +595,8 @@ export default function PurchaseRequestPage() {
                   onClick={() => handleSort('request_dept')}
                 >
                   <span className="inline-flex items-center">
-                    {t('requestDept')}{getSortIcon('request_dept')}
+                    {t('requestDept')}
+                    {getSortIcon('request_dept')}
                   </span>
                 </TableHead>
                 <TableHead
@@ -572,7 +604,8 @@ export default function PurchaseRequestPage() {
                   onClick={() => handleSort('requester_name')}
                 >
                   <span className="inline-flex items-center">
-                    {t('requester')}{getSortIcon('requester_name')}
+                    {t('requester')}
+                    {getSortIcon('requester_name')}
                   </span>
                 </TableHead>
                 <TableHead
@@ -580,28 +613,36 @@ export default function PurchaseRequestPage() {
                   onClick={() => handleSort('request_type')}
                 >
                   <span className="inline-flex items-center">
-                    {tc('type')}{getSortIcon('request_type')}
+                    {tc('type')}
+                    {getSortIcon('request_type')}
                   </span>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-muted"
                   onClick={() => handleSort('priority')}
                 >
-                  <span className="inline-flex items-center">{tc('priority')}{getSortIcon('priority')}</span>
+                  <span className="inline-flex items-center">
+                    {tc('priority')}
+                    {getSortIcon('priority')}
+                  </span>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-muted"
                   onClick={() => handleSort('total_amount')}
                 >
                   <span className="inline-flex items-center">
-                    {tc('amount')}{getSortIcon('total_amount')}
+                    {tc('amount')}
+                    {getSortIcon('total_amount')}
                   </span>
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none hover:bg-muted"
                   onClick={() => handleSort('status')}
                 >
-                  <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
+                  <span className="inline-flex items-center">
+                    {tc('status')}
+                    {getSortIcon('status')}
+                  </span>
                 </TableHead>
                 <TableHead className="w-[100px]">{tc('actions')}</TableHead>
               </TableRow>
@@ -692,11 +733,15 @@ export default function PurchaseRequestPage() {
                               )}
                               {request.status === 1 && (
                                 <>
-                                  <DropdownMenuItem onClick={() => toast.info(t('approvalInProgress'))}>
+                                  <DropdownMenuItem
+                                    onClick={() => toast.info(t('approvalInProgress'))}
+                                  >
                                     <CheckCircle className="h-4 w-4 mr-2" />
                                     {tc('approve')}
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => toast.info(t('approvalInProgress'))}>
+                                  <DropdownMenuItem
+                                    onClick={() => toast.info(t('approvalInProgress'))}
+                                  >
                                     <XCircle className="h-4 w-4 mr-2" />
                                     {tc('reject')}
                                   </DropdownMenuItem>
@@ -803,7 +848,8 @@ export default function PurchaseRequestPage() {
         {total > pageSize && (
           <div className="flex items-center justify-between mt-4">
             <div className="text-sm text-muted-foreground">
-              {tc('totalRecords', { count: total })}，{tc('pageInfo', { current: page, total: Math.ceil(total / pageSize) })}
+              {tc('totalRecords', { count: total })}，
+              {tc('pageInfo', { current: page, total: Math.ceil(total / pageSize) })}
             </div>
             <div className="flex gap-2">
               <Button

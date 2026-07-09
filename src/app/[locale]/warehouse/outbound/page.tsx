@@ -110,7 +110,6 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
 
-
 // 状态类型
 const statusOptions = [
   {
@@ -160,82 +159,82 @@ const outboundTypeOptions = [
 const materials = [
   {
     id: 1,
-    category: '原材料',
-    name: '厚0.3热缩套管',
+    category: tc('text_cr294'),
+    name: tc('text_48n3vj'),
     code: 'RSG-0.3-32',
     spec: 'Ф32',
     unit: 'M',
-    supplier: '恒翌达',
+    supplier: tc('text_eqf5w'),
     location: 'A01-01',
   },
   {
     id: 2,
-    category: '原材料',
-    name: 'PE管',
+    category: tc('text_cr294'),
+    name: tc('text_2de4'),
     code: 'PE-25',
     spec: '25mm',
     unit: 'M',
-    supplier: '恒翌达',
+    supplier: tc('text_eqf5w'),
     location: 'A01-02',
   },
   {
     id: 3,
-    category: '原材料',
-    name: '厚0.2热缩套管',
+    category: tc('text_cr294'),
+    name: tc('text_496wgw'),
     code: 'RSG-0.2-22',
     spec: 'Ф22',
     unit: 'M',
-    supplier: '恒翌达',
+    supplier: tc('text_eqf5w'),
     location: 'A01-03',
   },
   {
     id: 4,
-    category: '原材料',
-    name: 'PVC绝缘胶带',
+    category: tc('text_cr294'),
+    name: tc('text_oyth1k'),
     code: 'PVC-TAPE-20',
     spec: '20mm*20m',
-    unit: '卷',
-    supplier: '华通材料',
+    unit: tc('text_ghj'),
+    supplier: tc('text_b3v5cl'),
     location: 'A02-01',
   },
   {
     id: 5,
-    category: '原材料',
-    name: '铜芯线',
+    category: tc('text_cr294'),
+    name: tc('text_mfuto'),
     code: 'CU-WIRE-1.5',
     spec: '1.5mm²',
     unit: 'M',
-    supplier: '江南电缆',
+    supplier: tc('text_e0uo21'),
     location: 'A02-02',
   },
   {
     id: 6,
-    category: '原材料',
-    name: '铝箔屏蔽带',
+    category: tc('text_cr294'),
+    name: tc('text_ts9aw1'),
     code: 'AL-FOIL-50',
     spec: '50mm*50m',
-    unit: '卷',
-    supplier: '华通材料',
+    unit: tc('text_ghj'),
+    supplier: tc('text_b3v5cl'),
     location: 'A02-03',
   },
   {
     id: 7,
-    category: '原材料',
-    name: '尼龙扎带',
+    category: tc('text_cr294'),
+    name: tc('text_canmt1'),
     code: 'NYLON-TIE-4',
     spec: '4*200mm',
-    unit: '包',
-    supplier: '恒翌达',
+    unit: tc('text_ged'),
+    supplier: tc('text_eqf5w'),
     location: 'A03-01',
   },
   {
     id: 8,
-    category: '原材料',
-    name: '热熔胶棒',
+    category: tc('text_cr294'),
+    name: tc('text_eq0ieb'),
     code: 'HOT-GLUE-11',
     spec: 'Ф11mm',
     unit: 'KG',
-    supplier: '华通材料',
+    supplier: tc('text_b3v5cl'),
     location: 'A03-02',
   },
 ];
@@ -245,17 +244,17 @@ const initialOutboundRecords: OutboundRecord[] = [
   {
     id: 'CK20250303001',
     date: '2025-03-03',
-    materialName: '厚0.3热缩套管',
+    materialName: tc('text_48n3vj'),
     spec: 'Ф32',
     quantity: 500,
     unit: 'M',
-    warehouse: '原材料仓',
+    warehouse: tc('text_azbdez'),
     location: 'A-01-01',
-    operator: '张三',
+    operator: tc('text_glwp'),
     status: 'completed',
     auditStatus: 'approved',
-    type: '生产出库',
-    remark: '生产车间领用',
+    type: tc('text_f3q2pt'),
+    remark: tc('text_w3u36g'),
     isRawMaterial: true,
     materialCode: 'RSG-0.3-32',
     width: 32,
@@ -264,17 +263,17 @@ const initialOutboundRecords: OutboundRecord[] = [
   {
     id: 'CK20250303002',
     date: '2025-03-03',
-    materialName: 'PE管',
+    materialName: tc('text_2de4'),
     spec: '25',
     quantity: 200,
     unit: 'M',
-    warehouse: '原材料仓',
+    warehouse: tc('text_azbdez'),
     location: 'A-01-02',
-    operator: '张三',
+    operator: tc('text_glwp'),
     status: 'completed',
     auditStatus: 'approved',
-    type: '生产出库',
-    remark: '生产车间领用',
+    type: tc('text_f3q2pt'),
+    remark: tc('text_w3u36g'),
     isRawMaterial: true,
     materialCode: 'PE-25',
     width: 25,
@@ -283,17 +282,17 @@ const initialOutboundRecords: OutboundRecord[] = [
   {
     id: 'CK20250302001',
     date: '2025-03-02',
-    materialName: '厚0.2热缩套管',
+    materialName: tc('text_496wgw'),
     spec: '22',
     quantity: 300,
     unit: 'M',
-    warehouse: '原材料仓',
+    warehouse: tc('text_azbdez'),
     location: 'A-01-03',
-    operator: '李四',
+    operator: tc('text_i1ql'),
     status: 'completed',
     auditStatus: 'approved',
-    type: '销售出库',
-    remark: '客户订单发货',
+    type: tc('text_j5fhqf'),
+    remark: tc('text_1pzp4u'),
     isRawMaterial: true,
     materialCode: 'RSG-0.2-22',
     width: 22,
@@ -302,17 +301,17 @@ const initialOutboundRecords: OutboundRecord[] = [
   {
     id: 'CK20250301001',
     date: '2025-03-01',
-    materialName: '厚0.3热缩套管',
+    materialName: tc('text_48n3vj'),
     spec: 'Ф32',
     quantity: 1000,
     unit: 'M',
-    warehouse: '原材料仓',
+    warehouse: tc('text_azbdez'),
     location: 'A-01-01',
-    operator: '张三',
+    operator: tc('text_glwp'),
     status: 'pending',
     auditStatus: 'draft',
-    type: '生产出库',
-    remark: '月度生产计划领用',
+    type: tc('text_f3q2pt'),
+    remark: tc('text_8x2lo9'),
     isRawMaterial: true,
     materialCode: 'RSG-0.3-32',
     width: 32,
@@ -374,18 +373,21 @@ export default function OutboundManagementPage() {
   const tc = useTranslations('Common');
 
   // 单位选项（支持国际化）
-  const unitOptions = useMemo(() => [
-    { value: 'M', label: t('unitM') },
-    { value: 'KG', label: t('unitKG') },
-    { value: '卷', label: t('unitRoll') },
-    { value: '支', label: t('unitPiece') },
-    { value: '张', label: t('unitSheet') },
-    { value: '桶', label: t('unitBarrel') },
-    { value: '箱', label: t('unitBox') },
-    { value: 'PCS', label: t('unitPCS') },
-    { value: '套', label: t('unitSet') },
-    { value: '件', label: t('unitItem') },
-  ], [t]);
+  const unitOptions = useMemo(
+    () => [
+      { value: 'M', label: t('unitM') },
+      { value: 'KG', label: t('unitKG') },
+      { value: '卷', label: t('unitRoll') },
+      { value: '支', label: t('unitPiece') },
+      { value: '张', label: t('unitSheet') },
+      { value: '桶', label: t('unitBarrel') },
+      { value: '箱', label: t('unitBox') },
+      { value: 'PCS', label: t('unitPCS') },
+      { value: '套', label: t('unitSet') },
+      { value: '件', label: t('unitItem') },
+    ],
+    [t]
+  );
 
   const [activeTab, setActiveTab] = useState('records');
   const [searchQuery, setSearchQuery] = useState('');
@@ -449,10 +451,14 @@ export default function OutboundManagementPage() {
       const result = await response.json();
       if (result.success) {
         setOutboundRecords(result.data?.list || result.data || []);
-        logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '出库单列表获取成功', { count: (result.data?.list || result.data || []).length });
+        logger.info({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '出库单列表获取成功', {
+          count: (result.data?.list || result.data || []).length,
+        });
       }
     } catch (error) {
-      logger.error({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '获取出库单列表失败', { error: (error as Error).message });
+      logger.error({ module: 'Warehouse', action: 'fetchOutboundRecords' }, '获取出库单列表失败', {
+        error: (error as Error).message,
+      });
     }
   }, [searchQuery, statusFilter]);
 
@@ -464,8 +470,7 @@ export default function OutboundManagementPage() {
       if (result.success) {
         setWarehouses(result.data);
       }
-    } catch (error) {
-    }
+    } catch {}
   }, []);
 
   // 获取仓库分类列表
@@ -476,8 +481,7 @@ export default function OutboundManagementPage() {
       if (result.success) {
         setWarehouseCategories(result.data);
       }
-    } catch (error) {
-    }
+    } catch {}
   }, []);
 
   // 初始加载仓库数据
@@ -601,7 +605,7 @@ export default function OutboundManagementPage() {
       } else {
         toast.error(result.message || t('saveFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('saveFailed'));
     }
   };
@@ -656,7 +660,7 @@ export default function OutboundManagementPage() {
       } else {
         toast.error(result.message || t('updateFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('updateFailed'));
     }
   };
@@ -683,7 +687,7 @@ export default function OutboundManagementPage() {
       } else {
         toast.error(result.message || t('deleteFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('deleteFailed'));
     }
     setIsDeleteDialogOpen(false);
@@ -713,12 +717,14 @@ export default function OutboundManagementPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success(currentRecord.auditAction === 'approve' ? t('auditSuccess') : t('unauditSuccess'));
+        toast.success(
+          currentRecord.auditAction === 'approve' ? t('auditSuccess') : t('unauditSuccess')
+        );
         await fetchOutboundRecords();
       } else {
         toast.error(result.message || tc('error'));
       }
-    } catch (error) {
+    } catch {
       toast.error(tc('error'));
     }
     setIsAuditDialogOpen(false);
@@ -751,7 +757,7 @@ export default function OutboundManagementPage() {
       } else {
         toast.error(t('fifoFetchFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('fifoFetchFailed'));
     }
     setFifoLoading(false);
@@ -781,7 +787,7 @@ export default function OutboundManagementPage() {
       } else {
         toast.error(result.message || t('fifoConfirmFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('fifoConfirmFailed'));
     }
     setFifoConfirming(false);
@@ -828,12 +834,19 @@ export default function OutboundManagementPage() {
           className="flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#1677ff' }}>
+            <div
+              className="w-10 h-10 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: '#1677ff' }}
+            >
               <ArrowUpRight className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold" style={{ color: '#1f2329' }}>{t('outboundManagement')}</h1>
-              <p className="text-sm" style={{ color: '#86909c' }}>{t('outboundDesc')}</p>
+              <h1 className="text-lg font-semibold" style={{ color: '#1f2329' }}>
+                {t('outboundManagement')}
+              </h1>
+              <p className="text-sm" style={{ color: '#86909c' }}>
+                {t('outboundDesc')}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -844,22 +857,46 @@ export default function OutboundManagementPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
           className="flex flex-wrap items-center gap-3 rounded-lg p-4 border"
-          style={{ backgroundColor: '#ffffff', borderColor: '#eeeeee', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+          style={{
+            backgroundColor: '#ffffff',
+            borderColor: '#eeeeee',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          }}
         >
-          <Button onClick={handleAdd} className="gap-2" style={{ backgroundColor: '#1677ff', borderColor: '#1677ff' }}>
+          <Button
+            onClick={handleAdd}
+            className="gap-2"
+            style={{ backgroundColor: '#1677ff', borderColor: '#1677ff' }}
+          >
             <Plus className="w-4 h-4" />
             {tc('add')}
           </Button>
-          <Button onClick={handlePrint} variant="outline" className="gap-2" style={{ color: '#4e5969', borderColor: '#dcdfe6' }}>
+          <Button
+            onClick={handlePrint}
+            variant="outline"
+            className="gap-2"
+            style={{ color: '#4e5969', borderColor: '#dcdfe6' }}
+          >
             <Printer className="w-4 h-4" />
             {tc('print')}
           </Button>
           <div className="w-px h-8 mx-2" style={{ backgroundColor: '#eeeeee' }} />
-          <Button onClick={handleRefresh} variant="outline" className="gap-2" disabled={isLoading} style={{ color: '#4e5969', borderColor: '#dcdfe6' }}>
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            className="gap-2"
+            disabled={isLoading}
+            style={{ color: '#4e5969', borderColor: '#dcdfe6' }}
+          >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             {t('refresh')}
           </Button>
-          <Button onClick={handleReset} variant="outline" className="gap-2" style={{ color: '#4e5969', borderColor: '#dcdfe6' }}>
+          <Button
+            onClick={handleReset}
+            variant="outline"
+            className="gap-2"
+            style={{ color: '#4e5969', borderColor: '#dcdfe6' }}
+          >
             <RotateCcw className="w-4 h-4" />
             {t('reset')}
           </Button>
@@ -871,11 +908,17 @@ export default function OutboundManagementPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="flex flex-wrap items-center gap-4 rounded-lg p-4 border"
-          style={{ backgroundColor: '#ffffff', borderColor: '#eeeeee', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+          style={{
+            backgroundColor: '#ffffff',
+            borderColor: '#eeeeee',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          }}
         >
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4" style={{ color: '#86909c' }} />
-            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>{t('statusFilter')}：</span>
+            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>
+              {t('statusFilter')}：
+            </span>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder={t('selectStatus')} />
@@ -892,7 +935,9 @@ export default function OutboundManagementPage() {
 
           <div className="flex items-center gap-2">
             <Search className="w-4 h-4" style={{ color: '#86909c' }} />
-            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>{tc('keyword')}：</span>
+            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>
+              {tc('keyword')}：
+            </span>
             <Input
               placeholder={t('searchPlaceholder')}
               value={searchQuery}
@@ -903,13 +948,15 @@ export default function OutboundManagementPage() {
 
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4" style={{ color: '#86909c' }} />
-            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>{tc('time')}：</span>
+            <span className="text-sm font-medium" style={{ color: '#4e5969' }}>
+              {tc('time')}：
+            </span>
             <Select value={dateRange} onValueChange={setDateRange}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder={t('timeRange')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{tc("all")}</SelectItem>
+                <SelectItem value="all">{tc('all')}</SelectItem>
                 <SelectItem value="today">{tc('today')}</SelectItem>
                 <SelectItem value="week">{tc('thisWeek')}</SelectItem>
                 <SelectItem value="month">{tc('thisMonth')}</SelectItem>
@@ -931,17 +978,31 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="border rounded-lg" style={{ borderColor: '#eeeeee', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            <Card
+              className="border rounded-lg"
+              style={{
+                borderColor: '#eeeeee',
+                backgroundColor: '#ffffff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              }}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm" style={{ color: '#86909c' }}>{t('todayOutbound')}</p>
+                    <p className="text-sm" style={{ color: '#86909c' }}>
+                      {t('todayOutbound')}
+                    </p>
                     <p className="text-xl font-semibold mt-1" style={{ color: '#1677ff' }}>
                       {totalOutboundToday.toLocaleString()}
                     </p>
-                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>{t('unitPiecesM')}</p>
+                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>
+                      {t('unitPiecesM')}
+                    </p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f5f7fa' }}>
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: '#f5f7fa' }}
+                  >
                     <TrendingDown className="w-5 h-5" style={{ color: '#1677ff' }} />
                   </div>
                 </div>
@@ -954,17 +1015,31 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="border rounded-lg" style={{ borderColor: '#eeeeee', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            <Card
+              className="border rounded-lg"
+              style={{
+                borderColor: '#eeeeee',
+                backgroundColor: '#ffffff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              }}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm" style={{ color: '#86909c' }}>{t('monthOutboundTotal')}</p>
+                    <p className="text-sm" style={{ color: '#86909c' }}>
+                      {t('monthOutboundTotal')}
+                    </p>
                     <p className="text-xl font-semibold mt-1" style={{ color: '#52c41a' }}>
                       {totalOutboundMonth.toLocaleString()}
                     </p>
-                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>{t('unitPiecesM')}</p>
+                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>
+                      {t('unitPiecesM')}
+                    </p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f5f7fa' }}>
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: '#f5f7fa' }}
+                  >
                     <Boxes className="w-5 h-5" style={{ color: '#52c41a' }} />
                   </div>
                 </div>
@@ -977,11 +1052,20 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="border rounded-lg" style={{ borderColor: '#eeeeee', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            <Card
+              className="border rounded-lg"
+              style={{
+                borderColor: '#eeeeee',
+                backgroundColor: '#ffffff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              }}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm" style={{ color: '#86909c' }}>{tc("pending")}</p>
+                    <p className="text-sm" style={{ color: '#86909c' }}>
+                      {tc('pending')}
+                    </p>
                     <p className="text-xl font-semibold mt-1" style={{ color: '#faad14' }}>
                       {
                         outboundRecords.filter(
@@ -989,9 +1073,14 @@ export default function OutboundManagementPage() {
                         ).length
                       }
                     </p>
-                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>{t('pendingCount')}</p>
+                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>
+                      {t('pendingCount')}
+                    </p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f5f7fa' }}>
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: '#f5f7fa' }}
+                  >
                     <Clock className="w-5 h-5" style={{ color: '#faad14' }} />
                   </div>
                 </div>
@@ -1004,17 +1093,31 @@ export default function OutboundManagementPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="border rounded-lg" style={{ borderColor: '#eeeeee', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            <Card
+              className="border rounded-lg"
+              style={{
+                borderColor: '#eeeeee',
+                backgroundColor: '#ffffff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              }}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm" style={{ color: '#86909c' }}>{t('outboundTotal')}</p>
+                    <p className="text-sm" style={{ color: '#86909c' }}>
+                      {t('outboundTotal')}
+                    </p>
                     <p className="text-xl font-semibold mt-1" style={{ color: '#1f2329' }}>
                       {outboundRecords.length}
                     </p>
-                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>{t('monthTotal')}</p>
+                    <p className="text-xs mt-1" style={{ color: '#86909c' }}>
+                      {t('monthTotal')}
+                    </p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#f5f7fa' }}>
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: '#f5f7fa' }}
+                  >
                     <FileText className="w-5 h-5" style={{ color: '#4e5969' }} />
                   </div>
                 </div>
@@ -1029,9 +1132,21 @@ export default function OutboundManagementPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="border rounded-lg" style={{ borderColor: '#eeeeee', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-            <CardHeader className="flex flex-row items-center justify-between border-b" style={{ borderColor: '#eeeeee' }}>
-              <CardTitle className="text-base font-semibold" style={{ color: '#1f2329' }}>{t('outboundRecords')}</CardTitle>
+          <Card
+            className="border rounded-lg"
+            style={{
+              borderColor: '#eeeeee',
+              backgroundColor: '#ffffff',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            }}
+          >
+            <CardHeader
+              className="flex flex-row items-center justify-between border-b"
+              style={{ borderColor: '#eeeeee' }}
+            >
+              <CardTitle className="text-base font-semibold" style={{ color: '#1f2329' }}>
+                {t('outboundRecords')}
+              </CardTitle>
               <div className="flex items-center gap-2">
                 <span className="text-sm" style={{ color: '#86909c' }}>
                   {t('totalRecordsCount', { count: filteredRecords.length })}
@@ -1053,17 +1168,17 @@ export default function OutboundManagementPage() {
                         />
                       </TableHead>
                       <TableHead>{t('outboundNo')}</TableHead>
-                      <TableHead>{tc("date")}</TableHead>
-                      <TableHead>{tc("materialName")}</TableHead>
-                      <TableHead>{tc("specification")}</TableHead>
-                      <TableHead>{tc("quantity")}</TableHead>
-                      <TableHead>{tc("unit")}</TableHead>
-                      <TableHead>{tc("warehouse")}</TableHead>
-                      <TableHead>{tc("batchNo")}</TableHead>
-                      <TableHead>{tc("type")}</TableHead>
-                      <TableHead>{tc("status")}</TableHead>
+                      <TableHead>{tc('date')}</TableHead>
+                      <TableHead>{tc('materialName')}</TableHead>
+                      <TableHead>{tc('specification')}</TableHead>
+                      <TableHead>{tc('quantity')}</TableHead>
+                      <TableHead>{tc('unit')}</TableHead>
+                      <TableHead>{tc('warehouse')}</TableHead>
+                      <TableHead>{tc('batchNo')}</TableHead>
+                      <TableHead>{tc('type')}</TableHead>
+                      <TableHead>{tc('status')}</TableHead>
                       <TableHead>{t('operator')}</TableHead>
-                      <TableHead className="text-right">{tc("actions")}</TableHead>
+                      <TableHead className="text-right">{tc('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1101,7 +1216,10 @@ export default function OutboundManagementPage() {
                           <TableCell>
                             <div className="flex items-center gap-1">
                               <StatusIcon className="w-4 h-4" />
-                              <span>{tc(statusConfig[record.status]?.labelKey || 'unknown') || record.status}</span>
+                              <span>
+                                {tc(statusConfig[record.status]?.labelKey || 'unknown') ||
+                                  record.status}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell>{record.operator}</TableCell>
@@ -1148,10 +1266,15 @@ export default function OutboundManagementPage() {
               </div>
               {filteredRecords.length === 0 && (
                 <div className="text-center py-12">
-                  <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: '#f5f7fa' }}>
+                  <div
+                    className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                    style={{ backgroundColor: '#f5f7fa' }}
+                  >
                     <List className="w-8 h-8" style={{ color: '#86909c' }} />
                   </div>
-                  <p className="text-sm" style={{ color: '#86909c' }}>{t('noOutboundRecords')}</p>
+                  <p className="text-sm" style={{ color: '#86909c' }}>
+                    {t('noOutboundRecords')}
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -1173,7 +1296,7 @@ export default function OutboundManagementPage() {
                 id="materialName"
                 value={formData.materialName}
                 onChange={(e) => setFormData({ ...formData, materialName: e.target.value })}
-                placeholder={tc("enterMaterialName")}
+                placeholder={tc('enterMaterialName')}
               />
             </div>
             <div className="space-y-2">
@@ -1182,11 +1305,11 @@ export default function OutboundManagementPage() {
                 id="materialCode"
                 value={formData.materialCode}
                 onChange={(e) => setFormData({ ...formData, materialCode: e.target.value })}
-                placeholder={tc("enterMaterialCode")}
+                placeholder={tc('enterMaterialCode')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="specification">{tc("specification")}</Label>
+              <Label htmlFor="specification">{tc('specification')}</Label>
               <Input
                 id="specification"
                 value={formData.specification}
@@ -1220,7 +1343,7 @@ export default function OutboundManagementPage() {
                 type="number"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                placeholder={tc("enterQuantity")}
+                placeholder={tc('enterQuantity')}
               />
             </div>
             <div className="space-y-2">
@@ -1278,12 +1401,12 @@ export default function OutboundManagementPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="remark">{tc("remark")}</Label>
+              <Label htmlFor="remark">{tc('remark')}</Label>
               <Input
                 id="remark"
                 value={formData.remark}
                 onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                placeholder={tc("enterRemark")}
+                placeholder={tc('enterRemark')}
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -1322,7 +1445,7 @@ export default function OutboundManagementPage() {
                 id="materialName"
                 value={formData.materialName}
                 onChange={(e) => setFormData({ ...formData, materialName: e.target.value })}
-                placeholder={tc("enterMaterialName")}
+                placeholder={tc('enterMaterialName')}
               />
             </div>
             <div className="space-y-2">
@@ -1331,11 +1454,11 @@ export default function OutboundManagementPage() {
                 id="materialCode"
                 value={formData.materialCode}
                 onChange={(e) => setFormData({ ...formData, materialCode: e.target.value })}
-                placeholder={tc("enterMaterialCode")}
+                placeholder={tc('enterMaterialCode')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="specification">{tc("specification")}</Label>
+              <Label htmlFor="specification">{tc('specification')}</Label>
               <Input
                 id="specification"
                 value={formData.specification}
@@ -1369,7 +1492,7 @@ export default function OutboundManagementPage() {
                 type="number"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                placeholder={tc("enterQuantity")}
+                placeholder={tc('enterQuantity')}
               />
             </div>
             <div className="space-y-2">
@@ -1427,12 +1550,12 @@ export default function OutboundManagementPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="remark">{tc("remark")}</Label>
+              <Label htmlFor="remark">{tc('remark')}</Label>
               <Input
                 id="remark"
                 value={formData.remark}
                 onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                placeholder={tc("enterRemark")}
+                placeholder={tc('enterRemark')}
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -1450,7 +1573,10 @@ export default function OutboundManagementPage() {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               {tc('cancel')}
             </Button>
-            <Button onClick={handleUpdate} style={{ backgroundColor: '#1677ff', borderColor: '#1677ff' }}>
+            <Button
+              onClick={handleUpdate}
+              style={{ backgroundColor: '#1677ff', borderColor: '#1677ff' }}
+            >
               {tc('update')}
             </Button>
           </DialogFooter>
@@ -1482,7 +1608,9 @@ export default function OutboundManagementPage() {
         <DialogContent className="sm:max-w-[650px]" resizable>
           <DialogHeader>
             <DialogTitle>
-              {currentRecord?.auditAction === 'approve' ? t('auditOutboundOrder') : t('unauditOutboundOrder')}
+              {currentRecord?.auditAction === 'approve'
+                ? t('auditOutboundOrder')
+                : t('unauditOutboundOrder')}
             </DialogTitle>
             <DialogDescription>
               {currentRecord?.auditAction === 'approve'
@@ -1517,27 +1645,37 @@ export default function OutboundManagementPage() {
               {t('fifoAllocationTitle')}
             </DialogTitle>
             <DialogDescription>
-              {t('fifoAllocationDesc', { id: currentRecord?.id, materialName: currentRecord?.materialName, quantity: currentRecord?.quantity || currentRecord?.qty })}
+              {t('fifoAllocationDesc', {
+                id: currentRecord?.id,
+                materialName: currentRecord?.materialName,
+                quantity: currentRecord?.quantity || currentRecord?.qty,
+              })}
             </DialogDescription>
           </DialogHeader>
 
           {fifoLoading ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
-              <span className="ml-3" style={{ color: '#86909c' }}>{t('calculatingFifo')}</span>
+              <span className="ml-3" style={{ color: '#86909c' }}>
+                {t('calculatingFifo')}
+              </span>
             </div>
           ) : fifoAllocation ? (
             <div className="space-y-4">
               {/* 汇总信息 */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-blue-50 rounded-lg p-3 text-center">
-                  <p className="text-xs" style={{ color: '#1677ff' }}>{t('requiredOutbound')}</p>
+                  <p className="text-xs" style={{ color: '#1677ff' }}>
+                    {t('requiredOutbound')}
+                  </p>
                   <p className="text-xl font-bold text-blue-700">
                     {fifoAllocation.required_qty || currentRecord?.quantity || currentRecord?.qty}
                   </p>
                 </div>
                 <div className="bg-green-50 rounded-lg p-3 text-center">
-                  <p className="text-xs" style={{ color: '#52c41a' }}>{t('availableStock')}</p>
+                  <p className="text-xs" style={{ color: '#52c41a' }}>
+                    {t('availableStock')}
+                  </p>
                   <p className="text-xl font-bold text-green-700">
                     {fifoAllocation.total_available?.toFixed(3) || '0'}
                   </p>
@@ -1553,7 +1691,9 @@ export default function OutboundManagementPage() {
                   <p
                     className={`text-xl font-bold ${fifoAllocation.shortage > 0 ? 'text-red-700' : 'text-emerald-700'}`}
                   >
-                    {fifoAllocation.shortage > 0 ? fifoAllocation.shortage.toFixed(3) : t('sufficient')}
+                    {fifoAllocation.shortage > 0
+                      ? fifoAllocation.shortage.toFixed(3)
+                      : t('sufficient')}
                   </p>
                 </div>
               </div>
@@ -1577,12 +1717,24 @@ export default function OutboundManagementPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">{tc("batchNo")}</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">{t('inboundDate')}</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">{t('availableQty')}</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">{t('allocatedQty')}</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">{t('unitPrice')}</TableHead>
-                          <TableHead className="bg-slate-50 dark:bg-slate-800">{t('allocatedAmount')}</TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">
+                            {tc('batchNo')}
+                          </TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">
+                            {t('inboundDate')}
+                          </TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">
+                            {t('availableQty')}
+                          </TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">
+                            {t('allocatedQty')}
+                          </TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">
+                            {t('unitPrice')}
+                          </TableHead>
+                          <TableHead className="bg-slate-50 dark:bg-slate-800">
+                            {t('allocatedAmount')}
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1618,16 +1770,24 @@ export default function OutboundManagementPage() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">{tc("batchNo")}</TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">
+                              {tc('batchNo')}
+                            </TableHead>
                             <TableHead className="bg-slate-50 dark:bg-slate-800">
                               {t('inboundDate')}
                             </TableHead>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">{tc("totalQuantity")}</TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">
+                              {tc('totalQuantity')}
+                            </TableHead>
                             <TableHead className="bg-slate-50 dark:bg-slate-800">
                               {t('availableQty')}
                             </TableHead>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">{t('unitPrice')}</TableHead>
-                            <TableHead className="bg-slate-50 dark:bg-slate-800">{tc("status")}</TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">
+                              {t('unitPrice')}
+                            </TableHead>
+                            <TableHead className="bg-slate-50 dark:bg-slate-800">
+                              {tc('status')}
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1662,13 +1822,17 @@ export default function OutboundManagementPage() {
                   <div className="text-center py-8">
                     <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
                     <p style={{ color: '#4e5969' }}>{t('noAvailableBatch')}</p>
-                    <p className="text-sm mt-1" style={{ color: '#86909c' }}>{t('pleaseInboundFirst')}</p>
+                    <p className="text-sm mt-1" style={{ color: '#86909c' }}>
+                      {t('pleaseInboundFirst')}
+                    </p>
                   </div>
                 )}
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-sm" style={{ color: '#86909c' }}>{t('cannotGetAllocation')}</p>
+              <p className="text-sm" style={{ color: '#86909c' }}>
+                {t('cannotGetAllocation')}
+              </p>
             </div>
           )}
 

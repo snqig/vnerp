@@ -3,7 +3,7 @@ import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
 // 创建产品管理相关表
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const results: string[] = [];
 

@@ -5,7 +5,7 @@ import { withPermission } from '@/lib/api-permissions';
 
 // POST /api/sales/delivery/[id]/ship - 扫码发货（符合设计文档 5.2 节）
 export const POST = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (request: NextRequest, _userInfo) => {
     // withPermission不转发context.params，从URL路径提取动态路由参数
     const shipmentId = parseInt(new URL(request.url).pathname.split('/')[4]);
     const body = await request.json();

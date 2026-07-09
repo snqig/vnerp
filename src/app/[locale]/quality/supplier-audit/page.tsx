@@ -121,8 +121,7 @@ export default function SupplierAuditPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -149,7 +148,7 @@ export default function SupplierAuditPage() {
       } else {
         toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -163,7 +162,7 @@ export default function SupplierAuditPage() {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -235,7 +234,11 @@ export default function SupplierAuditPage() {
                   { key: 'total_score', label: t('totalScore'), width: 10 },
                   { key: 'audit_result', label: tc('result'), width: 12 },
                 ]}
-                data={selectedIds.length > 0 ? sortedData.filter((i) => i.id && selectedIds.includes(i.id)) : sortedData}
+                data={
+                  selectedIds.length > 0
+                    ? sortedData.filter((i) => i.id && selectedIds.includes(i.id))
+                    : sortedData
+                }
               />
             </div>
 
@@ -363,7 +366,9 @@ export default function SupplierAuditPage() {
             </Table>
 
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-muted-foreground">{tc('totalRecords', { count: total })}</span>
+              <span className="text-sm text-muted-foreground">
+                {tc('totalRecords', { count: total })}
+              </span>
               <div className="flex gap-2">
                 <Button
                   variant="outline"

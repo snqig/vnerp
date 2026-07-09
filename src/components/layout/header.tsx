@@ -51,6 +51,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
 
+/* eslint-disable @next/next/no-img-element */
+
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Home,
   LayoutDashboard,
@@ -125,8 +127,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
         if (translated && translated !== menu.code && translated.trim() !== '') {
           return translated;
         }
-      } catch {
-      }
+      } catch {}
     }
     return menu.name;
   };
@@ -172,13 +173,18 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
           title: n.notice_title,
           content: n.notice_content || '',
           time: n.create_time ? new Date(n.create_time).toLocaleString('zh-CN') : '',
-          type: n.notice_type === 1 ? ts('notice') : n.notice_type === 2 ? ts('announcement') : tc('all'),
+          type:
+            n.notice_type === 1
+              ? ts('notice')
+              : n.notice_type === 2
+                ? ts('announcement')
+                : tc('all'),
           read: false,
         }));
         setNotifications(items);
         setUnreadCount(items.length);
       }
-    } catch (e) {
+    } catch {
       setNotifications([
         {
           id: 1,
@@ -205,8 +211,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
         });
       } else {
       }
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -352,7 +357,8 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
               className="text-center text-primary justify-center"
               onClick={handleViewAllNotifications}
             >
-              {tc('view')}{ts('notice')}
+              {tc('view')}
+              {ts('notice')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

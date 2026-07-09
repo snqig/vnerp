@@ -49,32 +49,128 @@ interface ConfigItem {
 
 // 配置分组定义
 const configGroups = [
-  { key: 'inventory', label: '库存管理', icon: '📦' },
-  { key: 'order', label: '订单管理', icon: '📋' },
-  { key: 'purchase', label: '采购管理', icon: '🛒' },
-  { key: 'finance', label: '财务管理', icon: '💰' },
-  { key: 'system', label: '系统设置', icon: '⚙️' },
-  { key: 'other', label: '其他', icon: '📝' },
+  { key: 'inventory', label: tc('text_cbemwa'), icon: '📦' },
+  { key: 'order', label: tc('text_hytrqw'), icon: '📋' },
+  { key: 'purchase', label: tc('text_iz76ff'), icon: '🛒' },
+  { key: 'finance', label: tc('text_i5j98k'), icon: '💰' },
+  { key: 'system', label: tc('text_gar1ro'), icon: '⚙️' },
+  { key: 'other', label: tc('text_eae8'), icon: '📝' },
 ];
 
 // 常用配置预设
 const presetConfigs: Partial<ConfigItem>[] = [
-  { config_name: '允许负库存', config_key: 'inventory.allow_negative', config_value: 'false', config_type: 2, description: '是否允许库存数量为负数' },
-  { config_name: '库存预警阈值', config_key: 'inventory.alert_threshold', config_value: '10', config_type: 1, description: '低于此数量触发库存预警' },
-  { config_name: '库存盘点差异审批', config_key: 'inventory.stocktake_approval', config_value: 'true', config_type: 2, description: '盘点差异是否需要审批' },
-  { config_name: '订单号前缀', config_key: 'order.prefix', config_value: 'ORD', config_type: 1, description: '销售订单号前缀' },
-  { config_name: '采购单号前缀', config_key: 'purchase.prefix', config_value: 'PO', config_type: 1, description: '采购订单号前缀' },
-  { config_name: '入库单号前缀', config_key: 'inbound.prefix', config_value: 'INB', config_type: 1, description: '入库单号前缀' },
-  { config_name: '出库单号前缀', config_key: 'outbound.prefix', config_value: 'OTB', config_type: 1, description: '出库单号前缀' },
-  { config_name: '默认付款期限（天）', config_key: 'finance.payment_terms_days', config_value: '30', config_type: 1, description: '默认付款期限天数' },
-  { config_name: '税率（%）', config_key: 'finance.tax_rate', config_value: '13', config_type: 1, description: '默认增值税税率' },
-  { config_name: '密码最小长度', config_key: 'system.password_min_length', config_value: '6', config_type: 1, description: '用户密码最小长度要求' },
-  { config_name: '登录失败锁定次数', config_key: 'system.login_fail_lock_count', config_value: '5', config_type: 1, description: '连续登录失败多少次后锁定账号' },
-  { config_name: '登录锁定时间（分钟）', config_key: 'system.login_lock_minutes', config_value: '30', config_type: 1, description: '账号锁定持续时间' },
-  { config_name: '密码过期天数', config_key: 'system.password_expire_days', config_value: '90', config_type: 1, description: '0表示永不过期' },
-  { config_name: '初始密码强制修改', config_key: 'system.force_change_password', config_value: 'true', config_type: 2, description: '首次登录是否强制修改密码' },
-  { config_name: '操作日志保留天数', config_key: 'system.log_retention_days', config_value: '180', config_type: 1, description: '操作日志保留天数，0表示永久保留' },
-  { config_name: '会话超时（分钟）', config_key: 'system.session_timeout', config_value: '120', config_type: 1, description: '用户会话超时时间' },
+  {
+    config_name: tc('text_j8sepf'),
+    config_key: 'inventory.allow_negative',
+    config_value: 'false',
+    config_type: 2,
+    description: tc('text_n12udj'),
+  },
+  {
+    config_name: tc('text_lwsuh1'),
+    config_key: 'inventory.alert_threshold',
+    config_value: '10',
+    config_type: 1,
+    description: tc('text_6n71u3'),
+  },
+  {
+    config_name: tc('text_xafmum'),
+    config_key: 'inventory.stocktake_approval',
+    config_value: 'true',
+    config_type: 2,
+    description: tc('text_v6z5x7'),
+  },
+  {
+    config_name: tc('text_bf7qdl'),
+    config_key: 'order.prefix',
+    config_value: 'ORD',
+    config_type: 1,
+    description: tc('text_dsudl5'),
+  },
+  {
+    config_name: tc('text_mikvc5'),
+    config_key: 'purchase.prefix',
+    config_value: 'PO',
+    config_type: 1,
+    description: tc('text_j9uhwx'),
+  },
+  {
+    config_name: tc('text_hywycj'),
+    config_key: 'inbound.prefix',
+    config_value: 'INB',
+    config_type: 1,
+    description: tc('text_hywycj'),
+  },
+  {
+    config_name: tc('text_hhil4e'),
+    config_key: 'outbound.prefix',
+    config_value: 'OTB',
+    config_type: 1,
+    description: tc('text_hhil4e'),
+  },
+  {
+    config_name: tc('text_7tq0ez'),
+    config_key: 'finance.payment_terms_days',
+    config_value: '30',
+    config_type: 1,
+    description: tc('text_b6keay'),
+  },
+  {
+    config_name: tc('text_4dide5'),
+    config_key: 'finance.tax_rate',
+    config_value: '13',
+    config_type: 1,
+    description: tc('text_35vfj1'),
+  },
+  {
+    config_name: tc('text_scr9ox'),
+    config_key: 'system.password_min_length',
+    config_value: '6',
+    config_type: 1,
+    description: tc('text_skskn5'),
+  },
+  {
+    config_name: tc('text_42f9l6'),
+    config_key: 'system.login_fail_lock_count',
+    config_value: '5',
+    config_type: 1,
+    description: tc('text_ac40x7'),
+  },
+  {
+    config_name: tc('text_mweypz'),
+    config_key: 'system.login_lock_minutes',
+    config_value: '30',
+    config_type: 1,
+    description: tc('text_r6o6y4'),
+  },
+  {
+    config_name: tc('text_xj8xlm'),
+    config_key: 'system.password_expire_days',
+    config_value: '90',
+    config_type: 1,
+    description: tc('text_vigai9'),
+  },
+  {
+    config_name: tc('text_j0i1zk'),
+    config_key: 'system.force_change_password',
+    config_value: 'true',
+    config_type: 2,
+    description: tc('text_nkt7he'),
+  },
+  {
+    config_name: tc('text_zb9d6k'),
+    config_key: 'system.log_retention_days',
+    config_value: '180',
+    config_type: 1,
+    description: tc('text_69kt43'),
+  },
+  {
+    config_name: tc('text_joipek'),
+    config_key: 'system.session_timeout',
+    config_value: '120',
+    config_type: 1,
+    description: tc('text_tq7y8v'),
+  },
 ];
 
 function getConfigGroup(key: string): string {
@@ -113,8 +209,7 @@ export default function ConfigPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, [page, searchName]);
 
   useEffect(() => {
@@ -142,7 +237,7 @@ export default function ConfigPage() {
       } else {
         toast({ title: result.message || '操作失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '操作失败', variant: 'destructive' });
     }
   };
@@ -156,7 +251,7 @@ export default function ConfigPage() {
         toast({ title: '删除成功' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '删除失败', variant: 'destructive' });
     }
   };
@@ -174,8 +269,7 @@ export default function ConfigPage() {
           });
           const result = await res.json();
           if (result.success) created++;
-        } catch (e) {
-        }
+        } catch {}
       }
     }
     toast({ title: `初始化完成，新增 ${created} 条配置` });
@@ -195,13 +289,23 @@ export default function ConfigPage() {
   };
 
   // 按分组过滤
-  const filteredList = activeGroup === 'all'
-    ? list
-    : list.filter((item) => getConfigGroup(item.config_key) === activeGroup);
+  const filteredList =
+    activeGroup === 'all'
+      ? list
+      : list.filter((item) => getConfigGroup(item.config_key) === activeGroup);
 
   const getTypeBadge = (type: number) => {
-    if (type === 2) return <Badge variant="secondary" className="text-xs">{tc("boolean")}</Badge>;
-    return <Badge variant="outline" className="text-xs">{tc("text")}</Badge>;
+    if (type === 2)
+      return (
+        <Badge variant="secondary" className="text-xs">
+          {tc('boolean')}
+        </Badge>
+      );
+    return (
+      <Badge variant="outline" className="text-xs">
+        {tc('text')}
+      </Badge>
+    );
   };
 
   const renderValueInput = () => {
@@ -210,9 +314,11 @@ export default function ConfigPage() {
         <div className="flex items-center gap-3">
           <Switch
             checked={form.config_value === 'true'}
-            onCheckedChange={(checked) => setForm({ ...form, config_value: checked ? 'true' : 'false' })}
+            onCheckedChange={(checked) =>
+              setForm({ ...form, config_value: checked ? 'true' : 'false' })
+            }
           />
-          <span className="text-sm">{form.config_value === 'true' ? tc("yes") : tc("no")}</span>
+          <span className="text-sm">{form.config_value === 'true' ? tc('yes') : tc('no')}</span>
         </div>
       );
     }
@@ -220,7 +326,7 @@ export default function ConfigPage() {
       <Input
         value={form.config_value || ''}
         onChange={(e) => setForm({ ...form, config_value: e.target.value })}
-        placeholder={tc("enterParamValue")}
+        placeholder={tc('enterParamValue')}
       />
     );
   };
@@ -232,13 +338,13 @@ export default function ConfigPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Settings className="w-6 h-6" />
-              {t("systemConfigCenter")}
+              {t('systemConfigCenter')}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">{tc("systemConfigDesc")}</p>
+            <p className="text-sm text-muted-foreground mt-1">{tc('systemConfigDesc')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Input
-              placeholder={tc("searchParamPlaceholder")}
+              placeholder={tc('searchParamPlaceholder')}
               value={searchName}
               onChange={(e) => setSearchName(e.target.value)}
               className="w-48 h-8 text-sm"
@@ -248,21 +354,21 @@ export default function ConfigPage() {
               <Search className="h-3 w-3" />
             </Button>
             <Button size="sm" variant="outline" onClick={handleInitPresets}>
-              {t("initPresets")}
+              {t('initPresets')}
             </Button>
             <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={openAddDialog}>
               <Plus className="h-3 w-3 mr-1" />
-              {t("add")}
+              {t('add')}
             </Button>
           </div>
         </div>
 
         <Tabs value={activeGroup} onValueChange={setActiveGroup}>
           <TabsList>
-            <TabsTrigger value="all">{tc("all")}</TabsTrigger>
+            <TabsTrigger value="all">{tc('all')}</TabsTrigger>
             {configGroups.map((group) => (
               <TabsTrigger key={group.key} value={group.key} className="text-xs">
-                {group.icon} {tc("configGroup_" + group.key)}
+                {group.icon} {tc('configGroup_' + group.key)}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -273,23 +379,28 @@ export default function ConfigPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">{tc("paramName")}</TableHead>
-                      <TableHead className="text-xs">{tc("paramKey")}</TableHead>
-                      <TableHead className="text-xs">{tc("paramValue")}</TableHead>
-                      <TableHead className="text-xs">{tc("type")}</TableHead>
-                      <TableHead className="text-xs">{tc("description")}</TableHead>
-                      <TableHead className="text-xs text-right">{tc("actions")}</TableHead>
+                      <TableHead className="text-xs">{tc('paramName')}</TableHead>
+                      <TableHead className="text-xs">{tc('paramKey')}</TableHead>
+                      <TableHead className="text-xs">{tc('paramValue')}</TableHead>
+                      <TableHead className="text-xs">{tc('type')}</TableHead>
+                      <TableHead className="text-xs">{tc('description')}</TableHead>
+                      <TableHead className="text-xs text-right">{tc('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredList.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="text-sm font-medium">{item.config_name}</TableCell>
-                        <TableCell className="text-xs font-mono text-muted-foreground">{item.config_key}</TableCell>
+                        <TableCell className="text-xs font-mono text-muted-foreground">
+                          {item.config_key}
+                        </TableCell>
                         <TableCell className="text-sm font-mono">
                           {item.config_type === 2 ? (
-                            <Badge variant={item.config_value === 'true' ? 'default' : 'secondary'} className="text-xs">
-                              {item.config_value === 'true' ? tc("enabled") : tc("disabled")}
+                            <Badge
+                              variant={item.config_value === 'true' ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {item.config_value === 'true' ? tc('enabled') : tc('disabled')}
                             </Badge>
                           ) : (
                             item.config_value
@@ -301,10 +412,20 @@ export default function ConfigPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditDialog(item)}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0"
+                              onClick={() => openEditDialog(item)}
+                            >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600" onClick={() => handleDelete(item.id)}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-red-600"
+                              onClick={() => handleDelete(item.id)}
+                            >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
@@ -314,7 +435,7 @@ export default function ConfigPage() {
                     {filteredList.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                          {tc("noConfigItems")}
+                          {tc('noConfigItems')}
                         </TableCell>
                       </TableRow>
                     )}
@@ -326,13 +447,25 @@ export default function ConfigPage() {
         </Tabs>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{tc("totalItems", { count: filteredList.length })}</span>
+          <span className="text-sm text-muted-foreground">
+            {tc('totalItems', { count: filteredList.length })}
+          </span>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-              {tc("prevPage")}
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              {tc('prevPage')}
             </Button>
-            <Button size="sm" variant="outline" disabled={page * 50 >= total} onClick={() => setPage((p) => p + 1)}>
-              {tc("nextPage")}
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page * 50 >= total}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
@@ -342,60 +475,74 @@ export default function ConfigPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing ? t("editConfig") : t("addConfig")}</DialogTitle>
-            <DialogDescription>{editing ? tc("editConfigDesc") : tc("addConfigDesc")}</DialogDescription>
+            <DialogTitle>{editing ? t('editConfig') : t('addConfig')}</DialogTitle>
+            <DialogDescription>
+              {editing ? tc('editConfigDesc') : tc('addConfigDesc')}
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>{tc("paramName")} <span className="text-red-500">*</span></Label>
+              <Label>
+                {tc('paramName')} <span className="text-red-500">*</span>
+              </Label>
               <Input
                 value={form.config_name || ''}
                 onChange={(e) => setForm({ ...form, config_name: e.target.value })}
-                placeholder={tc("paramNamePlaceholder")}
+                placeholder={tc('paramNamePlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label>{tc("paramKey")} <span className="text-red-500">*</span></Label>
+              <Label>
+                {tc('paramKey')} <span className="text-red-500">*</span>
+              </Label>
               <Input
                 value={form.config_key || ''}
                 onChange={(e) => setForm({ ...form, config_key: e.target.value })}
-                placeholder={tc("paramKeyPlaceholder")}
+                placeholder={tc('paramKeyPlaceholder')}
                 readOnly={editing}
               />
             </div>
             <div className="space-y-2">
-              <Label>{tc("paramType")}</Label>
+              <Label>{tc('paramType')}</Label>
               <Select
                 value={form.config_type?.toString() || '1'}
-                onValueChange={(v) => setForm({ ...form, config_type: parseInt(v), config_value: parseInt(v) === 2 ? 'false' : '' })}
+                onValueChange={(v) =>
+                  setForm({
+                    ...form,
+                    config_type: parseInt(v),
+                    config_value: parseInt(v) === 2 ? 'false' : '',
+                  })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">{tc("text")}</SelectItem>
-                  <SelectItem value="2">{tc("booleanOnOff")}</SelectItem>
+                  <SelectItem value="1">{tc('text')}</SelectItem>
+                  <SelectItem value="2">{tc('booleanOnOff')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{tc("paramValue")}</Label>
+              <Label>{tc('paramValue')}</Label>
               {renderValueInput()}
             </div>
             <div className="space-y-2">
-              <Label>{tc("description")}</Label>
+              <Label>{tc('description')}</Label>
               <Input
                 value={form.description || ''}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder={tc("configDescPlaceholder")}
+                placeholder={tc('configDescPlaceholder')}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>{tc("cancel")}</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              {tc('cancel')}
+            </Button>
             <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
               <Save className="w-4 h-4 mr-1" />
-              {editing ? tc("update") : tc("create")}
+              {editing ? tc('update') : tc('create')}
             </Button>
           </DialogFooter>
         </DialogContent>

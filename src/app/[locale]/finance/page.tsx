@@ -106,28 +106,27 @@ interface PaymentRecord {
 }
 
 const RECEIVABLE_STATUS: Record<number, { label: string; color: string }> = {
-  1: { label: '未收款', color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: '部分收款', color: 'bg-blue-100 text-blue-800' },
-  3: { label: '已收款', color: 'bg-green-100 text-green-800' },
+  1: { label: tc('text_flsaa'), color: 'bg-yellow-100 text-yellow-800' },
+  2: { label: tc('text_imh0me'), color: 'bg-blue-100 text-blue-800' },
+  3: { label: tc('text_e96be'), color: 'bg-green-100 text-green-800' },
 };
 
 const PAYABLE_STATUS: Record<number, { label: string; color: string }> = {
-  1: { label: '未付款', color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: '部分付款', color: 'bg-blue-100 text-blue-800' },
-  3: { label: '已付款', color: 'bg-green-100 text-green-800' },
+  1: { label: tc('text_fhzbk'), color: 'bg-yellow-100 text-yellow-800' },
+  2: { label: tc('text_imd7no'), color: 'bg-blue-100 text-blue-800' },
+  3: { label: tc('text_e5dco'), color: 'bg-green-100 text-green-800' },
 };
 
 const PAYMENT_METHODS: Record<string, string> = {
-  bank_transfer: '银行转账',
-  cash: '现金',
-  check: '支票',
-  alipay: '支付宝',
-  wechat: '微信',
-  other: '其他',
+  bank_transfer: tc('text_jd1cr4'),
+  cash: tc('text_kh7l'),
+  check: tc('text_hvkp'),
+  alipay: tc('text_f7gac'),
+  wechat: tc('text_gpo3'),
+  other: tc('text_eae8'),
 };
 
 export default function FinancePage() {
-
   // 翻译钩子
   const t = useTranslations('Finance');
   const tc = useTranslations('Common');
@@ -201,7 +200,7 @@ export default function FinancePage() {
           setSummary((prev) => ({ ...prev, receivable: data.data.summary }));
         }
       }
-    } catch (e) {
+    } catch {
       toast.error('获取应收列表失败');
     } finally {
       setLoading(false);
@@ -223,7 +222,7 @@ export default function FinancePage() {
           setSummary((prev) => ({ ...prev, payable: data.data.summary }));
         }
       }
-    } catch (e) {
+    } catch {
       toast.error('获取应付列表失败');
     } finally {
       setLoading(false);
@@ -238,7 +237,7 @@ export default function FinancePage() {
       if (data.success) {
         setReceipts(data.data?.list || []);
       }
-    } catch (e) {
+    } catch {
       toast.error('获取收款记录失败');
     } finally {
       setLoading(false);
@@ -253,7 +252,7 @@ export default function FinancePage() {
       if (data.success) {
         setPayments(data.data?.list || []);
       }
-    } catch (e) {
+    } catch {
       toast.error('获取付款记录失败');
     } finally {
       setLoading(false);
@@ -267,8 +266,7 @@ export default function FinancePage() {
       if (data.success) {
         setCustomers(data.data?.list || data.data || []);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchSuppliers = async () => {
@@ -278,8 +276,7 @@ export default function FinancePage() {
       if (data.success) {
         setSuppliers(data.data?.list || data.data || []);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -320,7 +317,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('创建应收单失败');
     }
   };
@@ -351,7 +348,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('创建应付单失败');
     }
   };
@@ -389,7 +386,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('创建收款记录失败');
     }
   };
@@ -427,7 +424,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '创建失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('创建付款记录失败');
     }
   };
@@ -443,7 +440,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '删除失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('删除失败');
     }
   };
@@ -459,7 +456,7 @@ export default function FinancePage() {
       } else {
         toast.error(data.message || '删除失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('删除失败');
     }
   };
@@ -477,7 +474,7 @@ export default function FinancePage() {
         setDetailType(type);
         setDetailDialogOpen(true);
       }
-    } catch (e) {
+    } catch {
       toast.error('获取详情失败');
     }
   };
@@ -495,7 +492,7 @@ export default function FinancePage() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">应收总额</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc('text_ccquec')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -503,13 +500,14 @@ export default function FinancePage() {
                 ¥{formatAmount(summary.receivable.total_amount)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                未收: ¥{formatAmount(summary.receivable.total_balance)}
+                {tc('text_a1sj2l')}
+                {formatAmount(summary.receivable.total_balance)}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">应付总额</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc('text_c9gwhy')}</CardTitle>
               <TrendingDown className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
@@ -517,13 +515,14 @@ export default function FinancePage() {
                 ¥{formatAmount(summary.payable.total_amount)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                未付: ¥{formatAmount(summary.payable.total_balance)}
+                {tc('text_cvcpyn')}
+                {formatAmount(summary.payable.total_balance)}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">已收金额</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc('text_ca3u5s')}</CardTitle>
               <DollarSign className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
@@ -531,13 +530,14 @@ export default function FinancePage() {
                 ¥{formatAmount(summary.receivable.total_received)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                逾期: ¥{formatAmount(summary.receivable.overdue_balance)}
+                {tc('text_8qs1dq')}
+                {formatAmount(summary.receivable.overdue_balance)}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">已付金额</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc('text_c6tw9e')}</CardTitle>
               <DollarSign className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
@@ -545,7 +545,8 @@ export default function FinancePage() {
                 ¥{formatAmount(summary.payable.total_paid)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                逾期: ¥{formatAmount(summary.payable.overdue_balance)}
+                {tc('text_8qs1dq')}
+                {formatAmount(summary.payable.overdue_balance)}
               </p>
             </CardContent>
           </Card>
@@ -554,10 +555,10 @@ export default function FinancePage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex items-center justify-between">
             <TabsList>
-              <TabsTrigger value="receivable">应收管理</TabsTrigger>
-              <TabsTrigger value="payable">应付管理</TabsTrigger>
-              <TabsTrigger value="receipt">收款记录</TabsTrigger>
-              <TabsTrigger value="payment">付款记录</TabsTrigger>
+              <TabsTrigger value="receivable">{tc('text_ccvaxz')}</TabsTrigger>
+              <TabsTrigger value="payable">{tc('text_c9ld1l')}</TabsTrigger>
+              <TabsTrigger value="receipt">{tc('text_d7xxt9')}</TabsTrigger>
+              <TabsTrigger value="payment">{tc('text_aedqx7')}</TabsTrigger>
             </TabsList>
             <div className="flex gap-2">
               <div className="relative w-64">
@@ -578,18 +579,18 @@ export default function FinancePage() {
                   <SelectValue placeholder="状态筛选" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部状态</SelectItem>
+                  <SelectItem value="all">{tc('text_avez63')}</SelectItem>
                   {activeTab === 'receivable' || activeTab === 'receipt' ? (
                     <>
-                      <SelectItem value="1">未收款</SelectItem>
-                      <SelectItem value="2">部分收款</SelectItem>
-                      <SelectItem value="3">已收款</SelectItem>
+                      <SelectItem value="1">{tc('text_flsaa')}</SelectItem>
+                      <SelectItem value="2">{tc('text_imh0me')}</SelectItem>
+                      <SelectItem value="3">{tc('text_e96be')}</SelectItem>
                     </>
                   ) : (
                     <>
-                      <SelectItem value="1">未付款</SelectItem>
-                      <SelectItem value="2">部分付款</SelectItem>
-                      <SelectItem value="3">已付款</SelectItem>
+                      <SelectItem value="1">{tc('text_fhzbk')}</SelectItem>
+                      <SelectItem value="2">{tc('text_imd7no')}</SelectItem>
+                      <SelectItem value="3">{tc('text_e5dco')}</SelectItem>
                     </>
                   )}
                 </SelectContent>
@@ -597,40 +598,42 @@ export default function FinancePage() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  activeTab === 'receivable'
-                    ? fetchReceivables()
-                    : activeTab === 'payable'
-                      ? fetchPayables()
-                      : activeTab === 'receipt'
-                        ? fetchReceipts()
-                        : fetchPayments();
+                  if (activeTab === 'receivable') {
+                    fetchReceivables();
+                  } else if (activeTab === 'payable') {
+                    fetchPayables();
+                  } else if (activeTab === 'receipt') {
+                    fetchReceipts();
+                  } else {
+                    fetchPayments();
+                  }
                 }}
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                刷新
+                {tc('text_ejix')}
               </Button>
               {activeTab === 'receivable' && (
                 <Button onClick={() => setReceivableDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  新增应收
+                  {tc('text_d75zm8')}
                 </Button>
               )}
               {activeTab === 'payable' && (
                 <Button onClick={() => setPayableDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  新增应付
+                  {tc('text_d75v76')}
                 </Button>
               )}
               {activeTab === 'receipt' && (
                 <Button onClick={() => setReceiptDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  新增收款
+                  {tc('text_d775fa')}
                 </Button>
               )}
               {activeTab === 'payment' && (
                 <Button onClick={() => setPaymentDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  新增付款
+                  {tc('text_d73cgk')}
                 </Button>
               )}
             </div>
@@ -642,22 +645,22 @@ export default function FinancePage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>应收单号</TableHead>
-                      <TableHead>客户名称</TableHead>
-                      <TableHead>来源单号</TableHead>
-                      <TableHead>应收金额</TableHead>
-                      <TableHead>已收金额</TableHead>
-                      <TableHead>未收余额</TableHead>
-                      <TableHead>到期日期</TableHead>
-                      <TableHead>{tc("status")}</TableHead>
-                      <TableHead>{tc("actions")}</TableHead>
+                      <TableHead>{tc('text_cco9us')}</TableHead>
+                      <TableHead>{tc('text_byvcwo')}</TableHead>
+                      <TableHead>{tc('text_di2qfh')}</TableHead>
+                      <TableHead>{tc('text_ccza1a')}</TableHead>
+                      <TableHead>{tc('text_ca3u5s')}</TableHead>
+                      <TableHead>{tc('text_dfng6o')}</TableHead>
+                      <TableHead>{tc('text_ass7ih')}</TableHead>
+                      <TableHead>{tc('status')}</TableHead>
+                      <TableHead>{tc('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {receivables.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                          暂无应收记录
+                          {tc('text_l07ifv')}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -716,22 +719,22 @@ export default function FinancePage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>应付单号</TableHead>
-                      <TableHead>供应商名称</TableHead>
-                      <TableHead>来源单号</TableHead>
-                      <TableHead>应付金额</TableHead>
-                      <TableHead>已付金额</TableHead>
-                      <TableHead>未付余额</TableHead>
-                      <TableHead>到期日期</TableHead>
-                      <TableHead>{tc("status")}</TableHead>
-                      <TableHead>{tc("actions")}</TableHead>
+                      <TableHead>{tc('text_c9ebye')}</TableHead>
+                      <TableHead>{tc('text_vm0hbk')}</TableHead>
+                      <TableHead>{tc('text_di2qfh')}</TableHead>
+                      <TableHead>{tc('text_c9pc4w')}</TableHead>
+                      <TableHead>{tc('text_c6tw9e')}</TableHead>
+                      <TableHead>{tc('text_dcdiaa')}</TableHead>
+                      <TableHead>{tc('text_ass7ih')}</TableHead>
+                      <TableHead>{tc('status')}</TableHead>
+                      <TableHead>{tc('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {payables.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                          暂无应付记录
+                          {tc('text_l3hgc9')}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -788,19 +791,19 @@ export default function FinancePage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>收款单号</TableHead>
-                      <TableHead>客户名称</TableHead>
-                      <TableHead>收款金额</TableHead>
-                      <TableHead>付款方式</TableHead>
-                      <TableHead>收款日期</TableHead>
-                      <TableHead>{tc("remark")}</TableHead>
+                      <TableHead>{tc('text_d7oah6')}</TableHead>
+                      <TableHead>{tc('text_byvcwo')}</TableHead>
+                      <TableHead>{tc('text_d7zano')}</TableHead>
+                      <TableHead>{tc('text_ae7ae4')}</TableHead>
+                      <TableHead>{tc('text_d7rjxe')}</TableHead>
+                      <TableHead>{tc('remark')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {receipts.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          暂无收款记录
+                          {tc('text_k57hth')}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -831,19 +834,19 @@ export default function FinancePage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>付款单号</TableHead>
-                      <TableHead>供应商名称</TableHead>
-                      <TableHead>付款金额</TableHead>
-                      <TableHead>付款方式</TableHead>
-                      <TableHead>付款日期</TableHead>
-                      <TableHead>{tc("remark")}</TableHead>
+                      <TableHead>{tc('text_ae43l4')}</TableHead>
+                      <TableHead>{tc('text_vm0hbk')}</TableHead>
+                      <TableHead>{tc('text_aef3rm')}</TableHead>
+                      <TableHead>{tc('text_ae7ae4')}</TableHead>
+                      <TableHead>{tc('text_ae7d1c')}</TableHead>
+                      <TableHead>{tc('remark')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {payments.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          暂无付款记录
+                          {tc('text_myropj')}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -870,12 +873,12 @@ export default function FinancePage() {
         <Dialog open={receivableDialogOpen} onOpenChange={setReceivableDialogOpen}>
           <DialogContent className="sm:max-w-[500px]" resizable>
             <DialogHeader>
-              <DialogTitle>新增应收单</DialogTitle>
-              <DialogDescription>创建新的应收账款记录</DialogDescription>
+              <DialogTitle>{tc('text_h0i797')}</DialogTitle>
+              <DialogDescription>{tc('text_5w7u0i')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>客户 *</Label>
+                <Label>{tc('text_bygexr')}</Label>
                 <Select
                   value={receivableForm.customer_id}
                   onValueChange={(v) => setReceivableForm((prev) => ({ ...prev, customer_id: v }))}
@@ -893,7 +896,7 @@ export default function FinancePage() {
                 </Select>
               </div>
               <div>
-                <Label>应收金额 *</Label>
+                <Label>{tc('text_gbxr14')}</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -901,11 +904,11 @@ export default function FinancePage() {
                   onChange={(e) =>
                     setReceivableForm((prev) => ({ ...prev, amount: e.target.value }))
                   }
-                  placeholder={tc("enterAmount")}
+                  placeholder={tc('enterAmount')}
                 />
               </div>
               <div>
-                <Label>来源单号</Label>
+                <Label>{tc('text_di2qfh')}</Label>
                 <Input
                   value={receivableForm.source_no}
                   onChange={(e) =>
@@ -915,7 +918,7 @@ export default function FinancePage() {
                 />
               </div>
               <div>
-                <Label>到期日期</Label>
+                <Label>{tc('text_ass7ih')}</Label>
                 <Input
                   type="date"
                   value={receivableForm.due_date}
@@ -925,7 +928,7 @@ export default function FinancePage() {
                 />
               </div>
               <div>
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={receivableForm.remark}
                   onChange={(e) =>
@@ -937,9 +940,9 @@ export default function FinancePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setReceivableDialogOpen(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
-              <Button onClick={handleCreateReceivable}>确认创建</Button>
+              <Button onClick={handleCreateReceivable}>{tc('text_froiph')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -947,12 +950,12 @@ export default function FinancePage() {
         <Dialog open={payableDialogOpen} onOpenChange={setPayableDialogOpen}>
           <DialogContent className="sm:max-w-[500px]" resizable>
             <DialogHeader>
-              <DialogTitle>新增应付单</DialogTitle>
-              <DialogDescription>创建新的应付账款记录</DialogDescription>
+              <DialogTitle>{tc('text_h0m07x')}</DialogTitle>
+              <DialogDescription>{tc('text_aj21m4')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>供应商 *</Label>
+                <Label>{tc('text_vmffah')}</Label>
                 <Select
                   value={payableForm.supplier_id}
                   onValueChange={(v) => setPayableForm((prev) => ({ ...prev, supplier_id: v }))}
@@ -970,17 +973,17 @@ export default function FinancePage() {
                 </Select>
               </div>
               <div>
-                <Label>应付金额 *</Label>
+                <Label>{tc('text_3c4li')}</Label>
                 <Input
                   type="number"
                   step="0.01"
                   value={payableForm.amount}
                   onChange={(e) => setPayableForm((prev) => ({ ...prev, amount: e.target.value }))}
-                  placeholder={tc("enterAmount")}
+                  placeholder={tc('enterAmount')}
                 />
               </div>
               <div>
-                <Label>来源单号</Label>
+                <Label>{tc('text_di2qfh')}</Label>
                 <Input
                   value={payableForm.source_no}
                   onChange={(e) =>
@@ -990,7 +993,7 @@ export default function FinancePage() {
                 />
               </div>
               <div>
-                <Label>到期日期</Label>
+                <Label>{tc('text_ass7ih')}</Label>
                 <Input
                   type="date"
                   value={payableForm.due_date}
@@ -1000,7 +1003,7 @@ export default function FinancePage() {
                 />
               </div>
               <div>
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={payableForm.remark}
                   onChange={(e) => setPayableForm((prev) => ({ ...prev, remark: e.target.value }))}
@@ -1010,9 +1013,9 @@ export default function FinancePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setPayableDialogOpen(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
-              <Button onClick={handleCreatePayable}>确认创建</Button>
+              <Button onClick={handleCreatePayable}>{tc('text_froiph')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1020,12 +1023,12 @@ export default function FinancePage() {
         <Dialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen}>
           <DialogContent className="sm:max-w-[500px]" resizable>
             <DialogHeader>
-              <DialogTitle>新增收款记录</DialogTitle>
-              <DialogDescription>记录客户付款信息</DialogDescription>
+              <DialogTitle>{tc('text_tclqjp')}</DialogTitle>
+              <DialogDescription>{tc('text_sfl836')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>应收单 *</Label>
+                <Label>{tc('text_rqxy9p')}</Label>
                 <Select
                   value={receiptForm.receivable_id}
                   onValueChange={(v) => setReceiptForm((prev) => ({ ...prev, receivable_id: v }))}
@@ -1038,24 +1041,26 @@ export default function FinancePage() {
                       .filter((r) => r.status !== 3)
                       .map((r) => (
                         <SelectItem key={r.id} value={String(r.id)}>
-                          {r.receivable_no} - {r.customer_name} (余额: ¥{formatAmount(r.balance)})
+                          {r.receivable_no} - {r.customer_name}
+                          {tc('text_6puuod')}
+                          {formatAmount(r.balance)})
                         </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>收款金额 *</Label>
+                <Label>{tc('text_8hyb0i')}</Label>
                 <Input
                   type="number"
                   step="0.01"
                   value={receiptForm.amount}
                   onChange={(e) => setReceiptForm((prev) => ({ ...prev, amount: e.target.value }))}
-                  placeholder={tc("enterAmount")}
+                  placeholder={tc('enterAmount')}
                 />
               </div>
               <div>
-                <Label>付款方式</Label>
+                <Label>{tc('text_ae7ae4')}</Label>
                 <Select
                   value={receiptForm.payment_method}
                   onValueChange={(v) => setReceiptForm((prev) => ({ ...prev, payment_method: v }))}
@@ -1073,7 +1078,7 @@ export default function FinancePage() {
                 </Select>
               </div>
               <div>
-                <Label>收款日期</Label>
+                <Label>{tc('text_d7rjxe')}</Label>
                 <Input
                   type="date"
                   value={receiptForm.receipt_date}
@@ -1083,7 +1088,7 @@ export default function FinancePage() {
                 />
               </div>
               <div>
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={receiptForm.remark}
                   onChange={(e) => setReceiptForm((prev) => ({ ...prev, remark: e.target.value }))}
@@ -1093,9 +1098,9 @@ export default function FinancePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setReceiptDialogOpen(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
-              <Button onClick={handleCreateReceipt}>确认收款</Button>
+              <Button onClick={handleCreateReceipt}>{tc('text_frru4e')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1103,12 +1108,12 @@ export default function FinancePage() {
         <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
           <DialogContent className="sm:max-w-[500px]" resizable>
             <DialogHeader>
-              <DialogTitle>新增付款记录</DialogTitle>
-              <DialogDescription>记录向供应商付款信息</DialogDescription>
+              <DialogTitle>{tc('text_w65xfr')}</DialogTitle>
+              <DialogDescription>{tc('text_wms8yz')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>应付单 *</Label>
+                <Label>{tc('text_oxdrdn')}</Label>
                 <Select
                   value={paymentForm.payable_id}
                   onValueChange={(v) => setPaymentForm((prev) => ({ ...prev, payable_id: v }))}
@@ -1121,24 +1126,26 @@ export default function FinancePage() {
                       .filter((p) => p.status !== 3)
                       .map((p) => (
                         <SelectItem key={p.id} value={String(p.id)}>
-                          {p.payable_no} - {p.supplier_name} (余额: ¥{formatAmount(p.balance)})
+                          {p.payable_no} - {p.supplier_name}
+                          {tc('text_6puuod')}
+                          {formatAmount(p.balance)})
                         </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>付款金额 *</Label>
+                <Label>{tc('text_kfo5no')}</Label>
                 <Input
                   type="number"
                   step="0.01"
                   value={paymentForm.amount}
                   onChange={(e) => setPaymentForm((prev) => ({ ...prev, amount: e.target.value }))}
-                  placeholder={tc("enterAmount")}
+                  placeholder={tc('enterAmount')}
                 />
               </div>
               <div>
-                <Label>付款方式</Label>
+                <Label>{tc('text_ae7ae4')}</Label>
                 <Select
                   value={paymentForm.payment_method}
                   onValueChange={(v) => setPaymentForm((prev) => ({ ...prev, payment_method: v }))}
@@ -1156,7 +1163,7 @@ export default function FinancePage() {
                 </Select>
               </div>
               <div>
-                <Label>付款日期</Label>
+                <Label>{tc('text_ae7d1c')}</Label>
                 <Input
                   type="date"
                   value={paymentForm.payment_date}
@@ -1166,7 +1173,7 @@ export default function FinancePage() {
                 />
               </div>
               <div>
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={paymentForm.remark}
                   onChange={(e) => setPaymentForm((prev) => ({ ...prev, remark: e.target.value }))}
@@ -1176,9 +1183,9 @@ export default function FinancePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
-              <Button onClick={handleCreatePayment}>确认付款</Button>
+              <Button onClick={handleCreatePayment}>{tc('text_fro15o')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1194,35 +1201,35 @@ export default function FinancePage() {
                   {detailType === 'receivable' ? (
                     <>
                       <div>
-                        <span className="text-muted-foreground">应收单号：</span>
+                        <span className="text-muted-foreground">{tc('text_rrdm0m')}</span>
                         {detailData.receivable_no}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">客户：</span>
+                        <span className="text-muted-foreground">{tc('text_dxa79')}</span>
                         {detailData.customer_name}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">来源单号：</span>
+                        <span className="text-muted-foreground">{tc('text_7ma64z')}</span>
                         {detailData.source_no || '-'}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">到期日期：</span>
+                        <span className="text-muted-foreground">{tc('text_kd8ekv')}</span>
                         {detailData.due_date || '-'}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">应收金额：</span>¥
+                        <span className="text-muted-foreground">{tc('text_s0urm4')}</span>¥
                         {formatAmount(detailData.amount)}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">已收金额：</span>¥
+                        <span className="text-muted-foreground">{tc('text_pjs3hm')}</span>¥
                         {formatAmount(detailData.received_amount)}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">未收余额：</span>¥
+                        <span className="text-muted-foreground">{tc('text_9pfzpy')}</span>¥
                         {formatAmount(detailData.balance)}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">状态：</span>
+                        <span className="text-muted-foreground">{tc('text_halin')}</span>
                         <Badge
                           className={RECEIVABLE_STATUS[detailData.status]?.color || 'bg-gray-100'}
                         >
@@ -1233,35 +1240,35 @@ export default function FinancePage() {
                   ) : (
                     <>
                       <div>
-                        <span className="text-muted-foreground">应付单号：</span>
+                        <span className="text-muted-foreground">{tc('text_oxtf4k')}</span>
                         {detailData.payable_no}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">供应商：</span>
+                        <span className="text-muted-foreground">{tc('text_afr3ql')}</span>
                         {detailData.supplier_name}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">来源单号：</span>
+                        <span className="text-muted-foreground">{tc('text_7ma64z')}</span>
                         {detailData.source_no || '-'}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">到期日期：</span>
+                        <span className="text-muted-foreground">{tc('text_kd8ekv')}</span>
                         {detailData.due_date || '-'}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">应付金额：</span>¥
+                        <span className="text-muted-foreground">{tc('text_p7akq2')}</span>¥
                         {formatAmount(detailData.amount)}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">已付金额：</span>¥
+                        <span className="text-muted-foreground">{tc('text_mq7wlk')}</span>¥
                         {formatAmount(detailData.paid_amount)}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">未付余额：</span>¥
+                        <span className="text-muted-foreground">{tc('text_cj06m0')}</span>¥
                         {formatAmount(detailData.balance)}
                       </div>
                       <div>
-                        <span className="text-muted-foreground">状态：</span>
+                        <span className="text-muted-foreground">{tc('text_halin')}</span>
                         <Badge
                           className={PAYABLE_STATUS[detailData.status]?.color || 'bg-gray-100'}
                         >
@@ -1273,14 +1280,14 @@ export default function FinancePage() {
                 </div>
                 {detailData.receipts && detailData.receipts.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">收款记录</h4>
+                    <h4 className="font-medium mb-2">{tc('text_d7xxt9')}</h4>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>收款单号</TableHead>
-                          <TableHead>{tc("amount")}</TableHead>
-                          <TableHead>方式</TableHead>
-                          <TableHead>{tc("date")}</TableHead>
+                          <TableHead>{tc('text_d7oah6')}</TableHead>
+                          <TableHead>{tc('amount')}</TableHead>
+                          <TableHead>{tc('text_hto6')}</TableHead>
+                          <TableHead>{tc('date')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1300,14 +1307,14 @@ export default function FinancePage() {
                 )}
                 {detailData.payments && detailData.payments.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">付款记录</h4>
+                    <h4 className="font-medium mb-2">{tc('text_aedqx7')}</h4>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>付款单号</TableHead>
-                          <TableHead>{tc("amount")}</TableHead>
-                          <TableHead>方式</TableHead>
-                          <TableHead>{tc("date")}</TableHead>
+                          <TableHead>{tc('text_ae43l4')}</TableHead>
+                          <TableHead>{tc('amount')}</TableHead>
+                          <TableHead>{tc('text_hto6')}</TableHead>
+                          <TableHead>{tc('date')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

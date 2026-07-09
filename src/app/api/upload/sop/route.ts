@@ -20,47 +20,50 @@ function generateUniqueFilename(originalName: string): string {
   return `${timestamp}-${random}.${extension}`;
 }
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const formData = await request.formData();
-  const file = formData.get('file') as File;
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
 
-  if (!file) {
-    return errorResponse('未找到上传的文件', 400, 400);
-  }
+    if (!file) {
+      return errorResponse('未找到上传的文件', 400, 400);
+    }
 
-  if (
-    !UPLOAD_CONFIG.allowedTypes.includes(file.type) &&
-    !file.name.toLowerCase().endsWith('.pdf')
-  ) {
-    return errorResponse('只能上传PDF文件', 400, 400);
-  }
+    if (
+      !UPLOAD_CONFIG.allowedTypes.includes(file.type) &&
+      !file.name.toLowerCase().endsWith('.pdf')
+    ) {
+      return errorResponse('只能上传PDF文件', 400, 400);
+    }
 
-  if (file.size > UPLOAD_CONFIG.maxSize) {
-    return errorResponse(`文件大小不能超过 ${UPLOAD_CONFIG.maxSize / 1024 / 1024}MB`, 400, 400);
-  }
+    if (file.size > UPLOAD_CONFIG.maxSize) {
+      return errorResponse(`文件大小不能超过 ${UPLOAD_CONFIG.maxSize / 1024 / 1024}MB`, 400, 400);
+    }
 
-  const filename = generateUniqueFilename(file.name);
+    const filename = generateUniqueFilename(file.name);
 
-  const uploadDir = join(process.cwd(), UPLOAD_CONFIG.uploadDir);
-  if (!existsSync(uploadDir)) {
-    await mkdir(uploadDir, { recursive: true });
-  }
+    const uploadDir = join(process.cwd(), UPLOAD_CONFIG.uploadDir);
+    if (!existsSync(uploadDir)) {
+      await mkdir(uploadDir, { recursive: true });
+    }
 
-  const filePath = join(uploadDir, filename);
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  await writeFile(filePath, buffer);
+    const filePath = join(uploadDir, filename);
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    await writeFile(filePath, buffer);
 
-  const fileUrl = `/uploads/sop/${filename}`;
+    const fileUrl = `/uploads/sop/${filename}`;
 
-  return successResponse(
-    {
-      url: fileUrl,
-      filename: filename,
-      originalName: file.name,
-      size: file.size,
-      type: file.type,
-    },
-    '上传成功'
-  );
-}, { logTitle: '上传SOP文件' });
+    return successResponse(
+      {
+        url: fileUrl,
+        filename: filename,
+        originalName: file.name,
+        size: file.size,
+        type: file.type,
+      },
+      '上传成功'
+    );
+  },
+  { logTitle: '上传SOP文件' }
+);

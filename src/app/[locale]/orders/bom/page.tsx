@@ -59,7 +59,10 @@ interface BOMItem {
 
 const statusMap: Record<number, { labelKey: string; color: string }> = {
   10: { labelKey: 'draft', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-  20: { labelKey: 'approved', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
+  20: {
+    labelKey: 'approved',
+    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  },
   30: {
     labelKey: 'published',
     color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -102,23 +105,23 @@ export default function BOMPage() {
       const data = await res.json();
 
       if (data.success) {
-        const bomList = Array.isArray(data.data) ? data.data : (data.data?.list || []);
+        const bomList = Array.isArray(data.data) ? data.data : data.data?.list || [];
         setBomList(bomList);
         const total = data.data?.total || 0;
         setTotalPages(Math.ceil(total / 20) || 1);
       } else {
+        toast({
+          title: tc('error'),
+          description: data.message || t('fetchBomFailed'),
+          variant: 'destructive',
+        });
+      }
+    } catch {
       toast({
         title: tc('error'),
-        description: data.message || t('fetchBomFailed'),
+        description: t('fetchBomFailed'),
         variant: 'destructive',
       });
-    }
-  } catch (error) {
-    toast({
-      title: tc('error'),
-      description: t('fetchBomFailed'),
-      variant: 'destructive',
-    });
     } finally {
       setLoading(false);
     }
@@ -133,18 +136,18 @@ export default function BOMPage() {
         setBomDetail(data.data);
         setDetailDialogOpen(true);
       } else {
+        toast({
+          title: tc('error'),
+          description: data.message || t('fetchBomDetailFailed'),
+          variant: 'destructive',
+        });
+      }
+    } catch {
       toast({
         title: tc('error'),
-        description: data.message || t('fetchBomDetailFailed'),
+        description: t('fetchBomDetailFailed'),
         variant: 'destructive',
       });
-    }
-  } catch (error) {
-    toast({
-      title: tc('error'),
-      description: t('fetchBomDetailFailed'),
-      variant: 'destructive',
-    });
     }
   };
 
@@ -170,7 +173,7 @@ export default function BOMPage() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: tc('error'),
         description: t('deleteFailed'),
@@ -191,7 +194,11 @@ export default function BOMPage() {
         toast({
           title: tc('success'),
           description:
-            action === 'audit' ? t('auditSuccess') : action === 'publish' ? t('publishSuccess') : t('disableSuccess'),
+            action === 'audit'
+              ? t('auditSuccess')
+              : action === 'publish'
+                ? t('publishSuccess')
+                : t('disableSuccess'),
         });
         fetchBOMList();
       } else {
@@ -201,7 +208,7 @@ export default function BOMPage() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: '错误',
         description: tc('error'),
@@ -226,7 +233,9 @@ export default function BOMPage() {
           <div className="flex items-center gap-3">
             <Layers className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('bomManagement')}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {t('bomManagement')}
+              </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">{t('bomListManagement')}</p>
             </div>
           </div>
@@ -305,8 +314,8 @@ export default function BOMPage() {
                         <span>{bom.version}</span>
                         {bom.is_default === 1 && (
                           <Badge variant="default" className="text-xs">
-                             {t('default')}
-                           </Badge>
+                            {t('default')}
+                          </Badge>
                         )}
                       </div>
                     </TableCell>
@@ -317,7 +326,9 @@ export default function BOMPage() {
                         {getStatusLabel(bom.status, t, tc)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{bom.total_material_count} {t('itemsUnit')}</TableCell>
+                    <TableCell>
+                      {bom.total_material_count} {t('itemsUnit')}
+                    </TableCell>
                     <TableCell>¥{Number(bom.total_cost || 0).toFixed(4)}</TableCell>
                     <TableCell>{new Date(bom.create_time).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
@@ -384,7 +395,7 @@ export default function BOMPage() {
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
             >
-               {tc('prevPage')}
+              {tc('prevPage')}
             </Button>
             <span className="flex items-center px-4">
               {currentPage} / {totalPages}
@@ -394,7 +405,7 @@ export default function BOMPage() {
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
             >
-               {tc('nextPage')}
+              {tc('nextPage')}
             </Button>
           </div>
         )}
@@ -412,19 +423,27 @@ export default function BOMPage() {
                     <div className="font-medium">{bomDetail.header.bom_no}</div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500 dark:text-gray-400">{t('version')}</label>
+                    <label className="text-sm text-gray-500 dark:text-gray-400">
+                      {t('version')}
+                    </label>
                     <div className="font-medium">{bomDetail.header.version}</div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500 dark:text-gray-400">{t('productName')}</label>
+                    <label className="text-sm text-gray-500 dark:text-gray-400">
+                      {t('productName')}
+                    </label>
                     <div className="font-medium">{bomDetail.header.product_name}</div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500 dark:text-gray-400">{t('productCode')}</label>
+                    <label className="text-sm text-gray-500 dark:text-gray-400">
+                      {t('productCode')}
+                    </label>
                     <div className="font-medium">{bomDetail.header.product_code}</div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500 dark:text-gray-400">{tc('status')}</label>
+                    <label className="text-sm text-gray-500 dark:text-gray-400">
+                      {tc('status')}
+                    </label>
                     <div>
                       <Badge className={statusMap[bomDetail.header.status]?.color}>
                         {bomDetail.header.status_name}
@@ -432,7 +451,9 @@ export default function BOMPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-500 dark:text-gray-400">{t('totalCost')}</label>
+                    <label className="text-sm text-gray-500 dark:text-gray-400">
+                      {t('totalCost')}
+                    </label>
                     <div className="font-medium text-blue-600 dark:text-blue-400">
                       ¥{parseFloat(bomDetail.header.total_cost || 0).toFixed(4)}
                     </div>

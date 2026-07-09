@@ -6,7 +6,7 @@ import { query } from '@/lib/db';
  * 系统健康检查 API
  * 无需认证，用于负载均衡器和监控探针
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const startTime = Date.now();
   const checks: Record<string, { status: string; latency?: number; message?: string }> = {};
 
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
   };
 
   // 总体状态
-  const allHealthy = Object.values(checks).every(c => c.status === 'healthy');
+  const allHealthy = Object.values(checks).every((c) => c.status === 'healthy');
   const overallStatus = allHealthy ? 'healthy' : 'degraded';
 
   const response = {

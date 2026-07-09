@@ -9,13 +9,13 @@ import {
 import { withPermission } from '@/lib/api-permissions';
 
 const MAINTENANCE_TYPE_MAP: Record<string, string> = {
-  routine: '常规保养',
-  grinding: '磨刃/修版',
-  re_rule: '重做/翻新',
-  replace: '更换',
+  routine: tc('text_cgdoei'),
+  grinding: tc('text_e4bfjm'),
+  re_rule: tc('text_bze2bb'),
+  replace: tc('text_i226'),
 };
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const die_id = searchParams.get('die_id');
   const maintenance_type = searchParams.get('maintenance_type');
@@ -75,69 +75,70 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const validation = validateRequestBody(body, ['die_id', 'maintenance_type']);
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
-
-  const dieId = parseInt(body.die_id);
-  const maintenanceType = body.maintenance_type;
-
-  return await transaction(async (conn) => {
-    const [dieRows]: any = await conn.execute(
-      'SELECT id, template_code, template_name, cumulative_impressions, max_impressions, warning_threshold, maintenance_interval, maintenance_count, last_maintenance_impressions, die_status FROM prd_die_template WHERE id = ? AND deleted = 0',
-      [dieId]
-    );
-    const die = dieRows?.[0];
-    if (!die) return errorResponse('刀模/网版不存在', 404, 404);
-
-    const maintenanceNo = `MT${Date.now()}`;
-    const impressionsBefore = die.cumulative_impressions;
-
-    let impressionsAfter = impressionsBefore;
-    let nextMaintenanceDate = null;
-    let newDieStatus = die.die_status;
-
-    if (maintenanceType === 'routine' || maintenanceType === 'grinding') {
-      newDieStatus = 'available';
-      if (die.maintenance_interval > 0) {
-        const nextDate = new Date();
-        nextDate.setDate(nextDate.getDate() + Math.ceil(die.maintenance_interval / 10));
-        nextMaintenanceDate = nextDate.toISOString().split('T')[0];
-      }
-    } else if (maintenanceType === 're_rule') {
-      impressionsAfter = 0;
-      newDieStatus = 'available';
-    } else if (maintenanceType === 'replace') {
-      impressionsAfter = 0;
-      newDieStatus = 'available';
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const validation = validateRequestBody(body, ['die_id', 'maintenance_type']);
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
     }
 
-    await conn.execute(
-      `INSERT INTO prd_die_maintenance (maintenance_no, die_id, die_code, maintenance_type, impressions_before, impressions_after, maintenance_date, next_maintenance_date, cost, technician_id, technician_name, status, remark)
-       VALUES (?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?)`,
-      [
-        maintenanceNo,
-        dieId,
-        die.template_code,
-        maintenanceType,
-        impressionsBefore,
-        impressionsAfter,
-        nextMaintenanceDate,
-        body.cost || 0,
-        body.technician_id || null,
-        body.technician_name || null,
-        body.status || 1,
-        body.remark || null,
-      ]
-    );
+    const dieId = parseInt(body.die_id);
+    const maintenanceType = body.maintenance_type;
 
-    if (body.status === 3 || body.complete_immediately) {
-      const newMaintenanceCount = die.maintenance_count + 1;
+    return await transaction(async (conn) => {
+      const [dieRows]: any = await conn.execute(
+        'SELECT id, template_code, template_name, cumulative_impressions, max_impressions, warning_threshold, maintenance_interval, maintenance_count, last_maintenance_impressions, die_status FROM prd_die_template WHERE id = ? AND deleted = 0',
+        [dieId]
+      );
+      const die = dieRows?.[0];
+      if (!die) return errorResponse('刀模/网版不存在', 404, 404);
+
+      const maintenanceNo = `MT${Date.now()}`;
+      const impressionsBefore = die.cumulative_impressions;
+
+      let impressionsAfter = impressionsBefore;
+      let nextMaintenanceDate = null;
+      let newDieStatus = die.die_status;
+
+      if (maintenanceType === 'routine' || maintenanceType === 'grinding') {
+        newDieStatus = 'available';
+        if (die.maintenance_interval > 0) {
+          const nextDate = new Date();
+          nextDate.setDate(nextDate.getDate() + Math.ceil(die.maintenance_interval / 10));
+          nextMaintenanceDate = nextDate.toISOString().split('T')[0];
+        }
+      } else if (maintenanceType === 're_rule') {
+        impressionsAfter = 0;
+        newDieStatus = 'available';
+      } else if (maintenanceType === 'replace') {
+        impressionsAfter = 0;
+        newDieStatus = 'available';
+      }
+
       await conn.execute(
-        `UPDATE prd_die_template
+        `INSERT INTO prd_die_maintenance (maintenance_no, die_id, die_code, maintenance_type, impressions_before, impressions_after, maintenance_date, next_maintenance_date, cost, technician_id, technician_name, status, remark)
+       VALUES (?, ?, ?, ?, ?, ?, CURDATE(), ?, ?, ?, ?, ?, ?)`,
+        [
+          maintenanceNo,
+          dieId,
+          die.template_code,
+          maintenanceType,
+          impressionsBefore,
+          impressionsAfter,
+          nextMaintenanceDate,
+          body.cost || 0,
+          body.technician_id || null,
+          body.technician_name || null,
+          body.status || 1,
+          body.remark || null,
+        ]
+      );
+
+      if (body.status === 3 || body.complete_immediately) {
+        const newMaintenanceCount = die.maintenance_count + 1;
+        await conn.execute(
+          `UPDATE prd_die_template
          SET cumulative_impressions = ?,
              current_usage = ?,
              remaining_usage = GREATEST(max_usage - ?, 0),
@@ -147,66 +148,69 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
              die_status = ?,
              status = 1
          WHERE id = ?`,
-        [
-          impressionsAfter,
-          impressionsAfter,
-          impressionsAfter,
-          newMaintenanceCount,
-          impressionsBefore,
-          newDieStatus,
-          dieId,
-        ]
-      );
-    }
+          [
+            impressionsAfter,
+            impressionsAfter,
+            impressionsAfter,
+            newMaintenanceCount,
+            impressionsBefore,
+            newDieStatus,
+            dieId,
+          ]
+        );
+      }
 
-    return successResponse(
-      {
-        maintenance_no: maintenanceNo,
-        die_id: dieId,
-        maintenance_type: maintenanceType,
-        impressions_before: impressionsBefore,
-        impressions_after: impressionsAfter,
-        new_die_status: newDieStatus,
-      },
-      '保养记录创建成功'
+      return successResponse(
+        {
+          maintenance_no: maintenanceNo,
+          die_id: dieId,
+          maintenance_type: maintenanceType,
+          impressions_before: impressionsBefore,
+          impressions_after: impressionsAfter,
+          new_die_status: newDieStatus,
+        },
+        '保养记录创建成功'
+      );
+    });
+  },
+  { errorMessage: '创建保养记录失败' }
+);
+
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    if (!body.id) return commonErrors.badRequest('保养ID不能为空');
+
+    const existing = await queryOne(
+      'SELECT id, die_id, maintenance_type, status FROM prd_die_maintenance WHERE id = ? AND deleted = 0',
+      [body.id]
     );
-  });
-}, { errorMessage: '创建保养记录失败' });
+    if (!existing) return commonErrors.notFound('保养记录不存在');
 
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  if (!body.id) return commonErrors.badRequest('保养ID不能为空');
+    return await transaction(async (conn) => {
+      if (body.status === 3 && existing.status !== 3) {
+        const [dieRows]: any = await conn.execute(
+          'SELECT id, cumulative_impressions, max_impressions, warning_threshold, maintenance_interval, maintenance_count, last_maintenance_impressions FROM prd_die_template WHERE id = ? AND deleted = 0',
+          [existing.die_id]
+        );
+        const die = dieRows?.[0];
+        if (!die) return errorResponse('刀模/网版不存在', 404, 404);
 
-  const existing = await queryOne(
-    'SELECT id, die_id, maintenance_type, status FROM prd_die_maintenance WHERE id = ? AND deleted = 0',
-    [body.id]
-  );
-  if (!existing) return commonErrors.notFound('保养记录不存在');
+        const impressionsAfter =
+          body.impressions_after !== undefined
+            ? body.impressions_after
+            : existing.maintenance_type === 're_rule' || existing.maintenance_type === 'replace'
+              ? 0
+              : die.cumulative_impressions;
+        const newMaintenanceCount = die.maintenance_count + 1;
+        const newDieStatus = computeDieStatus(
+          impressionsAfter,
+          die.max_impressions,
+          die.warning_threshold
+        );
 
-  return await transaction(async (conn) => {
-    if (body.status === 3 && existing.status !== 3) {
-      const [dieRows]: any = await conn.execute(
-        'SELECT id, cumulative_impressions, max_impressions, warning_threshold, maintenance_interval, maintenance_count, last_maintenance_impressions FROM prd_die_template WHERE id = ? AND deleted = 0',
-        [existing.die_id]
-      );
-      const die = dieRows?.[0];
-      if (!die) return errorResponse('刀模/网版不存在', 404, 404);
-
-      const impressionsAfter =
-        body.impressions_after !== undefined
-          ? body.impressions_after
-          : existing.maintenance_type === 're_rule' || existing.maintenance_type === 'replace'
-            ? 0
-            : die.cumulative_impressions;
-      const newMaintenanceCount = die.maintenance_count + 1;
-      const newDieStatus = computeDieStatus(
-        impressionsAfter,
-        die.max_impressions,
-        die.warning_threshold
-      );
-
-      await conn.execute(
-        `UPDATE prd_die_template
+        await conn.execute(
+          `UPDATE prd_die_template
          SET cumulative_impressions = ?,
              current_usage = ?,
              remaining_usage = GREATEST(max_usage - ?, 0),
@@ -220,70 +224,75 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
                ELSE 1
              END
          WHERE id = ?`,
-        [
-          impressionsAfter,
-          impressionsAfter,
-          impressionsAfter,
-          newMaintenanceCount,
-          die.cumulative_impressions,
-          newDieStatus,
-          impressionsAfter,
-          impressionsAfter,
-          existing.die_id,
-        ]
-      );
+          [
+            impressionsAfter,
+            impressionsAfter,
+            impressionsAfter,
+            newMaintenanceCount,
+            die.cumulative_impressions,
+            newDieStatus,
+            impressionsAfter,
+            impressionsAfter,
+            existing.die_id,
+          ]
+        );
 
-      await conn.execute(
-        `UPDATE prd_die_maintenance SET status = 3, impressions_after = ?, cost = ?, technician_name = ?, remark = ?, update_time = NOW() WHERE id = ?`,
-        [
-          impressionsAfter,
-          body.cost || 0,
-          body.technician_name || null,
-          body.remark || null,
-          body.id,
-        ]
-      );
-    } else {
-      const fields: string[] = [];
-      const values: any[] = [];
-      const allowedFields = [
-        'maintenance_type',
-        'impressions_after',
-        'next_maintenance_date',
-        'cost',
-        'technician_name',
-        'status',
-        'remark',
-      ];
+        await conn.execute(
+          `UPDATE prd_die_maintenance SET status = 3, impressions_after = ?, cost = ?, technician_name = ?, remark = ?, update_time = NOW() WHERE id = ?`,
+          [
+            impressionsAfter,
+            body.cost || 0,
+            body.technician_name || null,
+            body.remark || null,
+            body.id,
+          ]
+        );
+      } else {
+        const fields: string[] = [];
+        const values: any[] = [];
+        const allowedFields = [
+          'maintenance_type',
+          'impressions_after',
+          'next_maintenance_date',
+          'cost',
+          'technician_name',
+          'status',
+          'remark',
+        ];
 
-      for (const field of allowedFields) {
-        if (body[field] !== undefined) {
-          fields.push(`${field} = ?`);
-          values.push(body[field]);
+        for (const field of allowedFields) {
+          if (body[field] !== undefined) {
+            fields.push(`${field} = ?`);
+            values.push(body[field]);
+          }
+        }
+
+        if (fields.length > 0) {
+          values.push(body.id);
+          await conn.execute(
+            `UPDATE prd_die_maintenance SET ${fields.join(', ')}, update_time = NOW() WHERE id = ?`,
+            values
+          );
         }
       }
 
-      if (fields.length > 0) {
-        values.push(body.id);
-        await conn.execute(
-          `UPDATE prd_die_maintenance SET ${fields.join(', ')}, update_time = NOW() WHERE id = ?`,
-          values
-        );
-      }
-    }
+      return successResponse(null, '保养记录更新成功');
+    });
+  },
+  { errorMessage: '更新保养记录失败' }
+);
 
-    return successResponse(null, '保养记录更新成功');
-  });
-}, { errorMessage: '更新保养记录失败' });
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return commonErrors.badRequest('保养ID不能为空');
 
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  if (!id) return commonErrors.badRequest('保养ID不能为空');
-
-  await execute('UPDATE prd_die_maintenance SET deleted = 1 WHERE id = ?', [parseInt(id)]);
-  return successResponse(null, '删除成功');
-}, { logTitle: '删除保养记录', logType: 'business' });
+    await execute('UPDATE prd_die_maintenance SET deleted = 1 WHERE id = ?', [parseInt(id)]);
+    return successResponse(null, '删除成功');
+  },
+  { logTitle: '删除保养记录', logType: 'business' }
+);
 
 function computeDieStatus(
   cumulative: number,

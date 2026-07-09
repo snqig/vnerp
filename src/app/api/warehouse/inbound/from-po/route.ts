@@ -15,7 +15,7 @@ function getInboundService(): InboundApplicationService {
 }
 
 export const POST = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
 
     if (!body.po_id || typeof body.po_id !== 'number') {

@@ -79,7 +79,7 @@ function formatRole(role: any): Role {
   };
 }
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status');
@@ -122,131 +122,140 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // POST - 创建角色
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body: Role = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body: Role = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, ['role_code', 'role_name']);
+    // 验证必填字段
+    const validation = validateRequestBody(body, ['role_code', 'role_name']);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  // 检查编码是否已存在
-  const existing = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_role WHERE role_code = ? AND deleted = 0',
-    [body.role_code]
-  );
+    // 检查编码是否已存在
+    const existing = await queryOne<{ id: number }>(
+      'SELECT id FROM sys_role WHERE role_code = ? AND deleted = 0',
+      [body.role_code]
+    );
 
-  if (existing) {
-    return errorResponse('角色编码已存在', 409, 409);
-  }
+    if (existing) {
+      return errorResponse('角色编码已存在', 409, 409);
+    }
 
-  const permissions =
-    typeof body.permissions === 'object' ? JSON.stringify(body.permissions) : body.permissions;
+    const permissions =
+      typeof body.permissions === 'object' ? JSON.stringify(body.permissions) : body.permissions;
 
-  const result = await execute(
-    `INSERT INTO sys_role (role_code, role_name, description, data_scope, status, permissions)
+    const result = await execute(
+      `INSERT INTO sys_role (role_code, role_name, description, data_scope, status, permissions)
      VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      body.role_code,
-      body.role_name,
-      body.description ?? null,
-      body.data_scope ?? 1,
-      body.status ?? 1,
-      permissions ?? null,
-    ]
-  );
+      [
+        body.role_code,
+        body.role_name,
+        body.description ?? null,
+        body.data_scope ?? 1,
+        body.status ?? 1,
+        permissions ?? null,
+      ]
+    );
 
-  return successResponse({ id: result.insertId }, '角色创建成功');
-}, { logTitle: '创建角色' });
+    return successResponse({ id: result.insertId }, '角色创建成功');
+  },
+  { logTitle: '创建角色' }
+);
 
 // PUT - 更新角色
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body: Role = await request.json();
-  const { id } = body;
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body: Role = await request.json();
+    const { id } = body;
 
-  if (!id) {
-    return commonErrors.badRequest('角色ID不能为空');
-  }
+    if (!id) {
+      return commonErrors.badRequest('角色ID不能为空');
+    }
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, ['role_name']);
+    // 验证必填字段
+    const validation = validateRequestBody(body, ['role_name']);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  // 检查角色是否存在
-  const existingRole = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_role WHERE id = ? AND deleted = 0',
-    [id]
-  );
+    // 检查角色是否存在
+    const existingRole = await queryOne<{ id: number }>(
+      'SELECT id FROM sys_role WHERE id = ? AND deleted = 0',
+      [id]
+    );
 
-  if (!existingRole) {
-    return commonErrors.notFound('角色不存在');
-  }
+    if (!existingRole) {
+      return commonErrors.notFound('角色不存在');
+    }
 
-  const permissions =
-    typeof body.permissions === 'object' ? JSON.stringify(body.permissions) : body.permissions;
+    const permissions =
+      typeof body.permissions === 'object' ? JSON.stringify(body.permissions) : body.permissions;
 
-  const result = await execute(
-    `UPDATE sys_role SET
+    const result = await execute(
+      `UPDATE sys_role SET
       role_name = ?,
       description = ?,
       data_scope = ?,
       status = ?,
       permissions = ?
     WHERE id = ? AND deleted = 0`,
-    [
-      body.role_name,
-      body.description ?? null,
-      body.data_scope ?? 1,
-      body.status ?? 1,
-      permissions ?? null,
-      id,
-    ]
-  );
+      [
+        body.role_name,
+        body.description ?? null,
+        body.data_scope ?? 1,
+        body.status ?? 1,
+        permissions ?? null,
+        id,
+      ]
+    );
 
-  if (result.affectedRows === 0) {
-    return commonErrors.notFound('角色不存在');
-  }
+    if (result.affectedRows === 0) {
+      return commonErrors.notFound('角色不存在');
+    }
 
-  return successResponse(null, '角色更新成功');
-}, { logTitle: '更新角色' });
+    return successResponse(null, '角色更新成功');
+  },
+  { logTitle: '更新角色' }
+);
 
 // DELETE - 删除角色（软删除）
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return commonErrors.badRequest('角色ID不能为空');
-  }
+    if (!id) {
+      return commonErrors.badRequest('角色ID不能为空');
+    }
 
-  const roleId = parseInt(id);
+    const roleId = parseInt(id);
 
-  // 检查角色是否存在
-  const existingRole = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_role WHERE id = ? AND deleted = 0',
-    [roleId]
-  );
+    // 检查角色是否存在
+    const existingRole = await queryOne<{ id: number }>(
+      'SELECT id FROM sys_role WHERE id = ? AND deleted = 0',
+      [roleId]
+    );
 
-  if (!existingRole) {
-    return commonErrors.notFound('角色不存在');
-  }
+    if (!existingRole) {
+      return commonErrors.notFound('角色不存在');
+    }
 
-  // 检查是否有用户关联此角色
-  const hasUsers = await queryOne<{ count: number }>(
-    'SELECT COUNT(*) as count FROM sys_user_role WHERE role_id = ?',
-    [roleId]
-  );
+    // 检查是否有用户关联此角色
+    const hasUsers = await queryOne<{ count: number }>(
+      'SELECT COUNT(*) as count FROM sys_user_role WHERE role_id = ?',
+      [roleId]
+    );
 
-  if (hasUsers && hasUsers.count > 0) {
-    return errorResponse('该角色已分配给用户，无法删除', 409, 409);
-  }
+    if (hasUsers && hasUsers.count > 0) {
+      return errorResponse('该角色已分配给用户，无法删除', 409, 409);
+    }
 
-  await execute('UPDATE sys_role SET deleted = 1 WHERE id = ?', [roleId]);
+    await execute('UPDATE sys_role SET deleted = 1 WHERE id = ?', [roleId]);
 
-  return successResponse(null, '角色删除成功');
-}, { logTitle: '删除角色' });
+    return successResponse(null, '角色删除成功');
+  },
+  { logTitle: '删除角色' }
+);

@@ -10,13 +10,27 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { Search, Plus, RefreshCw, Undo2, CheckCircle, XCircle, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -59,16 +73,28 @@ interface ReturnOrder {
 }
 
 const statusMap: Record<string, { label: string; color: string }> = {
-  pending: { label: '待审核', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' },
-  approved: { label: '已审核', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
-  completed: { label: '已完成', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
-  cancelled: { label: '已取消', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' },
+  pending: {
+    label: tc('text_eftvg'),
+    color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  },
+  approved: {
+    label: tc('text_e7j1l'),
+    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  },
+  completed: {
+    label: tc('text_e7hbq'),
+    color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+  },
+  cancelled: {
+    label: tc('text_e68dg'),
+    color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
+  },
 };
 
 const returnTypeMap: Record<string, string> = {
-  quality: '质量问题',
-  quantity: '数量差异',
-  other: '其他原因',
+  quality: tc('text_if0wnl'),
+  quantity: tc('text_deejqr'),
+  other: tc('text_alu6v5'),
 };
 
 export default function PurchaseReturnPage() {
@@ -115,7 +141,7 @@ export default function PurchaseReturnPage() {
         setList(result.data?.list || result.data || []);
         setTotal(result.data?.total || 0);
       }
-    } catch (e) {
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -128,8 +154,7 @@ export default function PurchaseReturnPage() {
       if (result.success) {
         setPurchaseOrders(result.data?.list || result.data || []);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -208,7 +233,7 @@ export default function PurchaseReturnPage() {
       } else {
         toast({ title: result.message || '创建失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '创建失败', variant: 'destructive' });
     }
   };
@@ -229,7 +254,7 @@ export default function PurchaseReturnPage() {
       } else {
         toast({ title: result.message || '操作失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '操作失败', variant: 'destructive' });
     }
   };
@@ -245,7 +270,7 @@ export default function PurchaseReturnPage() {
         if (found?.items) setDetailItems(found.items);
         else setDetailItems([]);
       }
-    } catch (e) {
+    } catch {
       setDetailItems([]);
     }
     setDetailOpen(true);
@@ -276,9 +301,9 @@ export default function PurchaseReturnPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Undo2 className="w-6 h-6" />
-              采购退货管理
+              {tc('text_emjff2')}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">管理采购退货单，支持退货审核、库存扣减和红字应付单生成</p>
+            <p className="text-sm text-muted-foreground mt-1">{tc('text_vcqoue')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Input
@@ -293,11 +318,11 @@ export default function PurchaseReturnPage() {
                 <SelectValue placeholder="全部状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部状态</SelectItem>
-                <SelectItem value="pending">{tc("pending")}</SelectItem>
-                <SelectItem value="approved">{tc("approved")}</SelectItem>
-                <SelectItem value="completed">{tc("completed")}</SelectItem>
-                <SelectItem value="cancelled">{tc("cancelled")}</SelectItem>
+                <SelectItem value="all">{tc('text_avez63')}</SelectItem>
+                <SelectItem value="pending">{tc('pending')}</SelectItem>
+                <SelectItem value="approved">{tc('approved')}</SelectItem>
+                <SelectItem value="completed">{tc('completed')}</SelectItem>
+                <SelectItem value="cancelled">{tc('cancelled')}</SelectItem>
               </SelectContent>
             </Select>
             <Button size="sm" variant="outline" onClick={fetchList}>
@@ -305,7 +330,7 @@ export default function PurchaseReturnPage() {
             </Button>
             <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={openCreateDialog}>
               <Plus className="h-3 w-3 mr-1" />
-              新建退货
+              {tc('text_d8c5bl')}
             </Button>
           </div>
         </div>
@@ -315,14 +340,14 @@ export default function PurchaseReturnPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>退货单号</TableHead>
-                  <TableHead>关联采购单</TableHead>
-                  <TableHead>{tc("supplier")}</TableHead>
-                  <TableHead>退货日期</TableHead>
-                  <TableHead>退货类型</TableHead>
-                  <TableHead>{tc("amount")}</TableHead>
-                  <TableHead>{tc("status")}</TableHead>
-                  <TableHead className="text-right">{tc("actions")}</TableHead>
+                  <TableHead>{tc('text_iqxhux')}</TableHead>
+                  <TableHead>{tc('text_jw474i')}</TableHead>
+                  <TableHead>{tc('supplier')}</TableHead>
+                  <TableHead>{tc('text_ir0rb5')}</TableHead>
+                  <TableHead>{tc('text_ir4ijb')}</TableHead>
+                  <TableHead>{tc('amount')}</TableHead>
+                  <TableHead>{tc('status')}</TableHead>
+                  <TableHead className="text-right">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -335,7 +360,7 @@ export default function PurchaseReturnPage() {
                 ) : list.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                      暂无退货记录
+                      {tc('text_elyafq')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -345,7 +370,9 @@ export default function PurchaseReturnPage() {
                       <TableCell className="text-sm">{order.order_no || '-'}</TableCell>
                       <TableCell className="text-sm">{order.supplier_name}</TableCell>
                       <TableCell className="text-sm">{order.return_date}</TableCell>
-                      <TableCell className="text-sm">{returnTypeMap[order.return_type] || order.return_type}</TableCell>
+                      <TableCell className="text-sm">
+                        {returnTypeMap[order.return_type] || order.return_type}
+                      </TableCell>
                       <TableCell className="text-sm font-mono">
                         ¥{(order.grand_total || 0).toLocaleString()}
                       </TableCell>
@@ -356,26 +383,46 @@ export default function PurchaseReturnPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button size="sm" variant="ghost" className="h-7" onClick={() => viewDetail(order)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7"
+                            onClick={() => viewDetail(order)}
+                          >
                             <Eye className="h-3 w-3 mr-1" />
-                            详情
+                            {tc('text_obrz')}
                           </Button>
                           {order.status === 'pending' && (
                             <>
-                              <Button size="sm" variant="ghost" className="h-7 text-blue-600" onClick={() => handleAction(order.id, 'approve')}>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-blue-600"
+                                onClick={() => handleAction(order.id, 'approve')}
+                              >
                                 <CheckCircle className="h-3 w-3 mr-1" />
-                                审核
+                                {tc('text_g5o7')}
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-7 text-red-600" onClick={() => handleAction(order.id, 'cancel')}>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-red-600"
+                                onClick={() => handleAction(order.id, 'cancel')}
+                              >
                                 <XCircle className="h-3 w-3 mr-1" />
-                                取消
+                                {tc('text_ev02')}
                               </Button>
                             </>
                           )}
                           {order.status === 'approved' && (
-                            <Button size="sm" variant="ghost" className="h-7 text-green-600" onClick={() => handleAction(order.id, 'complete')}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-green-600"
+                              onClick={() => handleAction(order.id, 'complete')}
+                            >
                               <CheckCircle className="h-3 w-3 mr-1" />
-                              完成退货
+                              {tc('text_byqt63')}
                             </Button>
                           )}
                         </div>
@@ -389,13 +436,27 @@ export default function PurchaseReturnPage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">共 {total} 条</span>
+          <span className="text-sm text-muted-foreground">
+            {tc('text_g35')}
+            {total}
+            {tc('text_kf5')}
+          </span>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-              上一页
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              {tc('text_btlof')}
             </Button>
-            <Button size="sm" variant="outline" disabled={page * 10 >= total} onClick={() => setPage((p) => p + 1)}>
-              下一页
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page * 10 >= total}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              {tc('text_btmf4')}
             </Button>
           </div>
         </div>
@@ -405,14 +466,14 @@ export default function PurchaseReturnPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>新建采购退货</DialogTitle>
-            <DialogDescription>选择采购订单并填写退货明细</DialogDescription>
+            <DialogTitle>{tc('text_19w5rr')}</DialogTitle>
+            <DialogDescription>{tc('text_e7vdkm')}</DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>关联采购订单</Label>
+                <Label>{tc('text_mmoe4a')}</Label>
                 <Select onValueChange={handleSelectOrder}>
                   <SelectTrigger>
                     <SelectValue placeholder="选择采购订单" />
@@ -427,11 +488,11 @@ export default function PurchaseReturnPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{tc("supplier")}</Label>
+                <Label>{tc('supplier')}</Label>
                 <Input value={form.supplier_name} readOnly className="bg-muted" />
               </div>
               <div className="space-y-2">
-                <Label>退货日期</Label>
+                <Label>{tc('text_ir0rb5')}</Label>
                 <Input
                   type="date"
                   value={form.return_date}
@@ -439,22 +500,25 @@ export default function PurchaseReturnPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>退货类型</Label>
-                <Select value={form.return_type} onValueChange={(v) => setForm({ ...form, return_type: v })}>
+                <Label>{tc('text_ir4ijb')}</Label>
+                <Select
+                  value={form.return_type}
+                  onValueChange={(v) => setForm({ ...form, return_type: v })}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="quality">质量问题</SelectItem>
-                    <SelectItem value="quantity">数量差异</SelectItem>
-                    <SelectItem value="other">其他原因</SelectItem>
+                    <SelectItem value="quality">{tc('text_if0wnl')}</SelectItem>
+                    <SelectItem value="quantity">{tc('text_deejqr')}</SelectItem>
+                    <SelectItem value="other">{tc('text_alu6v5')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>{tc("remark")}</Label>
+              <Label>{tc('remark')}</Label>
               <Textarea
                 value={form.remark}
                 onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -466,19 +530,19 @@ export default function PurchaseReturnPage() {
             {/* 退货明细 */}
             <div className="border rounded-lg">
               <div className="p-3 border-b bg-muted/50">
-                <span className="font-medium text-sm">退货明细</span>
+                <span className="font-medium text-sm">{tc('text_ir0wyn')}</span>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-xs">物料编码</TableHead>
-                    <TableHead className="text-xs">物料名称</TableHead>
-                    <TableHead className="text-xs">{tc("specification")}</TableHead>
-                    <TableHead className="text-xs">{tc("unit")}</TableHead>
-                    <TableHead className="text-xs">单价</TableHead>
-                    <TableHead className="text-xs">退货数量</TableHead>
-                    <TableHead className="text-xs">{tc("amount")}</TableHead>
-                    <TableHead className="text-xs">{tc("actions")}</TableHead>
+                    <TableHead className="text-xs">{tc('text_euzqpn')}</TableHead>
+                    <TableHead className="text-xs">{tc('text_eusfkj')}</TableHead>
+                    <TableHead className="text-xs">{tc('specification')}</TableHead>
+                    <TableHead className="text-xs">{tc('unit')}</TableHead>
+                    <TableHead className="text-xs">{tc('text_elvm')}</TableHead>
+                    <TableHead className="text-xs">{tc('text_ir0wxy')}</TableHead>
+                    <TableHead className="text-xs">{tc('amount')}</TableHead>
+                    <TableHead className="text-xs">{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -500,7 +564,12 @@ export default function PurchaseReturnPage() {
                       </TableCell>
                       <TableCell className="text-xs font-mono">{item.amount.toFixed(2)}</TableCell>
                       <TableCell>
-                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-600" onClick={() => removeItem(idx)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-red-600"
+                          onClick={() => removeItem(idx)}
+                        >
                           <XCircle className="h-3 w-3" />
                         </Button>
                       </TableCell>
@@ -508,8 +577,11 @@ export default function PurchaseReturnPage() {
                   ))}
                   {items.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground py-4 text-sm">
-                        请先选择采购订单
+                      <TableCell
+                        colSpan={8}
+                        className="text-center text-muted-foreground py-4 text-sm"
+                      >
+                        {tc('text_kdl87q')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -519,15 +591,25 @@ export default function PurchaseReturnPage() {
 
             {/* 合计 */}
             <div className="flex justify-end gap-6 text-sm">
-              <span>{t('amountTotal')}: <strong>¥{totalAmount.toFixed(2)}</strong></span>
-              <span>{t('taxTotal')}: <strong>¥{totalTax.toFixed(2)}</strong></span>
-              <span>{t('amountWithTaxTotal')}: <strong>¥{(totalAmount + totalTax).toFixed(2)}</strong></span>
+              <span>
+                {t('amountTotal')}: <strong>¥{totalAmount.toFixed(2)}</strong>
+              </span>
+              <span>
+                {t('taxTotal')}: <strong>¥{totalTax.toFixed(2)}</strong>
+              </span>
+              <span>
+                {t('amountWithTaxTotal')}: <strong>¥{(totalAmount + totalTax).toFixed(2)}</strong>
+              </span>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>{tc("cancel")}</Button>
-            <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700">提交退货</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              {tc('cancel')}
+            </Button>
+            <Button onClick={handleSubmit} className="bg-blue-600 hover:bg-blue-700">
+              {tc('text_cxfim3')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -536,26 +618,49 @@ export default function PurchaseReturnPage() {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>退货单详情 - {detailOrder?.return_no}</DialogTitle>
+            <DialogTitle>
+              {tc('text_f4fj0a')}
+              {detailOrder?.return_no}
+            </DialogTitle>
             <DialogDescription>
-              状态：{statusMap[detailOrder?.status || '']?.label} | 供应商：{detailOrder?.supplier_name}
+              {tc('text_halin')}
+              {statusMap[detailOrder?.status || '']?.label}
+              {tc('text_1e6ecv')}
+              {detailOrder?.supplier_name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>{t('returnNo')}: <span className="font-mono">{detailOrder?.return_no}</span></div>
-              <div>{t('relatedPurchaseOrder')}: <span className="font-mono">{detailOrder?.order_no || '-'}</span></div>
-              <div>{t('returnDate')}: {detailOrder?.return_date}</div>
-              <div>{t('returnType')}: {returnTypeMap[detailOrder?.return_type || '']}</div>
-              <div>{tc('amount')}: ¥{(detailOrder?.total_amount || 0).toLocaleString()}</div>
-              <div>{t('amountWithTaxTotal')}: ¥{(detailOrder?.grand_total || 0).toLocaleString()}</div>
+              <div>
+                {t('returnNo')}: <span className="font-mono">{detailOrder?.return_no}</span>
+              </div>
+              <div>
+                {t('relatedPurchaseOrder')}:{' '}
+                <span className="font-mono">{detailOrder?.order_no || '-'}</span>
+              </div>
+              <div>
+                {t('returnDate')}: {detailOrder?.return_date}
+              </div>
+              <div>
+                {t('returnType')}: {returnTypeMap[detailOrder?.return_type || '']}
+              </div>
+              <div>
+                {tc('amount')}: ¥{(detailOrder?.total_amount || 0).toLocaleString()}
+              </div>
+              <div>
+                {t('amountWithTaxTotal')}: ¥{(detailOrder?.grand_total || 0).toLocaleString()}
+              </div>
             </div>
             {detailOrder?.remark && (
-              <div className="text-sm">{tc('remark')}: {detailOrder.remark}</div>
+              <div className="text-sm">
+                {tc('remark')}: {detailOrder.remark}
+              </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDetailOpen(false)}>{tc("close")}</Button>
+            <Button variant="outline" onClick={() => setDetailOpen(false)}>
+              {tc('close')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

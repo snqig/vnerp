@@ -67,7 +67,6 @@ interface MaterialLabel {
 
 // 是否徽章 - 需要在组件内部使用翻译
 export default function MaterialLabelsPage() {
-
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -80,7 +79,9 @@ export default function MaterialLabelsPage() {
         {tc('yes')}
       </Badge>
     ) : (
-      <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">{tc('no')}</Badge>
+      <Badge className="bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+        {tc('no')}
+      </Badge>
     );
   };
 
@@ -165,11 +166,15 @@ export default function MaterialLabelsPage() {
         if (result.success) {
           setLabels(result.data?.list || []);
           setTotal(result.data?.pagination?.total || 0);
-          logger.info({ module: 'Dcprint', action: 'fetchLabels' }, '标签数据获取成功', { count: (result.data?.list || []).length });
+          logger.info({ module: 'Dcprint', action: 'fetchLabels' }, '标签数据获取成功', {
+            count: (result.data?.list || []).length,
+          });
         }
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
-          logger.error({ module: 'Dcprint', action: 'fetchLabels' }, '获取标签数据失败', { error: (error as Error).message });
+          logger.error({ module: 'Dcprint', action: 'fetchLabels' }, '获取标签数据失败', {
+            error: (error as Error).message,
+          });
         }
       } finally {
         setLoading(false);
@@ -236,7 +241,7 @@ export default function MaterialLabelsPage() {
       } else {
         toast.error(result.message || t('cuttingFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('cuttingFailedRetry'));
     } finally {
       setCuttingLoading(false);
@@ -291,12 +296,12 @@ export default function MaterialLabelsPage() {
                 <label className="text-sm font-medium mb-2 block">{t('mainMaterial')}</label>
                 <Select value={isMainMaterial} onValueChange={setIsMainMaterial}>
                   <SelectTrigger>
-                    <SelectValue placeholder={tc("all")} />
+                    <SelectValue placeholder={tc('all')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{tc("all")}</SelectItem>
-                    <SelectItem value="1">{tc("yes")}</SelectItem>
-                    <SelectItem value="0">{tc("no")}</SelectItem>
+                    <SelectItem value="all">{tc('all')}</SelectItem>
+                    <SelectItem value="1">{tc('yes')}</SelectItem>
+                    <SelectItem value="0">{tc('no')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -304,12 +309,12 @@ export default function MaterialLabelsPage() {
                 <label className="text-sm font-medium mb-2 block">{t('isCut')}</label>
                 <Select value={isCut} onValueChange={setIsCut}>
                   <SelectTrigger>
-                    <SelectValue placeholder={tc("all")} />
+                    <SelectValue placeholder={tc('all')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{tc("all")}</SelectItem>
-                    <SelectItem value="1">{tc("yes")}</SelectItem>
-                    <SelectItem value="0">{tc("no")}</SelectItem>
+                    <SelectItem value="all">{tc('all')}</SelectItem>
+                    <SelectItem value="1">{tc('yes')}</SelectItem>
+                    <SelectItem value="0">{tc('no')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -374,15 +379,15 @@ export default function MaterialLabelsPage() {
                     </TableHead>
                     <TableHead>{t('labelNo')}</TableHead>
                     <TableHead>{t('materialInfo')}</TableHead>
-                    <TableHead>{tc("specification")}</TableHead>
+                    <TableHead>{tc('specification')}</TableHead>
                     <TableHead>{t('widthLength')}</TableHead>
                     <TableHead>{tc('batchNo')}</TableHead>
-                    <TableHead>{tc("warehouse")}</TableHead>
+                    <TableHead>{tc('warehouse')}</TableHead>
                     <TableHead>{t('mainMaterial')}</TableHead>
                     <TableHead>{t('isCut')}</TableHead>
                     <TableHead>{t('isUsed')}</TableHead>
-                    <TableHead>{tc("status")}</TableHead>
-                    <TableHead>{tc("actions")}</TableHead>
+                    <TableHead>{tc('status')}</TableHead>
+                    <TableHead>{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -552,7 +557,7 @@ export default function MaterialLabelsPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block">{tc("remark")}</label>
+              <label className="text-sm font-medium mb-2 block">{tc('remark')}</label>
               <Input
                 placeholder={t('cuttingRemark')}
                 value={cutRemark}

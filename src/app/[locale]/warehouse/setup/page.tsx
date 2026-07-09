@@ -129,7 +129,7 @@ export default function WarehouseSetupPage() {
       } else {
         toast.error(result.message || t('fetchWarehouseFailed'));
       }
-    } catch (err) {
+    } catch {
       toast.error(t('fetchWarehouseFailed'));
     } finally {
       setLoading(false);
@@ -209,7 +209,7 @@ export default function WarehouseSetupPage() {
         } else {
           toast.error(result.message || t('deleteFailed'));
         }
-      } catch (err) {
+      } catch {
         toast.error(t('deleteFailed'));
       }
     }
@@ -240,7 +240,7 @@ export default function WarehouseSetupPage() {
       } else {
         toast.error(result.message || t('saveFailed'));
       }
-    } catch (err) {
+    } catch {
       toast.error(t('saveFailed'));
     }
   };
@@ -315,7 +315,7 @@ export default function WarehouseSetupPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{tc("totalCapacity")}</p>
+                  <p className="text-sm text-muted-foreground">{tc('totalCapacity')}</p>
                   <p className="text-2xl font-bold">
                     {(warehouses.reduce((sum, w) => sum + w.capacity, 0) / 1000).toFixed(1)}k
                   </p>
@@ -354,22 +354,22 @@ export default function WarehouseSetupPage() {
                   <TableHead>{t('typeLabel')}</TableHead>
                   <TableHead>{t('includedInCalc')}</TableHead>
                   <TableHead>{t('capacityUsage')}</TableHead>
-                  <TableHead>{tc("responsiblePerson")}</TableHead>
-                  <TableHead>{tc("status")}</TableHead>
-                  <TableHead className="text-right">{tc("actions")}</TableHead>
+                  <TableHead>{tc('responsiblePerson')}</TableHead>
+                  <TableHead>{tc('status')}</TableHead>
+                  <TableHead className="text-right">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      加载中...
+                      {tc('text_27k1ha')}
                     </TableCell>
                   </TableRow>
                 ) : warehouses.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      暂无仓库数据
+                      {tc('text_n0w5s4')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -386,11 +386,11 @@ export default function WarehouseSetupPage() {
                       <TableCell>
                         {warehouse.includeInCalculation ? (
                           <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
-                            是
+                            {tc('text_k6n')}
                           </Badge>
                         ) : (
                           <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">
-                            否
+                            {tc('text_gme')}
                           </Badge>
                         )}
                       </TableCell>
@@ -442,14 +442,14 @@ export default function WarehouseSetupPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEdit(warehouse)}>
                               <Edit className="h-4 w-4 mr-2" />
-                              编辑
+                              {tc('text_mekb')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDeleteClick(warehouse)}
                               className="text-red-600"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              删除
+                              {tc('text_eslg')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -471,7 +471,8 @@ export default function WarehouseSetupPage() {
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="code">
-                  仓库编码 <span className="text-red-500">*</span>
+                  {tc('text_acdqyz')}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="code"
@@ -482,11 +483,12 @@ export default function WarehouseSetupPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="name">
-                  仓库名称 <span className="text-red-500">*</span>
+                  {tc('text_ac6ftv')}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="name"
-                  placeholder={tc("enterWarehouseName")}
+                  placeholder={tc('enterWarehouseName')}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
@@ -532,7 +534,7 @@ export default function WarehouseSetupPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="manager">{tc("responsiblePerson")}</Label>
+                <Label htmlFor="manager">{tc('responsiblePerson')}</Label>
                 <Input
                   id="manager"
                   placeholder={t('managerPlaceholder')}
@@ -541,7 +543,7 @@ export default function WarehouseSetupPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="contact">{tc("phone")}</Label>
+                <Label htmlFor="contact">{tc('phone')}</Label>
                 <Input
                   id="contact"
                   placeholder={t('contactPlaceholder')}
@@ -554,7 +556,7 @@ export default function WarehouseSetupPage() {
                 <Input
                   id="capacity"
                   type="number"
-                  placeholder={tc("enterWarehouseCapacity")}
+                  placeholder={tc('enterWarehouseCapacity')}
                   value={formData.capacity}
                   onChange={(e) =>
                     setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })
@@ -581,12 +583,10 @@ export default function WarehouseSetupPage() {
                     }
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  开启后，该仓库的库存将参与MRP需求计算
-                </p>
+                <p className="text-xs text-muted-foreground">{tc('text_va0t6m')}</p>
               </div>
               <div className="col-span-2 space-y-2">
-                <Label htmlFor="remark">{tc("remark")}</Label>
+                <Label htmlFor="remark">{tc('remark')}</Label>
                 <Input
                   id="remark"
                   placeholder={t('remarkPlaceholder')}
@@ -597,7 +597,7 @@ export default function WarehouseSetupPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
               <Button onClick={handleSave} className="btn-dashboard-primary">
                 {editingWarehouse ? tc('save') : '创建'}
@@ -614,16 +614,18 @@ export default function WarehouseSetupPage() {
             </DialogHeader>
             <div className="py-4">
               <p className="text-muted-foreground">
-                确定要删除仓库 <strong>{warehouseToDelete?.name}</strong> 吗？
+                {tc('text_m9latj')}
+                <strong>{warehouseToDelete?.name}</strong>
+                {tc('text_fpbc')}
               </p>
               <p className="text-sm text-red-500 mt-2">{t('irreversibleWarning')}</p>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
               <Button variant="destructive" onClick={handleConfirmDelete}>
-                确认删除
+                {tc('text_frotru')}
               </Button>
             </DialogFooter>
           </DialogContent>

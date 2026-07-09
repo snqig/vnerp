@@ -72,7 +72,6 @@ interface OutsourceIssueItem {
 }
 
 export default function OutsourceIssuePage() {
-
   const t = useTranslations('Outsource');
   const tc = useTranslations('Common');
 
@@ -129,8 +128,7 @@ export default function OutsourceIssuePage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchOutsourceOrders = async () => {
@@ -138,8 +136,7 @@ export default function OutsourceIssuePage() {
       const res = await authFetch('/api/outsource/order?pageSize=100');
       const result = await res.json();
       if (result.success) setOutsourceOrders(result.data?.list || []);
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchWarehouses = async () => {
@@ -147,8 +144,7 @@ export default function OutsourceIssuePage() {
       const res = await authFetch('/api/warehouse/categories');
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchMaterials = async () => {
@@ -156,8 +152,7 @@ export default function OutsourceIssuePage() {
       const res = await authFetch('/api/materials?pageSize=200');
       const result = await res.json();
       if (result.success) setMaterials(result.data?.list || result.data || []);
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -185,7 +180,7 @@ export default function OutsourceIssuePage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -205,7 +200,7 @@ export default function OutsourceIssuePage() {
       } else {
         toast({ title: t('issuePostFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -221,7 +216,7 @@ export default function OutsourceIssuePage() {
       } else {
         toast({ title: tc('deleteFailed'), variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
@@ -261,7 +256,7 @@ export default function OutsourceIssuePage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchOrderNo")}
+                placeholder={tc('searchOrderNo')}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -275,12 +270,40 @@ export default function OutsourceIssuePage() {
               title="外协发料"
               columns={[
                 { key: 'issue_no', label: t('issueNo'), width: 18 },
-                { key: 'outsource_order_no', label: t('orderNo'), width: 15, formatter: (v) => v || '-' },
-                { key: 'warehouse_name', label: tc('warehouse'), width: 12, formatter: (v) => v || '-' },
+                {
+                  key: 'outsource_order_no',
+                  label: t('orderNo'),
+                  width: 15,
+                  formatter: (v) => v || '-',
+                },
+                {
+                  key: 'warehouse_name',
+                  label: tc('warehouse'),
+                  width: 12,
+                  formatter: (v) => v || '-',
+                },
                 { key: 'issue_date', label: t('issueDate'), width: 12, formatter: (v) => v || '-' },
-                { key: 'items', label: t('issueDetail'), width: 30, formatter: (_v, row) => (row.items || []).map((i: any) => `${i.material_name || '-'}×${i.quantity}`).join(', ') || '-' },
-                { key: 'operator_name', label: t('operatorName'), width: 12, formatter: (v) => v || '-' },
-                { key: 'status', label: tc('status'), width: 10, formatter: (v) => statusMap[v]?.label || '-' },
+                {
+                  key: 'items',
+                  label: t('issueDetail'),
+                  width: 30,
+                  formatter: (_v, row) =>
+                    (row.items || [])
+                      .map((i: any) => `${i.material_name || '-'}×${i.quantity}`)
+                      .join(', ') || '-',
+                },
+                {
+                  key: 'operator_name',
+                  label: t('operatorName'),
+                  width: 12,
+                  formatter: (v) => v || '-',
+                },
+                {
+                  key: 'status',
+                  label: tc('status'),
+                  width: 10,
+                  formatter: (v) => statusMap[v]?.label || '-',
+                },
               ]}
               data={selectedIds.size > 0 ? list.filter((i) => selectedIds.has(i.id)) : list}
             />
@@ -313,12 +336,12 @@ export default function OutsourceIssuePage() {
                   </TableHead>
                   <TableHead className="text-xs">{t('issueNo')}</TableHead>
                   <TableHead className="text-xs">{t('orderNo')}</TableHead>
-                  <TableHead className="text-xs">{tc("warehouse")}</TableHead>
+                  <TableHead className="text-xs">{tc('warehouse')}</TableHead>
                   <TableHead className="text-xs">{t('issueDate')}</TableHead>
                   <TableHead className="text-xs">{t('issueDetail')}</TableHead>
                   <TableHead className="text-xs">{t('operatorName')}</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -493,10 +516,10 @@ export default function OutsourceIssuePage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">{tc("material")}</TableHead>
-                      <TableHead className="text-xs">{tc("quantity")}</TableHead>
-                      <TableHead className="text-xs">{tc("unit")}</TableHead>
-                      <TableHead className="text-xs">{tc("batchNo")}</TableHead>
+                      <TableHead className="text-xs">{tc('material')}</TableHead>
+                      <TableHead className="text-xs">{tc('quantity')}</TableHead>
+                      <TableHead className="text-xs">{tc('unit')}</TableHead>
+                      <TableHead className="text-xs">{tc('batchNo')}</TableHead>
                       <TableHead className="text-xs w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -573,7 +596,7 @@ export default function OutsourceIssuePage() {
                   />
                 </div>
                 <div>
-                  <Label>{tc("remark")}</Label>
+                  <Label>{tc('remark')}</Label>
                   <Input
                     value={form.remark || ''}
                     onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -585,7 +608,7 @@ export default function OutsourceIssuePage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

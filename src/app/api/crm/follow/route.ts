@@ -3,7 +3,7 @@ import { query, execute } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -38,79 +38,88 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const {
-    customer_id,
-    customer_name,
-    follow_type,
-    follow_content,
-    contact_name,
-    salesman_name,
-    next_follow_date,
-    opportunity,
-    status,
-    remark,
-  } = body;
-
-  if (!customer_id) return errorResponse('客户ID不能为空', 400, 400);
-
-  const result: any = await execute(
-    `INSERT INTO crm_follow_record (customer_id, customer_name, follow_type, follow_content, contact_name, salesman_name, next_follow_date, opportunity, status, remark)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const {
       customer_id,
-      customer_name || '',
-      follow_type || 'phone',
-      follow_content || null,
-      contact_name || null,
-      salesman_name || null,
-      next_follow_date || null,
-      opportunity || null,
-      status || 1,
-      remark || null,
-    ]
-  );
+      customer_name,
+      follow_type,
+      follow_content,
+      contact_name,
+      salesman_name,
+      next_follow_date,
+      opportunity,
+      status,
+      remark,
+    } = body;
 
-  return successResponse({ id: result.insertId }, '跟进记录创建成功');
-}, { logTitle: '创建跟进记录' });
+    if (!customer_id) return errorResponse('客户ID不能为空', 400, 400);
 
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, ...fields } = body;
-  if (!id) return errorResponse('ID不能为空', 400, 400);
-
-  const updateFields: string[] = [];
-  const updateValues: any[] = [];
-  const allowedFields = [
-    'follow_type',
-    'follow_content',
-    'contact_name',
-    'salesman_name',
-    'next_follow_date',
-    'opportunity',
-    'status',
-    'remark',
-  ];
-  for (const field of allowedFields) {
-    if (fields[field] !== undefined) {
-      updateFields.push(`${field} = ?`);
-      updateValues.push(fields[field]);
-    }
-  }
-  if (updateFields.length > 0) {
-    await execute(
-      `UPDATE crm_follow_record SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`,
-      [...updateValues, id]
+    const result: any = await execute(
+      `INSERT INTO crm_follow_record (customer_id, customer_name, follow_type, follow_content, contact_name, salesman_name, next_follow_date, opportunity, status, remark)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        customer_id,
+        customer_name || '',
+        follow_type || 'phone',
+        follow_content || null,
+        contact_name || null,
+        salesman_name || null,
+        next_follow_date || null,
+        opportunity || null,
+        status || 1,
+        remark || null,
+      ]
     );
-  }
-  return successResponse(null, '更新成功');
-}, { logTitle: '更新跟进记录' });
 
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  if (!id) return errorResponse('ID不能为空', 400, 400);
-  await execute('UPDATE crm_follow_record SET deleted = 1 WHERE id = ?', [id]);
-  return successResponse(null, '删除成功');
-}, { logTitle: '删除跟进记录' });
+    return successResponse({ id: result.insertId }, '跟进记录创建成功');
+  },
+  { logTitle: '创建跟进记录' }
+);
+
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { id, ...fields } = body;
+    if (!id) return errorResponse('ID不能为空', 400, 400);
+
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
+    const allowedFields = [
+      'follow_type',
+      'follow_content',
+      'contact_name',
+      'salesman_name',
+      'next_follow_date',
+      'opportunity',
+      'status',
+      'remark',
+    ];
+    for (const field of allowedFields) {
+      if (fields[field] !== undefined) {
+        updateFields.push(`${field} = ?`);
+        updateValues.push(fields[field]);
+      }
+    }
+    if (updateFields.length > 0) {
+      await execute(
+        `UPDATE crm_follow_record SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`,
+        [...updateValues, id]
+      );
+    }
+    return successResponse(null, '更新成功');
+  },
+  { logTitle: '更新跟进记录' }
+);
+
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return errorResponse('ID不能为空', 400, 400);
+    await execute('UPDATE crm_follow_record SET deleted = 1 WHERE id = ?', [id]);
+    return successResponse(null, '删除成功');
+  },
+  { logTitle: '删除跟进记录' }
+);

@@ -14,8 +14,9 @@ interface WarehouseCategory {
 }
 
 // GET - 获取仓库分类列表
-export const GET = withPermission(async (request: NextRequest) => {
-  const categories = await query<WarehouseCategory>(`
+export const GET = withPermission(
+  async (_request: NextRequest) => {
+    const categories = await query<WarehouseCategory>(`
     SELECT
       id, code, name, description, sort_order, status
     FROM sys_warehouse_category
@@ -23,5 +24,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     ORDER BY sort_order ASC, id ASC
   `);
 
-  return successResponse(categories);
-}, { errorMessage: '获取仓库分类列表失败' });
+    return successResponse(categories);
+  },
+  { errorMessage: '获取仓库分类列表失败' }
+);

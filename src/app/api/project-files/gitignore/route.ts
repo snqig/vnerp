@@ -61,10 +61,7 @@ Thumbs.db
       success: true,
       message: `已生成 .gitignore 文件: ${gitignorePath}`,
     });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, message: '生成 .gitignore 失败' },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ success: false, message: '生成 .gitignore 失败' }, { status: 500 });
   }
 }

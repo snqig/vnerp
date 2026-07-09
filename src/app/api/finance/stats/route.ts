@@ -3,8 +3,9 @@ import { query, queryOne } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
-export const GET = withPermission(async (request: NextRequest) => {
-  const receivableSummary = (await queryOne(`SELECT
+export const GET = withPermission(
+  async (_request: NextRequest) => {
+    const receivableSummary = (await queryOne(`SELECT
     COALESCE(SUM(amount), 0) as total_amount,
     COALESCE(SUM(received_amount), 0) as total_received,
     COALESCE(SUM(balance), 0) as total_balance,
@@ -13,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     COALESCE(SUM(CASE WHEN due_date < CURDATE() AND status IN (1, 2) THEN balance ELSE 0 END), 0) as overdue_balance
   FROM fin_receivable WHERE deleted = 0`)) as any;
 
-  const payableSummary = (await queryOne(`SELECT
+    const payableSummary = (await queryOne(`SELECT
     COALESCE(SUM(amount), 0) as total_amount,
     COALESCE(SUM(paid_amount), 0) as total_paid,
     COALESCE(SUM(balance), 0) as total_balance,
@@ -22,81 +23,83 @@ export const GET = withPermission(async (request: NextRequest) => {
     COALESCE(SUM(CASE WHEN due_date < CURDATE() AND status IN (1, 2) THEN balance ELSE 0 END), 0) as overdue_balance
   FROM fin_payable WHERE deleted = 0`)) as any;
 
-  const receivableByStatus = await query(`SELECT
+    const receivableByStatus = await query(`SELECT
     status,
     COUNT(*) as count,
     COALESCE(SUM(amount), 0) as amount,
     COALESCE(SUM(balance), 0) as balance
   FROM fin_receivable WHERE deleted = 0 GROUP BY status`);
 
-  const payableByStatus = await query(`SELECT
+    const payableByStatus = await query(`SELECT
     status,
     COUNT(*) as count,
     COALESCE(SUM(amount), 0) as amount,
     COALESCE(SUM(balance), 0) as balance
   FROM fin_payable WHERE deleted = 0 GROUP BY status`);
 
-  const recentReceipts = await query(`SELECT r.*, c.customer_name
+    const recentReceipts = await query(`SELECT r.*, c.customer_name
     FROM fin_receipt_record r
     LEFT JOIN crm_customer c ON r.customer_id = c.id
     WHERE r.deleted = 0
     ORDER BY r.receipt_date DESC LIMIT 5`);
 
-  const recentPayments = await query(`SELECT p.*, s.supplier_name
+    const recentPayments = await query(`SELECT p.*, s.supplier_name
     FROM fin_payment_record p
     LEFT JOIN pur_supplier s ON p.supplier_id = s.id
     WHERE p.deleted = 0
     ORDER BY p.payment_date DESC LIMIT 5`);
 
-  const topReceivables = await query(`SELECT r.*, c.customer_name
+    const topReceivables = await query(`SELECT r.*, c.customer_name
     FROM fin_receivable r
     LEFT JOIN crm_customer c ON r.customer_id = c.id
     WHERE r.deleted = 0 AND r.status IN (1, 2)
     ORDER BY r.balance DESC LIMIT 10`);
 
-  const topPayables = await query(`SELECT p.*, s.supplier_name
+    const topPayables = await query(`SELECT p.*, s.supplier_name
     FROM fin_payable p
     LEFT JOIN pur_supplier s ON p.supplier_id = s.id
     WHERE p.deleted = 0 AND p.status IN (1, 2)
     ORDER BY p.balance DESC LIMIT 10`);
 
-  const summary: any = await queryOne(`
+    const summary: any = await queryOne(`
     SELECT
       COALESCE((SELECT SUM(amount) FROM fin_receivable WHERE deleted = 0 AND status IN (2, 3)), 0) as total_revenue,
       COALESCE((SELECT SUM(amount) FROM fin_cost_record WHERE deleted = 0), 0) as total_cost
   `);
 
-  const totalRevenue = parseFloat(summary?.total_revenue || 0);
-  const totalCost = parseFloat(summary?.total_cost || 0);
-  const totalProfit = totalRevenue - totalCost;
-  const profitRate = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+    const totalRevenue = parseFloat(summary?.total_revenue || 0);
+    const totalCost = parseFloat(summary?.total_cost || 0);
+    const totalProfit = totalRevenue - totalCost;
+    const profitRate = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
-  return successResponse({
-    total_revenue: totalRevenue,
-    total_cost: totalCost,
-    total_profit: totalProfit,
-    profit_rate: profitRate,
-    receivable: {
-      total_amount: parseFloat(receivableSummary?.total_amount || 0),
-      total_received: parseFloat(receivableSummary?.total_received || 0),
-      total_balance: parseFloat(receivableSummary?.total_balance || 0),
-      unpaid_balance: parseFloat(receivableSummary?.unpaid_balance || 0),
-      partial_balance: parseFloat(receivableSummary?.partial_balance || 0),
-      overdue_balance: parseFloat(receivableSummary?.overdue_balance || 0),
-      by_status: receivableByStatus,
-    },
-    payable: {
-      total_amount: parseFloat(payableSummary?.total_amount || 0),
-      total_paid: parseFloat(payableSummary?.total_paid || 0),
-      total_balance: parseFloat(payableSummary?.total_balance || 0),
-      unpaid_balance: parseFloat(payableSummary?.unpaid_balance || 0),
-      partial_balance: parseFloat(payableSummary?.partial_balance || 0),
-      overdue_balance: parseFloat(payableSummary?.overdue_balance || 0),
-      by_status: payableByStatus,
-    },
-    recent_receipts: recentReceipts,
-    recent_payments: recentPayments,
-    top_receivables: topReceivables,
-    top_payables: topPayables,
-  });
-}, { errorMessage: '获取财务统计失败' });
+    return successResponse({
+      total_revenue: totalRevenue,
+      total_cost: totalCost,
+      total_profit: totalProfit,
+      profit_rate: profitRate,
+      receivable: {
+        total_amount: parseFloat(receivableSummary?.total_amount || 0),
+        total_received: parseFloat(receivableSummary?.total_received || 0),
+        total_balance: parseFloat(receivableSummary?.total_balance || 0),
+        unpaid_balance: parseFloat(receivableSummary?.unpaid_balance || 0),
+        partial_balance: parseFloat(receivableSummary?.partial_balance || 0),
+        overdue_balance: parseFloat(receivableSummary?.overdue_balance || 0),
+        by_status: receivableByStatus,
+      },
+      payable: {
+        total_amount: parseFloat(payableSummary?.total_amount || 0),
+        total_paid: parseFloat(payableSummary?.total_paid || 0),
+        total_balance: parseFloat(payableSummary?.total_balance || 0),
+        unpaid_balance: parseFloat(payableSummary?.unpaid_balance || 0),
+        partial_balance: parseFloat(payableSummary?.partial_balance || 0),
+        overdue_balance: parseFloat(payableSummary?.overdue_balance || 0),
+        by_status: payableByStatus,
+      },
+      recent_receipts: recentReceipts,
+      recent_payments: recentPayments,
+      top_receivables: topReceivables,
+      top_payables: topPayables,
+    });
+  },
+  { errorMessage: '获取财务统计失败' }
+);

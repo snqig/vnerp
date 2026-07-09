@@ -11,13 +11,13 @@ import { query, execute } from '@/lib/db';
 
 /**
  * 批次/序列号管理 API
- * 
+ *
  * 支持按批次管理物料，实现保质期预警、序列号追溯
  */
 
 // 获取批次列表
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
     const warehouseId = searchParams.get('warehouseId');
@@ -48,7 +48,8 @@ export const GET = withPermission(
     }
     if (expiryWarning) {
       // 查询即将过期的批次（30天内）
-      where += ' AND b.expiry_date IS NOT NULL AND b.expiry_date <= DATE_ADD(NOW(), INTERVAL 30 DAY) AND b.expiry_date > NOW() AND b.quantity > 0';
+      where +=
+        ' AND b.expiry_date IS NOT NULL AND b.expiry_date <= DATE_ADD(NOW(), INTERVAL 30 DAY) AND b.expiry_date > NOW() AND b.quantity > 0';
     }
 
     const countRows: any = await query(
@@ -77,18 +78,31 @@ export const GET = withPermission(
 
 // 创建批次/序列号记录
 export const POST = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
-    const validation = validateRequestBody(body, ['material_id', 'warehouse_id', 'batch_no', 'quantity']);
+    const validation = validateRequestBody(body, [
+      'material_id',
+      'warehouse_id',
+      'batch_no',
+      'quantity',
+    ]);
 
     if (!validation.valid) {
       return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
     }
 
     const {
-      material_id, warehouse_id, batch_no, serial_no,
-      quantity, unit_price, cost_price,
-      production_date, expiry_date, supplier_id, supplier_name,
+      material_id,
+      warehouse_id,
+      batch_no,
+      serial_no,
+      quantity,
+      unit_price,
+      cost_price,
+      production_date,
+      expiry_date,
+      supplier_id,
+      supplier_name,
       remark,
     } = body;
 
@@ -102,7 +116,9 @@ export const POST = withPermission(
       // 批次已存在，增加数量
       const newQty = Number(existing[0].quantity) + Number(quantity);
       const newCostPrice = cost_price
-        ? (Number(existing[0].quantity) * Number(existing[0].cost_price || 0) + Number(quantity) * Number(cost_price)) / newQty
+        ? (Number(existing[0].quantity) * Number(existing[0].cost_price || 0) +
+            Number(quantity) * Number(cost_price)) /
+          newQty
         : existing[0].cost_price;
 
       await execute(
@@ -122,11 +138,18 @@ export const POST = withPermission(
         supplier_id, supplier_name, remark, create_time, update_time)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
-        material_id, warehouse_id, batch_no, serial_no || null,
-        quantity, quantity,
-        unit_price || 0, cost_price || 0,
-        production_date || null, expiry_date || null,
-        supplier_id || null, supplier_name || null,
+        material_id,
+        warehouse_id,
+        batch_no,
+        serial_no || null,
+        quantity,
+        quantity,
+        unit_price || 0,
+        cost_price || 0,
+        production_date || null,
+        expiry_date || null,
+        supplier_id || null,
+        supplier_name || null,
         remark || null,
       ]
     );
@@ -138,7 +161,7 @@ export const POST = withPermission(
 
 // 更新批次信息
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
     const { id, action } = body;
 
@@ -148,10 +171,10 @@ export const PUT = withPermission(
 
     if (action === 'freeze') {
       // 冻结批次
-      await execute(
-        'UPDATE inv_inventory_batch SET available_qty = 0, status = ? WHERE id = ?',
-        ['frozen', id]
-      );
+      await execute('UPDATE inv_inventory_batch SET available_qty = 0, status = ? WHERE id = ?', [
+        'frozen',
+        id,
+      ]);
       return successResponse(null, '批次已冻结');
     }
 
@@ -161,10 +184,11 @@ export const PUT = withPermission(
       if (batch.length === 0) {
         return errorResponse('批次不存在', 404, 404);
       }
-      await execute(
-        'UPDATE inv_inventory_batch SET available_qty = ?, status = ? WHERE id = ?',
-        [batch[0].quantity, 'active', id]
-      );
+      await execute('UPDATE inv_inventory_batch SET available_qty = ?, status = ? WHERE id = ?', [
+        batch[0].quantity,
+        'active',
+        id,
+      ]);
       return successResponse(null, '批次已解冻');
     }
 
@@ -193,10 +217,7 @@ export const PUT = withPermission(
     updates.push('update_time = NOW()');
     params.push(id);
 
-    await execute(
-      `UPDATE inv_inventory_batch SET ${updates.join(', ')} WHERE id = ?`,
-      params
-    );
+    await execute(`UPDATE inv_inventory_batch SET ${updates.join(', ')} WHERE id = ?`, params);
 
     return successResponse(null, '批次信息更新成功');
   },

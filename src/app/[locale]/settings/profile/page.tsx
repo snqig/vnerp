@@ -42,7 +42,7 @@ export default function ProfilePage() {
           phone: user.phone || '',
           email: user.email || '',
         });
-      } catch (e) {}
+      } catch {}
     }
   }, []);
 
@@ -72,7 +72,7 @@ export default function ProfilePage() {
       } else {
         toast({ title: result.message || '保存失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '保存失败', variant: 'destructive' });
     } finally {
       setSaving(false);
@@ -108,7 +108,7 @@ export default function ProfilePage() {
       } else {
         toast({ title: result.message || '密码修改失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '密码修改失败', variant: 'destructive' });
     } finally {
       setSaving(false);
@@ -123,7 +123,10 @@ export default function ProfilePage() {
   return (
     <MainLayout>
       <div className="p-6 max-w-4xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold">{t('user')} - 个人中心</h1>
+        <h1 className="text-2xl font-bold">
+          {t('user')}
+          {tc('text_vzg8bd')}
+        </h1>
 
         <div className="grid gap-6 md:grid-cols-[240px_1fr]">
           {/* 左侧用户信息卡 */}
@@ -170,40 +173,40 @@ export default function ProfilePage() {
             <TabsList>
               <TabsTrigger value="profile">
                 <User className="h-4 w-4 mr-1" />
-                基本信息
+                {tc('text_biyzkw')}
               </TabsTrigger>
               <TabsTrigger value="password">
                 <Lock className="h-4 w-4 mr-1" />
-                修改密码
+                {tc('text_ai7i2u')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile">
               <Card>
                 <CardHeader>
-                  <CardTitle>基本信息</CardTitle>
-                  <CardDescription>修改您的个人基本信息</CardDescription>
+                  <CardTitle>{tc('text_biyzkw')}</CardTitle>
+                  <CardDescription>{tc('text_n6hg2x')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-1">
                     <Label>{t('realName')}</Label>
                     <Input
                       value={profileForm.realName}
-                      onChange={(e) => setProfileForm(f => ({ ...f, realName: e.target.value }))}
+                      onChange={(e) => setProfileForm((f) => ({ ...f, realName: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-1">
                     <Label>{t('phone')}</Label>
                     <Input
                       value={profileForm.phone}
-                      onChange={(e) => setProfileForm(f => ({ ...f, phone: e.target.value }))}
+                      onChange={(e) => setProfileForm((f) => ({ ...f, phone: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-1">
                     <Label>{t('email')}</Label>
                     <Input
                       value={profileForm.email}
-                      onChange={(e) => setProfileForm(f => ({ ...f, email: e.target.value }))}
+                      onChange={(e) => setProfileForm((f) => ({ ...f, email: e.target.value }))}
                     />
                   </div>
                   <Button onClick={handleSaveProfile} disabled={saving}>
@@ -217,33 +220,39 @@ export default function ProfilePage() {
             <TabsContent value="password">
               <Card>
                 <CardHeader>
-                  <CardTitle>{tc("changePassword")}</CardTitle>
-                  <CardDescription>定期修改密码有助于保障账号安全</CardDescription>
+                  <CardTitle>{tc('changePassword')}</CardTitle>
+                  <CardDescription>{tc('text_f6ikpe')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-1">
-                    <Label>当前密码</Label>
+                    <Label>{tc('text_cdc5hx')}</Label>
                     <Input
                       type="password"
                       value={passwordForm.oldPassword}
-                      onChange={(e) => setPasswordForm(f => ({ ...f, oldPassword: e.target.value }))}
+                      onChange={(e) =>
+                        setPasswordForm((f) => ({ ...f, oldPassword: e.target.value }))
+                      }
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label>新密码</Label>
+                    <Label>{tc('text_fcgq3')}</Label>
                     <Input
                       type="password"
                       value={passwordForm.newPassword}
-                      onChange={(e) => setPasswordForm(f => ({ ...f, newPassword: e.target.value }))}
+                      onChange={(e) =>
+                        setPasswordForm((f) => ({ ...f, newPassword: e.target.value }))
+                      }
                       placeholder="至少6位字符"
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label>确认新密码</Label>
+                    <Label>{tc('text_8aswln')}</Label>
                     <Input
                       type="password"
                       value={passwordForm.confirmPassword}
-                      onChange={(e) => setPasswordForm(f => ({ ...f, confirmPassword: e.target.value }))}
+                      onChange={(e) =>
+                        setPasswordForm((f) => ({ ...f, confirmPassword: e.target.value }))
+                      }
                     />
                   </div>
                   <Button onClick={handleChangePassword} disabled={saving}>

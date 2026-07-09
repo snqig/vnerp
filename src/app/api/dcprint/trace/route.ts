@@ -46,7 +46,7 @@ function generateTraceNo(): string {
 }
 
 // GET - 获取追溯记录列表
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const workOrderNo = searchParams.get('workOrderNo') || '';
@@ -127,7 +127,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 
 // POST - 执行追溯查询
 export const POST = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (request: NextRequest, _userInfo) => {
     const body = await request.json();
     const { cardNo, traceType = 'forward', operatorId, operatorName } = body;
 
@@ -258,7 +258,7 @@ export const POST = withPermission(
 );
 
 // GET /detail - 获取追溯详情
-export const detail = withPermission(async (request: NextRequest, userInfo) => {
+export const detail = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const traceNo = searchParams.get('traceNo');
 

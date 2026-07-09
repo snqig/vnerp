@@ -115,7 +115,7 @@ export function WarehouseCategoryManager() {
           activeWarehouses: result.data.summary.active_warehouses,
         });
       }
-    } catch (error) {
+    } catch {
       toast.error('获取仓库分类失败');
     } finally {
       setLoading(false);
@@ -170,7 +170,7 @@ export function WarehouseCategoryManager() {
       } else {
         toast.error(result.message || '操作失败');
       }
-    } catch (error) {
+    } catch {
       toast.error('保存分类失败');
     }
   };
@@ -189,7 +189,7 @@ export function WarehouseCategoryManager() {
       } else {
         toast.error(result.message || '删除失败');
       }
-    } catch (error) {
+    } catch {
       toast.error('删除分类失败');
     }
   };
@@ -203,9 +203,9 @@ export function WarehouseCategoryManager() {
   // 状态标签
   const getStatusBadge = (status: number) => {
     return status === 1 ? (
-      <Badge className="bg-green-100 text-green-800">启用</Badge>
+      <Badge className="bg-green-100 text-green-800">{tc('text_eymx')}</Badge>
     ) : (
-      <Badge className="bg-secondary text-secondary-foreground">停用</Badge>
+      <Badge className="bg-secondary text-secondary-foreground">{tc('text_eb7w')}</Badge>
     );
   };
 
@@ -223,7 +223,7 @@ export function WarehouseCategoryManager() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">总分类数</p>
+                <p className="text-sm text-muted-foreground">{tc('text_chkaf4')}</p>
                 <p className="text-2xl font-bold">{stats.total}</p>
               </div>
               <div className="p-3 bg-blue-500/10 rounded-full dark:bg-blue-400/15">
@@ -236,7 +236,7 @@ export function WarehouseCategoryManager() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">启用分类</p>
+                <p className="text-sm text-muted-foreground">{tc('text_b3t8lq')}</p>
                 <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {stats.active}
                 </p>
@@ -251,7 +251,7 @@ export function WarehouseCategoryManager() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">仓库总数</p>
+                <p className="text-sm text-muted-foreground">{tc('text_ac8ed1')}</p>
                 <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {stats.totalWarehouses}
                 </p>
@@ -266,7 +266,7 @@ export function WarehouseCategoryManager() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">可用仓库</p>
+                <p className="text-sm text-muted-foreground">{tc('text_b2nny1')}</p>
                 <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                   {stats.activeWarehouses}
                 </p>
@@ -285,9 +285,9 @@ export function WarehouseCategoryManager() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Warehouse className="w-5 h-5" />
-              仓库分类管理
+              {tc('text_9g3fxi')}
             </CardTitle>
-            <CardDescription>管理仓库分类，用于资源配置和容量规划</CardDescription>
+            <CardDescription>{tc('text_nucjbf')}</CardDescription>
           </div>
           <Button
             onClick={async () => {
@@ -305,7 +305,7 @@ export function WarehouseCategoryManager() {
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Plus className="w-4 h-4 mr-2" />
-            新增分类
+            {tc('text_d73zc3')}
           </Button>
         </CardHeader>
         <CardContent>
@@ -317,21 +317,21 @@ export function WarehouseCategoryManager() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>分类编码</TableHead>
-                  <TableHead>分类名称</TableHead>
-                  <TableHead>仓库数量</TableHead>
-                  <TableHead>总容量/已使用</TableHead>
-                  <TableHead>使用率</TableHead>
-                  <TableHead>排序</TableHead>
-                  <TableHead>状态</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
+                  <TableHead>{tc('text_avae8w')}</TableHead>
+                  <TableHead>{tc('text_av333s')}</TableHead>
+                  <TableHead>{tc('text_ac9j0f')}</TableHead>
+                  <TableHead>{tc('text_5lkvq5')}</TableHead>
+                  <TableHead>{tc('text_c7qqm')}</TableHead>
+                  <TableHead>{tc('text_hge5')}</TableHead>
+                  <TableHead>{tc('text_k1e3')}</TableHead>
+                  <TableHead className="text-right">{tc('text_hkxb')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {categories.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      暂无仓库分类数据
+                      {tc('text_wgn86p')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -357,7 +357,8 @@ export function WarehouseCategoryManager() {
                               : 'bg-gray-100 text-muted-foreground'
                           }
                         >
-                          {category.warehouse_count || 0} 个仓库
+                          {category.warehouse_count || 0}
+                          {tc('text_bu30q')}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -442,7 +443,8 @@ export function WarehouseCategoryManager() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  分类编码 <span className="text-red-500">*</span>
+                  {tc('text_avae8w')}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <div className="flex gap-2">
                   <Input
@@ -471,7 +473,7 @@ export function WarehouseCategoryManager() {
                         setCodeError('');
                       }}
                     >
-                      自动生成
+                      {tc('text_gqkcpb')}
                     </Button>
                   )}
                 </div>
@@ -479,7 +481,8 @@ export function WarehouseCategoryManager() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  分类名称 <span className="text-red-500">*</span>
+                  {tc('text_av333s')}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={form.name || ''}
@@ -489,7 +492,7 @@ export function WarehouseCategoryManager() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>排序号</Label>
+              <Label>{tc('text_f1kre')}</Label>
               <Input
                 type="number"
                 value={form.sort_order || 0}
@@ -498,18 +501,18 @@ export function WarehouseCategoryManager() {
               />
             </div>
             <div className="space-y-2">
-              <Label>状态</Label>
+              <Label>{tc('text_k1e3')}</Label>
               <select
                 className="w-full h-9 px-3 rounded-md border border-input bg-transparent"
                 value={form.status ?? 1}
                 onChange={(e) => setForm({ ...form, status: parseInt(e.target.value) })}
               >
-                <option value={1}>启用</option>
-                <option value={0}>停用</option>
+                <option value={1}>{tc('text_eymx')}</option>
+                <option value={0}>{tc('text_eb7w')}</option>
               </select>
             </div>
             <div className="space-y-2">
-              <Label>分类描述</Label>
+              <Label>{tc('text_av5vxy')}</Label>
               <textarea
                 className="w-full min-h-[80px] px-3 py-2 rounded-md border border-input bg-transparent"
                 value={form.description || ''}
@@ -521,10 +524,10 @@ export function WarehouseCategoryManager() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)} type="button">
-              取消
+              {tc('text_ev02')}
             </Button>
             <Button onClick={saveCategory} className="bg-blue-600 hover:bg-blue-700" type="button">
-              保存
+              {tc('text_e32z')}
             </Button>
           </DialogFooter>
         </DialogContent>

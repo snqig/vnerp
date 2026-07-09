@@ -11,10 +11,20 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import { BookOpen, Plus, RefreshCw, Edit, Trash2, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -49,7 +59,14 @@ export default function DictPage() {
   const [typeDialogOpen, setTypeDialogOpen] = useState(false);
   const [dataDialogOpen, setDataDialogOpen] = useState(false);
   const [typeForm, setTypeForm] = useState({ dict_name: '', dict_type: '', status: 1, remark: '' });
-  const [dataForm, setDataForm] = useState({ dict_type: '', dict_label: '', dict_value: '', sort_order: 0, status: 1, remark: '' });
+  const [dataForm, setDataForm] = useState({
+    dict_type: '',
+    dict_label: '',
+    dict_value: '',
+    sort_order: 0,
+    status: 1,
+    remark: '',
+  });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -62,7 +79,7 @@ export default function DictPage() {
           setSelectedType(result.data.list[0]);
         }
       }
-    } catch (e) {
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -91,7 +108,7 @@ export default function DictPage() {
       } else {
         toast({ title: result.message || '创建失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '创建失败', variant: 'destructive' });
     }
   };
@@ -104,18 +121,33 @@ export default function DictPage() {
     try {
       const res = await authFetch('/api/system/dict', {
         method: 'POST',
-        body: JSON.stringify({ action: 'create_data', dict_type: selectedType?.dict_type, dict_label: dataForm.dict_label, dict_value: dataForm.dict_value, sort_order: dataForm.sort_order, status: dataForm.status, remark: dataForm.remark }),
+        body: JSON.stringify({
+          action: 'create_data',
+          dict_type: selectedType?.dict_type,
+          dict_label: dataForm.dict_label,
+          dict_value: dataForm.dict_value,
+          sort_order: dataForm.sort_order,
+          status: dataForm.status,
+          remark: dataForm.remark,
+        }),
       });
       const result = await res.json();
       if (result.success) {
         toast({ title: '字典数据创建成功' });
         setDataDialogOpen(false);
-        setDataForm({ dict_type: '', dict_label: '', dict_value: '', sort_order: 0, status: 1, remark: '' });
+        setDataForm({
+          dict_type: '',
+          dict_label: '',
+          dict_value: '',
+          sort_order: 0,
+          status: 1,
+          remark: '',
+        });
         fetchData();
       } else {
         toast({ title: result.message || '创建失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '创建失败', variant: 'destructive' });
     }
   };
@@ -123,14 +155,16 @@ export default function DictPage() {
   const handleDeleteType = async (id: number) => {
     if (!confirm('确认删除此字典类型及其所有数据？')) return;
     try {
-      const res = await authFetch(`/api/system/dict?action=delete_type&id=${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/system/dict?action=delete_type&id=${id}`, {
+        method: 'DELETE',
+      });
       const result = await res.json();
       if (result.success) {
         toast({ title: '字典类型已删除' });
         if (selectedType?.id === id) setSelectedType(null);
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '删除失败', variant: 'destructive' });
     }
   };
@@ -138,13 +172,15 @@ export default function DictPage() {
   const handleDeleteData = async (id: number) => {
     if (!confirm('确认删除此字典数据？')) return;
     try {
-      const res = await authFetch(`/api/system/dict?action=delete_data&id=${id}`, { method: 'DELETE' });
+      const res = await authFetch(`/api/system/dict?action=delete_data&id=${id}`, {
+        method: 'DELETE',
+      });
       const result = await res.json();
       if (result.success) {
         toast({ title: '字典数据已删除' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '删除失败', variant: 'destructive' });
     }
   };
@@ -158,9 +194,7 @@ export default function DictPage() {
               <BookOpen className="w-6 h-6" />
               {t('dictManagement')}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('dictManagementDesc')}
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">{t('dictManagementDesc')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={fetchData}>
@@ -169,7 +203,7 @@ export default function DictPage() {
             </Button>
             <Button size="sm" onClick={() => setTypeDialogOpen(true)}>
               <Plus className="h-3 w-3 mr-1" />
-              {t("addDictType")}
+              {t('addDictType')}
             </Button>
           </div>
         </div>
@@ -195,8 +229,18 @@ export default function DictPage() {
                       <p className="text-xs text-muted-foreground">{dt.dict_type}</p>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Badge variant="outline" className="text-xs">{dt.items?.length || 0}</Badge>
-                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); handleDeleteType(dt.id); }}>
+                      <Badge variant="outline" className="text-xs">
+                        {dt.items?.length || 0}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 w-6 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteType(dt.id);
+                        }}
+                      >
                         <Trash2 className="h-3 w-3 text-red-500" />
                       </Button>
                     </div>
@@ -211,15 +255,23 @@ export default function DictPage() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-sm">{selectedType?.dict_name || tc("selectDictType")}</CardTitle>
+                  <CardTitle className="text-sm">
+                    {selectedType?.dict_name || tc('selectDictType')}
+                  </CardTitle>
                   {selectedType && (
                     <CardDescription className="text-xs">{selectedType.dict_type}</CardDescription>
                   )}
                 </div>
                 {selectedType && (
-                  <Button size="sm" onClick={() => { setDataForm(f => ({ ...f, dict_type: selectedType.dict_type })); setDataDialogOpen(true); }}>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setDataForm((f) => ({ ...f, dict_type: selectedType.dict_type }));
+                      setDataDialogOpen(true);
+                    }}
+                  >
                     <Plus className="h-3 w-3 mr-1" />
-                    {t("addDictData")}
+                    {t('addDictData')}
                   </Button>
                 )}
               </div>
@@ -231,7 +283,7 @@ export default function DictPage() {
                     <TableRow>
                       <TableHead>{t('dictLabel')}</TableHead>
                       <TableHead>{t('dictValue')}</TableHead>
-                      <TableHead>{tc("sortOrder")}</TableHead>
+                      <TableHead>{tc('sortOrder')}</TableHead>
                       <TableHead>{tc('status')}</TableHead>
                       <TableHead className="text-right">{tc('actions')}</TableHead>
                     </TableRow>
@@ -251,13 +303,20 @@ export default function DictPage() {
                           <TableCell className="text-sm">{item.sort_order}</TableCell>
                           <TableCell>
                             {item.status === 1 ? (
-                              <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">{tc("enable")}</Badge>
+                              <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">
+                                {tc('enable')}
+                              </Badge>
                             ) : (
-                              <Badge variant="secondary">{tc("disable")}</Badge>
+                              <Badge variant="secondary">{tc('disable')}</Badge>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button size="sm" variant="ghost" className="h-7 text-red-600" onClick={() => handleDeleteData(item.id)}>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-red-600"
+                              onClick={() => handleDeleteData(item.id)}
+                            >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </TableCell>
@@ -267,9 +326,7 @@ export default function DictPage() {
                   </TableBody>
                 </Table>
               ) : (
-                <div className="text-center text-muted-foreground py-12">
-                  请从左侧选择一个字典类型
-                </div>
+                <div className="text-center text-muted-foreground py-12">{tc('text_wxodgt')}</div>
               )}
             </CardContent>
           </Card>
@@ -280,25 +337,37 @@ export default function DictPage() {
       <Dialog open={typeDialogOpen} onOpenChange={setTypeDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("addDictType")}</DialogTitle>
-            <DialogDescription>{tc("createNewDictCategory")}</DialogDescription>
+            <DialogTitle>{t('addDictType')}</DialogTitle>
+            <DialogDescription>{tc('createNewDictCategory')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label>{tc("dictName")} *</Label>
-              <Input value={typeForm.dict_name} onChange={(e) => setTypeForm(f => ({ ...f, dict_name: e.target.value }))} />
+              <Label>{tc('dictName')} *</Label>
+              <Input
+                value={typeForm.dict_name}
+                onChange={(e) => setTypeForm((f) => ({ ...f, dict_name: e.target.value }))}
+              />
             </div>
             <div className="space-y-1">
-              <Label>{tc("dictCode")} *</Label>
-              <Input value={typeForm.dict_type} onChange={(e) => setTypeForm(f => ({ ...f, dict_type: e.target.value }))} placeholder={tc("dictCodePlaceholder")} />
+              <Label>{tc('dictCode')} *</Label>
+              <Input
+                value={typeForm.dict_type}
+                onChange={(e) => setTypeForm((f) => ({ ...f, dict_type: e.target.value }))}
+                placeholder={tc('dictCodePlaceholder')}
+              />
             </div>
             <div className="space-y-1">
               <Label>{tc('remark')}</Label>
-              <Textarea value={typeForm.remark} onChange={(e) => setTypeForm(f => ({ ...f, remark: e.target.value }))} />
+              <Textarea
+                value={typeForm.remark}
+                onChange={(e) => setTypeForm((f) => ({ ...f, remark: e.target.value }))}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTypeDialogOpen(false)}>{tc('cancel')}</Button>
+            <Button variant="outline" onClick={() => setTypeDialogOpen(false)}>
+              {tc('cancel')}
+            </Button>
             <Button onClick={handleCreateType}>{tc('confirm')}</Button>
           </DialogFooter>
         </DialogContent>
@@ -308,29 +377,46 @@ export default function DictPage() {
       <Dialog open={dataDialogOpen} onOpenChange={setDataDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t("addDictData")}</DialogTitle>
-            <DialogDescription>{tc("addDataForDict", { dictName: selectedType?.dict_name || '' })}</DialogDescription>
+            <DialogTitle>{t('addDictData')}</DialogTitle>
+            <DialogDescription>
+              {tc('addDataForDict', { dictName: selectedType?.dict_name || '' })}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label>{tc("dictLabel")} *</Label>
-              <Input value={dataForm.dict_label} onChange={(e) => setDataForm(f => ({ ...f, dict_label: e.target.value }))} />
+              <Label>{tc('dictLabel')} *</Label>
+              <Input
+                value={dataForm.dict_label}
+                onChange={(e) => setDataForm((f) => ({ ...f, dict_label: e.target.value }))}
+              />
             </div>
             <div className="space-y-1">
-              <Label>{tc("dictValue")} *</Label>
-              <Input value={dataForm.dict_value} onChange={(e) => setDataForm(f => ({ ...f, dict_value: e.target.value }))} />
+              <Label>{tc('dictValue')} *</Label>
+              <Input
+                value={dataForm.dict_value}
+                onChange={(e) => setDataForm((f) => ({ ...f, dict_value: e.target.value }))}
+              />
             </div>
             <div className="space-y-1">
-              <Label>{tc("sortOrder")}</Label>
-              <Input type="number" value={dataForm.sort_order} onChange={(e) => setDataForm(f => ({ ...f, sort_order: Number(e.target.value) }))} />
+              <Label>{tc('sortOrder')}</Label>
+              <Input
+                type="number"
+                value={dataForm.sort_order}
+                onChange={(e) => setDataForm((f) => ({ ...f, sort_order: Number(e.target.value) }))}
+              />
             </div>
             <div className="space-y-1">
               <Label>{tc('remark')}</Label>
-              <Textarea value={dataForm.remark} onChange={(e) => setDataForm(f => ({ ...f, remark: e.target.value }))} />
+              <Textarea
+                value={dataForm.remark}
+                onChange={(e) => setDataForm((f) => ({ ...f, remark: e.target.value }))}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDataDialogOpen(false)}>{tc('cancel')}</Button>
+            <Button variant="outline" onClick={() => setDataDialogOpen(false)}>
+              {tc('cancel')}
+            </Button>
             <Button onClick={handleCreateData}>{tc('confirm')}</Button>
           </DialogFooter>
         </DialogContent>

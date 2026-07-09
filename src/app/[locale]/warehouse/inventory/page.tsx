@@ -65,9 +65,19 @@ export default function InventoryPage() {
 
   // 高级搜索字段配置
   const filterFields: FilterField[] = [
-    { key: 'material_code', label: t('materialCode'), type: 'text', placeholder: t('materialCode') },
+    {
+      key: 'material_code',
+      label: t('materialCode'),
+      type: 'text',
+      placeholder: t('materialCode'),
+    },
     { key: 'material_name', label: t('material'), type: 'text', placeholder: t('material') },
-    { key: 'specification', label: t('specification'), type: 'text', placeholder: t('specification') },
+    {
+      key: 'specification',
+      label: t('specification'),
+      type: 'text',
+      placeholder: t('specification'),
+    },
     { key: 'batch_no', label: t('batchNo'), type: 'text', placeholder: t('batchNo') },
     {
       key: 'status',
@@ -103,7 +113,7 @@ export default function InventoryPage() {
           } else {
             toast({ title: result.message || tc('freezeFailed'), variant: 'destructive' });
           }
-        } catch (e) {
+        } catch {
           toast({ title: tc('freezeFailed'), variant: 'destructive' });
         }
       },
@@ -124,7 +134,7 @@ export default function InventoryPage() {
           a.click();
           URL.revokeObjectURL(url);
           toast({ title: tc('exportSuccess') });
-        } catch (e) {
+        } catch {
           toast({ title: tc('exportFailed'), variant: 'destructive' });
         }
       },
@@ -220,8 +230,7 @@ export default function InventoryPage() {
         const list = Array.isArray(result.data) ? result.data : result.data.list || [];
         setWarehouses(list);
       }
-    } catch (error) {
-    }
+    } catch {}
   };
 
   const fetchInventory = async () => {
@@ -272,7 +281,7 @@ export default function InventoryPage() {
         }));
         setWarehouseStats(stats);
       }
-    } catch (error) {
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -307,7 +316,10 @@ export default function InventoryPage() {
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">{t('materialTypes')}</span>
-                      <span className="font-medium">{wh.items}{t('typesUnit')}</span>
+                      <span className="font-medium">
+                        {wh.items}
+                        {t('typesUnit')}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">{t('stockValue')}</span>
@@ -352,11 +364,13 @@ export default function InventoryPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">{t('current')}</span>
-                        <span className={`font-medium ${
-                          alert.type === 'out'
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-orange-600 dark:text-orange-400'
-                        }`}>
+                        <span
+                          className={`font-medium ${
+                            alert.type === 'out'
+                              ? 'text-red-600 dark:text-red-400'
+                              : 'text-orange-600 dark:text-orange-400'
+                          }`}
+                        >
                           {alert.current} {alert.unit}
                         </span>
                       </div>
@@ -433,9 +447,9 @@ export default function InventoryPage() {
                     const newFilters: ActiveFilter[] = [];
                     Object.entries(filters).forEach(([key, value]) => {
                       if (value) {
-                        const field = filterFields.find(f => f.key === key);
+                        const field = filterFields.find((f) => f.key === key);
                         if (field) {
-                          const option = field.options?.find(o => o.value === value);
+                          const option = field.options?.find((o) => o.value === value);
                           newFilters.push({
                             key,
                             label: field.label,
@@ -463,7 +477,7 @@ export default function InventoryPage() {
                   }}
                   activeFilters={activeFilters}
                   onRemoveFilter={(key) => {
-                    setActiveFilters(prev => prev.filter(f => f.key !== key));
+                    setActiveFilters((prev) => prev.filter((f) => f.key !== key));
                     if (key === 'status') setStatus('all');
                   }}
                 />
@@ -488,7 +502,10 @@ export default function InventoryPage() {
                   <TableRow>
                     <TableHead className="w-[40px]">
                       <Checkbox
-                        checked={selectedIds.length === sortedInventory.length && sortedInventory.length > 0}
+                        checked={
+                          selectedIds.length === sortedInventory.length &&
+                          sortedInventory.length > 0
+                        }
                         onCheckedChange={(checked) => {
                           if (checked) setSelectedIds(sortedInventory.map((i: any) => i.id));
                           else setSelectedIds([]);
@@ -500,7 +517,8 @@ export default function InventoryPage() {
                       onClick={() => handleSort('batch_no')}
                     >
                       <span className="inline-flex items-center">
-                        {t('batchNo')}{getSortIcon('batch_no')}
+                        {t('batchNo')}
+                        {getSortIcon('batch_no')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -508,7 +526,8 @@ export default function InventoryPage() {
                       onClick={() => handleSort('material_code')}
                     >
                       <span className="inline-flex items-center">
-                        {t('materialCode')}{getSortIcon('material_code')}
+                        {t('materialCode')}
+                        {getSortIcon('material_code')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -516,7 +535,8 @@ export default function InventoryPage() {
                       onClick={() => handleSort('material_name')}
                     >
                       <span className="inline-flex items-center">
-                        {t('material')}{getSortIcon('material_name')}
+                        {t('material')}
+                        {getSortIcon('material_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -524,7 +544,8 @@ export default function InventoryPage() {
                       onClick={() => handleSort('specification')}
                     >
                       <span className="inline-flex items-center">
-                        {t('specification')}{getSortIcon('specification')}
+                        {t('specification')}
+                        {getSortIcon('specification')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -532,7 +553,8 @@ export default function InventoryPage() {
                       onClick={() => handleSort('warehouse_name')}
                     >
                       <span className="inline-flex items-center">
-                        {t('warehouseName')}{getSortIcon('warehouse_name')}
+                        {t('warehouseName')}
+                        {getSortIcon('warehouse_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -540,7 +562,8 @@ export default function InventoryPage() {
                       onClick={() => handleSort('quantity')}
                     >
                       <span className="inline-flex items-center justify-end">
-                        {t('quantity')}{getSortIcon('quantity')}
+                        {t('quantity')}
+                        {getSortIcon('quantity')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -548,7 +571,8 @@ export default function InventoryPage() {
                       onClick={() => handleSort('available_qty')}
                     >
                       <span className="inline-flex items-center justify-end">
-                        {t('availableQty')}{getSortIcon('available_qty')}
+                        {t('availableQty')}
+                        {getSortIcon('available_qty')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -556,14 +580,18 @@ export default function InventoryPage() {
                       onClick={() => handleSort('locked_qty')}
                     >
                       <span className="inline-flex items-center justify-end">
-                        {t('lockedQty')}{getSortIcon('locked_qty')}
+                        {t('lockedQty')}
+                        {getSortIcon('locked_qty')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('status')}
                     >
-                      <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
+                      <span className="inline-flex items-center">
+                        {tc('status')}
+                        {getSortIcon('status')}
+                      </span>
                     </TableHead>
                     <TableHead>{tc('warning')}</TableHead>
                     <TableHead
@@ -571,7 +599,8 @@ export default function InventoryPage() {
                       onClick={() => handleSort('expiry_date')}
                     >
                       <span className="inline-flex items-center">
-                        {t('expiryDate')}{getSortIcon('expiry_date')}
+                        {t('expiryDate')}
+                        {getSortIcon('expiry_date')}
                       </span>
                     </TableHead>
                     <TableHead className="text-right">{tc('operation')}</TableHead>
@@ -584,8 +613,8 @@ export default function InventoryPage() {
                         <Checkbox
                           checked={selectedIds.includes(item.id)}
                           onCheckedChange={(checked) => {
-                            if (checked) setSelectedIds(prev => [...prev, item.id]);
-                            else setSelectedIds(prev => prev.filter(id => id !== item.id));
+                            if (checked) setSelectedIds((prev) => [...prev, item.id]);
+                            else setSelectedIds((prev) => prev.filter((id) => id !== item.id));
                           }}
                         />
                       </TableCell>

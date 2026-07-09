@@ -138,7 +138,7 @@ export default function TracePage() {
       if (data.success) {
         // 统一处理API返回的数据结构
         const rawData = data.data;
-        const rawList = Array.isArray(rawData) ? rawData : (rawData?.list || []);
+        const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
         const list = rawList.map((item: any) => ({
           id: item.id,
           trace_no: item.traceNo || item.trace_no,
@@ -157,8 +157,7 @@ export default function TracePage() {
         }));
         setRecords(list);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, [keyword, traceTypeFilter]);
 
   useEffect(() => {
@@ -196,7 +195,7 @@ export default function TracePage() {
       } else {
         setError(result.message || t('traceQueryFailed'));
       }
-    } catch (err) {
+    } catch {
       setError(t('traceQueryNetworkError'));
     } finally {
       setLoading(false);
@@ -232,7 +231,7 @@ export default function TracePage() {
       } else {
         setError(result.message || t('traceQueryFailed'));
       }
-    } catch (err) {
+    } catch {
       setError(t('traceQueryFailed'));
     } finally {
       setLoading(false);
@@ -441,9 +440,9 @@ export default function TracePage() {
                         <TableHead>{t('materialType')}</TableHead>
                         <TableHead>{t('materialCode')}</TableHead>
                         <TableHead>{tc('name')}</TableHead>
-                        <TableHead>{tc("specification")}</TableHead>
+                        <TableHead>{tc('specification')}</TableHead>
                         <TableHead>{tc('batchNo')}</TableHead>
-                        <TableHead>{tc("supplier")}</TableHead>
+                        <TableHead>{tc('supplier')}</TableHead>
                         <TableHead>{t('receiveDate')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -522,7 +521,11 @@ export default function TracePage() {
                     { key: 'operator_name', label: tc('operator'), width: 12 },
                     { key: 'trace_time', label: t('traceTime'), width: 18 },
                   ]}
-                  data={selectedIds.length > 0 ? sortedData.filter((r) => selectedIds.includes(r.id)) : sortedData}
+                  data={
+                    selectedIds.length > 0
+                      ? sortedData.filter((r) => selectedIds.includes(r.id))
+                      : sortedData
+                  }
                 />
               </div>
             </div>
@@ -543,7 +546,7 @@ export default function TracePage() {
                       }
                     />
                   </TableHead>
-                  <TableHead className="w-12 text-center">{tc("serialNo")}</TableHead>
+                  <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
                   <SortableTableHeader
                     field="trace_no"
                     sortField={sortField}
@@ -579,7 +582,7 @@ export default function TracePage() {
                   >
                     {t('traceTime')}
                   </SortableTableHeader>
-                  <TableHead>{tc("actions")}</TableHead>
+                  <TableHead>{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

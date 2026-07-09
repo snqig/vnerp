@@ -1,7 +1,5 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-} from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 import { query } from '@/lib/db';
@@ -11,7 +9,7 @@ import { query } from '@/lib/db';
  * 提供系统运行状态、数据库状态、连接池状态等信息
  */
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'overview';
 
@@ -27,7 +25,9 @@ export const GET = withPermission(
           query('SELECT COUNT(*) as count FROM sys_user WHERE deleted = 0'),
           query('SELECT COUNT(*) as count FROM purchase_order WHERE deleted = 0'),
           query('SELECT COUNT(*) as count FROM warehouse_stock'),
-          query('SELECT COUNT(*) as count FROM sys_operation_log WHERE create_time > DATE_SUB(NOW(), INTERVAL 24 HOUR)'),
+          query(
+            'SELECT COUNT(*) as count FROM sys_operation_log WHERE create_time > DATE_SUB(NOW(), INTERVAL 24 HOUR)'
+          ),
         ]);
         dbStats = {
           users: userCount[0]?.count || 0,
@@ -35,7 +35,7 @@ export const GET = withPermission(
           inventoryRecords: inventoryCount[0]?.count || 0,
           recentLogs: logCount[0]?.count || 0,
         };
-      } catch (e) {
+      } catch {
         dbStats = { error: '数据库查询失败' };
       }
 

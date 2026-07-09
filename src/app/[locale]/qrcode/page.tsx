@@ -122,13 +122,13 @@ export default function QRCodePage() {
           totalCount = rawData.length;
         } else if (rawData) {
           rawList = rawData.list || rawData.records || rawData.items || [];
-          totalCount = rawData.total || rawData.totalCount || rawData.totalRecords || rawList.length;
+          totalCount =
+            rawData.total || rawData.totalCount || rawData.totalRecords || rawList.length;
         }
         setList(rawList);
         setTotal(totalCount);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, [page, keyword, typeFilter]);
 
   useEffect(() => {
@@ -150,7 +150,7 @@ export default function QRCodePage() {
       } else {
         toast({ title: t('generateFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -163,7 +163,7 @@ export default function QRCodePage() {
       });
       toast({ title: t('printRecordUpdated') });
       fetchData();
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -203,7 +203,7 @@ export default function QRCodePage() {
       } else {
         toast({ title: t('queryFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: t('queryFailed'), variant: 'destructive' });
     }
   };
@@ -217,7 +217,7 @@ export default function QRCodePage() {
       });
       toast({ title: t('qrCodeInvalidated') });
       fetchData();
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -245,13 +245,13 @@ export default function QRCodePage() {
               }}
             >
               <SelectTrigger className="w-28 h-9">
-              <SelectValue placeholder={tc("type")} />
-            </SelectTrigger>
+                <SelectValue placeholder={tc('type')} />
+              </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{tc("all")}</SelectItem>
+                <SelectItem value="all">{tc('all')}</SelectItem>
                 <SelectItem value="material">{t('rawMaterial')}</SelectItem>
                 <SelectItem value="product">{t('finished')}</SelectItem>
-                <SelectItem value="workorder">{tc("workOrder")}</SelectItem>
+                <SelectItem value="workorder">{tc('workOrder')}</SelectItem>
                 <SelectItem value="ink">{t('ink')}</SelectItem>
                 <SelectItem value="screen_plate">{t('screen')}</SelectItem>
                 <SelectItem value="die">{t('blade')}</SelectItem>
@@ -264,21 +264,28 @@ export default function QRCodePage() {
             <GlobalExportToolbar
               filename="二维码记录列表"
               title="二维码记录列表"
-              columns={[
-                { key: 'qr_code', label: '二维码编码', width: 25 },
-                { key: 'qr_type', label: '类型', width: 12 },
-                { key: 'ref_no', label: '关联单号', width: 18 },
-                { key: 'material_code', label: '物料编码', width: 15 },
-                { key: 'material_name', label: '物料名称', width: 20 },
-                { key: 'batch_no', label: '批次号', width: 15 },
-                { key: 'quantity', label: '数量', width: 10 },
-                { key: 'unit', label: '单位', width: 8 },
-                { key: 'warehouse_name', label: '仓库', width: 12 },
-                { key: 'print_count', label: '打印次数', width: 10 },
-                { key: 'scan_count', label: '扫描次数', width: 10 },
-                { key: 'status', label: '状态', width: 10, formatter: (v: any) => ['','有效','已用','过期','作废'][v] || String(v) },
-                { key: 'create_time', label: '创建时间', width: 18 },
-              ] as ExportColumn[]}
+              columns={
+                [
+                  { key: 'qr_code', label: '二维码编码', width: 25 },
+                  { key: 'qr_type', label: '类型', width: 12 },
+                  { key: 'ref_no', label: '关联单号', width: 18 },
+                  { key: 'material_code', label: '物料编码', width: 15 },
+                  { key: 'material_name', label: '物料名称', width: 20 },
+                  { key: 'batch_no', label: '批次号', width: 15 },
+                  { key: 'quantity', label: '数量', width: 10 },
+                  { key: 'unit', label: '单位', width: 8 },
+                  { key: 'warehouse_name', label: '仓库', width: 12 },
+                  { key: 'print_count', label: '打印次数', width: 10 },
+                  { key: 'scan_count', label: '扫描次数', width: 10 },
+                  {
+                    key: 'status',
+                    label: '状态',
+                    width: 10,
+                    formatter: (v: any) => ['', '有效', '已用', '过期', '作废'][v] || String(v),
+                  },
+                  { key: 'create_time', label: '创建时间', width: 18 },
+                ] as ExportColumn[]
+              }
               data={list}
               landscape={true}
             />
@@ -301,124 +308,124 @@ export default function QRCodePage() {
             <TabsTrigger value="trace">{t('tabTrace')}</TabsTrigger>
           </TabsList>
           <TabsContent value="records">
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('qrCode')}</TableHead>
-                  <TableHead>{tc("type")}</TableHead>
-                  <TableHead>{t('refNo')}</TableHead>
-                  <TableHead>{t('materialName')}</TableHead>
-                  <TableHead>{tc("specification")}</TableHead>
-                  <TableHead className="text-right">{tc("quantity")}</TableHead>
-                  <TableHead>{tc("warehouse")}</TableHead>
-                  <TableHead>{tc("print")}</TableHead>
-                  <TableHead>{t('scanCount')}</TableHead>
-                  <TableHead>{tc("status")}</TableHead>
-                  <TableHead>{tc("actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {list.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
-                      {tc('noData')}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  list.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-mono text-xs">{r.qr_code}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{typeMap[r.qr_type] || r.qr_type}</Badge>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">{r.ref_no || '-'}</TableCell>
-                      <TableCell>
-                        {(() => {
-                          // 处理可能的编码问题
-                          try {
-                            return r.material_name ? String(r.material_name) : '-';
-                          } catch {
-                            return '-';
-                          }
-                        })()}
-                      </TableCell>
-                      <TableCell className="text-sm">{r.specification || '-'}</TableCell>
-                      <TableCell className="text-right">
-                        {r.quantity}
-                        {r.unit}
-                      </TableCell>
-                      <TableCell className="text-sm">{r.warehouse_name || '-'}</TableCell>
-                      <TableCell className="text-center">{r.print_count}</TableCell>
-                      <TableCell className="text-center">{r.scan_count}</TableCell>
-                      <TableCell>
-                        <Badge variant={statusMap[r.status]?.variant || 'outline'}>
-                          {statusMap[r.status]?.label || tc('unknown')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handlePrint(r.id)}
-                            title={tc("print")}
-                          >
-                            <Printer className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setTraceInput(r.qr_code);
-                              handleTrace();
-                            }}
-                            title={t('trace')}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {r.status === 1 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleInvalidate(r.id)}
-                              title={t('invalidate')}
-                            >
-                              <QrCode className="h-4 w-4 text-muted-foreground" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('qrCode')}</TableHead>
+                      <TableHead>{tc('type')}</TableHead>
+                      <TableHead>{t('refNo')}</TableHead>
+                      <TableHead>{t('materialName')}</TableHead>
+                      <TableHead>{tc('specification')}</TableHead>
+                      <TableHead className="text-right">{tc('quantity')}</TableHead>
+                      <TableHead>{tc('warehouse')}</TableHead>
+                      <TableHead>{tc('print')}</TableHead>
+                      <TableHead>{t('scanCount')}</TableHead>
+                      <TableHead>{tc('status')}</TableHead>
+                      <TableHead>{tc('actions')}</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {list.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                          {tc('noData')}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      list.map((r) => (
+                        <TableRow key={r.id}>
+                          <TableCell className="font-mono text-xs">{r.qr_code}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{typeMap[r.qr_type] || r.qr_type}</Badge>
+                          </TableCell>
+                          <TableCell className="font-mono text-sm">{r.ref_no || '-'}</TableCell>
+                          <TableCell>
+                            {(() => {
+                              // 处理可能的编码问题
+                              try {
+                                return r.material_name ? String(r.material_name) : '-';
+                              } catch {
+                                return '-';
+                              }
+                            })()}
+                          </TableCell>
+                          <TableCell className="text-sm">{r.specification || '-'}</TableCell>
+                          <TableCell className="text-right">
+                            {r.quantity}
+                            {r.unit}
+                          </TableCell>
+                          <TableCell className="text-sm">{r.warehouse_name || '-'}</TableCell>
+                          <TableCell className="text-center">{r.print_count}</TableCell>
+                          <TableCell className="text-center">{r.scan_count}</TableCell>
+                          <TableCell>
+                            <Badge variant={statusMap[r.status]?.variant || 'outline'}>
+                              {statusMap[r.status]?.label || tc('unknown')}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handlePrint(r.id)}
+                                title={tc('print')}
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setTraceInput(r.qr_code);
+                                  handleTrace();
+                                }}
+                                title={t('trace')}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              {r.status === 1 && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleInvalidate(r.id)}
+                                  title={t('invalidate')}
+                                >
+                                  <QrCode className="h-4 w-4 text-muted-foreground" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{t('totalRecords', { total })}</span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              {tc('prevPage')}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page * 20 >= total}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              {tc('nextPage')}
-            </Button>
-          </div>
-        </div>
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>{t('totalRecords', { total })}</span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  {tc('prevPage')}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page * 20 >= total}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  {tc('nextPage')}
+                </Button>
+              </div>
+            </div>
           </TabsContent>
           <TabsContent value="trace">
             <Card>
@@ -462,7 +469,7 @@ export default function QRCodePage() {
                   <SelectContent>
                     <SelectItem value="material">{t('rawMaterial')}</SelectItem>
                     <SelectItem value="product">{t('finished')}</SelectItem>
-                    <SelectItem value="workorder">{tc("workOrder")}</SelectItem>
+                    <SelectItem value="workorder">{tc('workOrder')}</SelectItem>
                     <SelectItem value="ink">{t('ink')}</SelectItem>
                     <SelectItem value="screen_plate">{t('screen')}</SelectItem>
                     <SelectItem value="die">{t('blade')}</SelectItem>
@@ -502,14 +509,14 @@ export default function QRCodePage() {
                 />
               </div>
               <div>
-                <Label>{tc("batchNo")}</Label>
+                <Label>{tc('batchNo')}</Label>
                 <Input
                   value={form.batch_no || ''}
                   onChange={(e) => setForm({ ...form, batch_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("quantity")}</Label>
+                <Label>{tc('quantity')}</Label>
                 <Input
                   type="number"
                   value={form.quantity || ''}
@@ -517,7 +524,7 @@ export default function QRCodePage() {
                 />
               </div>
               <div>
-                <Label>{tc("unit")}</Label>
+                <Label>{tc('unit')}</Label>
                 <Input
                   value={form.unit || ''}
                   onChange={(e) => setForm({ ...form, unit: e.target.value })}
@@ -531,14 +538,14 @@ export default function QRCodePage() {
                 />
               </div>
               <div>
-                <Label>{tc("supplier")}</Label>
+                <Label>{tc('supplier')}</Label>
                 <Input
                   value={form.supplier_name || ''}
                   onChange={(e) => setForm({ ...form, supplier_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("customer")}</Label>
+                <Label>{tc('customer')}</Label>
                 <Input
                   value={form.customer_name || ''}
                   onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
@@ -568,7 +575,7 @@ export default function QRCodePage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -676,7 +683,9 @@ export default function QRCodePage() {
                 </TabsContent>
                 <TabsContent value="timeline">
                   {traceData.timeline?.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">{t('noTraceRecords')}</div>
+                    <div className="text-center py-8 text-muted-foreground">
+                      {t('noTraceRecords')}
+                    </div>
                   ) : (
                     <div className="space-y-3">
                       {traceData.timeline?.map((item: any, i: number) => (
@@ -710,17 +719,19 @@ export default function QRCodePage() {
                 </TabsContent>
                 <TabsContent value="related">
                   {traceData.related_records?.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">{t('noRelatedRecords')}</div>
+                    <div className="text-center py-8 text-muted-foreground">
+                      {t('noRelatedRecords')}
+                    </div>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>{t('qrCode')}</TableHead>
-                          <TableHead>{tc("type")}</TableHead>
+                          <TableHead>{tc('type')}</TableHead>
                           <TableHead>{t('orderNo')}</TableHead>
-                          <TableHead>{tc("material")}</TableHead>
-                          <TableHead>{tc("quantity")}</TableHead>
-                          <TableHead>{tc("status")}</TableHead>
+                          <TableHead>{tc('material')}</TableHead>
+                          <TableHead>{tc('quantity')}</TableHead>
+                          <TableHead>{tc('status')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -746,16 +757,18 @@ export default function QRCodePage() {
                 </TabsContent>
                 <TabsContent value="inventory">
                   {traceData.inventory?.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">{t('noInventoryInfo')}</div>
+                    <div className="text-center py-8 text-muted-foreground">
+                      {t('noInventoryInfo')}
+                    </div>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>{tc("warehouse")}</TableHead>
+                          <TableHead>{tc('warehouse')}</TableHead>
                           <TableHead>{tc('materialCode')}</TableHead>
                           <TableHead>{t('materialName')}</TableHead>
                           <TableHead className="text-right">{t('inventoryQty')}</TableHead>
-                          <TableHead>{tc("unit")}</TableHead>
+                          <TableHead>{tc('unit')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

@@ -22,7 +22,7 @@ function getInboundService(): InboundApplicationService {
 }
 
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const keyword = searchParams.get('keyword') || '';
     const status = searchParams.get('status') || '';
@@ -117,7 +117,7 @@ export const POST = withPermission(
 );
 
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
 
     let validated: any;
@@ -185,7 +185,7 @@ export const PUT = withPermission(
 );
 
 export const DELETE = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

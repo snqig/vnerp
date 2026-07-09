@@ -83,16 +83,14 @@ export default function MaterialReturnPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
   const fetchWarehouses = async () => {
     try {
       const res = await authFetch('/api/warehouse/categories');
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
-    } catch (e) {
-    }
+    } catch {}
   };
   useEffect(() => {
     fetchData();
@@ -116,7 +114,7 @@ export default function MaterialReturnPage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -131,7 +129,7 @@ export default function MaterialReturnPage() {
         toast({ title: tc('updateSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -144,7 +142,7 @@ export default function MaterialReturnPage() {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -195,7 +193,11 @@ export default function MaterialReturnPage() {
               <TableBody>
                 {list.map((item) => {
                   const st = RETURN_STATUS_CONFIG[item.status] || RETURN_STATUS_CONFIG[1];
-                  const returnStatusLabels: Record<number, string> = {1: t('pendingReturnStatus'), 2: t('returnedStatus'), 3: t('cancelledStatus')};
+                  const returnStatusLabels: Record<number, string> = {
+                    1: t('pendingReturnStatus'),
+                    2: t('returnedStatus'),
+                    3: t('cancelledStatus'),
+                  };
                   return (
                     <TableRow key={item.id}>
                       <TableCell className="text-xs font-mono">{item.return_no}</TableCell>

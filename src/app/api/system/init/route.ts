@@ -4,7 +4,7 @@ import { getEventBus } from '@/infrastructure/event-bus/EventBus';
 import { withPermission } from '@/lib/api-permissions';
 
 export const GET = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (_request: NextRequest, _userInfo) => {
     try {
       initializeApplication();
 

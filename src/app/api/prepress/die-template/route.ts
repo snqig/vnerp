@@ -9,17 +9,17 @@ import {
 import { withPermission } from '@/lib/api-permissions';
 
 const ASSET_TYPE_MAP: Record<string, string> = {
-  die: '刀模',
-  flexo_plate: '柔印版',
-  screen_mesh: '丝网版',
+  die: tc('text_ej35'),
+  flexo_plate: tc('text_fmawc'),
+  screen_mesh: tc('text_c267o'),
 };
 
 const DIE_STATUS_MAP: Record<string, string> = {
-  available: '可用',
-  in_use: '使用中',
-  maintenance_needed: '需保养',
-  re_rule_needed: '需重做',
-  scrap: '已报废',
+  available: tc('text_ex3t'),
+  in_use: tc('text_c7jd0'),
+  maintenance_needed: tc('text_mi91a'),
+  re_rule_needed: tc('text_mtgkt'),
+  scrap: tc('text_e8o3w'),
 };
 
 function computeDieStatus(
@@ -34,7 +34,7 @@ function computeDieStatus(
   return 'available';
 }
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const template_type = searchParams.get('template_type');
@@ -118,36 +118,41 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const validation = validateRequestBody(body, ['template_code', 'template_name', 'template_type']);
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const validation = validateRequestBody(body, [
+      'template_code',
+      'template_name',
+      'template_type',
+    ]);
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const existing = await queryOne(
-    'SELECT id FROM prd_die_template WHERE template_code = ? AND deleted = 0',
-    [body.template_code]
-  );
-  if (existing) {
-    return errorResponse('刀模板/网版编号已存在', 409, 409);
-  }
+    const existing = await queryOne(
+      'SELECT id FROM prd_die_template WHERE template_code = ? AND deleted = 0',
+      [body.template_code]
+    );
+    if (existing) {
+      return errorResponse('刀模板/网版编号已存在', 409, 409);
+    }
 
-  const maxUsage = body.max_usage || 0;
-  const currentUsage = body.current_usage || 0;
-  const warningUsage = body.warning_usage || Math.round(maxUsage * 0.2);
+    const maxUsage = body.max_usage || 0;
+    const currentUsage = body.current_usage || 0;
+    const warningUsage = body.warning_usage || Math.round(maxUsage * 0.2);
 
-  const maxImpressions = body.max_impressions || maxUsage;
-  const cumulativeImpressions = body.cumulative_impressions || currentUsage;
-  const warningThreshold = body.warning_threshold || 80;
-  const maintenanceInterval = body.maintenance_interval || 8000;
-  const assetType = body.asset_type || (body.template_type === 2 ? 'screen_mesh' : 'die');
-  const layoutType = body.layout_type || 'single_row';
-  const piecesPerImpression = body.pieces_per_impression || 1;
-  const dieStatus = computeDieStatus(cumulativeImpressions, maxImpressions, warningThreshold);
+    const maxImpressions = body.max_impressions || maxUsage;
+    const cumulativeImpressions = body.cumulative_impressions || currentUsage;
+    const warningThreshold = body.warning_threshold || 80;
+    const maintenanceInterval = body.maintenance_interval || 8000;
+    const assetType = body.asset_type || (body.template_type === 2 ? 'screen_mesh' : 'die');
+    const layoutType = body.layout_type || 'single_row';
+    const piecesPerImpression = body.pieces_per_impression || 1;
+    const dieStatus = computeDieStatus(cumulativeImpressions, maxImpressions, warningThreshold);
 
-  const result = await execute(
-    `INSERT INTO prd_die_template (
+    const result = await execute(
+      `INSERT INTO prd_die_template (
       template_code, template_name, asset_type, layout_type, pieces_per_impression,
       template_type, specification, material,
       max_usage, current_usage, remaining_usage, warning_usage,
@@ -156,86 +161,90 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       status, die_status, storage_location, purchase_date, supplier_id,
       unit_price, qr_code, remark
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      body.template_code,
-      body.template_name,
-      assetType,
-      layoutType,
-      piecesPerImpression,
-      body.template_type,
-      body.specification || null,
-      body.material || null,
-      maxUsage,
-      currentUsage,
-      maxUsage - currentUsage,
-      warningUsage,
-      maxImpressions,
-      cumulativeImpressions,
-      warningThreshold,
-      maintenanceInterval,
-      0,
-      0,
-      body.status || 1,
-      dieStatus,
-      body.storage_location || null,
-      body.purchase_date || null,
-      body.supplier_id || null,
-      body.unit_price || 0,
-      body.qr_code || null,
-      body.remark || null,
-    ]
-  );
+      [
+        body.template_code,
+        body.template_name,
+        assetType,
+        layoutType,
+        piecesPerImpression,
+        body.template_type,
+        body.specification || null,
+        body.material || null,
+        maxUsage,
+        currentUsage,
+        maxUsage - currentUsage,
+        warningUsage,
+        maxImpressions,
+        cumulativeImpressions,
+        warningThreshold,
+        maintenanceInterval,
+        0,
+        0,
+        body.status || 1,
+        dieStatus,
+        body.storage_location || null,
+        body.purchase_date || null,
+        body.supplier_id || null,
+        body.unit_price || 0,
+        body.qr_code || null,
+        body.remark || null,
+      ]
+    );
 
-  return successResponse({ id: result.insertId }, '刀模板/网版创建成功');
-}, { errorMessage: '创建刀模板/网版失败' });
+    return successResponse({ id: result.insertId }, '刀模板/网版创建成功');
+  },
+  { errorMessage: '创建刀模板/网版失败' }
+);
 
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  if (!body.id) return commonErrors.badRequest('ID不能为空');
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    if (!body.id) return commonErrors.badRequest('ID不能为空');
 
-  const existing = await queryOne('SELECT id FROM prd_die_template WHERE id = ? AND deleted = 0', [
-    body.id,
-  ]);
-  if (!existing) return commonErrors.notFound('刀模板/网版不存在');
+    const existing = await queryOne(
+      'SELECT id FROM prd_die_template WHERE id = ? AND deleted = 0',
+      [body.id]
+    );
+    if (!existing) return commonErrors.notFound('刀模板/网版不存在');
 
-  return await transaction(async (conn) => {
-    const maxUsage = body.max_usage;
-    const currentUsage = body.current_usage;
-    const maxImpressions = body.max_impressions;
-    const cumulativeImpressions = body.cumulative_impressions;
-    const warningThreshold = body.warning_threshold;
+    return await transaction(async (conn) => {
+      const maxUsage = body.max_usage;
+      const currentUsage = body.current_usage;
+      const maxImpressions = body.max_impressions;
+      const cumulativeImpressions = body.cumulative_impressions;
+      const warningThreshold = body.warning_threshold;
 
-    let remainingUsage = undefined;
-    let newStatus = body.status;
-    let newDieStatus = body.die_status;
+      let remainingUsage = undefined;
+      let newStatus = body.status;
+      let newDieStatus = body.die_status;
 
-    if (maxUsage !== undefined && currentUsage !== undefined) {
-      remainingUsage = maxUsage - currentUsage;
-      const warningUsage = body.warning_usage || Math.round(maxUsage * 0.2);
-      if (currentUsage >= maxUsage) {
-        newStatus = 3;
-      } else if (currentUsage >= warningUsage) {
-        newStatus = 2;
+      if (maxUsage !== undefined && currentUsage !== undefined) {
+        remainingUsage = maxUsage - currentUsage;
+        const warningUsage = body.warning_usage || Math.round(maxUsage * 0.2);
+        if (currentUsage >= maxUsage) {
+          newStatus = 3;
+        } else if (currentUsage >= warningUsage) {
+          newStatus = 2;
+        }
       }
-    }
 
-    if (
-      maxImpressions !== undefined &&
-      cumulativeImpressions !== undefined &&
-      warningThreshold !== undefined
-    ) {
-      newDieStatus = computeDieStatus(cumulativeImpressions, maxImpressions, warningThreshold);
-    } else if (maxImpressions !== undefined && cumulativeImpressions !== undefined) {
-      const wt = warningThreshold || 80;
-      newDieStatus = computeDieStatus(cumulativeImpressions, maxImpressions, wt);
-    }
+      if (
+        maxImpressions !== undefined &&
+        cumulativeImpressions !== undefined &&
+        warningThreshold !== undefined
+      ) {
+        newDieStatus = computeDieStatus(cumulativeImpressions, maxImpressions, warningThreshold);
+      } else if (maxImpressions !== undefined && cumulativeImpressions !== undefined) {
+        const wt = warningThreshold || 80;
+        newDieStatus = computeDieStatus(cumulativeImpressions, maxImpressions, wt);
+      }
 
-    if (body.force_die_status) {
-      newDieStatus = body.force_die_status;
-    }
+      if (body.force_die_status) {
+        newDieStatus = body.force_die_status;
+      }
 
-    await conn.execute(
-      `UPDATE prd_die_template SET
+      await conn.execute(
+        `UPDATE prd_die_template SET
         template_name = ?, asset_type = ?, layout_type = ?, pieces_per_impression = ?,
         template_type = ?, specification = ?, material = ?,
         max_usage = ?, current_usage = ?, remaining_usage = ?, warning_usage = ?,
@@ -245,45 +254,50 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
         status = ?, die_status = ?, storage_location = ?,
         unit_price = ?, qr_code = ?, remark = ?
       WHERE id = ?`,
-      [
-        body.template_name,
-        body.asset_type || existing.asset_type,
-        body.layout_type || existing.layout_type,
-        body.pieces_per_impression || existing.pieces_per_impression,
-        body.template_type,
-        body.specification,
-        body.material,
-        maxUsage,
-        currentUsage,
-        remainingUsage,
-        body.warning_usage,
-        maxImpressions,
-        cumulativeImpressions,
-        warningThreshold,
-        body.maintenance_interval,
-        body.maintenance_count,
-        body.last_maintenance_impressions,
-        body.last_maintenance_date || existing.last_maintenance_date,
-        body.last_used_date || existing.last_used_date,
-        newStatus || body.status || existing.status,
-        newDieStatus || existing.die_status,
-        body.storage_location,
-        body.unit_price,
-        body.qr_code,
-        body.remark,
-        body.id,
-      ]
-    );
+        [
+          body.template_name,
+          body.asset_type || existing.asset_type,
+          body.layout_type || existing.layout_type,
+          body.pieces_per_impression || existing.pieces_per_impression,
+          body.template_type,
+          body.specification,
+          body.material,
+          maxUsage,
+          currentUsage,
+          remainingUsage,
+          body.warning_usage,
+          maxImpressions,
+          cumulativeImpressions,
+          warningThreshold,
+          body.maintenance_interval,
+          body.maintenance_count,
+          body.last_maintenance_impressions,
+          body.last_maintenance_date || existing.last_maintenance_date,
+          body.last_used_date || existing.last_used_date,
+          newStatus || body.status || existing.status,
+          newDieStatus || existing.die_status,
+          body.storage_location,
+          body.unit_price,
+          body.qr_code,
+          body.remark,
+          body.id,
+        ]
+      );
 
-    return successResponse(null, '刀模板/网版更新成功');
-  });
-}, { errorMessage: '更新刀模板/网版失败' });
+      return successResponse(null, '刀模板/网版更新成功');
+    });
+  },
+  { errorMessage: '更新刀模板/网版失败' }
+);
 
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  if (!id) return commonErrors.badRequest('ID不能为空');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return commonErrors.badRequest('ID不能为空');
 
-  await execute('UPDATE prd_die_template SET deleted = 1 WHERE id = ?', [parseInt(id)]);
-  return successResponse(null, '删除成功');
-}, { logTitle: '删除刀模板/网版', logType: 'business' });
+    await execute('UPDATE prd_die_template SET deleted = 1 WHERE id = ?', [parseInt(id)]);
+    return successResponse(null, '删除成功');
+  },
+  { logTitle: '删除刀模板/网版', logType: 'business' }
+);

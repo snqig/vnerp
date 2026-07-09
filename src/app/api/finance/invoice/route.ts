@@ -16,7 +16,7 @@ import { query, execute } from '@/lib/db';
 
 // 获取发票列表
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
@@ -71,7 +71,13 @@ export const GET = withPermission(
 export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
-    const validation = validateRequestBody(body, ['invoice_type', 'partner_id', 'partner_name', 'invoice_date', 'items']);
+    const validation = validateRequestBody(body, [
+      'invoice_type',
+      'partner_id',
+      'partner_name',
+      'invoice_date',
+      'items',
+    ]);
 
     if (!validation.valid) {
       return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
@@ -114,12 +120,20 @@ export const POST = withPermission(
           status, remark, create_by, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
-          invoiceNo, body.invoice_type,
-          body.source_type || null, body.source_id || null, body.source_no || '',
-          body.partner_id, body.partner_name,
-          body.invoice_date, body.tax_rate || 13,
-          totalAmount, totalTax, totalAmount + totalTax,
-          'pending', body.remark || '',
+          invoiceNo,
+          body.invoice_type,
+          body.source_type || null,
+          body.source_id || null,
+          body.source_no || '',
+          body.partner_id,
+          body.partner_name,
+          body.invoice_date,
+          body.tax_rate || 13,
+          totalAmount,
+          totalTax,
+          totalAmount + totalTax,
+          'pending',
+          body.remark || '',
           userInfo.userId,
         ]
       );
@@ -137,12 +151,18 @@ export const POST = withPermission(
             quantity, unit, unit_price, amount, tax_rate, tax_amount, line_total)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
-            invoiceId, i + 1,
-            item.material_id || null, item.material_name || '',
+            invoiceId,
+            i + 1,
+            item.material_id || null,
+            item.material_name || '',
             item.material_spec || '',
-            item.quantity, item.unit || '件',
-            item.unit_price || 0, amount,
-            item.tax_rate || 13, tax, amount + tax,
+            item.quantity,
+            item.unit || '件',
+            item.unit_price || 0,
+            amount,
+            item.tax_rate || 13,
+            tax,
+            amount + tax,
           ]
         );
       }
@@ -210,9 +230,15 @@ export const PUT = withPermission(
          (invoice_id, invoice_no, invoice_type, payable_id, receivable_id,
           write_off_amount, write_off_by, write_off_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [id, invoice.invoice_no, invoice.invoice_type,
-         payableId || null, receivableId || null,
-         writeOffAmount, userInfo.userId]
+        [
+          id,
+          invoice.invoice_no,
+          invoice.invoice_type,
+          payableId || null,
+          receivableId || null,
+          writeOffAmount,
+          userInfo.userId,
+        ]
       );
 
       await execute('UPDATE finance_invoice SET status = ? WHERE id = ?', ['written_off', id]);

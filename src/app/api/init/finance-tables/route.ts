@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { execute, query } from '@/lib/db';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   const results: string[] = [];
 
   try {
@@ -64,13 +64,16 @@ export async function POST(request: NextRequest) {
     return Response.json({
       success: true,
       message: '财务表创建成功',
-      tables: results
+      tables: results,
     });
   } catch (error: any) {
-    return Response.json({
-      success: false,
-      error: error.message,
-      tables: results
-    }, { status: 500 });
+    return Response.json(
+      {
+        success: false,
+        error: error.message,
+        tables: results,
+      },
+      { status: 500 }
+    );
   }
 }

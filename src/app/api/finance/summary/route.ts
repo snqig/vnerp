@@ -7,7 +7,7 @@ import { FinanceApplicationService } from '@/application/services/FinanceApplica
 const financeService = FinanceApplicationService.create();
 
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const supplierId = searchParams.get('supplierId');
     const customerId = searchParams.get('customerId');

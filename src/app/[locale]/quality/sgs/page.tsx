@@ -83,7 +83,7 @@ const certTypeMap: Record<string, string> = {
   REACH: 'REACH',
   FDA: 'FDA',
   'EN71-3': 'EN71-3',
-  其他: '其他',
+  其他: tc('text_eae8'),
 };
 const statusMap: Record<
   number,
@@ -105,32 +105,37 @@ const testResultMap: Record<
 
 const rohsTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
   {
-    test_item_name: '铅(Pb)',
-    test_standard: 'RoHS 2011/65/EU',
-    limit_value: '1000',
-    unit: 'mg/kg',
-  },
-  { test_item_name: '镉(Cd)', test_standard: 'RoHS 2011/65/EU', limit_value: '100', unit: 'mg/kg' },
-  {
-    test_item_name: '汞(Hg)',
+    test_item_name: tc('text_dgj7n8'),
     test_standard: 'RoHS 2011/65/EU',
     limit_value: '1000',
     unit: 'mg/kg',
   },
   {
-    test_item_name: '六价铬(Cr6+)',
+    test_item_name: tc('text_fh3sdl'),
+    test_standard: 'RoHS 2011/65/EU',
+    limit_value: '100',
+    unit: 'mg/kg',
+  },
+  {
+    test_item_name: tc('text_2g8vds'),
     test_standard: 'RoHS 2011/65/EU',
     limit_value: '1000',
     unit: 'mg/kg',
   },
   {
-    test_item_name: '多溴联苯(PBB)',
+    test_item_name: tc('text_gewps1'),
     test_standard: 'RoHS 2011/65/EU',
     limit_value: '1000',
     unit: 'mg/kg',
   },
   {
-    test_item_name: '多溴二苯醚(PBDE)',
+    test_item_name: tc('text_vhn6ac'),
+    test_standard: 'RoHS 2011/65/EU',
+    limit_value: '1000',
+    unit: 'mg/kg',
+  },
+  {
+    test_item_name: tc('text_ji279x'),
     test_standard: 'RoHS 2011/65/EU',
     limit_value: '1000',
     unit: 'mg/kg',
@@ -139,13 +144,13 @@ const rohsTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
 
 const reachTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
   {
-    test_item_name: 'SVHC物质',
+    test_item_name: tc('text_ud7j0j'),
     test_standard: 'REACH EC 1907/2006',
     limit_value: '1000',
     unit: 'mg/kg',
   },
   {
-    test_item_name: '邻苯二甲酸酯',
+    test_item_name: tc('text_n6fwoh'),
     test_standard: 'REACH EC 1907/2006',
     limit_value: '1000',
     unit: 'mg/kg',
@@ -153,23 +158,53 @@ const reachTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
 ];
 
 const en71TestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
-  { test_item_name: '钡(Ba)', test_standard: 'EN71-3:2019', limit_value: '18750', unit: 'mg/kg' },
-  { test_item_name: '镉(Cd)', test_standard: 'EN71-3:2019', limit_value: '17.9', unit: 'mg/kg' },
-  { test_item_name: '铬(Cr)', test_standard: 'EN71-3:2019', limit_value: '460', unit: 'mg/kg' },
-  { test_item_name: '铅(Pb)', test_standard: 'EN71-3:2019', limit_value: '2380', unit: 'mg/kg' },
-  { test_item_name: '汞(Hg)', test_standard: 'EN71-3:2019', limit_value: '94', unit: 'mg/kg' },
-  { test_item_name: '硒(Se)', test_standard: 'EN71-3:2019', limit_value: '460', unit: 'mg/kg' },
+  {
+    test_item_name: tc('text_cwqbvn'),
+    test_standard: 'EN71-3:2019',
+    limit_value: '18750',
+    unit: 'mg/kg',
+  },
+  {
+    test_item_name: tc('text_fh3sdl'),
+    test_standard: 'EN71-3:2019',
+    limit_value: '17.9',
+    unit: 'mg/kg',
+  },
+  {
+    test_item_name: tc('text_e1yxj2'),
+    test_standard: 'EN71-3:2019',
+    limit_value: '460',
+    unit: 'mg/kg',
+  },
+  {
+    test_item_name: tc('text_dgj7n8'),
+    test_standard: 'EN71-3:2019',
+    limit_value: '2380',
+    unit: 'mg/kg',
+  },
+  {
+    test_item_name: tc('text_2g8vds'),
+    test_standard: 'EN71-3:2019',
+    limit_value: '94',
+    unit: 'mg/kg',
+  },
+  {
+    test_item_name: tc('text_qqu9jz'),
+    test_standard: 'EN71-3:2019',
+    limit_value: '460',
+    unit: 'mg/kg',
+  },
 ];
 
 const fdaTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
   {
-    test_item_name: '总迁移量',
+    test_item_name: tc('text_cqllzu'),
     test_standard: 'FDA 21 CFR 175.105',
     limit_value: '60',
     unit: 'mg/dm²',
   },
   {
-    test_item_name: '重金属(以Pb计)',
+    test_item_name: tc('text_rgy1n3'),
     test_standard: 'FDA 21 CFR 175.105',
     limit_value: '1',
     unit: 'mg/dm²',
@@ -239,8 +274,7 @@ export default function SGSManagementPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchWarning = async () => {
@@ -250,8 +284,7 @@ export default function SGSManagementPage() {
       if (result.success) {
         setWarningData(result.data);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -277,7 +310,7 @@ export default function SGSManagementPage() {
       } else {
         toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -292,7 +325,7 @@ export default function SGSManagementPage() {
         fetchData();
         fetchWarning();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -305,8 +338,7 @@ export default function SGSManagementPage() {
         setDetailItem(result.data);
         setShowDetailDialog(true);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const handleCertTypeChange = (certType: string) => {
@@ -383,7 +415,7 @@ export default function SGSManagementPage() {
                   <SelectValue placeholder={t('certType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{tc("all")}</SelectItem>
+                  <SelectItem value="all">{tc('all')}</SelectItem>
                   <SelectItem value="RoHS">RoHS</SelectItem>
                   <SelectItem value="REACH">REACH</SelectItem>
                   <SelectItem value="FDA">FDA</SelectItem>
@@ -396,10 +428,10 @@ export default function SGSManagementPage() {
                 onValueChange={(v) => setSearchStatus(v === 'all' ? '' : v)}
               >
                 <SelectTrigger className="w-24 h-8 text-sm">
-                  <SelectValue placeholder={tc("status")} />
+                  <SelectValue placeholder={tc('status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{tc("all")}</SelectItem>
+                  <SelectItem value="all">{tc('all')}</SelectItem>
                   <SelectItem value="1">{t('valid')}</SelectItem>
                   <SelectItem value="2">{t('pendingTest')}</SelectItem>
                   <SelectItem value="3">{t('expired')}</SelectItem>
@@ -437,7 +469,11 @@ export default function SGSManagementPage() {
                 { key: 'test_result', label: t('testResult'), width: 12 },
                 { key: 'expire_date', label: t('validUntil'), width: 12 },
               ]}
-              data={selectedIds.length > 0 ? sortedData.filter((i) => i.id && selectedIds.includes(i.id)) : sortedData}
+              data={
+                selectedIds.length > 0
+                  ? sortedData.filter((i) => i.id && selectedIds.includes(i.id))
+                  : sortedData
+              }
             />
           </div>
         </div>
@@ -448,7 +484,10 @@ export default function SGSManagementPage() {
               <div className="flex items-center gap-2 text-amber-700">
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-sm font-medium">
-                  {t('sgsCertWarning', { expired: warningData.expired.length, expiring: warningData.expiring.length })}
+                  {t('sgsCertWarning', {
+                    expired: warningData.expired.length,
+                    expiring: warningData.expiring.length,
+                  })}
                 </span>
               </div>
             </CardContent>
@@ -472,7 +511,7 @@ export default function SGSManagementPage() {
                       }
                     />
                   </TableHead>
-                  <TableHead className="text-xs w-12 text-center">{tc("serialNo")}</TableHead>
+                  <TableHead className="text-xs w-12 text-center">{tc('serialNo')}</TableHead>
                   <SortableTableHeader
                     field="cert_no"
                     sortField={sortField}
@@ -489,7 +528,7 @@ export default function SGSManagementPage() {
                   >
                     <span className="text-xs">{tc('materialName')}</span>
                   </SortableTableHeader>
-                  <TableHead className="text-xs">{tc("supplier")}</TableHead>
+                  <TableHead className="text-xs">{tc('supplier')}</TableHead>
                   <TableHead className="text-xs">{t('certType')}</TableHead>
                   <TableHead className="text-xs">{t('testResult')}</TableHead>
                   <TableHead className="text-xs">{t('testOrg')}</TableHead>
@@ -508,10 +547,10 @@ export default function SGSManagementPage() {
                     sortDirection={sortDirection}
                     onSort={handleSort}
                   >
-                    <span className="text-xs">{tc("status")}</span>
+                    <span className="text-xs">{tc('status')}</span>
                   </SortableTableHeader>
                   <TableHead className="text-xs">{t('testItems')}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -572,7 +611,10 @@ export default function SGSManagementPage() {
                         {t(statusMap[item.status]?.label || tc('unknown'))}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-xs">{item.item_count ?? 0}{t('items')}</TableCell>
+                    <TableCell className="text-xs">
+                      {item.item_count ?? 0}
+                      {t('items')}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         <Button
@@ -703,8 +745,8 @@ export default function SGSManagementPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PASS">{tc("qualified")}</SelectItem>
-                    <SelectItem value="FAIL">{tc("unqualified")}</SelectItem>
+                    <SelectItem value="PASS">{tc('qualified')}</SelectItem>
+                    <SelectItem value="FAIL">{tc('unqualified')}</SelectItem>
                     <SelectItem value="PENDING">{t('pendingTest')}</SelectItem>
                   </SelectContent>
                 </Select>
@@ -724,7 +766,7 @@ export default function SGSManagementPage() {
                 />
               </div>
               <div>
-                <Label>{tc("status")}</Label>
+                <Label>{tc('status')}</Label>
                 <Select
                   value={String(editItem.status ?? 2)}
                   onValueChange={(v) => setEditItem({ ...editItem, status: Number(v) })}
@@ -765,7 +807,7 @@ export default function SGSManagementPage() {
                 />
               </div>
               <div className="col-span-3">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -789,9 +831,9 @@ export default function SGSManagementPage() {
                     <TableHead className="text-xs w-36">{t('testStandard')}</TableHead>
                     <TableHead className="text-xs w-20">{t('limitValue')}</TableHead>
                     <TableHead className="text-xs w-20">{t('testValue')}</TableHead>
-                    <TableHead className="text-xs w-16">{tc("unit")}</TableHead>
+                    <TableHead className="text-xs w-16">{tc('unit')}</TableHead>
                     <TableHead className="text-xs w-20">{tc('result')}</TableHead>
-                    <TableHead className="text-xs w-12">{tc("actions")}</TableHead>
+                    <TableHead className="text-xs w-12">{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -874,7 +916,7 @@ export default function SGSManagementPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -882,7 +924,9 @@ export default function SGSManagementPage() {
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" resizable>
             <DialogHeader>
-              <DialogTitle>{t('sgsCertDetail')} - {detailItem?.cert_no}</DialogTitle>
+              <DialogTitle>
+                {t('sgsCertDetail')} - {detailItem?.cert_no}
+              </DialogTitle>
             </DialogHeader>
             {detailItem && (
               <div className="space-y-4">
@@ -965,7 +1009,7 @@ export default function SGSManagementPage() {
                           <TableHead className="text-xs">{t('testStandard')}</TableHead>
                           <TableHead className="text-xs">{t('limitValue')}</TableHead>
                           <TableHead className="text-xs">{t('testValue')}</TableHead>
-                          <TableHead className="text-xs">{tc("unit")}</TableHead>
+                          <TableHead className="text-xs">{tc('unit')}</TableHead>
                           <TableHead className="text-xs">{tc('result')}</TableHead>
                         </TableRow>
                       </TableHeader>

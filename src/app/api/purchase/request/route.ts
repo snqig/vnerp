@@ -72,7 +72,7 @@ function calculateTotalAmount(items: RequestItem[] | undefined): number {
 }
 
 // GET - 获取采购申请列表或单个申请
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -146,159 +146,64 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // POST - 创建采购申请
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, [
-    'request_type',
-    'request_dept',
-    'requester_name',
-    'expected_date',
-  ]);
+    // 验证必填字段
+    const validation = validateRequestBody(body, [
+      'request_type',
+      'request_dept',
+      'requester_name',
+      'expected_date',
+    ]);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  // 验证明细
-  if (!body.items || body.items.length === 0) {
-    return errorResponse('采购申请必须包含至少一条明细', 400, 400);
-  }
+    // 验证明细
+    if (!body.items || body.items.length === 0) {
+      return errorResponse('采购申请必须包含至少一条明细', 400, 400);
+    }
 
-  const requestNo = await generateDocumentNo('purchase_request');
-  const totalAmount = calculateTotalAmount(body.items);
+    const requestNo = await generateDocumentNo('purchase_request');
+    const totalAmount = calculateTotalAmount(body.items);
 
-  // 使用事务确保数据一致性
-  const result = await transaction(async (connection) => {
-    // 插入主表
-    const [requestResult] = await connection.execute(
-      `INSERT INTO pur_request (
+    // 使用事务确保数据一致性
+    const result = await transaction(async (connection) => {
+      // 插入主表
+      const [requestResult] = await connection.execute(
+        `INSERT INTO pur_request (
         request_no, request_date, request_type, request_dept_id, request_dept, requester_id, requester_name,
         reviewer_id, reviewer_name, approver_id, approver_name,
         total_amount, currency, status, priority, expected_date, supplier_name, remark
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        requestNo,
-        body.request_date || new Date().toISOString().split('T')[0],
-        body.request_type,
-        body.request_dept_id || null,
-        body.request_dept,
-        body.requester_id || null,
-        body.requester_name,
-        body.reviewer_id || null,
-        body.reviewer_name || null,
-        body.approver_id || null,
-        body.approver_name || null,
-        totalAmount,
-        body.currency || 'CNY',
-        body.status || 0,
-        body.priority || 1,
-        body.expected_date,
-        body.supplier_name,
-        body.remark,
-      ]
-    );
+        [
+          requestNo,
+          body.request_date || new Date().toISOString().split('T')[0],
+          body.request_type,
+          body.request_dept_id || null,
+          body.request_dept,
+          body.requester_id || null,
+          body.requester_name,
+          body.reviewer_id || null,
+          body.reviewer_name || null,
+          body.approver_id || null,
+          body.approver_name || null,
+          totalAmount,
+          body.currency || 'CNY',
+          body.status || 0,
+          body.priority || 1,
+          body.expected_date,
+          body.supplier_name,
+          body.remark,
+        ]
+      );
 
-    const requestId = (requestResult as any).insertId;
+      const requestId = (requestResult as any).insertId;
 
-    // 批量插入明细
-    const itemValues = body.items.map((item: RequestItem, index: number) => [
-      requestId,
-      index + 1,
-      item.material_id || null,
-      item.material_code,
-      item.material_name,
-      item.material_spec,
-      item.material_unit,
-      item.quantity,
-      item.price || 0,
-      item.amount || item.quantity * (item.price || 0),
-      item.supplier_name,
-      item.expected_date,
-      item.remark,
-    ]);
-
-    await connection.query(
-      `INSERT INTO pur_request_item (
-        request_id, line_no, material_id, material_code, material_name, material_spec,
-        material_unit, quantity, price, amount, supplier_name, expected_date, remark
-      ) VALUES ?`,
-      [itemValues]
-    );
-
-    return { id: requestId, request_no: requestNo };
-  });
-
-  return successResponse(result, '采购申请创建成功');
-}, { logTitle: '创建采购申请', logType: 'business' });
-
-// PUT - 更新采购申请
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-
-  if (!id) {
-    return commonErrors.badRequest('缺少申请ID');
-  }
-
-  const requestId = parseInt(id);
-  const body = await request.json();
-
-  // 检查申请是否存在
-  const existingRequest = await queryOne<{ id: number; status: number }>(
-    'SELECT id, status FROM pur_request WHERE id = ? AND deleted = 0',
-    [requestId]
-  );
-
-  if (!existingRequest) {
-    return commonErrors.notFound('采购申请不存在或已被删除');
-  }
-
-  // 已审批的申请不能修改
-  if (existingRequest.status >= 4 && existingRequest.status !== 6) {
-    return errorResponse('已批准的采购申请不能修改', 400, 400);
-  }
-
-  const totalAmount = calculateTotalAmount(body.items);
-
-  // 使用事务更新主表和明细
-  await transaction(async (connection) => {
-    // 更新主表
-    await connection.execute(
-      `UPDATE pur_request SET
-        request_date = ?, request_type = ?, request_dept_id = ?, request_dept = ?, requester_id = ?, requester_name = ?,
-        reviewer_id = ?, reviewer_name = ?, approver_id = ?, approver_name = ?,
-        total_amount = ?, priority = ?, expected_date = ?, supplier_name = ?, remark = ?, status = ?
-      WHERE id = ? AND deleted = 0`,
-      [
-        body.request_date,
-        body.request_type,
-        body.request_dept_id || null,
-        body.request_dept,
-        body.requester_id || null,
-        body.requester_name,
-        body.reviewer_id || null,
-        body.reviewer_name || null,
-        body.approver_id || null,
-        body.approver_name || null,
-        totalAmount,
-        body.priority,
-        body.expected_date,
-        body.supplier_name,
-        body.remark,
-        body.status !== undefined ? body.status : existingRequest.status,
-        requestId,
-      ]
-    );
-
-    // 软删除旧明细
-    await connection.execute('UPDATE pur_request_item SET deleted = 1 WHERE request_id = ?', [
-      requestId,
-    ]);
-
-    // 批量插入新明细
-    if (body.items && body.items.length > 0) {
+      // 批量插入明细
       const itemValues = body.items.map((item: RequestItem, index: number) => [
         requestId,
         index + 1,
@@ -317,58 +222,162 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
 
       await connection.query(
         `INSERT INTO pur_request_item (
+        request_id, line_no, material_id, material_code, material_name, material_spec,
+        material_unit, quantity, price, amount, supplier_name, expected_date, remark
+      ) VALUES ?`,
+        [itemValues]
+      );
+
+      return { id: requestId, request_no: requestNo };
+    });
+
+    return successResponse(result, '采购申请创建成功');
+  },
+  { logTitle: '创建采购申请', logType: 'business' }
+);
+
+// PUT - 更新采购申请
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return commonErrors.badRequest('缺少申请ID');
+    }
+
+    const requestId = parseInt(id);
+    const body = await request.json();
+
+    // 检查申请是否存在
+    const existingRequest = await queryOne<{ id: number; status: number }>(
+      'SELECT id, status FROM pur_request WHERE id = ? AND deleted = 0',
+      [requestId]
+    );
+
+    if (!existingRequest) {
+      return commonErrors.notFound('采购申请不存在或已被删除');
+    }
+
+    // 已审批的申请不能修改
+    if (existingRequest.status >= 4 && existingRequest.status !== 6) {
+      return errorResponse('已批准的采购申请不能修改', 400, 400);
+    }
+
+    const totalAmount = calculateTotalAmount(body.items);
+
+    // 使用事务更新主表和明细
+    await transaction(async (connection) => {
+      // 更新主表
+      await connection.execute(
+        `UPDATE pur_request SET
+        request_date = ?, request_type = ?, request_dept_id = ?, request_dept = ?, requester_id = ?, requester_name = ?,
+        reviewer_id = ?, reviewer_name = ?, approver_id = ?, approver_name = ?,
+        total_amount = ?, priority = ?, expected_date = ?, supplier_name = ?, remark = ?, status = ?
+      WHERE id = ? AND deleted = 0`,
+        [
+          body.request_date,
+          body.request_type,
+          body.request_dept_id || null,
+          body.request_dept,
+          body.requester_id || null,
+          body.requester_name,
+          body.reviewer_id || null,
+          body.reviewer_name || null,
+          body.approver_id || null,
+          body.approver_name || null,
+          totalAmount,
+          body.priority,
+          body.expected_date,
+          body.supplier_name,
+          body.remark,
+          body.status !== undefined ? body.status : existingRequest.status,
+          requestId,
+        ]
+      );
+
+      // 软删除旧明细
+      await connection.execute('UPDATE pur_request_item SET deleted = 1 WHERE request_id = ?', [
+        requestId,
+      ]);
+
+      // 批量插入新明细
+      if (body.items && body.items.length > 0) {
+        const itemValues = body.items.map((item: RequestItem, index: number) => [
+          requestId,
+          index + 1,
+          item.material_id || null,
+          item.material_code,
+          item.material_name,
+          item.material_spec,
+          item.material_unit,
+          item.quantity,
+          item.price || 0,
+          item.amount || item.quantity * (item.price || 0),
+          item.supplier_name,
+          item.expected_date,
+          item.remark,
+        ]);
+
+        await connection.query(
+          `INSERT INTO pur_request_item (
           request_id, line_no, material_id, material_code, material_name, material_spec,
           material_unit, quantity, price, amount, supplier_name, expected_date, remark
         ) VALUES ?`,
-        [itemValues]
-      );
-    }
-  });
+          [itemValues]
+        );
+      }
+    });
 
-  return successResponse(null, '采购申请更新成功');
-}, { logTitle: '更新采购申请', logType: 'business' });
+    return successResponse(null, '采购申请更新成功');
+  },
+  { logTitle: '更新采购申请', logType: 'business' }
+);
 
 // DELETE - 删除采购申请
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return commonErrors.badRequest('缺少申请ID');
-  }
+    if (!id) {
+      return commonErrors.badRequest('缺少申请ID');
+    }
 
-  const requestId = parseInt(id);
+    const requestId = parseInt(id);
 
-  // 检查申请是否存在
-  const existingRequest = await queryOne<{ id: number; status: number }>(
-    'SELECT id, status FROM pur_request WHERE id = ? AND deleted = 0',
-    [requestId]
-  );
+    // 检查申请是否存在
+    const existingRequest = await queryOne<{ id: number; status: number }>(
+      'SELECT id, status FROM pur_request WHERE id = ? AND deleted = 0',
+      [requestId]
+    );
 
-  if (!existingRequest) {
-    return commonErrors.notFound('采购申请不存在或已被删除');
-  }
+    if (!existingRequest) {
+      return commonErrors.notFound('采购申请不存在或已被删除');
+    }
 
-  // 已审批的申请不能删除
-  if (existingRequest.status >= 4) {
-    return errorResponse('已批准的采购申请不能删除', 400, 400);
-  }
+    // 已审批的申请不能删除
+    if (existingRequest.status >= 4) {
+      return errorResponse('已批准的采购申请不能删除', 400, 400);
+    }
 
-  const refCheck = await queryOne<{ cnt: number }>(
-    `SELECT COUNT(*) as cnt FROM pur_order WHERE remark LIKE ? AND deleted = 0`,
-    [`%PR-${existingRequest.id}%`]
-  );
-  if (refCheck && refCheck.cnt > 0) {
-    return errorResponse('该请购单已被采购订单引用，无法删除', 400, 400);
-  }
+    const refCheck = await queryOne<{ cnt: number }>(
+      `SELECT COUNT(*) as cnt FROM pur_order WHERE remark LIKE ? AND deleted = 0`,
+      [`%PR-${existingRequest.id}%`]
+    );
+    if (refCheck && refCheck.cnt > 0) {
+      return errorResponse('该请购单已被采购订单引用，无法删除', 400, 400);
+    }
 
-  // 使用事务软删除主表和明细
-  await transaction(async (connection) => {
-    await connection.execute('UPDATE pur_request SET deleted = 1 WHERE id = ?', [requestId]);
-    await connection.execute('UPDATE pur_request_item SET deleted = 1 WHERE request_id = ?', [
-      requestId,
-    ]);
-  });
+    // 使用事务软删除主表和明细
+    await transaction(async (connection) => {
+      await connection.execute('UPDATE pur_request SET deleted = 1 WHERE id = ?', [requestId]);
+      await connection.execute('UPDATE pur_request_item SET deleted = 1 WHERE request_id = ?', [
+        requestId,
+      ]);
+    });
 
-  return successResponse(null, '采购申请删除成功');
-}, { logTitle: '删除采购申请', logType: 'business' });
+    return successResponse(null, '采购申请删除成功');
+  },
+  { logTitle: '删除采购申请', logType: 'business' }
+);

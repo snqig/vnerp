@@ -132,7 +132,10 @@ const STATUS_MAP: Record<number, { labelKey: string; className: string }> = {
     labelKey: 'statusCompleted',
     className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
   },
-  5: { labelKey: 'statusCancelled', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+  5: {
+    labelKey: 'statusCancelled',
+    className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  },
 };
 
 const getStatusBadge = (status: number, t: (key: string) => string) => {
@@ -185,8 +188,7 @@ export default function SalesOrdersPage() {
       if (result.success || result.code === 200) {
         setCustomers(result.data?.list || result.data || []);
       }
-    } catch (error) {
-    }
+    } catch {}
   };
 
   const fetchMaterials = async () => {
@@ -196,8 +198,7 @@ export default function SalesOrdersPage() {
       if (result.success || result.code === 200) {
         setMaterials(result.data?.list || result.data || []);
       }
-    } catch (error) {
-    }
+    } catch {}
   };
 
   const fetchOrders = useCallback(
@@ -216,7 +217,7 @@ export default function SalesOrdersPage() {
         } else {
           toast.error(result.message || t('fetchOrdersFailed'));
         }
-      } catch (error) {
+      } catch {
         toast.error(t('fetchOrdersFailed'));
       } finally {
         setLoading(false);
@@ -348,7 +349,7 @@ export default function SalesOrdersPage() {
         } else {
           toast.error(result.message || t('deleteFailed'));
         }
-      } catch (error) {
+      } catch {
         toast.error(t('deleteFailed'));
       }
     }
@@ -367,7 +368,7 @@ export default function SalesOrdersPage() {
       } else {
         toast.error(result.message || t('confirmFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('confirmFailed'));
     }
   };
@@ -402,7 +403,7 @@ export default function SalesOrdersPage() {
       } else {
         toast.error(t('confirmFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('confirmFailed'));
     }
   };
@@ -425,7 +426,7 @@ export default function SalesOrdersPage() {
       } else {
         toast.error(t('deleteFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('deleteFailed'));
     } finally {
       setLoading(false);
@@ -469,7 +470,7 @@ export default function SalesOrdersPage() {
       } else {
         toast.error(result.message || t('generateWorkOrderFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('networkError'));
     }
   };
@@ -494,7 +495,15 @@ export default function SalesOrdersPage() {
     };
 
     if (format === 'excel') {
-      const headers = [t('orderNo'), t('customer'), t('orderDate'), t('deliveryDate'), t('amount'), tc('status'), t('productDetail')];
+      const headers = [
+        t('orderNo'),
+        t('customer'),
+        t('orderDate'),
+        t('deliveryDate'),
+        t('amount'),
+        tc('status'),
+        t('productDetail'),
+      ];
       const rows = dataToExport.map((o) => {
         const itemsStr =
           o.items?.map((i) => `${i.material_name} x${i.quantity}${i.unit}`).join('; ') || '';
@@ -580,7 +589,15 @@ export default function SalesOrdersPage() {
         </tr>`;
         })
         .join('');
-      const thCells = [t('orderNo'), t('customer'), t('orderDate'), t('deliveryDate'), t('amount'), tc('status'), t('productDetail')]
+      const thCells = [
+        t('orderNo'),
+        t('customer'),
+        t('orderDate'),
+        t('deliveryDate'),
+        t('amount'),
+        tc('status'),
+        t('productDetail'),
+      ]
         .map((h) => `<th style="border:1px solid #333;padding:6px;background:#f0f0f0">${h}</th>`)
         .join('');
       const htmlContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
@@ -730,7 +747,7 @@ export default function SalesOrdersPage() {
       } else {
         toast.error(result.message || t('submitFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('submitNetworkError'));
     } finally {
       setSubmitting(false);
@@ -761,7 +778,7 @@ export default function SalesOrdersPage() {
       } else {
         toast.error(result.message || t('saveFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('saveFailed'));
     }
   };
@@ -785,7 +802,7 @@ export default function SalesOrdersPage() {
       } else {
         toast.error(result.message || t('updateFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('updateFailed'));
     }
   };
@@ -845,7 +862,8 @@ export default function SalesOrdersPage() {
                 )}
                 <Button variant="outline" onClick={handlePrintList}>
                   <Printer className="h-4 w-4 mr-2" />
-                  {tc('print')}{selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
+                  {tc('print')}
+                  {selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
                 </Button>
                 {selectedOrders.length > 0 && (
                   <Button variant="destructive" onClick={handleBatchDelete}>
@@ -860,9 +878,24 @@ export default function SalesOrdersPage() {
                   columns={[
                     { key: 'order_no', label: t('orderNo'), width: 18 },
                     { key: 'customer_name', label: t('customer'), width: 20 },
-                    { key: 'order_date', label: t('orderDate'), width: 12, formatter: (v) => formatDate(v) },
-                    { key: 'delivery_date', label: t('deliveryDate'), width: 12, formatter: (v) => formatDate(v) },
-                    { key: 'total_amount', label: t('amount'), width: 12, formatter: (v) => Number(v || 0).toFixed(2) },
+                    {
+                      key: 'order_date',
+                      label: t('orderDate'),
+                      width: 12,
+                      formatter: (v) => formatDate(v),
+                    },
+                    {
+                      key: 'delivery_date',
+                      label: t('deliveryDate'),
+                      width: 12,
+                      formatter: (v) => formatDate(v),
+                    },
+                    {
+                      key: 'total_amount',
+                      label: t('amount'),
+                      width: 12,
+                      formatter: (v) => Number(v || 0).toFixed(2),
+                    },
                     {
                       key: 'status',
                       label: tc('status'),
@@ -883,10 +916,16 @@ export default function SalesOrdersPage() {
                       label: t('productDetail'),
                       width: 30,
                       formatter: (_v, row) =>
-                        row.items?.map((i: any) => `${i.material_name} x${i.quantity}${i.unit}`).join('; ') || '-',
+                        row.items
+                          ?.map((i: any) => `${i.material_name} x${i.quantity}${i.unit}`)
+                          .join('; ') || '-',
                     },
                   ]}
-                  data={selectedOrders.length > 0 ? filteredOrders.filter((o) => selectedOrders.includes(o.id)) : filteredOrders}
+                  data={
+                    selectedOrders.length > 0
+                      ? filteredOrders.filter((o) => selectedOrders.includes(o.id))
+                      : filteredOrders
+                  }
                 />
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                   <DialogTrigger asChild>
@@ -1063,7 +1102,8 @@ export default function SalesOrdersPage() {
           <CardHeader>
             <CardTitle>{t('orderList')}</CardTitle>
             <CardDescription>
-              {tc('total', { count: filteredOrders.length })}{statusFilter !== 'all' ? ` (${t('filtered')})` : ''}
+              {tc('total', { count: filteredOrders.length })}
+              {statusFilter !== 'all' ? ` (${t('filtered')})` : ''}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1096,7 +1136,8 @@ export default function SalesOrdersPage() {
                       onKeyDown={(e) => handleSortKeyDown(e, 'order_no')}
                     >
                       <span className="inline-flex items-center">
-                        {t('orderNo')}{getSortIcon('order_no')}
+                        {t('orderNo')}
+                        {getSortIcon('order_no')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1107,7 +1148,8 @@ export default function SalesOrdersPage() {
                       onKeyDown={(e) => handleSortKeyDown(e, 'customer_name')}
                     >
                       <span className="inline-flex items-center">
-                        {t('customer')}{getSortIcon('customer_name')}
+                        {t('customer')}
+                        {getSortIcon('customer_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1118,7 +1160,8 @@ export default function SalesOrdersPage() {
                       onKeyDown={(e) => handleSortKeyDown(e, 'order_date')}
                     >
                       <span className="inline-flex items-center">
-                        {t('orderDate')}{getSortIcon('order_date')}
+                        {t('orderDate')}
+                        {getSortIcon('order_date')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1129,7 +1172,8 @@ export default function SalesOrdersPage() {
                       onKeyDown={(e) => handleSortKeyDown(e, 'delivery_date')}
                     >
                       <span className="inline-flex items-center">
-                        {t('deliveryDate')}{getSortIcon('delivery_date')}
+                        {t('deliveryDate')}
+                        {getSortIcon('delivery_date')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1140,7 +1184,8 @@ export default function SalesOrdersPage() {
                       onKeyDown={(e) => handleSortKeyDown(e, 'total_amount')}
                     >
                       <span className="inline-flex items-center justify-end">
-                        {t('amount')}{getSortIcon('total_amount')}
+                        {t('amount')}
+                        {getSortIcon('total_amount')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1150,7 +1195,10 @@ export default function SalesOrdersPage() {
                       onClick={() => handleSort('status')}
                       onKeyDown={(e) => handleSortKeyDown(e, 'status')}
                     >
-                      <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
+                      <span className="inline-flex items-center">
+                        {tc('status')}
+                        {getSortIcon('status')}
+                      </span>
                     </TableHead>
                     <TableHead className="text-right">{tc('operation')}</TableHead>
                   </TableRow>
@@ -1307,7 +1355,9 @@ export default function SalesOrdersPage() {
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
               <DialogTitle>{t('orderDetail')}</DialogTitle>
-              <DialogDescription>{t('orderNo')}: {selectedOrder?.order_no}</DialogDescription>
+              <DialogDescription>
+                {t('orderNo')}: {selectedOrder?.order_no}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
@@ -1376,7 +1426,9 @@ export default function SalesOrdersPage() {
           <DialogContent className="max-w-2xl" resizable>
             <DialogHeader>
               <DialogTitle>{t('editOrder')}</DialogTitle>
-              <DialogDescription>{t('orderNo')}: {selectedOrder?.order_no}</DialogDescription>
+              <DialogDescription>
+                {t('orderNo')}: {selectedOrder?.order_no}
+              </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">

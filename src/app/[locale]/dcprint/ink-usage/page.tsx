@@ -60,7 +60,6 @@ interface Ink {
 }
 
 export default function InkUsagePage() {
-
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -83,8 +82,7 @@ export default function InkUsagePage() {
       if (result.success) {
         setInkList(result.data.list || result.data || []);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchData = async () => {
@@ -99,8 +97,7 @@ export default function InkUsagePage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -129,7 +126,7 @@ export default function InkUsagePage() {
       } else {
         toast({ title: '失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -143,7 +140,7 @@ export default function InkUsagePage() {
         toast({ title: '删除成功' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -152,7 +149,7 @@ export default function InkUsagePage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">油墨耗用管理</h1>
+          <h1 className="text-2xl font-bold">{tc('text_pevrqz')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -191,7 +188,7 @@ export default function InkUsagePage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增耗用
+              {tc('text_d7brz3')}
             </Button>
           </div>
         </div>
@@ -201,15 +198,15 @@ export default function InkUsagePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">耗用日期</TableHead>
-                  <TableHead className="text-xs">网版编码</TableHead>
-                  <TableHead className="text-xs">油墨编码</TableHead>
-                  <TableHead className="text-xs">油墨名称</TableHead>
-                  <TableHead className="text-xs">耗用数量</TableHead>
-                  <TableHead className="text-xs">{tc("unit")}</TableHead>
-                  <TableHead className="text-xs">操作人</TableHead>
-                  <TableHead className="text-xs">{tc("remark")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('text_gn9imj')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_gjgb2a')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_e39t6i')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_e32i1e')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_gn9o9c')}</TableHead>
+                  <TableHead className="text-xs">{tc('unit')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_f5g8b')}</TableHead>
+                  <TableHead className="text-xs">{tc('remark')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -238,7 +235,7 @@ export default function InkUsagePage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                      暂无记录
+                      {tc('text_dd1mmb')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -248,7 +245,11 @@ export default function InkUsagePage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">共 {total} 条</span>
+          <span className="text-sm text-gray-500">
+            {tc('text_g35')}
+            {total}
+            {tc('text_kf5')}
+          </span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -256,7 +257,7 @@ export default function InkUsagePage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              上一页
+              {tc('text_btlof')}
             </Button>
             <Button
               size="sm"
@@ -264,7 +265,7 @@ export default function InkUsagePage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              下一页
+              {tc('text_btmf4')}
             </Button>
           </div>
         </div>
@@ -272,11 +273,11 @@ export default function InkUsagePage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>新增油墨耗用</DialogTitle>
+              <DialogTitle>{tc('text_sh9ple')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>油墨</Label>
+                <Label>{tc('text_iz9r')}</Label>
                 <Select
                   value={String(editItem.ink_id || '')}
                   onValueChange={(v) => {
@@ -303,7 +304,7 @@ export default function InkUsagePage() {
                 </Select>
               </div>
               <div>
-                <Label>耗用数量</Label>
+                <Label>{tc('text_gn9o9c')}</Label>
                 <Input
                   type="number"
                   value={editItem.usage_qty ?? ''}
@@ -311,7 +312,7 @@ export default function InkUsagePage() {
                 />
               </div>
               <div>
-                <Label>网版ID（可选）</Label>
+                <Label>{tc('text_4dwchz')}</Label>
                 <Input
                   type="number"
                   value={editItem.screen_plate_id ?? ''}
@@ -321,7 +322,7 @@ export default function InkUsagePage() {
                 />
               </div>
               <div>
-                <Label>工单ID（可选）</Label>
+                <Label>{tc('text_7ieqz2')}</Label>
                 <Input
                   type="number"
                   value={editItem.work_order_id ?? ''}
@@ -331,7 +332,7 @@ export default function InkUsagePage() {
                 />
               </div>
               <div>
-                <Label>耗用日期</Label>
+                <Label>{tc('text_gn9imj')}</Label>
                 <Input
                   type="datetime-local"
                   value={editItem.usage_date?.slice(0, 16) || ''}
@@ -339,14 +340,14 @@ export default function InkUsagePage() {
                 />
               </div>
               <div>
-                <Label>操作人</Label>
+                <Label>{tc('text_f5g8b')}</Label>
                 <UserSelect
                   value={editItem.operator_name || ''}
                   onChange={(v) => setEditItem({ ...editItem, operator_name: v })}
                 />
               </div>
               <div>
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -355,9 +356,9 @@ export default function InkUsagePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

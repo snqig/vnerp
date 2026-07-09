@@ -56,10 +56,13 @@ const STATUS_CONFIG: Record<
   2: { variant: 'default' },
   3: { variant: 'destructive' },
 };
-const TYPE_MAP: Record<number, string> = { 1: 'normalIssue', 2: 'supplementaryIssue', 3: 'overIssue' };
+const TYPE_MAP: Record<number, string> = {
+  1: 'normalIssue',
+  2: 'supplementaryIssue',
+  3: 'overIssue',
+};
 
 export default function MaterialIssuePage() {
-
   // 翻译钩子
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
@@ -82,8 +85,7 @@ export default function MaterialIssuePage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
   const fetchWarehouses = async () => {
     try {
@@ -96,8 +98,7 @@ export default function MaterialIssuePage() {
             name: w.name || w.warehouse_name || '',
           }))
         );
-    } catch (e) {
-    }
+    } catch {}
   };
   useEffect(() => {
     fetchData();
@@ -121,7 +122,7 @@ export default function MaterialIssuePage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -137,7 +138,7 @@ export default function MaterialIssuePage() {
         toast({ title: tc('updateSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -150,7 +151,7 @@ export default function MaterialIssuePage() {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -202,7 +203,11 @@ export default function MaterialIssuePage() {
               <TableBody>
                 {list.map((item) => {
                   const st = STATUS_CONFIG[item.status] || STATUS_CONFIG[1];
-                  const statusLabels: Record<number, string> = {1: t('pendingIssueStatus'), 2: t('issuedStatus'), 3: t('cancelledStatus')};
+                  const statusLabels: Record<number, string> = {
+                    1: t('pendingIssueStatus'),
+                    2: t('issuedStatus'),
+                    3: t('cancelledStatus'),
+                  };
                   return (
                     <TableRow key={item.id}>
                       <TableCell className="text-xs font-mono">{item.issue_no}</TableCell>
@@ -211,7 +216,9 @@ export default function MaterialIssuePage() {
                       <TableCell className="text-xs">
                         {formatDate(item.issue_date) || '-'}
                       </TableCell>
-                      <TableCell className="text-xs">{t(TYPE_MAP[item.issue_type] || '') || '-'}</TableCell>
+                      <TableCell className="text-xs">
+                        {t(TYPE_MAP[item.issue_type] || '') || '-'}
+                      </TableCell>
                       <TableCell className="text-xs">{item.operator_name || '-'}</TableCell>
                       <TableCell>
                         <Badge variant={st.variant} className="text-xs">

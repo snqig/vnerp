@@ -3,7 +3,7 @@ import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
-export const POST = withPermission(async (request: NextRequest) => {
+export const POST = withPermission(async (_request: NextRequest) => {
   const result = await transaction(async (conn) => {
     const results: string[] = [];
 

@@ -21,12 +21,7 @@ interface AuditDialogProps {
   onSuccess: () => void;
 }
 
-export function AuditDialog({
-  open,
-  onOpenChange,
-  currentRecord,
-  onSuccess,
-}: AuditDialogProps) {
+export function AuditDialog({ open, onOpenChange, currentRecord, onSuccess }: AuditDialogProps) {
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
 
@@ -45,7 +40,7 @@ export function AuditDialog({
       } else {
         toast.error(result.message || tc('error'));
       }
-    } catch (error) {
+    } catch {
       toast.error(tc('error'));
     }
   };
@@ -65,7 +60,7 @@ export function AuditDialog({
       } else {
         toast.error(result.message || tc('error'));
       }
-    } catch (error) {
+    } catch {
       toast.error(tc('error'));
     }
   };

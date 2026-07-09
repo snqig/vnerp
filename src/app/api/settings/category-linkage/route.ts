@@ -17,24 +17,25 @@ interface LinkageItem {
 }
 
 const MATERIAL_TYPE_NAMES: Record<number, string> = {
-  1: '原材料',
-  2: '半成品',
-  3: '成品',
-  4: '辅料',
-  5: '包材',
-  6: '油墨',
+  1: tc('text_cr294'),
+  2: tc('text_cobqz'),
+  3: tc('text_h581'),
+  4: tc('text_oywk'),
+  5: tc('text_eorv'),
+  6: tc('text_iz9r'),
 };
 
-const TYPE_WAREHOUSE_MAPPING: Record<number, { preferred_prefix: string; preferred_name: string }> = {
-  1: { preferred_prefix: 'WH-CAT-RAW', preferred_name: '原材料仓' },
-  2: { preferred_prefix: 'WH-CAT-WIP', preferred_name: '半成品仓' },
-  3: { preferred_prefix: 'WH-CAT-FG', preferred_name: '成品仓' },
-  4: { preferred_prefix: 'WH-CAT-AUX', preferred_name: '辅料仓' },
-  5: { preferred_prefix: 'WH-CAT-PKG', preferred_name: '包材仓' },
-  6: { preferred_prefix: 'WH-CAT-INK', preferred_name: '油墨仓' },
-};
+const TYPE_WAREHOUSE_MAPPING: Record<number, { preferred_prefix: string; preferred_name: string }> =
+  {
+    1: { preferred_prefix: 'WH-CAT-RAW', preferred_name: tc('text_azbdez') },
+    2: { preferred_prefix: 'WH-CAT-WIP', preferred_name: tc('text_awyjso') },
+    3: { preferred_prefix: 'WH-CAT-FG', preferred_name: tc('text_erxhe') },
+    4: { preferred_prefix: 'WH-CAT-AUX', preferred_name: tc('text_lihlr') },
+    5: { preferred_prefix: 'WH-CAT-PKG', preferred_name: tc('text_cnrk8') },
+    6: { preferred_prefix: 'WH-CAT-INK', preferred_name: tc('text_gcsys') },
+  };
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const checkType = searchParams.get('checkType') || 'all';
 
@@ -47,14 +48,14 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   };
 
   try {
-    const materialCategories = await query(
+    const materialCategories = (await query(
       `SELECT id, category_code, category_name, category_type, parent_id, status
        FROM inv_material_category WHERE deleted = 0 AND status = 1`
-    ) as any[];
+    )) as any[];
 
-    const warehouseCategories = await query(
+    const warehouseCategories = (await query(
       `SELECT id, code, name, status FROM sys_warehouse_category WHERE deleted = 0 AND status = 1`
-    ) as any[];
+    )) as any[];
 
     summary.total_material_categories = materialCategories.length;
 
@@ -62,9 +63,13 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       const typeName = MATERIAL_TYPE_NAMES[mc.category_type] || '未知';
       const preferred = TYPE_WAREHOUSE_MAPPING[mc.category_type];
 
-      let linkedWh = warehouseCategories.find((wh: any) =>
-        preferred && (wh.code.startsWith(preferred.preferred_prefix) || wh.name.includes(preferred.preferred_name))
-      ) || null;
+      const linkedWh =
+        warehouseCategories.find(
+          (wh: any) =>
+            preferred &&
+            (wh.code.startsWith(preferred.preferred_prefix) ||
+              wh.name.includes(preferred.preferred_name))
+        ) || null;
 
       const item: LinkageItem = {
         material_category_id: mc.id,
@@ -82,7 +87,11 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         item.linkage_status = 'unlinked';
         item.issue = `物料分类"${typeName}"未关联对应仓库分类`;
         summary.unlinked++;
-      } else if (preferred && !linkedWh.code.startsWith(preferred.preferred_prefix) && !linkedWh.name.includes(preferred.preferred_name)) {
+      } else if (
+        preferred &&
+        !linkedWh.code.startsWith(preferred.preferred_prefix) &&
+        !linkedWh.name.includes(preferred.preferred_name)
+      ) {
         item.linkage_status = 'mismatch';
         item.issue = `物料分类"${typeName}"关联的仓库分类"${linkedWh.name}"可能不匹配`;
         summary.mismatch++;
@@ -104,36 +113,39 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { materialCategoryId, warehouseCategoryId } = body;
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { materialCategoryId, warehouseCategoryId } = body;
 
-  if (!materialCategoryId || !warehouseCategoryId) {
-    return errorResponse('物料分类ID和仓库分类ID不能为空', 400);
-  }
+    if (!materialCategoryId || !warehouseCategoryId) {
+      return errorResponse('物料分类ID和仓库分类ID不能为空', 400);
+    }
 
-  const mc = await query(
-    `SELECT id, category_code, category_name, category_type FROM inv_material_category WHERE id = ? AND deleted = 0`,
-    [materialCategoryId]
-  ) as any[];
+    const mc = (await query(
+      `SELECT id, category_code, category_name, category_type FROM inv_material_category WHERE id = ? AND deleted = 0`,
+      [materialCategoryId]
+    )) as any[];
 
-  if (mc.length === 0) {
-    return errorResponse('物料分类不存在', 404);
-  }
+    if (mc.length === 0) {
+      return errorResponse('物料分类不存在', 404);
+    }
 
-  const wh = await query(
-    `SELECT id, code, name FROM sys_warehouse_category WHERE id = ? AND deleted = 0`,
-    [warehouseCategoryId]
-  ) as any[];
+    const wh = (await query(
+      `SELECT id, code, name FROM sys_warehouse_category WHERE id = ? AND deleted = 0`,
+      [warehouseCategoryId]
+    )) as any[];
 
-  if (wh.length === 0) {
-    return errorResponse('仓库分类不存在', 404);
-  }
+    if (wh.length === 0) {
+      return errorResponse('仓库分类不存在', 404);
+    }
 
-  return successResponse({
-    material_category: mc[0],
-    warehouse_category: wh[0],
-    compatible: true,
-    message: `物料分类"${mc[0].category_name}"与仓库分类"${wh[0].name}"关联校验通过`,
-  });
-}, { logTitle: '关联校验' });
+    return successResponse({
+      material_category: mc[0],
+      warehouse_category: wh[0],
+      compatible: true,
+      message: `物料分类"${mc[0].category_name}"与仓库分类"${wh[0].name}"关联校验通过`,
+    });
+  },
+  { logTitle: '关联校验' }
+);

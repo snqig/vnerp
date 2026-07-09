@@ -92,7 +92,7 @@ export function MixedAddDialog({
       } else {
         toast.error(result.message || t('createMixedInboundFailed'));
       }
-    } catch (err) {
+    } catch {
       toast.error(t('createMixedInboundFailed'));
     }
   };
@@ -111,9 +111,7 @@ export function MixedAddDialog({
               <Input
                 id="mixed-materialCode"
                 value={formData.materialCode}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, materialCode: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, materialCode: e.target.value }))}
                 placeholder={t('enterMaterialCode')}
               />
             </div>
@@ -122,9 +120,7 @@ export function MixedAddDialog({
               <Input
                 id="mixed-materialName"
                 value={formData.materialName}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, materialName: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, materialName: e.target.value }))}
                 placeholder={t('enterMaterialName')}
               />
             </div>
@@ -158,9 +154,7 @@ export function MixedAddDialog({
               <Input
                 id="mixed-colorCode"
                 value={formData.colorCode}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, colorCode: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, colorCode: e.target.value }))}
                 placeholder={t('enterColorCode')}
               />
             </div>
@@ -169,9 +163,7 @@ export function MixedAddDialog({
               <Input
                 id="mixed-machineNo"
                 value={formData.machineNo}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, machineNo: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, machineNo: e.target.value }))}
                 placeholder={t('enterMachineNo')}
               />
             </div>
@@ -190,9 +182,7 @@ export function MixedAddDialog({
               <Label htmlFor="mixed-warehouse">{tc('warehouse')}</Label>
               <Select
                 value={formData.warehouse}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, warehouse: value }))
-                }
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, warehouse: value }))}
               >
                 <SelectTrigger id="mixed-warehouse">
                   <SelectValue placeholder={t('selectWarehouse')} />

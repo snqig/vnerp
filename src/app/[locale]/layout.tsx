@@ -29,10 +29,10 @@ async function getCompanyName(): Promise<string> {
       cacheTimestamp = now;
       return cachedCompanyName!;
     }
-  } catch (e) {
+  } catch {
     if (cachedCompanyName) return cachedCompanyName;
   }
-  return '越南达昌科技有限公司';
+  return tc('text_ki0kv1');
 }
 
 /**
@@ -75,7 +75,9 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale: rawLocale } = await params;
-  const locale = (locales as readonly string[]).includes(rawLocale) ? rawLocale as Locale : 'zh-CN';
+  const locale = (locales as readonly string[]).includes(rawLocale)
+    ? (rawLocale as Locale)
+    : 'zh-CN';
 
   if (!locales.includes(locale)) {
     notFound();

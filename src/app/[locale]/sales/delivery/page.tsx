@@ -133,40 +133,61 @@ export default function DeliveryPage() {
   const tc = useTranslations('Common');
 
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  1: { label: t('pendingDelivery'), color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
-  2: {
-    label: t('delivered'),
-    color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  },
-  3: { label: t('signed'), color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' },
-  9: { label: tc('cancelled'), color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
-};
+    1: {
+      label: t('pendingDelivery'),
+      color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+    },
+    2: {
+      label: t('delivered'),
+      color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+    },
+    3: {
+      label: t('signed'),
+      color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+    },
+    9: {
+      label: tc('cancelled'),
+      color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+    },
+  };
 
-const SIGN_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: t('notSigned'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
-  1: { label: t('partialSigned'), color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
-  2: { label: t('allSigned'), color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
-  3: { label: t('rejected'), color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
-};
+  const SIGN_STATUS_MAP: Record<number, { label: string; color: string }> = {
+    0: {
+      label: t('notSigned'),
+      color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+    },
+    1: {
+      label: t('partialSigned'),
+      color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+    },
+    2: {
+      label: t('allSigned'),
+      color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+    },
+    3: {
+      label: t('rejected'),
+      color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+    },
+  };
 
-const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> = {
-  normal: {
-    label: t('normalShip'),
-    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  },
-  partial: {
-    label: t('partialShip'),
-    color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  },
-  return: {
-    label: t('returnShip'),
-    color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-  },
-  re_ship: {
-    label: t('reShip'),
-    color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-  },
-};
+  const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> = {
+    normal: {
+      label: t('normalShip'),
+      color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+    },
+    partial: {
+      label: t('partialShip'),
+      color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+    },
+    return: {
+      label: t('returnShip'),
+      color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+    },
+    re_ship: {
+      label: t('reShip'),
+      color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+    },
+  };
 
   const [list, setList] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -204,12 +225,18 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    logger.info({ module: 'Sales', action: 'fetchDelivery' }, '开始获取发货单列表', { keyword, statusFilter, typeFilter });
+    logger.info({ module: 'Sales', action: 'fetchDelivery' }, '开始获取发货单列表', {
+      keyword,
+      statusFilter,
+      typeFilter,
+    });
     try {
       if (USE_MOCK) {
         logger.info({ module: 'Sales', action: 'fetchDelivery' }, '使用 mock 数据');
         const filtered = keyword
-          ? mockShipments.filter(s => s.shipment_no?.includes(keyword) || s.customer_name?.includes(keyword))
+          ? mockShipments.filter(
+              (s) => s.shipment_no?.includes(keyword) || s.customer_name?.includes(keyword)
+            )
           : mockShipments;
         setList(filtered);
         setTotal(filtered.length);
@@ -225,10 +252,14 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
       if (result.success) {
         setList(result.data?.list || []);
         setTotal(result.data?.total || 0);
-        logger.info({ module: 'Sales', action: 'fetchDelivery' }, '发货单列表获取成功', { count: (result.data?.list || []).length });
+        logger.info({ module: 'Sales', action: 'fetchDelivery' }, '发货单列表获取成功', {
+          count: (result.data?.list || []).length,
+        });
       }
     } catch (e) {
-      logger.error({ module: 'Sales', action: 'fetchDelivery' }, '获取发货单列表失败', { error: (e as Error).message });
+      logger.error({ module: 'Sales', action: 'fetchDelivery' }, '获取发货单列表失败', {
+        error: (e as Error).message,
+      });
       toast.error('获取发货单列表失败');
     } finally {
       setLoading(false);
@@ -248,10 +279,14 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
       const result = await res.json();
       if (result.success) {
         setCustomers(result.data?.list || result.data || []);
-        logger.info({ module: 'Sales', action: 'fetchCustomers' }, '客户列表获取成功', { count: (result.data?.list || []).length });
+        logger.info({ module: 'Sales', action: 'fetchCustomers' }, '客户列表获取成功', {
+          count: (result.data?.list || []).length,
+        });
       }
     } catch (e) {
-      logger.error({ module: 'Sales', action: 'fetchCustomers' }, '获取客户列表失败', { error: (e as Error).message });
+      logger.error({ module: 'Sales', action: 'fetchCustomers' }, '获取客户列表失败', {
+        error: (e as Error).message,
+      });
     }
   }, []);
 
@@ -326,7 +361,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
       } else {
         toast.error(result.message || '创建失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('保存发货单失败');
     }
   };
@@ -393,7 +428,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
       } else {
         toast.error(result.message || '发货失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('执行发货操作失败');
     }
   };
@@ -425,7 +460,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
       } else {
         toast.error(result.message || '提交失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('提交部分发货申请失败');
     }
   };
@@ -456,7 +491,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
       } else {
         toast.error(result.message || '提交失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('提交补发申请失败');
     }
   };
@@ -474,7 +509,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
       } else {
         toast.error(result.message || '更新失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('更新状态失败');
     }
   };
@@ -490,7 +525,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
       } else {
         toast.error(result.message || '删除失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('删除失败');
     }
   };
@@ -504,7 +539,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
         setDetailItems(result.data?.items || []);
         setDetailOpen(true);
       }
-    } catch (e) {
+    } catch {
       toast.error('获取详情失败');
     }
   };
@@ -530,9 +565,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                 <Truck className="w-5 h-5" />
                 {t('deliveryManagement')}
               </CardTitle>
-              <CardDescription>
-                {t('deliveryManagementDesc')}
-              </CardDescription>
+              <CardDescription>{t('deliveryManagementDesc')}</CardDescription>
             </div>
             <Button
               onClick={() => {
@@ -574,7 +607,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder={tc("status")} />
+                  <SelectValue placeholder={tc('status')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{tc('allStatus')}</SelectItem>
@@ -635,11 +668,11 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                     <TableHead>{t('relatedOrder')}</TableHead>
                     <TableHead>{tc('customerName')}</TableHead>
                     <TableHead>{t('deliveryDate')}</TableHead>
-                    <TableHead>{tc("totalQuantity")}</TableHead>
-                    <TableHead>{tc("totalAmount")}</TableHead>
+                    <TableHead>{tc('totalQuantity')}</TableHead>
+                    <TableHead>{tc('totalAmount')}</TableHead>
                     <TableHead>{t('signStatus')}</TableHead>
                     <TableHead>{t('documentStatus')}</TableHead>
-                    <TableHead className="text-right">{tc("actions")}</TableHead>
+                    <TableHead className="text-right">{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -652,7 +685,9 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                       <TableCell>{parseFloat(String(d.total_qty || 0)).toLocaleString()}</TableCell>
                       <TableCell>¥{parseFloat(String(d.total_amount || 0)).toFixed(2)}</TableCell>
                       <TableCell>
-                        <Badge className={SIGN_STATUS_MAP[d.sign_status ?? 0]?.color || 'bg-gray-100'}>
+                        <Badge
+                          className={SIGN_STATUS_MAP[d.sign_status ?? 0]?.color || 'bg-gray-100'}
+                        >
                           {SIGN_STATUS_MAP[d.sign_status ?? 0]?.label || tc('unknown')}
                         </Badge>
                       </TableCell>
@@ -686,7 +721,11 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                               <Printer className="w-4 h-4 text-green-500" />
                             </Button>
                           )}
-                          <Button variant="ghost" size="sm" onClick={() => d.id && deleteDelivery(d.id)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => d.id && deleteDelivery(d.id)}
+                          >
                             <Trash2 className="w-4 h-4 text-red-500" />
                           </Button>
                         </div>
@@ -696,7 +735,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                   {list.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-8 text-gray-500">
-                        暂无数据
+                        {tc('text_dcv57g')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -710,14 +749,15 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" resizable>
           <DialogHeader>
-            <DialogTitle>新增送货单</DialogTitle>
-            <DialogDescription>按订单生成送货单，关联发货明细</DialogDescription>
+            <DialogTitle>{tc('text_gt2sbj')}</DialogTitle>
+            <DialogDescription>{tc('text_5k6wux')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>
-                  客户 <span className="text-red-500">*</span>
+                  {tc('text_g4id')}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={String(form.customer_id || '')}
@@ -743,7 +783,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>送货日期</Label>
+                <Label>{tc('text_ir1eao')}</Label>
                 <Input
                   type="date"
                   value={form.delivery_date || ''}
@@ -751,7 +791,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                 />
               </div>
               <div className="space-y-2">
-                <Label>关联订单号</Label>
+                <Label>{tc('text_jxaflp')}</Label>
                 <Input
                   value={form.order_no || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, order_no: e.target.value }))}
@@ -761,7 +801,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>收货联系人</Label>
+                <Label>{tc('text_c3zlr2')}</Label>
                 <Input
                   value={form.contact_name || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, contact_name: e.target.value }))}
@@ -769,7 +809,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc("phone")}</Label>
+                <Label>{tc('phone')}</Label>
                 <Input
                   value={form.contact_phone || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, contact_phone: e.target.value }))}
@@ -777,19 +817,19 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                 />
               </div>
               <div className="space-y-2">
-                <Label>送货地址</Label>
+                <Label>{tc('text_iqyt3q')}</Label>
                 <Input
                   value={form.delivery_address || ''}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, delivery_address: e.target.value }))
                   }
-                  placeholder={tc("address")}
+                  placeholder={tc('address')}
                 />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>物流公司</Label>
+                <Label>{tc('text_evw5c4')}</Label>
                 <Input
                   value={form.logistics_company || ''}
                   onChange={(e) =>
@@ -799,7 +839,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                 />
               </div>
               <div className="space-y-2">
-                <Label>物流单号</Label>
+                <Label>{tc('text_evwh16')}</Label>
                 <Input
                   value={form.tracking_no || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, tracking_no: e.target.value }))}
@@ -807,33 +847,33 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Input
                   value={form.remark || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, remark: e.target.value }))}
-                  placeholder={tc("remark")}
+                  placeholder={tc('remark')}
                 />
               </div>
             </div>
 
             <div className="border-t pt-4">
               <div className="flex items-center justify-between mb-3">
-                <Label className="text-base font-semibold">送货明细</Label>
+                <Label className="text-base font-semibold">{tc('text_ir1jy6')}</Label>
                 <Button variant="outline" size="sm" onClick={addItem}>
                   <Plus className="w-4 h-4 mr-1" />
-                  添加物料
+                  {tc('text_e81ct1')}
                 </Button>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>物料名称</TableHead>
-                    <TableHead>规格型号</TableHead>
-                    <TableHead>{tc("quantity")}</TableHead>
-                    <TableHead>{tc("unit")}</TableHead>
-                    <TableHead>单价</TableHead>
-                    <TableHead>{tc("amount")}</TableHead>
-                    <TableHead>{tc("batchNo")}</TableHead>
+                    <TableHead>{tc('text_eusfkj')}</TableHead>
+                    <TableHead>{tc('text_ht8gjo')}</TableHead>
+                    <TableHead>{tc('quantity')}</TableHead>
+                    <TableHead>{tc('unit')}</TableHead>
+                    <TableHead>{tc('text_elvm')}</TableHead>
+                    <TableHead>{tc('amount')}</TableHead>
+                    <TableHead>{tc('batchNo')}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -852,7 +892,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                         <Input
                           value={item.material_spec}
                           onChange={(e) => updateItem(idx, 'material_spec', e.target.value)}
-                          placeholder={tc("specification")}
+                          placeholder={tc('specification')}
                           className="w-28"
                         />
                       </TableCell>
@@ -890,7 +930,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                         <Input
                           value={item.batch_no}
                           onChange={(e) => updateItem(idx, 'batch_no', e.target.value)}
-                          placeholder={tc("batch")}
+                          placeholder={tc('batch')}
                           className="w-24"
                         />
                       </TableCell>
@@ -907,20 +947,22 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
               </Table>
               <div className="flex justify-end gap-6 mt-3 text-sm">
                 <span>
-                  总数量: <strong>{calcTotalQty().toLocaleString()}</strong>
+                  {tc('text_ckhqcg')}
+                  <strong>{calcTotalQty().toLocaleString()}</strong>
                 </span>
                 <span>
-                  总金额: <strong className="text-blue-600">¥{calcTotal().toFixed(2)}</strong>
+                  {tc('text_cr0wc3')}
+                  <strong className="text-blue-600">¥{calcTotal().toFixed(2)}</strong>
                 </span>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              取消
+              {tc('text_ev02')}
             </Button>
             <Button onClick={saveDelivery} className="bg-blue-600 hover:bg-blue-700">
-              保存
+              {tc('text_e32z')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -929,61 +971,61 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-2xl" resizable>
           <DialogHeader>
-            <DialogTitle>送货单详情</DialogTitle>
+            <DialogTitle>{tc('text_cyrs1a')}</DialogTitle>
             <DialogDescription>{detailData?.delivery_no}</DialogDescription>
           </DialogHeader>
           {detailData && (
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">客户名称：</span>
+                  <span className="text-gray-500">{tc('text_fvh8n6')}</span>
                   {detailData.customer_name}
                 </div>
                 <div>
-                  <span className="text-gray-500">送货日期：</span>
+                  <span className="text-gray-500">{tc('text_d1c9ru')}</span>
                   {detailData.delivery_date}
                 </div>
                 <div>
-                  <span className="text-gray-500">关联订单：</span>
+                  <span className="text-gray-500">{tc('text_jx9hsq')}</span>
                   {detailData.order_no || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">物流公司：</span>
+                  <span className="text-gray-500">{tc('text_za1nyu')}</span>
                   {detailData.logistics_company || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">物流单号：</span>
+                  <span className="text-gray-500">{tc('text_zabqjk')}</span>
                   {detailData.tracking_no || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">联系人：</span>
+                  <span className="text-gray-500">{tc('text_gpem87')}</span>
                   {detailData.contact_name || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">联系电话：</span>
+                  <span className="text-gray-500">{tc('text_ksxgln')}</span>
                   {detailData.contact_phone || '-'}
                 </div>
                 <div>
-                  <span className="text-gray-500">送货地址：</span>
+                  <span className="text-gray-500">{tc('text_cz40sk')}</span>
                   {detailData.delivery_address || '-'}
                 </div>
               </div>
               <div className="border-t pt-4">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <div className="text-gray-500 text-sm">{tc("totalQuantity")}</div>
+                    <div className="text-gray-500 text-sm">{tc('totalQuantity')}</div>
                     <div className="text-xl font-bold">
                       {parseFloat(String(detailData.total_qty || 0)).toLocaleString()}
                     </div>
                   </div>
                   <div>
-                    <div className="text-gray-500 text-sm">{tc("totalAmount")}</div>
+                    <div className="text-gray-500 text-sm">{tc('totalAmount')}</div>
                     <div className="text-xl font-bold text-blue-600">
                       ¥{parseFloat(String(detailData.total_amount || 0)).toFixed(2)}
                     </div>
                   </div>
                   <div>
-                    <div className="text-gray-500 text-sm">签收状态</div>
+                    <div className="text-gray-500 text-sm">{tc('text_g041ab')}</div>
                     <Badge className={SIGN_STATUS_MAP[detailData.sign_status ?? 0]?.color}>
                       {SIGN_STATUS_MAP[detailData.sign_status ?? 0]?.label}
                     </Badge>
@@ -994,11 +1036,11 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
                 <div className="border-t pt-4 text-sm">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <span className="text-gray-500">签收人：</span>
+                      <span className="text-gray-500">{tc('text_fzysd4')}</span>
                       {detailData.sign_person}
                     </div>
                     <div>
-                      <span className="text-gray-500">签收时间：</span>
+                      <span className="text-gray-500">{tc('text_15vxi4')}</span>
                       {detailData.sign_time}
                     </div>
                   </div>
@@ -1008,7 +1050,7 @@ const SHIPMENT_TYPE_MAP: Record<ShipmentType, { label: string; color: string }> 
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDetailOpen(false)}>
-              关闭
+              {tc('text_eod6')}
             </Button>
           </DialogFooter>
         </DialogContent>

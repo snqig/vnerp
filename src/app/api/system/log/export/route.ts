@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  successResponse,
-} from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query } from '@/lib/db';
@@ -13,11 +11,11 @@ import { getTranslator } from '@/lib/i18n-server';
  */
 
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || '';
     const operation = searchParams.get('operation') || '';
-    const module = searchParams.get('module') || '';
+    const moduleName = searchParams.get('module') || '';
     const businessType = searchParams.get('businessType') || '';
     const businessId = searchParams.get('businessId') || '';
     const startDate = searchParams.get('startDate') || '';
@@ -27,13 +25,34 @@ export const GET = withPermission(
     let where = 'WHERE 1=1';
     const params: any[] = [];
 
-    if (userId) { where += ' AND l.user_id = ?'; params.push(Number(userId)); }
-    if (operation) { where += ' AND l.operation LIKE ?'; params.push(`%${operation}%`); }
-    if (module) { where += ' AND l.module = ?'; params.push(module); }
-    if (businessType) { where += ' AND l.business_type = ?'; params.push(businessType); }
-    if (businessId) { where += ' AND l.business_id = ?'; params.push(businessId); }
-    if (startDate) { where += ' AND l.create_time >= ?'; params.push(startDate + ' 00:00:00'); }
-    if (endDate) { where += ' AND l.create_time <= ?'; params.push(endDate + ' 23:59:59'); }
+    if (userId) {
+      where += ' AND l.user_id = ?';
+      params.push(Number(userId));
+    }
+    if (operation) {
+      where += ' AND l.operation LIKE ?';
+      params.push(`%${operation}%`);
+    }
+    if (moduleName) {
+      where += ' AND l.module = ?';
+      params.push(moduleName);
+    }
+    if (businessType) {
+      where += ' AND l.business_type = ?';
+      params.push(businessType);
+    }
+    if (businessId) {
+      where += ' AND l.business_id = ?';
+      params.push(businessId);
+    }
+    if (startDate) {
+      where += ' AND l.create_time >= ?';
+      params.push(startDate + ' 00:00:00');
+    }
+    if (endDate) {
+      where += ' AND l.create_time <= ?';
+      params.push(endDate + ' 23:59:59');
+    }
 
     const rows: any = await query(
       `SELECT l.*, u.real_name as operator_name
@@ -48,7 +67,7 @@ export const GET = withPermission(
     if (format === 'csv') {
       // 获取翻译函数
       const t = await getTranslator('Export');
-      
+
       // 生成CSV表头
       const headers = [
         t('id'),
@@ -60,9 +79,9 @@ export const GET = withPermission(
         t('ipAddress'),
         t('status'),
         t('description'),
-        t('time')
+        t('time'),
       ];
-      
+
       const csvRows = rows.map((r: any) => [
         r.id,
         r.operator_name || r.username || '',

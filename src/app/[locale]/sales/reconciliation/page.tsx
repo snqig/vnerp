@@ -73,7 +73,10 @@ export default function ReconciliationPage() {
   const tc = useTranslations('Common');
 
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
-    1: { label: tc('draft'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+    1: {
+      label: tc('draft'),
+      color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+    },
     2: {
       label: t('confirmed'),
       color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
@@ -86,7 +89,10 @@ export default function ReconciliationPage() {
       label: t('fullyWrittenOff'),
       color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
     },
-    9: { label: tc('closed'), color: 'bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-stone-200' },
+    9: {
+      label: tc('closed'),
+      color: 'bg-stone-100 text-stone-800 dark:bg-stone-700 dark:text-stone-200',
+    },
   };
 
   const [list, setList] = useState<Reconciliation[]>([]);
@@ -144,7 +150,7 @@ export default function ReconciliationPage() {
           ),
         });
       }
-    } catch (e) {
+    } catch {
       toast.error(t('fetchListFailed'));
     } finally {
       setLoading(false);
@@ -158,8 +164,7 @@ export default function ReconciliationPage() {
       if (result.success) {
         setCustomers(result.data?.list || result.data || []);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -191,7 +196,7 @@ export default function ReconciliationPage() {
       } else {
         toast.error(result.message || tc('createFailed'));
       }
-    } catch (e) {
+    } catch {
       toast.error(t('createFailed'));
     }
   };
@@ -204,7 +209,7 @@ export default function ReconciliationPage() {
       if (result.success) {
         setDetailItems(result.data?.details || []);
       }
-    } catch (e) {
+    } catch {
       setDetailItems([]);
     }
     setDetailOpen(true);
@@ -245,9 +250,7 @@ export default function ReconciliationPage() {
                 <Calculator className="w-5 h-5" />
                 {t('pageTitle')}
               </CardTitle>
-              <CardDescription>
-                {t('pageDescription')}
-              </CardDescription>
+              <CardDescription>{t('pageDescription')}</CardDescription>
             </div>
             <Button
               onClick={() => {
@@ -279,7 +282,7 @@ export default function ReconciliationPage() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder={tc("status")} />
+                  <SelectValue placeholder={tc('status')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{tc('allStatus')}</SelectItem>
@@ -345,9 +348,9 @@ export default function ReconciliationPage() {
                     <TableHead>{t('returnAmount')}</TableHead>
                     <TableHead>{t('netAmount')}</TableHead>
                     <TableHead>{t('receivedAmount')}</TableHead>
-                    <TableHead>{tc("balance")}</TableHead>
-                    <TableHead>{tc("status")}</TableHead>
-                    <TableHead className="text-right">{tc("actions")}</TableHead>
+                    <TableHead>{tc('balance')}</TableHead>
+                    <TableHead>{tc('status')}</TableHead>
+                    <TableHead className="text-right">{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -387,7 +390,7 @@ export default function ReconciliationPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => exportReconciliation(r)}
-                            title={tc("export")}
+                            title={tc('export')}
                           >
                             <Download className="w-4 h-4" />
                           </Button>
@@ -466,11 +469,11 @@ export default function ReconciliationPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>{tc("remark")}</Label>
+              <Label>{tc('remark')}</Label>
               <Input
                 value={form.remark}
                 onChange={(e) => setForm((prev) => ({ ...prev, remark: e.target.value }))}
-                placeholder={tc("remark")}
+                placeholder={tc('remark')}
               />
             </div>
             <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-800">
@@ -523,7 +526,7 @@ export default function ReconciliationPage() {
                 </Card>
                 <Card>
                   <CardContent className="pt-3 pb-3">
-                    <div className="text-xs text-gray-500">{tc("discount")}</div>
+                    <div className="text-xs text-gray-500">{tc('discount')}</div>
                     <div className="text-lg font-bold">
                       ¥{parseFloat(String(detailData.discount_amount || 0)).toFixed(2)}
                     </div>
@@ -548,14 +551,16 @@ export default function ReconciliationPage() {
               </div>
               {detailItems.length > 0 && (
                 <div className="border-t pt-4">
-                  <Label className="text-base font-semibold mb-3 block">{t('reconciliationDetails')}</Label>
+                  <Label className="text-base font-semibold mb-3 block">
+                    {t('reconciliationDetails')}
+                  </Label>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{tc("type")}</TableHead>
+                        <TableHead>{tc('type')}</TableHead>
                         <TableHead>{t('orderNo')}</TableHead>
-                        <TableHead>{tc("date")}</TableHead>
-                        <TableHead>{tc("amount")}</TableHead>
+                        <TableHead>{tc('date')}</TableHead>
+                        <TableHead>{tc('amount')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

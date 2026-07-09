@@ -94,7 +94,10 @@ function loadCachedMenus(): { menus: Menu[]; permissions: string[] } | null {
     if (!raw) return null;
     const data = JSON.parse(raw);
     if (Array.isArray(data?.menus)) {
-      return { menus: data.menus, permissions: Array.isArray(data.permissions) ? data.permissions : [] };
+      return {
+        menus: data.menus,
+        permissions: Array.isArray(data.permissions) ? data.permissions : [],
+      };
     }
   } catch {
     // 缓存数据损坏，清除
@@ -201,7 +204,9 @@ export function AuthProvider({
         if (result.success) {
           menusLoadedRef.current = true;
           const menus = Array.isArray(result.data?.menus) ? result.data.menus : [];
-          const permissions = Array.isArray(result.data?.permissions) ? result.data.permissions : [];
+          const permissions = Array.isArray(result.data?.permissions)
+            ? result.data.permissions
+            : [];
           menusCountRef.current = menus.length;
 
           // 持久化菜单缓存到 localStorage
@@ -279,7 +284,7 @@ export function AuthProvider({
             // 无缓存：等待 API 返回（首次登录场景）
             await fetchMenus(token);
           }
-        } catch (e) {
+        } catch {
           setState((prev) => ({ ...prev, isLoading: false }));
         }
       } else {
@@ -325,13 +330,12 @@ export function AuthProvider({
             isLoading: true,
           });
 
-          fetchMenus(result.data.token, true, false).catch((e) => {
-          });
+          fetchMenus(result.data.token, true, false).catch((e) => {});
           return { success: true };
         } else {
           return { success: false, message: result.message };
         }
-      } catch (error) {
+      } catch {
         return { success: false, message: '登录失败' };
       }
     },
@@ -385,7 +389,7 @@ export function AuthProvider({
         body: JSON.stringify(data),
       });
       return await response.json();
-    } catch (error) {
+    } catch {
       return { success: false, message: '注册失败' };
     }
   }, []);

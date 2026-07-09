@@ -6,7 +6,7 @@ import { withPermission } from '@/lib/api-permissions';
 /**
  * 报表仪表盘 - 核心指标汇总
  */
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const period = searchParams.get('period') || '30'; // 天数
 

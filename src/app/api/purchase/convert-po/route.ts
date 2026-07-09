@@ -6,19 +6,22 @@ import {
   batchConvertRequestToPurchaseOrder,
 } from '@/lib/services/purchase-request-service';
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { requestId, requestIds } = body;
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { requestId, requestIds } = body;
 
-  if (requestIds && Array.isArray(requestIds)) {
-    const results = await batchConvertRequestToPurchaseOrder(requestIds);
-    return successResponse(results, `批量转采购完成: ${results.length}/${requestIds.length}成功`);
-  }
+    if (requestIds && Array.isArray(requestIds)) {
+      const results = await batchConvertRequestToPurchaseOrder(requestIds);
+      return successResponse(results, `批量转采购完成: ${results.length}/${requestIds.length}成功`);
+    }
 
-  if (!requestId) {
-    return errorResponse('请提供requestId或requestIds', 400);
-  }
+    if (!requestId) {
+      return errorResponse('请提供requestId或requestIds', 400);
+    }
 
-  const result = await convertRequestToPurchaseOrder(requestId);
-  return successResponse(result, '请购单转采购订单成功');
-}, { logTitle: '请购单转采购订单', logType: 'business' });
+    const result = await convertRequestToPurchaseOrder(requestId);
+    return successResponse(result, '请购单转采购订单成功');
+  },
+  { logTitle: '请购单转采购订单', logType: 'business' }
+);

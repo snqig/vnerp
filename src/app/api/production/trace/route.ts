@@ -3,7 +3,7 @@ import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const sn = searchParams.get('sn');
   const batchNo = searchParams.get('batchNo');
@@ -41,40 +41,41 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const {
-    sn,
-    parent_sn,
-    material_batch,
-    workorder_id,
-    workorder_no,
-    material_id,
-    material_code,
-    material_name,
-    supplier_id,
-    supplier_name,
-    inbound_date,
-    inbound_no,
-    inspection_id,
-    inspection_result,
-    trace_level,
-    trace_type,
-  } = body;
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const {
+      sn,
+      parent_sn,
+      material_batch,
+      workorder_id,
+      workorder_no,
+      material_id,
+      material_code,
+      material_name,
+      supplier_id,
+      supplier_name,
+      inbound_date,
+      inbound_no,
+      inspection_id,
+      inspection_result,
+      trace_level,
+      trace_type,
+    } = body;
 
-  if (!sn) {
-    return errorResponse('缺少必填字段: sn', 400, 400);
-  }
+    if (!sn) {
+      return errorResponse('缺少必填字段: sn', 400, 400);
+    }
 
-  const result = await transaction(async (conn) => {
-    const [existing]: any = await conn.execute(
-      'SELECT id FROM prd_product_trace_link WHERE sn = ? AND material_batch = ? AND deleted = 0',
-      [sn, material_batch || '']
-    );
+    const result = await transaction(async (conn) => {
+      const [existing]: any = await conn.execute(
+        'SELECT id FROM prd_product_trace_link WHERE sn = ? AND material_batch = ? AND deleted = 0',
+        [sn, material_batch || '']
+      );
 
-    if (existing.length > 0) {
-      await conn.execute(
-        `UPDATE prd_product_trace_link SET
+      if (existing.length > 0) {
+        await conn.execute(
+          `UPDATE prd_product_trace_link SET
           parent_sn = ?, workorder_id = ?, workorder_no = ?,
           material_id = ?, material_code = ?, material_name = ?,
           supplier_id = ?, supplier_name = ?,
@@ -82,8 +83,34 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
           inspection_id = ?, inspection_result = ?,
           trace_level = ?, trace_type = ?
         WHERE id = ?`,
+          [
+            parent_sn || null,
+            workorder_id || null,
+            workorder_no || null,
+            material_id || null,
+            material_code || null,
+            material_name || null,
+            supplier_id || null,
+            supplier_name || null,
+            inbound_date || null,
+            inbound_no || null,
+            inspection_id || null,
+            inspection_result || null,
+            trace_level || 1,
+            trace_type || 'product',
+            existing[0].id,
+          ]
+        );
+        return { id: existing[0].id, sn, updated: true };
+      }
+
+      const [insertResult]: any = await conn.execute(
+        `INSERT INTO prd_product_trace_link (sn, parent_sn, material_batch, workorder_id, workorder_no, material_id, material_code, material_name, supplier_id, supplier_name, inbound_date, inbound_no, inspection_id, inspection_result, trace_level, trace_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
+          sn,
           parent_sn || null,
+          material_batch || null,
           workorder_id || null,
           workorder_no || null,
           material_id || null,
@@ -97,40 +124,16 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
           inspection_result || null,
           trace_level || 1,
           trace_type || 'product',
-          existing[0].id,
         ]
       );
-      return { id: existing[0].id, sn, updated: true };
-    }
 
-    const [insertResult]: any = await conn.execute(
-      `INSERT INTO prd_product_trace_link (sn, parent_sn, material_batch, workorder_id, workorder_no, material_id, material_code, material_name, supplier_id, supplier_name, inbound_date, inbound_no, inspection_id, inspection_result, trace_level, trace_type)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        sn,
-        parent_sn || null,
-        material_batch || null,
-        workorder_id || null,
-        workorder_no || null,
-        material_id || null,
-        material_code || null,
-        material_name || null,
-        supplier_id || null,
-        supplier_name || null,
-        inbound_date || null,
-        inbound_no || null,
-        inspection_id || null,
-        inspection_result || null,
-        trace_level || 1,
-        trace_type || 'product',
-      ]
-    );
+      return { id: insertResult.insertId, sn, updated: false };
+    });
 
-    return { id: insertResult.insertId, sn, updated: false };
-  });
-
-  return successResponse(result, '追溯链记录创建成功');
-}, { logTitle: '创建追溯链记录', logType: 'business' });
+    return successResponse(result, '追溯链记录创建成功');
+  },
+  { logTitle: '创建追溯链记录', logType: 'business' }
+);
 
 async function buildTraceChain(startSn: string): Promise<any[]> {
   const chain: any[] = [];

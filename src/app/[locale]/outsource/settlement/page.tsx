@@ -98,8 +98,7 @@ export default function OutsourceSettlementPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchOutsourceOrders = async () => {
@@ -107,8 +106,7 @@ export default function OutsourceSettlementPage() {
       const res = await authFetch('/api/outsource/order?pageSize=100');
       const result = await res.json();
       if (result.success) setOutsourceOrders(result.data?.list || []);
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -134,7 +132,7 @@ export default function OutsourceSettlementPage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -152,9 +150,13 @@ export default function OutsourceSettlementPage() {
         toast({ title: t('settlementConfirmSuccess') });
         fetchData();
       } else {
-        toast({ title: t('settlementConfirmFailed'), description: result.message, variant: 'destructive' });
+        toast({
+          title: t('settlementConfirmFailed'),
+          description: result.message,
+          variant: 'destructive',
+        });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -172,7 +174,7 @@ export default function OutsourceSettlementPage() {
         toast({ title: t('paymentConfirmSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -188,7 +190,7 @@ export default function OutsourceSettlementPage() {
       } else {
         toast({ title: tc('deleteFailed'), variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
@@ -205,7 +207,7 @@ export default function OutsourceSettlementPage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchOrderNo")}
+                placeholder={tc('searchOrderNo')}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -234,15 +236,15 @@ export default function OutsourceSettlementPage() {
                 <TableRow>
                   <TableHead className="text-xs">{t('settlementNo')}</TableHead>
                   <TableHead className="text-xs">{t('orderNo')}</TableHead>
-                  <TableHead className="text-xs">{tc("supplier")}</TableHead>
+                  <TableHead className="text-xs">{tc('supplier')}</TableHead>
                   <TableHead className="text-xs">{t('settlementDate')}</TableHead>
                   <TableHead className="text-xs text-right">{t('settlementQty')}</TableHead>
                   <TableHead className="text-xs text-right">{t('settlementAmount')}</TableHead>
                   <TableHead className="text-xs text-right">{t('deductAmount')}</TableHead>
                   <TableHead className="text-xs text-right">{t('actualAmount')}</TableHead>
                   <TableHead className="text-xs">{t('paymentStatus')}</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -430,7 +432,7 @@ export default function OutsourceSettlementPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Input
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -441,7 +443,7 @@ export default function OutsourceSettlementPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

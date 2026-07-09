@@ -46,20 +46,20 @@ interface Item {
   status: number;
 }
 const typeMap: Record<number, string> = {
-  1: '安全培训',
-  2: '技能培训',
-  3: '质量培训',
-  4: '管理培训',
-  5: '新员工培训',
+  1: tc('text_bvzj0z'),
+  2: tc('text_cykx01'),
+  3: tc('text_ieqapn'),
+  4: tc('text_g2s6jd'),
+  5: tc('text_hk2alr'),
 };
 const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  0: { label: '待开始', variant: 'outline' },
-  1: { label: '进行中', variant: 'default' },
-  2: { label: '已完成', variant: 'secondary' },
-  3: { label: '已取消', variant: 'destructive' },
+  0: { label: tc('text_egbo0'), variant: 'outline' },
+  1: { label: tc('text_lq5q4'), variant: 'default' },
+  2: { label: tc('text_e7hbq'), variant: 'secondary' },
+  3: { label: tc('text_e68dg'), variant: 'destructive' },
 };
 
 const formatDate = (dateStr: string) => {
@@ -93,8 +93,7 @@ export default function TrainingPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
   useEffect(() => {
     fetchData();
@@ -115,7 +114,7 @@ export default function TrainingPage() {
       } else {
         toast({ title: t('operationFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: t('operationFailed'), variant: 'destructive' });
     }
   };
@@ -130,7 +129,7 @@ export default function TrainingPage() {
         toast({ title: t('updateSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: t('operationFailed'), variant: 'destructive' });
     }
   };
@@ -143,20 +142,20 @@ export default function TrainingPage() {
         toast({ title: t('deleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: t('operationFailed'), variant: 'destructive' });
     }
   };
 
   return (
-    <MainLayout title={t("trainingManagement")}>
+    <MainLayout title={t('trainingManagement')}>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t("trainingManagement")}</h1>
+          <h1 className="text-2xl font-bold">{t('trainingManagement')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchTrainingPlaceholder")}
+                placeholder={tc('searchTrainingPlaceholder')}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -173,7 +172,7 @@ export default function TrainingPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              {t("newTraining")}
+              {t('newTraining')}
             </Button>
           </div>
         </div>
@@ -182,16 +181,16 @@ export default function TrainingPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs w-12 text-center">{tc("serialNo")}</TableHead>
-                  <TableHead className="text-xs">{tc("trainingNo")}</TableHead>
-                  <TableHead className="text-xs">{tc("trainingName")}</TableHead>
-                  <TableHead className="text-xs">{tc("trainingType")}</TableHead>
-                  <TableHead className="text-xs">{tc("trainingDate")}</TableHead>
-                  <TableHead className="text-xs">{tc("hours")}</TableHead>
-                  <TableHead className="text-xs">{tc("trainer")}</TableHead>
-                  <TableHead className="text-xs">{tc("location")}</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs w-12 text-center">{tc('serialNo')}</TableHead>
+                  <TableHead className="text-xs">{tc('trainingNo')}</TableHead>
+                  <TableHead className="text-xs">{tc('trainingName')}</TableHead>
+                  <TableHead className="text-xs">{tc('trainingType')}</TableHead>
+                  <TableHead className="text-xs">{tc('trainingDate')}</TableHead>
+                  <TableHead className="text-xs">{tc('hours')}</TableHead>
+                  <TableHead className="text-xs">{tc('trainer')}</TableHead>
+                  <TableHead className="text-xs">{tc('location')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -225,7 +224,7 @@ export default function TrainingPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              {tc("start")}
+                              {tc('start')}
                             </Button>
                           )}
                           {item.status === 2 && (
@@ -235,7 +234,7 @@ export default function TrainingPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 3)}
                             >
-                              {tc("complete")}
+                              {tc('complete')}
                             </Button>
                           )}
                           <Button
@@ -265,7 +264,7 @@ export default function TrainingPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                      {tc("noRecords")}
+                      {tc('noRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -274,7 +273,9 @@ export default function TrainingPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{tc("totalRecords", { count: total })}</span>
+          <span className="text-sm text-muted-foreground">
+            {tc('totalRecords', { count: total })}
+          </span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -282,7 +283,7 @@ export default function TrainingPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc("prevPage")}
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -290,25 +291,25 @@ export default function TrainingPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc("nextPage")}
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{t("addTrainingTitle")}</DialogTitle>
+              <DialogTitle>{t('addTrainingTitle')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{tc("trainingName")}</Label>
+                <Label>{tc('trainingName')}</Label>
                 <Input
                   value={editItem.training_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, training_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("trainingType")}</Label>
+                <Label>{tc('trainingType')}</Label>
                 <Select
                   value={String(editItem.training_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, training_type: Number(v) })}
@@ -317,16 +318,16 @@ export default function TrainingPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">{tc("safetyTraining")}</SelectItem>
-                    <SelectItem value="2">{tc("skillTraining")}</SelectItem>
-                    <SelectItem value="3">{tc("qualityTraining")}</SelectItem>
-                    <SelectItem value="4">{tc("managementTraining")}</SelectItem>
-                    <SelectItem value="5">{tc("newEmployeeTraining")}</SelectItem>
+                    <SelectItem value="1">{tc('safetyTraining')}</SelectItem>
+                    <SelectItem value="2">{tc('skillTraining')}</SelectItem>
+                    <SelectItem value="3">{tc('qualityTraining')}</SelectItem>
+                    <SelectItem value="4">{tc('managementTraining')}</SelectItem>
+                    <SelectItem value="5">{tc('newEmployeeTraining')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>{tc("trainingDate")}</Label>
+                <Label>{tc('trainingDate')}</Label>
                 <Input
                   type="date"
                   value={editItem.training_date || ''}
@@ -334,7 +335,7 @@ export default function TrainingPage() {
                 />
               </div>
               <div>
-                <Label>{tc("hours")}</Label>
+                <Label>{tc('hours')}</Label>
                 <Input
                   type="number"
                   value={editItem.training_hours ?? ''}
@@ -344,14 +345,14 @@ export default function TrainingPage() {
                 />
               </div>
               <div>
-                <Label>{tc("trainer")}</Label>
+                <Label>{tc('trainer')}</Label>
                 <Input
                   value={editItem.trainer || ''}
                   onChange={(e) => setEditItem({ ...editItem, trainer: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("location")}</Label>
+                <Label>{tc('location')}</Label>
                 <Input
                   value={editItem.training_place || ''}
                   onChange={(e) => setEditItem({ ...editItem, training_place: e.target.value })}
@@ -360,9 +361,9 @@ export default function TrainingPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc("cancel")}
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

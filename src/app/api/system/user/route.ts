@@ -5,7 +5,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 
-export const GET = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -49,7 +49,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo: UserInf
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const POST = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const body = await request.json();
   const { username, password, real_name, email, phone, department_id, role_ids, status } = body;
 
@@ -96,7 +96,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo: UserIn
   return successResponse(result, '用户创建成功');
 });
 
-export const PUT = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const PUT = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const body = await request.json();
   const { id, real_name, email, phone, department_id, role_ids, status } = body;
 
@@ -133,7 +133,7 @@ export const PUT = withPermission(async (request: NextRequest, userInfo: UserInf
   return successResponse(null, '更新成功');
 });
 
-export const DELETE = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const DELETE = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });

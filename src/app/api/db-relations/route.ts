@@ -9,10 +9,7 @@ export async function GET() {
     const relations = JSON.parse(data);
 
     return NextResponse.json(relations);
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to load database relations' },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ error: 'Failed to load database relations' }, { status: 500 });
   }
 }

@@ -34,7 +34,7 @@ function calcNextExecuteDate(
   return next.toISOString().slice(0, 10);
 }
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
 
   // 即将到期提醒：查询 next_execute_date 在 lead_days 窗口内的计划

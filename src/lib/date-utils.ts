@@ -22,8 +22,7 @@ async function fetchDateFormat(): Promise<string> {
           return cachedDateFormat;
         }
       }
-    } catch (e) {
-    }
+    } catch {}
     return cachedDateFormat;
   })();
 

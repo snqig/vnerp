@@ -4,7 +4,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 
-export const GET = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
@@ -22,7 +22,10 @@ export const GET = withPermission(async (request: NextRequest, userInfo: UserInf
   // 解析权限JSON
   const list = rows.map((row: any) => ({
     ...row,
-    permissions: typeof row.permissions === 'string' ? JSON.parse(row.permissions || '[]') : (row.permissions || []),
+    permissions:
+      typeof row.permissions === 'string'
+        ? JSON.parse(row.permissions || '[]')
+        : row.permissions || [],
   }));
 
   // 如果需要继承权限，解析完整权限链
@@ -37,7 +40,10 @@ export const GET = withPermission(async (request: NextRequest, userInfo: UserInf
 });
 
 // 解析角色的有效权限（包含继承的权限）
-async function resolveEffectivePermissions(roleId: number, visited = new Set<number>()): Promise<string[]> {
+async function resolveEffectivePermissions(
+  roleId: number,
+  visited = new Set<number>()
+): Promise<string[]> {
   if (visited.has(roleId)) return []; // 防止循环继承
   visited.add(roleId);
 
@@ -48,9 +54,10 @@ async function resolveEffectivePermissions(roleId: number, visited = new Set<num
 
   if (role.length === 0) return [];
 
-  const currentPermissions = typeof role[0].permissions === 'string'
-    ? JSON.parse(role[0].permissions || '[]')
-    : (role[0].permissions || []);
+  const currentPermissions =
+    typeof role[0].permissions === 'string'
+      ? JSON.parse(role[0].permissions || '[]')
+      : role[0].permissions || [];
 
   if (!role[0].parent_id) {
     return currentPermissions;
@@ -68,13 +75,24 @@ async function resolveEffectivePermissions(roleId: number, visited = new Set<num
 }
 
 async function getParentRoleName(parentId: number): Promise<string | null> {
-  const rows: any = await query('SELECT role_name FROM sys_role WHERE id = ? AND deleted = 0', [parentId]);
+  const rows: any = await query('SELECT role_name FROM sys_role WHERE id = ? AND deleted = 0', [
+    parentId,
+  ]);
   return rows.length > 0 ? rows[0].role_name : null;
 }
 
-export const POST = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const POST = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const body = await request.json();
-  const { role_name, role_code, parent_id, inherit_mode, description, data_scope, status, permissions } = body;
+  const {
+    role_name,
+    role_code,
+    parent_id,
+    inherit_mode,
+    description,
+    data_scope,
+    status,
+    permissions,
+  } = body;
 
   if (!role_name || !role_code) return errorResponse('ROLE_NAME_CODE_REQUIRED', 400, 400);
 
@@ -85,7 +103,10 @@ export const POST = withPermission(async (request: NextRequest, userInfo: UserIn
 
   // 验证父角色是否存在且不形成循环
   if (parent_id) {
-    const parent: any = await query('SELECT id, parent_id FROM sys_role WHERE id = ? AND deleted = 0', [parent_id]);
+    const parent: any = await query(
+      'SELECT id, parent_id FROM sys_role WHERE id = ? AND deleted = 0',
+      [parent_id]
+    );
     if (parent.length === 0) return errorResponse('PARENT_ROLE_NOT_FOUND', 400, 400);
   }
 
@@ -106,9 +127,19 @@ export const POST = withPermission(async (request: NextRequest, userInfo: UserIn
   return successResponse({ id: result.insertId }, 'ROLE_CREATED');
 });
 
-export const PUT = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const PUT = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const body = await request.json();
-  const { id, role_name, role_code, parent_id, inherit_mode, description, data_scope, status, permissions } = body;
+  const {
+    id,
+    role_name,
+    role_code,
+    parent_id,
+    inherit_mode,
+    description,
+    data_scope,
+    status,
+    permissions,
+  } = body;
 
   if (!id) return errorResponse('ROLE_ID_REQUIRED', 400, 400);
 
@@ -122,7 +153,10 @@ export const PUT = withPermission(async (request: NextRequest, userInfo: UserInf
       if (checkId === id) return errorResponse('CANNOT_FORM_CIRCULAR_INHERITANCE', 400, 400);
       if (visited.has(checkId)) break;
       visited.add(checkId);
-      const parent: any = await query('SELECT parent_id FROM sys_role WHERE id = ? AND deleted = 0', [checkId]);
+      const parent: any = await query(
+        'SELECT parent_id FROM sys_role WHERE id = ? AND deleted = 0',
+        [checkId]
+      );
       checkId = parent.length > 0 ? parent[0].parent_id : null;
     }
   }
@@ -170,13 +204,15 @@ export const PUT = withPermission(async (request: NextRequest, userInfo: UserInf
   return successResponse(null, 'ROLE_UPDATED');
 });
 
-export const DELETE = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const DELETE = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return errorResponse('ROLE_ID_REQUIRED', 400, 400);
 
   // 检查是否有子角色
-  const children: any = await query('SELECT id FROM sys_role WHERE parent_id = ? AND deleted = 0', [Number(id)]);
+  const children: any = await query('SELECT id FROM sys_role WHERE parent_id = ? AND deleted = 0', [
+    Number(id),
+  ]);
   if (children.length > 0) return errorResponse('ROLE_HAS_CHILDREN', 400, 400);
 
   await execute('UPDATE sys_role SET deleted = 1 WHERE id = ?', [Number(id)]);

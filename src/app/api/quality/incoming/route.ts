@@ -10,7 +10,7 @@ import {
 import { withPermission } from '@/lib/api-permissions';
 
 // 获取进料检验列表
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status') || '';
@@ -111,156 +111,160 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // 创建进料检验单
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, [
-    'inspectionDate',
-    'supplierName',
-    'materialCode',
-    'materialName',
-    'specification',
-    'batchNo',
-    'quantity',
-    'unit',
-    'inspectionType',
-    'inspectionResult',
-    'inspectorName',
-  ]);
+    // 验证必填字段
+    const validation = validateRequestBody(body, [
+      'inspectionDate',
+      'supplierName',
+      'materialCode',
+      'materialName',
+      'specification',
+      'batchNo',
+      'quantity',
+      'unit',
+      'inspectionType',
+      'inspectionResult',
+      'inspectorName',
+    ]);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const {
-    inspectionDate,
-    supplierName,
-    materialCode,
-    materialName,
-    specification,
-    batchNo,
-    quantity,
-    unit,
-    inspectionType,
-    inspectionResult,
-    inspectorName,
-    remark,
-    items,
-  } = body;
+    const {
+      inspectionDate,
+      supplierName,
+      materialCode,
+      materialName,
+      specification,
+      batchNo,
+      quantity,
+      unit,
+      inspectionType,
+      inspectionResult,
+      inspectorName,
+      remark,
+      items,
+    } = body;
 
-  // 使用事务确保数据一致性
-  const result = await transaction(async (connection) => {
-    // 生成检验单号
-    const date = new Date();
-    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-    const [maxInspection] = await connection.query(
-      `SELECT MAX(inspection_no) as maxNo FROM qc_incoming_inspection WHERE inspection_no LIKE ?`,
-      [`IQC${dateStr}%`]
-    );
-    const maxNo = (maxInspection as any[])[0]?.maxNo;
-    const seq = maxNo ? String(parseInt(maxNo.slice(-3)) + 1).padStart(3, '0') : '001';
-    const inspectionNo = `IQC${dateStr}${seq}`;
+    // 使用事务确保数据一致性
+    const result = await transaction(async (connection) => {
+      // 生成检验单号
+      const date = new Date();
+      const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+      const [maxInspection] = await connection.query(
+        `SELECT MAX(inspection_no) as maxNo FROM qc_incoming_inspection WHERE inspection_no LIKE ?`,
+        [`IQC${dateStr}%`]
+      );
+      const maxNo = (maxInspection as any[])[0]?.maxNo;
+      const seq = maxNo ? String(parseInt(maxNo.slice(-3)) + 1).padStart(3, '0') : '001';
+      const inspectionNo = `IQC${dateStr}${seq}`;
 
-    // 插入检验单主表
-    const [insertResult] = (await connection.execute(
-      `INSERT INTO qc_incoming_inspection (
+      // 插入检验单主表
+      const [insertResult] = (await connection.execute(
+        `INSERT INTO qc_incoming_inspection (
         inspection_no, inspection_date, supplier_name,
         material_code, material_name, specification,
         batch_no, quantity, unit, inspection_type,
         inspection_result, inspector_name, remark
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        inspectionNo,
-        inspectionDate,
-        supplierName,
-        materialCode,
-        materialName,
-        specification,
-        batchNo,
-        quantity,
-        unit,
-        inspectionType,
-        inspectionResult,
-        inspectorName,
-        remark,
-      ]
-    )) as [any, any];
+        [
+          inspectionNo,
+          inspectionDate,
+          supplierName,
+          materialCode,
+          materialName,
+          specification,
+          batchNo,
+          quantity,
+          unit,
+          inspectionType,
+          inspectionResult,
+          inspectorName,
+          remark,
+        ]
+      )) as [any, any];
 
-    const inspectionId = (insertResult as any).insertId;
+      const inspectionId = (insertResult as any).insertId;
 
-    // 批量插入检验单明细
-    if (items && items.length > 0) {
-      const itemValues = items.map((item: any) => [
-        inspectionId,
-        inspectionNo,
-        item.itemName,
-        item.standard,
-        item.actualValue,
-        item.result,
-        item.itemRemark,
-      ]);
+      // 批量插入检验单明细
+      if (items && items.length > 0) {
+        const itemValues = items.map((item: any) => [
+          inspectionId,
+          inspectionNo,
+          item.itemName,
+          item.standard,
+          item.actualValue,
+          item.result,
+          item.itemRemark,
+        ]);
 
-      await connection.query(
-        `INSERT INTO qc_incoming_inspection_item (
+        await connection.query(
+          `INSERT INTO qc_incoming_inspection_item (
           inspection_id, inspection_no, item_name,
           standard, actual_value, result, remark
         ) VALUES ?`,
-        [itemValues]
-      );
+          [itemValues]
+        );
+      }
+
+      return { id: inspectionId, inspectionNo, inspectionResult };
+    });
+
+    if (result.inspectionResult === 'qualified' || result.inspectionResult === '合格') {
+      await transaction(async (conn) => {
+        await conn.execute(
+          `UPDATE inv_inventory_batch SET status = 'normal', freeze_reason = NULL, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
+          [result.id, batchNo]
+        );
+        await conn.execute(
+          `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 1, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
+          [result.id, batchNo]
+        );
+      }).catch(() => {});
+    } else if (result.inspectionResult === 'unqualified' || result.inspectionResult === '不合格') {
+      await transaction(async (conn) => {
+        await conn.execute(
+          `UPDATE inv_inventory_batch SET status = 'frozen', freeze_reason = '进料检验不合格', inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
+          [result.id, batchNo]
+        );
+        await conn.execute(
+          `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 2, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
+          [result.id, batchNo]
+        );
+      }).catch(() => {});
     }
 
-    return { id: inspectionId, inspectionNo, inspectionResult };
-  });
-
-  if (result.inspectionResult === 'qualified' || result.inspectionResult === '合格') {
-    await transaction(async (conn) => {
-      await conn.execute(
-        `UPDATE inv_inventory_batch SET status = 'normal', freeze_reason = NULL, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
-        [result.id, batchNo]
-      );
-      await conn.execute(
-        `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 1, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
-        [result.id, batchNo]
-      );
-    }).catch(() => {});
-  } else if (result.inspectionResult === 'unqualified' || result.inspectionResult === '不合格') {
-    await transaction(async (conn) => {
-      await conn.execute(
-        `UPDATE inv_inventory_batch SET status = 'frozen', freeze_reason = '进料检验不合格', inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
-        [result.id, batchNo]
-      );
-      await conn.execute(
-        `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 2, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
-        [result.id, batchNo]
-      );
-    }).catch(() => {});
-  }
-
-  return successResponse(result, '进料检验单创建成功');
-}, { logTitle: '创建进料检验单', logType: 'business' });
+    return successResponse(result, '进料检验单创建成功');
+  },
+  { logTitle: '创建进料检验单', logType: 'business' }
+);
 
 // 更新进料检验单
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, ...updateData } = body;
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { id, ...updateData } = body;
 
-  if (!id) {
-    return commonErrors.badRequest('检验单ID不能为空');
-  }
+    if (!id) {
+      return commonErrors.badRequest('检验单ID不能为空');
+    }
 
-  // 检查检验单是否存在
-  const [inspection] = await query<{ id: number }>(
-    'SELECT id FROM qc_incoming_inspection WHERE id = ? AND deleted = 0',
-    [id]
-  );
+    // 检查检验单是否存在
+    const [inspection] = await query<{ id: number }>(
+      'SELECT id FROM qc_incoming_inspection WHERE id = ? AND deleted = 0',
+      [id]
+    );
 
-  if (!inspection) {
-    return commonErrors.notFound('检验单不存在');
-  }
+    if (!inspection) {
+      return commonErrors.notFound('检验单不存在');
+    }
 
-  await execute(
-    `UPDATE qc_incoming_inspection SET
+    await execute(
+      `UPDATE qc_incoming_inspection SET
       inspection_date = ?,
       supplier_name = ?,
       material_code = ?,
@@ -274,107 +278,112 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
       inspector_name = ?,
       remark = ?
     WHERE id = ?`,
-    [
-      updateData.inspectionDate,
-      updateData.supplierName,
-      updateData.materialCode,
-      updateData.materialName,
-      updateData.specification,
-      updateData.batchNo,
-      updateData.quantity,
-      updateData.unit,
-      updateData.inspectionType,
-      updateData.inspectionResult,
-      updateData.inspectorName,
-      updateData.remark,
-      id,
-    ]
-  );
+      [
+        updateData.inspectionDate,
+        updateData.supplierName,
+        updateData.materialCode,
+        updateData.materialName,
+        updateData.specification,
+        updateData.batchNo,
+        updateData.quantity,
+        updateData.unit,
+        updateData.inspectionType,
+        updateData.inspectionResult,
+        updateData.inspectorName,
+        updateData.remark,
+        id,
+      ]
+    );
 
-  if (updateData.inspectionResult === 'qualified' || updateData.inspectionResult === '合格') {
-    await transaction(async (conn) => {
-      await conn.execute(
-        `UPDATE inv_inventory_batch SET status = 'normal', freeze_reason = NULL, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
-        [id, updateData.batchNo]
-      );
-      await conn.execute(
-        `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 1, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
-        [id, updateData.batchNo]
-      );
-    }).catch(() => {});
-  } else if (
-    updateData.inspectionResult === 'unqualified' ||
-    updateData.inspectionResult === '不合格'
-  ) {
-    await transaction(async (conn) => {
-      await conn.execute(
-        `UPDATE inv_inventory_batch SET status = 'frozen', freeze_reason = '进料检验不合格', inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
-        [id, updateData.batchNo]
-      );
-      await conn.execute(
-        `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 2, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
-        [id, updateData.batchNo]
-      );
-    }).catch(() => {});
-  }
+    if (updateData.inspectionResult === 'qualified' || updateData.inspectionResult === '合格') {
+      await transaction(async (conn) => {
+        await conn.execute(
+          `UPDATE inv_inventory_batch SET status = 'normal', freeze_reason = NULL, inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
+          [id, updateData.batchNo]
+        );
+        await conn.execute(
+          `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 1, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
+          [id, updateData.batchNo]
+        );
+      }).catch(() => {});
+    } else if (
+      updateData.inspectionResult === 'unqualified' ||
+      updateData.inspectionResult === '不合格'
+    ) {
+      await transaction(async (conn) => {
+        await conn.execute(
+          `UPDATE inv_inventory_batch SET status = 'frozen', freeze_reason = '进料检验不合格', inspection_id = ? WHERE batch_no = ? AND deleted = 0`,
+          [id, updateData.batchNo]
+        );
+        await conn.execute(
+          `UPDATE inv_inbound_order o INNER JOIN qrcode_record q ON o.order_no = q.ref_no SET o.inspection_status = 2, o.inspection_id = ? WHERE q.batch_no = ? AND q.qr_type = 'material' AND q.deleted = 0 AND o.deleted = 0`,
+          [id, updateData.batchNo]
+        );
+      }).catch(() => {});
+    }
 
-  // 更新检验单明细
-  if (updateData.items && updateData.items.length > 0) {
-    // 先删除原有的明细
-    await execute('UPDATE qc_incoming_inspection_item SET deleted = 1 WHERE inspection_id = ?', [
-      id,
-    ]);
+    // 更新检验单明细
+    if (updateData.items && updateData.items.length > 0) {
+      // 先删除原有的明细
+      await execute('UPDATE qc_incoming_inspection_item SET deleted = 1 WHERE inspection_id = ?', [
+        id,
+      ]);
 
-    // 插入新的明细
-    const itemValues = updateData.items.map((item: any) => [
-      id,
-      updateData.inspectionNo,
-      item.itemName,
-      item.standard,
-      item.actualValue,
-      item.result,
-      item.itemRemark,
-    ]);
+      // 插入新的明细
+      const itemValues = updateData.items.map((item: any) => [
+        id,
+        updateData.inspectionNo,
+        item.itemName,
+        item.standard,
+        item.actualValue,
+        item.result,
+        item.itemRemark,
+      ]);
 
-    await execute(
-      `INSERT INTO qc_incoming_inspection_item (
+      await execute(
+        `INSERT INTO qc_incoming_inspection_item (
         inspection_id, inspection_no, item_name,
         standard, actual_value, result, remark
       ) VALUES ?`,
-      [itemValues]
-    );
-  }
+        [itemValues]
+      );
+    }
 
-  return successResponse(null, '进料检验单更新成功');
-}, { logTitle: '更新进料检验单', logType: 'business' });
+    return successResponse(null, '进料检验单更新成功');
+  },
+  { logTitle: '更新进料检验单', logType: 'business' }
+);
 
 // 删除进料检验单（软删除）
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return commonErrors.badRequest('检验单ID不能为空');
-  }
+    if (!id) {
+      return commonErrors.badRequest('检验单ID不能为空');
+    }
 
-  // 检查检验单是否存在
-  const [inspection] = await query<{ id: number }>(
-    'SELECT id FROM qc_incoming_inspection WHERE id = ? AND deleted = 0',
-    [id]
-  );
-
-  if (!inspection) {
-    return commonErrors.notFound('检验单不存在');
-  }
-
-  // 使用事务同时更新主表和明细表
-  await transaction(async (connection) => {
-    await connection.execute('UPDATE qc_incoming_inspection SET deleted = 1 WHERE id = ?', [id]);
-    await connection.execute(
-      'UPDATE qc_incoming_inspection_item SET deleted = 1 WHERE inspection_id = ?',
+    // 检查检验单是否存在
+    const [inspection] = await query<{ id: number }>(
+      'SELECT id FROM qc_incoming_inspection WHERE id = ? AND deleted = 0',
       [id]
     );
-  });
 
-  return successResponse(null, '进料检验单删除成功');
-}, { logTitle: '删除进料检验单', logType: 'business' });
+    if (!inspection) {
+      return commonErrors.notFound('检验单不存在');
+    }
+
+    // 使用事务同时更新主表和明细表
+    await transaction(async (connection) => {
+      await connection.execute('UPDATE qc_incoming_inspection SET deleted = 1 WHERE id = ?', [id]);
+      await connection.execute(
+        'UPDATE qc_incoming_inspection_item SET deleted = 1 WHERE inspection_id = ?',
+        [id]
+      );
+    });
+
+    return successResponse(null, '进料检验单删除成功');
+  },
+  { logTitle: '删除进料检验单', logType: 'business' }
+);

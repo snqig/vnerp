@@ -6,7 +6,7 @@ import { ToolManagementService } from '@/application/services/ToolManagementServ
 const service = new ToolManagementService();
 
 export const GET = withPermission(
-  async (request: NextRequest) => {
+  async (_request: NextRequest) => {
     const dashboard = await service.getDashboard();
     return successResponse(dashboard);
   },

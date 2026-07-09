@@ -97,16 +97,16 @@ interface InventoryCheckItem {
 }
 
 const TYPE_MAP: Record<number, string> = {
-  1: '定期盘点',
-  2: '不定期盘点',
-  3: '循环盘点',
-  4: '抽盘',
+  1: tc('text_bzlzl2'),
+  2: tc('text_x1ivoz'),
+  3: tc('text_cjwana'),
+  4: tc('text_hg3f'),
 };
 
 const SPLIT_FLAG_MAP: Record<number, string> = {
-  0: '整料',
-  1: '小料',
-  2: '余料',
+  0: tc('text_htb9'),
+  1: tc('text_g7sa'),
+  2: tc('text_e1y8'),
 };
 
 export default function StocktakingPage() {
@@ -176,8 +176,7 @@ export default function StocktakingPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchWarehouses = async () => {
@@ -187,8 +186,7 @@ export default function StocktakingPage() {
       if (result.success) {
         setWarehouses(result.data?.map((w: any) => ({ id: w.id, name: w.name })) || []);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -221,7 +219,7 @@ export default function StocktakingPage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -244,7 +242,7 @@ export default function StocktakingPage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -258,9 +256,13 @@ export default function StocktakingPage() {
         toast({ title: t('checkDeleteSuccess') });
         fetchData();
       } else {
-        toast({ title: t('checkDeleteFailed'), description: result.message, variant: 'destructive' });
+        toast({
+          title: t('checkDeleteFailed'),
+          description: result.message,
+          variant: 'destructive',
+        });
       }
-    } catch (e) {
+    } catch {
       toast({ title: t('checkDeleteFailed'), variant: 'destructive' });
     }
   };
@@ -297,7 +299,7 @@ export default function StocktakingPage() {
       } else {
         toast({ title: t('scanCheckFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: t('scanCheckFailed'), variant: 'destructive' });
     }
   };
@@ -307,12 +309,11 @@ export default function StocktakingPage() {
       const res = await authFetch(`/api/warehouse/stocktaking/${check.id}/items`);
       const result = await res.json();
       if (result.success) {
-        const detailitemsList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const detailitemsList = Array.isArray(result.data) ? result.data : result.data?.list || [];
         setDetailItems(detailitemsList);
         setShowDetailDialog(true);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   return (
@@ -323,7 +324,7 @@ export default function StocktakingPage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchOrderNo")}
+                placeholder={tc('searchOrderNo')}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -341,8 +342,18 @@ export default function StocktakingPage() {
                 { key: 'type', label: tc('type'), width: 10, formatter: (v) => TYPE_MAP[v] || '-' },
                 { key: 'total_items', label: t('checkItems'), width: 10 },
                 { key: 'diff_items', label: t('diffItems'), width: 10 },
-                { key: 'diff_amount', label: t('diffAmount'), width: 12, formatter: (v) => Number(v || 0).toFixed(2) },
-                { key: 'status', label: tc('status'), width: 10, formatter: (v) => STATUS_MAP[v]?.label || '-' },
+                {
+                  key: 'diff_amount',
+                  label: t('diffAmount'),
+                  width: 12,
+                  formatter: (v) => Number(v || 0).toFixed(2),
+                },
+                {
+                  key: 'status',
+                  label: tc('status'),
+                  width: 10,
+                  formatter: (v) => STATUS_MAP[v]?.label || '-',
+                },
               ]}
               data={selectedIds.size > 0 ? list.filter((i) => selectedIds.has(i.id)) : list}
             />
@@ -374,13 +385,13 @@ export default function StocktakingPage() {
                     />
                   </TableHead>
                   <TableHead className="text-xs">{t('checkNo')}</TableHead>
-                  <TableHead className="text-xs">{tc("warehouse")}</TableHead>
-                  <TableHead className="text-xs">{tc("type")}</TableHead>
+                  <TableHead className="text-xs">{tc('warehouse')}</TableHead>
+                  <TableHead className="text-xs">{tc('type')}</TableHead>
                   <TableHead className="text-xs">{t('checkItems')}</TableHead>
                   <TableHead className="text-xs">{t('diffItems')}</TableHead>
                   <TableHead className="text-xs">{t('diffAmount')}</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -574,7 +585,7 @@ export default function StocktakingPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Input
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -603,7 +614,7 @@ export default function StocktakingPage() {
                 <Input
                   value={scanQrCode}
                   onChange={(e) => setScanQrCode(e.target.value)}
-                  placeholder={tc("scanOrEnterQrCode")}
+                  placeholder={tc('scanOrEnterQrCode')}
                   className="font-mono"
                 />
               </div>
@@ -677,11 +688,11 @@ export default function StocktakingPage() {
                 <TableRow>
                   <TableHead>{t('qrCodeCol')}</TableHead>
                   <TableHead>{t('materialNameCol')}</TableHead>
-                  <TableHead>{tc("type")}</TableHead>
+                  <TableHead>{tc('type')}</TableHead>
                   <TableHead>{t('bookQtyCol')}</TableHead>
                   <TableHead>{t('actualQtyCol')}</TableHead>
                   <TableHead>{t('diffQtyCol')}</TableHead>
-                  <TableHead>{tc("status")}</TableHead>
+                  <TableHead>{tc('status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -707,7 +718,11 @@ export default function StocktakingPage() {
                         variant={item.status === 1 ? 'default' : 'outline'}
                         className="text-xs"
                       >
-                        {item.status === 0 ? t('unchecked') : item.status === 1 ? t('checked') : t('adjusted')}
+                        {item.status === 0
+                          ? t('unchecked')
+                          : item.status === 1
+                            ? t('checked')
+                            : t('adjusted')}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -724,7 +739,7 @@ export default function StocktakingPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>{tc("approver")}</Label>
+                <Label>{tc('approver')}</Label>
                 <UserSelect value="" onChange={(v) => {}} />
               </div>
               <div className="flex gap-2">

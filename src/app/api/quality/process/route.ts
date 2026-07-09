@@ -1,10 +1,6 @@
 ﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import {
-  successResponse,
-  paginatedResponse,
-  errorResponse,
-} from '@/lib/api-response';
+import { successResponse, paginatedResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { StateMachineValidator, InspectStatus, StateTransitionLogger } from '@/lib/state-machine';
 import { generateDocNo, getQiPrefix } from '@/lib/global-config';
@@ -58,7 +54,7 @@ async function getCurrentInspectStatus(cardId: number): Promise<InspectStatus> {
 }
 
 // 获取品质检验列表
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
   const cardNo = searchParams.get('cardNo');
@@ -116,53 +112,10 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // 创建品质检验记录
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const {
-    cardId,
-    cardNo,
-    inspectType,
-    inspectResult,
-    defectType,
-    defectQty,
-    qualifiedQty,
-    inspector,
-    remark,
-  } = body;
-
-  // 参数验证
-  if (!cardId || !inspectResult) {
-    return errorResponse('缺少必填参数: cardId, inspectResult', 400);
-  }
-
-  // 验证检验结果值是否合法
-  const validResults = ['pending', 'inspecting', 'pass', 'fail', 'rework', 'scrap'];
-  if (!validResults.includes(inspectResult)) {
-    return errorResponse(`无效的检验结果: ${inspectResult}`, 400);
-  }
-
-  // 状态机验证
-  const currentStatus = await getCurrentInspectStatus(cardId);
-  const targetStatus = inspectResult as InspectStatus;
-
-  if (!StateMachineValidator.canTransitionInspect(currentStatus, targetStatus)) {
-    return errorResponse(
-      `状态流转不合法: ${StateMachineValidator.getInspectStatusLabel(currentStatus)} -> ${StateMachineValidator.getInspectStatusLabel(targetStatus)}`,
-      400
-    );
-  }
-
-  // 生成检验编号
-  const inspectNo = generateDocNo(getQiPrefix());
-
-  // 插入到品质检验表 qc_process_inspection
-  await query(
-    `INSERT INTO qc_process_inspection (
-      inspect_no, card_id, card_no, inspect_type, inspect_result,
-      defect_type, defect_qty, qualified_qty, inspector, remark, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-    [
-      inspectNo,
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const {
       cardId,
       cardNo,
       inspectType,
@@ -172,110 +125,159 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       qualifiedQty,
       inspector,
       remark,
-    ]
-  );
+    } = body;
 
-  // 记录状态流转日志
-  StateTransitionLogger.logTransition(
-    'inspect',
-    cardId,
-    currentStatus,
-    targetStatus,
-    undefined,
-    inspector,
-    remark
-  );
+    // 参数验证
+    if (!cardId || !inspectResult) {
+      return errorResponse('缺少必填参数: cardId, inspectResult', 400);
+    }
 
-  // 更新流程卡状态
-  if (inspectResult === 'pass') {
+    // 验证检验结果值是否合法
+    const validResults = ['pending', 'inspecting', 'pass', 'fail', 'rework', 'scrap'];
+    if (!validResults.includes(inspectResult)) {
+      return errorResponse(`无效的检验结果: ${inspectResult}`, 400);
+    }
+
+    // 状态机验证
+    const currentStatus = await getCurrentInspectStatus(cardId);
+    const targetStatus = inspectResult as InspectStatus;
+
+    if (!StateMachineValidator.canTransitionInspect(currentStatus, targetStatus)) {
+      return errorResponse(
+        `状态流转不合法: ${StateMachineValidator.getInspectStatusLabel(currentStatus)} -> ${StateMachineValidator.getInspectStatusLabel(targetStatus)}`,
+        400
+      );
+    }
+
+    // 生成检验编号
+    const inspectNo = generateDocNo(getQiPrefix());
+
+    // 插入到品质检验表 qc_process_inspection
     await query(
-      `UPDATE prd_process_card SET burdening_status = burdening_status + 1, update_time = NOW() WHERE id = ?`,
-      [cardId]
+      `INSERT INTO qc_process_inspection (
+      inspect_no, card_id, card_no, inspect_type, inspect_result,
+      defect_type, defect_qty, qualified_qty, inspector, remark, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        inspectNo,
+        cardId,
+        cardNo,
+        inspectType,
+        inspectResult,
+        defectType,
+        defectQty,
+        qualifiedQty,
+        inspector,
+        remark,
+      ]
     );
-  } else if (inspectResult === 'fail') {
-    // 检验失败时，可以设置特定状态
-    await query(
-      `UPDATE prd_process_card SET burdening_status = 5, update_time = NOW() WHERE id = ?`,
-      [cardId]
-    );
-  }
 
-  return successResponse({ inspectNo }, '品质检验记录创建成功');
-}, { logTitle: '创建品质检验记录', logType: 'business' });
+    // 记录状态流转日志
+    StateTransitionLogger.logTransition(
+      'inspect',
+      cardId,
+      currentStatus,
+      targetStatus,
+      undefined,
+      inspector,
+      remark
+    );
+
+    // 更新流程卡状态
+    if (inspectResult === 'pass') {
+      await query(
+        `UPDATE prd_process_card SET burdening_status = burdening_status + 1, update_time = NOW() WHERE id = ?`,
+        [cardId]
+      );
+    } else if (inspectResult === 'fail') {
+      // 检验失败时，可以设置特定状态
+      await query(
+        `UPDATE prd_process_card SET burdening_status = 5, update_time = NOW() WHERE id = ?`,
+        [cardId]
+      );
+    }
+
+    return successResponse({ inspectNo }, '品质检验记录创建成功');
+  },
+  { logTitle: '创建品质检验记录', logType: 'business' }
+);
 
 // 更新品质检验结果
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, inspectResult, qualifiedQty, defectQty, inspector, remark } = body;
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { id, inspectResult, qualifiedQty, defectQty, inspector, remark } = body;
 
-  // 参数验证
-  if (!id || !inspectResult) {
-    return errorResponse('缺少必填参数: id, inspectResult', 400);
-  }
+    // 参数验证
+    if (!id || !inspectResult) {
+      return errorResponse('缺少必填参数: id, inspectResult', 400);
+    }
 
-  // 验证检验结果值是否合法
-  const validResults = ['pending', 'inspecting', 'pass', 'fail', 'rework', 'scrap'];
-  if (!validResults.includes(inspectResult)) {
-    return errorResponse(`无效的检验结果: ${inspectResult}`, 400);
-  }
+    // 验证检验结果值是否合法
+    const validResults = ['pending', 'inspecting', 'pass', 'fail', 'rework', 'scrap'];
+    if (!validResults.includes(inspectResult)) {
+      return errorResponse(`无效的检验结果: ${inspectResult}`, 400);
+    }
 
-  // 获取当前检验记录
-  const [currentRecord] = await query<{ card_id: number; inspect_result: string }>(
-    `SELECT card_id, inspect_result FROM qc_process_inspection WHERE id = ?`,
-    [id]
-  );
-
-  if (!currentRecord) {
-    return errorResponse('检验记录不存在', 404);
-  }
-
-  // 状态机验证
-  const currentStatus = (currentRecord.inspect_result || 'pending') as InspectStatus;
-  const targetStatus = inspectResult as InspectStatus;
-
-  if (!StateMachineValidator.canTransitionInspect(currentStatus, targetStatus)) {
-    return errorResponse(
-      `状态流转不合法: ${StateMachineValidator.getInspectStatusLabel(currentStatus)} -> ${StateMachineValidator.getInspectStatusLabel(targetStatus)}`,
-      400
+    // 获取当前检验记录
+    const [currentRecord] = await query<{ card_id: number; inspect_result: string }>(
+      `SELECT card_id, inspect_result FROM qc_process_inspection WHERE id = ?`,
+      [id]
     );
-  }
 
-  // 更新检验记录
-  await query(
-    `UPDATE qc_process_inspection 
+    if (!currentRecord) {
+      return errorResponse('检验记录不存在', 404);
+    }
+
+    // 状态机验证
+    const currentStatus = (currentRecord.inspect_result || 'pending') as InspectStatus;
+    const targetStatus = inspectResult as InspectStatus;
+
+    if (!StateMachineValidator.canTransitionInspect(currentStatus, targetStatus)) {
+      return errorResponse(
+        `状态流转不合法: ${StateMachineValidator.getInspectStatusLabel(currentStatus)} -> ${StateMachineValidator.getInspectStatusLabel(targetStatus)}`,
+        400
+      );
+    }
+
+    // 更新检验记录
+    await query(
+      `UPDATE qc_process_inspection 
      SET inspect_result = ?, qualified_qty = ?, defect_qty = ?, inspector = ?, remark = ?, updated_at = NOW()
      WHERE id = ?`,
-    [inspectResult, qualifiedQty, defectQty, inspector, remark, id]
-  );
-
-  // 记录状态流转日志
-  StateTransitionLogger.logTransition(
-    'inspect',
-    currentRecord.card_id,
-    currentStatus,
-    targetStatus,
-    undefined,
-    inspector,
-    remark
-  );
-
-  // 更新流程卡状态
-  if (inspectResult === 'pass') {
-    await query(
-      `UPDATE prd_process_card SET burdening_status = burdening_status + 1, update_time = NOW() WHERE id = ?`,
-      [currentRecord.card_id]
+      [inspectResult, qualifiedQty, defectQty, inspector, remark, id]
     );
-  } else if (inspectResult === 'fail') {
-    await query(
-      `UPDATE prd_process_card SET burdening_status = 5, update_time = NOW() WHERE id = ?`,
-      [currentRecord.card_id]
-    );
-  } else if (inspectResult === 'rework') {
-    await query(
-      `UPDATE prd_process_card SET burdening_status = 6, update_time = NOW() WHERE id = ?`,
-      [currentRecord.card_id]
-    );
-  }
 
-  return successResponse(null, '品质检验结果更新成功');
-}, { logTitle: '更新品质检验记录', logType: 'business' });
+    // 记录状态流转日志
+    StateTransitionLogger.logTransition(
+      'inspect',
+      currentRecord.card_id,
+      currentStatus,
+      targetStatus,
+      undefined,
+      inspector,
+      remark
+    );
+
+    // 更新流程卡状态
+    if (inspectResult === 'pass') {
+      await query(
+        `UPDATE prd_process_card SET burdening_status = burdening_status + 1, update_time = NOW() WHERE id = ?`,
+        [currentRecord.card_id]
+      );
+    } else if (inspectResult === 'fail') {
+      await query(
+        `UPDATE prd_process_card SET burdening_status = 5, update_time = NOW() WHERE id = ?`,
+        [currentRecord.card_id]
+      );
+    } else if (inspectResult === 'rework') {
+      await query(
+        `UPDATE prd_process_card SET burdening_status = 6, update_time = NOW() WHERE id = ?`,
+        [currentRecord.card_id]
+      );
+    }
+
+    return successResponse(null, '品质检验结果更新成功');
+  },
+  { logTitle: '更新品质检验记录', logType: 'business' }
+);

@@ -180,7 +180,7 @@ export default function CustomersPage() {
 
       if (result.success) {
         // 转换数据库字段为前端格式
-        const customerList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const customerList = Array.isArray(result.data) ? result.data : result.data?.list || [];
         const formattedCustomers: CustomerListItem[] = customerList.map((item: any) => ({
           id: item.id,
           customerCode: item.customer_code,
@@ -214,7 +214,7 @@ export default function CustomersPage() {
         setTotalCount(result.pagination?.total || result.data?.total || 0);
       } else {
       }
-    } catch (error) {
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -284,7 +284,7 @@ export default function CustomersPage() {
       } else {
         alert(tc('deleteFailed') + ': ' + result.message);
       }
-    } catch (error) {
+    } catch {
       alert(t('deleteNetworkError'));
     }
   };
@@ -328,7 +328,7 @@ export default function CustomersPage() {
       } else {
         alert(t('saveFailed') + ': ' + result.message);
       }
-    } catch (error) {
+    } catch {
       alert(t('saveNetworkError'));
     }
   };
@@ -432,7 +432,9 @@ export default function CustomersPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{t('totalCustomers')}</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {t('totalCustomers')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalCount}</div>
@@ -440,7 +442,9 @@ export default function CustomersPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{t('completedCustomers')}</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {t('completedCustomers')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
@@ -450,7 +454,9 @@ export default function CustomersPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{t('intentionCustomers')}</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {t('intentionCustomers')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
@@ -460,7 +466,9 @@ export default function CustomersPage() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{t('enterpriseCustomers')}</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {t('enterpriseCustomers')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
@@ -553,14 +561,39 @@ export default function CustomersPage() {
               columns={[
                 { key: 'customerCode', label: t('customerCode'), width: 15 },
                 { key: 'customerName', label: t('customerName'), width: 25 },
-                { key: 'customerType', label: t('type'), width: 10, formatter: (v) => t(CUSTOMER_TYPE_LABEL_KEYS[v] || 'typeEnterprise') },
+                {
+                  key: 'customerType',
+                  label: t('type'),
+                  width: 10,
+                  formatter: (v) => t(CUSTOMER_TYPE_LABEL_KEYS[v] || 'typeEnterprise'),
+                },
                 { key: 'contactName', label: t('contactPerson'), width: 12 },
                 { key: 'contactPhone', label: t('contactPhone'), width: 15 },
-                { key: 'address', label: t('address'), width: 30, formatter: (_v, row) => `${row.province || ''}${row.city || ''}${row.district || ''}${row.address || ''}` },
-                { key: 'followUpStatus', label: t('followUpStatus'), width: 12, formatter: (v) => t(FOLLOW_UP_STATUS_LABEL_KEYS[v] || 'statusPotential') },
-                { key: 'status', label: tc('status'), width: 10, formatter: (v) => tc(STATUS_LABEL_KEYS[v] || 'enabled') },
+                {
+                  key: 'address',
+                  label: t('address'),
+                  width: 30,
+                  formatter: (_v, row) =>
+                    `${row.province || ''}${row.city || ''}${row.district || ''}${row.address || ''}`,
+                },
+                {
+                  key: 'followUpStatus',
+                  label: t('followUpStatus'),
+                  width: 12,
+                  formatter: (v) => t(FOLLOW_UP_STATUS_LABEL_KEYS[v] || 'statusPotential'),
+                },
+                {
+                  key: 'status',
+                  label: tc('status'),
+                  width: 10,
+                  formatter: (v) => tc(STATUS_LABEL_KEYS[v] || 'enabled'),
+                },
               ]}
-              data={selectedIds.size > 0 ? filteredCustomers.filter((c) => selectedIds.has(c.id)) : filteredCustomers}
+              data={
+                selectedIds.size > 0
+                  ? filteredCustomers.filter((c) => selectedIds.has(c.id))
+                  : filteredCustomers
+              }
             />
           </CardHeader>
           <CardContent>
@@ -584,7 +617,8 @@ export default function CustomersPage() {
                       onClick={() => handleSort('customerCode')}
                     >
                       <span className="inline-flex items-center">
-                        {t('customerCode')}{getSortIcon('customerCode')}
+                        {t('customerCode')}
+                        {getSortIcon('customerCode')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -592,7 +626,8 @@ export default function CustomersPage() {
                       onClick={() => handleSort('customerName')}
                     >
                       <span className="inline-flex items-center">
-                        {t('customerName')}{getSortIcon('customerName')}
+                        {t('customerName')}
+                        {getSortIcon('customerName')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -600,7 +635,8 @@ export default function CustomersPage() {
                       onClick={() => handleSort('customerType')}
                     >
                       <span className="inline-flex items-center">
-                        {t('type')}{getSortIcon('customerType')}
+                        {t('type')}
+                        {getSortIcon('customerType')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -608,7 +644,8 @@ export default function CustomersPage() {
                       onClick={() => handleSort('contactName')}
                     >
                       <span className="inline-flex items-center">
-                        {t('contactPerson')}{getSortIcon('contactName')}
+                        {t('contactPerson')}
+                        {getSortIcon('contactName')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -616,28 +653,36 @@ export default function CustomersPage() {
                       onClick={() => handleSort('contactPhone')}
                     >
                       <span className="inline-flex items-center">
-                        {t('contactPhone')}{getSortIcon('contactPhone')}
+                        {t('contactPhone')}
+                        {getSortIcon('contactPhone')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="w-[200px] cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('address')}
                     >
-                      <span className="inline-flex items-center">{t('address')}{getSortIcon('address')}</span>
+                      <span className="inline-flex items-center">
+                        {t('address')}
+                        {getSortIcon('address')}
+                      </span>
                     </TableHead>
                     <TableHead
                       className="w-[100px] cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('followUpStatus')}
                     >
                       <span className="inline-flex items-center">
-                        {t('followUpStatus')}{getSortIcon('followUpStatus')}
+                        {t('followUpStatus')}
+                        {getSortIcon('followUpStatus')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="w-[70px] cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('status')}
                     >
-                      <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
+                      <span className="inline-flex items-center">
+                        {tc('status')}
+                        {getSortIcon('status')}
+                      </span>
                     </TableHead>
                     <TableHead className="w-[80px] text-center">{tc('operation')}</TableHead>
                   </TableRow>
@@ -756,7 +801,11 @@ export default function CustomersPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4">
                 <div className="text-sm text-muted-foreground">
-                  {t('paginationInfo', { total: totalCount, current: currentPage, pages: totalPages })}
+                  {t('paginationInfo', {
+                    total: totalCount,
+                    current: currentPage,
+                    pages: totalPages,
+                  })}
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -883,10 +932,10 @@ export default function CustomersPage() {
                     </div>
                   </div>
                 </div>
-                  <div className="border-t pt-4">
-                    <span className="text-sm text-muted-foreground">{tc('remark')}</span>
-                    <p className="font-medium mt-1">{selectedCustomer.remark}</p>
-                  </div>
+                <div className="border-t pt-4">
+                  <span className="text-sm text-muted-foreground">{tc('remark')}</span>
+                  <p className="font-medium mt-1">{selectedCustomer.remark}</p>
+                </div>
               </div>
             )}
           </DialogContent>

@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-} from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 import { query } from '@/lib/db';
@@ -10,12 +7,12 @@ import { getTranslator } from '@/lib/i18n-server';
 
 /**
  * 库存流水导出 API
- * 
+ *
  * 支持导出库存变动记录为CSV格式
  */
 
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
     const warehouseId = searchParams.get('warehouseId');
@@ -67,7 +64,7 @@ export const GET = withPermission(
     if (format === 'csv') {
       // 获取翻译函数
       const t = await getTranslator('Export');
-      
+
       // 生成CSV表头
       const headers = [
         t('id'),
@@ -82,21 +79,21 @@ export const GET = withPermission(
         t('sourceNo'),
         t('operator'),
         t('remark'),
-        t('time')
+        t('time'),
       ];
-      
+
       // 变动类型映射
       const typeMap: Record<string, string> = {
-        'purchase_inbound': t('movementTypePurchaseInbound'),
-        'sales_outbound': t('movementTypeSalesOutbound'),
-        'transfer_in': t('movementTypeTransferIn'),
-        'transfer_out': t('movementTypeTransferOut'),
-        'sales_return': t('movementTypeSalesReturn'),
-        'purchase_return': t('movementTypePurchaseReturn'),
-        'production_inbound': t('movementTypeProductionInbound'),
-        'stock_gain': t('movementTypeStockGain'),
-        'stock_loss': t('movementTypeStockLoss'),
-        'adjustment': t('movementTypeAdjustment'),
+        purchase_inbound: t('movementTypePurchaseInbound'),
+        sales_outbound: t('movementTypeSalesOutbound'),
+        transfer_in: t('movementTypeTransferIn'),
+        transfer_out: t('movementTypeTransferOut'),
+        sales_return: t('movementTypeSalesReturn'),
+        purchase_return: t('movementTypePurchaseReturn'),
+        production_inbound: t('movementTypeProductionInbound'),
+        stock_gain: t('movementTypeStockGain'),
+        stock_loss: t('movementTypeStockLoss'),
+        adjustment: t('movementTypeAdjustment'),
       };
 
       const csvRows = rows.map((r: any) => [

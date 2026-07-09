@@ -152,7 +152,12 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
     sql += ' ORDER BY o.create_time DESC';
 
     type PurPurchaseOrderWithLines = PurPurchaseOrderRow & { _lines?: PurPurchaseOrderLineRow[] };
-    const result = await queryPaginated<PurPurchaseOrderWithLines>(sql, countSql, params, pagination);
+    const result = await queryPaginated<PurPurchaseOrderWithLines>(
+      sql,
+      countSql,
+      params,
+      pagination
+    );
 
     if (result.data.length > 0) {
       const orderIds = result.data.map((o) => o.id);
@@ -283,14 +288,19 @@ export class MysqlPurchaseOrderRepository implements IPurchaseOrderRepository {
     ]);
   }
 
-  private mapToProps(order: PurPurchaseOrderRow, lines: PurPurchaseOrderLineRow[]): PurchaseOrderProps {
+  private mapToProps(
+    order: PurPurchaseOrderRow,
+    lines: PurPurchaseOrderLineRow[]
+  ): PurchaseOrderProps {
     // 历史种子数据可能存在 domain 未定义的状态码（如 status=2），此时降级为 draft
     // 并记录告警，避免单行脏数据导致整个列表接口 500
     let statusValue: PurchaseOrderProps['status'];
     try {
       statusValue = PurchaseOrderStatus.fromDbCode(order.status).value;
-    } catch (e) {
-      console.warn(`[PurchaseRepository] 未知采购单状态码 status=${order.status} (order id=${order.id}, po_no=${order.po_no})，降级为 draft`);
+    } catch {
+      console.warn(
+        `[PurchaseRepository] 未知采购单状态码 status=${order.status} (order id=${order.id}, po_no=${order.po_no})，降级为 draft`
+      );
       statusValue = 'draft' as PurchaseOrderProps['status'];
     }
     return {

@@ -1,22 +1,19 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-} from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { withAuthAndErrorHandler, UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 import { query, execute } from '@/lib/db';
 
 /**
  * 移动加权平均成本核算 API
- * 
+ *
  * 移动加权平均法：每次入库后重新计算平均成本
  * 公式：新平均成本 = (原库存金额 + 本次入库金额) / (原库存数量 + 本次入库数量)
  */
 
 // 获取物料成本信息
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
     const warehouseId = searchParams.get('warehouseId');
@@ -88,7 +85,7 @@ export const GET = withPermission(
 
 // 手动触发成本重算
 export const POST = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
     const { materialId, warehouseId } = body;
 
@@ -139,20 +136,23 @@ export const POST = withPermission(
         [currentCostPrice, Number(materialId), Number(warehouseId)]
       );
     } else {
-      await execute(
-        'UPDATE stock SET cost_price = ?, update_time = NOW() WHERE material_id = ?',
-        [currentCostPrice, Number(materialId)]
-      );
+      await execute('UPDATE stock SET cost_price = ?, update_time = NOW() WHERE material_id = ?', [
+        currentCostPrice,
+        Number(materialId),
+      ]);
     }
 
-    return successResponse({
-      materialId,
-      warehouseId,
-      costPrice: currentCostPrice,
-      totalQuantity: totalQty,
-      totalCostAmount: totalAmount,
-      movementCount: movements.length,
-    }, '成本重算完成');
+    return successResponse(
+      {
+        materialId,
+        warehouseId,
+        costPrice: currentCostPrice,
+        totalQuantity: totalQty,
+        totalCostAmount: totalAmount,
+        movementCount: movements.length,
+      },
+      '成本重算完成'
+    );
   },
   { errorMessage: '操作失败' }
 );

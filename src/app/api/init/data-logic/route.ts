@@ -3,43 +3,44 @@ import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const result = await transaction(async (conn) => {
-    const results: string[] = [];
+export const POST = withPermission(
+  async (_request: NextRequest, _userInfo) => {
+    const result = await transaction(async (conn) => {
+      const results: string[] = [];
 
-    const safeExecute = async (sql: string, label: string) => {
-      try {
-        await conn.execute(sql);
-        results.push(`${label}: OK`);
-      } catch (e: any) {
-        if (e.code === 'ER_DUP_FIELDNAME' || e.code === 'ER_DUP_KEYNAME') {
-          results.push(`${label}: 已存在`);
-        } else {
-          results.push(`${label}: ${e.message}`);
+      const safeExecute = async (sql: string, label: string) => {
+        try {
+          await conn.execute(sql);
+          results.push(`${label}: OK`);
+        } catch (e: any) {
+          if (e.code === 'ER_DUP_FIELDNAME' || e.code === 'ER_DUP_KEYNAME') {
+            results.push(`${label}: 已存在`);
+          } else {
+            results.push(`${label}: ${e.message}`);
+          }
         }
-      }
-    };
+      };
 
-    const safeCreateTable = async (name: string, sql: string) => {
-      try {
-        await conn.execute(sql);
-        results.push(`${name}: 创建成功`);
-      } catch (e: any) {
-        if (e.code === 'ER_TABLE_EXISTS_ERROR') {
-          results.push(`${name}: 已存在`);
-        } else {
-          results.push(`${name}: ${e.message}`);
+      const safeCreateTable = async (name: string, sql: string) => {
+        try {
+          await conn.execute(sql);
+          results.push(`${name}: 创建成功`);
+        } catch (e: any) {
+          if (e.code === 'ER_TABLE_EXISTS_ERROR') {
+            results.push(`${name}: 已存在`);
+          } else {
+            results.push(`${name}: ${e.message}`);
+          }
         }
-      }
-    };
+      };
 
-    // ========================================
-    // 1. 产品追溯链表 (QR Code Trace Link)
-    //    成品标签 ← 生产工单 ← 来料批次
-    // ========================================
-    await safeCreateTable(
-      'prd_product_trace_link',
-      `CREATE TABLE IF NOT EXISTS prd_product_trace_link (
+      // ========================================
+      // 1. 产品追溯链表 (QR Code Trace Link)
+      //    成品标签 ← 生产工单 ← 来料批次
+      // ========================================
+      await safeCreateTable(
+        'prd_product_trace_link',
+        `CREATE TABLE IF NOT EXISTS prd_product_trace_link (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       sn VARCHAR(100) NOT NULL COMMENT '成品序列号/标签号',
       parent_sn VARCHAR(100) COMMENT '父级SN(用于分切/组合)',
@@ -64,15 +65,15 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_batch (material_batch),
       KEY idx_workorder (workorder_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='产品追溯链表'`
-    );
+      );
 
-    // ========================================
-    // 2. FIFO覆盖日志表 (FIFO Override Log)
-    //    当用户跳过FIFO推荐批次时记录
-    // ========================================
-    await safeCreateTable(
-      'inv_fifo_override_log',
-      `CREATE TABLE IF NOT EXISTS inv_fifo_override_log (
+      // ========================================
+      // 2. FIFO覆盖日志表 (FIFO Override Log)
+      //    当用户跳过FIFO推荐批次时记录
+      // ========================================
+      await safeCreateTable(
+        'inv_fifo_override_log',
+        `CREATE TABLE IF NOT EXISTS inv_fifo_override_log (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       source_type VARCHAR(30) NOT NULL COMMENT '来源类型: material_issue/sales_outbound',
       source_id BIGINT UNSIGNED NOT NULL COMMENT '来源单据ID',
@@ -93,15 +94,15 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_source (source_type, source_id),
       KEY idx_material (material_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='FIFO覆盖日志'`
-    );
+      );
 
-    // ========================================
-    // 3. 财务凭证表 (Finance Voucher)
-    //    出入库单据过账生成财务凭证
-    // ========================================
-    await safeCreateTable(
-      'fin_voucher',
-      `CREATE TABLE IF NOT EXISTS fin_voucher (
+      // ========================================
+      // 3. 财务凭证表 (Finance Voucher)
+      //    出入库单据过账生成财务凭证
+      // ========================================
+      await safeCreateTable(
+        'fin_voucher',
+        `CREATE TABLE IF NOT EXISTS fin_voucher (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       voucher_no VARCHAR(50) NOT NULL COMMENT '凭证号',
       voucher_date DATE NOT NULL COMMENT '凭证日期',
@@ -125,15 +126,15 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_source (source_type, source_id),
       KEY idx_date (voucher_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='财务凭证表'`
-    );
+      );
 
-    // ========================================
-    // 4. 合同评审表 (Contract Review)
-    //    销售订单→合同评审→生产/采购/财务联合评审
-    // ========================================
-    await safeCreateTable(
-      'biz_contract_review',
-      `CREATE TABLE IF NOT EXISTS biz_contract_review (
+      // ========================================
+      // 4. 合同评审表 (Contract Review)
+      //    销售订单→合同评审→生产/采购/财务联合评审
+      // ========================================
+      await safeCreateTable(
+        'biz_contract_review',
+        `CREATE TABLE IF NOT EXISTS biz_contract_review (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       review_no VARCHAR(50) NOT NULL COMMENT '评审编号',
       order_id BIGINT UNSIGNED NOT NULL COMMENT '销售订单ID',
@@ -168,15 +169,15 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       UNIQUE KEY uk_review_no (review_no),
       KEY idx_order (order_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='合同评审表'`
-    );
+      );
 
-    // ========================================
-    // 5. 样品转量产记录表 (Sample to Mass Production)
-    //    打样订单→标准卡→流程卡→量产工单
-    // ========================================
-    await safeCreateTable(
-      'eng_sample_to_mass',
-      `CREATE TABLE IF NOT EXISTS eng_sample_to_mass (
+      // ========================================
+      // 5. 样品转量产记录表 (Sample to Mass Production)
+      //    打样订单→标准卡→流程卡→量产工单
+      // ========================================
+      await safeCreateTable(
+        'eng_sample_to_mass',
+        `CREATE TABLE IF NOT EXISTS eng_sample_to_mass (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       sample_order_id BIGINT UNSIGNED NOT NULL COMMENT '打样订单ID',
       sample_order_no VARCHAR(50) NOT NULL COMMENT '打样订单号',
@@ -202,15 +203,15 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_sample (sample_order_id),
       KEY idx_product (product_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='样品转量产记录表'`
-    );
+      );
 
-    // ========================================
-    // 6. 油墨开罐记录表 (Ink Opening Record)
-    //    开罐后重新计算有效期
-    // ========================================
-    await safeCreateTable(
-      'ink_opening_record',
-      `CREATE TABLE IF NOT EXISTS ink_opening_record (
+      // ========================================
+      // 6. 油墨开罐记录表 (Ink Opening Record)
+      //    开罐后重新计算有效期
+      // ========================================
+      await safeCreateTable(
+        'ink_opening_record',
+        `CREATE TABLE IF NOT EXISTS ink_opening_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       opening_no VARCHAR(50) NOT NULL COMMENT '开罐记录号',
       label_no VARCHAR(50) NOT NULL COMMENT '物料标签号',
@@ -234,15 +235,15 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_label (label_no),
       KEY idx_batch (batch_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨开罐记录表'`
-    );
+      );
 
-    // ========================================
-    // 7. 调色油墨批次表 (Ink Mixed Batch)
-    //    调色油墨由多种原墨混合而成
-    // ========================================
-    await safeCreateTable(
-      'ink_mixed_batch',
-      `CREATE TABLE IF NOT EXISTS ink_mixed_batch (
+      // ========================================
+      // 7. 调色油墨批次表 (Ink Mixed Batch)
+      //    调色油墨由多种原墨混合而成
+      // ========================================
+      await safeCreateTable(
+        'ink_mixed_batch',
+        `CREATE TABLE IF NOT EXISTS ink_mixed_batch (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       batch_no VARCHAR(50) NOT NULL COMMENT '混合批次号: MIX-YYYYMMDD-配方号-序号',
       formula_no VARCHAR(50) COMMENT '配方号',
@@ -260,11 +261,11 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       UNIQUE KEY uk_batch_no (batch_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调色油墨批次表'`
-    );
+      );
 
-    await safeCreateTable(
-      'ink_mixed_batch_detail',
-      `CREATE TABLE IF NOT EXISTS ink_mixed_batch_detail (
+      await safeCreateTable(
+        'ink_mixed_batch_detail',
+        `CREATE TABLE IF NOT EXISTS ink_mixed_batch_detail (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       mixed_batch_id BIGINT UNSIGNED NOT NULL COMMENT '混合批次ID',
       source_batch_no VARCHAR(50) NOT NULL COMMENT '原墨批次号',
@@ -278,15 +279,15 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_mixed (mixed_batch_id),
       KEY idx_source (source_batch_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调色油墨批次明细表'`
-    );
+      );
 
-    // ========================================
-    // 8. 扫码日志表 (Scan Log)
-    //    统一记录所有扫码操作
-    // ========================================
-    await safeCreateTable(
-      'inv_scan_log',
-      `CREATE TABLE IF NOT EXISTS inv_scan_log (
+      // ========================================
+      // 8. 扫码日志表 (Scan Log)
+      //    统一记录所有扫码操作
+      // ========================================
+      await safeCreateTable(
+        'inv_scan_log',
+        `CREATE TABLE IF NOT EXISTS inv_scan_log (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       scan_type VARCHAR(30) NOT NULL COMMENT '扫码类型: material_issue/production_report/quality_inspection/sales_outbound/inbound',
       qr_content TEXT NOT NULL COMMENT '二维码内容',
@@ -310,161 +311,161 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_batch (batch_no),
       KEY idx_time (scan_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='扫码日志表'`
-    );
+      );
 
-    // ========================================
-    // 9. 添加缺失的关联字段
-    // ========================================
+      // ========================================
+      // 9. 添加缺失的关联字段
+      // ========================================
 
-    // 入库单添加采购订单关联
-    await safeExecute(
-      `ALTER TABLE inv_inbound_order ADD COLUMN purchase_order_id BIGINT UNSIGNED COMMENT '采购订单ID'`,
-      'inv_inbound_order.purchase_order_id'
-    );
-    await safeExecute(
-      `ALTER TABLE inv_inbound_order ADD COLUMN purchase_order_no VARCHAR(50) COMMENT '采购订单号'`,
-      'inv_inbound_order.purchase_order_no'
-    );
+      // 入库单添加采购订单关联
+      await safeExecute(
+        `ALTER TABLE inv_inbound_order ADD COLUMN purchase_order_id BIGINT UNSIGNED COMMENT '采购订单ID'`,
+        'inv_inbound_order.purchase_order_id'
+      );
+      await safeExecute(
+        `ALTER TABLE inv_inbound_order ADD COLUMN purchase_order_no VARCHAR(50) COMMENT '采购订单号'`,
+        'inv_inbound_order.purchase_order_no'
+      );
 
-    // 入库单添加质检状态
-    await safeExecute(
-      `ALTER TABLE inv_inbound_order ADD COLUMN inspection_status TINYINT DEFAULT 0 COMMENT '质检状态: 0-未检, 1-合格, 2-不合格, 3-待检'`,
-      'inv_inbound_order.inspection_status'
-    );
-    await safeExecute(
-      `ALTER TABLE inv_inbound_order ADD COLUMN inspection_id BIGINT UNSIGNED COMMENT '检验记录ID'`,
-      'inv_inbound_order.inspection_id'
-    );
+      // 入库单添加质检状态
+      await safeExecute(
+        `ALTER TABLE inv_inbound_order ADD COLUMN inspection_status TINYINT DEFAULT 0 COMMENT '质检状态: 0-未检, 1-合格, 2-不合格, 3-待检'`,
+        'inv_inbound_order.inspection_status'
+      );
+      await safeExecute(
+        `ALTER TABLE inv_inbound_order ADD COLUMN inspection_id BIGINT UNSIGNED COMMENT '检验记录ID'`,
+        'inv_inbound_order.inspection_id'
+      );
 
-    // 出库单添加财务过账状态
-    await safeExecute(
-      `ALTER TABLE inv_outbound_order ADD COLUMN finance_posted TINYINT DEFAULT 0 COMMENT '财务过账: 0-未过账, 1-已过账'`,
-      'inv_outbound_order.finance_posted'
-    );
-    await safeExecute(
-      `ALTER TABLE inv_outbound_order ADD COLUMN voucher_no VARCHAR(50) COMMENT '财务凭证号'`,
-      'inv_outbound_order.voucher_no'
-    );
+      // 出库单添加财务过账状态
+      await safeExecute(
+        `ALTER TABLE inv_outbound_order ADD COLUMN finance_posted TINYINT DEFAULT 0 COMMENT '财务过账: 0-未过账, 1-已过账'`,
+        'inv_outbound_order.finance_posted'
+      );
+      await safeExecute(
+        `ALTER TABLE inv_outbound_order ADD COLUMN voucher_no VARCHAR(50) COMMENT '财务凭证号'`,
+        'inv_outbound_order.voucher_no'
+      );
 
-    // 销售出库添加销售订单关联
-    await safeExecute(
-      `ALTER TABLE inv_sales_outbound ADD COLUMN finance_posted TINYINT DEFAULT 0 COMMENT '财务过账: 0-未过账, 1-已过账'`,
-      'inv_sales_outbound.finance_posted'
-    );
-    await safeExecute(
-      `ALTER TABLE inv_sales_outbound ADD COLUMN voucher_no VARCHAR(50) COMMENT '财务凭证号'`,
-      'inv_sales_outbound.voucher_no'
-    );
+      // 销售出库添加销售订单关联
+      await safeExecute(
+        `ALTER TABLE inv_sales_outbound ADD COLUMN finance_posted TINYINT DEFAULT 0 COMMENT '财务过账: 0-未过账, 1-已过账'`,
+        'inv_sales_outbound.finance_posted'
+      );
+      await safeExecute(
+        `ALTER TABLE inv_sales_outbound ADD COLUMN voucher_no VARCHAR(50) COMMENT '财务凭证号'`,
+        'inv_sales_outbound.voucher_no'
+      );
 
-    // 入库单添加财务过账状态
-    await safeExecute(
-      `ALTER TABLE inv_inbound_order ADD COLUMN finance_posted TINYINT DEFAULT 0 COMMENT '财务过账: 0-未过账, 1-已过账'`,
-      'inv_inbound_order.finance_posted'
-    );
-    await safeExecute(
-      `ALTER TABLE inv_inbound_order ADD COLUMN voucher_no VARCHAR(50) COMMENT '财务凭证号'`,
-      'inv_inbound_order.voucher_no'
-    );
+      // 入库单添加财务过账状态
+      await safeExecute(
+        `ALTER TABLE inv_inbound_order ADD COLUMN finance_posted TINYINT DEFAULT 0 COMMENT '财务过账: 0-未过账, 1-已过账'`,
+        'inv_inbound_order.finance_posted'
+      );
+      await safeExecute(
+        `ALTER TABLE inv_inbound_order ADD COLUMN voucher_no VARCHAR(50) COMMENT '财务凭证号'`,
+        'inv_inbound_order.voucher_no'
+      );
 
-    // 批次库存添加冻结状态
-    await safeExecute(
-      `ALTER TABLE inv_inventory_batch ADD COLUMN freeze_reason VARCHAR(100) COMMENT '冻结原因'`,
-      'inv_inventory_batch.freeze_reason'
-    );
-    await safeExecute(
-      `ALTER TABLE inv_inventory_batch ADD COLUMN inspection_id BIGINT UNSIGNED COMMENT '关联检验ID'`,
-      'inv_inventory_batch.inspection_id'
-    );
+      // 批次库存添加冻结状态
+      await safeExecute(
+        `ALTER TABLE inv_inventory_batch ADD COLUMN freeze_reason VARCHAR(100) COMMENT '冻结原因'`,
+        'inv_inventory_batch.freeze_reason'
+      );
+      await safeExecute(
+        `ALTER TABLE inv_inventory_batch ADD COLUMN inspection_id BIGINT UNSIGNED COMMENT '关联检验ID'`,
+        'inv_inventory_batch.inspection_id'
+      );
 
-    // 生产工单添加销售订单关联
-    await safeExecute(
-      `ALTER TABLE prod_work_order ADD COLUMN sales_order_id BIGINT UNSIGNED COMMENT '销售订单ID'`,
-      'prod_work_order.sales_order_id'
-    );
-    await safeExecute(
-      `ALTER TABLE prod_work_order ADD COLUMN sales_order_no VARCHAR(50) COMMENT '销售订单号'`,
-      'prod_work_order.sales_order_no'
-    );
+      // 生产工单添加销售订单关联
+      await safeExecute(
+        `ALTER TABLE prod_work_order ADD COLUMN sales_order_id BIGINT UNSIGNED COMMENT '销售订单ID'`,
+        'prod_work_order.sales_order_id'
+      );
+      await safeExecute(
+        `ALTER TABLE prod_work_order ADD COLUMN sales_order_no VARCHAR(50) COMMENT '销售订单号'`,
+        'prod_work_order.sales_order_no'
+      );
 
-    // 生产工单添加标准卡/流程卡关联
-    await safeExecute(
-      `ALTER TABLE prod_work_order ADD COLUMN standard_card_id BIGINT UNSIGNED COMMENT '标准卡ID'`,
-      'prod_work_order.standard_card_id'
-    );
-    await safeExecute(
-      `ALTER TABLE prod_work_order ADD COLUMN process_card_id BIGINT UNSIGNED COMMENT '流程卡ID'`,
-      'prod_work_order.process_card_id'
-    );
+      // 生产工单添加标准卡/流程卡关联
+      await safeExecute(
+        `ALTER TABLE prod_work_order ADD COLUMN standard_card_id BIGINT UNSIGNED COMMENT '标准卡ID'`,
+        'prod_work_order.standard_card_id'
+      );
+      await safeExecute(
+        `ALTER TABLE prod_work_order ADD COLUMN process_card_id BIGINT UNSIGNED COMMENT '流程卡ID'`,
+        'prod_work_order.process_card_id'
+      );
 
-    // 物料标签添加追溯链关联
-    await safeExecute(
-      `ALTER TABLE inv_material_label ADD COLUMN trace_link_id BIGINT UNSIGNED COMMENT '追溯链ID'`,
-      'inv_material_label.trace_link_id'
-    );
+      // 物料标签添加追溯链关联
+      await safeExecute(
+        `ALTER TABLE inv_material_label ADD COLUMN trace_link_id BIGINT UNSIGNED COMMENT '追溯链ID'`,
+        'inv_material_label.trace_link_id'
+      );
 
-    // 供应商添加质量评估分数
-    await safeExecute(
-      `ALTER TABLE pur_supplier ADD COLUMN quality_score DECIMAL(5,2) DEFAULT 0 COMMENT '质量评分(0-100)'`,
-      'pur_supplier.quality_score'
-    );
-    await safeExecute(
-      `ALTER TABLE pur_supplier ADD COLUMN delivery_score DECIMAL(5,2) DEFAULT 0 COMMENT '交付评分(0-100)'`,
-      'pur_supplier.delivery_score'
-    );
-    await safeExecute(
-      `ALTER TABLE pur_supplier ADD COLUMN price_score DECIMAL(5,2) DEFAULT 0 COMMENT '价格评分(0-100)'`,
-      'pur_supplier.price_score'
-    );
-    await safeExecute(
-      `ALTER TABLE pur_supplier ADD COLUMN overall_score DECIMAL(5,2) DEFAULT 0 COMMENT '综合评分(0-100)'`,
-      'pur_supplier.overall_score'
-    );
+      // 供应商添加质量评估分数
+      await safeExecute(
+        `ALTER TABLE pur_supplier ADD COLUMN quality_score DECIMAL(5,2) DEFAULT 0 COMMENT '质量评分(0-100)'`,
+        'pur_supplier.quality_score'
+      );
+      await safeExecute(
+        `ALTER TABLE pur_supplier ADD COLUMN delivery_score DECIMAL(5,2) DEFAULT 0 COMMENT '交付评分(0-100)'`,
+        'pur_supplier.delivery_score'
+      );
+      await safeExecute(
+        `ALTER TABLE pur_supplier ADD COLUMN price_score DECIMAL(5,2) DEFAULT 0 COMMENT '价格评分(0-100)'`,
+        'pur_supplier.price_score'
+      );
+      await safeExecute(
+        `ALTER TABLE pur_supplier ADD COLUMN overall_score DECIMAL(5,2) DEFAULT 0 COMMENT '综合评分(0-100)'`,
+        'pur_supplier.overall_score'
+      );
 
-    // 客户添加信用额度
-    await safeExecute(
-      `ALTER TABLE crm_customer ADD COLUMN credit_limit DECIMAL(18,4) DEFAULT 0 COMMENT '信用额度'`,
-      'crm_customer.credit_limit'
-    );
-    await safeExecute(
-      `ALTER TABLE crm_customer ADD COLUMN credit_used DECIMAL(18,4) DEFAULT 0 COMMENT '已用信用额度'`,
-      'crm_customer.credit_used'
-    );
+      // 客户添加信用额度
+      await safeExecute(
+        `ALTER TABLE crm_customer ADD COLUMN credit_limit DECIMAL(18,4) DEFAULT 0 COMMENT '信用额度'`,
+        'crm_customer.credit_limit'
+      );
+      await safeExecute(
+        `ALTER TABLE crm_customer ADD COLUMN credit_used DECIMAL(18,4) DEFAULT 0 COMMENT '已用信用额度'`,
+        'crm_customer.credit_used'
+      );
 
-    // 设备添加OEE字段
-    await safeExecute(
-      `ALTER TABLE eqp_equipment ADD COLUMN oee_availability DECIMAL(5,2) DEFAULT 0 COMMENT '可用率OEE-A%'`,
-      'eqp_equipment.oee_availability'
-    );
-    await safeExecute(
-      `ALTER TABLE eqp_equipment ADD COLUMN oee_performance DECIMAL(5,2) DEFAULT 0 COMMENT '表现率OEE-P%'`,
-      'eqp_equipment.oee_performance'
-    );
-    await safeExecute(
-      `ALTER TABLE eqp_equipment ADD COLUMN oee_quality DECIMAL(5,2) DEFAULT 0 COMMENT '质量率OEE-Q%'`,
-      'eqp_equipment.oee_quality'
-    );
-    await safeExecute(
-      `ALTER TABLE eqp_equipment ADD COLUMN oee_overall DECIMAL(5,2) DEFAULT 0 COMMENT '综合OEE%'`,
-      'eqp_equipment.oee_overall'
-    );
+      // 设备添加OEE字段
+      await safeExecute(
+        `ALTER TABLE eqp_equipment ADD COLUMN oee_availability DECIMAL(5,2) DEFAULT 0 COMMENT '可用率OEE-A%'`,
+        'eqp_equipment.oee_availability'
+      );
+      await safeExecute(
+        `ALTER TABLE eqp_equipment ADD COLUMN oee_performance DECIMAL(5,2) DEFAULT 0 COMMENT '表现率OEE-P%'`,
+        'eqp_equipment.oee_performance'
+      );
+      await safeExecute(
+        `ALTER TABLE eqp_equipment ADD COLUMN oee_quality DECIMAL(5,2) DEFAULT 0 COMMENT '质量率OEE-Q%'`,
+        'eqp_equipment.oee_quality'
+      );
+      await safeExecute(
+        `ALTER TABLE eqp_equipment ADD COLUMN oee_overall DECIMAL(5,2) DEFAULT 0 COMMENT '综合OEE%'`,
+        'eqp_equipment.oee_overall'
+      );
 
-    // 物料添加SGS认证关联
-    await safeExecute(
-      `ALTER TABLE inv_material ADD COLUMN sgs_cert_required TINYINT DEFAULT 0 COMMENT '需要SGS认证: 0-否, 1-是'`,
-      'inv_material.sgs_cert_required'
-    );
-    await safeExecute(
-      `ALTER TABLE inv_material ADD COLUMN sgs_cert_id BIGINT UNSIGNED COMMENT 'SGS认证ID'`,
-      'inv_material.sgs_cert_id'
-    );
+      // 物料添加SGS认证关联
+      await safeExecute(
+        `ALTER TABLE inv_material ADD COLUMN sgs_cert_required TINYINT DEFAULT 0 COMMENT '需要SGS认证: 0-否, 1-是'`,
+        'inv_material.sgs_cert_required'
+      );
+      await safeExecute(
+        `ALTER TABLE inv_material ADD COLUMN sgs_cert_id BIGINT UNSIGNED COMMENT 'SGS认证ID'`,
+        'inv_material.sgs_cert_id'
+      );
 
-    // ========================================
-    // 10. 创建数据关联视图
-    // ========================================
+      // ========================================
+      // 10. 创建数据关联视图
+      // ========================================
 
-    await safeCreateTable(
-      'v_order_to_delivery',
-      `CREATE OR REPLACE VIEW v_order_to_delivery AS
+      await safeCreateTable(
+        'v_order_to_delivery',
+        `CREATE OR REPLACE VIEW v_order_to_delivery AS
       SELECT
         so.id as order_id,
         so.order_no,
@@ -482,11 +483,11 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       LEFT JOIN crm_customer c ON so.customer_id = c.id
       LEFT JOIN sal_delivery sd ON sd.order_id = so.id AND sd.deleted = 0
       WHERE so.deleted = 0`
-    );
+      );
 
-    await safeCreateTable(
-      'v_purchase_to_inbound',
-      `CREATE OR REPLACE VIEW v_purchase_to_inbound AS
+      await safeCreateTable(
+        'v_purchase_to_inbound',
+        `CREATE OR REPLACE VIEW v_purchase_to_inbound AS
       SELECT
         po.id as purchase_id,
         po.order_no as purchase_no,
@@ -503,11 +504,11 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       LEFT JOIN pur_supplier ps ON po.supplier_id = ps.id
       LEFT JOIN inv_inbound_order io ON io.purchase_order_id = po.id AND io.deleted = 0
       WHERE po.deleted = 0`
-    );
+      );
 
-    await safeCreateTable(
-      'v_workorder_to_outbound',
-      `CREATE OR REPLACE VIEW v_workorder_to_outbound AS
+      await safeCreateTable(
+        'v_workorder_to_outbound',
+        `CREATE OR REPLACE VIEW v_workorder_to_outbound AS
       SELECT
         wo.id as workorder_id,
         wo.order_no as workorder_no,
@@ -524,11 +525,11 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       LEFT JOIN prd_material_issue mi ON mi.work_order_id = wo.id AND mi.deleted = 0
       LEFT JOIN inv_sales_outbound so2 ON so2.order_id = wo.sales_order_id AND so2.deleted = 0
       WHERE wo.deleted = 0`
-    );
+      );
 
-    await safeCreateTable(
-      'v_fifo_cost_analysis',
-      `CREATE OR REPLACE VIEW v_fifo_cost_analysis AS
+      await safeCreateTable(
+        'v_fifo_cost_analysis',
+        `CREATE OR REPLACE VIEW v_fifo_cost_analysis AS
       SELECT
         ib.material_id,
         ib.material_code,
@@ -550,12 +551,14 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       FROM inv_inventory_batch ib
       LEFT JOIN inv_warehouse w ON ib.warehouse_id = w.id
       WHERE ib.deleted = 0`
-    );
+      );
 
-    results.push('=== 数据逻辑关系修正完成 ===');
+      results.push('=== 数据逻辑关系修正完成 ===');
 
-    return results;
-  });
+      return results;
+    });
 
-  return successResponse(result);
-}, { errorMessage: '数据逻辑关系修正失败' });
+    return successResponse(result);
+  },
+  { errorMessage: '数据逻辑关系修正失败' }
+);

@@ -3,7 +3,7 @@ import { query, queryOne } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   const stats = await query(`
     SELECT
       wc.id,

@@ -1,15 +1,12 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-} from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 
 /**
  * 库存预警推送 API
- * 
+ *
  * 支持站内信、邮件推送库存预警通知
  * 可配置预警规则和推送方式
  */
@@ -64,9 +61,7 @@ export const GET = withPermission(
 
     if (type === 'rules') {
       // 获取预警规则
-      const rules: any = await query(
-        'SELECT * FROM inv_alert_rule WHERE deleted = 0 ORDER BY id'
-      );
+      const rules: any = await query('SELECT * FROM inv_alert_rule WHERE deleted = 0 ORDER BY id');
       return successResponse({ rules });
     }
 
@@ -88,7 +83,15 @@ export const POST = withPermission(
 
     if (action === 'create_rule') {
       // 创建预警规则
-      const { rule_name, material_id, warehouse_id, alert_type, threshold, notify_method, notify_users } = body;
+      const {
+        rule_name,
+        material_id,
+        warehouse_id,
+        alert_type,
+        threshold,
+        notify_method,
+        notify_users,
+      } = body;
 
       if (!rule_name || !alert_type || threshold === undefined) {
         return errorResponse('规则名称、预警类型和阈值不能为空', 400, 400);
@@ -119,10 +122,9 @@ export const POST = withPermission(
       if (!notification_ids || !Array.isArray(notification_ids)) {
         return errorResponse('通知ID列表不能为空', 400, 400);
       }
-      await execute(
-        `UPDATE sys_notification SET is_read = 1, read_time = NOW() WHERE id IN (?)`,
-        [notification_ids.join(',')]
-      );
+      await execute(`UPDATE sys_notification SET is_read = 1, read_time = NOW() WHERE id IN (?)`, [
+        notification_ids.join(','),
+      ]);
       return successResponse(null, '已标记为已读');
     }
 
@@ -133,7 +135,7 @@ export const POST = withPermission(
 
 // 更新预警规则
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
     const { id, rule_name, alert_type, threshold, notify_method, notify_users, enabled } = body;
 
@@ -176,10 +178,7 @@ export const PUT = withPermission(
     updates.push('update_time = NOW()');
     params.push(id);
 
-    await execute(
-      `UPDATE inv_alert_rule SET ${updates.join(', ')} WHERE id = ?`,
-      params
-    );
+    await execute(`UPDATE inv_alert_rule SET ${updates.join(', ')} WHERE id = ?`, params);
 
     return successResponse(null, '预警规则更新成功');
   },
@@ -199,7 +198,7 @@ async function triggerAlertPush(userInfo: UserInfo) {
   );
 
   if (alerts.length === 0) {
-    return successResponse({ alertCount: 0 }, '当前无库存预警');
+    return successResponse({ alertCount: 0 }, tc('text_dh7pir'));
   }
 
   // 获取需要通知的用户（仓库管理员和系统管理员）
@@ -225,16 +224,19 @@ async function triggerAlertPush(userInfo: UserInfo) {
     }
   }
 
-  return successResponse({
-    alertCount: alerts.length,
-    pushCount,
-    alerts: alerts.map((a: any) => ({
-      material_code: a.material_code,
-      material_name: a.material_name,
-      warehouse_name: a.warehouse_name,
-      quantity: a.quantity,
-      safety_stock: a.safety_stock,
-      unit: a.unit,
-    })),
-  }, `已推送 ${alerts.length} 条库存预警`);
+  return successResponse(
+    {
+      alertCount: alerts.length,
+      pushCount,
+      alerts: alerts.map((a: any) => ({
+        material_code: a.material_code,
+        material_name: a.material_name,
+        warehouse_name: a.warehouse_name,
+        quantity: a.quantity,
+        safety_stock: a.safety_stock,
+        unit: a.unit,
+      })),
+    },
+    `已推送 ${alerts.length} 条库存预警`
+  );
 }

@@ -7,7 +7,7 @@ import { withPermission } from '@/lib/api-permissions';
  * 订单交付率报表
  * 按月/客户统计订单准时交付率
  */
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');

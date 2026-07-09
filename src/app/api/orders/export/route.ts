@@ -4,11 +4,11 @@ import { commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { getTranslator } from '@/lib/i18n-server';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const format = searchParams.get('format') || 'pdf';
-  
+
   // 获取翻译函数
   const t = await getTranslator('Export');
 
@@ -45,7 +45,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       t('deliveryDate'),
       t('orderAmount'),
       t('status'),
-      t('remark')
+      t('remark'),
     ];
     const rows = (orders as any[]).map((order) => [
       `"${order.order_no || ''}"`,

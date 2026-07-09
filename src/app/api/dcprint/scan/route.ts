@@ -4,75 +4,78 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 // POST - 扫描二维码查询信息
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { qrContent, scanType, operatorId, operatorName } = body;
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { qrContent, scanType, operatorId, operatorName } = body;
 
-  if (!qrContent) {
-    return errorResponse('二维码内容不能为空', 400, 400);
-  }
+    if (!qrContent) {
+      return errorResponse('二维码内容不能为空', 400, 400);
+    }
 
-  let qrData: any;
-  try {
-    qrData = JSON.parse(qrContent);
-  } catch {
-    // 如果不是JSON格式，尝试按标签号查询
-    qrData = { ID: qrContent, TYPE: '0' };
-  }
+    let qrData: any;
+    try {
+      qrData = JSON.parse(qrContent);
+    } catch {
+      // 如果不是JSON格式，尝试按标签号查询
+      qrData = { ID: qrContent, TYPE: '0' };
+    }
 
-  const labelNo = qrData.ID;
-  const type = qrData.TYPE;
+    const labelNo = qrData.ID;
+    const type = qrData.TYPE;
 
-  if (!labelNo) {
-    return errorResponse('二维码格式不正确', 400, 400);
-  }
+    if (!labelNo) {
+      return errorResponse('二维码格式不正确', 400, 400);
+    }
 
-  // 记录扫码日志
-  await logScan(scanType, qrContent, labelNo, operatorId, operatorName, 'scanning');
+    // 记录扫码日志
+    await logScan(scanType, qrContent, labelNo, operatorId, operatorName, 'scanning');
 
-  // 根据类型查询不同信息
-  let result: any = null;
+    // 根据类型查询不同信息
+    let result: any = null;
 
-  switch (type) {
-    case '0': // 母材标签
-    case '1': // 入库标签
-    case '2': // 分切后标签
-      result = await queryMaterialLabel(labelNo);
-      break;
-    case '3': // 工单
-      result = await queryWorkOrder(labelNo);
-      break;
-    case '4': // 流程卡
-      result = await queryProcessCard(labelNo);
-      break;
-    default:
-      // 默认查询物料标签
-      result = await queryMaterialLabel(labelNo);
-  }
+    switch (type) {
+      case '0': // 母材标签
+      case '1': // 入库标签
+      case '2': // 分切后标签
+        result = await queryMaterialLabel(labelNo);
+        break;
+      case '3': // 工单
+        result = await queryWorkOrder(labelNo);
+        break;
+      case '4': // 流程卡
+        result = await queryProcessCard(labelNo);
+        break;
+      default:
+        // 默认查询物料标签
+        result = await queryMaterialLabel(labelNo);
+    }
 
-  if (!result) {
-    await logScan(
-      scanType,
-      qrContent,
-      labelNo,
-      operatorId,
-      operatorName,
-      'failed',
-      '未找到对应记录'
+    if (!result) {
+      await logScan(
+        scanType,
+        qrContent,
+        labelNo,
+        operatorId,
+        operatorName,
+        'failed',
+        '未找到对应记录'
+      );
+      return errorResponse('未找到对应记录', 404, 404);
+    }
+
+    await logScan(scanType, qrContent, labelNo, operatorId, operatorName, 'success');
+
+    return successResponse(
+      {
+        type,
+        data: result,
+      },
+      '扫码查询成功'
     );
-    return errorResponse('未找到对应记录', 404, 404);
-  }
-
-  await logScan(scanType, qrContent, labelNo, operatorId, operatorName, 'success');
-
-  return successResponse(
-    {
-      type,
-      data: result,
-    },
-    '扫码查询成功'
-  );
-}, { logTitle: '扫码查询', logType: 'business' });
+  },
+  { logTitle: '扫码查询', logType: 'business' }
+);
 
 // 查询物料标签
 async function queryMaterialLabel(labelNo: string) {
@@ -293,6 +296,5 @@ async function logScan(
         operatorName,
       ]
     );
-  } catch (error) {
-  }
+  } catch {}
 }

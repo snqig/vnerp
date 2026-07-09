@@ -11,13 +11,27 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
 import { Megaphone, Plus, RefreshCw, Eye, Send, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -69,7 +83,7 @@ export default function AnnouncementPage() {
         setList(result.data?.list || []);
         setTotal(result.data?.total || 0);
       }
-    } catch (e) {
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -93,12 +107,20 @@ export default function AnnouncementPage() {
       if (result.success) {
         toast({ title: '公告创建成功' });
         setCreateOpen(false);
-        setForm({ title: '', content: '', type: 'info', priority: 0, is_top: false, expire_time: '', status: 'draft' });
+        setForm({
+          title: '',
+          content: '',
+          type: 'info',
+          priority: 0,
+          is_top: false,
+          expire_time: '',
+          status: 'draft',
+        });
         fetchData();
       } else {
         toast({ title: result.message || '创建失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '创建失败', variant: 'destructive' });
     }
   };
@@ -114,7 +136,7 @@ export default function AnnouncementPage() {
         toast({ title: '公告已发布' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '操作失败', variant: 'destructive' });
     }
   };
@@ -128,7 +150,7 @@ export default function AnnouncementPage() {
         toast({ title: '公告已删除' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '删除失败', variant: 'destructive' });
     }
   };
@@ -144,9 +166,15 @@ export default function AnnouncementPage() {
   };
 
   const typeMap: Record<string, { label: string; color: string }> = {
-    'info': { label: '通知', color: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' },
-    'warning': { label: '警告', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300' },
-    'important': { label: '重要', color: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300' },
+    info: { label: '通知', color: 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' },
+    warning: {
+      label: '警告',
+      color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300',
+    },
+    important: {
+      label: '重要',
+      color: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300',
+    },
   };
 
   return (
@@ -158,9 +186,7 @@ export default function AnnouncementPage() {
               <Megaphone className="w-6 h-6" />
               {t('announcementManagement')}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('announcementManagementDesc')}
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">{t('announcementManagementDesc')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={fetchData}>
@@ -180,11 +206,11 @@ export default function AnnouncementPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[40%]">{tc('title') || '标题'}</TableHead>
-                  <TableHead>{tc("type")}</TableHead>
+                  <TableHead>{tc('type')}</TableHead>
                   <TableHead>{tc('status')}</TableHead>
-                  <TableHead>置顶</TableHead>
-                  <TableHead>阅读量</TableHead>
-                  <TableHead>发布时间</TableHead>
+                  <TableHead>{tc('text_mifc')}</TableHead>
+                  <TableHead>{tc('text_mnnqx')}</TableHead>
+                  <TableHead>{tc('text_ayuphs')}</TableHead>
                   <TableHead className="text-right">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -217,9 +243,11 @@ export default function AnnouncementPage() {
                       </TableCell>
                       <TableCell>
                         {item.status === 'published' ? (
-                          <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">已发布</Badge>
+                          <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">
+                            {tc('text_e656s')}
+                          </Badge>
                         ) : (
-                          <Badge variant="secondary">{tc("draft")}</Badge>
+                          <Badge variant="secondary">{tc('draft')}</Badge>
                         )}
                       </TableCell>
                       <TableCell>{item.is_top ? '是' : '-'}</TableCell>
@@ -227,15 +255,32 @@ export default function AnnouncementPage() {
                       <TableCell className="text-xs">{item.publish_time || '-'}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button size="sm" variant="ghost" className="h-7" onClick={() => viewDetail(item)}>
-                            <Eye className="h-3 w-3 mr-1" />查看
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7"
+                            onClick={() => viewDetail(item)}
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            {tc('text_ibpi')}
                           </Button>
                           {item.status === 'draft' && (
-                            <Button size="sm" variant="ghost" className="h-7 text-green-600" onClick={() => handlePublish(item.id)}>
-                              <Send className="h-3 w-3 mr-1" />发布
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-green-600"
+                              onClick={() => handlePublish(item.id)}
+                            >
+                              <Send className="h-3 w-3 mr-1" />
+                              {tc('text_erte')}
                             </Button>
                           )}
-                          <Button size="sm" variant="ghost" className="h-7 text-red-600" onClick={() => handleDelete(item.id)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-red-600"
+                            onClick={() => handleDelete(item.id)}
+                          >
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
@@ -249,12 +294,24 @@ export default function AnnouncementPage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{tc('total')} {total}</span>
+          <span className="text-sm text-muted-foreground">
+            {tc('total')} {total}
+          </span>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
               {tc('prevPage') || '上一页'}
             </Button>
-            <Button size="sm" variant="outline" disabled={page * 20 >= total} onClick={() => setPage(p => p + 1)}>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page * 20 >= total}
+              onClick={() => setPage((p) => p + 1)}
+            >
               {tc('nextPage') || '下一页'}
             </Button>
           </div>
@@ -265,54 +322,81 @@ export default function AnnouncementPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>创建公告</DialogTitle>
-            <DialogDescription>发布系统公告通知所有用户</DialogDescription>
+            <DialogTitle>{tc('text_ar49nh')}</DialogTitle>
+            <DialogDescription>{tc('text_7tfy1j')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label>标题 *</Label>
-              <Input value={form.title} onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))} />
+              <Label>{tc('text_dqp6wr')}</Label>
+              <Input
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              />
             </div>
             <div className="space-y-1">
-              <Label>内容 *</Label>
-              <Textarea rows={5} value={form.content} onChange={(e) => setForm(f => ({ ...f, content: e.target.value }))} />
+              <Label>{tc('text_anl1i6')}</Label>
+              <Textarea
+                rows={5}
+                value={form.content}
+                onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label>{tc("type")}</Label>
-                <Select value={form.type} onValueChange={(v) => setForm(f => ({ ...f, type: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label>{tc('type')}</Label>
+                <Select
+                  value={form.type}
+                  onValueChange={(v) => setForm((f) => ({ ...f, type: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="info">{tc("notice")}</SelectItem>
-                    <SelectItem value="warning">警告</SelectItem>
-                    <SelectItem value="important">重要</SelectItem>
+                    <SelectItem value="info">{tc('notice')}</SelectItem>
+                    <SelectItem value="warning">{tc('text_o690')}</SelectItem>
+                    <SelectItem value="important">{tc('text_pjys')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label>{tc("priority")}</Label>
-                <Input type="number" value={form.priority} onChange={(e) => setForm(f => ({ ...f, priority: Number(e.target.value) }))} />
+                <Label>{tc('priority')}</Label>
+                <Input
+                  type="number"
+                  value={form.priority}
+                  onChange={(e) => setForm((f) => ({ ...f, priority: Number(e.target.value) }))}
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label>过期时间</Label>
-                <Input type="datetime-local" value={form.expire_time} onChange={(e) => setForm(f => ({ ...f, expire_time: e.target.value }))} />
+                <Label>{tc('text_ikg3cm')}</Label>
+                <Input
+                  type="datetime-local"
+                  value={form.expire_time}
+                  onChange={(e) => setForm((f) => ({ ...f, expire_time: e.target.value }))}
+                />
               </div>
               <div className="space-y-1">
-                <Label>{tc("actions")}</Label>
-                <Select value={form.status} onValueChange={(v: any) => setForm(f => ({ ...f, status: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label>{tc('actions')}</Label>
+                <Select
+                  value={form.status}
+                  onValueChange={(v: any) => setForm((f) => ({ ...f, status: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">保存为草稿</SelectItem>
-                    <SelectItem value="published">直接发布</SelectItem>
+                    <SelectItem value="draft">{tc('text_v17vor')}</SelectItem>
+                    <SelectItem value="published">{tc('text_ff4jlv')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>{tc('cancel')}</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              {tc('cancel')}
+            </Button>
             <Button onClick={handleCreate}>{tc('confirm')}</Button>
           </DialogFooter>
         </DialogContent>
@@ -329,7 +413,9 @@ export default function AnnouncementPage() {
           </DialogHeader>
           <div className="text-sm whitespace-pre-wrap">{currentItem?.content}</div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setViewOpen(false)}>{tc('close')}</Button>
+            <Button variant="outline" onClick={() => setViewOpen(false)}>
+              {tc('close')}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

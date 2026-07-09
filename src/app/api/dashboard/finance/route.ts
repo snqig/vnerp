@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
     const aging30Days = Number(getConfig('aging_30_days') || 30);
@@ -30,8 +30,7 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(payRows) && payRows.length > 0)
         overview.totalPayable = Number(payRows[0].total || 0);
       overview.netProfit = overview.totalReceivable - overview.totalPayable;
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const revRows: any = await query(
@@ -44,8 +43,7 @@ export async function GET(request: NextRequest) {
         overview.monthRevenue = Number(revRows[0].total || 0);
       if (Array.isArray(expRows) && expRows.length > 0)
         overview.monthExpense = Number(expRows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     let revenueTrend: any[] = [];
     try {
@@ -55,8 +53,7 @@ export async function GET(request: NextRequest) {
         GROUP BY DATE(receipt_date) ORDER BY date
       `);
       revenueTrend = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let expenseTrend: any[] = [];
     try {
@@ -66,8 +63,7 @@ export async function GET(request: NextRequest) {
         GROUP BY DATE(payment_date) ORDER BY date
       `);
       expenseTrend = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let receivableAging: any[] = [];
     try {
@@ -84,8 +80,7 @@ export async function GET(request: NextRequest) {
         FROM fin_receivable WHERE deleted = 0 AND status = 1 GROUP BY aging
       `);
       receivableAging = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let recentTransactions: any[] = [];
     try {
@@ -100,8 +95,7 @@ export async function GET(request: NextRequest) {
       recentTransactions = [...receipts, ...payments]
         .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 10);
-    } catch (e) {
-    }
+    } catch {}
 
     let topPayables: any[] = [];
     try {
@@ -112,8 +106,7 @@ export async function GET(request: NextRequest) {
         WHERE p.deleted = 0 AND p.status = 1 GROUP BY s.supplier_name ORDER BY total DESC LIMIT 5
       `);
       topPayables = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     return NextResponse.json({
       success: true,
@@ -126,7 +119,7 @@ export async function GET(request: NextRequest) {
         topPayables,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: '获取财务看板数据失败' }, { status: 500 });
   }
 }

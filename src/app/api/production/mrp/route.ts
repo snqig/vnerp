@@ -11,29 +11,32 @@ import {
   runFullMRP,
 } from '@/lib/mrp-engine';
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { work_order_ids, warehouse_id, auto_generate_pr = false } = body;
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { work_order_ids, warehouse_id, auto_generate_pr = false } = body;
 
-  if (!work_order_ids || !Array.isArray(work_order_ids) || work_order_ids.length === 0) {
-    return errorResponse('请提供工单ID列表', 400, 400);
-  }
+    if (!work_order_ids || !Array.isArray(work_order_ids) || work_order_ids.length === 0) {
+      return errorResponse('请提供工单ID列表', 400, 400);
+    }
 
-  const result = await transaction(async (conn) => {
-    return await runFullMRP(
-      conn,
-      work_order_ids,
-      warehouse_id || 1,
-      null,
-      'system',
-      auto_generate_pr
-    );
-  });
+    const result = await transaction(async (conn) => {
+      return await runFullMRP(
+        conn,
+        work_order_ids,
+        warehouse_id || 1,
+        null,
+        'system',
+        auto_generate_pr
+      );
+    });
 
-  return successResponse(result);
-}, { logTitle: '运行MRP', logType: 'business' });
+    return successResponse(result);
+  },
+  { logTitle: '运行MRP', logType: 'business' }
+);
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
 

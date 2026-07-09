@@ -7,86 +7,86 @@ const CORRECT_DATA: Record<
   { name: string; dept_name: string; position: string; email: string; phone: string }
 > = {
   E2024001: {
-    name: '张达昌',
-    dept_name: '总经办',
-    position: '总经理',
+    name: tc('text_emlny'),
+    dept_name: tc('text_epfze'),
+    position: tc('text_epmky'),
     email: 'zhang@dachang.com',
     phone: '13800138001',
   },
   E2024002: {
-    name: '李行政',
-    dept_name: '行政部',
-    position: '行政经理',
+    name: tc('text_fsgn5'),
+    dept_name: tc('text_kgpg5'),
+    position: tc('text_hmbgzu'),
     email: 'li@dachang.com',
     phone: '13800138002',
   },
   E2024003: {
-    name: '王财务',
-    dept_name: '财务部',
-    position: '财务经理',
+    name: tc('text_hlpqi'),
+    dept_name: tc('text_l31ft'),
+    position: tc('text_i5jspi'),
     email: 'wang@dachang.com',
     phone: '13800138003',
   },
   E2024004: {
-    name: '赵人事',
-    dept_name: '人力资源部',
-    position: '人事经理',
+    name: tc('text_l3pza'),
+    dept_name: tc('text_ypco2j'),
+    position: tc('text_a9l6nc'),
     email: 'zhao@dachang.com',
     phone: '13800138004',
   },
   E2024005: {
-    name: '钱销售',
-    dept_name: '销售部',
-    position: '销售经理',
+    name: tc('text_mhuvz'),
+    dept_name: tc('text_m8ygq'),
+    position: tc('text_j5n8hx'),
     email: 'qian@dachang.com',
     phone: '13800138005',
   },
   E2024006: {
-    name: '孙生产',
-    dept_name: '生产部',
-    position: '生产经理',
+    name: tc('text_dy0zl'),
+    dept_name: tc('text_hjr0g'),
+    position: tc('text_f3xthb'),
     email: 'sun@dachang.com',
     phone: '13800138006',
   },
   E2024007: {
-    name: '周技术',
-    dept_name: '技术部',
-    position: '技术经理',
+    name: tc('text_cue53'),
+    dept_name: tc('text_exqft'),
+    position: tc('text_cuzbpi'),
     email: 'zhou@dachang.com',
     phone: '13800138007',
   },
   E2024008: {
-    name: '吴品质',
-    dept_name: '品质部',
-    position: '品质经理',
+    name: tc('text_cr6wr'),
+    dept_name: tc('text_d3pkx'),
+    position: tc('text_ba4l3y'),
     email: 'wu@dachang.com',
     phone: '13800138008',
   },
   E2024009: {
-    name: '郑采购',
-    dept_name: '采购部',
-    position: '采购经理',
+    name: tc('text_lx6mv'),
+    dept_name: tc('text_m1hlu'),
+    position: tc('text_iz7pwd'),
     email: 'zheng@dachang.com',
     phone: '13800138009',
   },
   E2024010: {
-    name: '陈仓储',
-    dept_name: '仓储部',
-    position: '仓库主管',
+    name: tc('text_mea2l'),
+    dept_name: tc('text_by5hv'),
+    position: tc('text_ac5giu'),
     email: 'chen@dachang.com',
     phone: '13800138010',
   },
   E2024011: {
-    name: '林印刷',
-    dept_name: '印刷车间',
-    position: '印刷机长',
+    name: tc('text_fkvby'),
+    dept_name: tc('text_avlm51'),
+    position: tc('text_aves24'),
     email: 'lin@dachang.com',
     phone: '13800138011',
   },
   E2024012: {
-    name: '黄后道',
-    dept_name: '后道车间',
-    position: '后道组长',
+    name: tc('text_no98p'),
+    dept_name: tc('text_b7i043'),
+    position: tc('text_b7f668'),
     email: 'huang@dachang.com',
     phone: '13800138012',
   },
@@ -98,7 +98,7 @@ Object.keys(CORRECT_DATA).forEach((key) => {
 });
 
 export const POST = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (_request: NextRequest, _userInfo) => {
     if (process.env.NODE_ENV === 'production') {
       return NextResponse.json(
         { success: false, message: 'Not available in production' },
@@ -111,8 +111,12 @@ export const POST = withPermission(
         'SELECT id, employee_no, name, dept_name, position, email, phone FROM sys_employee'
       );
 
-      const results: { employee_no: string; old_name: string; new_name: string; updated: boolean }[] =
-        [];
+      const results: {
+        employee_no: string;
+        old_name: string;
+        new_name: string;
+        updated: boolean;
+      }[] = [];
       let empUpdated = 0;
       let userUpdated = 0;
 
@@ -124,7 +128,14 @@ export const POST = withPermission(
         if (correct && emp.name !== correct.name) {
           await execute(
             'UPDATE sys_employee SET name = ?, dept_name = ?, position = ?, email = ?, phone = ? WHERE id = ?',
-            [correct.name, correct.dept_name, correct.position, correct.email, correct.phone, emp.id]
+            [
+              correct.name,
+              correct.dept_name,
+              correct.position,
+              correct.email,
+              correct.phone,
+              emp.id,
+            ]
           );
           empUpdated++;
 

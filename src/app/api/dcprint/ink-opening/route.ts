@@ -10,7 +10,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
 import { getConfig, isInkUnopenedShelfLife, getInkOpenedShelfLife } from '@/lib/global-config';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const keyword = searchParams.get('keyword') || '';
@@ -82,225 +82,237 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const validation = validateRequestBody(body, ['material_id', 'open_time', 'expire_hours']);
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const validation = validateRequestBody(body, ['material_id', 'open_time', 'expire_hours']);
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const {
-    material_id,
-    material_code,
-    material_name,
-    batch_no,
-    label_id,
-    ink_type,
-    open_time,
-    expire_hours,
-    remaining_qty,
-    unit,
-    operator_id,
-    operator_name,
-    remark,
-    workorder_id,
-    workorder_no,
-  } = body;
+    const {
+      material_id,
+      material_code,
+      material_name,
+      batch_no,
+      label_id,
+      ink_type,
+      open_time,
+      expire_hours,
+      remaining_qty,
+      unit,
+      operator_id,
+      operator_name,
+      remark,
+      workorder_id,
+      workorder_no,
+    } = body;
 
-  if (batch_no) {
-    const expiredOpening: any = await queryOne(
-      `SELECT id, record_no, expire_time FROM ink_opening_record
+    if (batch_no) {
+      const expiredOpening: any = await queryOne(
+        `SELECT id, record_no, expire_time FROM ink_opening_record
        WHERE batch_no = ? AND material_id = ? AND status = 1 AND deleted = 0 AND expire_time < NOW()
        ORDER BY expire_time DESC LIMIT 1`,
-      [batch_no, material_id]
-    );
-    if (expiredOpening) {
-      return errorResponse(
-        `该批次油墨已有过期开盖记录(${expiredOpening.record_no}，过期时间: ${expiredOpening.expire_time})，请先报废后再重新开盖`,
-        400,
-        400
+        [batch_no, material_id]
       );
-    }
+      if (expiredOpening) {
+        return errorResponse(
+          `该批次油墨已有过期开盖记录(${expiredOpening.record_no}，过期时间: ${expiredOpening.expire_time})，请先报废后再重新开盖`,
+          400,
+          400
+        );
+      }
 
-    const activeOpening: any = await queryOne(
-      `SELECT id, record_no, expire_time FROM ink_opening_record
+      const activeOpening: any = await queryOne(
+        `SELECT id, record_no, expire_time FROM ink_opening_record
        WHERE batch_no = ? AND material_id = ? AND status = 1 AND deleted = 0 AND expire_time >= NOW()
        ORDER BY expire_time DESC LIMIT 1`,
-      [batch_no, material_id]
-    );
-    if (activeOpening) {
-      return errorResponse(
-        `该批次油墨已有生效中的开盖记录(${activeOpening.record_no}，过期时间: ${activeOpening.expire_time})，请勿重复开盖`,
-        409,
-        409
+        [batch_no, material_id]
       );
-    }
-  }
-
-  const INK_SHELF_LIFE: Record<string, number> = {
-    solvent: isInkUnopenedShelfLife(),
-    uv: isInkUnopenedShelfLife() * 4,
-    water: getInkOpenedShelfLife(),
-  };
-
-  const result = await transaction(async (conn) => {
-    const recordNo = `INK${Date.now()}`;
-
-    let actualExpireHours = expire_hours;
-    if (!actualExpireHours && ink_type) {
-      actualExpireHours = INK_SHELF_LIFE[ink_type] || isInkUnopenedShelfLife();
-    } else if (!actualExpireHours) {
-      actualExpireHours = isInkUnopenedShelfLife();
-    }
-
-    const expireTime = new Date(new Date(open_time).getTime() + actualExpireHours * 3600000)
-      .toISOString()
-      .slice(0, 19)
-      .replace('T', ' ');
-
-    let finalExpireTime = expireTime;
-    if (batch_no) {
-      const [batchRows]: any = await conn.execute(
-        'SELECT expire_date FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0',
-        [batch_no]
-      );
-      if (batchRows.length > 0 && batchRows[0].expire_date) {
-        const batchExpire = new Date(batchRows[0].expire_date);
-        const calculatedExpire = new Date(expireTime);
-        if (batchExpire < calculatedExpire) {
-          finalExpireTime = batchExpire.toISOString().slice(0, 19).replace('T', ' ');
-        }
+      if (activeOpening) {
+        return errorResponse(
+          `该批次油墨已有生效中的开盖记录(${activeOpening.record_no}，过期时间: ${activeOpening.expire_time})，请勿重复开盖`,
+          409,
+          409
+        );
       }
     }
 
-    const [insertResult]: any = await conn.execute(
-      `INSERT INTO ink_opening_record (record_no, material_id, material_code, material_name, batch_no, label_id, ink_type, open_time, expire_hours, expire_time, remaining_qty, unit, status, operator_id, operator_name, remark)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
-      [
-        recordNo,
-        material_id,
-        material_code || null,
-        material_name || null,
-        batch_no || null,
-        label_id || null,
-        ink_type || null,
-        open_time,
-        actualExpireHours,
-        finalExpireTime,
-        remaining_qty || null,
-        unit || null,
-        operator_id || null,
-        operator_name || null,
-        remark || null,
-      ]
-    );
-    const insertId = insertResult.insertId;
+    const INK_SHELF_LIFE: Record<string, number> = {
+      solvent: isInkUnopenedShelfLife(),
+      uv: isInkUnopenedShelfLife() * 4,
+      water: getInkOpenedShelfLife(),
+    };
 
-    if (workorder_id || workorder_no) {
-      try {
-        await conn.execute(
-          `INSERT INTO ink_usage (usage_no, usage_type, batch_no, workorder_id, workorder_no, color_name, weight, unit, operator_id, operator_name, status, remark)
-           VALUES (?, 'requisition', ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-          [
-            'IU' + Date.now(),
-            batch_no || recordNo,
-            workorder_id || null,
-            workorder_no || null,
-            material_name || '',
-            remaining_qty || 0,
-            unit || 'kg',
-            operator_id || null,
-            operator_name || null,
-            `开罐领用 - ${recordNo}`,
-          ]
+    const result = await transaction(async (conn) => {
+      const recordNo = `INK${Date.now()}`;
+
+      let actualExpireHours = expire_hours;
+      if (!actualExpireHours && ink_type) {
+        actualExpireHours = INK_SHELF_LIFE[ink_type] || isInkUnopenedShelfLife();
+      } else if (!actualExpireHours) {
+        actualExpireHours = isInkUnopenedShelfLife();
+      }
+
+      const expireTime = new Date(new Date(open_time).getTime() + actualExpireHours * 3600000)
+        .toISOString()
+        .slice(0, 19)
+        .replace('T', ' ');
+
+      let finalExpireTime = expireTime;
+      if (batch_no) {
+        const [batchRows]: any = await conn.execute(
+          'SELECT expire_date FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0',
+          [batch_no]
         );
-      } catch {}
-    }
+        if (batchRows.length > 0 && batchRows[0].expire_date) {
+          const batchExpire = new Date(batchRows[0].expire_date);
+          const calculatedExpire = new Date(expireTime);
+          if (batchExpire < calculatedExpire) {
+            finalExpireTime = batchExpire.toISOString().slice(0, 19).replace('T', ' ');
+          }
+        }
+      }
 
-    if (batch_no) {
-      await conn.execute(
-        `UPDATE inv_inventory_batch SET expire_date = ?, status = CASE WHEN ? < NOW() THEN 'expired' ELSE status END WHERE batch_no = ? AND deleted = 0`,
-        [finalExpireTime, finalExpireTime, batch_no]
-      );
-    }
-
-    const qrCode = 'IK-' + randomUUID().replace(/-/g, '').substring(0, 16);
-    await conn.execute(
-      `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, material_id, material_code, material_name, batch_no, quantity, unit, expiry_date, status, extra_data)
-       VALUES (?, 'ink_open', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-      [
-        qrCode,
-        insertId,
-        recordNo,
-        material_id,
-        material_code || null,
-        material_name || null,
-        batch_no || null,
-        remaining_qty || 0,
-        unit || null,
-        finalExpireTime,
-        JSON.stringify({
-          ink_type,
+      const [insertResult]: any = await conn.execute(
+        `INSERT INTO ink_opening_record (record_no, material_id, material_code, material_name, batch_no, label_id, ink_type, open_time, expire_hours, expire_time, remaining_qty, unit, status, operator_id, operator_name, remark)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
+        [
+          recordNo,
+          material_id,
+          material_code || null,
+          material_name || null,
+          batch_no || null,
+          label_id || null,
+          ink_type || null,
           open_time,
-          expire_hours: actualExpireHours,
-          workorder_no: workorder_no || null,
-        }),
-      ]
+          actualExpireHours,
+          finalExpireTime,
+          remaining_qty || null,
+          unit || null,
+          operator_id || null,
+          operator_name || null,
+          remark || null,
+        ]
+      );
+      const insertId = insertResult.insertId;
+
+      if (workorder_id || workorder_no) {
+        try {
+          await conn.execute(
+            `INSERT INTO ink_usage (usage_no, usage_type, batch_no, workorder_id, workorder_no, color_name, weight, unit, operator_id, operator_name, status, remark)
+           VALUES (?, 'requisition', ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+            [
+              'IU' + Date.now(),
+              batch_no || recordNo,
+              workorder_id || null,
+              workorder_no || null,
+              material_name || '',
+              remaining_qty || 0,
+              unit || 'kg',
+              operator_id || null,
+              operator_name || null,
+              `开罐领用 - ${recordNo}`,
+            ]
+          );
+        } catch {}
+      }
+
+      if (batch_no) {
+        await conn.execute(
+          `UPDATE inv_inventory_batch SET expire_date = ?, status = CASE WHEN ? < NOW() THEN 'expired' ELSE status END WHERE batch_no = ? AND deleted = 0`,
+          [finalExpireTime, finalExpireTime, batch_no]
+        );
+      }
+
+      const qrCode = 'IK-' + randomUUID().replace(/-/g, '').substring(0, 16);
+      await conn.execute(
+        `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, material_id, material_code, material_name, batch_no, quantity, unit, expiry_date, status, extra_data)
+       VALUES (?, 'ink_open', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+        [
+          qrCode,
+          insertId,
+          recordNo,
+          material_id,
+          material_code || null,
+          material_name || null,
+          batch_no || null,
+          remaining_qty || 0,
+          unit || null,
+          finalExpireTime,
+          JSON.stringify({
+            ink_type,
+            open_time,
+            expire_hours: actualExpireHours,
+            workorder_no: workorder_no || null,
+          }),
+        ]
+      );
+
+      return { id: insertId, record_no: recordNo, expire_time: finalExpireTime, qr_code: qrCode };
+    });
+
+    return successResponse(result, '油墨开罐记录创建成功');
+  },
+  { logTitle: '油墨开罐', logType: 'business' }
+);
+
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    if (!body.id) return commonErrors.badRequest('记录ID不能为空');
+
+    const existing = await queryOne(
+      'SELECT id, status FROM ink_opening_record WHERE id = ? AND deleted = 0',
+      [body.id]
     );
+    if (!existing) return commonErrors.notFound('油墨开罐记录不存在');
 
-    return { id: insertId, record_no: recordNo, expire_time: finalExpireTime, qr_code: qrCode };
-  });
-
-  return successResponse(result, '油墨开罐记录创建成功');
-}, { logTitle: '油墨开罐', logType: 'business' });
-
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  if (!body.id) return commonErrors.badRequest('记录ID不能为空');
-
-  const existing = await queryOne(
-    'SELECT id, status FROM ink_opening_record WHERE id = ? AND deleted = 0',
-    [body.id]
-  );
-  if (!existing) return commonErrors.notFound('油墨开罐记录不存在');
-
-  if (body.status !== undefined) {
-    const allowedStatus = [1, 2, 3];
-    if (!allowedStatus.includes(body.status)) {
-      return errorResponse('无效的状态值', 400, 400);
+    if (body.status !== undefined) {
+      const allowedStatus = [1, 2, 3];
+      if (!allowedStatus.includes(body.status)) {
+        return errorResponse('无效的状态值', 400, 400);
+      }
+      await execute('UPDATE ink_opening_record SET status = ? WHERE id = ?', [
+        body.status,
+        body.id,
+      ]);
+      return successResponse(null, '状态更新成功');
     }
-    await execute('UPDATE ink_opening_record SET status = ? WHERE id = ?', [body.status, body.id]);
-    return successResponse(null, '状态更新成功');
-  }
 
-  const fields: string[] = [];
-  const values: any[] = [];
-  const allowedFields = ['remaining_qty', 'remark'];
-  for (const field of allowedFields) {
-    if (body[field] !== undefined) {
-      fields.push(`${field} = ?`);
-      values.push(body[field]);
+    const fields: string[] = [];
+    const values: any[] = [];
+    const allowedFields = ['remaining_qty', 'remark'];
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        fields.push(`${field} = ?`);
+        values.push(body[field]);
+      }
     }
-  }
-  if (fields.length > 0) {
-    values.push(body.id);
-    await execute(`UPDATE ink_opening_record SET ${fields.join(', ')} WHERE id = ?`, values);
-  }
+    if (fields.length > 0) {
+      values.push(body.id);
+      await execute(`UPDATE ink_opening_record SET ${fields.join(', ')} WHERE id = ?`, values);
+    }
 
-  return successResponse(null, '油墨开罐记录更新成功');
-}, { logTitle: '更新油墨开罐记录', logType: 'business' });
+    return successResponse(null, '油墨开罐记录更新成功');
+  },
+  { logTitle: '更新油墨开罐记录', logType: 'business' }
+);
 
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  if (!id) return commonErrors.badRequest('记录ID不能为空');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return commonErrors.badRequest('记录ID不能为空');
 
-  const existing = await queryOne(
-    'SELECT id, status FROM ink_opening_record WHERE id = ? AND deleted = 0',
-    [parseInt(id)]
-  );
-  if (!existing) return commonErrors.notFound('油墨开罐记录不存在');
+    const existing = await queryOne(
+      'SELECT id, status FROM ink_opening_record WHERE id = ? AND deleted = 0',
+      [parseInt(id)]
+    );
+    if (!existing) return commonErrors.notFound('油墨开罐记录不存在');
 
-  await execute('UPDATE ink_opening_record SET deleted = 1 WHERE id = ?', [parseInt(id)]);
-  return successResponse(null, '油墨开罐记录删除成功');
-}, { logTitle: '删除油墨开罐记录', logType: 'business' });
+    await execute('UPDATE ink_opening_record SET deleted = 1 WHERE id = ?', [parseInt(id)]);
+    return successResponse(null, '油墨开罐记录删除成功');
+  },
+  { logTitle: '删除油墨开罐记录', logType: 'business' }
+);

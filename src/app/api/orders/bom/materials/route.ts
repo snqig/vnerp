@@ -12,7 +12,7 @@ import { withPermission } from '@/lib/api-permissions';
  * 获取物料列表
  * GET /api/orders/bom/materials
  */
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -59,149 +59,158 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
  * 创建物料
  * POST /api/orders/bom/materials
  */
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
 
-  const validation = validateRequestBody(body, ['materialCode', 'materialName']);
+    const validation = validateRequestBody(body, ['materialCode', 'materialName']);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const {
-    materialCode,
-    materialName,
-    materialSpec,
-    materialType = 'RAW',
-    categoryId,
-    categoryName,
-    unit = '件',
-    unitCost = 0,
-    safetyStock = 0,
-    defaultSupplierId,
-    defaultSupplierName,
-    shelfLifeDays,
-    remark,
-  } = body;
+    const {
+      materialCode,
+      materialName,
+      materialSpec,
+      materialType = 'RAW',
+      categoryId,
+      categoryName,
+      unit = '件',
+      unitCost = 0,
+      safetyStock = 0,
+      defaultSupplierId,
+      defaultSupplierName,
+      shelfLifeDays,
+      remark,
+    } = body;
 
-  // 检查物料编码是否已存在
-  const existing = await query(
-    'SELECT id FROM bom_material WHERE material_code = ? AND deleted = 0',
-    [materialCode]
-  );
+    // 检查物料编码是否已存在
+    const existing = await query(
+      'SELECT id FROM bom_material WHERE material_code = ? AND deleted = 0',
+      [materialCode]
+    );
 
-  if ((existing as any[]).length > 0) {
-    return errorResponse('物料编码已存在', 400, 400);
-  }
+    if ((existing as any[]).length > 0) {
+      return errorResponse('物料编码已存在', 400, 400);
+    }
 
-  const result = await query(
-    `INSERT INTO bom_material 
+    const result = await query(
+      `INSERT INTO bom_material 
      (material_code, material_name, material_spec, material_type, category_id, category_name,
       unit, unit_cost, safety_stock, default_supplier_id, default_supplier_name, shelf_life_days, remark, create_time)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-    [
-      materialCode,
-      materialName,
-      materialSpec || '',
-      materialType,
-      categoryId || null,
-      categoryName || '',
-      unit,
-      unitCost,
-      safetyStock,
-      defaultSupplierId || null,
-      defaultSupplierName || '',
-      shelfLifeDays || null,
-      remark || '',
-    ]
-  );
+      [
+        materialCode,
+        materialName,
+        materialSpec || '',
+        materialType,
+        categoryId || null,
+        categoryName || '',
+        unit,
+        unitCost,
+        safetyStock,
+        defaultSupplierId || null,
+        defaultSupplierName || '',
+        shelfLifeDays || null,
+        remark || '',
+      ]
+    );
 
-  return successResponse({ id: (result as any).insertId, materialCode }, '物料创建成功');
-}, { logTitle: '创建BOM物料', logType: 'business' });
+    return successResponse({ id: (result as any).insertId, materialCode }, '物料创建成功');
+  },
+  { logTitle: '创建BOM物料', logType: 'business' }
+);
 
 /**
  * 更新物料
  * PUT /api/orders/bom/materials
  */
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, ...updateData } = body;
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { id, ...updateData } = body;
 
-  if (!id) {
-    return errorResponse('物料ID不能为空', 400, 400);
-  }
+    if (!id) {
+      return errorResponse('物料ID不能为空', 400, 400);
+    }
 
-  const material = await query('SELECT id FROM bom_material WHERE id = ? AND deleted = 0', [id]);
+    const material = await query('SELECT id FROM bom_material WHERE id = ? AND deleted = 0', [id]);
 
-  if ((material as any[]).length === 0) {
-    return errorResponse('物料不存在', 404, 404);
-  }
+    if ((material as any[]).length === 0) {
+      return errorResponse('物料不存在', 404, 404);
+    }
 
-  const updateFields: string[] = [];
-  const updateValues: any[] = [];
+    const updateFields: string[] = [];
+    const updateValues: any[] = [];
 
-  if (updateData.materialName !== undefined) {
-    updateFields.push('material_name = ?');
-    updateValues.push(updateData.materialName);
-  }
-  if (updateData.materialSpec !== undefined) {
-    updateFields.push('material_spec = ?');
-    updateValues.push(updateData.materialSpec);
-  }
-  if (updateData.unit !== undefined) {
-    updateFields.push('unit = ?');
-    updateValues.push(updateData.unit);
-  }
-  if (updateData.unitCost !== undefined) {
-    updateFields.push('unit_cost = ?');
-    updateValues.push(updateData.unitCost);
-  }
-  if (updateData.safetyStock !== undefined) {
-    updateFields.push('safety_stock = ?');
-    updateValues.push(updateData.safetyStock);
-  }
-  if (updateData.isActive !== undefined) {
-    updateFields.push('is_active = ?');
-    updateValues.push(updateData.isActive ? 1 : 0);
-  }
-  if (updateData.remark !== undefined) {
-    updateFields.push('remark = ?');
-    updateValues.push(updateData.remark);
-  }
+    if (updateData.materialName !== undefined) {
+      updateFields.push('material_name = ?');
+      updateValues.push(updateData.materialName);
+    }
+    if (updateData.materialSpec !== undefined) {
+      updateFields.push('material_spec = ?');
+      updateValues.push(updateData.materialSpec);
+    }
+    if (updateData.unit !== undefined) {
+      updateFields.push('unit = ?');
+      updateValues.push(updateData.unit);
+    }
+    if (updateData.unitCost !== undefined) {
+      updateFields.push('unit_cost = ?');
+      updateValues.push(updateData.unitCost);
+    }
+    if (updateData.safetyStock !== undefined) {
+      updateFields.push('safety_stock = ?');
+      updateValues.push(updateData.safetyStock);
+    }
+    if (updateData.isActive !== undefined) {
+      updateFields.push('is_active = ?');
+      updateValues.push(updateData.isActive ? 1 : 0);
+    }
+    if (updateData.remark !== undefined) {
+      updateFields.push('remark = ?');
+      updateValues.push(updateData.remark);
+    }
 
-  if (updateFields.length === 0) {
-    return errorResponse('没有要更新的字段', 400, 400);
-  }
+    if (updateFields.length === 0) {
+      return errorResponse('没有要更新的字段', 400, 400);
+    }
 
-  updateValues.push(id);
-  await query(
-    `UPDATE bom_material SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
-    updateValues
-  );
+    updateValues.push(id);
+    await query(
+      `UPDATE bom_material SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
+      updateValues
+    );
 
-  return successResponse({ id }, '物料更新成功');
-}, { logTitle: '更新BOM物料', logType: 'business' });
+    return successResponse({ id }, '物料更新成功');
+  },
+  { logTitle: '更新BOM物料', logType: 'business' }
+);
 
 /**
  * 删除物料
  * DELETE /api/orders/bom/materials?id={id}
  */
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return errorResponse('物料ID不能为空', 400, 400);
-  }
+    if (!id) {
+      return errorResponse('物料ID不能为空', 400, 400);
+    }
 
-  // 检查是否被BOM引用
-  const usedInBom = await query('SELECT 1 FROM bom_line WHERE material_id = ? LIMIT 1', [id]);
+    // 检查是否被BOM引用
+    const usedInBom = await query('SELECT 1 FROM bom_line WHERE material_id = ? LIMIT 1', [id]);
 
-  if ((usedInBom as any[]).length > 0) {
-    return errorResponse('该物料已被BOM引用，不能删除', 400, 400);
-  }
+    if ((usedInBom as any[]).length > 0) {
+      return errorResponse('该物料已被BOM引用，不能删除', 400, 400);
+    }
 
-  await query('UPDATE bom_material SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
+    await query('UPDATE bom_material SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
-  return successResponse(null, '物料删除成功');
-}, { logTitle: '删除BOM物料', logType: 'business' });
+    return successResponse(null, '物料删除成功');
+  },
+  { logTitle: '删除BOM物料', logType: 'business' }
+);

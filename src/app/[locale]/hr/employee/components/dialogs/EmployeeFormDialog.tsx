@@ -1,6 +1,13 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +21,8 @@ import {
 import { Upload, X, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Employee, Department, Role } from '../../types';
+
+/* eslint-disable @next/next/no-img-element */
 
 interface EmployeeFormDialogProps {
   open: boolean;
@@ -51,13 +60,15 @@ export function EmployeeFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" resizable>
         <DialogHeader>
-          <DialogTitle>{editing ? t("editEmployee") : t("addEmployeeTitle")}</DialogTitle>
-          <DialogDescription>{editing ? t("editEmployeeDesc") : t("addEmployeeDesc")}</DialogDescription>
+          <DialogTitle>{editing ? t('editEmployee') : t('addEmployeeTitle')}</DialogTitle>
+          <DialogDescription>
+            {editing ? t('editEmployeeDesc') : t('addEmployeeDesc')}
+          </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-3 gap-4 py-4">
           {/* 照片上传区域 */}
           <div className="col-span-1 row-span-4">
-            <Label className="mb-2 block">{tc("employeePhoto")}</Label>
+            <Label className="mb-2 block">{tc('employeePhoto')}</Label>
             <div className="relative">
               <input
                 type="file"
@@ -68,11 +79,15 @@ export function EmployeeFormDialog({
               />
               {form.photo ? (
                 <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600">
-                  <img src={form.photo} alt={tc("employeePhoto")} className="w-full h-full object-cover" />
+                  <img
+                    src={form.photo}
+                    alt={tc('employeePhoto')}
+                    className="w-full h-full object-cover"
+                  />
                   <button
                     onClick={onRemovePhoto}
                     className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                    title={tc("deletePhoto")}
+                    title={tc('deletePhoto')}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -88,8 +103,8 @@ export function EmployeeFormDialog({
                   ) : (
                     <>
                       <Upload className="w-8 h-8 text-gray-400" />
-                      <span className="text-sm text-gray-500">{tc("uploadPhoto")}</span>
-                      <span className="text-xs text-gray-400">{tc("supportJpgPng")}</span>
+                      <span className="text-sm text-gray-500">{tc('uploadPhoto')}</span>
+                      <span className="text-xs text-gray-400">{tc('supportJpgPng')}</span>
                     </>
                   )}
                 </button>
@@ -97,65 +112,65 @@ export function EmployeeFormDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label>{tc("employeeNo")}</Label>
+            <Label>{tc('employeeNo')}</Label>
             <Input
               value={form.employee_no || ''}
               onChange={(e) => setForm({ ...form, employee_no: e.target.value })}
-              placeholder={tc("autoGenerate")}
+              placeholder={tc('autoGenerate')}
               readOnly={!editing}
             />
           </div>
           <div className="space-y-2">
             <Label>
-              {tc("name")} <span className="text-red-500">*</span>
+              {tc('name')} <span className="text-red-500">*</span>
             </Label>
             <Input
               value={form.name || ''}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder={tc("enterName")}
+              placeholder={tc('enterName')}
             />
           </div>
           <div className="space-y-2">
             <Label>
-              {tc("gender")} <span className="text-gray-400 text-xs">{tc("idCardAuto")}</span>
+              {tc('gender')} <span className="text-gray-400 text-xs">{tc('idCardAuto')}</span>
             </Label>
             <Select
               value={form.gender?.toString() || '1'}
               onValueChange={(v) => setForm({ ...form, gender: parseInt(v) })}
             >
               <SelectTrigger>
-                <SelectValue placeholder={tc("selectGender")} />
+                <SelectValue placeholder={tc('selectGender')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">{tc("maleShort")}</SelectItem>
-                <SelectItem value="2">{tc("femaleShort")}</SelectItem>
+                <SelectItem value="1">{tc('maleShort')}</SelectItem>
+                <SelectItem value="2">{tc('femaleShort')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>{tc("contact")}</Label>
+            <Label>{tc('contact')}</Label>
             <Input
               value={form.phone || ''}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder={tc("enterPhone")}
+              placeholder={tc('enterPhone')}
             />
           </div>
           <div className="space-y-2">
-            <Label>{tc("email")}</Label>
+            <Label>{tc('email')}</Label>
             <Input
               value={form.email || ''}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder={tc("enterEmail")}
+              placeholder={tc('enterEmail')}
             />
           </div>
           <div className="space-y-2">
-            <Label>{tc("department")}</Label>
+            <Label>{tc('department')}</Label>
             <Select
               value={form.dept_id?.toString() || ''}
               onValueChange={(v) => setForm({ ...form, dept_id: parseInt(v) })}
             >
               <SelectTrigger>
-                <SelectValue placeholder={tc("selectDepartment")} />
+                <SelectValue placeholder={tc('selectDepartment')} />
               </SelectTrigger>
               <SelectContent>
                 {departments.map((dept) => (
@@ -167,21 +182,21 @@ export function EmployeeFormDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>{tc("position")}</Label>
+            <Label>{tc('position')}</Label>
             <Input
               value={form.position || ''}
               onChange={(e) => setForm({ ...form, position: e.target.value })}
-              placeholder={tc("enterPosition")}
+              placeholder={tc('enterPosition')}
             />
           </div>
           <div className="space-y-2">
-            <Label>{tc("role")}</Label>
+            <Label>{tc('role')}</Label>
             <Select
               value={form.role_id?.toString() || ''}
               onValueChange={(v) => setForm({ ...form, role_id: parseInt(v) })}
             >
               <SelectTrigger>
-                <SelectValue placeholder={tc("selectRole")} />
+                <SelectValue placeholder={tc('selectRole')} />
               </SelectTrigger>
               <SelectContent>
                 {roles.map((role) => (
@@ -193,7 +208,7 @@ export function EmployeeFormDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>{tc("entryDate")}</Label>
+            <Label>{tc('entryDate')}</Label>
             <Input
               type="date"
               value={form.entry_date || ''}
@@ -201,50 +216,50 @@ export function EmployeeFormDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label>{tc("status")}</Label>
+            <Label>{tc('status')}</Label>
             <Select
               value={form.status?.toString() || '1'}
               onValueChange={(v) => setForm({ ...form, status: parseInt(v) })}
             >
               <SelectTrigger>
-                <SelectValue placeholder={tc("selectStatus")} />
+                <SelectValue placeholder={tc('selectStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">{tc("statusActive")}</SelectItem>
-                <SelectItem value="2">{tc("statusProbation")}</SelectItem>
-                <SelectItem value="3">{tc("statusResigned")}</SelectItem>
-                <SelectItem value="0">{tc("statusInactive")}</SelectItem>
+                <SelectItem value="1">{tc('statusActive')}</SelectItem>
+                <SelectItem value="2">{tc('statusProbation')}</SelectItem>
+                <SelectItem value="3">{tc('statusResigned')}</SelectItem>
+                <SelectItem value="0">{tc('statusInactive')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>
-              {tc("age")} <span className="text-gray-400 text-xs">{tc("autoCalculate")}</span>
+              {tc('age')} <span className="text-gray-400 text-xs">{tc('autoCalculate')}</span>
             </Label>
             <Input
               type="number"
               value={form.age || ''}
               readOnly
               className="bg-gray-50"
-              placeholder={tc("autoCalculate")}
+              placeholder={tc('autoCalculate')}
             />
           </div>
           <div className="space-y-2">
-            <Label>{tc("section")}</Label>
+            <Label>{tc('section')}</Label>
             <Input
               value={form.section || ''}
               onChange={(e) => setForm({ ...form, section: e.target.value })}
-              placeholder={tc("enterSection")}
+              placeholder={tc('enterSection')}
             />
           </div>
           <div className="space-y-2">
             <Label>
-              {tc("birthDate")} <span className="text-gray-400 text-xs">{tc("autoCalculate")}</span>
+              {tc('birthDate')} <span className="text-gray-400 text-xs">{tc('autoCalculate')}</span>
             </Label>
             <Input type="date" value={form.birth_date || ''} readOnly className="bg-gray-50" />
           </div>
           <div className="space-y-2">
-            <Label>{tc("idCard")}</Label>
+            <Label>{tc('idCard')}</Label>
             <Input
               value={form.id_card || ''}
               onChange={(e) => {
@@ -281,60 +296,60 @@ export function EmployeeFormDialog({
                   gender: gender,
                 });
               }}
-              placeholder={tc("enterIdCard")}
+              placeholder={tc('enterIdCard')}
             />
           </div>
           <div className="space-y-2">
-            <Label>{tc("nativePlace")}</Label>
+            <Label>{tc('nativePlace')}</Label>
             <Input
               value={form.native_place || ''}
               onChange={(e) => setForm({ ...form, native_place: e.target.value })}
-              placeholder={tc("enterNativePlace")}
+              placeholder={tc('enterNativePlace')}
             />
           </div>
           <div className="space-y-2">
-            <Label>{tc("education")}</Label>
+            <Label>{tc('education')}</Label>
             <Select
               value={form.education || ''}
               onValueChange={(v) => setForm({ ...form, education: v })}
             >
               <SelectTrigger>
-                <SelectValue placeholder={tc("selectEducation")} />
+                <SelectValue placeholder={tc('selectEducation')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="初中">{tc("juniorHigh")}</SelectItem>
-                <SelectItem value="中专">{tc("technical")}</SelectItem>
-                <SelectItem value="高中">{tc("highSchool")}</SelectItem>
-                <SelectItem value="大专">{tc("associate")}</SelectItem>
-                <SelectItem value="本科">{tc("bachelor")}</SelectItem>
-                <SelectItem value="硕士">{tc("master")}</SelectItem>
-                <SelectItem value="博士">{tc("doctor")}</SelectItem>
+                <SelectItem value="初中">{tc('juniorHigh')}</SelectItem>
+                <SelectItem value="中专">{tc('technical')}</SelectItem>
+                <SelectItem value="高中">{tc('highSchool')}</SelectItem>
+                <SelectItem value="大专">{tc('associate')}</SelectItem>
+                <SelectItem value="本科">{tc('bachelor')}</SelectItem>
+                <SelectItem value="硕士">{tc('master')}</SelectItem>
+                <SelectItem value="博士">{tc('doctor')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>{tc("homeAddress")}</Label>
+            <Label>{tc('homeAddress')}</Label>
             <Input
               value={form.home_address || ''}
               onChange={(e) => setForm({ ...form, home_address: e.target.value })}
-              placeholder={tc("enterHomeAddress")}
+              placeholder={tc('enterHomeAddress')}
             />
           </div>
           <div className="space-y-2">
-            <Label>{tc("currentAddress")}</Label>
+            <Label>{tc('currentAddress')}</Label>
             <Input
               value={form.current_address || ''}
               onChange={(e) => setForm({ ...form, current_address: e.target.value })}
-              placeholder={tc("enterCurrentAddress")}
+              placeholder={tc('enterCurrentAddress')}
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {tc("cancel")}
+            {tc('cancel')}
           </Button>
           <Button onClick={onSave} className="bg-blue-600 hover:bg-blue-700">
-            {editing ? t("update") : t("create")}
+            {editing ? t('update') : t('create')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -189,16 +189,25 @@ export default function QualityFinalPage() {
       if (USE_MOCK) {
         logger.info({ module: 'Quality', action: 'fetchFinals' }, '使用 mock 数据');
         setFinals(mockQualityFinal);
-        const pendingCount = mockQualityFinal.filter((f: FinalInspect) => f.burdening_status === 1).length;
-        const inspectingCount = mockQualityFinal.filter((f: FinalInspect) => f.burdening_status === 2).length;
-        const passedCount = mockQualityFinal.filter((f: FinalInspect) => f.burdening_status === 3).length;
+        const pendingCount = mockQualityFinal.filter(
+          (f: FinalInspect) => f.burdening_status === 1
+        ).length;
+        const inspectingCount = mockQualityFinal.filter(
+          (f: FinalInspect) => f.burdening_status === 2
+        ).length;
+        const passedCount = mockQualityFinal.filter(
+          (f: FinalInspect) => f.burdening_status === 3
+        ).length;
         setStats({
           pending: pendingCount,
           inspecting: inspectingCount,
           passed: passedCount,
           today: mockQualityFinal.length,
           week: mockQualityFinal.length,
-          passRate: mockQualityFinal.length > 0 ? Math.round((passedCount / mockQualityFinal.length) * 100) : 0,
+          passRate:
+            mockQualityFinal.length > 0
+              ? Math.round((passedCount / mockQualityFinal.length) * 100)
+              : 0,
         });
         return;
       }
@@ -207,7 +216,7 @@ export default function QualityFinalPage() {
       const data = await res.json();
       if (data.success) {
         const rawData = data.data;
-        const rawList = Array.isArray(rawData) ? rawData : (rawData?.list || []);
+        const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
         const list = rawList.map((item: any) => ({
           id: item.id,
           card_no: item.cardNo || item.card_no,
@@ -248,10 +257,14 @@ export default function QualityFinalPage() {
           week: list.length,
           passRate: list.length > 0 ? Math.round((passedCount / list.length) * 100) : 0,
         });
-        logger.info({ module: 'Quality', action: 'fetchFinals' }, '终检数据获取成功', { count: list.length });
+        logger.info({ module: 'Quality', action: 'fetchFinals' }, '终检数据获取成功', {
+          count: list.length,
+        });
       }
     } catch (error) {
-      logger.error({ module: 'Quality', action: 'fetchFinals' }, '获取终检数据失败', { error: (error as Error).message });
+      logger.error({ module: 'Quality', action: 'fetchFinals' }, '获取终检数据失败', {
+        error: (error as Error).message,
+      });
     } finally {
       setLoading(false);
     }
@@ -339,7 +352,7 @@ export default function QualityFinalPage() {
 
       setIsFinalOpen(false);
       alert(t('finalInspectionSubmitted'));
-    } catch (error) {
+    } catch {
       alert(t('submissionFailed'));
     } finally {
       setLoading(false);
@@ -366,8 +379,7 @@ export default function QualityFinalPage() {
       });
       setQrCodeDataUrl(dataUrl);
       setIsQRCodeOpen(true);
-    } catch (error) {
-    }
+    } catch {}
   };
 
   // 生成报告
@@ -512,17 +524,26 @@ export default function QualityFinalPage() {
                     { key: 'product_code', label: tc('productCode'), width: 15 },
                     { key: 'material_spec', label: tc('specification'), width: 15 },
                     { key: 'plan_qty', label: tc('quantity'), width: 10 },
-                    { key: 'burdening_status', label: tc('status'), width: 12, formatter: (v) => {
-                      const m: Record<number, string> = {
-                        0: t('pendingProduction'),
-                        1: t('scheduled'),
-                        2: t('pendingFinalInspection'),
-                        3: t('finalInspectionCompleted'),
-                      };
-                      return m[v] || tc('unknown');
-                    } },
+                    {
+                      key: 'burdening_status',
+                      label: tc('status'),
+                      width: 12,
+                      formatter: (v) => {
+                        const m: Record<number, string> = {
+                          0: t('pendingProduction'),
+                          1: t('scheduled'),
+                          2: t('pendingFinalInspection'),
+                          3: t('finalInspectionCompleted'),
+                        };
+                        return m[v] || tc('unknown');
+                      },
+                    },
                   ]}
-                  data={selectedIds.length > 0 ? filteredFinals.filter((f) => selectedIds.includes(f.id)) : filteredFinals}
+                  data={
+                    selectedIds.length > 0
+                      ? filteredFinals.filter((f) => selectedIds.includes(f.id))
+                      : filteredFinals
+                  }
                 />
               </div>
             </div>
@@ -532,9 +553,15 @@ export default function QualityFinalPage() {
         {/* 终检列表 */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="all">{tc('all')} ({finals.length})</TabsTrigger>
-            <TabsTrigger value="pending">{t('pendingFinalInspection')} ({stats.pending})</TabsTrigger>
-            <TabsTrigger value="passed">{t('finalInspectionCompleted')} ({stats.passed})</TabsTrigger>
+            <TabsTrigger value="all">
+              {tc('all')} ({finals.length})
+            </TabsTrigger>
+            <TabsTrigger value="pending">
+              {t('pendingFinalInspection')} ({stats.pending})
+            </TabsTrigger>
+            <TabsTrigger value="passed">
+              {t('finalInspectionCompleted')} ({stats.passed})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-4">
@@ -558,7 +585,7 @@ export default function QualityFinalPage() {
                           }}
                         />
                       </TableHead>
-                      <TableHead className="w-12 text-center">{tc("serialNo")}</TableHead>
+                      <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
                       <SortableTableHeader
                         field="card_no"
                         sortField={sortField}
@@ -575,9 +602,9 @@ export default function QualityFinalPage() {
                       >
                         {t('productInfo')}
                       </SortableTableHeader>
-                      <TableHead>{tc("customer")}</TableHead>
+                      <TableHead>{tc('customer')}</TableHead>
                       <TableHead>{t('specificationRequirement')}</TableHead>
-                      <TableHead>{tc("quantity")}</TableHead>
+                      <TableHead>{tc('quantity')}</TableHead>
                       <TableHead>{t('packagingMethod')}</TableHead>
                       <SortableTableHeader
                         field="status"
@@ -587,7 +614,7 @@ export default function QualityFinalPage() {
                       >
                         {tc('status')}
                       </SortableTableHeader>
-                      <TableHead>{tc("actions")}</TableHead>
+                      <TableHead>{tc('actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -637,8 +664,12 @@ export default function QualityFinalPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col text-sm">
-                            <span>{t('size')}: {final.finished_size}</span>
-                            <span>{t('tolerance')}: {final.tolerance}</span>
+                            <span>
+                              {t('size')}: {final.finished_size}
+                            </span>
+                            <span>
+                              {t('tolerance')}: {final.tolerance}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>{(final.plan_qty ?? 0).toLocaleString()}</TableCell>
@@ -646,7 +677,8 @@ export default function QualityFinalPage() {
                           <div className="flex flex-col text-sm">
                             <span>{final.packing_type}</span>
                             <span className="text-xs text-muted-foreground">
-                              {final.slice_per_box}{t('slicePerBox')}
+                              {final.slice_per_box}
+                              {t('slicePerBox')}
                             </span>
                           </div>
                         </TableCell>
@@ -715,7 +747,9 @@ export default function QualityFinalPage() {
                 <div className="space-y-6 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('processInfo')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('processInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">{t('cardNo')}:</span>
                         <span>{selectedFinal.card_no}</span>
@@ -729,7 +763,9 @@ export default function QualityFinalPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('productInfo')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('productInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">{tc('productName')}:</span>
                         <span>{selectedFinal.product_name}</span>
@@ -744,7 +780,9 @@ export default function QualityFinalPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">{t('specificationAndPackaging')}</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">
+                      {t('specificationAndPackaging')}
+                    </h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div className="space-y-2">
                         <span className="text-muted-foreground">{t('finishedSize')}:</span>
@@ -761,14 +799,18 @@ export default function QualityFinalPage() {
                       <div className="space-y-2">
                         <span className="text-muted-foreground">{t('packingSpec')}:</span>
                         <span>
-                          {selectedFinal.slice_per_box}{t('slicePerBox')} × {selectedFinal.slice_per_bundle}{t('slicePerBundle')}
+                          {selectedFinal.slice_per_box}
+                          {t('slicePerBox')} × {selectedFinal.slice_per_bundle}
+                          {t('slicePerBundle')}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">{t('processFlow')}</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">
+                      {t('processFlow')}
+                    </h4>
                     <div className="flex items-center gap-2 flex-wrap">
                       {selectedFinal.process_flow1
                         ?.split('-')
@@ -977,7 +1019,7 @@ export default function QualityFinalPage() {
                   </div>
 
                   <div className="space-y-3">
-                    <Label>{tc("remark")}</Label>
+                    <Label>{tc('remark')}</Label>
                     <Textarea
                       placeholder={t('enterFinalInspectionRemark')}
                       value={finalForm.remark}
@@ -1023,7 +1065,9 @@ export default function QualityFinalPage() {
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-blue-600">{stats.pending}</div>
-                    <div className="text-sm text-muted-foreground">{t('pendingFinalInspection')}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {t('pendingFinalInspection')}
+                    </div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -1035,7 +1079,9 @@ export default function QualityFinalPage() {
                 <Card>
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-green-600">{stats.passed}</div>
-                    <div className="text-sm text-muted-foreground">{t('finalInspectionCompleted')}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {t('finalInspectionCompleted')}
+                    </div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -1065,10 +1111,10 @@ export default function QualityFinalPage() {
                     <TableRow>
                       <TableHead>{t('cardNo')}</TableHead>
                       <TableHead>{tc('productName')}</TableHead>
-                      <TableHead>{tc("customer")}</TableHead>
-                      <TableHead>{tc("specification")}</TableHead>
-                      <TableHead>{tc("quantity")}</TableHead>
-                      <TableHead>{tc("status")}</TableHead>
+                      <TableHead>{tc('customer')}</TableHead>
+                      <TableHead>{tc('specification')}</TableHead>
+                      <TableHead>{tc('quantity')}</TableHead>
+                      <TableHead>{tc('status')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1089,11 +1135,15 @@ export default function QualityFinalPage() {
               <div className="grid grid-cols-3 gap-8 pt-8 border-t mt-8">
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">{t('finalInspectorSignature')}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {t('finalInspectorSignature')}
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>
-                  <div className="text-sm text-muted-foreground">{t('qualityManagerSignature')}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {t('qualityManagerSignature')}
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="h-16 border-b border-dashed mb-2"></div>

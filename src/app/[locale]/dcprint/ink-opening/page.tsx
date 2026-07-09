@@ -69,33 +69,47 @@ interface InkOpeningRecord {
 }
 
 const INK_TYPE_MAP: Record<string, { label: string; color: string }> = {
-  solvent: { label: '溶剂型', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
-  uv: { label: 'UV型', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' },
-  water: { label: '水性', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' },
+  solvent: {
+    label: tc('text_gm8xr'),
+    color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+  },
+  uv: {
+    label: tc('text_2adm'),
+    color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+  },
+  water: {
+    label: tc('text_ixkj'),
+    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  },
 };
 
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
   1: {
-    label: '使用中',
+    label: tc('text_c7jd0'),
     color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
   },
-  2: { label: '已过期', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
-  3: { label: '已报废', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  2: {
+    label: tc('text_ege5m'),
+    color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  },
+  3: {
+    label: tc('text_e8o3w'),
+    color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+  },
 };
 
 const EXPIRE_HOURS_OPTIONS = [
-  { value: 24, label: '24小时' },
-  { value: 48, label: '48小时' },
-  { value: 72, label: '72小时' },
-  { value: 96, label: '96小时' },
-  { value: 120, label: '120小时' },
-  { value: 168, label: '168小时(7天)' },
-  { value: 336, label: '336小时(14天)' },
-  { value: 720, label: '720小时(30天)' },
+  { value: 24, label: tc('text_1d7rd') },
+  { value: 48, label: tc('text_1ekp7') },
+  { value: 72, label: tc('text_1gd7m') },
+  { value: 96, label: tc('text_1hq5g') },
+  { value: 120, label: tc('text_sb1va') },
+  { value: 168, label: tc('text_upeg2f') },
+  { value: 336, label: tc('text_3alp3m') },
+  { value: 720, label: tc('text_h9z2vr') },
 ];
 
 export default function InkOpeningPage() {
-
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -149,7 +163,7 @@ export default function InkOpeningPage() {
         if (data.data?.summary) setSummary(data.data.summary);
         if (data.data?.overdue_list) setOverdueList(data.data.overdue_list);
       }
-    } catch (e) {
+    } catch {
       toast({ title: '获取油墨开罐记录失败', variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -163,8 +177,7 @@ export default function InkOpeningPage() {
       if (data.success) {
         setMaterials(data.data?.list || data.data || []);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -216,7 +229,7 @@ export default function InkOpeningPage() {
       } else {
         toast({ title: data.message || '创建失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '创建油墨开罐记录失败', variant: 'destructive' });
     }
   };
@@ -235,7 +248,7 @@ export default function InkOpeningPage() {
       } else {
         toast({ title: data.message || '更新失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '更新失败', variant: 'destructive' });
     }
   };
@@ -251,7 +264,7 @@ export default function InkOpeningPage() {
       } else {
         toast({ title: data.message || '删除失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '删除失败', variant: 'destructive' });
     }
   };
@@ -278,44 +291,50 @@ export default function InkOpeningPage() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">使用中</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc('text_c7jd0')}</CardTitle>
               <Droplets className="h-4 w-4 text-green-600 dark:text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{summary.using_count}</div>
-              <p className="text-xs text-muted-foreground mt-1">当前正在使用的油墨</p>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                {summary.using_count}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{tc('text_b9271x')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">已过期</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc('text_ege5m')}</CardTitle>
               <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">{summary.expired_count}</div>
-              <p className="text-xs text-muted-foreground mt-1">已过期的油墨记录</p>
+              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                {summary.expired_count}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{tc('text_tqjk0e')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">即将过期</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc('text_ax323v')}</CardTitle>
               <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                 {summary.overdue_using_count}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">使用中但已超时</p>
+              <p className="text-xs text-muted-foreground mt-1">{tc('text_o676in')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">已报废</CardTitle>
+              <CardTitle className="text-sm font-medium">{tc('text_e8o3w')}</CardTitle>
               <Trash2 className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{summary.scrapped_count}</div>
-              <p className="text-xs text-muted-foreground mt-1">已报废处理的油墨</p>
+              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">
+                {summary.scrapped_count}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{tc('text_dl7x6j')}</p>
             </CardContent>
           </Card>
         </div>
@@ -325,22 +344,22 @@ export default function InkOpeningPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
                 <AlertTriangle className="h-5 w-5" />
-                过期预警
+                {tc('text_ikomu2')}
               </CardTitle>
               <CardDescription className="text-red-600 dark:text-red-400">
-                以下油墨已超过有效使用时间，请及时处理！
+                {tc('text_4skp25')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>记录单号</TableHead>
-                    <TableHead>油墨名称</TableHead>
-                    <TableHead>油墨类型</TableHead>
-                    <TableHead>开罐时间</TableHead>
-                    <TableHead>过期时间</TableHead>
-                    <TableHead>{tc("actions")}</TableHead>
+                    <TableHead>{tc('text_i0myef')}</TableHead>
+                    <TableHead>{tc('text_e32i1e')}</TableHead>
+                    <TableHead>{tc('text_e396tb')}</TableHead>
+                    <TableHead>{tc('text_ciieby')}</TableHead>
+                    <TableHead>{tc('text_ikg3cm')}</TableHead>
+                    <TableHead>{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -354,14 +373,16 @@ export default function InkOpeningPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>{r.open_time}</TableCell>
-                      <TableCell className="text-red-600 font-medium dark:text-red-400">{r.expire_time}</TableCell>
+                      <TableCell className="text-red-600 font-medium dark:text-red-400">
+                        {r.expire_time}
+                      </TableCell>
                       <TableCell>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleStatusChange(r.id, 2)}
                         >
-                          标记过期
+                          {tc('text_dpi4xt')}
                         </Button>
                         <Button
                           size="sm"
@@ -369,7 +390,7 @@ export default function InkOpeningPage() {
                           className="ml-1"
                           onClick={() => handleStatusChange(r.id, 3)}
                         >
-                          标记报废
+                          {tc('text_dpaew3')}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -384,8 +405,8 @@ export default function InkOpeningPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>油墨开罐记录</CardTitle>
-                <CardDescription>管理所有油墨开罐计时记录</CardDescription>
+                <CardTitle>{tc('text_tjkjgc')}</CardTitle>
+                <CardDescription>{tc('text_ws0d89')}</CardDescription>
               </div>
               <div className="flex gap-2">
                 <div className="relative w-64">
@@ -400,13 +421,13 @@ export default function InkOpeningPage() {
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-28">
-                    <SelectValue placeholder={tc("status")} />
+                    <SelectValue placeholder={tc('status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部状态</SelectItem>
-                    <SelectItem value="1">使用中</SelectItem>
-                    <SelectItem value="2">已过期</SelectItem>
-                    <SelectItem value="3">已报废</SelectItem>
+                    <SelectItem value="all">{tc('text_avez63')}</SelectItem>
+                    <SelectItem value="1">{tc('text_c7jd0')}</SelectItem>
+                    <SelectItem value="2">{tc('text_ege5m')}</SelectItem>
+                    <SelectItem value="3">{tc('text_e8o3w')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={inkTypeFilter} onValueChange={setInkTypeFilter}>
@@ -414,19 +435,19 @@ export default function InkOpeningPage() {
                     <SelectValue placeholder="油墨类型" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部类型</SelectItem>
-                    <SelectItem value="solvent">溶剂型</SelectItem>
-                    <SelectItem value="uv">UV型</SelectItem>
-                    <SelectItem value="water">水性</SelectItem>
+                    <SelectItem value="all">{tc('text_avglbk')}</SelectItem>
+                    <SelectItem value="solvent">{tc('text_gm8xr')}</SelectItem>
+                    <SelectItem value="uv">{tc('text_2adm')}</SelectItem>
+                    <SelectItem value="water">{tc('text_ixkj')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" onClick={fetchRecords}>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  刷新
+                  {tc('text_ejix')}
                 </Button>
                 <Button onClick={() => setDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  新增开罐
+                  {tc('text_d767cu')}
                 </Button>
               </div>
             </div>
@@ -435,24 +456,24 @@ export default function InkOpeningPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>记录单号</TableHead>
-                  <TableHead>油墨名称</TableHead>
-                  <TableHead>油墨类型</TableHead>
-                  <TableHead>批号</TableHead>
-                  <TableHead>开罐时间</TableHead>
-                  <TableHead>有效时长</TableHead>
-                  <TableHead>过期时间</TableHead>
-                  <TableHead>剩余时间</TableHead>
-                  <TableHead>剩余数量</TableHead>
-                  <TableHead>{tc("status")}</TableHead>
-                  <TableHead>{tc("actions")}</TableHead>
+                  <TableHead>{tc('text_i0myef')}</TableHead>
+                  <TableHead>{tc('text_e32i1e')}</TableHead>
+                  <TableHead>{tc('text_e396tb')}</TableHead>
+                  <TableHead>{tc('text_h7ku')}</TableHead>
+                  <TableHead>{tc('text_ciieby')}</TableHead>
+                  <TableHead>{tc('text_df6ktk')}</TableHead>
+                  <TableHead>{tc('text_ikg3cm')}</TableHead>
+                  <TableHead>{tc('text_aqbiku')}</TableHead>
+                  <TableHead>{tc('text_aqbejz')}</TableHead>
+                  <TableHead>{tc('status')}</TableHead>
+                  <TableHead>{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {records.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
-                      暂无油墨开罐记录
+                      {tc('text_cd9ztu')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -480,7 +501,10 @@ export default function InkOpeningPage() {
                         </TableCell>
                         <TableCell className="font-mono">{r.batch_no || '-'}</TableCell>
                         <TableCell>{r.open_time}</TableCell>
-                        <TableCell>{r.expire_hours}小时</TableCell>
+                        <TableCell>
+                          {r.expire_hours}
+                          {tc('text_g7uv')}
+                        </TableCell>
                         <TableCell>{r.expire_time}</TableCell>
                         <TableCell>
                           {timeRemaining ? (
@@ -555,13 +579,13 @@ export default function InkOpeningPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="sm:max-w-[550px]" resizable>
             <DialogHeader>
-              <DialogTitle>新增油墨开罐记录</DialogTitle>
-              <DialogDescription>记录油墨开罐信息，系统将自动计算过期时间</DialogDescription>
+              <DialogTitle>{tc('text_q7y77y')}</DialogTitle>
+              <DialogDescription>{tc('text_ue1msy')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>物料编码</Label>
+                  <Label>{tc('text_euzqpn')}</Label>
                   <Input
                     value={form.material_code}
                     onChange={(e) =>
@@ -571,7 +595,7 @@ export default function InkOpeningPage() {
                   />
                 </div>
                 <div>
-                  <Label>物料名称</Label>
+                  <Label>{tc('text_eusfkj')}</Label>
                   <Input
                     value={form.material_name}
                     onChange={(e) =>
@@ -583,7 +607,7 @@ export default function InkOpeningPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>油墨类型</Label>
+                  <Label>{tc('text_e396tb')}</Label>
                   <Select
                     value={form.ink_type}
                     onValueChange={(v) => setForm((prev) => ({ ...prev, ink_type: v }))}
@@ -592,24 +616,24 @@ export default function InkOpeningPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="solvent">溶剂型</SelectItem>
-                      <SelectItem value="uv">UV型</SelectItem>
-                      <SelectItem value="water">水性</SelectItem>
+                      <SelectItem value="solvent">{tc('text_gm8xr')}</SelectItem>
+                      <SelectItem value="uv">{tc('text_2adm')}</SelectItem>
+                      <SelectItem value="water">{tc('text_ixkj')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>批号</Label>
+                  <Label>{tc('text_h7ku')}</Label>
                   <Input
                     value={form.batch_no}
                     onChange={(e) => setForm((prev) => ({ ...prev, batch_no: e.target.value }))}
-                    placeholder={tc("batchNo")}
+                    placeholder={tc('batchNo')}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>开罐时间 *</Label>
+                  <Label>{tc('text_lx3btk')}</Label>
                   <Input
                     type="datetime-local"
                     value={form.open_time}
@@ -617,7 +641,7 @@ export default function InkOpeningPage() {
                   />
                 </div>
                 <div>
-                  <Label>有效时长 *</Label>
+                  <Label>{tc('text_tbw5qm')}</Label>
                   <Select
                     value={String(form.expire_hours)}
                     onValueChange={(v) =>
@@ -639,7 +663,7 @@ export default function InkOpeningPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>剩余数量</Label>
+                  <Label>{tc('text_aqbejz')}</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -651,7 +675,7 @@ export default function InkOpeningPage() {
                   />
                 </div>
                 <div>
-                  <Label>{tc("unit")}</Label>
+                  <Label>{tc('unit')}</Label>
                   <Select
                     value={form.unit}
                     onValueChange={(v) => setForm((prev) => ({ ...prev, unit: v }))}
@@ -662,20 +686,20 @@ export default function InkOpeningPage() {
                     <SelectContent>
                       <SelectItem value="kg">kg</SelectItem>
                       <SelectItem value="L">L</SelectItem>
-                      <SelectItem value="罐">罐</SelectItem>
+                      <SelectItem value="罐">{tc('text_p5c')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div>
-                <Label>操作员</Label>
+                <Label>{tc('text_f5hc9')}</Label>
                 <UserSelect
                   value={form.operator_name}
                   onChange={(v) => setForm((prev) => ({ ...prev, operator_name: v }))}
                 />
               </div>
               <div>
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={form.remark}
                   onChange={(e) => setForm((prev) => ({ ...prev, remark: e.target.value }))}
@@ -685,9 +709,9 @@ export default function InkOpeningPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
-              <Button onClick={handleCreate}>确认开罐</Button>
+              <Button onClick={handleCreate}>{tc('text_frqw1y')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -695,57 +719,58 @@ export default function InkOpeningPage() {
         <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
           <DialogContent className="sm:max-w-[500px]" resizable>
             <DialogHeader>
-              <DialogTitle>油墨开罐详情</DialogTitle>
+              <DialogTitle>{tc('text_tjkhvm')}</DialogTitle>
             </DialogHeader>
             {detailData && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">记录单号：</span>
+                    <span className="text-muted-foreground">{tc('text_9p3ezx')}</span>
                     {detailData.record_no}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">物料编码：</span>
+                    <span className="text-muted-foreground">{tc('text_yi52m7')}</span>
                     {detailData.material_code}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">物料名称：</span>
+                    <span className="text-muted-foreground">{tc('text_ybuh7r')}</span>
                     {detailData.material_name}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">油墨类型：</span>
+                    <span className="text-muted-foreground">{tc('text_am9xrv')}</span>
                     <Badge className={INK_TYPE_MAP[detailData.ink_type]?.color || 'bg-gray-100'}>
                       {INK_TYPE_MAP[detailData.ink_type]?.label || detailData.ink_type}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">批号：</span>
+                    <span className="text-muted-foreground">{tc('text_euxbw')}</span>
                     {detailData.batch_no || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">有效时长：</span>
-                    {detailData.expire_hours}小时
+                    <span className="text-muted-foreground">{tc('text_a3z00e')}</span>
+                    {detailData.expire_hours}
+                    {tc('text_g7uv')}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">开罐时间：</span>
+                    <span className="text-muted-foreground">{tc('text_wsbgss')}</span>
                     {detailData.open_time}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">过期时间：</span>
+                    <span className="text-muted-foreground">{tc('text_7czug4')}</span>
                     {detailData.expire_time}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">剩余数量：</span>
+                    <span className="text-muted-foreground">{tc('text_mhpcad')}</span>
                     {detailData.remaining_qty
                       ? `${detailData.remaining_qty} ${detailData.unit}`
                       : '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">操作员：</span>
+                    <span className="text-muted-foreground">{tc('text_d1rbxt')}</span>
                     {detailData.operator_name || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">状态：</span>
+                    <span className="text-muted-foreground">{tc('text_halin')}</span>
                     <Badge className={STATUS_MAP[detailData.status]?.color || 'bg-gray-100'}>
                       {STATUS_MAP[detailData.status]?.label || detailData.status}
                     </Badge>
@@ -753,7 +778,7 @@ export default function InkOpeningPage() {
                 </div>
                 {detailData.remark && (
                   <div className="text-sm">
-                    <span className="text-muted-foreground">备注：</span>
+                    <span className="text-muted-foreground">{tc('text_dld2x')}</span>
                     {detailData.remark}
                   </div>
                 )}

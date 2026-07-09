@@ -30,23 +30,23 @@ export function initializeApplication(): void {
       const redisClient = getRedisClientIfAvailable();
       if (redisClient && !streamConsumer) {
         streamConsumer = new StreamConsumer(redisClient);
-        streamConsumer
-          .start()
-          .catch((err) => {
-            secureLog('error', 'StreamConsumer start failed', { error: String(err) });
-            streamConsumer = null;
-          });
+        streamConsumer.start().catch((err) => {
+          secureLog('error', 'StreamConsumer start failed', { error: String(err) });
+          streamConsumer = null;
+        });
         secureLog('info', 'StreamConsumer auto-started (Redis available)');
       } else if (!redisClient) {
-        secureLog('info', 'StreamConsumer not started (Redis unavailable, OutboxPoller using direct publish)');
+        secureLog(
+          'info',
+          'StreamConsumer not started (Redis unavailable, OutboxPoller using direct publish)'
+        );
       }
     } else {
       secureLog('info', 'OutboxPoller not started (EVENT_BUS_TYPE=memory)');
     }
 
     initialized = true;
-  } catch (error) {
-  }
+  } catch {}
 }
 
 export function getInitializationStatus(): boolean {

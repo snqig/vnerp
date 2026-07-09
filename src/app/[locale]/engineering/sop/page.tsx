@@ -57,7 +57,6 @@ interface SOPRecord {
 }
 
 export default function SOPManagementPage() {
-
   const t = useTranslations('Engineering');
   const tc = useTranslations('Common');
 
@@ -110,7 +109,7 @@ export default function SOPManagementPage() {
       } else {
         toast({ title: t('uploadFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: t('uploadFailed'), variant: 'destructive' });
     } finally {
       setUploading(false);
@@ -142,8 +141,7 @@ export default function SOPManagementPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -166,7 +164,7 @@ export default function SOPManagementPage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -180,7 +178,7 @@ export default function SOPManagementPage() {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -446,7 +444,10 @@ export default function SOPManagementPage() {
                       size="sm"
                       variant="outline"
                       onClick={() =>
-                        handleDownload(editItem.file_url!, editItem.sop_name || t('defaultSopFileName'))
+                        handleDownload(
+                          editItem.file_url!,
+                          editItem.sop_name || t('defaultSopFileName')
+                        )
                       }
                     >
                       <Download className="h-3 w-3 mr-1" />
@@ -455,7 +456,9 @@ export default function SOPManagementPage() {
                   )}
                 </div>
                 {editItem.file_url && (
-                  <p className="text-xs text-muted-foreground mt-1">{t('uploaded')}: {editItem.file_url}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('uploaded')}: {editItem.file_url}
+                  </p>
                 )}
                 {uploading && <p className="text-xs text-blue-500 mt-1">{t('uploading')}...</p>}
               </div>

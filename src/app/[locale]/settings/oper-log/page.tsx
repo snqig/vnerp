@@ -54,24 +54,23 @@ export default function OperLogPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
   useEffect(() => {
     fetchData();
   }, [page]);
 
   const handleClear = async () => {
-    if (!confirm(tc("confirmClearOperLogs"))) return;
+    if (!confirm(tc('confirmClearOperLogs'))) return;
     try {
       const res = await authFetch('/api/system/oper-log', { method: 'DELETE' });
       const result = await res.json();
       if (result.success) {
-        toast({ title: tc("clearSuccess") });
+        toast({ title: tc('clearSuccess') });
         fetchData();
       }
-    } catch (e) {
-      toast({ title: tc("failed"), variant: 'destructive' });
+    } catch {
+      toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
 
@@ -79,11 +78,11 @@ export default function OperLogPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t("operLog")}</h1>
+          <h1 className="text-2xl font-bold">{t('operLog')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchOperTitle")}
+                placeholder={tc('searchOperTitle')}
                 value={searchTitle}
                 onChange={(e) => setSearchTitle(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -93,7 +92,7 @@ export default function OperLogPage() {
               </Button>
             </div>
             <Button size="sm" variant="destructive" onClick={handleClear}>
-              {tc("clearLogs")}
+              {tc('clearLogs')}
             </Button>
           </div>
         </div>
@@ -102,14 +101,14 @@ export default function OperLogPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">{tc("operTitle")}</TableHead>
-                  <TableHead className="text-xs">{tc("operator")}</TableHead>
-                  <TableHead className="text-xs">{tc("operType")}</TableHead>
-                  <TableHead className="text-xs">{tc("requestMethod")}</TableHead>
-                  <TableHead className="text-xs">{tc("operUrl")}</TableHead>
-                  <TableHead className="text-xs">{tc("ipAddress")}</TableHead>
-                  <TableHead className="text-xs">{tc("operTime")}</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
+                  <TableHead className="text-xs">{tc('operTitle')}</TableHead>
+                  <TableHead className="text-xs">{tc('operator')}</TableHead>
+                  <TableHead className="text-xs">{tc('operType')}</TableHead>
+                  <TableHead className="text-xs">{tc('requestMethod')}</TableHead>
+                  <TableHead className="text-xs">{tc('operUrl')}</TableHead>
+                  <TableHead className="text-xs">{tc('ipAddress')}</TableHead>
+                  <TableHead className="text-xs">{tc('operTime')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -129,7 +128,7 @@ export default function OperLogPage() {
                         variant={item.status === 1 ? 'default' : 'destructive'}
                         className="text-xs"
                       >
-                        {item.status === 1 ? tc("success") : tc("failed")}
+                        {item.status === 1 ? tc('success') : tc('failed')}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -137,7 +136,7 @@ export default function OperLogPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-gray-400 py-8">
-                      {tc("noRecords")}
+                      {tc('noRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -146,7 +145,7 @@ export default function OperLogPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{tc("totalItems", { count: total })}</span>
+          <span className="text-sm text-gray-500">{tc('totalItems', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -154,7 +153,7 @@ export default function OperLogPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc("prevPage")}
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -162,7 +161,7 @@ export default function OperLogPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc("nextPage")}
+              {tc('nextPage')}
             </Button>
           </div>
         </div>

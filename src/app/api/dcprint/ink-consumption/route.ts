@@ -3,7 +3,7 @@ import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const workorderNo = searchParams.get('workorderNo') || '';
   const period = searchParams.get('period') || 'month';
@@ -53,8 +53,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     `,
       params
     );
-  } catch (e) {
-  }
+  } catch {}
 
   let inkTypeSummary: any[] = [];
   try {
@@ -76,8 +75,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     `,
       params
     );
-  } catch (e) {
-  }
+  } catch {}
 
   let topWasteItems: any[] = [];
   try {
@@ -102,8 +100,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     `,
       params
     );
-  } catch (e) {
-  }
+  } catch {}
 
   let dailyTrend: any[] = [];
   try {
@@ -122,8 +119,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     `,
       params
     );
-  } catch (e) {
-  }
+  } catch {}
 
   const summary: any = {
     total_dispatch: 0,
@@ -166,8 +162,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
           ? Math.round((summary.total_consumed / Number(s.dispatch_count)) * 100) / 100
           : 0;
     }
-  } catch (e) {
-  }
+  } catch {}
 
   return successResponse({
     summary,

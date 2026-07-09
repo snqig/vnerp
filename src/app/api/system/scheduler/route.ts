@@ -11,7 +11,7 @@ import { query, execute } from '@/lib/db';
 
 // 获取定时任务列表
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
@@ -64,8 +64,11 @@ export const POST = withPermission(
        (task_name, task_type, task_group, cron_expression, description, config, status, create_by, create_time)
        VALUES (?, ?, ?, ?, ?, ?, 'active', ?, NOW())`,
       [
-        task_name, task_type, task_group || 'default',
-        cron_expression, description || null,
+        task_name,
+        task_type,
+        task_group || 'default',
+        cron_expression,
+        description || null,
         config ? JSON.stringify(config) : null,
         userInfo.userId,
       ]
@@ -78,7 +81,7 @@ export const POST = withPermission(
 
 // 更新任务状态
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
     const { id, action } = body;
 
@@ -149,10 +152,22 @@ export const PUT = withPermission(
       const updates: string[] = [];
       const params: any[] = [];
 
-      if (task_name) { updates.push('task_name = ?'); params.push(task_name); }
-      if (cron_expression) { updates.push('cron_expression = ?'); params.push(cron_expression); }
-      if (description !== undefined) { updates.push('description = ?'); params.push(description); }
-      if (config) { updates.push('config = ?'); params.push(JSON.stringify(config)); }
+      if (task_name) {
+        updates.push('task_name = ?');
+        params.push(task_name);
+      }
+      if (cron_expression) {
+        updates.push('cron_expression = ?');
+        params.push(cron_expression);
+      }
+      if (description !== undefined) {
+        updates.push('description = ?');
+        params.push(description);
+      }
+      if (config) {
+        updates.push('config = ?');
+        params.push(JSON.stringify(config));
+      }
 
       if (updates.length === 0) {
         return errorResponse('没有需要更新的字段', 400, 400);
@@ -170,7 +185,7 @@ export const PUT = withPermission(
 
 // 删除任务
 export const DELETE = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) return errorResponse('任务ID不能为空', 400, 400);
@@ -199,7 +214,9 @@ async function executeDataCleanup(config: string | null): Promise<string> {
     try {
       const cfg = JSON.parse(config);
       retentionDays = cfg.retentionDays || 180;
-    } catch (e) { /* use default */ }
+    } catch {
+      /* use default */
+    }
   }
 
   const result: any = await execute(
@@ -210,5 +227,5 @@ async function executeDataCleanup(config: string | null): Promise<string> {
 }
 
 async function executeReportGeneration(config: string | null): Promise<string> {
-  return '报表生成任务已触发（异步执行中）';
+  return tc('text_6w0nzd');
 }

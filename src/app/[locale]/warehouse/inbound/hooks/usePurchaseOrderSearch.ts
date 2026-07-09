@@ -5,9 +5,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import type { InboundFormData, PurchaseOrder } from '../types';
 
-export function usePurchaseOrderSearch(
-  setFormData: Dispatch<SetStateAction<InboundFormData>>
-) {
+export function usePurchaseOrderSearch(setFormData: Dispatch<SetStateAction<InboundFormData>>) {
   const [poSearchResults, setPoSearchResults] = useState<PurchaseOrder[]>([]);
   const [poSearchLoading, setPoSearchLoading] = useState(false);
   const [poDropdownVisible, setPoDropdownVisible] = useState(false);
@@ -33,7 +31,7 @@ export function usePurchaseOrderSearch(
         setPoSearchResults([]);
         setPoDropdownVisible(false);
       }
-    } catch (error) {
+    } catch {
       setPoSearchResults([]);
       setPoDropdownVisible(false);
     } finally {

@@ -76,17 +76,17 @@ import { useTranslations } from 'next-intl';
 
 // 部门选项
 const departmentOptions = [
-  { value: 'all', label: '全部部门' },
-  { value: '管理部', label: '管理部' },
-  { value: '业务部', label: '业务部' },
-  { value: '生产部', label: '生产部' },
-  { value: '打样中心', label: '打样中心' },
-  { value: '采购部', label: '采购部' },
-  { value: '品质部', label: '品质部' },
-  { value: '模切', label: '模切' },
-  { value: '商标', label: '商标' },
-  { value: '其他', label: '其他' },
-  { value: '采购', label: '采购' },
+  { value: 'all', label: tc('text_avkeps') },
+  { value: tc('text_iof7n'), label: tc('text_iof7n') },
+  { value: tc('text_buoe9'), label: tc('text_buoe9') },
+  { value: tc('text_hjr0g'), label: tc('text_hjr0g') },
+  { value: tc('text_cu3n96'), label: tc('text_cu3n96') },
+  { value: tc('text_m1hlu'), label: tc('text_m1hlu') },
+  { value: tc('text_d3pkx'), label: tc('text_d3pkx') },
+  { value: tc('text_ii2u'), label: tc('text_ii2u') },
+  { value: tc('text_f2pt'), label: tc('text_f2pt') },
+  { value: tc('text_eae8'), label: tc('text_eae8') },
+  { value: tc('text_pkjq'), label: tc('text_pkjq') },
 ];
 
 // 考勤记录接口
@@ -146,9 +146,21 @@ export default function AttendancePage() {
       color: 'bg-green-100 text-green-700 border-green-200',
       icon: CheckCircle2,
     },
-    late: { label: tc('late'), color: 'bg-yellow-100 text-yellow-700 border-yellow-200', icon: Clock3 },
-    absent: { label: tc('absent'), color: 'bg-red-100 text-red-700 border-red-200', icon: AlertCircle },
-    leave: { label: tc('leave'), color: 'bg-blue-100 text-blue-700 border-blue-200', icon: Calendar },
+    late: {
+      label: tc('late'),
+      color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      icon: Clock3,
+    },
+    absent: {
+      label: tc('absent'),
+      color: 'bg-red-100 text-red-700 border-red-200',
+      icon: AlertCircle,
+    },
+    leave: {
+      label: tc('leave'),
+      color: 'bg-blue-100 text-blue-700 border-blue-200',
+      icon: Calendar,
+    },
   };
 
   const { companyName } = useCompanyName();
@@ -193,7 +205,7 @@ export default function AttendancePage() {
       if (data.success || data.code === 200) {
         // 统一处理API返回的数据结构
         const rawData = data.data;
-        const rawList = Array.isArray(rawData) ? rawData : (rawData?.list || []);
+        const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
         setAttendanceRecords(
           rawList.map((r: any, idx: number) => {
             let dateStr = r.attendanceDate || r.attendance_date || r.date || '';
@@ -222,7 +234,7 @@ export default function AttendancePage() {
           })
         );
       }
-    } catch (error) {
+    } catch {
     } finally {
       setIsLoading(false);
     }
@@ -425,7 +437,7 @@ export default function AttendancePage() {
       } else {
         toast.error(data.message || t('saveFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('saveRetry'));
     }
   };
@@ -458,7 +470,7 @@ export default function AttendancePage() {
       } else {
         toast.error(data.message || t('updateFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('updateRetry'));
     }
   };
@@ -481,7 +493,7 @@ export default function AttendancePage() {
       } else {
         toast.error(data.message || t('deleteFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('deleteRetry'));
     }
   };
@@ -574,7 +586,7 @@ export default function AttendancePage() {
     totalRecords > 0 ? Math.round(((totalRecords - absentRecords) / totalRecords) * 100) : 0;
 
   return (
-    <MainLayout title={t("attendance")}>
+    <MainLayout title={t('attendance')}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -582,8 +594,8 @@ export default function AttendancePage() {
               <Calendar className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">{t("attendance")}</h1>
-              <p className="text-muted-foreground">{t("manageAttendanceDesc")}</p>
+              <h1 className="text-2xl font-bold text-foreground">{t('attendance')}</h1>
+              <p className="text-muted-foreground">{t('manageAttendanceDesc')}</p>
             </div>
           </div>
         </div>
@@ -591,30 +603,30 @@ export default function AttendancePage() {
         <div className="flex flex-wrap items-center gap-3 bg-card p-4 rounded-xl shadow-sm border">
           <Button onClick={handleAdd} className="gap-2 bg-blue-600 hover:bg-blue-700">
             <Plus className="w-4 h-4" />
-            {tc("add")}
+            {tc('add')}
           </Button>
           <Button onClick={handlePrint} variant="outline" className="gap-2">
             <Printer className="w-4 h-4" />
-            {tc("print")}
+            {tc('print')}
           </Button>
           <div className="w-px h-8 bg-border mx-2" />
           <Button onClick={handleRefresh} variant="outline" className="gap-2" disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            {tc("refresh")}
+            {tc('refresh')}
           </Button>
           <Button onClick={handleReset} variant="outline" className="gap-2">
             <RotateCcw className="w-4 h-4" />
-            {tc("reset")}
+            {tc('reset')}
           </Button>
         </div>
 
         <div className="flex flex-wrap items-center gap-4 bg-card p-4 rounded-xl shadow-sm border">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">{tc("status")}：</span>
+            <span className="text-sm font-medium text-foreground">{tc('status')}：</span>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-32">
-                <SelectValue placeholder={tc("selectStatus")} />
+                <SelectValue placeholder={tc('selectStatus')} />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((option) => (
@@ -628,10 +640,10 @@ export default function AttendancePage() {
 
           <div className="flex items-center gap-2">
             <Building2 className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">{tc("department")}：</span>
+            <span className="text-sm font-medium text-foreground">{tc('department')}：</span>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
               <SelectTrigger className="w-32">
-                <SelectValue placeholder={tc("selectDepartment")} />
+                <SelectValue placeholder={tc('selectDepartment')} />
               </SelectTrigger>
               <SelectContent>
                 {departmentOptions.map((option) => (
@@ -645,9 +657,9 @@ export default function AttendancePage() {
 
           <div className="flex items-center gap-2">
             <Search className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">{tc("keyword")}：</span>
+            <span className="text-sm font-medium text-foreground">{tc('keyword')}：</span>
             <Input
-              placeholder={tc("searchPlaceholder")}
+              placeholder={tc('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-64"
@@ -662,7 +674,7 @@ export default function AttendancePage() {
                 <SelectValue placeholder={t('dateRange')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">{tc("all")}</SelectItem>
+                <SelectItem value="all">{tc('all')}</SelectItem>
                 <SelectItem value="today">{t('today')}</SelectItem>
                 <SelectItem value="week">{t('week')}</SelectItem>
                 <SelectItem value="month">{t('month')}</SelectItem>
@@ -762,17 +774,17 @@ export default function AttendancePage() {
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
-                    <SortableHeader field="date">{tc("date")}</SortableHeader>
-                    <SortableHeader field="employeeId">{tc("employeeNo")}</SortableHeader>
-                    <SortableHeader field="employeeName">{tc("name")}</SortableHeader>
-                    <SortableHeader field="department">{tc("department")}</SortableHeader>
-                    <SortableHeader field="checkIn">{tc("checkIn")}</SortableHeader>
-                    <SortableHeader field="checkOut">{tc("checkOut")}</SortableHeader>
-                    <SortableHeader field="workingHours">{tc("workingHours")}</SortableHeader>
-                    <SortableHeader field="overtimeHours">{tc("overtimeHours")}</SortableHeader>
-                    <SortableHeader field="status">{tc("status")}</SortableHeader>
-                    <TableHead className="text-center">{tc("remark")}</TableHead>
-                    <TableHead className="text-center">{tc("actions")}</TableHead>
+                    <SortableHeader field="date">{tc('date')}</SortableHeader>
+                    <SortableHeader field="employeeId">{tc('employeeNo')}</SortableHeader>
+                    <SortableHeader field="employeeName">{tc('name')}</SortableHeader>
+                    <SortableHeader field="department">{tc('department')}</SortableHeader>
+                    <SortableHeader field="checkIn">{tc('checkIn')}</SortableHeader>
+                    <SortableHeader field="checkOut">{tc('checkOut')}</SortableHeader>
+                    <SortableHeader field="workingHours">{tc('workingHours')}</SortableHeader>
+                    <SortableHeader field="overtimeHours">{tc('overtimeHours')}</SortableHeader>
+                    <SortableHeader field="status">{tc('status')}</SortableHeader>
+                    <TableHead className="text-center">{tc('remark')}</TableHead>
+                    <TableHead className="text-center">{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -792,8 +804,12 @@ export default function AttendancePage() {
                         <TableCell className="text-center">{record.department}</TableCell>
                         <TableCell className="text-center">{record.checkIn || '-'}</TableCell>
                         <TableCell className="text-center">{record.checkOut || '-'}</TableCell>
-                        <TableCell className="text-center">{record.workingHours} {tc("hours")}</TableCell>
-                        <TableCell className="text-center">{record.overtimeHours} {tc("hours")}</TableCell>
+                        <TableCell className="text-center">
+                          {record.workingHours} {tc('hours')}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {record.overtimeHours} {tc('hours')}
+                        </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-1">
                             <StatusIcon className="w-4 h-4" />
@@ -811,11 +827,11 @@ export default function AttendancePage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => handleEdit(record)}>
                                 <Edit className="mr-2 h-4 w-4" />
-                                {tc("edit")}
+                                {tc('edit')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleDelete(record)}>
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                {tc("delete")}
+                                {tc('delete')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -933,7 +949,7 @@ export default function AttendancePage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="workingHours">工作时长（自动计算）</Label>
+                <Label htmlFor="workingHours">{tc('text_mkn0t')}</Label>
                 <Input
                   id="workingHours"
                   type="number"
@@ -944,7 +960,7 @@ export default function AttendancePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="overtimeHours">加班时长</Label>
+                <Label htmlFor="overtimeHours">{tc('text_awniae')}</Label>
                 <Input
                   id="overtimeHours"
                   type="number"
@@ -955,22 +971,22 @@ export default function AttendancePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="remark">{tc("remark")}</Label>
+                <Label htmlFor="remark">{tc('remark')}</Label>
                 <Input
                   id="remark"
                   value={formData.remark}
                   onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                  placeholder={tc("enterRemark")}
+                  placeholder={tc('enterRemark')}
                 />
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              取消
+              {tc('text_ev02')}
             </Button>
             <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-              保存
+              {tc('text_e32z')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -980,8 +996,8 @@ export default function AttendancePage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-2xl" resizable>
           <DialogHeader>
-            <DialogTitle>编辑考勤记录</DialogTitle>
-            <DialogDescription>修改考勤记录信息，带 * 为必填项</DialogDescription>
+            <DialogTitle>{tc('text_438gv')}</DialogTitle>
+            <DialogDescription>{tc('text_6i9gwa')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
@@ -1071,7 +1087,7 @@ export default function AttendancePage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="workingHours">工作时长（自动计算）</Label>
+                <Label htmlFor="workingHours">{tc('text_mkn0t')}</Label>
                 <Input
                   id="workingHours"
                   type="number"
@@ -1082,7 +1098,7 @@ export default function AttendancePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="overtimeHours">加班时长</Label>
+                <Label htmlFor="overtimeHours">{tc('text_awniae')}</Label>
                 <Input
                   id="overtimeHours"
                   type="number"
@@ -1093,22 +1109,22 @@ export default function AttendancePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="remark">{tc("remark")}</Label>
+                <Label htmlFor="remark">{tc('remark')}</Label>
                 <Input
                   id="remark"
                   value={formData.remark}
                   onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                  placeholder={tc("enterRemark")}
+                  placeholder={tc('enterRemark')}
                 />
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              取消
+              {tc('text_ev02')}
             </Button>
             <Button onClick={handleUpdate} className="bg-blue-600 hover:bg-blue-700">
-              更新
+              {tc('text_i2ik')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1118,18 +1134,20 @@ export default function AttendancePage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md" resizable>
           <DialogHeader>
-            <DialogTitle>删除考勤记录</DialogTitle>
+            <DialogTitle>{tc('text_orkg0m')}</DialogTitle>
             <DialogDescription>
-              确定要删除 {currentRecord?.employeeName} 在 {currentRecord?.date}{' '}
-              的考勤记录吗？此操作不可撤销。
+              {tc('text_e7q3fr')}
+              {currentRecord?.employeeName}
+              {tc('text_h7s')}
+              {currentRecord?.date} {tc('text_ybol37')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              取消
+              {tc('text_ev02')}
             </Button>
             <Button onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
-              删除
+              {tc('text_eslg')}
             </Button>
           </DialogFooter>
         </DialogContent>

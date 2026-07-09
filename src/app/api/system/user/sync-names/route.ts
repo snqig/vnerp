@@ -3,7 +3,7 @@ import { execute, query } from '@/lib/db';
 import { withPermission } from '@/lib/api-permissions';
 
 export const POST = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (_request: NextRequest, _userInfo) => {
     if (process.env.NODE_ENV === 'production') {
       return NextResponse.json(
         { success: false, message: 'Not available in production' },

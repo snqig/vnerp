@@ -105,7 +105,8 @@ export default function ProductionProcessPage() {
       3: t('statusCompleted'),
     };
     const label = statusLabels[status] || tc('unknown');
-    const className = STATUS_CLASSES[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200';
+    const className =
+      STATUS_CLASSES[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200';
     return <Badge className={className}>{label}</Badge>;
   };
 
@@ -138,7 +139,7 @@ export default function ProductionProcessPage() {
       const data = await res.json();
 
       if (data.success) {
-        const processList = Array.isArray(data.data) ? data.data : (data.data?.list || []);
+        const processList = Array.isArray(data.data) ? data.data : data.data?.list || [];
         setProcesses(processList);
       } else {
         toast({
@@ -147,8 +148,12 @@ export default function ProductionProcessPage() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
-      toast({ title: t('error'), description: t('fetchProcessListFailed'), variant: 'destructive' });
+    } catch {
+      toast({
+        title: t('error'),
+        description: t('fetchProcessListFailed'),
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -206,16 +211,25 @@ export default function ProductionProcessPage() {
       });
       const data = await res.json();
       if (data.success) {
-        const statusLabels: Record<number, string> = {0: t('pendingSchedule'), 1: t('statusScheduled'), 2: t('statusProducing'), 3: t('statusCompleted')};
+        const statusLabels: Record<number, string> = {
+          0: t('pendingSchedule'),
+          1: t('statusScheduled'),
+          2: t('statusProducing'),
+          3: t('statusCompleted'),
+        };
         toast({
           title: t('success'),
           description: t('statusUpdated', { status: statusLabels[newStatus] || newStatus }),
         });
         fetchProcesses();
       } else {
-        toast({ title: t('error'), description: data.message || tc('updateFailed'), variant: 'destructive' });
+        toast({
+          title: t('error'),
+          description: data.message || tc('updateFailed'),
+          variant: 'destructive',
+        });
       }
-    } catch (error) {
+    } catch {
       toast({ title: t('error'), description: tc('updateFailed'), variant: 'destructive' });
     }
   };
@@ -295,10 +309,18 @@ export default function ProductionProcessPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="all">{tc('all')} ({processes.length})</TabsTrigger>
-            <TabsTrigger value="scheduled">{t('statusScheduled')} ({stats.scheduled})</TabsTrigger>
-            <TabsTrigger value="producing">{t('statusProducing')} ({stats.producing})</TabsTrigger>
-            <TabsTrigger value="completed">{t('statusCompleted')} ({stats.completed})</TabsTrigger>
+            <TabsTrigger value="all">
+              {tc('all')} ({processes.length})
+            </TabsTrigger>
+            <TabsTrigger value="scheduled">
+              {t('statusScheduled')} ({stats.scheduled})
+            </TabsTrigger>
+            <TabsTrigger value="producing">
+              {t('statusProducing')} ({stats.producing})
+            </TabsTrigger>
+            <TabsTrigger value="completed">
+              {t('statusCompleted')} ({stats.completed})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-4">
@@ -458,7 +480,9 @@ export default function ProductionProcessPage() {
                 <div className="space-y-6 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('processInfo')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('processInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">{t('processCardNo')}:</span>
                         <span>{selectedProcess.card_no}</span>
@@ -472,7 +496,9 @@ export default function ProductionProcessPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('productInfo')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('productInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">{t('productName')}:</span>
                         <span>{selectedProcess.product_name}</span>
@@ -488,7 +514,9 @@ export default function ProductionProcessPage() {
 
                   {(selectedProcess.film_manufacturer || selectedProcess.mold_code) && (
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('processInfo2')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('processInfo2')}
+                      </h4>
                       <div className="grid grid-cols-3 gap-2 text-sm">
                         <div>
                           <span className="text-muted-foreground">{t('filmManufacturer')}:</span>
@@ -507,7 +535,9 @@ export default function ProductionProcessPage() {
                   )}
 
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-sm text-muted-foreground">{t('processFlow')}</h4>
+                    <h4 className="font-semibold text-sm text-muted-foreground">
+                      {t('processFlow')}
+                    </h4>
                     <div className="flex items-center gap-2 flex-wrap">
                       {getProcessFlow(selectedProcess).map((step, index, arr) => (
                         <div key={index} className="flex items-center">

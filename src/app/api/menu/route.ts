@@ -16,7 +16,7 @@ function buildMenuTree(menus: any[], parentId: number = 0): any[] {
 }
 
 // 获取菜单列表
-export const GET = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
@@ -55,7 +55,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo: UserInf
     const menuTree = buildMenuTree(menus as any[]);
 
     return successResponse(menuTree, '获取菜单列表成功');
-  } catch (error) {
+  } catch {
     return errorResponse('获取菜单列表失败', 500);
   }
 });

@@ -8,7 +8,7 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const die_id = searchParams.get('die_id');
   const work_order_id = searchParams.get('work_order_id');
@@ -93,63 +93,65 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const validation = validateRequestBody(body, ['die_id', 'impressions']);
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
-
-  const dieId = parseInt(body.die_id);
-  const impressionsToAdd = parseInt(body.impressions);
-
-  if (impressionsToAdd <= 0) {
-    return errorResponse('使用次数必须大于0', 400, 400);
-  }
-
-  return await transaction(async (conn) => {
-    const [dieRows]: any = await conn.execute(
-      'SELECT id, template_code, template_name, cumulative_impressions, max_impressions, warning_threshold, pieces_per_impression, die_status FROM prd_die_template WHERE id = ? AND deleted = 0',
-      [dieId]
-    );
-    const die = dieRows?.[0];
-    if (!die) return errorResponse('刀模/网版不存在', 404, 404);
-    if (die.die_status === 'scrap') return errorResponse('已报废的刀模/网版不能继续使用', 400, 400);
-    if (die.die_status === 're_rule_needed')
-      return errorResponse('需重做的刀模/网版请先保养后再使用', 400, 400);
-
-    if (die.max_impressions > 0 && die.cumulative_impressions >= die.max_impressions) {
-      return errorResponse(
-        `刀模/网版已达最大使用次数(${die.cumulative_impressions}/${die.max_impressions})，请更换或保养后再使用`,
-        400,
-        400
-      );
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const validation = validateRequestBody(body, ['die_id', 'impressions']);
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
     }
 
-    const actualImpressions = body.actual_qty
-      ? Math.ceil(parseInt(body.actual_qty) / (die.pieces_per_impression || 1))
-      : impressionsToAdd;
+    const dieId = parseInt(body.die_id);
+    const impressionsToAdd = parseInt(body.impressions);
 
-    if (die.max_impressions > 0) {
-      const projectedCumulative = die.cumulative_impressions + actualImpressions;
-      if (projectedCumulative > die.max_impressions * 1.05) {
+    if (impressionsToAdd <= 0) {
+      return errorResponse('使用次数必须大于0', 400, 400);
+    }
+
+    return await transaction(async (conn) => {
+      const [dieRows]: any = await conn.execute(
+        'SELECT id, template_code, template_name, cumulative_impressions, max_impressions, warning_threshold, pieces_per_impression, die_status FROM prd_die_template WHERE id = ? AND deleted = 0',
+        [dieId]
+      );
+      const die = dieRows?.[0];
+      if (!die) return errorResponse('刀模/网版不存在', 404, 404);
+      if (die.die_status === 'scrap')
+        return errorResponse('已报废的刀模/网版不能继续使用', 400, 400);
+      if (die.die_status === 're_rule_needed')
+        return errorResponse('需重做的刀模/网版请先保养后再使用', 400, 400);
+
+      if (die.max_impressions > 0 && die.cumulative_impressions >= die.max_impressions) {
         return errorResponse(
-          `本次使用后累计次数(${projectedCumulative})将远超最大限制(${die.max_impressions})，请确认使用次数是否正确`,
+          `刀模/网版已达最大使用次数(${die.cumulative_impressions}/${die.max_impressions})，请更换或保养后再使用`,
           400,
           400
         );
       }
-    }
 
-    const newCumulative = die.cumulative_impressions + actualImpressions;
-    const newDieStatus = computeDieStatus(
-      newCumulative,
-      die.max_impressions,
-      die.warning_threshold
-    );
+      const actualImpressions = body.actual_qty
+        ? Math.ceil(parseInt(body.actual_qty) / (die.pieces_per_impression || 1))
+        : impressionsToAdd;
 
-    await conn.execute(
-      `UPDATE prd_die_template
+      if (die.max_impressions > 0) {
+        const projectedCumulative = die.cumulative_impressions + actualImpressions;
+        if (projectedCumulative > die.max_impressions * 1.05) {
+          return errorResponse(
+            `本次使用后累计次数(${projectedCumulative})将远超最大限制(${die.max_impressions})，请确认使用次数是否正确`,
+            400,
+            400
+          );
+        }
+      }
+
+      const newCumulative = die.cumulative_impressions + actualImpressions;
+      const newDieStatus = computeDieStatus(
+        newCumulative,
+        die.max_impressions,
+        die.warning_threshold
+      );
+
+      await conn.execute(
+        `UPDATE prd_die_template
        SET cumulative_impressions = ?,
            current_usage = ?,
            remaining_usage = GREATEST(max_usage - ?, 0),
@@ -161,49 +163,51 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
              ELSE 1
            END
        WHERE id = ?`,
-      [
-        newCumulative,
-        newCumulative,
-        newCumulative,
-        newDieStatus,
-        newCumulative,
-        newCumulative,
-        dieId,
-      ]
-    );
+        [
+          newCumulative,
+          newCumulative,
+          newCumulative,
+          newDieStatus,
+          newCumulative,
+          newCumulative,
+          dieId,
+        ]
+      );
 
-    await conn.execute(
-      `INSERT INTO prd_die_usage_log (die_id, die_code, work_report_id, work_order_id, work_order_no, process_name, impressions, cumulative_after, operator_id, operator_name, equipment_id, usage_date, remark)
+      await conn.execute(
+        `INSERT INTO prd_die_usage_log (die_id, die_code, work_report_id, work_order_id, work_order_no, process_name, impressions, cumulative_after, operator_id, operator_name, equipment_id, usage_date, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURDATE(), ?)`,
-      [
-        dieId,
-        die.template_code,
-        body.work_report_id || null,
-        body.work_order_id || null,
-        body.work_order_no || null,
-        body.process_name || null,
-        actualImpressions,
-        newCumulative,
-        body.operator_id || null,
-        body.operator_name || null,
-        body.equipment_id || null,
-        body.remark || null,
-      ]
-    );
+        [
+          dieId,
+          die.template_code,
+          body.work_report_id || null,
+          body.work_order_id || null,
+          body.work_order_no || null,
+          body.process_name || null,
+          actualImpressions,
+          newCumulative,
+          body.operator_id || null,
+          body.operator_name || null,
+          body.equipment_id || null,
+          body.remark || null,
+        ]
+      );
 
-    return successResponse(
-      {
-        die_id: dieId,
-        impressions_added: actualImpressions,
-        cumulative_after: newCumulative,
-        die_status: newDieStatus,
-        usage_pct:
-          die.max_impressions > 0 ? Math.round((newCumulative / die.max_impressions) * 100) : 0,
-      },
-      '刀模使用记录已更新'
-    );
-  });
-}, { logTitle: '记录刀模使用', logType: 'business' });
+      return successResponse(
+        {
+          die_id: dieId,
+          impressions_added: actualImpressions,
+          cumulative_after: newCumulative,
+          die_status: newDieStatus,
+          usage_pct:
+            die.max_impressions > 0 ? Math.round((newCumulative / die.max_impressions) * 100) : 0,
+        },
+        '刀模使用记录已更新'
+      );
+    });
+  },
+  { logTitle: '记录刀模使用', logType: 'business' }
+);
 
 function computeDieStatus(
   cumulative: number,

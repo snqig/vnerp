@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
 // 获取品质检验统计
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // 待检验数量（已排产和生产的）
     const [pendingResult] = await query(
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
         week: weekResult.count,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: '获取品质统计失败' }, { status: 500 });
   }
 }

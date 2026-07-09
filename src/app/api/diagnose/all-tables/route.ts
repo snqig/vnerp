@@ -21,7 +21,7 @@ const tables = [
   'prod_work_order_item',
 ];
 
-export const GET = withPermission(async (request: NextRequest) => {
+export const GET = withPermission(async (_request: NextRequest) => {
   const results: any = {};
 
   for (const table of tables) {
@@ -35,6 +35,6 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   return NextResponse.json({
     success: true,
-    tables: results
+    tables: results,
   });
 });

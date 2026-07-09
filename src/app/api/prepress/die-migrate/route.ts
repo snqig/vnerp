@@ -24,111 +24,112 @@ async function safeCreateTable(tableName: string, sql: string) {
   }
 }
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const results: any[] = [];
+export const POST = withPermission(
+  async (_request: NextRequest, _userInfo) => {
+    const results: any[] = [];
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN asset_type VARCHAR(20) DEFAULT 'die' COMMENT '资产类型: die/flexo_plate/screen_mesh' AFTER template_name`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN asset_type VARCHAR(20) DEFAULT 'die' COMMENT '资产类型: die/flexo_plate/screen_mesh' AFTER template_name`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN layout_type VARCHAR(20) DEFAULT 'single_row' COMMENT '布局类型: single_row/multi_row' AFTER asset_type`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN layout_type VARCHAR(20) DEFAULT 'single_row' COMMENT '布局类型: single_row/multi_row' AFTER asset_type`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN pieces_per_impression INT DEFAULT 1 COMMENT '单次冲切/印刷出件数' AFTER layout_type`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN pieces_per_impression INT DEFAULT 1 COMMENT '单次冲切/印刷出件数' AFTER layout_type`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN cumulative_impressions INT DEFAULT 0 COMMENT '累计使用次数(impressions)' AFTER pieces_per_impression`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN cumulative_impressions INT DEFAULT 0 COMMENT '累计使用次数(impressions)' AFTER pieces_per_impression`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN max_impressions INT DEFAULT 0 COMMENT '最大使用寿命阈值' AFTER cumulative_impressions`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN max_impressions INT DEFAULT 0 COMMENT '最大使用寿命阈值' AFTER cumulative_impressions`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN warning_threshold DECIMAL(5,2) DEFAULT 80.00 COMMENT '预警比例(%)' AFTER max_impressions`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN warning_threshold DECIMAL(5,2) DEFAULT 80.00 COMMENT '预警比例(%)' AFTER max_impressions`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN maintenance_interval INT DEFAULT 8000 COMMENT '保养间隔次数' AFTER warning_threshold`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN maintenance_interval INT DEFAULT 8000 COMMENT '保养间隔次数' AFTER warning_threshold`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN maintenance_count INT DEFAULT 0 COMMENT '已保养次数' AFTER maintenance_interval`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN maintenance_count INT DEFAULT 0 COMMENT '已保养次数' AFTER maintenance_interval`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN last_maintenance_impressions INT DEFAULT 0 COMMENT '上次保养时累计次数' AFTER maintenance_count`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN last_maintenance_impressions INT DEFAULT 0 COMMENT '上次保养时累计次数' AFTER maintenance_count`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN last_maintenance_date DATE COMMENT '上次保养日期' AFTER last_maintenance_impressions`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN last_maintenance_date DATE COMMENT '上次保养日期' AFTER last_maintenance_impressions`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN last_used_date DATE COMMENT '最后使用日期' AFTER last_maintenance_date`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN last_used_date DATE COMMENT '最后使用日期' AFTER last_maintenance_date`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN unit_price DECIMAL(12,2) DEFAULT 0 COMMENT '单价(元)' AFTER last_used_date`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN unit_price DECIMAL(12,2) DEFAULT 0 COMMENT '单价(元)' AFTER last_used_date`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN die_status VARCHAR(30) DEFAULT 'available' COMMENT '生命周期状态: available/in_use/maintenance_needed/re_rule_needed/scrap' AFTER unit_price`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN die_status VARCHAR(30) DEFAULT 'available' COMMENT '生命周期状态: available/in_use/maintenance_needed/re_rule_needed/scrap' AFTER unit_price`
+      )
+    );
 
-  results.push(
-    await safeAlterTable(
-      'prd_die_template',
-      `ALTER TABLE prd_die_template ADD COLUMN qr_code VARCHAR(100) COMMENT '二维码编码' AFTER die_status`
-    )
-  );
+    results.push(
+      await safeAlterTable(
+        'prd_die_template',
+        `ALTER TABLE prd_die_template ADD COLUMN qr_code VARCHAR(100) COMMENT '二维码编码' AFTER die_status`
+      )
+    );
 
-  results.push(
-    await safeCreateTable(
-      'prd_die_usage_log',
-      `CREATE TABLE IF NOT EXISTS prd_die_usage_log (
+    results.push(
+      await safeCreateTable(
+        'prd_die_usage_log',
+        `CREATE TABLE IF NOT EXISTS prd_die_usage_log (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       die_id BIGINT UNSIGNED NOT NULL COMMENT '刀模/网版ID',
       die_code VARCHAR(50) COMMENT '刀模编码',
@@ -150,13 +151,13 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_work_order (work_order_id),
       KEY idx_usage_date (usage_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='刀模/网版使用记录表'`
-    )
-  );
+      )
+    );
 
-  results.push(
-    await safeCreateTable(
-      'prd_die_maintenance',
-      `CREATE TABLE IF NOT EXISTS prd_die_maintenance (
+    results.push(
+      await safeCreateTable(
+        'prd_die_maintenance',
+        `CREATE TABLE IF NOT EXISTS prd_die_maintenance (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       maintenance_no VARCHAR(50) NOT NULL COMMENT '保养单号',
       die_id BIGINT UNSIGNED NOT NULL COMMENT '刀模/网版ID',
@@ -179,53 +180,55 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_die_id (die_id),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='刀模/网版保养记录表'`
-    )
-  );
-
-  try {
-    await execute(
-      `UPDATE prd_die_template SET cumulative_impressions = current_usage, max_impressions = max_usage WHERE cumulative_impressions = 0 AND current_usage > 0`
+      )
     );
-    results.push({
-      action: 'migrate_data',
-      status: 'done',
-      detail: 'migrated current_usage to cumulative_impressions',
-    });
-  } catch (e: any) {
-    results.push({ action: 'migrate_data', status: 'error', message: e.message });
-  }
 
-  try {
-    await execute(
-      `UPDATE prd_die_template SET die_status = CASE
+    try {
+      await execute(
+        `UPDATE prd_die_template SET cumulative_impressions = current_usage, max_impressions = max_usage WHERE cumulative_impressions = 0 AND current_usage > 0`
+      );
+      results.push({
+        action: 'migrate_data',
+        status: 'done',
+        detail: 'migrated current_usage to cumulative_impressions',
+      });
+    } catch (e: any) {
+      results.push({ action: 'migrate_data', status: 'error', message: e.message });
+    }
+
+    try {
+      await execute(
+        `UPDATE prd_die_template SET die_status = CASE
         WHEN status = 4 THEN 'scrap'
         WHEN status = 3 THEN 're_rule_needed'
         WHEN status = 2 THEN 'maintenance_needed'
         ELSE 'available'
       END
       WHERE die_status = 'available' AND status IN (2, 3, 4)`
-    );
-    results.push({
-      action: 'migrate_status',
-      status: 'done',
-      detail: 'migrated old status to die_status',
-    });
-  } catch (e: any) {
-    results.push({ action: 'migrate_status', status: 'error', message: e.message });
-  }
+      );
+      results.push({
+        action: 'migrate_status',
+        status: 'done',
+        detail: 'migrated old status to die_status',
+      });
+    } catch (e: any) {
+      results.push({ action: 'migrate_status', status: 'error', message: e.message });
+    }
 
-  try {
-    await execute(
-      `UPDATE prd_die_template SET asset_type = CASE
+    try {
+      await execute(
+        `UPDATE prd_die_template SET asset_type = CASE
         WHEN template_type = 2 THEN 'screen_mesh'
         ELSE 'die'
       END
       WHERE asset_type = 'die'`
-    );
-    results.push({ action: 'migrate_asset_type', status: 'done' });
-  } catch (e: any) {
-    results.push({ action: 'migrate_asset_type', status: 'error', message: e.message });
-  }
+      );
+      results.push({ action: 'migrate_asset_type', status: 'done' });
+    } catch (e: any) {
+      results.push({ action: 'migrate_asset_type', status: 'error', message: e.message });
+    }
 
-  return successResponse(results, '刀模/网版表结构优化完成');
-}, { logTitle: '刀模/网版表结构优化', logType: 'business' });
+    return successResponse(results, '刀模/网版表结构优化完成');
+  },
+  { logTitle: '刀模/网版表结构优化', logType: 'business' }
+);

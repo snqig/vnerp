@@ -114,16 +114,14 @@ export default function StockAdjustPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
   const fetchWarehouses = async () => {
     try {
       const res = await authFetch('/api/warehouse?status=1&all=true');
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
-    } catch (e) {
-    }
+    } catch {}
   };
   useEffect(() => {
     fetchData();
@@ -146,7 +144,7 @@ export default function StockAdjustPage() {
       } else {
         toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -171,7 +169,7 @@ export default function StockAdjustPage() {
       } else {
         toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -184,7 +182,7 @@ export default function StockAdjustPage() {
         toast({ title: t('adjustDeleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -197,7 +195,7 @@ export default function StockAdjustPage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchOrderNo")}
+                placeholder={tc('searchOrderNo')}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -211,11 +209,36 @@ export default function StockAdjustPage() {
               title="库存调整"
               columns={[
                 { key: 'adjust_no', label: t('adjustNo'), width: 18 },
-                { key: 'warehouse_name', label: t('warehouse'), width: 15, formatter: (v) => v || '-' },
-                { key: 'adjust_date', label: t('adjustDate'), width: 12, formatter: (v) => v || '-' },
-                { key: 'adjust_type', label: t('adjustType'), width: 12, formatter: (v) => typeMap[v] || '-' },
-                { key: 'operator_name', label: t('operator'), width: 12, formatter: (v) => v || '-' },
-                { key: 'status', label: tc('status'), width: 10, formatter: (v) => statusMap[v]?.label || '-' },
+                {
+                  key: 'warehouse_name',
+                  label: t('warehouse'),
+                  width: 15,
+                  formatter: (v) => v || '-',
+                },
+                {
+                  key: 'adjust_date',
+                  label: t('adjustDate'),
+                  width: 12,
+                  formatter: (v) => v || '-',
+                },
+                {
+                  key: 'adjust_type',
+                  label: t('adjustType'),
+                  width: 12,
+                  formatter: (v) => typeMap[v] || '-',
+                },
+                {
+                  key: 'operator_name',
+                  label: t('operator'),
+                  width: 12,
+                  formatter: (v) => v || '-',
+                },
+                {
+                  key: 'status',
+                  label: tc('status'),
+                  width: 10,
+                  formatter: (v) => statusMap[v]?.label || '-',
+                },
               ]}
               data={selectedIds.size > 0 ? list.filter((i) => selectedIds.has(i.id)) : list}
             />
@@ -246,12 +269,12 @@ export default function StockAdjustPage() {
                     />
                   </TableHead>
                   <TableHead className="text-xs">{t('adjustNo')}</TableHead>
-                  <TableHead className="text-xs">{tc("warehouse")}</TableHead>
+                  <TableHead className="text-xs">{tc('warehouse')}</TableHead>
                   <TableHead className="text-xs">{t('adjustDate')}</TableHead>
                   <TableHead className="text-xs">{t('adjustType')}</TableHead>
                   <TableHead className="text-xs">{t('operator')}</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -365,7 +388,7 @@ export default function StockAdjustPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{tc("warehouse")}</Label>
+                <Label>{tc('warehouse')}</Label>
                 <Select
                   value={String(editItem.warehouse_id || '')}
                   onValueChange={(v) => {
@@ -421,7 +444,7 @@ export default function StockAdjustPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Input
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -432,7 +455,7 @@ export default function StockAdjustPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

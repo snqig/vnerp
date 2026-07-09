@@ -1,11 +1,7 @@
 import { NextRequest } from 'next/server';
 import { escapeId } from 'mysql2';
 import { query, execute, queryOne, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  validateRequestBody,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 // 生成流程卡卡号
@@ -19,7 +15,7 @@ function generateCardNo(): string {
 }
 
 // GET - 获取流程卡列表
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const workOrderNo = searchParams.get('workOrderNo') || '';
@@ -105,138 +101,144 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // POST - 创建流程卡
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, [
-    'workOrderId',
-    'workOrderNo',
-    'mainLabelId',
-    'mainLabelNo',
-    'createUserId',
-    'createUserName',
-  ]);
+    // 验证必填字段
+    const validation = validateRequestBody(body, [
+      'workOrderId',
+      'workOrderNo',
+      'mainLabelId',
+      'mainLabelNo',
+      'createUserId',
+      'createUserName',
+    ]);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const {
-    workOrderId,
-    workOrderNo,
-    productCode,
-    productName,
-    materialSpec,
-    workOrderDate,
-    planQty,
-    mainLabelId,
-    mainLabelNo,
-    createUserId,
-    createUserName,
-  } = body;
+    const {
+      workOrderId,
+      workOrderNo,
+      productCode,
+      productName,
+      materialSpec,
+      workOrderDate,
+      planQty,
+      mainLabelId,
+      mainLabelNo,
+      createUserId,
+      createUserName,
+    } = body;
 
-  // 检查主材标签是否已被使用
-  const mainLabel = await queryOne<any>(
-    `SELECT is_used, is_main_material FROM inv_material_label WHERE id = ? AND deleted = 0`,
-    [mainLabelId]
-  );
+    // 检查主材标签是否已被使用
+    const mainLabel = await queryOne<any>(
+      `SELECT is_used, is_main_material FROM inv_material_label WHERE id = ? AND deleted = 0`,
+      [mainLabelId]
+    );
 
-  if (!mainLabel) {
-    return errorResponse('主材标签不存在', 404, 404);
-  }
+    if (!mainLabel) {
+      return errorResponse('主材标签不存在', 404, 404);
+    }
 
-  if (mainLabel.is_main_material !== 1) {
-    return errorResponse('该标签不是母材标签，不能作为主材使用', 400, 400);
-  }
+    if (mainLabel.is_main_material !== 1) {
+      return errorResponse('该标签不是母材标签，不能作为主材使用', 400, 400);
+    }
 
-  // 生成流程卡卡号
-  const cardNo = generateCardNo();
+    // 生成流程卡卡号
+    const cardNo = generateCardNo();
 
-  // 生成二维码内容
-  const qrCode = JSON.stringify({
-    ID: cardNo,
-    TYPE: '4', // 4-流程卡
-    GDDH: workOrderNo,
-    CPLH: productCode,
-    WLDH: mainLabel.material_code,
-    WLPH: mainLabel.batch_no,
-  });
+    // 生成二维码内容
+    const qrCode = JSON.stringify({
+      ID: cardNo,
+      TYPE: '4', // 4-流程卡
+      GDDH: workOrderNo,
+      CPLH: productCode,
+      WLDH: mainLabel.material_code,
+      WLPH: mainLabel.batch_no,
+    });
 
-  // 开始事务
-  const result = await transaction(async (conn) => {
-    // 1. 创建流程卡
-    const cardResult = await conn.execute(
-      `INSERT INTO prd_process_card (
+    // 开始事务
+    const result = await transaction(async (conn) => {
+      // 1. 创建流程卡
+      const cardResult = await conn.execute(
+        `INSERT INTO prd_process_card (
         card_no, qr_code, work_order_id, work_order_no, product_code, product_name,
         material_spec, work_order_date, plan_qty, main_label_id, main_label_no,
         burdening_status, lock_status, create_user_id, create_user_name, deleted
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'unlocked', ?, ?, 0)`,
-      [
-        cardNo,
-        qrCode,
-        workOrderId,
-        workOrderNo,
-        productCode,
-        productName,
-        materialSpec,
-        workOrderDate,
-        planQty,
-        mainLabelId,
-        mainLabelNo,
-        createUserId,
-        createUserName,
-      ]
-    );
+        [
+          cardNo,
+          qrCode,
+          workOrderId,
+          workOrderNo,
+          productCode,
+          productName,
+          materialSpec,
+          workOrderDate,
+          planQty,
+          mainLabelId,
+          mainLabelNo,
+          createUserId,
+          createUserName,
+        ]
+      );
 
-    const cardId = (cardResult as any).insertId;
+      const cardId = (cardResult as any).insertId;
 
-    // 2. 更新主材标签为已使用
-    await conn.execute(`UPDATE inv_material_label SET is_used = 1 WHERE id = ?`, [mainLabelId]);
+      // 2. 更新主材标签为已使用
+      await conn.execute(`UPDATE inv_material_label SET is_used = 1 WHERE id = ?`, [mainLabelId]);
 
-    // 3. 添加主材到流程卡物料关联表
-    await conn.execute(
-      `INSERT INTO prd_process_card_material (
+      // 3. 添加主材到流程卡物料关联表
+      await conn.execute(
+        `INSERT INTO prd_process_card_material (
         card_id, card_no, label_id, label_no, material_type,
         material_code, material_name, specification, batch_no, quantity, unit
       )
       SELECT ?, ?, id, label_no, 'main', material_code, material_name, specification, batch_no, quantity, unit
       FROM inv_material_label WHERE id = ?`,
-      [cardId, cardNo, mainLabelId]
-    );
+        [cardId, cardNo, mainLabelId]
+      );
 
-    return {
-      cardId,
-      cardNo,
-      qrCode,
-    };
-  });
+      return {
+        cardId,
+        cardNo,
+        qrCode,
+      };
+    });
 
-  return successResponse(result, '流程卡创建成功');
-}, { logTitle: '创建流程卡', logType: 'business' });
+    return successResponse(result, '流程卡创建成功');
+  },
+  { logTitle: '创建流程卡', logType: 'business' }
+);
 
 // PUT - 更新流程卡（添加辅料、配料完成、锁住/解锁）
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
 
-  if (!body.id && !body.cardNo) {
-    return errorResponse('缺少流程卡ID或卡号', 400, 400);
-  }
+    if (!body.id && !body.cardNo) {
+      return errorResponse('缺少流程卡ID或卡号', 400, 400);
+    }
 
-  const { id, cardNo, action, ...updateData } = body;
+    const { id, cardNo, action, ...updateData } = body;
 
-  // 根据action执行不同操作
-  switch (action) {
-    case 'addMaterial':
-      return addMaterialToCard(id || cardNo, updateData);
-    case 'burdening':
-      return updateBurdeningStatus(id || cardNo, updateData.burdeningStatus);
-    case 'lock':
-      return updateLockStatus(id || cardNo, updateData.lockStatus);
-    default:
-      return updateCardInfo(id || cardNo, updateData);
-  }
-}, { logTitle: '更新流程卡', logType: 'business' });
+    // 根据action执行不同操作
+    switch (action) {
+      case 'addMaterial':
+        return addMaterialToCard(id || cardNo, updateData);
+      case 'burdening':
+        return updateBurdeningStatus(id || cardNo, updateData.burdeningStatus);
+      case 'lock':
+        return updateLockStatus(id || cardNo, updateData.lockStatus);
+      default:
+        return updateCardInfo(id || cardNo, updateData);
+    }
+  },
+  { logTitle: '更新流程卡', logType: 'business' }
+);
 
 // 添加辅料到流程卡
 async function addMaterialToCard(cardIdentifier: string | number, data: any) {
@@ -249,11 +251,11 @@ async function addMaterialToCard(cardIdentifier: string | number, data: any) {
   );
 
   if (!card) {
-    return errorResponse('流程卡不存在', 404, 404);
+    return errorResponse(tc('text_lnluva'), 404, 404);
   }
 
   if (card.lock_status === 'locked') {
-    return errorResponse('流程卡已锁住，不能添加辅料', 400, 400);
+    return errorResponse(tc('text_gpknh0'), 400, 400);
   }
 
   // 获取标签信息
@@ -264,7 +266,7 @@ async function addMaterialToCard(cardIdentifier: string | number, data: any) {
   );
 
   if (!label) {
-    return errorResponse('物料标签不存在', 404, 404);
+    return errorResponse(tc('text_wkfluy'), 404, 404);
   }
 
   // 添加辅料关联
@@ -290,7 +292,7 @@ async function addMaterialToCard(cardIdentifier: string | number, data: any) {
   // 更新标签为已使用
   await execute(`UPDATE inv_material_label SET is_used = 1 WHERE id = ?`, [labelId]);
 
-  return successResponse(null, '辅料添加成功');
+  return successResponse(null, tc('text_le25fc'));
 }
 
 // 更新配料状态
@@ -300,7 +302,7 @@ async function updateBurdeningStatus(cardIdentifier: string | number, status: st
     [status, cardIdentifier]
   );
 
-  return successResponse(null, '配料状态更新成功');
+  return successResponse(null, tc('text_wabaki'));
 }
 
 // 更新锁住状态
@@ -310,7 +312,7 @@ async function updateLockStatus(cardIdentifier: string | number, status: string)
     [status, cardIdentifier]
   );
 
-  return successResponse(null, status === 'locked' ? '流程卡已锁住' : '流程卡已解锁');
+  return successResponse(null, status === 'locked' ? tc('text_lq7fm1') : tc('text_lq5xax'));
 }
 
 // 更新流程卡基本信息
@@ -335,7 +337,7 @@ async function updateCardInfo(cardIdentifier: string | number, data: any) {
   });
 
   if (updateFields.length === 0) {
-    return errorResponse('没有要更新的字段', 400, 400);
+    return errorResponse(tc('text_magxwt'), 400, 400);
   }
 
   params.push(cardIdentifier);
@@ -345,22 +347,25 @@ async function updateCardInfo(cardIdentifier: string | number, data: any) {
     params
   );
 
-  return successResponse(null, '流程卡更新成功');
+  return successResponse(null, tc('text_z8gj5u'));
 }
 
 // DELETE - 删除流程卡
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return errorResponse('缺少流程卡ID', 400, 400);
-  }
+    if (!id) {
+      return errorResponse('缺少流程卡ID', 400, 400);
+    }
 
-  await execute('UPDATE prd_process_card SET deleted = 1 WHERE id = ?', [id]);
+    await execute('UPDATE prd_process_card SET deleted = 1 WHERE id = ?', [id]);
 
-  return successResponse(null, '流程卡删除成功');
-}, { logTitle: '删除流程卡', logType: 'business' });
+    return successResponse(null, '流程卡删除成功');
+  },
+  { logTitle: '删除流程卡', logType: 'business' }
+);
 
 // 辅助函数：分页查询
 async function queryPaginated(
@@ -386,7 +391,7 @@ async function queryPaginated(
         total: countResult?.total || 0,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       list: [],
       pagination: {

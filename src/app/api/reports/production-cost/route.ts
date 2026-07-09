@@ -7,7 +7,7 @@ import { withPermission } from '@/lib/api-permissions';
  * 生产成本汇总报表
  * 标准成本 vs 实际成本对比
  */
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');

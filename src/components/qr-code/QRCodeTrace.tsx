@@ -144,7 +144,7 @@ export function QRCodeTrace({
       } else {
         toast({ title: t('queryFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (error) {
+    } catch {
       toast({ title: t('queryFailed'), variant: 'destructive' });
     } finally {
       setIsLoading(false);
@@ -281,8 +281,7 @@ export function QRCodeTrace({
                         <div className="text-sm">
                           <div className="font-mono font-medium">{qrCode}</div>
                           <Badge variant="outline" className="mt-1">
-                            {typeMap[traceData.record?.qr_type as any] ||
-                              traceData.record?.qr_type}
+                            {typeMap[traceData.record?.qr_type as any] || traceData.record?.qr_type}
                           </Badge>
                         </div>
                       </div>
@@ -304,15 +303,12 @@ export function QRCodeTrace({
                       <div className="text-sm">
                         <span className="text-muted-foreground">{tc('type')}：</span>
                         <Badge variant="outline">
-                          {typeMap[traceData.record.qr_type as any] ||
-                            traceData.record.qr_type}
+                          {typeMap[traceData.record.qr_type as any] || traceData.record.qr_type}
                         </Badge>
                       </div>
                       <div className="text-sm">
                         <span className="text-muted-foreground">{tc('status')}：</span>
-                        <Badge
-                          variant={statusMap[traceData.record.status as any]?.variant}
-                        >
+                        <Badge variant={statusMap[traceData.record.status as any]?.variant}>
                           {statusMap[traceData.record.status as any]?.label}
                         </Badge>
                       </div>
@@ -391,7 +387,9 @@ export function QRCodeTrace({
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">{t('noRelatedRecords')}</div>
+                  <div className="text-center py-8 text-muted-foreground">
+                    {t('noRelatedRecords')}
+                  </div>
                 )}
               </TabsContent>
 
@@ -421,7 +419,9 @@ export function QRCodeTrace({
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">{t('noInventoryInfo')}</div>
+                  <div className="text-center py-8 text-muted-foreground">
+                    {t('noInventoryInfo')}
+                  </div>
                 )}
               </TabsContent>
             </Tabs>

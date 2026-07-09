@@ -66,7 +66,7 @@ export function EditDialog({
       } else {
         toast.error(result.message || t('updateFailed'));
       }
-    } catch (err) {
+    } catch {
       toast.error(t('updateFailed'));
     }
   };
@@ -84,18 +84,14 @@ export function EditDialog({
               <Label>{tc('materialCode')}</Label>
               <Input
                 value={formData.materialCode}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, materialCode: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, materialCode: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
               <Label>{tc('materialName')}</Label>
               <Input
                 value={formData.materialName}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, materialName: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, materialName: e.target.value }))}
               />
             </div>
           </div>
@@ -143,9 +139,7 @@ export function EditDialog({
               <Label>{tc('warehouse')}</Label>
               <Select
                 value={formData.warehouse}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, warehouse: value }))
-                }
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, warehouse: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={t('selectWarehouse')} />

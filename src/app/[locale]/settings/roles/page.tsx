@@ -74,11 +74,11 @@ interface Menu {
 
 // 数据范围选项
 const dataScopeOptions = [
-  { value: 1, label: '全部数据' },
-  { value: 2, label: '本部门数据' },
-  { value: 3, label: '本部门及以下数据' },
-  { value: 4, label: '仅本人数据' },
-  { value: 5, label: '自定义' },
+  { value: 1, label: tc('text_avcqke') },
+  { value: 2, label: tc('text_3vvdg6') },
+  { value: 3, label: tc('text_wlp4yq') },
+  { value: 4, label: tc('text_xtjdwv') },
+  { value: 5, label: tc('text_jh1ll') },
 ];
 
 // 权限模块
@@ -120,9 +120,9 @@ export default function RolesPage() {
       if (!response.ok) return;
       const result = await response.json();
       if (result.success) {
-        setRoles(Array.isArray(result.data) ? result.data : (result.data?.list || []));
+        setRoles(Array.isArray(result.data) ? result.data : result.data?.list || []);
       }
-    } catch (error) {
+    } catch {
       toast({ title: tc('fetchRoleListFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -136,12 +136,11 @@ export default function RolesPage() {
       if (!response.ok) return [];
       const result = await response.json();
       if (result.success) {
-        const data = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const data = Array.isArray(result.data) ? result.data : result.data?.list || [];
         setMenus(data);
         return data;
       }
-    } catch (error) {
-    }
+    } catch {}
     return [];
   }, []);
 
@@ -166,7 +165,7 @@ export default function RolesPage() {
           setSelectedPermissions([]);
         }
       }
-    } catch (error) {
+    } catch {
       setSelectedMenus([]);
       setSelectedPermissions([]);
     }
@@ -196,7 +195,7 @@ export default function RolesPage() {
       } else {
         toast({ title: result.message || tc('saveFailed'), variant: 'destructive' });
       }
-    } catch (error) {
+    } catch {
       toast({ title: tc('saveRoleFailed'), variant: 'destructive' });
     }
   };
@@ -217,7 +216,7 @@ export default function RolesPage() {
       } else {
         toast({ title: result.message || tc('deleteFailed'), variant: 'destructive' });
       }
-    } catch (error) {
+    } catch {
       toast({ title: tc('deleteRoleFailed'), variant: 'destructive' });
     }
   };
@@ -265,8 +264,7 @@ export default function RolesPage() {
             scopes: dataScopeConfig,
           }),
         });
-      } catch (e) {
-      }
+      } catch {}
 
       toast({ title: tc('permissionSetSuccess') });
       setPermissionDialogOpen(false);
@@ -274,9 +272,8 @@ export default function RolesPage() {
 
       try {
         await authFetch('/api/auth/cache/clear', { method: 'POST' });
-      } catch (e) {
-      }
-    } catch (error) {
+      } catch {}
+    } catch {
       toast({ title: tc('savePermissionFailed'), variant: 'destructive' });
     }
   };
@@ -317,38 +314,44 @@ export default function RolesPage() {
       if (scopeResult.success) {
         setDataScopeConfig(scopeResult.data || {});
       }
-    } catch (e) {
-    }
+    } catch {}
 
     // 加载仓库列表
     try {
       const whRes = await authFetch('/api/warehouse/list');
       const whResult = await whRes.json();
       if (whResult.success) {
-        setWarehouses((whResult.data || []).map((w: any) => ({ id: w.id, name: w.warehouse_name || w.name })));
+        setWarehouses(
+          (whResult.data || []).map((w: any) => ({ id: w.id, name: w.warehouse_name || w.name }))
+        );
       }
-    } catch (e) {
-    }
+    } catch {}
 
     // 加载客户列表
     try {
       const custRes = await authFetch('/api/customers');
       const custResult = await custRes.json();
       if (custResult.success) {
-        setCustomers((Array.isArray(custResult.data) ? custResult.data : (custResult.data?.list || [])).map((c: any) => ({ id: c.id, name: c.customer_name || c.name })));
+        setCustomers(
+          (Array.isArray(custResult.data) ? custResult.data : custResult.data?.list || []).map(
+            (c: any) => ({ id: c.id, name: c.customer_name || c.name })
+          )
+        );
       }
-    } catch (e) {
-    }
+    } catch {}
 
     // 加载供应商列表
     try {
       const supRes = await authFetch('/api/suppliers');
       const supResult = await supRes.json();
       if (supResult.success) {
-        setSuppliers((Array.isArray(supResult.data) ? supResult.data : (supResult.data?.list || [])).map((s: any) => ({ id: s.id, name: s.supplier_name || s.name })));
+        setSuppliers(
+          (Array.isArray(supResult.data) ? supResult.data : supResult.data?.list || []).map(
+            (s: any) => ({ id: s.id, name: s.supplier_name || s.name })
+          )
+        );
       }
-    } catch (e) {
-    }
+    } catch {}
 
     setPermissionDialogOpen(true);
   };
@@ -397,9 +400,13 @@ export default function RolesPage() {
   const getStatusBadge = (status: number) => {
     switch (status) {
       case 1:
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{tc('enabled')}</Badge>;
+        return (
+          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{tc('enabled')}</Badge>
+        );
       case 0:
-        return <Badge className="bg-muted text-muted-foreground hover:bg-muted">{tc('disabled')}</Badge>;
+        return (
+          <Badge className="bg-muted text-muted-foreground hover:bg-muted">{tc('disabled')}</Badge>
+        );
       default:
         return <Badge variant="secondary">{tc('unknown')}</Badge>;
     }
@@ -514,7 +521,9 @@ export default function RolesPage() {
         <DialogContent className="max-w-lg" resizable>
           <DialogHeader>
             <DialogTitle>{editing ? tc('editRole') : tc('addRole')}</DialogTitle>
-            <DialogDescription>{editing ? tc('editRoleDesc') : tc('addRoleDesc')}</DialogDescription>
+            <DialogDescription>
+              {editing ? tc('editRoleDesc') : tc('addRoleDesc')}
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
@@ -577,7 +586,9 @@ export default function RolesPage() {
       <Dialog open={permissionDialogOpen} onOpenChange={setPermissionDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" resizable>
           <DialogHeader>
-            <DialogTitle>{tc('setPermission')} - {selectedRole?.role_name}</DialogTitle>
+            <DialogTitle>
+              {tc('setPermission')} - {selectedRole?.role_name}
+            </DialogTitle>
             <DialogDescription>{tc('setPermissionDesc')}</DialogDescription>
           </DialogHeader>
 
@@ -706,15 +717,16 @@ export default function RolesPage() {
 
             <TabsContent value="dataScope" className="mt-4">
               <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  {tc('dataPermissionDesc')}
-                </p>
+                <p className="text-sm text-muted-foreground">{tc('dataPermissionDesc')}</p>
 
                 {/* 仓库维度 */}
                 <div className="border rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
                     <Checkbox
-                      checked={warehouses.length > 0 && (dataScopeConfig.warehouse || []).length === warehouses.length}
+                      checked={
+                        warehouses.length > 0 &&
+                        (dataScopeConfig.warehouse || []).length === warehouses.length
+                      }
                       onCheckedChange={(checked) => {
                         setDataScopeConfig((prev) => ({
                           ...prev,
@@ -748,7 +760,9 @@ export default function RolesPage() {
                       </div>
                     ))}
                     {warehouses.length === 0 && (
-                      <p className="text-sm text-muted-foreground col-span-2">{tc('noWarehouseData')}</p>
+                      <p className="text-sm text-muted-foreground col-span-2">
+                        {tc('noWarehouseData')}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -757,7 +771,10 @@ export default function RolesPage() {
                 <div className="border rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
                     <Checkbox
-                      checked={customers.length > 0 && (dataScopeConfig.customer || []).length === customers.length}
+                      checked={
+                        customers.length > 0 &&
+                        (dataScopeConfig.customer || []).length === customers.length
+                      }
                       onCheckedChange={(checked) => {
                         setDataScopeConfig((prev) => ({
                           ...prev,
@@ -791,7 +808,9 @@ export default function RolesPage() {
                       </div>
                     ))}
                     {customers.length === 0 && (
-                      <p className="text-sm text-muted-foreground col-span-2">{tc('noCustomerData')}</p>
+                      <p className="text-sm text-muted-foreground col-span-2">
+                        {tc('noCustomerData')}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -800,7 +819,10 @@ export default function RolesPage() {
                 <div className="border rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
                     <Checkbox
-                      checked={suppliers.length > 0 && (dataScopeConfig.supplier || []).length === suppliers.length}
+                      checked={
+                        suppliers.length > 0 &&
+                        (dataScopeConfig.supplier || []).length === suppliers.length
+                      }
                       onCheckedChange={(checked) => {
                         setDataScopeConfig((prev) => ({
                           ...prev,
@@ -834,7 +856,9 @@ export default function RolesPage() {
                       </div>
                     ))}
                     {suppliers.length === 0 && (
-                      <p className="text-sm text-muted-foreground col-span-2">{tc('noSupplierData')}</p>
+                      <p className="text-sm text-muted-foreground col-span-2">
+                        {tc('noSupplierData')}
+                      </p>
                     )}
                   </div>
                 </div>

@@ -80,7 +80,6 @@ interface MaterialLabel {
 }
 
 export default function ProcessCardsPage() {
-
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -117,10 +116,14 @@ export default function ProcessCardsPage() {
       const result = await response.json();
       if (result.success) {
         setCards(result.data.list || []);
-        logger.info({ module: 'Dcprint', action: 'fetchProcessCards' }, '流程卡数据获取成功', { count: (result.data.list || []).length });
+        logger.info({ module: 'Dcprint', action: 'fetchProcessCards' }, '流程卡数据获取成功', {
+          count: (result.data.list || []).length,
+        });
       }
     } catch (error) {
-      logger.error({ module: 'Dcprint', action: 'fetchProcessCards' }, '获取流程卡数据失败', { error: (error as Error).message });
+      logger.error({ module: 'Dcprint', action: 'fetchProcessCards' }, '获取流程卡数据失败', {
+        error: (error as Error).message,
+      });
     }
   };
 
@@ -197,7 +200,7 @@ export default function ProcessCardsPage() {
       } else {
         setError(result.message || tc('scanFailed'));
       }
-    } catch (err) {
+    } catch {
       setError(t('scanQueryFailed'));
     } finally {
       setLoading(false);
@@ -242,7 +245,7 @@ export default function ProcessCardsPage() {
       } else {
         setError(result.message || t('generateFailed'));
       }
-    } catch (err) {
+    } catch {
       setError(t('generateCardFailed'));
     } finally {
       setLoading(false);
@@ -284,7 +287,9 @@ export default function ProcessCardsPage() {
 
   const getLockBadge = (lockStatus: string) => {
     return lockStatus ? (
-      <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">{t('locked')}</Badge>
+      <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+        {t('locked')}
+      </Badge>
     ) : (
       <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
         {t('unlocked')}
@@ -407,7 +412,9 @@ export default function ProcessCardsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-muted-foreground text-center py-4">{t('pleaseScanWorkOrder')}</div>
+                      <div className="text-muted-foreground text-center py-4">
+                        {t('pleaseScanWorkOrder')}
+                      </div>
                     )}
                   </CardContent>
                 </Card>
@@ -438,7 +445,9 @@ export default function ProcessCardsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-muted-foreground text-center py-4">{t('pleaseScanMainMaterial')}</div>
+                      <div className="text-muted-foreground text-center py-4">
+                        {t('pleaseScanMainMaterial')}
+                      </div>
                     )}
                   </CardContent>
                 </Card>
@@ -502,9 +511,9 @@ export default function ProcessCardsPage() {
                     <TableHead>{t('mainLabel')}</TableHead>
                     <TableHead>{t('burdeningStatus')}</TableHead>
                     <TableHead>{t('lockStatus')}</TableHead>
-                    <TableHead>{tc("createdBy")}</TableHead>
-                    <TableHead>{tc("createdAt")}</TableHead>
-                    <TableHead>{tc("actions")}</TableHead>
+                    <TableHead>{tc('createdBy')}</TableHead>
+                    <TableHead>{tc('createdAt')}</TableHead>
+                    <TableHead>{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -184,7 +184,7 @@ export default function ProductionReportPage() {
         setTotal(result.data?.total || 0);
         setSummaryStats(result.data?.summaryStats || {});
       }
-    } catch (e) {
+    } catch {
       toast.error(t('fetchReportFailed'));
     } finally {
       setLoading(false);
@@ -201,12 +201,11 @@ export default function ProductionReportPage() {
       let result;
       try {
         result = JSON.parse(text);
-      } catch (e) {
+      } catch {
         return;
       }
       if (result.success) setWorkOrders(result.data?.list || []);
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   const fetchEquipment = useCallback(async () => {
@@ -214,8 +213,7 @@ export default function ProductionReportPage() {
       const res = await authFetch('/api/equipment?pageSize=100');
       const result = await res.json();
       if (result.success) setEquipmentList(result.data?.list || []);
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -232,8 +230,7 @@ export default function ProductionReportPage() {
       const res = await fetch('/api/prepress/die-template?pageSize=100&die_status=available');
       const result = await res.json();
       if (result.success) setDieTemplateList(result.data?.list || []);
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   const handleSave = async () => {
@@ -267,7 +264,7 @@ export default function ProductionReportPage() {
       } else {
         toast.error(result.message || t('reportFailed'));
       }
-    } catch (e) {
+    } catch {
       toast.error(t('reportFailed'));
     }
   };
@@ -330,7 +327,7 @@ export default function ProductionReportPage() {
       } else {
         toast.error(result.message || tc('deleteFailed'));
       }
-    } catch (e) {
+    } catch {
       toast.error(tc('deleteFailed'));
     }
   };
@@ -359,9 +356,7 @@ export default function ProductionReportPage() {
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {t('scanInstructions')}
-                </p>
+                <p className="text-sm text-muted-foreground mb-4">{t('scanInstructions')}</p>
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   {[
                     {
@@ -499,20 +494,32 @@ export default function ProductionReportPage() {
               <GlobalExportToolbar
                 filename="生产报工记录"
                 title="生产报工记录列表"
-                columns={[
-                  { key: 'report_no', label: '报工单号', width: 18 },
-                  { key: 'work_order_no', label: '工单号', width: 18 },
-                  { key: 'process_name', label: '工序', width: 15 },
-                  { key: 'operator_name', label: '操作员', width: 12 },
-                  { key: 'equipment_name', label: '设备', width: 15 },
-                  { key: 'plan_qty', label: '计划数量', width: 10 },
-                  { key: 'completed_qty', label: '完成数量', width: 10 },
-                  { key: 'qualified_qty', label: '合格数量', width: 10 },
-                  { key: 'scrap_qty', label: '报废数量', width: 10 },
-                  { key: 'efficiency', label: '效率', width: 10, formatter: (v: any) => `${Number(v || 0).toFixed(1)}%` },
-                  { key: 'work_hours', label: '工时', width: 10, formatter: (v: any) => `${Number(v || 0).toFixed(1)}h` },
-                  { key: 'report_time', label: '报工时间', width: 18 },
-                ] as ExportColumn[]}
+                columns={
+                  [
+                    { key: 'report_no', label: '报工单号', width: 18 },
+                    { key: 'work_order_no', label: '工单号', width: 18 },
+                    { key: 'process_name', label: '工序', width: 15 },
+                    { key: 'operator_name', label: '操作员', width: 12 },
+                    { key: 'equipment_name', label: '设备', width: 15 },
+                    { key: 'plan_qty', label: '计划数量', width: 10 },
+                    { key: 'completed_qty', label: '完成数量', width: 10 },
+                    { key: 'qualified_qty', label: '合格数量', width: 10 },
+                    { key: 'scrap_qty', label: '报废数量', width: 10 },
+                    {
+                      key: 'efficiency',
+                      label: '效率',
+                      width: 10,
+                      formatter: (v: any) => `${Number(v || 0).toFixed(1)}%`,
+                    },
+                    {
+                      key: 'work_hours',
+                      label: '工时',
+                      width: 10,
+                      formatter: (v: any) => `${Number(v || 0).toFixed(1)}h`,
+                    },
+                    { key: 'report_time', label: '报工时间', width: 18 },
+                  ] as ExportColumn[]
+                }
                 data={list}
                 landscape={true}
               />
@@ -829,18 +836,18 @@ export default function ProductionReportPage() {
                   />
                 </div>
               </div>
-                <div className="space-y-2">
-                  <Label>{t('dieScreenLabel')}</Label>
-                  <Select
-                    value={String(form.die_template_id || '')}
-                    onValueChange={(v) => {
-                      const die = dieTemplateList.find((d) => d.id === Number(v));
-                      setForm({ ...form, die_template_id: Number(v) });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('selectDieScreen')} />
-                    </SelectTrigger>
+              <div className="space-y-2">
+                <Label>{t('dieScreenLabel')}</Label>
+                <Select
+                  value={String(form.die_template_id || '')}
+                  onValueChange={(v) => {
+                    const die = dieTemplateList.find((d) => d.id === Number(v));
+                    setForm({ ...form, die_template_id: Number(v) });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('selectDieScreen')} />
+                  </SelectTrigger>
                   <SelectContent>
                     {dieTemplateList.map((die) => {
                       const usagePct =
@@ -866,7 +873,9 @@ export default function ProductionReportPage() {
                         : 0;
                     return (
                       <div className="text-xs text-gray-500 flex items-center gap-2">
-                        <span>{t('usageRate')}: {usagePct}%</span>
+                        <span>
+                          {t('usageRate')}: {usagePct}%
+                        </span>
                         <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                           <div
                             className={`h-full ${usagePct >= 80 ? 'bg-red-500' : usagePct >= 60 ? 'bg-yellow-500' : 'bg-green-500'}`}

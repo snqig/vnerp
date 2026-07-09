@@ -8,7 +8,7 @@ async function addColumnIfNotExists(table: string, column: string, definition: s
     AND TABLE_NAME = '${table}' 
     AND COLUMN_NAME = '${column}'
   `);
-  
+
   if (result[0]?.cnt === 0) {
     await query(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
     return true;
@@ -20,7 +20,7 @@ async function createTableIfNotExists(sql: string) {
   try {
     await query(sql);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -30,8 +30,8 @@ export async function POST() {
     const results: string[] = [];
 
     const prdSchedule = await addColumnIfNotExists(
-      'prd_schedule', 
-      'workshop', 
+      'prd_schedule',
+      'workshop',
       "VARCHAR(50) NULL COMMENT '车间: die_cut-模切, trademark-商标'"
     );
     if (prdSchedule) {
@@ -40,30 +40,26 @@ export async function POST() {
       results.push('prd_schedule 表 workshop 字段已存在');
     }
 
-    await addColumnIfNotExists(
-      'eqp_equipment', 
-      'workshop', 
-      "VARCHAR(50) NULL COMMENT '所属车间'"
-    );
+    await addColumnIfNotExists('eqp_equipment', 'workshop', "VARCHAR(50) NULL COMMENT '所属车间'");
     results.push('已添加/确认 eqp_equipment workshop 字段');
 
     await addColumnIfNotExists(
-      'eqp_equipment', 
-      'capacity_per_hour', 
+      'eqp_equipment',
+      'capacity_per_hour',
       'DECIMAL(10,2) DEFAULT 100 COMMENT "每小时产能"'
     );
     results.push('已添加/确认 eqp_equipment capacity_per_hour 字段');
 
     await addColumnIfNotExists(
-      'eqp_equipment', 
-      'max_colors', 
+      'eqp_equipment',
+      'max_colors',
       'INT DEFAULT 1 COMMENT "最大支持色数"'
     );
     results.push('已添加/确认 eqp_equipment max_colors 字段');
 
     await addColumnIfNotExists(
-      'eqp_equipment', 
-      'setup_time_minutes', 
+      'eqp_equipment',
+      'setup_time_minutes',
       'INT DEFAULT 30 COMMENT "换型准备时间"'
     );
     results.push('已添加/确认 eqp_equipment setup_time_minutes 字段');
@@ -130,15 +126,18 @@ export async function POST() {
       results.push('prd_schedule_detail 表已存在');
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: results.join('; ')
+    return NextResponse.json({
+      success: true,
+      message: results.join('; '),
     });
   } catch (error: any) {
-    return NextResponse.json({ 
-      success: false, 
-      error: error.message 
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message,
+      },
+      { status: 500 }
+    );
   }
 }
 

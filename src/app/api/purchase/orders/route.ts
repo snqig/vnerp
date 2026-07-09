@@ -21,7 +21,7 @@ function getPurchaseService(): PurchaseApplicationService {
   return new PurchaseApplicationService(orderRepo);
 }
 
-export const GET = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status') || '';
@@ -205,7 +205,7 @@ export const PUT = withPermission(
 );
 
 export const DELETE = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

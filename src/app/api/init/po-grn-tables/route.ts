@@ -27,7 +27,7 @@ async function addColumnSafe(tableName: string, columnDef: string) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const results: string[] = [];
 
@@ -283,17 +283,17 @@ export async function GET(request: NextRequest) {
     // 添加索引
     try {
       await query(`CREATE INDEX idx_po_id ON inv_inbound_order(po_id)`);
-    } catch (e) {
+    } catch {
       /* 索引可能已存在 */
     }
     try {
       await query(`CREATE INDEX idx_po_no ON inv_inbound_order(po_no)`);
-    } catch (e) {
+    } catch {
       /* 索引可能已存在 */
     }
     try {
       await query(`CREATE INDEX idx_grn_type ON inv_inbound_order(grn_type)`);
-    } catch (e) {
+    } catch {
       /* 索引可能已存在 */
     }
 

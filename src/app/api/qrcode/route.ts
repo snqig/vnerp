@@ -4,7 +4,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
@@ -46,198 +46,209 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const {
-    qr_type,
-    ref_id,
-    ref_no,
-    batch_no,
-    material_id,
-    material_code,
-    material_name,
-    specification,
-    quantity,
-    unit,
-    warehouse_id,
-    warehouse_name,
-    location,
-    supplier_id,
-    supplier_name,
-    customer_id,
-    customer_name,
-    work_order_id,
-    work_order_no,
-    production_date,
-    expiry_date,
-    extra_data,
-    remark,
-  } = body;
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const {
+      qr_type,
+      ref_id,
+      ref_no,
+      batch_no,
+      material_id,
+      material_code,
+      material_name,
+      specification,
+      quantity,
+      unit,
+      warehouse_id,
+      warehouse_name,
+      location,
+      supplier_id,
+      supplier_name,
+      customer_id,
+      customer_name,
+      work_order_id,
+      work_order_no,
+      production_date,
+      expiry_date,
+      extra_data,
+      remark,
+    } = body;
 
-  if (!qr_type) return errorResponse('二维码类型不能为空', 400, 400);
+    if (!qr_type) return errorResponse('二维码类型不能为空', 400, 400);
 
-  const qrCode =
-    qr_type.toUpperCase().substring(0, 2) + '-' + randomUUID().replace(/-/g, '').substring(0, 16);
+    const qrCode =
+      qr_type.toUpperCase().substring(0, 2) + '-' + randomUUID().replace(/-/g, '').substring(0, 16);
 
-  const result: any = await transaction(async (conn) => {
-    if (batch_no && (qr_type === 'material' || qr_type === 'product')) {
-      const batch: any = await queryOne(
-        'SELECT id, batch_no, available_qty, quantity, status FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0',
-        [batch_no]
-      );
-      if (!batch) {
-        throw new Error(`批次号 ${batch_no} 不存在，无法关联`);
+    const result: any = await transaction(async (conn) => {
+      if (batch_no && (qr_type === 'material' || qr_type === 'product')) {
+        const batch: any = await queryOne(
+          'SELECT id, batch_no, available_qty, quantity, status FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0',
+          [batch_no]
+        );
+        if (!batch) {
+          throw new Error(`批次号 ${batch_no} 不存在，无法关联`);
+        }
       }
-    }
 
-    const [insertResult] = await conn.execute(
-      `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, batch_no, material_id, material_code, material_name,
+      const [insertResult] = await conn.execute(
+        `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, batch_no, material_id, material_code, material_name,
         specification, quantity, unit, warehouse_id, warehouse_name, location, supplier_id, supplier_name,
         customer_id, customer_name, work_order_id, work_order_no, production_date, expiry_date, extra_data, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-      [
-        qrCode,
-        qr_type,
-        ref_id || null,
-        ref_no || null,
-        batch_no || null,
-        material_id || null,
-        material_code || null,
-        material_name || null,
-        specification || null,
-        quantity || 0,
-        unit || null,
-        warehouse_id || null,
-        warehouse_name || null,
-        location || null,
-        supplier_id || null,
-        supplier_name || null,
-        customer_id || null,
-        customer_name || null,
-        work_order_id || null,
-        work_order_no || null,
-        production_date || null,
-        expiry_date || null,
-        extra_data ? JSON.stringify(extra_data) : null,
-        remark || null,
-      ]
-    );
-    return insertResult;
-  });
-
-  return successResponse({ id: (result as any).insertId, qr_code: qrCode }, '二维码生成成功');
-}, { logTitle: '生成二维码' });
-
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, action, status, remark } = body;
-
-  if (!id && action !== 'batch-consumed') return errorResponse('ID不能为空', 400, 400);
-
-  if (action === 'batch-consumed') {
-    const { batch_no } = body;
-    if (!batch_no) return errorResponse('批次号不能为空', 400, 400);
-
-    await transaction(async (conn) => {
-      const [batchResult]: any = await conn.execute(
-        'UPDATE inv_inventory_batch SET available_qty = 0, status = 0 WHERE batch_no = ? AND deleted = 0',
-        [batch_no]
-      );
-      if (batchResult.affectedRows === 0) {
-        throw new Error(`批次 ${batch_no} 不存在或已删除`);
-      }
-
-      await conn.execute(
-        "UPDATE qrcode_record SET status = 4 WHERE batch_no = ? AND qr_type IN ('material', 'product') AND status IN (1, 2) AND deleted = 0",
-        [batch_no]
-      );
-    });
-
-    return successResponse(null, '批次已消耗，关联二维码状态已更新');
-  }
-
-  if (action === 'print') {
-    await execute(
-      'UPDATE qrcode_record SET print_count = print_count + 1, last_print_time = NOW() WHERE id = ? AND deleted = 0',
-      [id]
-    );
-    return successResponse(null, '打印记录已更新');
-  }
-
-  if (action === 'scan') {
-    const {
-      scan_type,
-      operator_id,
-      operator_name,
-      scan_result,
-      scan_message,
-      scan_data,
-      device_info,
-    } = body;
-    const record: any = await queryOne('SELECT * FROM qrcode_record WHERE id = ? AND deleted = 0', [
-      id,
-    ]);
-    if (!record) return errorResponse('二维码记录不存在', 404, 404);
-
-    await transaction(async (conn) => {
-      await conn.execute(
-        'UPDATE qrcode_record SET scan_count = scan_count + 1, last_scan_time = NOW() WHERE id = ?',
-        [id]
-      );
-
-      await conn.execute(
-        `INSERT INTO qrcode_scan_log (qr_code, qr_type, scan_type, ref_id, ref_no, operator_id, operator_name, scan_result, scan_message, scan_data, device_info)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          record.qr_code,
-          record.qr_type,
-          scan_type || 'trace',
-          record.ref_id,
-          record.ref_no,
-          operator_id || null,
-          operator_name || null,
-          scan_result || 'success',
-          scan_message || null,
-          scan_data ? JSON.stringify(scan_data) : null,
-          device_info || null,
+          qrCode,
+          qr_type,
+          ref_id || null,
+          ref_no || null,
+          batch_no || null,
+          material_id || null,
+          material_code || null,
+          material_name || null,
+          specification || null,
+          quantity || 0,
+          unit || null,
+          warehouse_id || null,
+          warehouse_name || null,
+          location || null,
+          supplier_id || null,
+          supplier_name || null,
+          customer_id || null,
+          customer_name || null,
+          work_order_id || null,
+          work_order_no || null,
+          production_date || null,
+          expiry_date || null,
+          extra_data ? JSON.stringify(extra_data) : null,
+          remark || null,
         ]
       );
+      return insertResult;
     });
 
-    return successResponse(null, '扫描记录已保存');
-  }
+    return successResponse({ id: (result as any).insertId, qr_code: qrCode }, '二维码生成成功');
+  },
+  { logTitle: '生成二维码' }
+);
 
-  if (action === 'invalidate') {
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { id, action, status, remark } = body;
+
+    if (!id && action !== 'batch-consumed') return errorResponse('ID不能为空', 400, 400);
+
+    if (action === 'batch-consumed') {
+      const { batch_no } = body;
+      if (!batch_no) return errorResponse('批次号不能为空', 400, 400);
+
+      await transaction(async (conn) => {
+        const [batchResult]: any = await conn.execute(
+          'UPDATE inv_inventory_batch SET available_qty = 0, status = 0 WHERE batch_no = ? AND deleted = 0',
+          [batch_no]
+        );
+        if (batchResult.affectedRows === 0) {
+          throw new Error(`批次 ${batch_no} 不存在或已删除`);
+        }
+
+        await conn.execute(
+          "UPDATE qrcode_record SET status = 4 WHERE batch_no = ? AND qr_type IN ('material', 'product') AND status IN (1, 2) AND deleted = 0",
+          [batch_no]
+        );
+      });
+
+      return successResponse(null, '批次已消耗，关联二维码状态已更新');
+    }
+
+    if (action === 'print') {
+      await execute(
+        'UPDATE qrcode_record SET print_count = print_count + 1, last_print_time = NOW() WHERE id = ? AND deleted = 0',
+        [id]
+      );
+      return successResponse(null, '打印记录已更新');
+    }
+
+    if (action === 'scan') {
+      const {
+        scan_type,
+        operator_id,
+        operator_name,
+        scan_result,
+        scan_message,
+        scan_data,
+        device_info,
+      } = body;
+      const record: any = await queryOne(
+        'SELECT * FROM qrcode_record WHERE id = ? AND deleted = 0',
+        [id]
+      );
+      if (!record) return errorResponse('二维码记录不存在', 404, 404);
+
+      await transaction(async (conn) => {
+        await conn.execute(
+          'UPDATE qrcode_record SET scan_count = scan_count + 1, last_scan_time = NOW() WHERE id = ?',
+          [id]
+        );
+
+        await conn.execute(
+          `INSERT INTO qrcode_scan_log (qr_code, qr_type, scan_type, ref_id, ref_no, operator_id, operator_name, scan_result, scan_message, scan_data, device_info)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            record.qr_code,
+            record.qr_type,
+            scan_type || 'trace',
+            record.ref_id,
+            record.ref_no,
+            operator_id || null,
+            operator_name || null,
+            scan_result || 'success',
+            scan_message || null,
+            scan_data ? JSON.stringify(scan_data) : null,
+            device_info || null,
+          ]
+        );
+      });
+
+      return successResponse(null, '扫描记录已保存');
+    }
+
+    if (action === 'invalidate') {
+      await transaction(async (conn) => {
+        await conn.execute('UPDATE qrcode_record SET status = 3 WHERE id = ? AND deleted = 0', [
+          id,
+        ]);
+      });
+      return successResponse(null, '二维码已失效');
+    }
+
+    if (action === 'void') {
+      await transaction(async (conn) => {
+        await conn.execute('UPDATE qrcode_record SET status = 9 WHERE id = ? AND deleted = 0', [
+          id,
+        ]);
+      });
+      return successResponse(null, '二维码已作废');
+    }
+
+    const fields: string[] = [];
+    const values: any[] = [];
+    if (status !== undefined) {
+      fields.push('status = ?');
+      values.push(status);
+    }
+    if (remark !== undefined) {
+      fields.push('remark = ?');
+      values.push(remark);
+    }
+    if (fields.length === 0) return errorResponse('没有需要更新的字段', 400, 400);
+    values.push(id);
     await transaction(async (conn) => {
-      await conn.execute('UPDATE qrcode_record SET status = 3 WHERE id = ? AND deleted = 0', [id]);
+      await conn.execute(
+        `UPDATE qrcode_record SET ${fields.join(', ')} WHERE id = ? AND deleted = 0`,
+        values
+      );
     });
-    return successResponse(null, '二维码已失效');
-  }
-
-  if (action === 'void') {
-    await transaction(async (conn) => {
-      await conn.execute('UPDATE qrcode_record SET status = 9 WHERE id = ? AND deleted = 0', [id]);
-    });
-    return successResponse(null, '二维码已作废');
-  }
-
-  const fields: string[] = [];
-  const values: any[] = [];
-  if (status !== undefined) {
-    fields.push('status = ?');
-    values.push(status);
-  }
-  if (remark !== undefined) {
-    fields.push('remark = ?');
-    values.push(remark);
-  }
-  if (fields.length === 0) return errorResponse('没有需要更新的字段', 400, 400);
-  values.push(id);
-  await transaction(async (conn) => {
-    await conn.execute(
-      `UPDATE qrcode_record SET ${fields.join(', ')} WHERE id = ? AND deleted = 0`,
-      values
-    );
-  });
-  return successResponse(null, '更新成功');
-}, { logTitle: '更新二维码' });
+    return successResponse(null, '更新成功');
+  },
+  { logTitle: '更新二维码' }
+);

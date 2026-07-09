@@ -9,7 +9,7 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status') || '';
@@ -69,7 +69,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 export const POST = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (request: NextRequest, _userInfo) => {
     const body = await request.json();
 
     const validation = validateRequestBody(body, ['supplier_code', 'supplier_name']);
@@ -129,7 +129,7 @@ export const POST = withPermission(
 );
 
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (request: NextRequest, _userInfo) => {
     const body = await request.json();
     const { id, ...updateData } = body;
 
@@ -186,7 +186,7 @@ export const PUT = withPermission(
 );
 
 export const DELETE = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (request: NextRequest, _userInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

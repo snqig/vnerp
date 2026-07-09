@@ -10,10 +10,13 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { generateDocumentNo } from '@/lib/document-numbering';
-import { WarehouseStateMachine, OutboundStatus } from '@/domain/warehouse/value-objects/WarehouseStateMachine';
+import {
+  WarehouseStateMachine,
+  OutboundStatus,
+} from '@/domain/warehouse/value-objects/WarehouseStateMachine';
 
 // 获取出库单列表
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status') || '';
@@ -119,148 +122,155 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // 创建出库单
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, [
-    'orderDate',
-    'warehouseId',
-    'warehouseCode',
-    'warehouseName',
-    'items',
-    'operatorId',
-    'operatorName',
-  ]);
+    // 验证必填字段
+    const validation = validateRequestBody(body, [
+      'orderDate',
+      'warehouseId',
+      'warehouseCode',
+      'warehouseName',
+      'items',
+      'operatorId',
+      'operatorName',
+    ]);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const {
-    orderDate,
-    outboundType,
-    warehouseId,
-    warehouseCode,
-    warehouseName,
-    remark,
-    items,
-    operatorId,
-    operatorName,
-  } = body;
+    const {
+      orderDate,
+      outboundType,
+      warehouseId,
+      warehouseCode,
+      warehouseName,
+      remark,
+      items,
+      operatorId,
+      operatorName,
+    } = body;
 
-  const orderNo = await generateDocumentNo('outbound');
+    const orderNo = await generateDocumentNo('outbound');
 
-  // 使用事务确保数据一致性
-  const result = await transaction(async (connection) => {
-    // 计算总金额
-    const totalQty = items.reduce((sum: number, item: any) => sum + (parseFloat(item.qty) || 0), 0);
-    const totalAmount = items.reduce(
-      (sum: number, item: any) =>
-        sum + (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0),
-      0
-    );
+    // 使用事务确保数据一致性
+    const result = await transaction(async (connection) => {
+      // 计算总金额
+      const totalQty = items.reduce(
+        (sum: number, item: any) => sum + (parseFloat(item.qty) || 0),
+        0
+      );
+      const totalAmount = items.reduce(
+        (sum: number, item: any) =>
+          sum + (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0),
+        0
+      );
 
-    // 插入出库单主表
-    const [orderResult] = await connection.execute(
-      `INSERT INTO inv_outbound_order (
+      // 插入出库单主表
+      const [orderResult] = await connection.execute(
+        `INSERT INTO inv_outbound_order (
         order_no, order_date, outbound_type,
         warehouse_id, warehouse_code, warehouse_name,
         total_qty, total_amount, remark, operator_id, operator_name, status
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
-      [
-        orderNo,
-        orderDate,
-        outboundType,
-        warehouseId,
-        warehouseCode,
-        warehouseName,
-        totalQty,
-        totalAmount,
-        remark,
-        operatorId,
-        operatorName,
-      ]
-    );
+        [
+          orderNo,
+          orderDate,
+          outboundType,
+          warehouseId,
+          warehouseCode,
+          warehouseName,
+          totalQty,
+          totalAmount,
+          remark,
+          operatorId,
+          operatorName,
+        ]
+      );
 
-    const orderId = (orderResult as any).insertId;
+      const orderId = (orderResult as any).insertId;
 
-    // 批量插入出库单明细
-    if (items.length > 0) {
-      const itemValues = items.map((item: any) => [
-        orderId,
-        item.materialId,
-        item.materialName,
-        item.specification || '',
-        item.qty,
-        item.unit || '个',
-        item.unitPrice || 0,
-        (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0),
-        item.batchNo || '',
-        item.remark || '',
-      ]);
+      // 批量插入出库单明细
+      if (items.length > 0) {
+        const itemValues = items.map((item: any) => [
+          orderId,
+          item.materialId,
+          item.materialName,
+          item.specification || '',
+          item.qty,
+          item.unit || '个',
+          item.unitPrice || 0,
+          (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0),
+          item.batchNo || '',
+          item.remark || '',
+        ]);
 
-      await connection.query(
-        `INSERT INTO inv_outbound_item (
+        await connection.query(
+          `INSERT INTO inv_outbound_item (
           order_id, material_id, material_name,
           material_spec, quantity, unit, unit_price, amount,
           batch_no, remark
         ) VALUES ?`,
-        [itemValues]
+          [itemValues]
+        );
+      }
+
+      return { id: orderId, orderNo };
+    });
+
+    await logOperation({
+      title: '创建出库单',
+      oper_type: 'warehouse',
+      oper_method: 'POST',
+      oper_url: '/api/warehouse/outbound',
+      oper_param: JSON.stringify({
+        orderNo: result.orderNo,
+        warehouseCode,
+        warehouseName,
+        operatorName,
+      }),
+      oper_result: `出库单 ${result.orderNo} 创建成功`,
+      status: 1,
+    });
+
+    return successResponse(result, '出库单创建成功');
+  },
+  { errorMessage: '创建出库单失败' }
+);
+
+// 更新出库单
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { id, ...updateData } = body;
+
+    if (!id) {
+      return commonErrors.badRequest('出库单ID不能为空');
+    }
+
+    // 检查出库单状态
+    const [order] = await query<{ status: OutboundStatus }>(
+      'SELECT status FROM inv_outbound_order WHERE id = ? AND deleted = 0',
+      [id]
+    );
+
+    if (!order) {
+      return commonErrors.notFound('出库单不存在');
+    }
+
+    // 使用状态机检查是否允许编辑
+    if (!WarehouseStateMachine.canEditOutbound(order.status)) {
+      return errorResponse(
+        `当前状态【${WarehouseStateMachine.getOutboundStatusLabel(order.status)}】不允许修改`,
+        400,
+        400
       );
     }
 
-    return { id: orderId, orderNo };
-  });
-
-  await logOperation({
-    title: '创建出库单',
-    oper_type: 'warehouse',
-    oper_method: 'POST',
-    oper_url: '/api/warehouse/outbound',
-    oper_param: JSON.stringify({
-      orderNo: result.orderNo,
-      warehouseCode,
-      warehouseName,
-      operatorName,
-    }),
-    oper_result: `出库单 ${result.orderNo} 创建成功`,
-    status: 1,
-  });
-
-  return successResponse(result, '出库单创建成功');
-}, { errorMessage: '创建出库单失败' });
-
-// 更新出库单
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, ...updateData } = body;
-
-  if (!id) {
-    return commonErrors.badRequest('出库单ID不能为空');
-  }
-
-  // 检查出库单状态
-  const [order] = await query<{ status: OutboundStatus }>(
-    'SELECT status FROM inv_outbound_order WHERE id = ? AND deleted = 0',
-    [id]
-  );
-
-  if (!order) {
-    return commonErrors.notFound('出库单不存在');
-  }
-
-  // 使用状态机检查是否允许编辑
-  if (!WarehouseStateMachine.canEditOutbound(order.status)) {
-    return errorResponse(
-      `当前状态【${WarehouseStateMachine.getOutboundStatusLabel(order.status)}】不允许修改`,
-      400,
-      400
-    );
-  }
-
-  await execute(
-    `UPDATE inv_outbound_order SET
+    await execute(
+      `UPDATE inv_outbound_order SET
       order_date = ?,
       outbound_type = ?,
       warehouse_id = ?,
@@ -269,66 +279,71 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
       remark = ?,
       update_time = NOW()
     WHERE id = ?`,
-    [
-      updateData.orderDate,
-      updateData.outboundType,
-      updateData.warehouseId,
-      updateData.warehouseCode,
-      updateData.warehouseName,
-      updateData.remark,
-      id,
-    ]
-  );
+      [
+        updateData.orderDate,
+        updateData.outboundType,
+        updateData.warehouseId,
+        updateData.warehouseCode,
+        updateData.warehouseName,
+        updateData.remark,
+        id,
+      ]
+    );
 
-  return successResponse(null, '出库单更新成功');
-}, { logTitle: '更新出库单', logType: 'business' });
+    return successResponse(null, '出库单更新成功');
+  },
+  { logTitle: '更新出库单', logType: 'business' }
+);
 
 // 删除出库单（软删除）
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return commonErrors.badRequest('出库单ID不能为空');
-  }
+    if (!id) {
+      return commonErrors.badRequest('出库单ID不能为空');
+    }
 
-  // 检查出库单状态
-  const [order] = await query<{ status: OutboundStatus }>(
-    'SELECT status FROM inv_outbound_order WHERE id = ? AND deleted = 0',
-    [id]
-  );
-
-  if (!order) {
-    return commonErrors.notFound('出库单不存在');
-  }
-
-  // 使用状态机检查是否允许删除
-  if (!WarehouseStateMachine.canDeleteOutbound(order.status)) {
-    return errorResponse(
-      `当前状态【${WarehouseStateMachine.getOutboundStatusLabel(order.status)}】不允许删除`,
-      400,
-      400
-    );
-  }
-
-  // 使用事务同时更新主表和明细表
-  await transaction(async (connection) => {
-    await connection.execute(
-      'UPDATE inv_outbound_order SET deleted = 1, update_time = NOW() WHERE id = ?',
+    // 检查出库单状态
+    const [order] = await query<{ status: OutboundStatus }>(
+      'SELECT status FROM inv_outbound_order WHERE id = ? AND deleted = 0',
       [id]
     );
-    await connection.execute('UPDATE inv_outbound_item SET deleted = 1 WHERE order_id = ?', [id]);
-  });
 
-  await logOperation({
-    title: '删除出库单',
-    oper_type: 'warehouse',
-    oper_method: 'DELETE',
-    oper_url: '/api/warehouse/outbound',
-    oper_param: JSON.stringify({ id }),
-    oper_result: `出库单 ${id} 删除成功`,
-    status: 1,
-  });
+    if (!order) {
+      return commonErrors.notFound('出库单不存在');
+    }
 
-  return successResponse(null, '出库单删除成功');
-}, { errorMessage: '删除出库单失败' });
+    // 使用状态机检查是否允许删除
+    if (!WarehouseStateMachine.canDeleteOutbound(order.status)) {
+      return errorResponse(
+        `当前状态【${WarehouseStateMachine.getOutboundStatusLabel(order.status)}】不允许删除`,
+        400,
+        400
+      );
+    }
+
+    // 使用事务同时更新主表和明细表
+    await transaction(async (connection) => {
+      await connection.execute(
+        'UPDATE inv_outbound_order SET deleted = 1, update_time = NOW() WHERE id = ?',
+        [id]
+      );
+      await connection.execute('UPDATE inv_outbound_item SET deleted = 1 WHERE order_id = ?', [id]);
+    });
+
+    await logOperation({
+      title: '删除出库单',
+      oper_type: 'warehouse',
+      oper_method: 'DELETE',
+      oper_url: '/api/warehouse/outbound',
+      oper_param: JSON.stringify({ id }),
+      oper_result: `出库单 ${id} 删除成功`,
+      status: 1,
+    });
+
+    return successResponse(null, '出库单删除成功');
+  },
+  { errorMessage: '删除出库单失败' }
+);

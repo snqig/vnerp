@@ -1,23 +1,19 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-  validateRequestBody,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 
 /**
  * 多单位换算 API
- * 
+ *
  * 支持物料的多单位管理，实现"箱→个"、"吨→公斤"等换算
  * 换算关系：1 大单位 = N 小单位
  */
 
 // 获取单位换算列表
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
     const page = parseInt(searchParams.get('page') || '1');
@@ -54,7 +50,7 @@ export const GET = withPermission(
 
 // 创建/更新单位换算
 export const POST = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
     const validation = validateRequestBody(body, ['material_id', 'from_unit', 'to_unit', 'ratio']);
 
@@ -98,7 +94,7 @@ export const POST = withPermission(
 
 // 删除换算关系
 export const DELETE = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -114,7 +110,7 @@ export const DELETE = withPermission(
 
 // 单位换算计算
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
     const { material_id, from_unit, to_unit, quantity } = body;
 
@@ -143,14 +139,17 @@ export const PUT = withPermission(
       resultQty = Number(quantity) / Number(conv.ratio);
     }
 
-    return successResponse({
-      material_id,
-      from_unit,
-      to_unit,
-      from_quantity: Number(quantity),
-      to_quantity: resultQty,
-      ratio: Number(conv.ratio),
-    }, '换算完成');
+    return successResponse(
+      {
+        material_id,
+        from_unit,
+        to_unit,
+        from_quantity: Number(quantity),
+        to_quantity: resultQty,
+        ratio: Number(conv.ratio),
+      },
+      '换算完成'
+    );
   },
   { errorMessage: '操作失败' }
 );

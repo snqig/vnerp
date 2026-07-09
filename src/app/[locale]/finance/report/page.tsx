@@ -75,8 +75,7 @@ export default function FinanceReportPage() {
         setList(result.data?.list || []);
         setTotal(result.data?.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, [page, periodType]);
 
   const fetchSummary = useCallback(async () => {
@@ -92,8 +91,7 @@ export default function FinanceReportPage() {
           profit_rate: d.profit_rate || 0,
         });
       }
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -184,15 +182,37 @@ export default function FinanceReportPage() {
               filename="财务收支报表"
               title="财务收支明细报表"
               subtitle={periodType || ''}
-              columns={[
-                { key: 'period', label: '期间', width: 18 },
-                { key: 'type', label: '类型', width: 12 },
-                { key: 'category', label: '类别', width: 15 },
-                { key: 'revenue', label: '收入', width: 12, formatter: (v) => Number(v || 0).toFixed(2) },
-                { key: 'cost', label: '成本', width: 12, formatter: (v) => Number(v || 0).toFixed(2) },
-                { key: 'profit', label: '利润', width: 12, formatter: (v) => Number(v || 0).toFixed(2) },
-                { key: 'profit_rate', label: '利润率', width: 10, formatter: (v) => `${(Number(v || 0)).toFixed(1)}%` },
-              ] as ExportColumn[]}
+              columns={
+                [
+                  { key: 'period', label: '期间', width: 18 },
+                  { key: 'type', label: '类型', width: 12 },
+                  { key: 'category', label: '类别', width: 15 },
+                  {
+                    key: 'revenue',
+                    label: '收入',
+                    width: 12,
+                    formatter: (v) => Number(v || 0).toFixed(2),
+                  },
+                  {
+                    key: 'cost',
+                    label: '成本',
+                    width: 12,
+                    formatter: (v) => Number(v || 0).toFixed(2),
+                  },
+                  {
+                    key: 'profit',
+                    label: '利润',
+                    width: 12,
+                    formatter: (v) => Number(v || 0).toFixed(2),
+                  },
+                  {
+                    key: 'profit_rate',
+                    label: '利润率',
+                    width: 10,
+                    formatter: (v) => `${Number(v || 0).toFixed(1)}%`,
+                  },
+                ] as ExportColumn[]
+              }
               data={list}
               footer="本报表由 ERP 系统自动生成，仅供参考。"
             />
@@ -202,11 +222,11 @@ export default function FinanceReportPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('period')}</TableHead>
-                  <TableHead>{tc("type")}</TableHead>
-                  <TableHead>{tc("category")}</TableHead>
-                  <TableHead className="text-right">{tc("revenue")}</TableHead>
-                  <TableHead className="text-right">{tc("cost")}</TableHead>
-                  <TableHead className="text-right">{tc("profit")}</TableHead>
+                  <TableHead>{tc('type')}</TableHead>
+                  <TableHead>{tc('category')}</TableHead>
+                  <TableHead className="text-right">{tc('revenue')}</TableHead>
+                  <TableHead className="text-right">{tc('cost')}</TableHead>
+                  <TableHead className="text-right">{tc('profit')}</TableHead>
                   <TableHead className="text-right">{t('profitRate')}</TableHead>
                 </TableRow>
               </TableHeader>

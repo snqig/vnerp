@@ -35,7 +35,7 @@ export class QrCodeGenerationHandler implements EventHandler<InboundOrderApprove
               }),
             ]
           );
-        } catch (e) {
+        } catch {
           secureLog('error', 'Failed to generate QR code', {
             orderNo: inboundNo,
             materialId: item.materialId,
@@ -44,6 +44,9 @@ export class QrCodeGenerationHandler implements EventHandler<InboundOrderApprove
       }
     });
 
-    secureLog('info', 'QR codes generated for inbound order', { orderNo: inboundNo, itemCount: items.length });
+    secureLog('info', 'QR codes generated for inbound order', {
+      orderNo: inboundNo,
+      itemCount: items.length,
+    });
   }
 }

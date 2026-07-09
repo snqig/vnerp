@@ -86,7 +86,7 @@ function buildQueryConditions(params: {
 }
 
 // GET - 获取员工列表或单个员工
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const keyword = searchParams.get('keyword') || '';
@@ -127,101 +127,105 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // POST - 创建员工
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body: Employee = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body: Employee = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, ['employee_no', 'name']);
+    // 验证必填字段
+    const validation = validateRequestBody(body, ['employee_no', 'name']);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  // 检查员工编号是否已存在
-  const existing = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_employee WHERE employee_no = ?',
-    [body.employee_no]
-  );
+    // 检查员工编号是否已存在
+    const existing = await queryOne<{ id: number }>(
+      'SELECT id FROM sys_employee WHERE employee_no = ?',
+      [body.employee_no]
+    );
 
-  if (existing) {
-    return errorResponse('员工编号已存在', 409, 409);
-  }
+    if (existing) {
+      return errorResponse('员工编号已存在', 409, 409);
+    }
 
-  const result = await execute(
-    `INSERT INTO sys_employee (
+    const result = await execute(
+      `INSERT INTO sys_employee (
       employee_no, name, gender, age, id_card, phone, email,
       dept_id, dept_name, section, role_id, role_name, position, entry_date,
       birth_date, native_place, home_address, current_address, birth_month, id_card_expiry, education, remark, status, photo
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      body.employee_no,
-      body.name,
-      body.gender ?? 1,
-      body.age ?? null,
-      body.id_card ?? null,
-      body.phone ?? null,
-      body.email ?? null,
-      body.dept_id ?? null,
-      body.dept_name ?? null,
-      body.section ?? null,
-      body.role_id ?? null,
-      body.role_name ?? null,
-      body.position ?? null,
-      body.entry_date ?? null,
-      body.birth_date ?? null,
-      body.native_place ?? null,
-      body.home_address ?? null,
-      body.current_address ?? null,
-      body.birth_month ?? null,
-      body.id_card_expiry ?? null,
-      body.education ?? null,
-      body.remark ?? null,
-      body.status ?? 1,
-      body.photo ?? null,
-    ]
-  );
+      [
+        body.employee_no,
+        body.name,
+        body.gender ?? 1,
+        body.age ?? null,
+        body.id_card ?? null,
+        body.phone ?? null,
+        body.email ?? null,
+        body.dept_id ?? null,
+        body.dept_name ?? null,
+        body.section ?? null,
+        body.role_id ?? null,
+        body.role_name ?? null,
+        body.position ?? null,
+        body.entry_date ?? null,
+        body.birth_date ?? null,
+        body.native_place ?? null,
+        body.home_address ?? null,
+        body.current_address ?? null,
+        body.birth_month ?? null,
+        body.id_card_expiry ?? null,
+        body.education ?? null,
+        body.remark ?? null,
+        body.status ?? 1,
+        body.photo ?? null,
+      ]
+    );
 
-  return successResponse({ id: result.insertId }, '员工创建成功');
-}, { logTitle: '创建员工' });
+    return successResponse({ id: result.insertId }, '员工创建成功');
+  },
+  { logTitle: '创建员工' }
+);
 
 // PUT - 更新员工
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body: Employee = await request.json();
-  const { id } = body;
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body: Employee = await request.json();
+    const { id } = body;
 
-  if (!id) {
-    return commonErrors.badRequest('员工ID不能为空');
-  }
+    if (!id) {
+      return commonErrors.badRequest('员工ID不能为空');
+    }
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, ['employee_no', 'name']);
+    // 验证必填字段
+    const validation = validateRequestBody(body, ['employee_no', 'name']);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  // 检查员工是否存在
-  const existingEmployee = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_employee WHERE id = ?',
-    [id]
-  );
+    // 检查员工是否存在
+    const existingEmployee = await queryOne<{ id: number }>(
+      'SELECT id FROM sys_employee WHERE id = ?',
+      [id]
+    );
 
-  if (!existingEmployee) {
-    return commonErrors.notFound('员工不存在');
-  }
+    if (!existingEmployee) {
+      return commonErrors.notFound('员工不存在');
+    }
 
-  // 检查员工编号是否已被其他员工使用
-  const codeExists = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_employee WHERE employee_no = ? AND id != ?',
-    [body.employee_no, id]
-  );
+    // 检查员工编号是否已被其他员工使用
+    const codeExists = await queryOne<{ id: number }>(
+      'SELECT id FROM sys_employee WHERE employee_no = ? AND id != ?',
+      [body.employee_no, id]
+    );
 
-  if (codeExists) {
-    return errorResponse('员工编号已存在', 409, 409);
-  }
+    if (codeExists) {
+      return errorResponse('员工编号已存在', 409, 409);
+    }
 
-  const result = await execute(
-    `UPDATE sys_employee SET
+    const result = await execute(
+      `UPDATE sys_employee SET
       employee_no = ?,
       name = ?,
       gender = ?,
@@ -247,67 +251,72 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
       status = ?,
       photo = ?
     WHERE id = ?`,
-    [
-      body.employee_no,
-      body.name,
-      body.gender ?? 1,
-      body.age ?? null,
-      body.id_card ?? null,
-      body.phone ?? null,
-      body.email ?? null,
-      body.dept_id ?? null,
-      body.dept_name ?? null,
-      body.section ?? null,
-      body.role_id ?? null,
-      body.role_name ?? null,
-      body.position ?? null,
-      body.entry_date ?? null,
-      body.birth_date ?? null,
-      body.native_place ?? null,
-      body.home_address ?? null,
-      body.current_address ?? null,
-      body.birth_month ?? null,
-      body.id_card_expiry ?? null,
-      body.education ?? null,
-      body.remark ?? null,
-      body.status,
-      body.photo ?? null,
-      id,
-    ]
-  );
+      [
+        body.employee_no,
+        body.name,
+        body.gender ?? 1,
+        body.age ?? null,
+        body.id_card ?? null,
+        body.phone ?? null,
+        body.email ?? null,
+        body.dept_id ?? null,
+        body.dept_name ?? null,
+        body.section ?? null,
+        body.role_id ?? null,
+        body.role_name ?? null,
+        body.position ?? null,
+        body.entry_date ?? null,
+        body.birth_date ?? null,
+        body.native_place ?? null,
+        body.home_address ?? null,
+        body.current_address ?? null,
+        body.birth_month ?? null,
+        body.id_card_expiry ?? null,
+        body.education ?? null,
+        body.remark ?? null,
+        body.status,
+        body.photo ?? null,
+        id,
+      ]
+    );
 
-  if (result.affectedRows === 0) {
-    return commonErrors.notFound('员工不存在');
-  }
+    if (result.affectedRows === 0) {
+      return commonErrors.notFound('员工不存在');
+    }
 
-  return successResponse(null, '员工更新成功');
-}, { logTitle: '更新员工' });
+    return successResponse(null, '员工更新成功');
+  },
+  { logTitle: '更新员工' }
+);
 
 // DELETE - 删除员工（软删除）
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return commonErrors.badRequest('员工ID不能为空');
-  }
+    if (!id) {
+      return commonErrors.badRequest('员工ID不能为空');
+    }
 
-  const employeeId = parseInt(id);
+    const employeeId = parseInt(id);
 
-  // 检查员工是否存在
-  const existingEmployee = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_employee WHERE id = ?',
-    [employeeId]
-  );
+    // 检查员工是否存在
+    const existingEmployee = await queryOne<{ id: number }>(
+      'SELECT id FROM sys_employee WHERE id = ?',
+      [employeeId]
+    );
 
-  if (!existingEmployee) {
-    return commonErrors.notFound('员工不存在');
-  }
+    if (!existingEmployee) {
+      return commonErrors.notFound('员工不存在');
+    }
 
-  // 使用事务软删除
-  await transaction(async (connection) => {
-    await connection.execute('UPDATE sys_employee SET status = 0 WHERE id = ?', [employeeId]);
-  });
+    // 使用事务软删除
+    await transaction(async (connection) => {
+      await connection.execute('UPDATE sys_employee SET status = 0 WHERE id = ?', [employeeId]);
+    });
 
-  return successResponse(null, '员工删除成功');
-}, { logTitle: '删除员工' });
+    return successResponse(null, '员工删除成功');
+  },
+  { logTitle: '删除员工' }
+);

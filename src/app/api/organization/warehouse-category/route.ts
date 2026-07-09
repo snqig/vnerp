@@ -19,7 +19,7 @@ interface WarehouseCategory {
   update_time?: string;
 }
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const status = searchParams.get('status');
@@ -48,107 +48,116 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   return successResponse(result);
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body: WarehouseCategory = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body: WarehouseCategory = await request.json();
 
-  const validation = validateRequestBody(body, ['code', 'name']);
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    const validation = validateRequestBody(body, ['code', 'name']);
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const existing = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_warehouse_category WHERE code = ?',
-    [body.code]
-  );
+    const existing = await queryOne<{ id: number }>(
+      'SELECT id FROM sys_warehouse_category WHERE code = ?',
+      [body.code]
+    );
 
-  if (existing) {
-    return errorResponse('分类编码已存在', 409, 409);
-  }
+    if (existing) {
+      return errorResponse('分类编码已存在', 409, 409);
+    }
 
-  const result = await execute(
-    `INSERT INTO sys_warehouse_category (code, name, description, sort_order, status) VALUES (?, ?, ?, ?, ?)`,
-    [body.code, body.name, body.description || '', body.sort_order ?? 0, body.status ?? 1]
-  );
+    const result = await execute(
+      `INSERT INTO sys_warehouse_category (code, name, description, sort_order, status) VALUES (?, ?, ?, ?, ?)`,
+      [body.code, body.name, body.description || '', body.sort_order ?? 0, body.status ?? 1]
+    );
 
-  return successResponse({ id: result.insertId }, '仓库分类创建成功');
-}, { logTitle: '创建仓库分类' });
+    return successResponse({ id: result.insertId }, '仓库分类创建成功');
+  },
+  { logTitle: '创建仓库分类' }
+);
 
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body: WarehouseCategory = await request.json();
-  const { id } = body;
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body: WarehouseCategory = await request.json();
+    const { id } = body;
 
-  if (!id) {
-    return commonErrors.badRequest('缺少分类ID');
-  }
+    if (!id) {
+      return commonErrors.badRequest('缺少分类ID');
+    }
 
-  const validation = validateRequestBody(body, ['code', 'name']);
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    const validation = validateRequestBody(body, ['code', 'name']);
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const existingCategory = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_warehouse_category WHERE id = ?',
-    [id]
-  );
+    const existingCategory = await queryOne<{ id: number }>(
+      'SELECT id FROM sys_warehouse_category WHERE id = ?',
+      [id]
+    );
 
-  if (!existingCategory) {
-    return commonErrors.notFound('仓库分类不存在');
-  }
+    if (!existingCategory) {
+      return commonErrors.notFound('仓库分类不存在');
+    }
 
-  const codeExists = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_warehouse_category WHERE code = ? AND id != ?',
-    [body.code, id]
-  );
+    const codeExists = await queryOne<{ id: number }>(
+      'SELECT id FROM sys_warehouse_category WHERE code = ? AND id != ?',
+      [body.code, id]
+    );
 
-  if (codeExists) {
-    return errorResponse('分类编码已存在', 409, 409);
-  }
+    if (codeExists) {
+      return errorResponse('分类编码已存在', 409, 409);
+    }
 
-  const result = await execute(
-    `UPDATE sys_warehouse_category SET code = ?, name = ?, description = ?, sort_order = ?, status = ? WHERE id = ?`,
-    [body.code, body.name, body.description || '', body.sort_order ?? 0, body.status ?? 1, id]
-  );
+    const result = await execute(
+      `UPDATE sys_warehouse_category SET code = ?, name = ?, description = ?, sort_order = ?, status = ? WHERE id = ?`,
+      [body.code, body.name, body.description || '', body.sort_order ?? 0, body.status ?? 1, id]
+    );
 
-  if (result.affectedRows === 0) {
-    return commonErrors.notFound('仓库分类不存在');
-  }
+    if (result.affectedRows === 0) {
+      return commonErrors.notFound('仓库分类不存在');
+    }
 
-  return successResponse(null, '仓库分类更新成功');
-}, { logTitle: '更新仓库分类' });
+    return successResponse(null, '仓库分类更新成功');
+  },
+  { logTitle: '更新仓库分类' }
+);
 
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return commonErrors.badRequest('缺少分类ID');
-  }
+    if (!id) {
+      return commonErrors.badRequest('缺少分类ID');
+    }
 
-  const categoryId = parseInt(id);
+    const categoryId = parseInt(id);
 
-  const existingCategory = await queryOne<{ id: number }>(
-    'SELECT id FROM sys_warehouse_category WHERE id = ?',
-    [categoryId]
-  );
+    const existingCategory = await queryOne<{ id: number }>(
+      'SELECT id FROM sys_warehouse_category WHERE id = ?',
+      [categoryId]
+    );
 
-  if (!existingCategory) {
-    return commonErrors.notFound('仓库分类不存在');
-  }
+    if (!existingCategory) {
+      return commonErrors.notFound('仓库分类不存在');
+    }
 
-  const hasWarehouses = await queryOne<{ count: number }>(
-    'SELECT COUNT(*) as count FROM inv_warehouse WHERE category_id = ?',
-    [categoryId]
-  );
+    const hasWarehouses = await queryOne<{ count: number }>(
+      'SELECT COUNT(*) as count FROM inv_warehouse WHERE category_id = ?',
+      [categoryId]
+    );
 
-  if (hasWarehouses && hasWarehouses.count > 0) {
-    return errorResponse('该分类下有仓库，无法删除', 409, 409);
-  }
+    if (hasWarehouses && hasWarehouses.count > 0) {
+      return errorResponse('该分类下有仓库，无法删除', 409, 409);
+    }
 
-  const result = await execute('DELETE FROM sys_warehouse_category WHERE id = ?', [categoryId]);
+    const result = await execute('DELETE FROM sys_warehouse_category WHERE id = ?', [categoryId]);
 
-  if (result.affectedRows === 0) {
-    return commonErrors.notFound('仓库分类不存在');
-  }
+    if (result.affectedRows === 0) {
+      return commonErrors.notFound('仓库分类不存在');
+    }
 
-  return successResponse(null, '仓库分类删除成功');
-}, { logTitle: '删除仓库分类' });
+    return successResponse(null, '仓库分类删除成功');
+  },
+  { logTitle: '删除仓库分类' }
+);

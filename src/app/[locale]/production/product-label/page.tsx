@@ -114,8 +114,7 @@ export default function ProductLabelPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, [page, searchNo, searchMaterial, searchStatus]);
 
   useEffect(() => {
@@ -154,7 +153,7 @@ export default function ProductLabelPage() {
       } else {
         toast({ title: '失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -170,7 +169,7 @@ export default function ProductLabelPage() {
         toast({ title: '更新成功' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -184,7 +183,7 @@ export default function ProductLabelPage() {
         toast({ title: '删除成功' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -257,7 +256,11 @@ export default function ProductLabelPage() {
   };
 
   const getExportLabel = (status: number) => {
-    const labels: Record<number, string> = {1: t('labelPendingPrint'), 2: t('labelPrinted'), 3: t('labelLabeled')};
+    const labels: Record<number, string> = {
+      1: t('labelPendingPrint'),
+      2: t('labelPrinted'),
+      3: t('labelLabeled'),
+    };
     return labels[status] || tc('unknown');
   };
   const getExportData = () =>
@@ -306,7 +309,13 @@ export default function ProductLabelPage() {
                   <SelectItem value="all">{t('allStatus')}</SelectItem>
                   {Object.entries(LABEL_STATUS_CONFIG).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
-                      {t(k === '1' ? 'labelPendingPrint' : k === '2' ? 'labelPrinted' : 'labelLabeled')}
+                      {t(
+                        k === '1'
+                          ? 'labelPendingPrint'
+                          : k === '2'
+                            ? 'labelPrinted'
+                            : 'labelLabeled'
+                      )}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -326,7 +335,12 @@ export default function ProductLabelPage() {
                 { key: 'quantity', label: tc('quantity'), width: 10 },
                 { key: 'batch_no', label: t('batchNo'), width: 12 },
                 { key: 'qc_result', label: t('qcResult'), width: 12 },
-                { key: 'status', label: tc('status'), width: 12, formatter: (v) => getExportLabel(v) },
+                {
+                  key: 'status',
+                  label: tc('status'),
+                  width: 12,
+                  formatter: (v) => getExportLabel(v),
+                },
               ]}
               data={selectedIds.size > 0 ? list.filter((i) => selectedIds.has(i.id)) : list}
             />
@@ -377,7 +391,11 @@ export default function ProductLabelPage() {
               <TableBody>
                 {list.map((item) => {
                   const st = LABEL_STATUS_CONFIG[item.status] || LABEL_STATUS_CONFIG[1];
-                  const labelStatusLabels: Record<number, string> = {1: t('labelPendingPrint'), 2: t('labelPrinted'), 3: t('labelLabeled')};
+                  const labelStatusLabels: Record<number, string> = {
+                    1: t('labelPendingPrint'),
+                    2: t('labelPrinted'),
+                    3: t('labelLabeled'),
+                  };
                   return (
                     <TableRow
                       key={item.id}
@@ -463,7 +481,8 @@ export default function ProductLabelPage() {
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">
-            {tc('total', { count: total })} {selectedIds.size > 0 && t('selectedCount', { count: selectedIds.size })}
+            {tc('total', { count: total })}{' '}
+            {selectedIds.size > 0 && t('selectedCount', { count: selectedIds.size })}
           </span>
           <div className="flex gap-2">
             <Button
@@ -565,14 +584,24 @@ export default function ProductLabelPage() {
                 >
                   <div className="flex-1 text-xs leading-relaxed">
                     <div className="text-sm font-bold mb-1">{item.material_name}</div>
-                    <div>{t('labelNo')}: {item.label_no}</div>
-                    <div>{t('workOrderNo')}: {item.work_order_no || '-'}</div>
-                    <div>{t('materialCode')}: {item.material_code || '-'}</div>
+                    <div>
+                      {t('labelNo')}: {item.label_no}
+                    </div>
+                    <div>
+                      {t('workOrderNo')}: {item.work_order_no || '-'}
+                    </div>
+                    <div>
+                      {t('materialCode')}: {item.material_code || '-'}
+                    </div>
                     <div>
                       {tc('quantity')}: {item.quantity} {item.unit}
                     </div>
-                    <div>{t('batchNo')}: {item.batch_no || '-'}</div>
-                    <div>{t('qcResult')}: {item.qc_result || '-'}</div>
+                    <div>
+                      {t('batchNo')}: {item.batch_no || '-'}
+                    </div>
+                    <div>
+                      {t('qcResult')}: {item.qc_result || '-'}
+                    </div>
                   </div>
                   <div className="flex items-center">
                     {qrDataUrls[item.id] && (

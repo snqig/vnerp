@@ -41,8 +41,7 @@ export function UserSelect({
           const list = result.data.list || [];
           setUsers(list.filter((u: UserItem) => u.status === 1));
         }
-      } catch (e) {
-      }
+      } catch {}
     };
     fetchUsers();
   }, []);

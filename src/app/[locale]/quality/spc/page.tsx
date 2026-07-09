@@ -117,9 +117,9 @@ const capabilityColor = (value: number): string => {
 };
 
 const capabilityLabel = (value: number): string => {
-  if (value >= 1.33) return '优秀';
-  if (value >= 1.0) return '可接受';
-  return '需改善';
+  if (value >= 1.33) return tc('text_e4dk');
+  if (value >= 1.0) return tc('text_crzlt');
+  return tc('text_mlwmj');
 };
 
 export default function SPCPage() {
@@ -177,8 +177,7 @@ export default function SPCPage() {
           }))
         );
       }
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -196,7 +195,7 @@ export default function SPCPage() {
       if (data.success || data.data) {
         setXbarResult(data.data || data);
       }
-    } catch (e) {
+    } catch {
     } finally {
       setXbarLoading(false);
     }
@@ -212,7 +211,7 @@ export default function SPCPage() {
       if (data.success || data.data) {
         setParetoResult(Array.isArray(data.data) ? data.data : []);
       }
-    } catch (e) {
+    } catch {
     } finally {
       setParetoLoading(false);
     }
@@ -228,7 +227,7 @@ export default function SPCPage() {
       if (data.success || data.data) {
         setPChartResult(data.data || data);
       }
-    } catch (e) {
+    } catch {
     } finally {
       setPChartLoading(false);
     }
@@ -269,15 +268,15 @@ export default function SPCPage() {
           <TabsList>
             <TabsTrigger value="xbar-r">
               <Activity className="h-4 w-4 mr-1" />
-              Xbar-R 控制图
+              {tc('text_1wfcvl')}
             </TabsTrigger>
             <TabsTrigger value="pareto">
               <BarChart3 className="h-4 w-4 mr-1" />
-              帕累托分析
+              {tc('text_swkcyw')}
             </TabsTrigger>
             <TabsTrigger value="p-chart">
               <PieChart className="h-4 w-4 mr-1" />
-              P控制图
+              {tc('text_gf09r')}
             </TabsTrigger>
           </TabsList>
 
@@ -287,14 +286,14 @@ export default function SPCPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="h-5 w-5" />
-                    Xbar-R 控制图参数
+                    {tc('text_k7dh6l')}
                   </CardTitle>
-                  <CardDescription>选择物料和检验参数，生成X均值-极差控制图</CardDescription>
+                  <CardDescription>{tc('text_8j6lln')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
                     <div className="space-y-2">
-                      <Label>{tc("material")}</Label>
+                      <Label>{tc('material')}</Label>
                       <Select value={xbarMaterialId} onValueChange={setXbarMaterialId}>
                         <SelectTrigger>
                           <SelectValue placeholder="选择物料" />
@@ -309,20 +308,20 @@ export default function SPCPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>检验类型</Label>
+                      <Label>{tc('text_duv8zg')}</Label>
                       <Select value={inspectionType} onValueChange={setInspectionType}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="incoming">来料检验</SelectItem>
-                          <SelectItem value="process">过程检验</SelectItem>
-                          <SelectItem value="finished">成品检验</SelectItem>
+                          <SelectItem value="incoming">{tc('text_dgvhr4')}</SelectItem>
+                          <SelectItem value="process">{tc('text_in8d80')}</SelectItem>
+                          <SelectItem value="finished">{tc('text_cq7399')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>{tc("startDate")}</Label>
+                      <Label>{tc('startDate')}</Label>
                       <Input
                         type="date"
                         value={xbarStartDate}
@@ -332,7 +331,7 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{tc("endDate")}</Label>
+                      <Label>{tc('endDate')}</Label>
                       <Input
                         type="date"
                         value={xbarEndDate}
@@ -342,7 +341,7 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>子组大小</Label>
+                      <Label>{tc('text_c1m918')}</Label>
                       <Select value={subgroupSize} onValueChange={setSubgroupSize}>
                         <SelectTrigger>
                           <SelectValue />
@@ -367,7 +366,7 @@ export default function SPCPage() {
                         ) : (
                           <Activity className="h-4 w-4 mr-2" />
                         )}
-                        生成图表
+                        {tc('text_f6li9n')}
                       </Button>
                     </div>
                   </div>
@@ -454,10 +453,12 @@ export default function SPCPage() {
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
                             <AlertTriangle className="h-5 w-5" />
-                            异常点警告
+                            {tc('text_sonhlz')}
                           </CardTitle>
                           <CardDescription>
-                            检测到 {xbarResult.out_of_control_points.length} 个超出控制限的点
+                            {tc('text_fvdvp')}
+                            {xbarResult.out_of_control_points.length}
+                            {tc('text_x9wkpj')}
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -468,7 +469,8 @@ export default function SPCPage() {
                                   key={idx}
                                   className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                                 >
-                                  子组#{p.subgroup_id} {p.type === 'x_bar' ? 'X均值' : '极差'}=
+                                  {tc('text_dz1v3')}
+                                  {p.subgroup_id} {p.type === 'x_bar' ? 'X均值' : '极差'}=
                                   {p.value.toFixed(4)}
                                 </Badge>
                               )
@@ -480,7 +482,7 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>X-bar 均值控制图</CardTitle>
+                        <CardTitle>{tc('text_2hgwlk')}</CardTitle>
                         <CardDescription>
                           UCL={xbarResult.x_bar_limits.ucl.toFixed(4)} | CL=
                           {xbarResult.x_bar_limits.cl.toFixed(4)} | LCL=
@@ -569,7 +571,7 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>R 极差控制图</CardTitle>
+                        <CardTitle>{tc('text_1z0bqs')}</CardTitle>
                         <CardDescription>
                           UCL={xbarResult.r_limits.ucl.toFixed(4)} | CL=
                           {xbarResult.r_limits.cl.toFixed(4)} | LCL=
@@ -658,19 +660,19 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>子组数据明细</CardTitle>
+                        <CardTitle>{tc('text_190pee')}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>子组</TableHead>
-                                <TableHead>{tc("time")}</TableHead>
-                                <TableHead>测量值</TableHead>
-                                <TableHead className="text-right">X均值</TableHead>
-                                <TableHead className="text-right">极差R</TableHead>
-                                <TableHead>{tc("status")}</TableHead>
+                                <TableHead>{tc('text_g86s')}</TableHead>
+                                <TableHead>{tc('time')}</TableHead>
+                                <TableHead>{tc('text_gpjh4')}</TableHead>
+                                <TableHead className="text-right">{tc('text_h3jh')}</TableHead>
+                                <TableHead className="text-right">{tc('text_flr39')}</TableHead>
+                                <TableHead>{tc('status')}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -706,12 +708,12 @@ export default function SPCPage() {
                                     <TableCell>
                                       {isOocXbar && (
                                         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 mr-1">
-                                          X异常
+                                          {tc('text_ihn2')}
                                         </Badge>
                                       )}
                                       {isOocRange && (
                                         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                          R异常
+                                          {tc('text_id6w')}
                                         </Badge>
                                       )}
                                       {!isOocXbar && !isOocRange && (
@@ -719,7 +721,7 @@ export default function SPCPage() {
                                           variant="outline"
                                           className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                         >
-                                          正常
+                                          {tc('text_is6t')}
                                         </Badge>
                                       )}
                                     </TableCell>
@@ -743,14 +745,14 @@ export default function SPCPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5" />
-                    帕累托分析参数
+                    {tc('text_48vjx2')}
                   </CardTitle>
-                  <CardDescription>分析不良类型的分布，识别主要质量问题</CardDescription>
+                  <CardDescription>{tc('text_ty23k3')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div className="space-y-2">
-                      <Label>{tc("startDate")}</Label>
+                      <Label>{tc('startDate')}</Label>
                       <Input
                         type="date"
                         value={paretoStartDate}
@@ -760,7 +762,7 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{tc("endDate")}</Label>
+                      <Label>{tc('endDate')}</Label>
                       <Input
                         type="date"
                         value={paretoEndDate}
@@ -770,13 +772,13 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>物料（可选）</Label>
+                      <Label>{tc('text_k4uyzb')}</Label>
                       <Select value={paretoMaterialId} onValueChange={setParetoMaterialId}>
                         <SelectTrigger>
                           <SelectValue placeholder="全部物料" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">全部物料</SelectItem>
+                          <SelectItem value="all">{tc('text_aveyfk')}</SelectItem>
                           {materials.map((m: Material) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               {m.material_code} - {m.material_name}
@@ -796,7 +798,7 @@ export default function SPCPage() {
                         ) : (
                           <BarChart3 className="h-4 w-4 mr-2" />
                         )}
-                        分析
+                        {tc('text_eiq2')}
                       </Button>
                     </div>
                   </div>
@@ -813,8 +815,8 @@ export default function SPCPage() {
                   >
                     <Card>
                       <CardHeader>
-                        <CardTitle>帕累托图</CardTitle>
-                        <CardDescription>不良类型分布及累计百分比</CardDescription>
+                        <CardTitle>{tc('text_ce05pc')}</CardTitle>
+                        <CardDescription>{tc('text_gqrtlt')}</CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="h-[400px]">
@@ -901,18 +903,18 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>不良类型明细</CardTitle>
+                        <CardTitle>{tc('text_stbm6u')}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>不良类型</TableHead>
-                                <TableHead className="text-right">{tc("quantity")}</TableHead>
-                                <TableHead className="text-right">占比</TableHead>
-                                <TableHead className="text-right">累计占比</TableHead>
-                                <TableHead>分类</TableHead>
+                                <TableHead>{tc('text_ae3saa')}</TableHead>
+                                <TableHead className="text-right">{tc('quantity')}</TableHead>
+                                <TableHead className="text-right">{tc('text_eruc')}</TableHead>
+                                <TableHead className="text-right">{tc('text_gd9tty')}</TableHead>
+                                <TableHead>{tc('text_emut')}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -936,15 +938,15 @@ export default function SPCPage() {
                                   <TableCell>
                                     {item.cumulative_percentage <= 80 ? (
                                       <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                        A类(关键)
+                                        {tc('text_kn94tc')}
                                       </Badge>
                                     ) : item.cumulative_percentage <= 95 ? (
                                       <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                        B类(重要)
+                                        {tc('text_ldo3dy')}
                                       </Badge>
                                     ) : (
                                       <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                        C类(一般)
+                                        {tc('text_lkqygd')}
                                       </Badge>
                                     )}
                                   </TableCell>
@@ -967,14 +969,14 @@ export default function SPCPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PieChart className="h-5 w-5" />
-                    P控制图参数
+                    {tc('text_c2cpcd')}
                   </CardTitle>
-                  <CardDescription>监控不合格品率的变化趋势</CardDescription>
+                  <CardDescription>{tc('text_n5r8jf')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div className="space-y-2">
-                      <Label>{tc("startDate")}</Label>
+                      <Label>{tc('startDate')}</Label>
                       <Input
                         type="date"
                         value={pChartStartDate}
@@ -984,7 +986,7 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>{tc("endDate")}</Label>
+                      <Label>{tc('endDate')}</Label>
                       <Input
                         type="date"
                         value={pChartEndDate}
@@ -994,13 +996,13 @@ export default function SPCPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>物料（可选）</Label>
+                      <Label>{tc('text_k4uyzb')}</Label>
                       <Select value={pChartMaterialId} onValueChange={setPChartMaterialId}>
                         <SelectTrigger>
                           <SelectValue placeholder="全部物料" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">全部物料</SelectItem>
+                          <SelectItem value="all">{tc('text_aveyfk')}</SelectItem>
                           {materials.map((m: Material) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               {m.material_code} - {m.material_name}
@@ -1020,7 +1022,7 @@ export default function SPCPage() {
                         ) : (
                           <PieChart className="h-4 w-4 mr-2" />
                         )}
-                        生成
+                        {tc('text_kgk1')}
                       </Button>
                     </div>
                   </div>
@@ -1040,10 +1042,12 @@ export default function SPCPage() {
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
                             <AlertTriangle className="h-5 w-5" />
-                            异常点警告
+                            {tc('text_sonhlz')}
                           </CardTitle>
                           <CardDescription>
-                            检测到 {pChartResult.out_of_control_points.length} 个超出控制限的时段
+                            {tc('text_fvdvp')}
+                            {pChartResult.out_of_control_points.length}
+                            {tc('text_xxo89r')}
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -1054,7 +1058,9 @@ export default function SPCPage() {
                                   key={idx}
                                   className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                                 >
-                                  {p.period} 不良率={(p.rate * 100).toFixed(2)}%
+                                  {p.period}
+                                  {tc('text_ae1s7s')}
+                                  {(p.rate * 100).toFixed(2)}%
                                 </Badge>
                               )
                             )}
@@ -1065,7 +1071,7 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>P 不合格品率控制图</CardTitle>
+                        <CardTitle>{tc('text_ld8amg')}</CardTitle>
                         <CardDescription>
                           UCL={(pChartResult.limits.ucl * 100).toFixed(2)}% | CL=
                           {(pChartResult.limits.cl * 100).toFixed(2)}% | LCL=
@@ -1170,18 +1176,18 @@ export default function SPCPage() {
 
                     <Card>
                       <CardHeader>
-                        <CardTitle>P图数据明细</CardTitle>
+                        <CardTitle>{tc('text_yyguak')}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
                         <div className="overflow-x-auto">
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>时段</TableHead>
-                                <TableHead className="text-right">检验数</TableHead>
-                                <TableHead className="text-right">不良数</TableHead>
-                                <TableHead className="text-right">不良率</TableHead>
-                                <TableHead>{tc("status")}</TableHead>
+                                <TableHead>{tc('text_hxmn')}</TableHead>
+                                <TableHead className="text-right">{tc('text_g36sk')}</TableHead>
+                                <TableHead className="text-right">{tc('text_c2awe')}</TableHead>
+                                <TableHead className="text-right">{tc('text_c2dol')}</TableHead>
+                                <TableHead>{tc('status')}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -1209,14 +1215,14 @@ export default function SPCPage() {
                                       {isOoc ? (
                                         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
                                           <AlertTriangle className="h-3 w-3 mr-1" />
-                                          异常
+                                          {tc('text_gody')}
                                         </Badge>
                                       ) : (
                                         <Badge
                                           variant="outline"
                                           className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                         >
-                                          正常
+                                          {tc('text_is6t')}
                                         </Badge>
                                       )}
                                     </TableCell>

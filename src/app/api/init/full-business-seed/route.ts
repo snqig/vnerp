@@ -24,7 +24,7 @@ function randomAmount(min: number, max: number): number {
   return Math.round((min + Math.random() * (max - min)) * 100) / 100;
 }
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
+export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
 

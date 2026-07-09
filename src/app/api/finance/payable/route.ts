@@ -8,7 +8,7 @@ import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 const financeService = FinanceApplicationService.create();
 
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const supplierId = searchParams.get('supplierId');
     const status = searchParams.get('status');

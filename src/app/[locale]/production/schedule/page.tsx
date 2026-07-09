@@ -189,20 +189,32 @@ export default function ProductionSchedulePage() {
         className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
       },
     };
-    const config = statusMap[status] || { label: tc('unknown'), className: 'bg-gray-100 text-gray-700' };
+    const config = statusMap[status] || {
+      label: tc('unknown'),
+      className: 'bg-gray-100 text-gray-700',
+    };
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
   const getPriorityBadge = (priority: number) => {
     const priorityMap: Record<number, { label: string; className: string }> = {
-      1: { label: tc('critical'), className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' },
+      1: {
+        label: tc('critical'),
+        className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+      },
       2: {
         label: tc('normal'),
         className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
       },
-      3: { label: tc('low'), className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
+      3: {
+        label: tc('low'),
+        className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+      },
     };
-    const config = priorityMap[priority] || { label: tc('normal'), className: 'bg-blue-100 text-blue-700' };
+    const config = priorityMap[priority] || {
+      label: tc('normal'),
+      className: 'bg-blue-100 text-blue-700',
+    };
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
@@ -303,7 +315,7 @@ export default function ProductionSchedulePage() {
           conflictCount: conflicts,
         });
       }
-    } catch (error) {
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -326,8 +338,7 @@ export default function ProductionSchedulePage() {
           }))
         );
       }
-    } catch (error) {
-    }
+    } catch {}
   };
 
   // 获取待排产工单
@@ -338,8 +349,7 @@ export default function ProductionSchedulePage() {
       if (data.success) {
         setWorkOrders(data.data?.list || []);
       }
-    } catch (error) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -518,13 +528,13 @@ export default function ProductionSchedulePage() {
         body: JSON.stringify({ id: selectedSchedule.id, ...editForm }),
       });
       const result = await response.json();
-        if (result.success) {
-          fetchSchedules();
-          setIsEditOpen(false);
-        } else alert(result.message || tc('updateFailed'));
-      } catch (error) {
-        alert(tc('updateFailed'));
-      }
+      if (result.success) {
+        fetchSchedules();
+        setIsEditOpen(false);
+      } else alert(result.message || tc('updateFailed'));
+    } catch {
+      alert(tc('updateFailed'));
+    }
   };
 
   const handleStatusChange = async (schedule: Schedule, newStatus: number) => {
@@ -538,7 +548,7 @@ export default function ProductionSchedulePage() {
       if (result.success) {
         fetchSchedules();
       } else alert(result.message || tc('error'));
-    } catch (error) {
+    } catch {
       alert(tc('error'));
     } finally {
       setLoading(false);
@@ -571,8 +581,8 @@ export default function ProductionSchedulePage() {
       } else {
         alert(result.message || t('autoScheduleFailed'));
       }
-    } catch (error) {
-        alert(t('autoScheduleFailed'));
+    } catch {
+      alert(t('autoScheduleFailed'));
     } finally {
       setAutoScheduleLoading(false);
     }
@@ -628,7 +638,9 @@ export default function ProductionSchedulePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.producing}</div>
-              <p className="text-xs text-muted-foreground">{t('capacityRate', { rate: stats.capacityRate })}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('capacityRate', { rate: stats.capacityRate })}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -651,7 +663,9 @@ export default function ProductionSchedulePage() {
               >
                 {stats.conflictCount}
               </div>
-              {stats.conflictCount > 0 && <p className="text-xs text-red-500">{t('timeConflictFound')}</p>}
+              {stats.conflictCount > 0 && (
+                <p className="text-xs text-red-500">{t('timeConflictFound')}</p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -800,11 +814,21 @@ export default function ProductionSchedulePage() {
         {viewMode === 'list' && (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
-              <TabsTrigger value="all">{tc('all')} ({stats.total})</TabsTrigger>
-              <TabsTrigger value="pending">{t('statusPending')} ({stats.pending})</TabsTrigger>
-              <TabsTrigger value="scheduled">{t('statusScheduled')} ({stats.scheduled})</TabsTrigger>
-              <TabsTrigger value="producing">{t('statusProducing')} ({stats.producing})</TabsTrigger>
-              <TabsTrigger value="completed">{t('statusCompleted')} ({stats.completed})</TabsTrigger>
+              <TabsTrigger value="all">
+                {tc('all')} ({stats.total})
+              </TabsTrigger>
+              <TabsTrigger value="pending">
+                {t('statusPending')} ({stats.pending})
+              </TabsTrigger>
+              <TabsTrigger value="scheduled">
+                {t('statusScheduled')} ({stats.scheduled})
+              </TabsTrigger>
+              <TabsTrigger value="producing">
+                {t('statusProducing')} ({stats.producing})
+              </TabsTrigger>
+              <TabsTrigger value="completed">
+                {t('statusCompleted')} ({stats.completed})
+              </TabsTrigger>
             </TabsList>
             <TabsContent value={activeTab} className="mt-4">
               <Card>
@@ -939,7 +963,7 @@ export default function ProductionSchedulePage() {
                     </div>
                   );
                 })}
-            </div>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -1098,15 +1122,17 @@ export default function ProductionSchedulePage() {
                                           <div className="font-semibold">
                                             {schedule.schedule_no}
                                           </div>
-                                          <div>{t('tooltipProduct')}: {schedule.product_name}</div>
+                                          <div>
+                                            {t('tooltipProduct')}: {schedule.product_name}
+                                          </div>
                                           <div>
                                             {t('tooltipWorkshop')}:{' '}
                                             {ganttWorkshopLabels[schedule.workshop] ||
                                               schedule.workshop}
                                           </div>
                                           <div>
-                                            {t('tooltipPlan')}: {formatDate(schedule.planned_start)} ~{' '}
-                                            {formatDate(schedule.planned_end)}
+                                            {t('tooltipPlan')}: {formatDate(schedule.planned_start)}{' '}
+                                            ~ {formatDate(schedule.planned_end)}
                                           </div>
                                           <div>
                                             {t('tooltipQuantity')}: {schedule.completed_qty || 0}/
@@ -1121,7 +1147,7 @@ export default function ProductionSchedulePage() {
                                               {t('timeConflict')}
                                             </div>
                                           )}
-                                      </div>
+                                        </div>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
@@ -1226,7 +1252,9 @@ export default function ProductionSchedulePage() {
                           {result.conflicts.length > 0 ? (
                             <Badge variant="destructive">{t('hasConflict')}</Badge>
                           ) : (
-                            <Badge className="bg-green-100 text-green-700">{t('statusScheduled')}</Badge>
+                            <Badge className="bg-green-100 text-green-700">
+                              {t('statusScheduled')}
+                            </Badge>
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
@@ -1289,8 +1317,12 @@ export default function ProductionSchedulePage() {
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{t('equipmentCount')}: {cap.equipmentCount}</span>
-                        <span>{t('totalCapacity')}: {cap.totalCapacity}</span>
+                        <span>
+                          {t('equipmentCount')}: {cap.equipmentCount}
+                        </span>
+                        <span>
+                          {t('totalCapacity')}: {cap.totalCapacity}
+                        </span>
                       </div>
                       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
@@ -1305,8 +1337,12 @@ export default function ProductionSchedulePage() {
                         />
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span>{t('usedCapacity')}: {cap.usedCapacity}</span>
-                        <span>{t('availableCapacity')}: {cap.availableCapacity}</span>
+                        <span>
+                          {t('usedCapacity')}: {cap.usedCapacity}
+                        </span>
+                        <span>
+                          {t('availableCapacity')}: {cap.availableCapacity}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -1335,7 +1371,9 @@ export default function ProductionSchedulePage() {
                 <div className="space-y-6 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('scheduleInfo')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('scheduleInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">{t('scheduleNo')}:</span>
                         <span>{selectedSchedule.schedule_no}</span>
@@ -1348,7 +1386,9 @@ export default function ProductionSchedulePage() {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('productInfo')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('productInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">{t('productName')}:</span>
                         <span>{selectedSchedule.product_name}</span>
@@ -1376,7 +1416,9 @@ export default function ProductionSchedulePage() {
                   </div>
                   {selectedSchedule.remark && (
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('remarkLabel')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('remarkLabel')}
+                      </h4>
                       <div className="text-sm p-3 bg-gray-50 rounded">
                         {selectedSchedule.remark}
                       </div>

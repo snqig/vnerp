@@ -26,7 +26,7 @@ export function usePrintLabels(inboundRecords: InboundRecord[]) {
         printWindow.print();
         printWindow.close();
       };
-    } catch (error) {
+    } catch {
       toast.error(t('printFailed'));
     }
   }, [inboundRecords, t]);

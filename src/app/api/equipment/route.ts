@@ -13,7 +13,7 @@ import { withPermission } from '@/lib/api-permissions';
  * DELETE /api/equipment?id=N     — 删除设备（软删除）
  */
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
 
   // 单个设备详情

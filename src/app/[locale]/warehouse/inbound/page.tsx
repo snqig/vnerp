@@ -26,18 +26,8 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { authFetch } from '@/lib/auth-fetch';
 
-import type {
-  InboundItem,
-  InboundRecord,
-  PrintLabel,
-  ScanResult,
-  InboundFormData,
-} from './types';
-import {
-  statusConfig,
-  INITIAL_FORM_DATA,
-  isCuttableMaterial,
-} from './types';
+import type { InboundItem, InboundRecord, PrintLabel, ScanResult, InboundFormData } from './types';
+import { statusConfig, INITIAL_FORM_DATA, isCuttableMaterial } from './types';
 
 import { InboundToolbar } from './components/InboundToolbar';
 import { InboundStatsCards } from './components/InboundStatsCards';
@@ -132,40 +122,46 @@ export default function InboundManagementPage() {
   } = usePurchaseOrderSearch(setFormData);
 
   // 生成二维码
-  const generateQRCode = useCallback(async (labelId: string, labelNo: string) => {
-    try {
-      const qrContent = `${labelNo}@001:type:IN`;
-      const dataUrl = await QRCode.toDataURL(qrContent, {
-        width: 150,
-        margin: 1,
-      });
-      setQrCodeDataUrl(dataUrl);
-      setQrCodeLabelId(labelId);
-      setIsQRCodeDialogOpen(true);
-    } catch (error) {
-      toast.error(t('qrCodeGenerateFailed'));
-    }
-  }, [t]);
-
-  const handleQRCodeView = useCallback(async (label: PrintLabel) => {
-    if (!label.id) {
-      toast.error(t('scanQueryFailed'));
-      return;
-    }
-    try {
-      const response = await authFetch(`/api/warehouse/inbound/labels/${label.id}/qrcode`);
-      const result = await response.json();
-      if (result.success) {
-        setQrCodeDataUrl(result.data?.qrCode || '');
-        setQrCodeLabelId(label.id);
+  const generateQRCode = useCallback(
+    async (labelId: string, labelNo: string) => {
+      try {
+        const qrContent = `${labelNo}@001:type:IN`;
+        const dataUrl = await QRCode.toDataURL(qrContent, {
+          width: 150,
+          margin: 1,
+        });
+        setQrCodeDataUrl(dataUrl);
+        setQrCodeLabelId(labelId);
         setIsQRCodeDialogOpen(true);
-      } else {
+      } catch {
+        toast.error(t('qrCodeGenerateFailed'));
+      }
+    },
+    [t]
+  );
+
+  const handleQRCodeView = useCallback(
+    async (label: PrintLabel) => {
+      if (!label.id) {
+        toast.error(t('scanQueryFailed'));
+        return;
+      }
+      try {
+        const response = await authFetch(`/api/warehouse/inbound/labels/${label.id}/qrcode`);
+        const result = await response.json();
+        if (result.success) {
+          setQrCodeDataUrl(result.data?.qrCode || '');
+          setQrCodeLabelId(label.id);
+          setIsQRCodeDialogOpen(true);
+        } else {
+          toast.error(t('scanQueryFailed'));
+        }
+      } catch {
         toast.error(t('scanQueryFailed'));
       }
-    } catch (error) {
-      toast.error(t('scanQueryFailed'));
-    }
-  }, [t]);
+    },
+    [t]
+  );
 
   // 状态选项
   const statusOptions = [
@@ -408,7 +404,7 @@ export default function InboundManagementPage() {
                                 } else {
                                   toast.error(result.message || t('deleteFailed'));
                                 }
-                              } catch (err) {
+                              } catch {
                                 toast.error(t('deleteFailed'));
                               }
                             }}
@@ -440,9 +436,7 @@ export default function InboundManagementPage() {
                     <QrCode className="h-5 w-5" />
                     {t('labelManagement')}
                   </CardTitle>
-                  <CardDescription>
-                    {t('labelManagementDesc')}
-                  </CardDescription>
+                  <CardDescription>{t('labelManagementDesc')}</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   {selectedLabels.size > 0 && (
@@ -461,7 +455,9 @@ export default function InboundManagementPage() {
                         size="sm"
                         className="gap-1 bg-blue-600 hover:bg-blue-700"
                         onClick={async () => {
-                          const allLabels = mapRecordsToLabels(filterApprovedRecords(inboundRecords));
+                          const allLabels = mapRecordsToLabels(
+                            filterApprovedRecords(inboundRecords)
+                          );
                           const selected = allLabels.filter((l) => selectedLabels.has(l.id));
                           setPrintLabels(selected);
                           setIsPrintPreviewOpen(true);

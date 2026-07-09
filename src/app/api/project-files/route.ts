@@ -36,7 +36,7 @@ function getAllFiles(dir: string, fileList: string[] = []): string[] {
         fileList.push(fullPath);
       }
     }
-  } catch (error) {
+  } catch {
     // 忽略无法访问的目录
   }
 
@@ -70,10 +70,7 @@ export async function GET() {
       total: fileInfos.length,
       totalSize: fileInfos.reduce((sum, f) => sum + (f?.size || 0), 0),
     });
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to get file list' },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ error: 'Failed to get file list' }, { status: 500 });
   }
 }

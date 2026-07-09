@@ -90,7 +90,10 @@ export default function ReturnPage() {
   };
 
   const INSPECTION_STATUS_MAP: Record<number, { label: string; color: string }> = {
-    0: { label: t('notInspected'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+    0: {
+      label: t('notInspected'),
+      color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+    },
     1: {
       label: t('inspecting'),
       color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
@@ -145,7 +148,7 @@ export default function ReturnPage() {
         setList(result.data?.list || []);
         setTotal(result.data?.total || 0);
       }
-    } catch (e) {
+    } catch {
       toast.error(t('fetchListFailed'));
     } finally {
       setLoading(false);
@@ -159,8 +162,7 @@ export default function ReturnPage() {
       if (result.success) {
         setCustomers(result.data?.list || result.data || []);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -229,7 +231,7 @@ export default function ReturnPage() {
       } else {
         toast.error(result.message || tc('createFailed'));
       }
-    } catch (e) {
+    } catch {
       toast.error(t('saveFailed'));
     }
   };
@@ -247,7 +249,7 @@ export default function ReturnPage() {
       } else {
         toast.error(result.message || tc('updateFailed'));
       }
-    } catch (e) {
+    } catch {
       toast.error(tc('updateFailed'));
     }
   };
@@ -263,7 +265,7 @@ export default function ReturnPage() {
       } else {
         toast.error(result.message || tc('deleteFailed'));
       }
-    } catch (e) {
+    } catch {
       toast.error(tc('deleteFailed'));
     }
   };
@@ -282,9 +284,7 @@ export default function ReturnPage() {
                 <RotateCcw className="w-5 h-5" />
                 {t('pageTitle')}
               </CardTitle>
-              <CardDescription>
-                {t('pageDescription')}
-              </CardDescription>
+              <CardDescription>{t('pageDescription')}</CardDescription>
             </div>
             <Button
               onClick={() => {
@@ -325,7 +325,7 @@ export default function ReturnPage() {
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder={tc("status")} />
+                  <SelectValue placeholder={tc('status')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{tc('allStatus')}</SelectItem>
@@ -350,7 +350,7 @@ export default function ReturnPage() {
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{tc("pending")}</div>
+                  <div className="text-sm text-gray-500">{tc('pending')}</div>
                   <div className="text-2xl font-bold text-yellow-600">
                     {list.filter((r) => r.status === 1).length}
                   </div>
@@ -358,7 +358,7 @@ export default function ReturnPage() {
               </Card>
               <Card>
                 <CardContent className="pt-4">
-                  <div className="text-sm text-gray-500">{tc("approved")}</div>
+                  <div className="text-sm text-gray-500">{tc('approved')}</div>
                   <div className="text-2xl font-bold text-blue-600">
                     {list.filter((r) => r.status === 2).length}
                   </div>
@@ -391,7 +391,7 @@ export default function ReturnPage() {
                     <TableHead>{t('returnAmount')}</TableHead>
                     <TableHead>{t('inspectionStatus')}</TableHead>
                     <TableHead>{t('orderStatus')}</TableHead>
-                    <TableHead className="text-right">{tc("actions")}</TableHead>
+                    <TableHead className="text-right">{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -402,7 +402,9 @@ export default function ReturnPage() {
                       <TableCell>{r.customer_name || '-'}</TableCell>
                       <TableCell>{r.return_date || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{RETURN_TYPE_MAP[r.return_type] || tc('other')}</Badge>
+                        <Badge variant="outline">
+                          {RETURN_TYPE_MAP[r.return_type] || tc('other')}
+                        </Badge>
                       </TableCell>
                       <TableCell>{parseFloat(String(r.total_qty || 0)).toLocaleString()}</TableCell>
                       <TableCell>¥{parseFloat(String(r.total_amount || 0)).toFixed(2)}</TableCell>
@@ -439,7 +441,9 @@ export default function ReturnPage() {
                               onClick={() => updateStatus(r.id, 2)}
                               title={t('approve')}
                             >
-                              <Badge className="bg-blue-100 text-blue-800 text-xs">{tc("review")}</Badge>
+                              <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                {tc('review')}
+                              </Badge>
                             </Button>
                           )}
                           {r.status === 2 && (
@@ -449,7 +453,9 @@ export default function ReturnPage() {
                               onClick={() => updateStatus(r.id, 3)}
                               title={t('confirmReturn')}
                             >
-                              <Badge className="bg-green-100 text-green-800 text-xs">{tc("returnOrder")}</Badge>
+                              <Badge className="bg-green-100 text-green-800 text-xs">
+                                {tc('returnOrder')}
+                              </Badge>
                             </Button>
                           )}
                           <Button variant="ghost" size="sm" onClick={() => deleteReturn(r.id)}>
@@ -576,11 +582,11 @@ export default function ReturnPage() {
                   <TableRow>
                     <TableHead>{tc('materialName')}</TableHead>
                     <TableHead>{tc('specification')}</TableHead>
-                    <TableHead>{tc("quantity")}</TableHead>
-                    <TableHead>{tc("unit")}</TableHead>
+                    <TableHead>{tc('quantity')}</TableHead>
+                    <TableHead>{tc('unit')}</TableHead>
                     <TableHead>{t('unitPrice')}</TableHead>
-                    <TableHead>{tc("amount")}</TableHead>
-                    <TableHead>{tc("batchNo")}</TableHead>
+                    <TableHead>{tc('amount')}</TableHead>
+                    <TableHead>{tc('batchNo')}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -599,7 +605,7 @@ export default function ReturnPage() {
                         <Input
                           value={item.material_spec}
                           onChange={(e) => updateItem(idx, 'material_spec', e.target.value)}
-                          placeholder={tc("specification")}
+                          placeholder={tc('specification')}
                           className="w-28"
                         />
                       </TableCell>
@@ -637,7 +643,7 @@ export default function ReturnPage() {
                         <Input
                           value={item.batch_no}
                           onChange={(e) => updateItem(idx, 'batch_no', e.target.value)}
-                          placeholder={tc("batch")}
+                          placeholder={tc('batch')}
                           className="w-24"
                         />
                       </TableCell>
@@ -657,7 +663,8 @@ export default function ReturnPage() {
                   {t('totalQty')}: <strong>{calcTotalQty().toLocaleString()}</strong>
                 </span>
                 <span>
-                  {t('totalAmount')}: <strong className="text-red-600">¥{calcTotal().toFixed(2)}</strong>
+                  {t('totalAmount')}:{' '}
+                  <strong className="text-red-600">¥{calcTotal().toFixed(2)}</strong>
                 </span>
               </div>
             </div>

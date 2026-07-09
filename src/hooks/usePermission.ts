@@ -21,69 +21,69 @@ interface UserPermissions {
 const permissionModules = [
   {
     id: 'dashboard',
-    name: '仪表盘',
-    permissions: [{ id: 'dashboard:view', name: '查看仪表盘' }],
+    name: tc('text_c7ysa'),
+    permissions: [{ id: 'dashboard:view', name: tc('text_4lte3w') }],
   },
   {
     id: 'order',
-    name: '订单管理',
+    name: tc('text_hytrqw'),
     permissions: [
-      { id: 'order:view', name: '查看订单' },
-      { id: 'order:create', name: '创建订单' },
-      { id: 'order:edit', name: '编辑订单' },
-      { id: 'order:delete', name: '删除订单' },
-      { id: 'order:approve', name: '审核订单' },
+      { id: 'order:view', name: tc('text_dlur7d') },
+      { id: 'order:create', name: tc('text_are5wy') },
+      { id: 'order:edit', name: tc('text_gmqzji') },
+      { id: 'order:delete', name: tc('text_azljxz') },
+      { id: 'order:approve', name: tc('text_bzzmcq') },
     ],
   },
   {
     id: 'production',
-    name: '生产管理',
+    name: tc('text_f3xa0d'),
     permissions: [
-      { id: 'production:view', name: '查看生产' },
-      { id: 'production:create', name: '创建生产单' },
-      { id: 'production:edit', name: '编辑生产单' },
-      { id: 'production:delete', name: '删除生产单' },
-      { id: 'production:approve', name: '审核生产单' },
+      { id: 'production:view', name: tc('text_dlqwfi') },
+      { id: 'production:create', name: tc('text_lno81e') },
+      { id: 'production:edit', name: tc('text_ia56fm') },
+      { id: 'production:delete', name: tc('text_elb55j') },
+      { id: 'production:approve', name: tc('text_gqsxjq') },
     ],
   },
   {
     id: 'warehouse',
-    name: '仓库管理',
+    name: tc('text_acd50l'),
     permissions: [
-      { id: 'warehouse:view', name: '查看仓库' },
-      { id: 'warehouse:in', name: '入库操作' },
-      { id: 'warehouse:out', name: '出库操作' },
-      { id: 'warehouse:transfer', name: '调拨操作' },
+      { id: 'warehouse:view', name: tc('text_dlkh2e') },
+      { id: 'warehouse:in', name: tc('text_anx7ct') },
+      { id: 'warehouse:out', name: tc('text_aqkceg') },
+      { id: 'warehouse:transfer', name: tc('text_i2pqus') },
     ],
   },
   {
     id: 'quality',
-    name: '质量管理',
+    name: tc('text_iew8do'),
     permissions: [
-      { id: 'quality:view', name: '查看质量' },
-      { id: 'quality:inspect', name: '检验操作' },
-      { id: 'quality:approve', name: '审核检验' },
+      { id: 'quality:view', name: tc('text_dlvcvh') },
+      { id: 'quality:inspect', name: tc('text_dur6d7') },
+      { id: 'quality:approve', name: tc('text_bzu2tf') },
     ],
   },
   {
     id: 'standard-card',
-    name: '标准卡管理',
+    name: tc('text_8rr715'),
     permissions: [
-      { id: 'standard-card:view', name: '查看标准卡' },
-      { id: 'standard-card:create', name: '创建标准卡' },
-      { id: 'standard-card:edit', name: '编辑标准卡' },
-      { id: 'standard-card:delete', name: '删除标准卡' },
-      { id: 'standard-card:approve', name: '审核标准卡' },
+      { id: 'standard-card:view', name: tc('text_4iegh0') },
+      { id: 'standard-card:create', name: tc('text_lpkqgt') },
+      { id: 'standard-card:edit', name: tc('text_i88o07') },
+      { id: 'standard-card:delete', name: tc('text_en7nky') },
+      { id: 'standard-card:approve', name: tc('text_gowf4b') },
     ],
   },
   {
     id: 'system',
-    name: '系统管理',
+    name: tc('text_gao8uh'),
     permissions: [
-      { id: 'system:user', name: '用户管理' },
-      { id: 'system:role', name: '角色管理' },
-      { id: 'system:menu', name: '菜单管理' },
-      { id: 'system:config', name: '系统配置' },
+      { id: 'system:user', name: tc('text_f6y6dw') },
+      { id: 'system:role', name: tc('text_hxhx7p') },
+      { id: 'system:menu', name: tc('text_gzj3um') },
+      { id: 'system:config', name: tc('text_garzt1') },
     ],
   },
 ];
@@ -139,8 +139,7 @@ export function usePermission() {
           loaded: true,
         });
       }
-    } catch (error) {
-    }
+    } catch {}
   }, []);
 
   // 检查是否有权限

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
@@ -21,16 +21,14 @@ export async function GET(request: NextRequest) {
         `SELECT COUNT(*) as total FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE()`
       );
       if (Array.isArray(rows) && rows.length > 0) overview.todayOrders = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(
         `SELECT COUNT(*) as total FROM sal_order WHERE deleted = 0 AND DATE(create_time) = CURDATE()`
       );
       if (Array.isArray(rows) && rows.length > 0) overview.todayOrders = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(
@@ -38,8 +36,7 @@ export async function GET(request: NextRequest) {
       );
       if (Array.isArray(rows) && rows.length > 0)
         overview.todayProduction = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(
@@ -47,8 +44,7 @@ export async function GET(request: NextRequest) {
       );
       if (Array.isArray(rows) && rows.length > 0)
         overview.todayDelivery = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(
@@ -56,8 +52,7 @@ export async function GET(request: NextRequest) {
       );
       if (Array.isArray(rows) && rows.length > 0)
         overview.inventoryValue = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     const production: any = {
       efficiency: 0,
@@ -78,8 +73,7 @@ export async function GET(request: NextRequest) {
         production.activeOrders = Number(rows[0].active || 0);
         production.completedToday = Number(rows[0].completed || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const woRows: any = await query(`
@@ -96,8 +90,7 @@ export async function GET(request: NextRequest) {
             priority: r.priority,
           }))
         : [];
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(`
@@ -123,8 +116,7 @@ export async function GET(request: NextRequest) {
         production.equipmentStatus.length > 0
           ? Math.round((running / production.equipmentStatus.length) * 100)
           : 0;
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(`
@@ -133,8 +125,7 @@ export async function GET(request: NextRequest) {
       `);
       if (Array.isArray(rows) && rows.length > 0)
         production.warningCount = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     const quality: any = {
       passRate: 0,
@@ -149,8 +140,7 @@ export async function GET(request: NextRequest) {
       );
       if (Array.isArray(rows) && rows.length > 0)
         quality.totalInspections = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(`
@@ -169,8 +159,7 @@ export async function GET(request: NextRequest) {
             ? Math.round((quality.passedInspections / quality.totalInspections) * 1000) / 10
             : 0;
       }
-    } catch (e) {
-    }
+    } catch {}
 
     const finance: any = {
       totalReceivable: 0,
@@ -191,8 +180,7 @@ export async function GET(request: NextRequest) {
         finance.totalReceivable = Number(recRows[0].total || 0);
       if (Array.isArray(payRows) && payRows.length > 0)
         finance.totalPayable = Number(payRows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const revRows: any = await query(
@@ -205,8 +193,7 @@ export async function GET(request: NextRequest) {
         finance.monthRevenue = Number(revRows[0].total || 0);
       if (Array.isArray(expRows) && expRows.length > 0)
         finance.monthExpense = Number(expRows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     const inventory: any = { totalItems: 0, lowStock: 0, totalValue: 0, warehouseUtilization: 0 };
     try {
@@ -219,16 +206,14 @@ export async function GET(request: NextRequest) {
         inventory.totalItems = Number(rows[0].total || 0);
         inventory.lowStock = Number(rows[0].low_stock || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(
         `SELECT COALESCE(SUM(stock_qty * unit_price), 0) as total FROM inv_material WHERE deleted = 0 AND status = 1`
       );
       if (Array.isArray(rows) && rows.length > 0) inventory.totalValue = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(`
@@ -237,8 +222,7 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0) {
         inventory.warehouseUtilization = Math.min(100, Number(rows[0].total || 0) * 5);
       }
-    } catch (e) {
-    }
+    } catch {}
 
     let orderTrend: any[] = [];
     try {
@@ -248,8 +232,7 @@ export async function GET(request: NextRequest) {
         GROUP BY DATE(create_time) ORDER BY date
       `);
       orderTrend = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let topProducts: any[] = [];
     try {
@@ -259,8 +242,7 @@ export async function GET(request: NextRequest) {
         GROUP BY product_name ORDER BY total_qty DESC LIMIT 5
       `);
       topProducts = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let workshopDaily: any[] = [];
     try {
@@ -276,8 +258,7 @@ export async function GET(request: NextRequest) {
             completed: Number(r.total_qty || 0),
           }))
         : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let materialConsumption: any[] = [];
     try {
@@ -292,8 +273,7 @@ export async function GET(request: NextRequest) {
             qty: Number(r.total_qty || 0),
           }))
         : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let monthlyMaterialConsumption: any[] = [];
     try {
@@ -308,8 +288,7 @@ export async function GET(request: NextRequest) {
             qty: Number(r.total_qty || 0),
           }))
         : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let workshopHistory: any[] = [];
     try {
@@ -324,8 +303,7 @@ export async function GET(request: NextRequest) {
             total: Number(r.total_qty || 0),
           }))
         : [];
-    } catch (e) {
-    }
+    } catch {}
 
     const shiftData: any = {
       dayShift: { plan: 0, actual: 0, rate: 0 },
@@ -366,8 +344,7 @@ export async function GET(request: NextRequest) {
             ? Math.round((shiftData.nightShift.actual / shiftData.nightShift.plan) * 100)
             : 0;
       }
-    } catch (e) {
-    }
+    } catch {}
 
     const powerConsumption: any[] = [];
 
@@ -381,8 +358,7 @@ export async function GET(request: NextRequest) {
         ORDER BY product_name
       `);
       processRelations = Array.isArray(rows) ? rows.map((r: any) => r.product_name) : [];
-    } catch (e) {
-    }
+    } catch {}
 
     return NextResponse.json({
       success: true,
@@ -404,7 +380,7 @@ export async function GET(request: NextRequest) {
         processRelations,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: '获取CEO看板数据失败' }, { status: 500 });
   }
 }

@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     let todayOrders = 0,
-      orderChange = 0,
       pendingOrders = 0,
       producingOrders = 0;
+    const orderChange = 0;
     let completedToday = 0,
-      totalCustomers = 0,
-      todayProduction = 0,
+      totalCustomers = 0;
+    const todayProduction = 0,
       productionChange = 0;
 
     try {
@@ -28,14 +28,12 @@ export async function GET(request: NextRequest) {
         producingOrders = Number(rows[0].producing || 0);
         completedToday = Number(rows[0].completed_today || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(`SELECT COUNT(*) as total FROM crm_customer WHERE deleted = 0`);
       if (Array.isArray(rows) && rows.length > 0) totalCustomers = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     let inventoryAlert = 0;
     try {
@@ -45,8 +43,7 @@ export async function GET(request: NextRequest) {
         WHERE i.deleted = 0 AND m.status = 1 AND i.quantity <= COALESCE(m.safety_stock, 0)
       `);
       if (Array.isArray(rows) && rows.length > 0) inventoryAlert = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     let totalEmployees = 0;
     try {
@@ -54,8 +51,7 @@ export async function GET(request: NextRequest) {
         `SELECT COUNT(*) as total FROM sys_user WHERE deleted = 0 AND status = 1`
       );
       if (Array.isArray(rows) && rows.length > 0) totalEmployees = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     let recentOrders: any[] = [];
     try {
@@ -67,8 +63,7 @@ export async function GET(request: NextRequest) {
         WHERE pc.deleted = 0 ORDER BY pc.update_time DESC LIMIT 8
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     const alerts: any[] = [];
     try {
@@ -105,8 +100,7 @@ export async function GET(request: NextRequest) {
           severity: 'high',
           time: '刚刚',
         });
-    } catch (e) {
-    }
+    } catch {}
 
     let orderStats: any[] = [];
     try {
@@ -116,8 +110,7 @@ export async function GET(request: NextRequest) {
         GROUP BY DATE(create_time) ORDER BY date
       `);
       orderStats = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     return NextResponse.json({
       success: true,
@@ -147,7 +140,7 @@ export async function GET(request: NextRequest) {
         orderStats,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: '获取仪表盘数据失败' }, { status: 500 });
   }
 }

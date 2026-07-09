@@ -53,7 +53,6 @@ interface OutsourceReceive {
 }
 
 export default function OutsourceReceivePage() {
-
   const t = useTranslations('Outsource');
   const tc = useTranslations('Common');
 
@@ -99,8 +98,7 @@ export default function OutsourceReceivePage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchOutsourceOrders = async () => {
@@ -108,8 +106,7 @@ export default function OutsourceReceivePage() {
       const res = await authFetch('/api/outsource/order?pageSize=100');
       const result = await res.json();
       if (result.success) setOutsourceOrders(result.data?.list || []);
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchWarehouses = async () => {
@@ -117,8 +114,7 @@ export default function OutsourceReceivePage() {
       const res = await authFetch('/api/warehouse/categories');
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -145,7 +141,7 @@ export default function OutsourceReceivePage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -163,9 +159,13 @@ export default function OutsourceReceivePage() {
         toast({ title: t('receivePostSuccess') });
         fetchData();
       } else {
-        toast({ title: t('receivePostFailed'), description: result.message, variant: 'destructive' });
+        toast({
+          title: t('receivePostFailed'),
+          description: result.message,
+          variant: 'destructive',
+        });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -182,7 +182,7 @@ export default function OutsourceReceivePage() {
         toast({ title: action === 'qc_pass' ? t('qcPassTitle') : t('qcFailTitle') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -198,7 +198,7 @@ export default function OutsourceReceivePage() {
       } else {
         toast({ title: tc('deleteFailed'), variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };
@@ -211,7 +211,7 @@ export default function OutsourceReceivePage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchOrderNo")}
+                placeholder={tc('searchOrderNo')}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -246,8 +246,8 @@ export default function OutsourceReceivePage() {
                   <TableHead className="text-xs text-right">{t('qualifiedQty')}</TableHead>
                   <TableHead className="text-xs text-right">{t('defectiveQty')}</TableHead>
                   <TableHead className="text-xs">{t('qcStatus')}</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -460,7 +460,7 @@ export default function OutsourceReceivePage() {
                 />
               </div>
               <div>
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Input
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -471,7 +471,7 @@ export default function OutsourceReceivePage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

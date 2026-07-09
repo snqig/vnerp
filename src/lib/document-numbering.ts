@@ -96,7 +96,7 @@ export async function getNumberingConfig(): Promise<DocumentNumberingConfig> {
         ? Number(configs['serial_length'])
         : DEFAULT_CONFIG.serial_length,
     };
-  } catch (e) {
+  } catch {
     return DEFAULT_CONFIG;
   }
 }

@@ -101,7 +101,7 @@ export function AddDialog({
       } else {
         toast.error(result.message || t('createInboundFailed'));
       }
-    } catch (err) {
+    } catch {
       toast.error(t('createInboundFailed'));
     }
   };
@@ -120,9 +120,7 @@ export function AddDialog({
               <Input
                 id="add-materialCode"
                 value={formData.materialCode}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, materialCode: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, materialCode: e.target.value }))}
                 placeholder={t('enterMaterialCode')}
               />
             </div>
@@ -131,9 +129,7 @@ export function AddDialog({
               <Input
                 id="add-materialName"
                 value={formData.materialName}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, materialName: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, materialName: e.target.value }))}
                 placeholder={t('enterMaterialName')}
               />
             </div>
@@ -207,9 +203,7 @@ export function AddDialog({
               <Label htmlFor="add-warehouse">{tc('warehouse')}</Label>
               <Select
                 value={formData.warehouse}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, warehouse: value }))
-                }
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, warehouse: value }))}
               >
                 <SelectTrigger id="add-warehouse">
                   <SelectValue placeholder={t('selectWarehouse')} />

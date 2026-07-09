@@ -79,14 +79,14 @@ export default function MenusPage() {
       const res = await authFetch('/api/organization/menu');
       const result = await res.json();
       if (result.success && result.data) {
-        const menuData = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const menuData = Array.isArray(result.data) ? result.data : result.data?.list || [];
         setList(menuData);
         const parentIds = new Set<number>(
           menuData.filter((m: MenuItem) => m.menu_type === 1).map((m: MenuItem) => m.id)
         );
         setExpandedIds(parentIds);
       }
-    } catch (e) {
+    } catch {
       toast({ title: '获取菜单失败', variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -150,7 +150,11 @@ export default function MenusPage() {
           <TableCell className="font-mono text-sm">{item.menu_code}</TableCell>
           <TableCell>
             <Badge variant={item.menu_type === 1 ? 'default' : 'secondary'}>
-              {item.menu_type === 1 ? tc("directory") : item.menu_type === 2 ? tc("menu") : tc("button")}
+              {item.menu_type === 1
+                ? tc('directory')
+                : item.menu_type === 2
+                  ? tc('menu')
+                  : tc('button')}
             </Badge>
           </TableCell>
           <TableCell>{item.icon || '-'}</TableCell>
@@ -250,7 +254,7 @@ export default function MenusPage() {
       } else {
         toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '保存失败', variant: 'destructive' });
     } finally {
       setSaving(false);
@@ -268,7 +272,7 @@ export default function MenusPage() {
       } else {
         toast({ title: result.message || '删除失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '删除失败', variant: 'destructive' });
     }
   };
@@ -277,12 +281,12 @@ export default function MenusPage() {
     <MainLayout>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">{t("menuManagement")}</h2>
+          <h2 className="text-2xl font-bold">{t('menuManagement')}</h2>
           <div className="flex items-center gap-2">
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={tc("searchMenuPlaceholder")}
+                placeholder={tc('searchMenuPlaceholder')}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="pl-10 h-9"
@@ -293,7 +297,7 @@ export default function MenusPage() {
             </Button>
             <Button size="sm" onClick={() => handleAdd(0)}>
               <Plus className="h-4 w-4 mr-1" />
-              {t("addDirectory")}
+              {t('addDirectory')}
             </Button>
           </div>
         </div>
@@ -303,27 +307,27 @@ export default function MenusPage() {
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                <span className="ml-2 text-gray-400">{tc("loading")}</span>
+                <span className="ml-2 text-gray-400">{tc('loading')}</span>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{tc("menuName")}</TableHead>
-                    <TableHead>{tc("code")}</TableHead>
-                    <TableHead>{tc("type")}</TableHead>
-                    <TableHead>{tc("icon")}</TableHead>
-                    <TableHead>{tc("path")}</TableHead>
-                    <TableHead>{tc("permission")}</TableHead>
-                    <TableHead>{tc("sortOrder")}</TableHead>
-                    <TableHead>{tc("actions")}</TableHead>
+                    <TableHead>{tc('menuName')}</TableHead>
+                    <TableHead>{tc('code')}</TableHead>
+                    <TableHead>{tc('type')}</TableHead>
+                    <TableHead>{tc('icon')}</TableHead>
+                    <TableHead>{tc('path')}</TableHead>
+                    <TableHead>{tc('permission')}</TableHead>
+                    <TableHead>{tc('sortOrder')}</TableHead>
+                    <TableHead>{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {tree.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        {tc("noData")}
+                        {tc('noData')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -338,18 +342,18 @@ export default function MenusPage() {
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.is_new ? t("addMenu") : t("editMenu")}</DialogTitle>
+              <DialogTitle>{editItem.is_new ? t('addMenu') : t('editMenu')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{tc("menuName")}</Label>
+                <Label>{tc('menuName')}</Label>
                 <Input
                   value={editItem.menu_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, menu_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("menuCode")}</Label>
+                <Label>{tc('menuCode')}</Label>
                 <Input
                   value={editItem.menu_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, menu_code: e.target.value })}
@@ -357,7 +361,7 @@ export default function MenusPage() {
                 />
               </div>
               <div>
-                <Label>{tc("menuType")}</Label>
+                <Label>{tc('menuType')}</Label>
                 <Select
                   value={String(editItem.menu_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, menu_type: Number(v) })}
@@ -366,35 +370,35 @@ export default function MenusPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">{tc("directory")}</SelectItem>
-                    <SelectItem value="2">{tc("menu")}</SelectItem>
-                    <SelectItem value="3">{tc("button")}</SelectItem>
+                    <SelectItem value="1">{tc('directory')}</SelectItem>
+                    <SelectItem value="2">{tc('menu')}</SelectItem>
+                    <SelectItem value="3">{tc('button')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>{tc("icon")}</Label>
+                <Label>{tc('icon')}</Label>
                 <Input
                   value={editItem.icon || ''}
                   onChange={(e) => setEditItem({ ...editItem, icon: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("path")}</Label>
+                <Label>{tc('path')}</Label>
                 <Input
                   value={editItem.path || ''}
                   onChange={(e) => setEditItem({ ...editItem, path: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("permission")}</Label>
+                <Label>{tc('permission')}</Label>
                 <Input
                   value={editItem.permission || ''}
                   onChange={(e) => setEditItem({ ...editItem, permission: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("sortOrder")}</Label>
+                <Label>{tc('sortOrder')}</Label>
                 <Input
                   type="number"
                   value={editItem.sort_order || 0}
@@ -402,7 +406,7 @@ export default function MenusPage() {
                 />
               </div>
               <div>
-                <Label>{tc("visible")}</Label>
+                <Label>{tc('visible')}</Label>
                 <Select
                   value={String(editItem.is_visible ?? 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, is_visible: Number(v) })}
@@ -411,18 +415,19 @@ export default function MenusPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">{tc("visible")}</SelectItem>
-                    <SelectItem value="0">{tc("hidden")}</SelectItem>
+                    <SelectItem value="1">{tc('visible')}</SelectItem>
+                    <SelectItem value="0">{tc('hidden')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc("cancel")}
+                {tc('cancel')}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{tc("save")}
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {tc('save')}
               </Button>
             </DialogFooter>
           </DialogContent>

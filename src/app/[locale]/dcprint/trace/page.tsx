@@ -72,7 +72,6 @@ interface TraceRecord {
 }
 
 export default function TracePage() {
-
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -97,8 +96,7 @@ export default function TracePage() {
       if (result.success) {
         setRecords(result.data.list || []);
       }
-    } catch (error) {
-    }
+    } catch {}
   };
 
   const handleScanQRCode = async () => {
@@ -139,7 +137,7 @@ export default function TracePage() {
         setError(result.message || '追溯查询失败');
         setTraceResult(null);
       }
-    } catch (err) {
+    } catch {
       setError('追溯查询失败');
       setTraceResult(null);
     } finally {
@@ -170,16 +168,16 @@ export default function TracePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <QrCode className="h-5 w-5" />
-              扫码追溯
+              {tc('text_cx5i2w')}
             </CardTitle>
-            <CardDescription>扫描流程卡二维码进行物料追溯查询</CardDescription>
+            <CardDescription>{tc('text_7ywqdy')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {/* 二维码输入 */}
               <div className="flex gap-4">
                 <div className="flex-1">
-                  <label className="text-sm font-medium mb-2 block">流程卡二维码</label>
+                  <label className="text-sm font-medium mb-2 block">{tc('text_lnupky')}</label>
                   <Input
                     ref={qrInputRef}
                     placeholder="请扫描流程卡二维码..."
@@ -192,11 +190,11 @@ export default function TracePage() {
                 <div className="flex items-end gap-2">
                   <Button variant="outline" onClick={handleReset}>
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    重置
+                    {tc('text_phz5')}
                   </Button>
                   <Button onClick={handleScanQRCode} disabled={loading}>
                     <Search className="h-4 w-4 mr-2" />
-                    追溯
+                    {tc('text_p3ki')}
                   </Button>
                 </div>
               </div>
@@ -226,12 +224,15 @@ export default function TracePage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>追溯结果</CardTitle>
-                    <CardDescription>追溯单号: {traceResult.traceNo}</CardDescription>
+                    <CardTitle>{tc('text_immfaz')}</CardTitle>
+                    <CardDescription>
+                      {tc('text_91y2ee')}
+                      {traceResult.traceNo}
+                    </CardDescription>
                   </div>
                   <Button onClick={handlePrint}>
                     <Printer className="h-4 w-4 mr-2" />
-                    打印追溯单
+                    {tc('text_um5lcq')}
                   </Button>
                 </div>
               </CardHeader>
@@ -240,24 +241,24 @@ export default function TracePage() {
                   {/* 流程卡信息 */}
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">流程卡信息</CardTitle>
+                      <CardTitle className="text-sm">{tc('text_gqkiw5')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">流程卡卡号</span>
+                          <span className="text-muted-foreground">{tc('text_gql1v1')}</span>
                           <span className="font-medium">{traceResult.card.cardNo}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">工单号</span>
+                          <span className="text-muted-foreground">{tc('text_e5qlj')}</span>
                           <span className="font-medium">{traceResult.card.workOrderNo}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">成品料号</span>
+                          <span className="text-muted-foreground">{tc('text_cq660f')}</span>
                           <span className="font-medium">{traceResult.card.productCode}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">成品名称</span>
+                          <span className="text-muted-foreground">{tc('text_cq3e2c')}</span>
                           <span className="font-medium">{traceResult.card.productName}</span>
                         </div>
                       </div>
@@ -267,44 +268,44 @@ export default function TracePage() {
                   {/* 主材信息 */}
                   <Card className="border-green-200">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">主材信息</CardTitle>
+                      <CardTitle className="text-sm">{tc('text_aaqm03')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">标签编号</span>
+                          <span className="text-muted-foreground">{tc('text_dn1smw')}</span>
                           <span className="font-medium">{traceResult.mainMaterial.labelNo}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">物料代号</span>
+                          <span className="text-muted-foreground">{tc('text_eurcg4')}</span>
                           <span className="font-medium">
                             {traceResult.mainMaterial.materialCode}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">物料名称</span>
+                          <span className="text-muted-foreground">{tc('text_eusfkj')}</span>
                           <span className="font-medium">
                             {traceResult.mainMaterial.materialName}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">{tc("specification")}</span>
+                          <span className="text-muted-foreground">{tc('specification')}</span>
                           <span className="font-medium">
                             {traceResult.mainMaterial.specification}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">批号</span>
+                          <span className="text-muted-foreground">{tc('text_h7ku')}</span>
                           <span className="font-medium">{traceResult.mainMaterial.batchNo}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">{tc("supplier")}</span>
+                          <span className="text-muted-foreground">{tc('supplier')}</span>
                           <span className="font-medium">
                             {traceResult.mainMaterial.supplierName}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">进料日期</span>
+                          <span className="text-muted-foreground">{tc('text_ikkk8o')}</span>
                           <span className="font-medium">
                             {traceResult.mainMaterial.receiveDate}
                           </span>
@@ -316,18 +317,18 @@ export default function TracePage() {
                   {/* 统计信息 */}
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm">物料统计</CardTitle>
+                      <CardTitle className="text-sm">{tc('text_euzt9u')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
                         <div className="bg-muted p-3 rounded-lg">
-                          <div className="text-sm text-muted-foreground">主材数量</div>
+                          <div className="text-sm text-muted-foreground">{tc('text_aaujro')}</div>
                           <div className="text-2xl font-bold text-green-600">
                             {traceResult.materials.filter((m) => m.materialType === 'main').length}
                           </div>
                         </div>
                         <div className="bg-muted p-3 rounded-lg">
-                          <div className="text-sm text-muted-foreground">辅料数量</div>
+                          <div className="text-sm text-muted-foreground">{tc('text_ij1t03')}</div>
                           <div className="text-2xl font-bold text-blue-600">
                             {
                               traceResult.materials.filter((m) => m.materialType === 'auxiliary')
@@ -336,7 +337,7 @@ export default function TracePage() {
                           </div>
                         </div>
                         <div className="bg-muted p-3 rounded-lg">
-                          <div className="text-sm text-muted-foreground">物料总数</div>
+                          <div className="text-sm text-muted-foreground">{tc('text_euue3p')}</div>
                           <div className="text-2xl font-bold">{traceResult.materials.length}</div>
                         </div>
                       </div>
@@ -349,29 +350,29 @@ export default function TracePage() {
             {/* 物料明细 */}
             <Card>
               <CardHeader>
-                <CardTitle>物料明细</CardTitle>
-                <CardDescription>该流程卡使用的所有物料</CardDescription>
+                <CardTitle>{tc('text_euvirs')}</CardTitle>
+                <CardDescription>{tc('text_57bhxa')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="border rounded-lg">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>标签编号</TableHead>
-                        <TableHead>{tc("type")}</TableHead>
-                        <TableHead>物料代号</TableHead>
-                        <TableHead>物料名称</TableHead>
-                        <TableHead>{tc("specification")}</TableHead>
-                        <TableHead>批号</TableHead>
-                        <TableHead>{tc("supplier")}</TableHead>
-                        <TableHead>进料日期</TableHead>
+                        <TableHead>{tc('text_dn1smw')}</TableHead>
+                        <TableHead>{tc('type')}</TableHead>
+                        <TableHead>{tc('text_eurcg4')}</TableHead>
+                        <TableHead>{tc('text_eusfkj')}</TableHead>
+                        <TableHead>{tc('specification')}</TableHead>
+                        <TableHead>{tc('text_h7ku')}</TableHead>
+                        <TableHead>{tc('supplier')}</TableHead>
+                        <TableHead>{tc('text_ikkk8o')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {traceResult.materials.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={8} className="text-center py-8">
-                            暂无物料数据
+                            {tc('text_iia61g')}
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -380,9 +381,13 @@ export default function TracePage() {
                             <TableCell className="font-medium">{material.labelNo}</TableCell>
                             <TableCell>
                               {material.materialType === 'main' ? (
-                                <Badge className="bg-green-100 text-green-700">主材</Badge>
+                                <Badge className="bg-green-100 text-green-700">
+                                  {tc('text_dvg5')}
+                                </Badge>
                               ) : (
-                                <Badge className="bg-blue-100 text-blue-700">辅料</Badge>
+                                <Badge className="bg-blue-100 text-blue-700">
+                                  {tc('text_oywk')}
+                                </Badge>
                               )}
                             </TableCell>
                             <TableCell>{material.materialCode}</TableCell>
@@ -405,28 +410,28 @@ export default function TracePage() {
         {/* 追溯记录列表 */}
         <Card>
           <CardHeader>
-            <CardTitle>追溯记录</CardTitle>
-            <CardDescription>历史追溯查询记录</CardDescription>
+            <CardTitle>{tc('text_imokfr')}</CardTitle>
+            <CardDescription>{tc('text_1oo8e8')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>追溯单号</TableHead>
-                    <TableHead>流程卡卡号</TableHead>
-                    <TableHead>工单号</TableHead>
-                    <TableHead>成品料号</TableHead>
-                    <TableHead>追溯类型</TableHead>
-                    <TableHead>操作员</TableHead>
-                    <TableHead>追溯时间</TableHead>
+                    <TableHead>{tc('text_imex3o')}</TableHead>
+                    <TableHead>{tc('text_gql1v1')}</TableHead>
+                    <TableHead>{tc('text_e5qlj')}</TableHead>
+                    <TableHead>{tc('text_cq660f')}</TableHead>
+                    <TableHead>{tc('text_imlxs2')}</TableHead>
+                    <TableHead>{tc('text_f5hc9')}</TableHead>
+                    <TableHead>{tc('text_imig7k')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {records.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8">
-                        暂无数据
+                        {tc('text_dcv57g')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -438,9 +443,11 @@ export default function TracePage() {
                         <TableCell>{record.productCode}</TableCell>
                         <TableCell>
                           {record.traceType === 'forward' ? (
-                            <Badge className="bg-blue-100 text-blue-700">正向追溯</Badge>
+                            <Badge className="bg-blue-100 text-blue-700">{tc('text_dwm21s')}</Badge>
                           ) : (
-                            <Badge className="bg-purple-100 text-purple-700">反向追溯</Badge>
+                            <Badge className="bg-purple-100 text-purple-700">
+                              {tc('text_axin92')}
+                            </Badge>
                           )}
                         </TableCell>
                         <TableCell>{record.operatorName}</TableCell>

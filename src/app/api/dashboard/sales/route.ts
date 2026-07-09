@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
@@ -28,8 +28,7 @@ export async function GET(request: NextRequest) {
         overview.pendingDelivery = Number(rows[0].pending || 0);
         overview.completedOrders = Number(rows[0].completed || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(`
@@ -38,8 +37,7 @@ export async function GET(request: NextRequest) {
       `);
       if (Array.isArray(rows) && rows.length > 0)
         overview.monthRevenue = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     let orderTrend: any[] = [];
     try {
@@ -49,8 +47,7 @@ export async function GET(request: NextRequest) {
         GROUP BY DATE(create_time) ORDER BY date
       `);
       orderTrend = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let topCustomers: any[] = [];
     try {
@@ -61,8 +58,7 @@ export async function GET(request: NextRequest) {
         WHERE o.deleted = 0 GROUP BY c.customer_name ORDER BY total_amount DESC LIMIT 5
       `);
       topCustomers = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let topProducts: any[] = [];
     try {
@@ -71,8 +67,7 @@ export async function GET(request: NextRequest) {
         FROM sal_order_item WHERE deleted = 0 GROUP BY product_name ORDER BY total_amount DESC LIMIT 5
       `);
       topProducts = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let recentOrders: any[] = [];
     try {
@@ -83,8 +78,7 @@ export async function GET(request: NextRequest) {
         WHERE o.deleted = 0 ORDER BY o.create_time DESC LIMIT 10
       `);
       recentOrders = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let statusDistribution: any[] = [];
     try {
@@ -92,14 +86,13 @@ export async function GET(request: NextRequest) {
         SELECT status, COUNT(*) as count FROM sal_order WHERE deleted = 0 GROUP BY status
       `);
       statusDistribution = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     return NextResponse.json({
       success: true,
       data: { overview, orderTrend, topCustomers, topProducts, recentOrders, statusDistribution },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: '获取销售看板数据失败' }, { status: 500 });
   }
 }

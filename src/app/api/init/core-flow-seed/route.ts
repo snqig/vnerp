@@ -24,7 +24,7 @@ function randomAmount(min: number, max: number): number {
   return Math.round((min + Math.random() * (max - min)) * 100) / 100;
 }
 
-export const POST = withPermission(async (request: NextRequest) => {
+export const POST = withPermission(async (_request: NextRequest) => {
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
     const now = new Date();
@@ -75,7 +75,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     for (const t of clearTables) {
       try {
         await conn.execute(`DELETE FROM ${t}`);
-      } catch (e) {
+      } catch {
         /* ignore */
       }
     }

@@ -116,7 +116,7 @@ export default function WarehousePage() {
         setBatches(data.data.list || []);
         setTotal(data.data.total || 0);
       }
-    } catch (error) {
+    } catch {
       toast.error(tc('fetchFailed'));
     } finally {
       setLoading(false);
@@ -158,7 +158,7 @@ export default function WarehousePage() {
       } else {
         toast.error(data.message || tc('inboundFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(tc('inboundFailed'));
     }
   };
@@ -197,7 +197,7 @@ export default function WarehousePage() {
       } else {
         toast.error(data.message || tc('outboundFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(tc('outboundFailed'));
     }
   };
@@ -212,7 +212,7 @@ export default function WarehousePage() {
       if (data.code === 200) {
         setAvailableBatches(data.data.batches || []);
       }
-    } catch (error) {
+    } catch {
       toast.error(tc('fetchBatchFailed'));
     }
   };
@@ -255,124 +255,124 @@ export default function WarehousePage() {
               <DialogHeader>
                 <DialogTitle>{t('productionInbound')}</DialogTitle>
               </DialogHeader>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>{t('warehouse')}</Label>
-                      <Select
-                        value={inboundForm.warehouse_id}
-                        onValueChange={(v) => setInboundForm({ ...inboundForm, warehouse_id: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={t('selectWarehouse')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">{t('rawMaterialWarehouse')}</SelectItem>
-                          <SelectItem value="2">{t('finishedWarehouse')}</SelectItem>
-                          <SelectItem value="3">{t('semiFinishedWarehouse')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>{t('inboundDate')}</Label>
-                      <Input
-                        type="date"
-                        value={inboundForm.inbound_date}
-                        onChange={(e) =>
-                          setInboundForm({ ...inboundForm, inbound_date: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t('inboundItems')}</Label>
-                    {inboundForm.items.map((item, index) => (
-                      <div key={index} className="grid grid-cols-6 gap-2">
-                        <Input
-                          placeholder={t('materialCode')}
-                          value={item.material_code}
-                          onChange={(e) => {
-                            const newItems = [...inboundForm.items];
-                            newItems[index].material_code = e.target.value;
-                            setInboundForm({ ...inboundForm, items: newItems });
-                          }}
-                        />
-                        <Input
-                          placeholder={t('materialName')}
-                          value={item.material_name}
-                          onChange={(e) => {
-                            const newItems = [...inboundForm.items];
-                            newItems[index].material_name = e.target.value;
-                            setInboundForm({ ...inboundForm, items: newItems });
-                          }}
-                        />
-                        <Input
-                          type="number"
-                          placeholder={tc('quantity')}
-                          value={item.quantity}
-                          onChange={(e) => {
-                            const newItems = [...inboundForm.items];
-                            newItems[index].quantity = e.target.value;
-                            setInboundForm({ ...inboundForm, items: newItems });
-                          }}
-                        />
-                        <Input
-                          placeholder={t('unit')}
-                          value={item.unit}
-                          onChange={(e) => {
-                            const newItems = [...inboundForm.items];
-                            newItems[index].unit = e.target.value;
-                            setInboundForm({ ...inboundForm, items: newItems });
-                          }}
-                        />
-                        <Input
-                          placeholder={t('batchNoOptional')}
-                          value={item.batch_no}
-                          onChange={(e) => {
-                            const newItems = [...inboundForm.items];
-                            newItems[index].batch_no = e.target.value;
-                            setInboundForm({ ...inboundForm, items: newItems });
-                          }}
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const newItems = inboundForm.items.filter((_, i) => i !== index);
-                            setInboundForm({ ...inboundForm, items: newItems });
-                          }}
-                        >
-                          {tc('delete')}
-                        </Button>
-                      </div>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setInboundForm({
-                          ...inboundForm,
-                          items: [
-                            ...inboundForm.items,
-                            {
-                              material_id: '',
-                              material_code: '',
-                              material_name: '',
-                              quantity: '',
-                              unit: '张',
-                              batch_no: '',
-                            },
-                          ],
-                        });
-                      }}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>{t('warehouse')}</Label>
+                    <Select
+                      value={inboundForm.warehouse_id}
+                      onValueChange={(v) => setInboundForm({ ...inboundForm, warehouse_id: v })}
                     >
-                      {t('addItem')}
-                    </Button>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('selectWarehouse')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">{t('rawMaterialWarehouse')}</SelectItem>
+                        <SelectItem value="2">{t('finishedWarehouse')}</SelectItem>
+                        <SelectItem value="3">{t('semiFinishedWarehouse')}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Button onClick={handleInbound} className="w-full">
-                    {t('confirmInbound')}
+                  <div>
+                    <Label>{t('inboundDate')}</Label>
+                    <Input
+                      type="date"
+                      value={inboundForm.inbound_date}
+                      onChange={(e) =>
+                        setInboundForm({ ...inboundForm, inbound_date: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('inboundItems')}</Label>
+                  {inboundForm.items.map((item, index) => (
+                    <div key={index} className="grid grid-cols-6 gap-2">
+                      <Input
+                        placeholder={t('materialCode')}
+                        value={item.material_code}
+                        onChange={(e) => {
+                          const newItems = [...inboundForm.items];
+                          newItems[index].material_code = e.target.value;
+                          setInboundForm({ ...inboundForm, items: newItems });
+                        }}
+                      />
+                      <Input
+                        placeholder={t('materialName')}
+                        value={item.material_name}
+                        onChange={(e) => {
+                          const newItems = [...inboundForm.items];
+                          newItems[index].material_name = e.target.value;
+                          setInboundForm({ ...inboundForm, items: newItems });
+                        }}
+                      />
+                      <Input
+                        type="number"
+                        placeholder={tc('quantity')}
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const newItems = [...inboundForm.items];
+                          newItems[index].quantity = e.target.value;
+                          setInboundForm({ ...inboundForm, items: newItems });
+                        }}
+                      />
+                      <Input
+                        placeholder={t('unit')}
+                        value={item.unit}
+                        onChange={(e) => {
+                          const newItems = [...inboundForm.items];
+                          newItems[index].unit = e.target.value;
+                          setInboundForm({ ...inboundForm, items: newItems });
+                        }}
+                      />
+                      <Input
+                        placeholder={t('batchNoOptional')}
+                        value={item.batch_no}
+                        onChange={(e) => {
+                          const newItems = [...inboundForm.items];
+                          newItems[index].batch_no = e.target.value;
+                          setInboundForm({ ...inboundForm, items: newItems });
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const newItems = inboundForm.items.filter((_, i) => i !== index);
+                          setInboundForm({ ...inboundForm, items: newItems });
+                        }}
+                      >
+                        {tc('delete')}
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setInboundForm({
+                        ...inboundForm,
+                        items: [
+                          ...inboundForm.items,
+                          {
+                            material_id: '',
+                            material_code: '',
+                            material_name: '',
+                            quantity: '',
+                            unit: '张',
+                            batch_no: '',
+                          },
+                        ],
+                      });
+                    }}
+                  >
+                    {t('addItem')}
                   </Button>
                 </div>
+                <Button onClick={handleInbound} className="w-full">
+                  {t('confirmInbound')}
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
 
@@ -599,7 +599,8 @@ export default function WarehousePage() {
           </div>
           <div className="flex justify-between items-center mt-4">
             <div className="text-sm text-gray-500">
-              {t('recordCount', { count: total })}，{t('pageOf', { page, pages: Math.ceil(total / pageSize) })}
+              {t('recordCount', { count: total })}，
+              {t('pageOf', { page, pages: Math.ceil(total / pageSize) })}
             </div>
             <div className="flex gap-2">
               <Button

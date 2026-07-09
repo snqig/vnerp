@@ -4,7 +4,7 @@ import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { getMrPrefix, generateDocNo } from '@/lib/global-config';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -36,65 +36,81 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { work_order_id, work_order_no, warehouse_id, return_date, operator_name, remark, items } =
-    body;
-  const now = new Date();
-  const returnNo = generateDocNo(getMrPrefix());
-
-  const result: any = await execute(
-    'INSERT INTO prd_material_return (return_no, work_order_id, work_order_no, warehouse_id, return_date, operator_name, remark) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [
-      returnNo,
-      work_order_id || null,
-      work_order_no || null,
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const {
+      work_order_id,
+      work_order_no,
       warehouse_id,
       return_date,
-      operator_name || null,
-      remark || null,
-    ]
-  );
-
-  if (items && Array.isArray(items)) {
-    for (const item of items) {
-      await execute(
-        'INSERT INTO prd_material_return_item (return_id, material_id, material_code, material_name, return_qty, unit, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [
-          result.insertId,
-          item.material_id,
-          item.material_code || null,
-          item.material_name || null,
-          item.return_qty,
-          item.unit || null,
-          item.batch_no || null,
-        ]
-      );
-    }
-  }
-  return successResponse({ id: result.insertId, return_no: returnNo }, '退料单创建成功');
-}, { logTitle: '创建退料单', logType: 'business' });
-
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, status, remark } = body;
-  if (status !== undefined)
-    await execute('UPDATE prd_material_return SET status = ? WHERE id = ? AND deleted = 0', [
-      status,
-      id,
-    ]);
-  if (remark !== undefined)
-    await execute('UPDATE prd_material_return SET remark = ? WHERE id = ? AND deleted = 0', [
+      operator_name,
       remark,
-      id,
-    ]);
-  return successResponse(null, '更新成功');
-}, { logTitle: '更新退料单', logType: 'business' });
+      items,
+    } = body;
+    const now = new Date();
+    const returnNo = generateDocNo(getMrPrefix());
 
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
-  await execute('UPDATE prd_material_return SET deleted = 1 WHERE id = ?', [Number(id)]);
-  return successResponse(null, '删除成功');
-}, { logTitle: '删除退料单', logType: 'business' });
+    const result: any = await execute(
+      'INSERT INTO prd_material_return (return_no, work_order_id, work_order_no, warehouse_id, return_date, operator_name, remark) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [
+        returnNo,
+        work_order_id || null,
+        work_order_no || null,
+        warehouse_id,
+        return_date,
+        operator_name || null,
+        remark || null,
+      ]
+    );
+
+    if (items && Array.isArray(items)) {
+      for (const item of items) {
+        await execute(
+          'INSERT INTO prd_material_return_item (return_id, material_id, material_code, material_name, return_qty, unit, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [
+            result.insertId,
+            item.material_id,
+            item.material_code || null,
+            item.material_name || null,
+            item.return_qty,
+            item.unit || null,
+            item.batch_no || null,
+          ]
+        );
+      }
+    }
+    return successResponse({ id: result.insertId, return_no: returnNo }, '退料单创建成功');
+  },
+  { logTitle: '创建退料单', logType: 'business' }
+);
+
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { id, status, remark } = body;
+    if (status !== undefined)
+      await execute('UPDATE prd_material_return SET status = ? WHERE id = ? AND deleted = 0', [
+        status,
+        id,
+      ]);
+    if (remark !== undefined)
+      await execute('UPDATE prd_material_return SET remark = ? WHERE id = ? AND deleted = 0', [
+        remark,
+        id,
+      ]);
+    return successResponse(null, '更新成功');
+  },
+  { logTitle: '更新退料单', logType: 'business' }
+);
+
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
+    await execute('UPDATE prd_material_return SET deleted = 1 WHERE id = ?', [Number(id)]);
+    return successResponse(null, '删除成功');
+  },
+  { logTitle: '删除退料单', logType: 'business' }
+);

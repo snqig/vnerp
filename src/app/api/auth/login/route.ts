@@ -257,7 +257,7 @@ export async function POST(request: NextRequest) {
           );
         }
       }
-    } catch (e) {
+    } catch {
       // 忽略异地登录检查错误
     }
 
@@ -284,7 +284,7 @@ export async function POST(request: NextRequest) {
         if (deptResult.length > 0) {
           departmentName = deptResult[0].dept_name;
         }
-      } catch (e) {}
+      } catch {}
     }
 
     let permissions: string[] = [];
@@ -347,7 +347,7 @@ export async function POST(request: NextRequest) {
           userInfo.passwordExpired = true;
         }
       }
-    } catch (e) {
+    } catch {
       // 忽略配置查询错误
     }
 
@@ -363,7 +363,7 @@ export async function POST(request: NextRequest) {
       ) {
         userInfo.passwordExpired = true;
       }
-    } catch (e) {
+    } catch {
       // 忽略
     }
 
@@ -411,7 +411,7 @@ export async function POST(request: NextRequest) {
     setCsrfCookie(response, csrfToken);
 
     return response;
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       {
         success: false,
@@ -431,7 +431,7 @@ async function logLogin(username: string, request: NextRequest, success: boolean
        VALUES (?, ?, ?, ?, ?)`,
       [username, ip, userAgent, success ? 1 : 0, success ? '' : message]
     );
-  } catch (e) {}
+  } catch {}
 }
 
 function parseBrowser(ua: string): string {

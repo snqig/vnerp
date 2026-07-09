@@ -18,10 +18,10 @@ import {
 // 操作日志查询
 // ============================================================
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
-  
-  const module = searchParams.get('module') || undefined;
+
+  const moduleName = searchParams.get('module') || undefined;
   const type = searchParams.get('type') || undefined;
   const username = searchParams.get('username') || undefined;
   const status = searchParams.get('status');
@@ -34,7 +34,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   switch (logType) {
     case 'operate': {
       const result = await queryOperateLogs({
-        module,
+        module: moduleName,
         type,
         username,
         status: status ? Number(status) : undefined,
@@ -61,9 +61,15 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     case 'stock': {
       const result = await queryStockFlows({
         businessType: searchParams.get('businessType') || undefined,
-        warehouseId: searchParams.get('warehouseId') ? Number(searchParams.get('warehouseId')) : undefined,
-        materialId: searchParams.get('materialId') ? Number(searchParams.get('materialId')) : undefined,
-        productId: searchParams.get('productId') ? Number(searchParams.get('productId')) : undefined,
+        warehouseId: searchParams.get('warehouseId')
+          ? Number(searchParams.get('warehouseId'))
+          : undefined,
+        materialId: searchParams.get('materialId')
+          ? Number(searchParams.get('materialId'))
+          : undefined,
+        productId: searchParams.get('productId')
+          ? Number(searchParams.get('productId'))
+          : undefined,
         sourceNo: searchParams.get('sourceNo') || undefined,
         startTime,
         endTime,
@@ -76,8 +82,12 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     case 'finance': {
       const result = await queryFinanceFlows({
         type: searchParams.get('financeType') || undefined,
-        customerId: searchParams.get('customerId') ? Number(searchParams.get('customerId')) : undefined,
-        supplierId: searchParams.get('supplierId') ? Number(searchParams.get('supplierId')) : undefined,
+        customerId: searchParams.get('customerId')
+          ? Number(searchParams.get('customerId'))
+          : undefined,
+        supplierId: searchParams.get('supplierId')
+          ? Number(searchParams.get('supplierId'))
+          : undefined,
         voucherNo: searchParams.get('voucherNo') || undefined,
         period: searchParams.get('period') || undefined,
         startTime,

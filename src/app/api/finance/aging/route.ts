@@ -11,7 +11,7 @@ import { query } from '@/lib/db';
  * 按账龄区间统计应收/应付款，识别坏账风险
  */
 
-export const GET = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'receivable';
   const asOfDate = searchParams.get('asOfDate') || new Date().toISOString().slice(0, 10);

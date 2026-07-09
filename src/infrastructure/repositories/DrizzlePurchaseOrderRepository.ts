@@ -23,7 +23,10 @@ import {
   PaginatedResult,
 } from '@/domain/purchase/repositories/IPurchaseOrderRepository';
 import { PurchaseOrder, PurchaseOrderProps } from '@/domain/purchase/aggregates/PurchaseOrder';
-import { PurchaseOrderStatus, PurchaseStatus } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
+import {
+  PurchaseOrderStatus,
+  PurchaseStatus,
+} from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
 type PurPurchaseOrderRow = typeof purPurchaseOrder.$inferSelect;
@@ -40,7 +43,7 @@ function logOp(
   result: unknown,
   durationMs: number
 ) {
-  console.log(
+  console.warn(
     `[DrizzlePurchaseRepo] ${method} (${durationMs}ms)\n` +
       `  TABLE: ${table}\n` +
       `  CONDITIONS: ${conditions}\n` +
@@ -66,7 +69,15 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     });
 
     if (!order) {
-      logOp('findById', 'pur_purchase_order', `id=${id} AND deleted=false`, sqlDesc, { id }, 'null (not found)', nowMs() - t0);
+      logOp(
+        'findById',
+        'pur_purchase_order',
+        `id=${id} AND deleted=false`,
+        sqlDesc,
+        { id },
+        'null (not found)',
+        nowMs() - t0
+      );
       return null;
     }
 
@@ -77,7 +88,15 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     });
 
     const result = PurchaseOrder.reconstitute(this.mapToProps(order, lines));
-    logOp('findById', 'pur_purchase_order + pur_purchase_order_line', `id=${id} AND deleted=false`, `${sqlDesc}; ${linesSqlDesc}`, { id }, `order+${lines.length} lines`, nowMs() - t0);
+    logOp(
+      'findById',
+      'pur_purchase_order + pur_purchase_order_line',
+      `id=${id} AND deleted=false`,
+      `${sqlDesc}; ${linesSqlDesc}`,
+      { id },
+      `order+${lines.length} lines`,
+      nowMs() - t0
+    );
     return result;
   }
 
@@ -92,7 +111,15 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     });
 
     if (!order) {
-      logOp('findByOrderNo', 'pur_purchase_order', `po_no='${orderNo}' AND deleted=false`, sqlDesc, { orderNo }, 'null (not found)', nowMs() - t0);
+      logOp(
+        'findByOrderNo',
+        'pur_purchase_order',
+        `po_no='${orderNo}' AND deleted=false`,
+        sqlDesc,
+        { orderNo },
+        'null (not found)',
+        nowMs() - t0
+      );
       return null;
     }
 
@@ -102,7 +129,15 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     });
 
     const result = PurchaseOrder.reconstitute(this.mapToProps(order, lines));
-    logOp('findByOrderNo', 'pur_purchase_order + pur_purchase_order_line', `po_no='${orderNo}' AND deleted=false`, `${sqlDesc}; SELECT * FROM pur_purchase_order_line WHERE po_id=${order.id}`, { orderNo }, `order+${lines.length} lines`, nowMs() - t0);
+    logOp(
+      'findByOrderNo',
+      'pur_purchase_order + pur_purchase_order_line',
+      `po_no='${orderNo}' AND deleted=false`,
+      `${sqlDesc}; SELECT * FROM pur_purchase_order_line WHERE po_id=${order.id}`,
+      { orderNo },
+      `order+${lines.length} lines`,
+      nowMs() - t0
+    );
     return result;
   }
 
@@ -130,10 +165,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     if (filters?.keyword) {
       const kw = `%${filters.keyword}%`;
       conditions.push(
-        or(
-          like(purPurchaseOrder.poNo, kw),
-          like(purPurchaseOrder.supplierName, kw)
-        )!
+        or(like(purPurchaseOrder.poNo, kw), like(purPurchaseOrder.supplierName, kw))!
       );
     }
 
@@ -150,10 +182,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
 
     const where = and(...conditions);
 
-    const totalRow = await drizzleDb
-      .select({ total: count() })
-      .from(purPurchaseOrder)
-      .where(where);
+    const totalRow = await drizzleDb.select({ total: count() }).from(purPurchaseOrder).where(where);
     const total = totalRow[0]?.total ?? 0;
 
     const orders = await drizzleDb
@@ -292,7 +321,15 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
 
       return { id: orderId, orderNo };
     });
-    logOp('save', 'pur_purchase_order (INSERT) + pur_purchase_order_line (INSERT)', 'N/A (new row)', `INSERT INTO pur_purchase_order (...) + ${order.lines.length} line inserts (in transaction)`, { orderNo, supplierId: order.supplierId, lineCount: order.lines.length }, result, nowMs() - t0);
+    logOp(
+      'save',
+      'pur_purchase_order (INSERT) + pur_purchase_order_line (INSERT)',
+      'N/A (new row)',
+      `INSERT INTO pur_purchase_order (...) + ${order.lines.length} line inserts (in transaction)`,
+      { orderNo, supplierId: order.supplierId, lineCount: order.lines.length },
+      result,
+      nowMs() - t0
+    );
     return result;
   }
 
@@ -307,15 +344,18 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     const result = await drizzleDb
       .update(purPurchaseOrder)
       .set({ status: dbStatus, updateTime: new Date() })
-      .where(
-        and(
-          eq(purPurchaseOrder.id, id),
-          eq(purPurchaseOrder.status, dbCurrentStatus)
-        )
-      );
+      .where(and(eq(purPurchaseOrder.id, id), eq(purPurchaseOrder.status, dbCurrentStatus)));
 
     const affected = (result[0] as any)?.affectedRows > 0;
-    logOp('updateStatus', 'pur_purchase_order (UPDATE)', `id=${id} AND status=${dbCurrentStatus} (optimistic lock)`, `UPDATE pur_purchase_order SET status=${dbStatus}, update_time=NOW() WHERE id=${id} AND status=${dbCurrentStatus}`, { id, status, currentStatus }, `affected=${affected}`, nowMs() - t0);
+    logOp(
+      'updateStatus',
+      'pur_purchase_order (UPDATE)',
+      `id=${id} AND status=${dbCurrentStatus} (optimistic lock)`,
+      `UPDATE pur_purchase_order SET status=${dbStatus}, update_time=NOW() WHERE id=${id} AND status=${dbCurrentStatus}`,
+      { id, status, currentStatus },
+      `affected=${affected}`,
+      nowMs() - t0
+    );
     return affected;
   }
 
@@ -328,7 +368,15 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
       .update(purPurchaseOrderLine)
       .set({ receivedQty: receivedQty.toString(), updateTime: new Date() })
       .where(eq(purPurchaseOrderLine.id, lineId));
-    logOp('updateReceivedQty', 'pur_purchase_order_line (UPDATE)', `id=${lineId}`, `UPDATE pur_purchase_order_line SET received_qty=${receivedQty}, update_time=NOW() WHERE id=${lineId}`, { lineId, receivedQty }, 'done', nowMs() - t0);
+    logOp(
+      'updateReceivedQty',
+      'pur_purchase_order_line (UPDATE)',
+      `id=${lineId}`,
+      `UPDATE pur_purchase_order_line SET received_qty=${receivedQty}, update_time=NOW() WHERE id=${lineId}`,
+      { lineId, receivedQty },
+      'done',
+      nowMs() - t0
+    );
   }
 
   /**
@@ -344,7 +392,15 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
         updateTime: new Date(),
       })
       .where(eq(purPurchaseOrder.id, id));
-    logOp('updateAuditInfo', 'pur_purchase_order (UPDATE)', `id=${id}`, `UPDATE pur_purchase_order SET audit_by=${auditBy}, audit_time=?, update_time=NOW() WHERE id=${id}`, { id, auditBy, auditTime }, 'done', nowMs() - t0);
+    logOp(
+      'updateAuditInfo',
+      'pur_purchase_order (UPDATE)',
+      `id=${id}`,
+      `UPDATE pur_purchase_order SET audit_by=${auditBy}, audit_time=?, update_time=NOW() WHERE id=${id}`,
+      { id, auditBy, auditTime },
+      'done',
+      nowMs() - t0
+    );
   }
 
   /**
@@ -356,14 +412,25 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
       .update(purPurchaseOrder)
       .set({ deleted: true, updateTime: new Date() })
       .where(eq(purPurchaseOrder.id, id));
-    logOp('softDelete', 'pur_purchase_order (UPDATE)', `id=${id}`, `UPDATE pur_purchase_order SET deleted=true, update_time=NOW() WHERE id=${id}`, { id }, 'done', nowMs() - t0);
+    logOp(
+      'softDelete',
+      'pur_purchase_order (UPDATE)',
+      `id=${id}`,
+      `UPDATE pur_purchase_order SET deleted=true, update_time=NOW() WHERE id=${id}`,
+      { id },
+      'done',
+      nowMs() - t0
+    );
   }
 
   /**
    * mapToProps - DB 行映射到 PurchaseOrderProps
    * 历史脏数据容错：未知状态码降级为 draft 并 warn
    */
-  private mapToProps(order: PurPurchaseOrderRow, lines: PurPurchaseOrderLineRow[]): PurchaseOrderProps {
+  private mapToProps(
+    order: PurPurchaseOrderRow,
+    lines: PurPurchaseOrderLineRow[]
+  ): PurchaseOrderProps {
     let statusValue: PurchaseStatus;
     try {
       statusValue = PurchaseOrderStatus.fromDbCode(order.status ?? 10).value;

@@ -4,7 +4,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { adjustInventory } from '@/lib/inventory-sync';
 
 // 库存调整（统一入口）
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
+export const POST = withPermission(async (request: NextRequest, _userInfo) => {
   const body = await request.json();
   const {
     materialId,

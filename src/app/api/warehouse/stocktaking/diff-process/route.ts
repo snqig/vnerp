@@ -1,49 +1,45 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-} from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
 
 /**
  * 盘点差异处理 API
- * 
+ *
  * 盘点单审核后，差异需要经过审批才能调整库存
  * 流程：盘点完成 → 差异确认 → 差异审批 → 库存调整
  */
 
 // 获取待处理的盘点差异
-export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') || 'pending';
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '20');
+export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
+  const { searchParams } = new URL(request.url);
+  const type = searchParams.get('type') || 'pending';
+  const page = parseInt(searchParams.get('page') || '1');
+  const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
-    let where = 'WHERE si.difference != 0';
-    const params: any[] = [];
+  let where = 'WHERE si.difference != 0';
+  const params: any[] = [];
 
-    if (type === 'pending') {
-      where += ' AND si.diff_status = ?';
-      params.push('pending');
-    } else if (type === 'approved') {
-      where += ' AND si.diff_status = ?';
-      params.push('approved');
-    } else if (type === 'processed') {
-      where += ' AND si.diff_status = ?';
-      params.push('processed');
-    }
+  if (type === 'pending') {
+    where += ' AND si.diff_status = ?';
+    params.push('pending');
+  } else if (type === 'approved') {
+    where += ' AND si.diff_status = ?';
+    params.push('approved');
+  } else if (type === 'processed') {
+    where += ' AND si.diff_status = ?';
+    params.push('processed');
+  }
 
-    const countRows: any = await query(
-      `SELECT COUNT(*) as total FROM inv_stocktaking_item si ${where}`,
-      params
-    );
-    const total = countRows[0]?.total || 0;
+  const countRows: any = await query(
+    `SELECT COUNT(*) as total FROM inv_stocktaking_item si ${where}`,
+    params
+  );
+  const total = countRows[0]?.total || 0;
 
-    const rows: any = await query(
-      `SELECT si.*, m.material_name, m.material_code, m.unit,
+  const rows: any = await query(
+    `SELECT si.*, m.material_name, m.material_code, m.unit,
               s.taking_no, s.warehouse_id, w.warehouse_name,
               u1.real_name as checker_name,
               u2.real_name as approver_name
@@ -56,12 +52,12 @@ export const GET = withPermission(
        ${where}
        ORDER BY si.diff_status ASC, ABS(si.difference) DESC
        LIMIT ? OFFSET ?`,
-      [...params, pageSize, (page - 1) * pageSize]
-    );
+    [...params, pageSize, (page - 1) * pageSize]
+  );
 
-    // 统计
-    const summary: any = await query(
-      `SELECT 
+  // 统计
+  const summary: any = await query(
+    `SELECT 
          COUNT(CASE WHEN diff_status = 'pending' THEN 1 END) as pending_count,
          COUNT(CASE WHEN diff_status = 'approved' THEN 1 END) as approved_count,
          COUNT(CASE WHEN diff_status = 'processed' THEN 1 END) as processed_count,
@@ -69,17 +65,16 @@ export const GET = withPermission(
          SUM(CASE WHEN diff_status = 'pending' AND difference < 0 THEN ABS(difference) ELSE 0 END) as pending_loss
        FROM inv_stocktaking_item
        WHERE difference != 0`
-    );
+  );
 
-    return successResponse({
-      list: rows,
-      total,
-      page,
-      pageSize,
-      summary: summary[0] || {},
-    });
-  }
-);
+  return successResponse({
+    list: rows,
+    total,
+    page,
+    pageSize,
+    summary: summary[0] || {},
+  });
+});
 
 // 差异审批/处理
 export const POST = withPermission(
@@ -158,7 +153,8 @@ export const POST = withPermission(
           `INSERT INTO stock_movement (material_id, warehouse_id, movement_type, quantity, unit_price, source_type, source_no, operator_id, create_time)
            VALUES (?, ?, ?, ?, 0, 'stocktaking', ?, ?, NOW())`,
           [
-            item.material_id, item.warehouse_id,
+            item.material_id,
+            item.warehouse_id,
             difference > 0 ? 'stock_gain' : 'stock_loss',
             Math.abs(difference),
             item.taking_no || '',

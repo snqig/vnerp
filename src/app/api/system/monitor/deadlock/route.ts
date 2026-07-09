@@ -3,12 +3,10 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { DeadlockMonitor } from '@/infrastructure/monitoring/DeadlockMonitor';
 
-export const GET = withPermission(
-  async (request: NextRequest) => {
-    const result = await DeadlockMonitor.checkDeadlocks();
-    return successResponse(result);
-  }
-);
+export const GET = withPermission(async (_request: NextRequest) => {
+  const result = await DeadlockMonitor.checkDeadlocks();
+  return successResponse(result);
+});
 
 export const POST = withPermission(
   async (request: NextRequest) => {

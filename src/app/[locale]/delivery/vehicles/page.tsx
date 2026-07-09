@@ -44,7 +44,6 @@ interface Vehicle {
 }
 
 export default function VehiclesPage() {
-
   const t = useTranslations('Delivery');
   const tc = useTranslations('Common');
 
@@ -89,7 +88,7 @@ export default function VehiclesPage() {
       } else {
         toast.error(result.message || t('fetchFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('fetchFailed'));
     } finally {
       setLoading(false);
@@ -111,7 +110,7 @@ export default function VehiclesPage() {
       } else {
         toast.error(result.message || tc('deleteFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(tc('deleteFailed'));
     }
   };

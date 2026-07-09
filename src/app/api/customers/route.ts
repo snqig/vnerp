@@ -97,7 +97,7 @@ function buildQueryConditions(params: {
 }
 
 // GET - 获取客户列表或单个客户
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const status = searchParams.get('status');
@@ -147,7 +147,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 
 // POST - 创建新客户
 export const POST = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (request: NextRequest, _userInfo) => {
     const body: Customer = await request.json();
 
     // 验证必填字段
@@ -215,7 +215,7 @@ export const POST = withPermission(
 
 // PUT - 更新客户
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (request: NextRequest, _userInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -297,7 +297,7 @@ export const PUT = withPermission(
 
 // DELETE - 删除客户（软删除）
 export const DELETE = withPermission(
-  async (request: NextRequest, userInfo) => {
+  async (request: NextRequest, _userInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

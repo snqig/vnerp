@@ -196,12 +196,12 @@ function LineChart({
       <g transform={`translate(${width - 150}, 10)`}>
         <line x1="0" y1="0" x2="20" y2="0" stroke="#06b6d4" strokeWidth="2" />
         <text x="25" y="4" fill="rgba(255,255,255,0.7)" fontSize="10">
-           {tc('totalInspections')}
-          </text>
-          <line x1="0" y1="15" x2="20" y2="15" stroke="#ef4444" strokeWidth="2" />
-          <text x="25" y="19" fill="rgba(255,255,255,0.7)" fontSize="10">
-           {tc('defectsCount')}
-          </text>
+          {tc('totalInspections')}
+        </text>
+        <line x1="0" y1="15" x2="20" y2="15" stroke="#ef4444" strokeWidth="2" />
+        <text x="25" y="19" fill="rgba(255,255,255,0.7)" fontSize="10">
+          {tc('defectsCount')}
+        </text>
       </g>
     </svg>
   );
@@ -288,7 +288,7 @@ export default function QualityDashboard() {
         const res = await fetch('/api/dashboard/quality');
         const result = await res.json();
         if (result.success && result.data) setData(result.data);
-      } catch (e) {
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -467,8 +467,8 @@ export default function QualityDashboard() {
             </div>
             <div className="p-4">
               {data.defectTrend.length === 0 ? (
-                  <p className="text-white/40 text-center py-8">{tc('noData')}</p>
-                ) : (
+                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+              ) : (
                 <LineChart data={data.defectTrend} width={600} height={200} />
               )}
             </div>
@@ -615,7 +615,9 @@ export default function QualityDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <BarChart3 className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">{t('inspectionTypeDistribution')}</span>
+              <span className="text-sm font-medium text-white/80">
+                {t('inspectionTypeDistribution')}
+              </span>
             </div>
             {/* 检验类型分布 */}
             <div className="p-4">
@@ -626,11 +628,21 @@ export default function QualityDashboard() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-white/10">
-                        <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('productName')}</th>
-                        <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('inspectionCount')}</th>
-                        <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('passCount')}</th>
-                        <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('passRate')}</th>
-                        <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('status')}</th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">
+                          {tc('productName')}
+                        </th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">
+                          {tc('inspectionCount')}
+                        </th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">
+                          {tc('passCount')}
+                        </th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">
+                          {tc('passRate')}
+                        </th>
+                        <th className="text-left py-2 px-3 text-white/60 font-medium">
+                          {tc('status')}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -674,7 +686,11 @@ export default function QualityDashboard() {
                                       : 'bg-red-500/20 text-red-400 border border-red-500/30'
                                 }`}
                               >
-                                {rate >= 95 ? tc('excellent') : rate >= 80 ? tc('good') : tc('needImprovement')}
+                                {rate >= 95
+                                  ? tc('excellent')
+                                  : rate >= 80
+                                    ? tc('good')
+                                    : tc('needImprovement')}
                               </span>
                             </td>
                           </tr>

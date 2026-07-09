@@ -36,13 +36,15 @@ const impl: ImplType =
   (process.env.REPOSITORY_IMPL as ImplType) === 'drizzle' ? 'drizzle' : 'mysql';
 
 // 启动时打印一次激活的实现类型，便于确认 env 是否生效
-console.log(
+console.warn(
   `[RepoRegistry] active impl = ${impl}` +
-    (impl === 'drizzle' ? ' (set via REPOSITORY_IMPL=drizzle)' : ' (default; set REPOSITORY_IMPL=drizzle to switch)')
+    (impl === 'drizzle'
+      ? ' (set via REPOSITORY_IMPL=drizzle)'
+      : ' (default; set REPOSITORY_IMPL=drizzle to switch)')
 );
 
 function logReturn(method: string, type: string) {
-  console.log(`[RepoRegistry] ${method}() → ${type} (${impl})`);
+  console.warn(`[RepoRegistry] ${method}() → ${type} (${impl})`);
 }
 
 export const RepositoryRegistry = {
@@ -50,7 +52,8 @@ export const RepositoryRegistry = {
    * 入库订单仓储
    */
   getInboundOrderRepository(): IInboundOrderRepository {
-    const type = impl === 'drizzle' ? 'DrizzleInboundOrderRepository' : 'MysqlInboundOrderRepository';
+    const type =
+      impl === 'drizzle' ? 'DrizzleInboundOrderRepository' : 'MysqlInboundOrderRepository';
     logReturn('getInboundOrderRepository', type);
     return impl === 'drizzle'
       ? new DrizzleInboundOrderRepository()
@@ -65,16 +68,15 @@ export const RepositoryRegistry = {
   getSalesOrderRepository(): ISalesOrderRepository {
     const type = impl === 'drizzle' ? 'DrizzleSalesOrderRepository' : 'MysqlSalesOrderRepository';
     logReturn('getSalesOrderRepository', type);
-    return impl === 'drizzle'
-      ? new DrizzleSalesOrderRepository()
-      : new MysqlSalesOrderRepository();
+    return impl === 'drizzle' ? new DrizzleSalesOrderRepository() : new MysqlSalesOrderRepository();
   },
 
   /**
    * 采购订单仓储
    */
   getPurchaseOrderRepository(): IPurchaseOrderRepository {
-    const type = impl === 'drizzle' ? 'DrizzlePurchaseOrderRepository' : 'MysqlPurchaseOrderRepository';
+    const type =
+      impl === 'drizzle' ? 'DrizzlePurchaseOrderRepository' : 'MysqlPurchaseOrderRepository';
     logReturn('getPurchaseOrderRepository', type);
     return impl === 'drizzle'
       ? new DrizzlePurchaseOrderRepository()

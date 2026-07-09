@@ -63,14 +63,14 @@ const materialTypes = [
 ];
 
 const units = [
-  { value: '件', labelKey: 'unitPiece' },
-  { value: '个', labelKey: 'unitItem' },
-  { value: '套', labelKey: 'unitSet' },
-  { value: '米', labelKey: 'unitMeter' },
-  { value: '千克', labelKey: 'unitKg' },
-  { value: '克', labelKey: 'unitGram' },
-  { value: '毫升', labelKey: 'unitMl' },
-  { value: '升', labelKey: 'unitLiter' },
+  { value: tc('text_fli'), labelKey: 'unitPiece' },
+  { value: tc('text_ffu'), labelKey: 'unitItem' },
+  { value: tc('text_hnb'), labelKey: 'unitSet' },
+  { value: tc('text_okz'), labelKey: 'unitMeter' },
+  { value: tc('text_elwo'), labelKey: 'unitKg' },
+  { value: tc('text_g23'), labelKey: 'unitGram' },
+  { value: tc('text_ita4'), labelKey: 'unitMl' },
+  { value: tc('text_gg7'), labelKey: 'unitLiter' },
 ];
 
 export default function CreateBOMPage() {
@@ -169,18 +169,18 @@ export default function CreateBOMPage() {
       if (data.success) {
         setMaterials(data.data || []);
       } else {
+        toast({
+          title: tc('error'),
+          description: data.message || t('fetchMaterialsFailed'),
+          variant: 'destructive',
+        });
+      }
+    } catch {
       toast({
         title: tc('error'),
-        description: data.message || t('fetchMaterialsFailed'),
+        description: t('fetchMaterialsFailed'),
         variant: 'destructive',
       });
-    }
-  } catch (error) {
-    toast({
-      title: tc('error'),
-      description: t('fetchMaterialsFailed'),
-      variant: 'destructive',
-    });
     } finally {
       setLoading(false);
     }
@@ -256,7 +256,7 @@ export default function CreateBOMPage() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: tc('error'),
         description: t('bomCreateFailed'),
@@ -407,7 +407,7 @@ export default function CreateBOMPage() {
                             <Input
                               value={line.material_code}
                               onChange={(e) => updateLine(index, 'material_code', e.target.value)}
-                              placeholder={tc("code")}
+                              placeholder={tc('code')}
                               className="w-32"
                             />
                             <Button
@@ -424,7 +424,7 @@ export default function CreateBOMPage() {
                           <Input
                             value={line.material_name}
                             onChange={(e) => updateLine(index, 'material_name', e.target.value)}
-                            placeholder={tc("name")}
+                            placeholder={tc('name')}
                           />
                         </TableCell>
                         <TableCell>
@@ -496,7 +496,7 @@ export default function CreateBOMPage() {
                             onValueChange={(value) => updateLine(index, 'material_type', value)}
                           >
                             <SelectTrigger className="w-32">
-                              <SelectValue placeholder={tc("type")} />
+                              <SelectValue placeholder={tc('type')} />
                             </SelectTrigger>
                             <SelectContent>
                               {materialTypes.map((type) => (
@@ -584,8 +584,8 @@ export default function CreateBOMPage() {
                 {materials.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-4 text-gray-500">
-                       {t('searchMaterialHint')}
-                     </TableCell>
+                      {t('searchMaterialHint')}
+                    </TableCell>
                   </TableRow>
                 ) : (
                   materials.map((material) => (
@@ -597,8 +597,8 @@ export default function CreateBOMPage() {
                       <TableCell>{material.unit_cost}</TableCell>
                       <TableCell>
                         <Button size="sm" type="button" onClick={() => selectMaterial(material)}>
-                           {t('select')}
-                         </Button>
+                          {t('select')}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

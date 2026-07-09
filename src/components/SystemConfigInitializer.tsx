@@ -36,7 +36,7 @@ export default function SystemConfigInitializer() {
               case 'json':
                 try {
                   value = JSON.parse(value);
-                } catch (e) {
+                } catch {
                   value = value;
                 }
                 break;
@@ -49,8 +49,7 @@ export default function SystemConfigInitializer() {
 
           setConfig(configMap);
         }
-      } catch (error) {
-      }
+      } catch {}
     };
 
     initSystemConfig();

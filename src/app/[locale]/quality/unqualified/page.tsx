@@ -140,8 +140,7 @@ export default function UnqualifiedPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
   useEffect(() => {
     fetchData();
@@ -244,7 +243,7 @@ export default function UnqualifiedPage() {
           toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
         }
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -259,7 +258,7 @@ export default function UnqualifiedPage() {
       } else {
         toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -295,12 +294,26 @@ export default function UnqualifiedPage() {
                 { key: 'material_code', label: tc('materialCode'), width: 15 },
                 { key: 'material_name', label: tc('materialName'), width: 20 },
                 { key: 'quantity', label: t('unqualifiedQty'), width: 10 },
-                { key: 'handle_type', label: t('handlingMethod'), width: 12, formatter: (v) => (v ? t(typeMap[v] || '-') : '-') },
+                {
+                  key: 'handle_type',
+                  label: t('handlingMethod'),
+                  width: 12,
+                  formatter: (v) => (v ? t(typeMap[v] || '-') : '-'),
+                },
                 { key: 'responsible_dept', label: t('responsibleDept'), width: 12 },
                 { key: 'responsible_person', label: t('responsiblePerson'), width: 12 },
-                { key: 'handle_status', label: tc('status'), width: 10, formatter: (v) => t(statusMap[v]?.label || '-') },
+                {
+                  key: 'handle_status',
+                  label: tc('status'),
+                  width: 10,
+                  formatter: (v) => t(statusMap[v]?.label || '-'),
+                },
               ]}
-              data={selectedIds.length > 0 ? displayList.filter((i) => selectedIds.includes(i.id)) : displayList}
+              data={
+                selectedIds.length > 0
+                  ? displayList.filter((i) => selectedIds.includes(i.id))
+                  : displayList
+              }
             />
           </div>
         </div>
@@ -440,7 +453,9 @@ export default function UnqualifiedPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{tc('totalRecords', { count: total })}</span>
+          <span className="text-sm text-muted-foreground">
+            {tc('totalRecords', { count: total })}
+          </span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -500,9 +515,7 @@ export default function UnqualifiedPage() {
                   <Input
                     type="number"
                     value={editItem.quantity || ''}
-                    onChange={(e) =>
-                      setEditItem({ ...editItem, quantity: Number(e.target.value) })
-                    }
+                    onChange={(e) => setEditItem({ ...editItem, quantity: Number(e.target.value) })}
                   />
                 </div>
                 <div>
@@ -546,9 +559,7 @@ export default function UnqualifiedPage() {
                   <Label>{t('handlingMethod')} *</Label>
                   <Select
                     value={String(startForm.handle_type)}
-                    onValueChange={(v) =>
-                      setStartForm({ ...startForm, handle_type: Number(v) })
-                    }
+                    onValueChange={(v) => setStartForm({ ...startForm, handle_type: Number(v) })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -587,9 +598,7 @@ export default function UnqualifiedPage() {
                   <Label>{t('handler') || 'Handler'} *</Label>
                   <Input
                     value={completeForm.handler}
-                    onChange={(e) =>
-                      setCompleteForm({ ...completeForm, handler: e.target.value })
-                    }
+                    onChange={(e) => setCompleteForm({ ...completeForm, handler: e.target.value })}
                   />
                 </div>
                 <div>

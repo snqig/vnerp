@@ -91,7 +91,7 @@ export default function MaterialRequisitionsPage() {
         setRequisitions(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (error) {
+    } catch {
       toast.error(t('loadFail'));
     } finally {
       setLoading(false);
@@ -140,7 +140,7 @@ export default function MaterialRequisitionsPage() {
       } else {
         toast.error(result.message);
       }
-    } catch (error) {
+    } catch {
       toast.error(t('generateFail'));
     }
   };
@@ -165,7 +165,7 @@ export default function MaterialRequisitionsPage() {
       } else {
         toast.error(result.message);
       }
-    } catch (error) {
+    } catch {
       toast.error(t('submitFail'));
     }
   };
@@ -190,7 +190,7 @@ export default function MaterialRequisitionsPage() {
       } else {
         toast.error(result.message);
       }
-    } catch (error) {
+    } catch {
       toast.error(t('submitFail'));
     }
   };
@@ -214,7 +214,7 @@ export default function MaterialRequisitionsPage() {
       } else {
         toast.error(result.message);
       }
-    } catch (error) {
+    } catch {
       toast.error(t('issueFail'));
     }
   };
@@ -229,7 +229,7 @@ export default function MaterialRequisitionsPage() {
         toast.success(approved ? t('approveSuccess') : t('rejectSuccess'));
         loadRequisitions();
       }
-    } catch (error) {
+    } catch {
       toast.error(t('approveFail'));
     }
   };
@@ -438,7 +438,9 @@ export default function MaterialRequisitionsPage() {
       <Dialog open={showIssue} onOpenChange={setShowIssue}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{t('scanIssue')} - {selectedReq?.requisition_no}</DialogTitle>
+            <DialogTitle>
+              {t('scanIssue')} - {selectedReq?.requisition_no}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>

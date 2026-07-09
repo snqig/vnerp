@@ -80,22 +80,23 @@ CREATE TABLE IF NOT EXISTS inv_inventory_batch (
 `;
 
 // GET - 检查并创建表
-export const GET = withPermission(async (request: NextRequest) => {
-  try {
-    // 检查表是否存在
-    const tables = await query(`
+export const GET = withPermission(
+  async (_request: NextRequest) => {
+    try {
+      // 检查表是否存在
+      const tables = await query(`
       SELECT TABLE_NAME 
       FROM information_schema.TABLES 
       WHERE TABLE_SCHEMA = DATABASE() 
       AND TABLE_NAME IN ('inv_inbound_order', 'inv_inbound_item', 'inv_inventory_batch')
     `);
 
-    const existingTables = (tables as any[]).map((t) => t.TABLE_NAME);
-    const results: string[] = [];
+      const existingTables = (tables as any[]).map((t) => t.TABLE_NAME);
+      const results: string[] = [];
 
-    // 创建入库订单主表
-    if (!existingTables.includes('inv_inbound_order')) {
-      await query(`
+      // 创建入库订单主表
+      if (!existingTables.includes('inv_inbound_order')) {
+        await query(`
         CREATE TABLE IF NOT EXISTS inv_inbound_order (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
           order_no VARCHAR(50) NOT NULL COMMENT '入库单号',
@@ -119,14 +120,14 @@ export const GET = withPermission(async (request: NextRequest) => {
           INDEX idx_create_time (create_time)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='入库订单主表'
       `);
-      results.push('✅ 创建表: inv_inbound_order');
-    } else {
-      results.push('✓ 表已存在: inv_inbound_order');
-    }
+        results.push('✅ 创建表: inv_inbound_order');
+      } else {
+        results.push('✓ 表已存在: inv_inbound_order');
+      }
 
-    // 创建入库订单明细表
-    if (!existingTables.includes('inv_inbound_item')) {
-      await query(`
+      // 创建入库订单明细表
+      if (!existingTables.includes('inv_inbound_item')) {
+        await query(`
         CREATE TABLE IF NOT EXISTS inv_inbound_item (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
           order_id INT UNSIGNED NOT NULL COMMENT '入库订单ID',
@@ -148,14 +149,14 @@ export const GET = withPermission(async (request: NextRequest) => {
           INDEX idx_batch_no (batch_no)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='入库订单明细表'
       `);
-      results.push('✅ 创建表: inv_inbound_item');
-    } else {
-      results.push('✓ 表已存在: inv_inbound_item');
-    }
+        results.push('✅ 创建表: inv_inbound_item');
+      } else {
+        results.push('✓ 表已存在: inv_inbound_item');
+      }
 
-    // 创建库存批次表
-    if (!existingTables.includes('inv_inventory_batch')) {
-      await query(`
+      // 创建库存批次表
+      if (!existingTables.includes('inv_inventory_batch')) {
+        await query(`
         CREATE TABLE IF NOT EXISTS inv_inventory_batch (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
           batch_no VARCHAR(50) NOT NULL COMMENT '批次号',
@@ -182,18 +183,18 @@ export const GET = withPermission(async (request: NextRequest) => {
           INDEX idx_status (status)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存批次表'
       `);
-      results.push('✅ 创建表: inv_inventory_batch');
-    } else {
-      results.push('✓ 表已存在: inv_inventory_batch');
-    }
+        results.push('✅ 创建表: inv_inventory_batch');
+      } else {
+        results.push('✓ 表已存在: inv_inventory_batch');
+      }
 
-    // 插入测试数据
-    const orderCount = await query(
-      'SELECT COUNT(*) as count FROM inv_inbound_order WHERE deleted = 0'
-    );
-    if ((orderCount as any[])[0].count === 0) {
-      // 添加入库订单测试数据
-      await query(`
+      // 插入测试数据
+      const orderCount = await query(
+        'SELECT COUNT(*) as count FROM inv_inbound_order WHERE deleted = 0'
+      );
+      if ((orderCount as any[])[0].count === 0) {
+        // 添加入库订单测试数据
+        await query(`
         INSERT INTO inv_inbound_order (order_no, order_type, warehouse_id, supplier_name, total_amount, total_quantity, status, inbound_date, remark) VALUES
         ('IN202501010001', 'purchase', 1, '供应商A', 15000.00, 100.000, 'completed', '2025-01-01', '第一批采购入库'),
         ('IN202501020001', 'purchase', 1, '供应商B', 25000.00, 200.000, 'completed', '2025-01-02', '第二批采购入库'),
@@ -201,8 +202,8 @@ export const GET = withPermission(async (request: NextRequest) => {
         ('IN202501040001', 'transfer', 3, '', 0.00, 30.000, 'draft', NULL, '仓库调拨')
       `);
 
-      // 添加入库明细
-      await query(`
+        // 添加入库明细
+        await query(`
         INSERT INTO inv_inbound_item (order_id, material_id, material_name, material_spec, batch_no, quantity, unit, unit_price, total_price, warehouse_location, produce_date) VALUES
         (1, 1, '原材料A', '规格A1', 'BATCH20250101001', 100.000, '卷', 150.00, 15000.00, 'A-01-01', '2025-01-01'),
         (2, 2, '原材料B', '规格B1', 'BATCH20250102001', 200.000, '卷', 125.00, 25000.00, 'A-01-02', '2025-01-02'),
@@ -210,8 +211,8 @@ export const GET = withPermission(async (request: NextRequest) => {
         (4, 3, '原材料C', '规格C1', 'BATCH20250104001', 30.000, '卷', 0.00, 0.00, 'C-01-01', '2025-01-04')
       `);
 
-      // 添加库存批次
-      await query(`
+        // 添加库存批次
+        await query(`
         INSERT INTO inv_inventory_batch (batch_no, material_id, material_name, warehouse_id, warehouse_name, quantity, available_qty, unit, unit_price, produce_date, inbound_date, status) VALUES
         ('BATCH20250101001', 1, '原材料A', 1, '原材料仓库', 100.000, 100.000, '卷', 150.00, '2025-01-01', '2025-01-01', 'normal'),
         ('BATCH20250102001', 2, '原材料B', 1, '原材料仓库', 200.000, 200.000, '卷', 125.00, '2025-01-02', '2025-01-02', 'normal'),
@@ -219,16 +220,18 @@ export const GET = withPermission(async (request: NextRequest) => {
         ('BATCH20250104001', 3, '原材料C', 3, '辅料仓库', 30.000, 30.000, '卷', 0.00, '2025-01-04', '2025-01-04', 'normal')
       `);
 
-      results.push('✅ 插入测试数据');
-    } else {
-      results.push('✓ 测试数据已存在');
-    }
+        results.push('✅ 插入测试数据');
+      } else {
+        results.push('✓ 测试数据已存在');
+      }
 
-    return successResponse({
-      message: '入库管理表初始化完成',
-      details: results,
-    });
-  } catch (error: any) {
-    return errorResponse(`创建表失败: ${error.message}`, 500, 500);
-  }
-}, { errorMessage: '初始化入库管理表失败' });
+      return successResponse({
+        message: '入库管理表初始化完成',
+        details: results,
+      });
+    } catch (error: any) {
+      return errorResponse(`创建表失败: ${error.message}`, 500, 500);
+    }
+  },
+  { errorMessage: '初始化入库管理表失败' }
+);

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getConfig } from '@/lib/global-config';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
@@ -22,8 +22,7 @@ export async function GET(request: NextRequest) {
       );
       if (Array.isArray(rows) && rows.length > 0)
         overview.totalInspections = Number(rows[0].total || 0);
-    } catch (e) {
-    }
+    } catch {}
 
     try {
       const rows: any = await query(`
@@ -44,8 +43,7 @@ export async function GET(request: NextRequest) {
             ? Math.round((overview.failedInspections / overview.totalInspections) * 1000) / 10
             : 0;
       }
-    } catch (e) {
-    }
+    } catch {}
 
     let byType: any[] = [];
     try {
@@ -55,8 +53,7 @@ export async function GET(request: NextRequest) {
         FROM qc_inspection WHERE deleted = 0 GROUP BY inspection_type
       `);
       byType = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let defectTrend: any[] = [];
     try {
@@ -67,8 +64,7 @@ export async function GET(request: NextRequest) {
         GROUP BY DATE(inspection_date) ORDER BY date
       `);
       defectTrend = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let topDefects: any[] = [];
     try {
@@ -77,8 +73,7 @@ export async function GET(request: NextRequest) {
         GROUP BY defect_type ORDER BY count DESC LIMIT 5
       `);
       topDefects = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let recentInspections: any[] = [];
     try {
@@ -87,8 +82,7 @@ export async function GET(request: NextRequest) {
         FROM qc_inspection WHERE deleted = 0 ORDER BY inspection_date DESC LIMIT 10
       `);
       recentInspections = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     let processQuality: any[] = [];
     try {
@@ -101,14 +95,13 @@ export async function GET(request: NextRequest) {
         WHERE pc.deleted = 0 GROUP BY pc.id ORDER BY pc.update_time DESC LIMIT 10
       `);
       processQuality = Array.isArray(rows) ? rows : [];
-    } catch (e) {
-    }
+    } catch {}
 
     return NextResponse.json({
       success: true,
       data: { overview, byType, defectTrend, topDefects, recentInspections, processQuality },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: '获取质量看板数据失败' }, { status: 500 });
   }
 }

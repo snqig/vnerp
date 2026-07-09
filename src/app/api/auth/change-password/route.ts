@@ -67,7 +67,7 @@ export const POST = withPermission(
         if (cfg.config_key === 'system.password_expire_days')
           passwordExpireDays = parseInt(cfg.config_value) || 0;
       }
-    } catch (e) {
+    } catch {
       // 使用默认值
     }
 
@@ -119,8 +119,7 @@ export const POST = withPermission(
          VALUES (?, ?, ?, ?, ?, NOW(), ?)`,
         ['修改密码', user.username, '/api/auth/change-password', 'POST', '', 1]
       );
-    } catch (e) {
-    }
+    } catch {}
 
     return successResponse(null, '密码修改成功');
   },

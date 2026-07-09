@@ -7,7 +7,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTranslations } from 'next-intl';
@@ -36,13 +43,13 @@ const getFileExtension = (path: string): string => {
 const getFileType = (path: string): string => {
   const ext = getFileExtension(path);
   const types: Record<string, string[]> = {
-    'TypeScript': ['ts', 'tsx'],
-    'JavaScript': ['js', 'jsx', 'mjs'],
-    'Style': ['css', 'scss', 'less', 'sass'],
-    'Data': ['json', 'yaml', 'yml', 'xml'],
-    'Document': ['md', 'txt', 'doc', 'docx'],
-    'Image': ['png', 'jpg', 'jpeg', 'gif', 'svg', 'ico'],
-    'Config': ['config', 'conf', 'ini'],
+    TypeScript: ['ts', 'tsx'],
+    JavaScript: ['js', 'jsx', 'mjs'],
+    Style: ['css', 'scss', 'less', 'sass'],
+    Data: ['json', 'yaml', 'yml', 'xml'],
+    Document: ['md', 'txt', 'doc', 'docx'],
+    Image: ['png', 'jpg', 'jpeg', 'gif', 'svg', 'ico'],
+    Config: ['config', 'conf', 'ini'],
   };
 
   for (const [type, extensions] of Object.entries(types)) {
@@ -52,14 +59,14 @@ const getFileType = (path: string): string => {
 };
 
 const typeColors: Record<string, string> = {
-  'TypeScript': 'bg-blue-500',
-  'JavaScript': 'bg-yellow-500',
-  'Style': 'bg-pink-500',
-  'Data': 'bg-green-500',
-  'Document': 'bg-gray-500',
-  'Image': 'bg-purple-500',
-  'Config': 'bg-orange-500',
-  'Other': 'bg-slate-500',
+  TypeScript: 'bg-blue-500',
+  JavaScript: 'bg-yellow-500',
+  Style: 'bg-pink-500',
+  Data: 'bg-green-500',
+  Document: 'bg-gray-500',
+  Image: 'bg-purple-500',
+  Config: 'bg-orange-500',
+  Other: 'bg-slate-500',
 };
 
 export default function ProjectUploaderPage() {
@@ -80,21 +87,21 @@ export default function ProjectUploaderPage() {
 
   useEffect(() => {
     fetch('/api/project-files')
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setFiles(data.files || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
 
-  const filteredFiles = files.filter(f =>
+  const filteredFiles = files.filter((f) =>
     f.path.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const selectedCount = selectedFiles.size;
   const selectedSize = files
-    .filter(f => selectedFiles.has(f.path))
+    .filter((f) => selectedFiles.has(f.path))
     .reduce((sum, f) => sum + f.size, 0);
 
   const toggleSelect = (path: string) => {
@@ -108,7 +115,7 @@ export default function ProjectUploaderPage() {
   };
 
   const selectAll = () => {
-    setSelectedFiles(new Set(filteredFiles.map(f => f.path)));
+    setSelectedFiles(new Set(filteredFiles.map((f) => f.path)));
   };
 
   const deselectAll = () => {
@@ -120,7 +127,7 @@ export default function ProjectUploaderPage() {
       const res = await fetch('/api/project-files/gitignore', { method: 'POST' });
       const data = await res.json();
       setStatus(data.message);
-    } catch (error) {
+    } catch {
       setStatus('生成 .gitignore 失败');
     }
   };
@@ -144,7 +151,7 @@ export default function ProjectUploaderPage() {
 
       const data = await res.json();
       setStatus(data.message);
-    } catch (error) {
+    } catch {
       setStatus('上传失败');
     } finally {
       setUploading(false);
@@ -156,7 +163,7 @@ export default function ProjectUploaderPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">正在加载文件列表...</p>
+          <p className="text-muted-foreground">{tc('text_qyzp04')}</p>
         </div>
       </div>
     );
@@ -166,17 +173,15 @@ export default function ProjectUploaderPage() {
     <div className="container mx-auto py-6 space-y-6">
       {/* 标题 */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">项目上传工具</h1>
-        <p className="text-muted-foreground">
-          选择文件上传到 GitHub（已排除 . 开头的文件和目录）
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">{tc('text_8yiig3')}</h1>
+        <p className="text-muted-foreground">{tc('text_183rhz')}</p>
       </div>
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">总文件数</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc('text_ck7e1y')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{files.length}</div>
@@ -184,7 +189,7 @@ export default function ProjectUploaderPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">总大小</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc('text_ej39f')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -194,7 +199,7 @@ export default function ProjectUploaderPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{tc("selected")}</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc('selected')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-500">{selectedCount}</div>
@@ -202,7 +207,7 @@ export default function ProjectUploaderPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">选择大小</CardTitle>
+            <CardTitle className="text-sm font-medium">{tc('text_ikxj9k')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-500">{formatSize(selectedSize)}</div>
@@ -212,8 +217,8 @@ export default function ProjectUploaderPage() {
 
       <Tabs defaultValue="files" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="files">文件列表</TabsTrigger>
-          <TabsTrigger value="settings">上传设置</TabsTrigger>
+          <TabsTrigger value="files">{tc('text_d4yym8')}</TabsTrigger>
+          <TabsTrigger value="settings">{tc('text_a6m4w6')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="files">
@@ -221,9 +226,11 @@ export default function ProjectUploaderPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>文件列表</CardTitle>
+                  <CardTitle>{tc('text_d4yym8')}</CardTitle>
                   <CardDescription>
-                    共 {files.length} 个文件，已排除 . 开头的文件和目录
+                    {tc('text_g35')}
+                    {files.length}
+                    {tc('text_wxe0ol')}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -233,8 +240,10 @@ export default function ProjectUploaderPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-64"
                   />
-                  <Button onClick={selectAll}>{tc("selectAll")}</Button>
-                  <Button variant="outline" onClick={deselectAll}>取消全选</Button>
+                  <Button onClick={selectAll}>{tc('selectAll')}</Button>
+                  <Button variant="outline" onClick={deselectAll}>
+                    {tc('text_b147f7')}
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -243,11 +252,11 @@ export default function ProjectUploaderPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-12">选择</TableHead>
-                      <TableHead>文件路径</TableHead>
-                      <TableHead className="w-24">{tc("type")}</TableHead>
-                      <TableHead className="w-24">大小</TableHead>
-                      <TableHead className="w-36">修改时间</TableHead>
+                      <TableHead className="w-12">{tc('text_p1j4')}</TableHead>
+                      <TableHead>{tc('text_d58wzo')}</TableHead>
+                      <TableHead className="w-24">{tc('type')}</TableHead>
+                      <TableHead className="w-24">{tc('text_fo3s')}</TableHead>
+                      <TableHead className="w-36">{tc('text_ai9edl')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -265,9 +274,7 @@ export default function ProjectUploaderPage() {
                             {file.path}
                           </TableCell>
                           <TableCell>
-                            <Badge className={typeColors[type]}>
-                              {type}
-                            </Badge>
+                            <Badge className={typeColors[type]}>{type}</Badge>
                           </TableCell>
                           <TableCell>{formatSize(file.size)}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">
@@ -280,7 +287,9 @@ export default function ProjectUploaderPage() {
                 </Table>
                 {filteredFiles.length > 100 && (
                   <p className="text-center text-muted-foreground py-4">
-                    显示前 100 个文件，共 {filteredFiles.length} 个
+                    {tc('text_j5mobk')}
+                    {filteredFiles.length}
+                    {tc('text_ffu')}
                   </p>
                 )}
               </ScrollArea>
@@ -291,13 +300,13 @@ export default function ProjectUploaderPage() {
         <TabsContent value="settings">
           <Card>
             <CardHeader>
-              <CardTitle>GitHub 上传设置</CardTitle>
-              <CardDescription>配置 GitHub 仓库信息</CardDescription>
+              <CardTitle>{tc('text_97jqu5')}</CardTitle>
+              <CardDescription>{tc('text_8lm3n8')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="repoName">仓库名称</Label>
+                  <Label htmlFor="repoName">{tc('text_ac6ftv')}</Label>
                   <Input
                     id="repoName"
                     value={repoName}
@@ -305,7 +314,7 @@ export default function ProjectUploaderPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="repoDesc">仓库描述</Label>
+                  <Label htmlFor="repoDesc">{tc('text_ac98o1')}</Label>
                   <Input
                     id="repoDesc"
                     value={repoDesc}
@@ -315,7 +324,7 @@ export default function ProjectUploaderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="commitMsg">提交信息</Label>
+                <Label htmlFor="commitMsg">{tc('text_cx4d4y')}</Label>
                 <Input
                   id="commitMsg"
                   value={commitMsg}
@@ -329,17 +338,14 @@ export default function ProjectUploaderPage() {
                   checked={isPrivate}
                   onCheckedChange={(checked) => setIsPrivate(checked as boolean)}
                 />
-                <Label htmlFor="private">私有仓库</Label>
+                <Label htmlFor="private">{tc('text_fsbedk')}</Label>
               </div>
 
               <div className="flex gap-4 pt-4">
                 <Button onClick={generateGitignore} variant="outline">
-                  生成 .gitignore
+                  {tc('text_kg8kgr')}
                 </Button>
-                <Button
-                  onClick={uploadToGitHub}
-                  disabled={uploading || selectedCount === 0}
-                >
+                <Button onClick={uploadToGitHub} disabled={uploading || selectedCount === 0}>
                   {uploading ? '上传中...' : `上传 ${selectedCount} 个文件到 GitHub`}
                 </Button>
               </div>

@@ -177,8 +177,7 @@ export default function CEODashboard() {
         const res = await authFetch('/api/dashboard/ceo');
         const result = await res.json();
         if (result.success && result.data) setData(result.data);
-      } catch (e) {
-      }
+      } catch {}
     };
     fetchData();
     const timer1 = setInterval(fetchData, 60000);
@@ -280,7 +279,9 @@ export default function CEODashboard() {
   }) => {
     if (data.length < 2)
       return (
-        <div className="h-32 flex items-center justify-center text-white/30 text-xs">{tc('noData')}</div>
+        <div className="h-32 flex items-center justify-center text-white/30 text-xs">
+          {tc('noData')}
+        </div>
       );
     const max = Math.max(...data, 1);
     const min = Math.min(...data, 0);
@@ -331,7 +332,9 @@ export default function CEODashboard() {
     const allData = [...data1, ...data2];
     if (data1.length < 2 || data2.length < 2)
       return (
-        <div className="h-32 flex items-center justify-center text-white/30 text-xs">{tc('noData')}</div>
+        <div className="h-32 flex items-center justify-center text-white/30 text-xs">
+          {tc('noData')}
+        </div>
       );
     const max = Math.max(...allData, 1);
     const min = Math.min(...allData, 0);
@@ -635,7 +638,11 @@ export default function CEODashboard() {
                   )}
                 </div>
                 <div className="flex justify-center gap-6 mt-4 pt-3 border-t border-white/10">
-                  <RingChart percent={data.production.efficiency} label={t('equipmentEfficiency')} color="cyan" />
+                  <RingChart
+                    percent={data.production.efficiency}
+                    label={t('equipmentEfficiency')}
+                    color="cyan"
+                  />
                   <RingChart
                     percent={data.inventory.warehouseUtilization}
                     label={t('warehouseUtilization')}
@@ -706,7 +713,9 @@ export default function CEODashboard() {
                 <div className="grid grid-cols-3 gap-3">
                   {/* 设备运转率 */}
                   <div className="space-y-2">
-                    <p className="text-xs text-white/50 text-center mb-2">{t('equipmentOperatingRate')}</p>
+                    <p className="text-xs text-white/50 text-center mb-2">
+                      {t('equipmentOperatingRate')}
+                    </p>
                     {data.production.equipmentStatus.length > 0 ? (
                       data.production.equipmentStatus.slice(0, 6).map((eq, i) => (
                         <div
@@ -730,17 +739,17 @@ export default function CEODashboard() {
                         </div>
                       ))
                     ) : (
-                    <div className="text-center py-4 text-white/30 text-xs">{tc('noData')}</div>
+                      <div className="text-center py-4 text-white/30 text-xs">{tc('noData')}</div>
                     )}
                   </div>
 
-                   <div className="space-y-2">
-                     <p className="text-xs text-cyan-300 text-center font-medium">
-                       {tc('shiftDay')}
-                     </p>
-                     <div className="grid grid-cols-3 gap-2 text-center">
-                       <div className="p-2 rounded bg-white/5">
-                         <p className="text-xs text-white/40">{tc('planQty')}</p>
+                  <div className="space-y-2">
+                    <p className="text-xs text-cyan-300 text-center font-medium">
+                      {tc('shiftDay')}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="p-2 rounded bg-white/5">
+                        <p className="text-xs text-white/40">{tc('planQty')}</p>
                         <p className="text-sm font-bold text-cyan-300">
                           {formatQty(shiftData.dayShift.plan)}
                         </p>
@@ -763,7 +772,7 @@ export default function CEODashboard() {
                   {/* 中班 */}
                   <div className="space-y-2">
                     <p className="text-xs text-blue-300 text-center font-medium">
-                       {tc('shiftMiddle')}
+                      {tc('shiftMiddle')}
                     </p>
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 rounded bg-white/5">
@@ -792,9 +801,9 @@ export default function CEODashboard() {
                 <div className="mt-3 pt-3 border-t border-white/10">
                   <div className="grid grid-cols-4 gap-3">
                     <div className="space-y-2">
-                       <p className="text-xs text-purple-300 text-center font-medium">
-                         {tc('shiftNight')}
-                       </p>
+                      <p className="text-xs text-purple-300 text-center font-medium">
+                        {tc('shiftNight')}
+                      </p>
                       <div className="grid grid-cols-3 gap-2 text-center">
                         <div className="p-2 rounded bg-white/5">
                           <p className="text-xs text-white/40">{tc('planQty')}</p>
@@ -817,9 +826,9 @@ export default function CEODashboard() {
                       </div>
                     </div>
                     <div className="col-span-3">
-                       <p className="text-xs text-white/50 mb-2">{tc('shiftRatio')}</p>
+                      <p className="text-xs text-white/50 mb-2">{tc('shiftRatio')}</p>
                       <div className="flex items-center gap-2">
-                         <span className="text-xs text-white/40 w-8">{tc('shiftDay')}</span>
+                        <span className="text-xs text-white/40 w-8">{tc('shiftDay')}</span>
                         <div className="flex-1 bg-white/10 rounded-full h-3 overflow-hidden">
                           <div
                             className="bg-gradient-to-r from-cyan-400 to-cyan-500 h-full rounded-full"
@@ -831,7 +840,7 @@ export default function CEODashboard() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1.5">
-                         <span className="text-xs text-white/40 w-8">{tc('shiftMiddle')}</span>
+                        <span className="text-xs text-white/40 w-8">{tc('shiftMiddle')}</span>
                         <div className="flex-1 bg-white/10 rounded-full h-3 overflow-hidden">
                           <div
                             className="bg-gradient-to-r from-blue-400 to-blue-500 h-full rounded-full"
@@ -843,7 +852,7 @@ export default function CEODashboard() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-1.5">
-                         <span className="text-xs text-white/40 w-8">{tc('shiftNight')}</span>
+                        <span className="text-xs text-white/40 w-8">{tc('shiftNight')}</span>
                         <div className="flex-1 bg-white/10 rounded-full h-3 overflow-hidden">
                           <div
                             className="bg-gradient-to-r from-purple-400 to-purple-500 h-full rounded-full"
@@ -978,19 +987,19 @@ export default function CEODashboard() {
               <Panel title={t('productionStatus')} icon={Factory}>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                     <span className="text-white/50">{t('inProgressOrders')}</span>
+                    <span className="text-white/50">{t('inProgressOrders')}</span>
                     <span className="text-green-400 font-bold text-base">
                       {data.production.activeOrders}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                     <span className="text-white/50">{t('todayCompleted')}</span>
+                    <span className="text-white/50">{t('todayCompleted')}</span>
                     <span className="text-green-400 font-bold text-base">
                       {data.production.completedToday}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
-                     <span className="text-white/50">{t('warningOrders')}</span>
+                    <span className="text-white/50">{t('warningOrders')}</span>
                     <span className="text-yellow-400 font-bold text-base">
                       {data.production.warningCount}
                     </span>
@@ -1021,7 +1030,7 @@ export default function CEODashboard() {
                               : wo.priority === 'high'
                                 ? tc('high')
                                 : wo.priority === 'normal'
-                                   ? tc('medium')
+                                  ? tc('medium')
                                   : tc('low')}
                           </span>
                         </div>
@@ -1071,25 +1080,25 @@ export default function CEODashboard() {
               <Panel title={t('financeOverview')} icon={DollarSign}>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                     <span className="text-xs text-white/50">{t('totalReceivable')}</span>
-                     <span className="text-sm text-green-300 font-mono">
-                       {formatMoney(data.finance.totalReceivable)}
-                     </span>
-                   </div>
-                   <div className="flex items-center justify-between">
-                     <span className="text-xs text-white/50">{t('totalPayable')}</span>
-                     <span className="text-sm text-red-300 font-mono">
-                       {formatMoney(data.finance.totalPayable)}
-                     </span>
-                   </div>
-                   <div className="flex items-center justify-between">
-                     <span className="text-xs text-white/50">{t('monthlyIncome')}</span>
-                     <span className="text-sm text-cyan-300 font-mono">
-                       {formatMoney(data.finance.monthRevenue)}
-                     </span>
-                   </div>
-                   <div className="flex items-center justify-between">
-                     <span className="text-xs text-white/50">{t('monthlyExpense')}</span>
+                    <span className="text-xs text-white/50">{t('totalReceivable')}</span>
+                    <span className="text-sm text-green-300 font-mono">
+                      {formatMoney(data.finance.totalReceivable)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-white/50">{t('totalPayable')}</span>
+                    <span className="text-sm text-red-300 font-mono">
+                      {formatMoney(data.finance.totalPayable)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-white/50">{t('monthlyIncome')}</span>
+                    <span className="text-sm text-cyan-300 font-mono">
+                      {formatMoney(data.finance.monthRevenue)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-white/50">{t('monthlyExpense')}</span>
                     <span className="text-sm text-amber-300 font-mono">
                       {formatMoney(data.finance.monthExpense)}
                     </span>

@@ -3,7 +3,7 @@ import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
+export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
   const result = await transaction(async (conn) => {
     const stats: Record<string, number> = {};
 
@@ -378,8 +378,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
             userId,
             roleId,
           ]);
-        } catch (e) {
-        }
+        } catch {}
       }
     }
     stats.sys_user = users.length;

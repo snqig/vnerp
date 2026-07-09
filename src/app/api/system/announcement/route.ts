@@ -1,9 +1,5 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-  validateRequestBody,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
@@ -73,9 +69,13 @@ export const POST = withPermission(
        (title, content, type, priority, is_top, publish_time, expire_time, status, create_by, create_time, update_time)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
-        title, content, type || 'info', priority || 0,
+        title,
+        content,
+        type || 'info',
+        priority || 0,
         is_top ? 1 : 0,
-        publish_time || (status === 'published' ? new Date().toISOString().slice(0, 19).replace('T', ' ') : null),
+        publish_time ||
+          (status === 'published' ? new Date().toISOString().slice(0, 19).replace('T', ' ') : null),
         expire_time || null,
         status || 'draft',
         userInfo.userId,
@@ -119,13 +119,34 @@ export const PUT = withPermission(
     const updates: string[] = [];
     const params: any[] = [];
 
-    if (title !== undefined) { updates.push('title = ?'); params.push(title); }
-    if (content !== undefined) { updates.push('content = ?'); params.push(content); }
-    if (type !== undefined) { updates.push('type = ?'); params.push(type); }
-    if (priority !== undefined) { updates.push('priority = ?'); params.push(priority); }
-    if (is_top !== undefined) { updates.push('is_top = ?'); params.push(is_top ? 1 : 0); }
-    if (expire_time !== undefined) { updates.push('expire_time = ?'); params.push(expire_time); }
-    if (status !== undefined) { updates.push('status = ?'); params.push(status); }
+    if (title !== undefined) {
+      updates.push('title = ?');
+      params.push(title);
+    }
+    if (content !== undefined) {
+      updates.push('content = ?');
+      params.push(content);
+    }
+    if (type !== undefined) {
+      updates.push('type = ?');
+      params.push(type);
+    }
+    if (priority !== undefined) {
+      updates.push('priority = ?');
+      params.push(priority);
+    }
+    if (is_top !== undefined) {
+      updates.push('is_top = ?');
+      params.push(is_top ? 1 : 0);
+    }
+    if (expire_time !== undefined) {
+      updates.push('expire_time = ?');
+      params.push(expire_time);
+    }
+    if (status !== undefined) {
+      updates.push('status = ?');
+      params.push(status);
+    }
 
     if (updates.length === 0) {
       return errorResponse('没有需要更新的字段', 400, 400);
@@ -134,10 +155,7 @@ export const PUT = withPermission(
     updates.push('update_time = NOW()');
     params.push(id);
 
-    await execute(
-      `UPDATE sys_announcement SET ${updates.join(', ')} WHERE id = ?`,
-      params
-    );
+    await execute(`UPDATE sys_announcement SET ${updates.join(', ')} WHERE id = ?`, params);
 
     return successResponse(null, '公告更新成功');
   },
@@ -146,7 +164,7 @@ export const PUT = withPermission(
 
 // 删除公告
 export const DELETE = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

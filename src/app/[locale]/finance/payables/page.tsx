@@ -42,7 +42,6 @@ interface Payable {
 }
 
 export default function PayablesPage() {
-
   // 翻译钩子
   const t = useTranslations('Finance');
   const tc = useTranslations('Common');
@@ -68,7 +67,7 @@ export default function PayablesPage() {
         setPayables(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (error) {
+    } catch {
       toast.error('加载应付单失败');
     } finally {
       setLoading(false);
@@ -109,7 +108,7 @@ export default function PayablesPage() {
       } else {
         toast.error(result.message);
       }
-    } catch (error) {
+    } catch {
       toast.error('付款失败');
     }
   };
@@ -117,29 +116,30 @@ export default function PayablesPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">应付管理</h1>
+        <h1 className="text-2xl font-bold">{tc('text_c9ld1l')}</h1>
         <Button onClick={loadPayables} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> 刷新
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          {tc('text_ejix')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>应付单列表</CardTitle>
+          <CardTitle>{tc('text_oxsg76')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>应付单号</TableHead>
-                <TableHead>来源订单</TableHead>
-                <TableHead>{tc("supplier")}</TableHead>
-                <TableHead>应付金额</TableHead>
-                <TableHead>已付金额</TableHead>
-                <TableHead>{tc("balance")}</TableHead>
-                <TableHead>到期日</TableHead>
-                <TableHead>{tc("status")}</TableHead>
-                <TableHead>{tc("actions")}</TableHead>
+                <TableHead>{tc('text_c9ebye')}</TableHead>
+                <TableHead>{tc('text_dicb26')}</TableHead>
+                <TableHead>{tc('supplier')}</TableHead>
+                <TableHead>{tc('text_c9pc4w')}</TableHead>
+                <TableHead>{tc('text_c6tw9e')}</TableHead>
+                <TableHead>{tc('balance')}</TableHead>
+                <TableHead>{tc('text_cjh06')}</TableHead>
+                <TableHead>{tc('status')}</TableHead>
+                <TableHead>{tc('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -161,11 +161,12 @@ export default function PayablesPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                  <TableCell>{getStatusBadge(pay.status)}</TableCell>
+                          <TableCell>{getStatusBadge(pay.status)}</TableCell>;
                           setShowPayment(true);
                         }}
                       >
-                        <CreditCard className="w-3 h-3 mr-1" /> 付款
+                        <CreditCard className="w-3 h-3 mr-1" />
+                        {tc('text_dzza')}
                       </Button>
                     )}
                   </TableCell>
@@ -174,7 +175,7 @@ export default function PayablesPage() {
               {payables.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                    暂无数据
+                    {tc('text_dcv57g')}
                   </TableCell>
                 </TableRow>
               )}
@@ -187,19 +188,22 @@ export default function PayablesPage() {
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>录入付款 - {selectedPay?.payable_no}</DialogTitle>
+            <DialogTitle>
+              {tc('text_lljs83')}
+              {selectedPay?.payable_no}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>应付金额</Label>
+              <Label>{tc('text_c9pc4w')}</Label>
               <Input value={selectedPay ? formatAmount(selectedPay.amount) : ''} disabled />
             </div>
             <div>
-              <Label>{tc("balance")}</Label>
+              <Label>{tc('balance')}</Label>
               <Input value={selectedPay ? formatAmount(selectedPay.balance) : ''} disabled />
             </div>
             <div>
-              <Label>付款金额</Label>
+              <Label>{tc('text_aef3rm')}</Label>
               <Input
                 type="number"
                 value={paymentAmount}
@@ -207,21 +211,21 @@ export default function PayablesPage() {
               />
             </div>
             <div>
-              <Label>付款方式</Label>
+              <Label>{tc('text_ae7ae4')}</Label>
               <select
                 className="w-full border rounded-md p-2"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
               >
-                <option value="bank_transfer">银行转账</option>
-                <option value="cash">现金</option>
-                <option value="check">支票</option>
-                <option value="wechat">微信支付</option>
-                <option value="alipay">支付宝</option>
+                <option value="bank_transfer">{tc('text_jd1cr4')}</option>
+                <option value="cash">{tc('text_kh7l')}</option>
+                <option value="check">{tc('text_hvkp')}</option>
+                <option value="wechat">{tc('text_cemv24')}</option>
+                <option value="alipay">{tc('text_f7gac')}</option>
               </select>
             </div>
             <div>
-              <Label>付款日期</Label>
+              <Label>{tc('text_ae7d1c')}</Label>
               <Input
                 type="date"
                 value={paymentDate}
@@ -231,9 +235,9 @@ export default function PayablesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPayment(false)}>
-              取消
+              {tc('text_ev02')}
             </Button>
-            <Button onClick={handlePayment}>确认付款</Button>
+            <Button onClick={handlePayment}>{tc('text_fro15o')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

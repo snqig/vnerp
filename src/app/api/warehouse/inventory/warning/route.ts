@@ -4,7 +4,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { getNegativeStockWarnings } from '@/lib/inventory-sync';
 
 // 获取库存预警列表
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   const warnings = await getNegativeStockWarnings();
 
   const critical = warnings.filter((w) => w.warningLevel === 'critical');

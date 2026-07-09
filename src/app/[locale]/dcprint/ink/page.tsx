@@ -63,7 +63,6 @@ type SortField = 'ink_code' | 'ink_name' | 'ink_type' | 'stock_qty' | 'safety_st
 type SortDir = 'asc' | 'desc';
 
 export default function InkManagementPage() {
-
   // 翻译钩子
   const t = useTranslations('Dcprint');
   const tc = useTranslations('Common');
@@ -76,7 +75,10 @@ export default function InkManagementPage() {
     5: t('specialInk'),
   };
 
-  const statusMap: Record<number, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  const statusMap: Record<
+    number,
+    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  > = {
     1: { label: tc('enabled'), variant: 'default' },
     0: { label: tc('disabled'), variant: 'destructive' },
   };
@@ -124,8 +126,7 @@ export default function InkManagementPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   }, [page, searchCode, searchName, searchType, searchStatus]);
 
   useEffect(() => {
@@ -216,7 +217,7 @@ export default function InkManagementPage() {
       } else {
         toast({ title: tc('failed'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -230,7 +231,7 @@ export default function InkManagementPage() {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -300,8 +301,8 @@ export default function InkManagementPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_all">{t('allStatus')}</SelectItem>
-                  <SelectItem value="1">{tc("enable")}</SelectItem>
-                  <SelectItem value="0">{tc("disable")}</SelectItem>
+                  <SelectItem value="1">{tc('enable')}</SelectItem>
+                  <SelectItem value="0">{tc('disable')}</SelectItem>
                 </SelectContent>
               </Select>
               <Button size="sm" variant="outline" className="h-8" onClick={fetchData}>
@@ -315,16 +316,30 @@ export default function InkManagementPage() {
                   columns={[
                     { key: 'ink_code', label: t('inkCode'), width: 15 },
                     { key: 'ink_name', label: t('inkName'), width: 20 },
-                    { key: 'ink_type', label: tc('type'), width: 10, formatter: (v) => typeMap[v] || '-' },
+                    {
+                      key: 'ink_type',
+                      label: tc('type'),
+                      width: 10,
+                      formatter: (v) => typeMap[v] || '-',
+                    },
                     { key: 'color_name', label: tc('color'), width: 10 },
                     { key: 'color_code', label: t('colorCode'), width: 10 },
                     { key: 'brand', label: tc('brand'), width: 12 },
                     { key: 'unit', label: tc('unit'), width: 8 },
                     { key: 'stock_qty', label: t('stock'), width: 10 },
                     { key: 'safety_stock', label: t('safetyStock'), width: 10 },
-                    { key: 'status', label: tc('status'), width: 10, formatter: (v) => statusMap[v]?.label || '-' },
+                    {
+                      key: 'status',
+                      label: tc('status'),
+                      width: 10,
+                      formatter: (v) => statusMap[v]?.label || '-',
+                    },
                   ]}
-                  data={selectedIds.size > 0 ? sortedList.filter((i) => selectedIds.has(i.id)) : sortedList}
+                  data={
+                    selectedIds.size > 0
+                      ? sortedList.filter((i) => selectedIds.has(i.id))
+                      : sortedList
+                  }
                 />
               </div>
             </div>
@@ -338,7 +353,7 @@ export default function InkManagementPage() {
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
-                  <TableHead className="w-[60px]">{tc("serialNo")}</TableHead>
+                  <TableHead className="w-[60px]">{tc('serialNo')}</TableHead>
                   <TableHead
                     className="text-xs cursor-pointer select-none"
                     onClick={() => handleSort('ink_code')}
@@ -366,10 +381,10 @@ export default function InkManagementPage() {
                       <SortIcon field="ink_type" />
                     </span>
                   </TableHead>
-                  <TableHead className="text-xs">{tc("color")}</TableHead>
+                  <TableHead className="text-xs">{tc('color')}</TableHead>
                   <TableHead className="text-xs">{t('colorCode')}</TableHead>
-                  <TableHead className="text-xs">{tc("brand")}</TableHead>
-                  <TableHead className="text-xs">{tc("unit")}</TableHead>
+                  <TableHead className="text-xs">{tc('brand')}</TableHead>
+                  <TableHead className="text-xs">{tc('unit')}</TableHead>
                   <TableHead
                     className="text-xs cursor-pointer select-none"
                     onClick={() => handleSort('stock_qty')}
@@ -397,7 +412,7 @@ export default function InkManagementPage() {
                       <SortIcon field="status" />
                     </span>
                   </TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -512,7 +527,7 @@ export default function InkManagementPage() {
                 />
               </div>
               <div>
-                <Label>{tc("type")}</Label>
+                <Label>{tc('type')}</Label>
                 <Select
                   value={String(editItem.ink_type || 4)}
                   onValueChange={(v) => setEditItem({ ...editItem, ink_type: Number(v) })}
@@ -544,14 +559,14 @@ export default function InkManagementPage() {
                 />
               </div>
               <div>
-                <Label>{tc("brand")}</Label>
+                <Label>{tc('brand')}</Label>
                 <Input
                   value={editItem.brand || ''}
                   onChange={(e) => setEditItem({ ...editItem, brand: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("unit")}</Label>
+                <Label>{tc('unit')}</Label>
                 <Input
                   value={editItem.unit || 'kg'}
                   onChange={(e) => setEditItem({ ...editItem, unit: e.target.value })}
@@ -572,7 +587,7 @@ export default function InkManagementPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

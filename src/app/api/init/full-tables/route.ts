@@ -3,88 +3,89 @@ import { query, execute, transaction } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const result = await transaction(async (conn) => {
-    const results: string[] = [];
+export const POST = withPermission(
+  async (_request: NextRequest, _userInfo) => {
+    const result = await transaction(async (conn) => {
+      const results: string[] = [];
 
-    // ========================================
-    // 0. 清理可能存在的不一致表（其他init路由创建的表列名可能不同）
-    // ========================================
-    await conn.execute(`SET FOREIGN_KEY_CHECKS = 0`);
-    const dropTables = [
-      'fin_payment_record',
-      'fin_receipt_record',
-      'fin_payable',
-      'fin_receivable',
-      'qc_unqualified',
-      'qc_inspection',
-      'prd_work_report',
-      'prod_work_order_material_req',
-      'prod_work_order_item',
-      'prod_work_order',
-      'prd_bom_detail',
-      'prd_bom',
-      'sal_reconciliation_writeoff',
-      'sal_reconciliation_line',
-      'sal_reconciliation',
-      'sal_return_detail',
-      'sal_return',
-      'sal_delivery_detail',
-      'sal_delivery',
-      'inv_inventory_transaction',
-      'inv_outbound_item',
-      'inv_outbound_order',
-      'inv_inventory_log',
-      'inv_inventory_batch',
-      'inv_inventory',
-      'inv_inbound_item',
-      'inv_inbound_order',
-      'sal_order_detail',
-      'sal_order_item',
-      'sal_order',
-      'sal_sample_order',
-      'pur_receipt_detail',
-      'pur_receipt',
-      'pur_purchase_order_line',
-      'pur_purchase_order',
-      'pur_request_item',
-      'pur_request',
-      'pur_order_detail',
-      'pur_order',
-      'prd_process_route_step',
-      'prd_process_route',
-      'prd_die_template',
-      'eqp_maintenance_record',
-      'eqp_maintenance_plan',
-      'eqp_equipment',
-      'inv_material',
-      'pur_supplier',
-      'crm_customer_contact',
-      'crm_customer',
-      'inv_location',
-      'inv_warehouse',
-      'inv_material_label',
-      'inv_cutting_record',
-      'inv_cutting_detail',
-      'prd_process_card',
-      'prd_process_card_material',
-      'inv_trace_record',
-      'inv_trace_detail',
-      'inv_scan_log',
-      'ink_opening_record',
-    ];
-    for (const table of dropTables) {
-      try {
-        await conn.execute(`DROP TABLE IF EXISTS ${table}`);
-      } catch (e: any) {}
-    }
-    await conn.execute(`SET FOREIGN_KEY_CHECKS = 1`);
-    results.push('已清理旧表');
+      // ========================================
+      // 0. 清理可能存在的不一致表（其他init路由创建的表列名可能不同）
+      // ========================================
+      await conn.execute(`SET FOREIGN_KEY_CHECKS = 0`);
+      const dropTables = [
+        'fin_payment_record',
+        'fin_receipt_record',
+        'fin_payable',
+        'fin_receivable',
+        'qc_unqualified',
+        'qc_inspection',
+        'prd_work_report',
+        'prod_work_order_material_req',
+        'prod_work_order_item',
+        'prod_work_order',
+        'prd_bom_detail',
+        'prd_bom',
+        'sal_reconciliation_writeoff',
+        'sal_reconciliation_line',
+        'sal_reconciliation',
+        'sal_return_detail',
+        'sal_return',
+        'sal_delivery_detail',
+        'sal_delivery',
+        'inv_inventory_transaction',
+        'inv_outbound_item',
+        'inv_outbound_order',
+        'inv_inventory_log',
+        'inv_inventory_batch',
+        'inv_inventory',
+        'inv_inbound_item',
+        'inv_inbound_order',
+        'sal_order_detail',
+        'sal_order_item',
+        'sal_order',
+        'sal_sample_order',
+        'pur_receipt_detail',
+        'pur_receipt',
+        'pur_purchase_order_line',
+        'pur_purchase_order',
+        'pur_request_item',
+        'pur_request',
+        'pur_order_detail',
+        'pur_order',
+        'prd_process_route_step',
+        'prd_process_route',
+        'prd_die_template',
+        'eqp_maintenance_record',
+        'eqp_maintenance_plan',
+        'eqp_equipment',
+        'inv_material',
+        'pur_supplier',
+        'crm_customer_contact',
+        'crm_customer',
+        'inv_location',
+        'inv_warehouse',
+        'inv_material_label',
+        'inv_cutting_record',
+        'inv_cutting_detail',
+        'prd_process_card',
+        'prd_process_card_material',
+        'inv_trace_record',
+        'inv_trace_detail',
+        'inv_scan_log',
+        'ink_opening_record',
+      ];
+      for (const table of dropTables) {
+        try {
+          await conn.execute(`DROP TABLE IF EXISTS ${table}`);
+        } catch (e: any) {}
+      }
+      await conn.execute(`SET FOREIGN_KEY_CHECKS = 1`);
+      results.push('已清理旧表');
 
-    // ========================================
-    // 1. 核心基础表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_warehouse (
+      // ========================================
+      // 1. 核心基础表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_warehouse (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       warehouse_code VARCHAR(50) NOT NULL COMMENT '仓库编码',
       warehouse_name VARCHAR(100) NOT NULL COMMENT '仓库名称',
@@ -102,9 +103,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       UNIQUE KEY uk_warehouse_code (warehouse_code)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='仓库表'`);
-    results.push('inv_warehouse');
+      results.push('inv_warehouse');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS pur_supplier (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS pur_supplier (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       supplier_code VARCHAR(50) NOT NULL COMMENT '供应商编码',
       supplier_name VARCHAR(100) NOT NULL COMMENT '供应商名称',
@@ -134,9 +135,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       UNIQUE KEY uk_supplier_code (supplier_code)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='供应商表'`);
-    results.push('pur_supplier');
+      results.push('pur_supplier');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS crm_customer (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS crm_customer (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       customer_code VARCHAR(50) NOT NULL COMMENT '客户编码',
       customer_name VARCHAR(100) NOT NULL COMMENT '客户名称',
@@ -170,9 +171,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       UNIQUE KEY uk_customer_code (customer_code)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户表'`);
-    results.push('crm_customer');
+      results.push('crm_customer');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_material (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_material (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       material_code VARCHAR(50) NOT NULL COMMENT '物料编码',
       material_name VARCHAR(100) NOT NULL COMMENT '物料名称',
@@ -203,9 +204,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       UNIQUE KEY uk_material_code (material_code)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='物料表'`);
-    results.push('inv_material');
+      results.push('inv_material');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_order (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sal_order (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       order_no VARCHAR(50) NOT NULL COMMENT '订单编号',
       order_date DATE COMMENT '订单日期',
@@ -233,9 +234,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       UNIQUE KEY uk_order_no (order_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售订单表'`);
-    results.push('sal_order');
+      results.push('sal_order');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_order_detail (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sal_order_detail (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       order_id BIGINT UNSIGNED NOT NULL COMMENT '订单ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -252,9 +253,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售订单明细表'`);
-    results.push('sal_order_detail');
+      results.push('sal_order_detail');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_order_item (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sal_order_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       order_id BIGINT UNSIGNED NOT NULL COMMENT '订单ID',
       material_name VARCHAR(200) COMMENT '物料名称',
@@ -267,9 +268,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       KEY idx_order (order_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售订单明细表(API)'`);
-    results.push('sal_order_item');
+      results.push('sal_order_item');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS pur_order (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS pur_order (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       order_no VARCHAR(50) NOT NULL COMMENT '订单编号',
       order_date DATE COMMENT '订单日期',
@@ -295,9 +296,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       UNIQUE KEY uk_order_no (order_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='采购订单表'`);
-    results.push('pur_order');
+      results.push('pur_order');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS pur_order_detail (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS pur_order_detail (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       order_id BIGINT UNSIGNED NOT NULL COMMENT '订单ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -314,9 +315,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='采购订单明细表'`);
-    results.push('pur_order_detail');
+      results.push('pur_order_detail');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS pur_purchase_order (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS pur_purchase_order (
       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
       po_no VARCHAR(50) NOT NULL COMMENT '采购单号',
       supplier_id INT UNSIGNED DEFAULT NULL COMMENT '供应商ID',
@@ -353,9 +354,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       INDEX idx_status (status),
       INDEX idx_order_date (order_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='采购单主表'`);
-    results.push('pur_purchase_order');
+      results.push('pur_purchase_order');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS pur_purchase_order_line (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS pur_purchase_order_line (
       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
       po_id INT UNSIGNED NOT NULL COMMENT '采购单ID',
       line_no INT UNSIGNED NOT NULL COMMENT '行号',
@@ -382,9 +383,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       INDEX idx_material (material_id),
       FOREIGN KEY (po_id) REFERENCES pur_purchase_order(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='采购单行表'`);
-    results.push('pur_purchase_order_line');
+      results.push('pur_purchase_order_line');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS pur_request (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS pur_request (
       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       request_no VARCHAR(50) NOT NULL COMMENT '申请单号',
       request_date DATE COMMENT '申请日期',
@@ -407,9 +408,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       INDEX idx_status (status),
       INDEX idx_request_date (request_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='采购申请主表'`);
-    results.push('pur_request');
+      results.push('pur_request');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS pur_request_item (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS pur_request_item (
       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       request_id INT UNSIGNED NOT NULL COMMENT '申请ID',
       line_no INT UNSIGNED NOT NULL COMMENT '行号',
@@ -428,9 +429,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       deleted TINYINT(1) DEFAULT 0,
       INDEX idx_request (request_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='采购申请明细表'`);
-    results.push('pur_request_item');
+      results.push('pur_request_item');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inbound_order (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inbound_order (
       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       order_no VARCHAR(50) NOT NULL COMMENT '入库单号',
       order_type ENUM('purchase', 'return', 'transfer', 'other') DEFAULT 'purchase' COMMENT '入库类型',
@@ -456,9 +457,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       INDEX idx_status (status),
       INDEX idx_po_id (po_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='入库订单主表'`);
-    results.push('inv_inbound_order');
+      results.push('inv_inbound_order');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inbound_item (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inbound_item (
       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       order_id INT UNSIGNED NOT NULL COMMENT '入库订单ID',
       material_id INT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -477,12 +478,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       INDEX idx_order (order_id),
       INDEX idx_material (material_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='入库订单明细表'`);
-    results.push('inv_inbound_item');
+      results.push('inv_inbound_item');
 
-    // ========================================
-    // 1. 送货单表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_delivery (
+      // ========================================
+      // 1. 送货单表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sal_delivery (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       delivery_no VARCHAR(50) NOT NULL COMMENT '出库单号',
       delivery_date DATE COMMENT '出库日期',
@@ -517,9 +518,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_customer (customer_id),
       KEY idx_warehouse (warehouse_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售出库单表'`);
-    results.push('sal_delivery');
+      results.push('sal_delivery');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_delivery_detail (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sal_delivery_detail (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       delivery_id BIGINT UNSIGNED NOT NULL COMMENT '出库单ID',
       line_no INT COMMENT '行号',
@@ -541,12 +542,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_material (material_id),
       KEY idx_order_detail (order_detail_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='销售出库明细表'`);
-    results.push('sal_delivery_detail');
+      results.push('sal_delivery_detail');
 
-    // ========================================
-    // 2. 退货单表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_return (
+      // ========================================
+      // 2. 退货单表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sal_return (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       return_no VARCHAR(50) NOT NULL COMMENT '退货单号',
       status TINYINT NOT NULL DEFAULT 1 COMMENT '状态: 1-待审核, 2-已审核, 3-已完成, 9-已取消',
@@ -584,9 +585,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_delivery (delivery_id),
       KEY idx_return_date (return_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='退货单主表'`);
-    results.push('sal_return');
+      results.push('sal_return');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_return_detail (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sal_return_detail (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       return_id BIGINT UNSIGNED NOT NULL COMMENT '退货单ID',
       line_no INT NOT NULL COMMENT '行号',
@@ -610,12 +611,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_order_detail (order_detail_id),
       KEY idx_batch (batch_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='退货单明细表'`);
-    results.push('sal_return_detail');
+      results.push('sal_return_detail');
 
-    // ========================================
-    // 3. 销售对账表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_reconciliation (
+      // ========================================
+      // 3. 销售对账表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sal_reconciliation (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       reconciliation_no VARCHAR(50) NOT NULL COMMENT '对账单号',
       status TINYINT NOT NULL DEFAULT 1 COMMENT '状态: 1-草稿, 2-已确认, 3-部分核销, 4-已核销, 9-已关闭',
@@ -646,9 +647,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_customer (customer_id),
       KEY idx_period (period_start, period_end)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对账单主表'`);
-    results.push('sal_reconciliation');
+      results.push('sal_reconciliation');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_reconciliation_line (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sal_reconciliation_line (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       reconciliation_id BIGINT UNSIGNED NOT NULL COMMENT '对账单ID',
       source_type TINYINT NOT NULL COMMENT '来源类型: 1-发货单, 2-退货单',
@@ -664,9 +665,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_source (source_type, source_id),
       KEY idx_source_no (source_no)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对账单明细表'`);
-    results.push('sal_reconciliation_line');
+      results.push('sal_reconciliation_line');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_reconciliation_writeoff (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sal_reconciliation_writeoff (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       reconciliation_id BIGINT UNSIGNED NOT NULL COMMENT '对账单ID',
       receivable_id BIGINT UNSIGNED NOT NULL COMMENT '应收单ID',
@@ -681,12 +682,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_receivable (receivable_id),
       KEY idx_write_off_date (write_off_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对账核销记录表'`);
-    results.push('sal_reconciliation_writeoff');
+      results.push('sal_reconciliation_writeoff');
 
-    // ========================================
-    // 4. 设备管理表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS eqp_equipment (
+      // ========================================
+      // 4. 设备管理表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS eqp_equipment (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       equipment_code VARCHAR(50) NOT NULL COMMENT '设备编码',
       equipment_name VARCHAR(100) NOT NULL COMMENT '设备名称',
@@ -720,9 +721,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_type (equipment_type),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备台账表'`);
-    results.push('eqp_equipment');
+      results.push('eqp_equipment');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS eqp_maintenance_plan (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS eqp_maintenance_plan (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       plan_no VARCHAR(50) NOT NULL COMMENT '计划编号',
       equipment_id BIGINT UNSIGNED NOT NULL COMMENT '设备ID',
@@ -743,9 +744,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_equipment (equipment_id),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备维护计划表'`);
-    results.push('eqp_maintenance_plan');
+      results.push('eqp_maintenance_plan');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS eqp_maintenance_record (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS eqp_maintenance_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       record_no VARCHAR(50) NOT NULL COMMENT '记录编号',
       plan_id BIGINT UNSIGNED COMMENT '维护计划ID',
@@ -768,12 +769,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_equipment (equipment_id),
       KEY idx_plan (plan_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='设备维护记录表'`);
-    results.push('eqp_maintenance_record');
+      results.push('eqp_maintenance_record');
 
-    // ========================================
-    // 5. 印前管理表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS prd_die_template (
+      // ========================================
+      // 5. 印前管理表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS prd_die_template (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       template_code VARCHAR(50) NOT NULL COMMENT '刀模板编号',
       template_name VARCHAR(100) NOT NULL COMMENT '刀模板名称',
@@ -798,12 +799,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_type (template_type),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='刀模板/网版管理表'`);
-    results.push('prd_die_template');
+      results.push('prd_die_template');
 
-    // ========================================
-    // 6. 生产报工表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS prd_work_report (
+      // ========================================
+      // 6. 生产报工表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS prd_work_report (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       report_no VARCHAR(50) NOT NULL COMMENT '报工单号',
       work_order_id BIGINT UNSIGNED NOT NULL COMMENT '工单ID',
@@ -834,12 +835,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_operator (operator_id),
       KEY idx_create_time (create_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产报工表'`);
-    results.push('prd_work_report');
+      results.push('prd_work_report');
 
-    // ========================================
-    // 7. 工艺路线表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS prd_process_route (
+      // ========================================
+      // 7. 工艺路线表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS prd_process_route (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       route_code VARCHAR(50) NOT NULL COMMENT '工艺路线编码',
       route_name VARCHAR(100) NOT NULL COMMENT '工艺路线名称',
@@ -856,9 +857,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       UNIQUE KEY uk_route_code (route_code),
       KEY idx_product (product_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线表'`);
-    results.push('prd_process_route');
+      results.push('prd_process_route');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS prd_process_route_step (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS prd_process_route_step (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       route_id BIGINT UNSIGNED NOT NULL COMMENT '工艺路线ID',
       step_seq INT NOT NULL COMMENT '工序序号',
@@ -875,12 +876,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       KEY idx_route (route_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线工序表'`);
-    results.push('prd_process_route_step');
+      results.push('prd_process_route_step');
 
-    // ========================================
-    // 8. 生产工单表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS prod_work_order (
+      // ========================================
+      // 8. 生产工单表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS prod_work_order (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       work_order_no VARCHAR(50) NOT NULL COMMENT '工单号',
       order_id BIGINT UNSIGNED COMMENT '关联销售订单ID',
@@ -908,9 +909,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_status (status),
       KEY idx_create_time (create_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产工单主表'`);
-    results.push('prod_work_order');
+      results.push('prod_work_order');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS prod_work_order_item (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS prod_work_order_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       work_order_id BIGINT UNSIGNED NOT NULL COMMENT '工单ID',
       line_no INT DEFAULT 0 COMMENT '行号',
@@ -925,9 +926,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       KEY idx_work_order_id (work_order_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产工单明细表'`);
-    results.push('prod_work_order_item');
+      results.push('prod_work_order_item');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS prod_work_order_material_req (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS prod_work_order_material_req (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       work_order_id BIGINT UNSIGNED NOT NULL COMMENT '工单ID',
       bom_line_id BIGINT UNSIGNED COMMENT 'BOM行ID',
@@ -940,12 +941,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_work_order (work_order_id),
       KEY idx_material (material_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工单物料需求表'`);
-    results.push('prod_work_order_material_req');
+      results.push('prod_work_order_material_req');
 
-    // ========================================
-    // 9. 库存表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inventory (
+      // ========================================
+      // 9. 库存表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inventory (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
       material_name VARCHAR(100) COMMENT '物料名称',
@@ -967,9 +968,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_material (material_id),
       KEY idx_warehouse (warehouse_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存表'`);
-    results.push('inv_inventory');
+      results.push('inv_inventory');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inventory_batch (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inventory_batch (
       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
       batch_no VARCHAR(50) NOT NULL COMMENT '批次号',
       material_id INT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -994,9 +995,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       INDEX idx_warehouse (warehouse_id),
       INDEX idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存批次表'`);
-    results.push('inv_inventory_batch');
+      results.push('inv_inventory_batch');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inventory_log (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inventory_log (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       warehouse_id INT UNSIGNED COMMENT '仓库ID',
       material_id INT UNSIGNED COMMENT '物料ID',
@@ -1010,12 +1011,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_material (material_id),
       KEY idx_create_time (create_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存变动日志表'`);
-    results.push('inv_inventory_log');
+      results.push('inv_inventory_log');
 
-    // ========================================
-    // 10. 出库单表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_outbound_order (
+      // ========================================
+      // 10. 出库单表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_outbound_order (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       order_no VARCHAR(50) NOT NULL COMMENT '出库单号',
       order_date DATE COMMENT '出库日期',
@@ -1041,9 +1042,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_warehouse (warehouse_id),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='出库单表'`);
-    results.push('inv_outbound_order');
+      results.push('inv_outbound_order');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_outbound_item (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_outbound_item (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       order_id BIGINT UNSIGNED NOT NULL COMMENT '出库单ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -1060,12 +1061,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_order (order_id),
       KEY idx_material (material_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='出库单明细表'`);
-    results.push('inv_outbound_item');
+      results.push('inv_outbound_item');
 
-    // ========================================
-    // 11. 库存事务表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inventory_transaction (
+      // ========================================
+      // 11. 库存事务表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_inventory_transaction (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       trans_no VARCHAR(50) NOT NULL COMMENT '事务单号',
       trans_type ENUM('in', 'out', 'transfer', 'adjust', 'return') NOT NULL COMMENT '事务类型',
@@ -1095,12 +1096,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_warehouse (warehouse_id),
       KEY idx_create_time (create_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存事务表'`);
-    results.push('inv_inventory_transaction');
+      results.push('inv_inventory_transaction');
 
-    // ========================================
-    // 12. 质检表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS qc_inspection (
+      // ========================================
+      // 12. 质检表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS qc_inspection (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       inspection_no VARCHAR(50) NOT NULL COMMENT '质检单号',
       inspection_type TINYINT COMMENT '质检类型: 1-来料检验, 2-过程检验, 3-成品检验, 4-出货检验',
@@ -1124,9 +1125,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_material (material_id),
       KEY idx_type (inspection_type)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='质检记录表'`);
-    results.push('qc_inspection');
+      results.push('qc_inspection');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS qc_unqualified (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS qc_unqualified (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       unqualified_no VARCHAR(50) NOT NULL COMMENT '不合格品单号',
       inspection_id BIGINT UNSIGNED COMMENT '关联质检ID',
@@ -1150,12 +1151,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_inspection (inspection_id),
       KEY idx_material (material_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='不合格品处理表'`);
-    results.push('qc_unqualified');
+      results.push('qc_unqualified');
 
-    // ========================================
-    // 13. 财务应收/应付表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS fin_receivable (
+      // ========================================
+      // 13. 财务应收/应付表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS fin_receivable (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       receivable_no VARCHAR(50) NOT NULL COMMENT '应收单号',
       source_type TINYINT DEFAULT 1 COMMENT '来源类型: 1-销售订单',
@@ -1176,9 +1177,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_source (source_no),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='应收账款表'`);
-    results.push('fin_receivable');
+      results.push('fin_receivable');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS fin_payable (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS fin_payable (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       payable_no VARCHAR(50) NOT NULL COMMENT '应付单号',
       source_type TINYINT DEFAULT 1 COMMENT '来源类型: 1-采购订单',
@@ -1199,9 +1200,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_source (source_no),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='应付账款表'`);
-    results.push('fin_payable');
+      results.push('fin_payable');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS fin_receipt_record (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS fin_receipt_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       receipt_no VARCHAR(50) NOT NULL COMMENT '收款单号',
       receivable_id BIGINT UNSIGNED COMMENT '应收ID',
@@ -1216,9 +1217,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_receivable (receivable_id),
       KEY idx_customer (customer_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='收款记录表'`);
-    results.push('fin_receipt_record');
+      results.push('fin_receipt_record');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS fin_payment_record (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS fin_payment_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       payment_no VARCHAR(50) NOT NULL COMMENT '付款单号',
       payable_id BIGINT UNSIGNED COMMENT '应付ID',
@@ -1233,9 +1234,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_payable (payable_id),
       KEY idx_supplier (supplier_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='付款记录表'`);
-    results.push('fin_payment_record');
+      results.push('fin_payment_record');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS prd_bom (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS prd_bom (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       bom_name VARCHAR(200) NOT NULL COMMENT 'BOM名称',
       product_id BIGINT UNSIGNED COMMENT '产品ID',
@@ -1250,9 +1251,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       KEY idx_product (product_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='BOM表'`);
-    results.push('prd_bom');
+      results.push('prd_bom');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS prd_bom_detail (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS prd_bom_detail (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       bom_id BIGINT UNSIGNED NOT NULL COMMENT 'BOM ID',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -1269,9 +1270,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_bom (bom_id),
       KEY idx_material (material_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='BOM明细表'`);
-    results.push('prd_bom_detail');
+      results.push('prd_bom_detail');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sal_sample_order (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sal_sample_order (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       order_no VARCHAR(50) NOT NULL COMMENT '打样订单号',
       notify_date DATE COMMENT '通知日期',
@@ -1301,12 +1302,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_status (status),
       KEY idx_notify_date (notify_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='打样订单表'`);
-    results.push('sal_sample_order');
+      results.push('sal_sample_order');
 
-    // ========================================
-    // 库位表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_location (
+      // ========================================
+      // 库位表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_location (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       location_code VARCHAR(50) NOT NULL COMMENT '库位编码',
       location_name VARCHAR(100) NOT NULL COMMENT '库位名称',
@@ -1325,12 +1326,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       UNIQUE KEY uk_location_code (location_code),
       KEY idx_warehouse (warehouse_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库位表'`);
-    results.push('inv_location');
+      results.push('inv_location');
 
-    // ========================================
-    // 客户联系人表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS crm_customer_contact (
+      // ========================================
+      // 客户联系人表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS crm_customer_contact (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       customer_id BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
       contact_name VARCHAR(50) NOT NULL COMMENT '联系人姓名',
@@ -1345,12 +1346,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       KEY idx_customer (customer_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户联系人表'`);
-    results.push('crm_customer_contact');
+      results.push('crm_customer_contact');
 
-    // ========================================
-    // 物料标签表（二维码追溯核心）
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_material_label (
+      // ========================================
+      // 物料标签表（二维码追溯核心）
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_material_label (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       label_no VARCHAR(50) NOT NULL COMMENT '标签编号',
       qr_code VARCHAR(255) COMMENT '二维码内容',
@@ -1390,12 +1391,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_parent_label (parent_label_id),
       KEY idx_label_type (label_type)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='物料标签表'`);
-    results.push('inv_material_label');
+      results.push('inv_material_label');
 
-    // ========================================
-    // 分切记录表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_cutting_record (
+      // ========================================
+      // 分切记录表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_cutting_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       record_no VARCHAR(50) NOT NULL COMMENT '分切单号',
       source_label_id BIGINT UNSIGNED NOT NULL COMMENT '源标签ID',
@@ -1415,12 +1416,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_source_label (source_label_id),
       KEY idx_cut_time (cut_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分切记录表'`);
-    results.push('inv_cutting_record');
+      results.push('inv_cutting_record');
 
-    // ========================================
-    // 分切明细表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_cutting_detail (
+      // ========================================
+      // 分切明细表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_cutting_detail (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       record_id BIGINT UNSIGNED NOT NULL COMMENT '分切记录ID',
       new_label_id BIGINT UNSIGNED NOT NULL COMMENT '新标签ID',
@@ -1432,12 +1433,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_record_id (record_id),
       KEY idx_new_label (new_label_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='分切明细表'`);
-    results.push('inv_cutting_detail');
+      results.push('inv_cutting_detail');
 
-    // ========================================
-    // 生产流程卡表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS prd_process_card (
+      // ========================================
+      // 生产流程卡表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS prd_process_card (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       card_no VARCHAR(50) NOT NULL COMMENT '流程卡卡号',
       qr_code VARCHAR(255) COMMENT '二维码内容',
@@ -1462,12 +1463,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_work_order (work_order_id),
       KEY idx_main_label (main_label_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='生产流程卡表'`);
-    results.push('prd_process_card');
+      results.push('prd_process_card');
 
-    // ========================================
-    // 流程卡物料关联表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS prd_process_card_material (
+      // ========================================
+      // 流程卡物料关联表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS prd_process_card_material (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       card_id BIGINT UNSIGNED NOT NULL COMMENT '流程卡ID',
       card_no VARCHAR(50) COMMENT '流程卡卡号',
@@ -1486,12 +1487,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_card_id (card_id),
       KEY idx_label_id (label_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流程卡物料关联表'`);
-    results.push('prd_process_card_material');
+      results.push('prd_process_card_material');
 
-    // ========================================
-    // 追溯记录表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_trace_record (
+      // ========================================
+      // 追溯记录表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_trace_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       trace_no VARCHAR(50) NOT NULL COMMENT '追溯单号',
       card_id BIGINT UNSIGNED COMMENT '流程卡ID',
@@ -1511,12 +1512,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_card_id (card_id),
       KEY idx_main_label (main_label_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='追溯记录表'`);
-    results.push('inv_trace_record');
+      results.push('inv_trace_record');
 
-    // ========================================
-    // 追溯明细表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_trace_detail (
+      // ========================================
+      // 追溯明细表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_trace_detail (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       trace_id BIGINT UNSIGNED NOT NULL COMMENT '追溯记录ID',
       label_id BIGINT UNSIGNED NOT NULL COMMENT '物料标签ID',
@@ -1534,12 +1535,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_trace_id (trace_id),
       KEY idx_label_id (label_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='追溯明细表'`);
-    results.push('inv_trace_detail');
+      results.push('inv_trace_detail');
 
-    // ========================================
-    // 扫码操作日志表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS inv_scan_log (
+      // ========================================
+      // 扫码操作日志表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS inv_scan_log (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       scan_type VARCHAR(50) NOT NULL COMMENT '扫码类型: cutting-分切, process-流程卡, trace-追溯',
       qr_content VARCHAR(500) COMMENT '二维码内容',
@@ -1556,12 +1557,12 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_label_no (label_no),
       KEY idx_scan_time (scan_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='扫码操作日志表'`);
-    results.push('inv_scan_log');
+      results.push('inv_scan_log');
 
-    // ========================================
-    // 油墨开罐记录表
-    // ========================================
-    await conn.execute(`CREATE TABLE IF NOT EXISTS ink_opening_record (
+      // ========================================
+      // 油墨开罐记录表
+      // ========================================
+      await conn.execute(`CREATE TABLE IF NOT EXISTS ink_opening_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       record_no VARCHAR(50) NOT NULL COMMENT '记录单号',
       material_id BIGINT UNSIGNED NOT NULL COMMENT '物料ID',
@@ -1589,9 +1590,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_status (status),
       KEY idx_expire_time (expire_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='油墨开罐记录表'`);
-    results.push('ink_opening_record');
+      results.push('ink_opening_record');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sys_dict_type (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sys_dict_type (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       dict_name VARCHAR(100) NOT NULL COMMENT '字典名称',
       dict_type VARCHAR(100) NOT NULL COMMENT '字典类型',
@@ -1604,9 +1605,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       UNIQUE KEY uk_dict_type (dict_type)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典类型表'`);
-    results.push('sys_dict_type');
+      results.push('sys_dict_type');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sys_dict_data (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sys_dict_data (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       dict_type VARCHAR(100) NOT NULL COMMENT '字典类型',
       dict_label VARCHAR(200) NOT NULL COMMENT '字典标签',
@@ -1624,9 +1625,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       KEY idx_dict_type (dict_type)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典数据表'`);
-    results.push('sys_dict_data');
+      results.push('sys_dict_data');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sys_config (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sys_config (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       config_name VARCHAR(100) NOT NULL COMMENT '参数名称',
       config_key VARCHAR(100) NOT NULL COMMENT '参数键名',
@@ -1640,9 +1641,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       PRIMARY KEY (id),
       UNIQUE KEY uk_config_key (config_key)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统参数配置表'`);
-    results.push('sys_config');
+      results.push('sys_config');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sys_oper_log (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sys_oper_log (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       title VARCHAR(50) COMMENT '操作模块',
       business_type TINYINT DEFAULT 0 COMMENT '业务类型: 0-其它, 1-新增, 2-修改, 3-删除',
@@ -1662,9 +1663,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_business_type (business_type),
       KEY idx_oper_time (oper_time)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志记录表'`);
-    results.push('sys_oper_log');
+      results.push('sys_oper_log');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sys_login_log (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sys_login_log (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       user_name VARCHAR(50) COMMENT '用户账号',
       ipaddr VARCHAR(128) COMMENT '登录IP地址',
@@ -1678,9 +1679,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_login_time (login_time),
       KEY idx_user_name (user_name)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统访问记录表'`);
-    results.push('sys_login_log');
+      results.push('sys_login_log');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS sys_notice (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS sys_notice (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       notice_title VARCHAR(200) NOT NULL COMMENT '公告标题',
       notice_type TINYINT NOT NULL COMMENT '公告类型: 1-通知, 2-公告',
@@ -1693,9 +1694,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       deleted TINYINT DEFAULT 0,
       PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通知公告表'`);
-    results.push('sys_notice');
+      results.push('sys_notice');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS ink_mixed_record (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS ink_mixed_record (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       record_no VARCHAR(50) NOT NULL COMMENT '记录单号',
       base_ink_id BIGINT UNSIGNED NOT NULL COMMENT '原油墨ID',
@@ -1725,9 +1726,9 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_company (company_id),
       KEY idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='调色后油墨入库记录表'`);
-    results.push('ink_mixed_record');
+      results.push('ink_mixed_record');
 
-    await conn.execute(`CREATE TABLE IF NOT EXISTS base_ink (
+      await conn.execute(`CREATE TABLE IF NOT EXISTS base_ink (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       ink_code VARCHAR(50) NOT NULL COMMENT '油墨编号',
       ink_name VARCHAR(200) NOT NULL COMMENT '油墨名称',
@@ -1752,58 +1753,63 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       KEY idx_ink_type (ink_type),
       KEY idx_supplier (supplier_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='原油墨基础信息表'`);
-    results.push('base_ink');
+      results.push('base_ink');
 
-    return { tablesCreated: true, tables: results };
-  });
+      return { tablesCreated: true, tables: results };
+    });
 
-  return successResponse(result, '数据库表创建成功');
-}, { errorMessage: '创建数据库表失败' });
+    return successResponse(result, '数据库表创建成功');
+  },
+  { errorMessage: '创建数据库表失败' }
+);
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
-  const tables = [
-    'sal_delivery',
-    'sal_delivery_detail',
-    'sal_return',
-    'sal_return_detail',
-    'sal_reconciliation',
-    'sal_reconciliation_line',
-    'sal_reconciliation_writeoff',
-    'eqp_equipment',
-    'eqp_maintenance_plan',
-    'eqp_maintenance_record',
-    'prd_die_template',
-    'prd_work_report',
-    'prd_process_route',
-    'prd_process_route_step',
-    'prod_work_order',
-    'prod_work_order_item',
-    'inv_inventory',
-    'inv_outbound_order',
-    'inv_outbound_item',
-    'inv_inventory_transaction',
-    'qc_inspection',
-    'qc_unqualified',
-    'fin_receivable',
-    'fin_payable',
-    'fin_receipt_record',
-    'fin_payment_record',
-    'prd_bom',
-    'prd_bom_detail',
-    'sal_sample_order',
-  ];
+export const GET = withPermission(
+  async (_request: NextRequest, _userInfo) => {
+    const tables = [
+      'sal_delivery',
+      'sal_delivery_detail',
+      'sal_return',
+      'sal_return_detail',
+      'sal_reconciliation',
+      'sal_reconciliation_line',
+      'sal_reconciliation_writeoff',
+      'eqp_equipment',
+      'eqp_maintenance_plan',
+      'eqp_maintenance_record',
+      'prd_die_template',
+      'prd_work_report',
+      'prd_process_route',
+      'prd_process_route_step',
+      'prod_work_order',
+      'prod_work_order_item',
+      'inv_inventory',
+      'inv_outbound_order',
+      'inv_outbound_item',
+      'inv_inventory_transaction',
+      'qc_inspection',
+      'qc_unqualified',
+      'fin_receivable',
+      'fin_payable',
+      'fin_receipt_record',
+      'fin_payment_record',
+      'prd_bom',
+      'prd_bom_detail',
+      'sal_sample_order',
+    ];
 
-  const existing: string[] = [];
-  const missing: string[] = [];
+    const existing: string[] = [];
+    const missing: string[] = [];
 
-  for (const table of tables) {
-    try {
-      await query(`SELECT 1 FROM ${table} LIMIT 1`);
-      existing.push(table);
-    } catch {
-      missing.push(table);
+    for (const table of tables) {
+      try {
+        await query(`SELECT 1 FROM ${table} LIMIT 1`);
+        existing.push(table);
+      } catch {
+        missing.push(table);
+      }
     }
-  }
 
-  return successResponse({ existing, missing, total: tables.length });
-}, { errorMessage: '检查表状态失败' });
+    return successResponse({ existing, missing, total: tables.length });
+  },
+  { errorMessage: '检查表状态失败' }
+);

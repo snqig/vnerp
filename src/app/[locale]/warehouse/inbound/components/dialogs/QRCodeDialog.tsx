@@ -11,6 +11,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
 
+/* eslint-disable @next/next/no-img-element */
+
 interface QRCodeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,7 +33,6 @@ export function QRCodeDialog({ open, onOpenChange, qrCodeDataUrl }: QRCodeDialog
         <div className="py-4 flex flex-col items-center">
           {qrCodeDataUrl && (
             <div className="mb-4 p-2 bg-card border rounded">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={qrCodeDataUrl} alt="QR Code" />
             </div>
           )}

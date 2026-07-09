@@ -107,7 +107,7 @@ function formatWarehouse(warehouse: any): Warehouse {
 }
 
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const keyword = searchParams.get('keyword') || '';
     const type = searchParams.get('type') || '';
@@ -174,7 +174,7 @@ export const GET = withPermission(
 
 // POST - 创建仓库
 export const POST = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body: Warehouse = await request.json();
 
     // 验证必填字段
@@ -240,7 +240,7 @@ export const POST = withPermission(
 
 // PUT - 更新仓库
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body: Warehouse = await request.json();
     const { id } = body;
 
@@ -316,7 +316,7 @@ export const PUT = withPermission(
 
 // DELETE - 删除仓库（软删除）
 export const DELETE = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

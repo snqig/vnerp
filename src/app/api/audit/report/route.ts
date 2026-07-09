@@ -8,12 +8,12 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { generateAuditReport } from '@/lib/audit-logger';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
 
   const startTime = searchParams.get('startTime');
   const endTime = searchParams.get('endTime');
-  const module = searchParams.get('module') || undefined;
+  const moduleName = searchParams.get('module') || undefined;
 
   if (!startTime || !endTime) {
     return errorResponse('请提供开始时间和结束时间', 400, 400);
@@ -22,7 +22,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const report = await generateAuditReport({
     startTime,
     endTime,
-    module,
+    module: moduleName,
   });
 
   return successResponse(report, '审计报告生成成功');

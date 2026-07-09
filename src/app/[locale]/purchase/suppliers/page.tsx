@@ -81,19 +81,19 @@ interface Supplier {
 }
 
 const supplierTypeMap: Record<number, string> = {
-  1: '原料',
-  2: '油墨',
-  3: '辅料',
-  4: '包装',
-  5: '设备',
-  6: '委外',
+  1: tc('text_es4a'),
+  2: tc('text_iz9r'),
+  3: tc('text_oywk'),
+  4: tc('text_evds'),
+  5: tc('text_o9ah'),
+  6: tc('text_frnm'),
 };
 const creditLevelMap: Record<string, { label: string; cls: string }> = {
-  S: { label: '战略', cls: 'bg-yellow-500 text-white' },
-  A: { label: '优选', cls: 'bg-gray-400 text-white' },
-  B: { label: '合格', cls: 'bg-orange-400 text-white' },
-  C: { label: '条件', cls: 'bg-orange-500 text-white' },
-  D: { label: '失格', cls: 'bg-red-500 text-white' },
+  S: { label: tc('text_hbv1'), cls: 'bg-yellow-500 text-white' },
+  A: { label: tc('text_e8s1'), cls: 'bg-gray-400 text-white' },
+  B: { label: tc('text_ev5g'), cls: 'bg-orange-400 text-white' },
+  C: { label: tc('text_i0mt'), cls: 'bg-orange-500 text-white' },
+  D: { label: tc('text_fqqz'), cls: 'bg-red-500 text-white' },
 };
 
 const emptyForm = {
@@ -106,8 +106,8 @@ const emptyForm = {
   contact_email: '',
   address: '',
   credit_level: 'B',
-  settlement_method: '月结',
-  payment_terms: '30天',
+  settlement_method: tc('text_i7yj'),
+  payment_terms: tc('text_1kks'),
   status: 1,
   remark: '',
 };
@@ -118,10 +118,10 @@ export default function SuppliersPage() {
   const tc = useTranslations('Common');
 
   const statusMap: Record<number, { label: string; cls: string }> = {
-  1: { label: tc('enabled'), cls: 'bg-green-100 text-green-800' },
-  0: { label: tc('disabled'), cls: 'bg-yellow-100 text-yellow-800' },
-  2: { label: tc('blacklist'), cls: 'bg-red-100 text-red-800' },
-};
+    1: { label: tc('enabled'), cls: 'bg-green-100 text-green-800' },
+    0: { label: tc('disabled'), cls: 'bg-yellow-100 text-yellow-800' },
+    2: { label: tc('blacklist'), cls: 'bg-red-100 text-red-800' },
+  };
 
   const { companyName } = useCompanyName();
   const { toast } = useToast();
@@ -185,7 +185,7 @@ export default function SuppliersPage() {
       const res = await authFetch(`/api/purchase/suppliers?${params}`);
       const result = await res.json();
       if (result.success) {
-        let data = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        let data = Array.isArray(result.data) ? result.data : result.data?.list || [];
         if (gradeFilter !== 'all') {
           data = data.filter((s: Supplier) => {
             const level = s.credit_level || 'B';
@@ -195,7 +195,7 @@ export default function SuppliersPage() {
         setList(data);
         setTotal(result.pagination?.total || result.data?.total || data.length);
       }
-    } catch (e) {
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -253,7 +253,7 @@ export default function SuppliersPage() {
       } else {
         toast({ title: result.message || tc('error'), variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '保存失败', variant: 'destructive' });
     } finally {
       setSaving(false);
@@ -271,7 +271,7 @@ export default function SuppliersPage() {
       } else {
         toast({ title: result.message || '删除失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '删除失败', variant: 'destructive' });
     }
   };
@@ -508,11 +508,11 @@ export default function SuppliersPage() {
                 </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder={tc("status")} />
+                    <SelectValue placeholder={tc('status')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{tc('allStatus')}</SelectItem>
-                    <SelectItem value="1">{tc("enable")}</SelectItem>
+                    <SelectItem value="1">{tc('enable')}</SelectItem>
                     <SelectItem value="0">{tc('disabled')}</SelectItem>
                     <SelectItem value="2">{tc('blacklist')}</SelectItem>
                   </SelectContent>
@@ -528,7 +528,7 @@ export default function SuppliersPage() {
               <div className="flex gap-1 ml-2">
                 <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1">
                   <Printer className="h-4 w-4" />
-                  打印
+                  {tc('text_h6kd')}
                 </Button>
                 <GlobalExportToolbar
                   filename="供应商列表"
@@ -536,7 +536,12 @@ export default function SuppliersPage() {
                   columns={[
                     { key: 'supplier_code', label: '供应商编号', width: 15 },
                     { key: 'supplier_name', label: '供应商名称', width: 25 },
-                    { key: 'supplier_type', label: tc('type'), width: 10, formatter: (v) => supplierTypeMap[v] || '-' },
+                    {
+                      key: 'supplier_type',
+                      label: tc('type'),
+                      width: 10,
+                      formatter: (v) => supplierTypeMap[v] || '-',
+                    },
                     { key: 'credit_level', label: '等级', width: 8 },
                     {
                       key: 'status',
@@ -549,7 +554,11 @@ export default function SuppliersPage() {
                     { key: 'contact_email', label: tc('email'), width: 20 },
                     { key: 'address', label: tc('address'), width: 30 },
                   ]}
-                  data={selectedIds.length > 0 ? list.filter((s) => selectedIds.includes(s.id)) : sortedList}
+                  data={
+                    selectedIds.length > 0
+                      ? list.filter((s) => selectedIds.includes(s.id))
+                      : sortedList
+                  }
                 />
               </div>
             </div>
@@ -558,13 +567,13 @@ export default function SuppliersPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>供应商列表</CardTitle>
+            <CardTitle>{tc('text_vm0qgy')}</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                <span className="ml-2 text-gray-400">加载中...</span>
+                <span className="ml-2 text-gray-400">{tc('text_27k1ha')}</span>
               </div>
             ) : (
               <Table>
@@ -581,7 +590,8 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('supplier_code')}
                     >
                       <span className="inline-flex items-center">
-                        供应商编号{getSortIcon('supplier_code')}
+                        {tc('text_vltdaq')}
+                        {getSortIcon('supplier_code')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -589,7 +599,8 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('supplier_name')}
                     >
                       <span className="inline-flex items-center">
-                        供应商名称{getSortIcon('supplier_name')}
+                        {tc('text_vm0hbk')}
+                        {getSortIcon('supplier_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -597,7 +608,8 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('supplier_type')}
                     >
                       <span className="inline-flex items-center">
-                        类型{getSortIcon('supplier_type')}
+                        {tc('text_lnjk')}
+                        {getSortIcon('supplier_type')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -605,21 +617,26 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('credit_level')}
                     >
                       <span className="inline-flex items-center">
-                        等级{getSortIcon('credit_level')}
+                        {tc('text_lny6')}
+                        {getSortIcon('credit_level')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('status')}
                     >
-                      <span className="inline-flex items-center">状态{getSortIcon('status')}</span>
+                      <span className="inline-flex items-center">
+                        {tc('text_k1e3')}
+                        {getSortIcon('status')}
+                      </span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('contact_name')}
                     >
                       <span className="inline-flex items-center">
-                        联系人{getSortIcon('contact_name')}
+                        {tc('text_jed0z')}
+                        {getSortIcon('contact_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -627,17 +644,18 @@ export default function SuppliersPage() {
                       onClick={() => handleSort('contact_phone')}
                     >
                       <span className="inline-flex items-center">
-                        联系电话{getSortIcon('contact_phone')}
+                        {tc('text_gpkj3j')}
+                        {getSortIcon('contact_phone')}
                       </span>
                     </TableHead>
-                    <TableHead className="text-right">{tc("actions")}</TableHead>
+                    <TableHead className="text-right">{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {list.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                        暂无数据
+                        {tc('text_dcv57g')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -704,7 +722,11 @@ export default function SuppliersPage() {
               </Table>
             )}
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-gray-500">共 {total} 条</span>
+              <span className="text-sm text-gray-500">
+                {tc('text_g35')}
+                {total}
+                {tc('text_kf5')}
+              </span>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -712,7 +734,7 @@ export default function SuppliersPage() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  上一页
+                  {tc('text_btlof')}
                 </Button>
                 <Button
                   size="sm"
@@ -720,7 +742,7 @@ export default function SuppliersPage() {
                   disabled={page * 20 >= total}
                   onClick={() => setPage((p) => p + 1)}
                 >
-                  下一页
+                  {tc('text_btmf4')}
                 </Button>
               </div>
             </div>
@@ -734,7 +756,7 @@ export default function SuppliersPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
-                <Label>供应商编码 *</Label>
+                <Label>{tc('text_s0hk76')}</Label>
                 <Input
                   value={form.supplier_code}
                   onChange={(e) => setForm({ ...form, supplier_code: e.target.value })}
@@ -743,7 +765,7 @@ export default function SuppliersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>供应商全称 *</Label>
+                <Label>{tc('text_m9cun3')}</Label>
                 <Input
                   value={form.supplier_name}
                   onChange={(e) => setForm({ ...form, supplier_name: e.target.value })}
@@ -751,7 +773,7 @@ export default function SuppliersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>供应商简称</Label>
+                <Label>{tc('text_vltrr7')}</Label>
                 <Input
                   value={form.short_name}
                   onChange={(e) => setForm({ ...form, short_name: e.target.value })}
@@ -759,7 +781,7 @@ export default function SuppliersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>供应商类型</Label>
+                <Label>{tc('text_vltsjn')}</Label>
                 <Select
                   value={String(form.supplier_type)}
                   onValueChange={(v) => setForm({ ...form, supplier_type: Number(v) })}
@@ -768,17 +790,17 @@ export default function SuppliersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">原料</SelectItem>
-                    <SelectItem value="2">油墨</SelectItem>
-                    <SelectItem value="3">辅料</SelectItem>
-                    <SelectItem value="4">包装</SelectItem>
-                    <SelectItem value="5">{tc("equipment")}</SelectItem>
-                    <SelectItem value="6">委外</SelectItem>
+                    <SelectItem value="1">{tc('text_es4a')}</SelectItem>
+                    <SelectItem value="2">{tc('text_iz9r')}</SelectItem>
+                    <SelectItem value="3">{tc('text_oywk')}</SelectItem>
+                    <SelectItem value="4">{tc('text_evds')}</SelectItem>
+                    <SelectItem value="5">{tc('equipment')}</SelectItem>
+                    <SelectItem value="6">{tc('text_frnm')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>联系人</Label>
+                <Label>{tc('text_jed0z')}</Label>
                 <Input
                   value={form.contact_name}
                   onChange={(e) => setForm({ ...form, contact_name: e.target.value })}
@@ -786,7 +808,7 @@ export default function SuppliersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc("phone")}</Label>
+                <Label>{tc('phone')}</Label>
                 <Input
                   value={form.contact_phone}
                   onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
@@ -794,15 +816,15 @@ export default function SuppliersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc("email")}</Label>
+                <Label>{tc('email')}</Label>
                 <Input
                   value={form.contact_email}
                   onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
-                  placeholder={tc("enterEmail")}
+                  placeholder={tc('enterEmail')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>信用等级</Label>
+                <Label>{tc('text_akgm5h')}</Label>
                 <Select
                   value={form.credit_level}
                   onValueChange={(v) => setForm({ ...form, credit_level: v })}
@@ -811,16 +833,16 @@ export default function SuppliersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="S">战略(S)</SelectItem>
-                    <SelectItem value="A">优选(A)</SelectItem>
-                    <SelectItem value="B">合格(B)</SelectItem>
-                    <SelectItem value="C">条件(C)</SelectItem>
-                    <SelectItem value="D">失格(D)</SelectItem>
+                    <SelectItem value="S">{tc('text_ru0etr')}</SelectItem>
+                    <SelectItem value="A">{tc('text_rqcwv5')}</SelectItem>
+                    <SelectItem value="B">{tc('text_dg2w6d')}</SelectItem>
+                    <SelectItem value="C">{tc('text_c0l8br')}</SelectItem>
+                    <SelectItem value="D">{tc('text_6q9bpe')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>结算方式</Label>
+                <Label>{tc('text_gighi2')}</Label>
                 <Select
                   value={form.settlement_method || '月结'}
                   onValueChange={(v) => setForm({ ...form, settlement_method: v })}
@@ -829,16 +851,16 @@ export default function SuppliersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="月结">月结</SelectItem>
-                    <SelectItem value="现结">现结</SelectItem>
-                    <SelectItem value="预付">预付</SelectItem>
-                    <SelectItem value="货到付款">货到付款</SelectItem>
-                    <SelectItem value="分期付款">分期付款</SelectItem>
+                    <SelectItem value="月结">{tc('text_i7yj')}</SelectItem>
+                    <SelectItem value="现结">{tc('text_kdgj')}</SelectItem>
+                    <SelectItem value="预付">{tc('text_qdhw')}</SelectItem>
+                    <SelectItem value="货到付款">{tc('text_i5cgen')}</SelectItem>
+                    <SelectItem value="分期付款">{tc('text_arxhq7')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>付款条件</Label>
+                <Label>{tc('text_ae7hcr')}</Label>
                 <Select
                   value={form.payment_terms || '30天'}
                   onValueChange={(v) => setForm({ ...form, payment_terms: v })}
@@ -847,25 +869,25 @@ export default function SuppliersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="货到付款">货到付款</SelectItem>
-                    <SelectItem value="15天">15天</SelectItem>
-                    <SelectItem value="30天">30天</SelectItem>
-                    <SelectItem value="60天">60天</SelectItem>
-                    <SelectItem value="90天">90天</SelectItem>
-                    <SelectItem value="120天">120天</SelectItem>
+                    <SelectItem value="货到付款">{tc('text_i5cgen')}</SelectItem>
+                    <SelectItem value="15天">{tc('text_1j7p')}</SelectItem>
+                    <SelectItem value="30天">{tc('text_1kks')}</SelectItem>
+                    <SelectItem value="60天">{tc('text_1msv')}</SelectItem>
+                    <SelectItem value="90天">{tc('text_1p0y')}</SelectItem>
+                    <SelectItem value="120天">{tc('text_wu6y')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2 col-span-2">
-                <Label>{tc("address")}</Label>
+                <Label>{tc('address')}</Label>
                 <Input
                   value={form.address}
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  placeholder={tc("enterAddress")}
+                  placeholder={tc('enterAddress')}
                 />
               </div>
               <div className="space-y-2 col-span-2">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Input
                   value={form.remark}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -875,10 +897,11 @@ export default function SuppliersPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}保存
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {tc('text_e32z')}
               </Button>
             </DialogFooter>
           </DialogContent>

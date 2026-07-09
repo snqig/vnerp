@@ -31,31 +31,29 @@ interface Company {
 }
 
 // GET - 获取企业信息
-export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type');
+export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
+  const { searchParams } = new URL(request.url);
+  const type = searchParams.get('type');
 
-    if (type === 'company') {
-      const company = await queryOne<Company>(
-        `SELECT
+  if (type === 'company') {
+    const company = await queryOne<Company>(
+      `SELECT
         id, full_name, short_name, code, legal_person, reg_address,
         contact_phone, email, tax_no, bank_name, bank_account,
         website, fax, postcode, description, create_time, update_time
       FROM sys_company
       WHERE id = 1`
-      );
+    );
 
-      return successResponse(company);
-    }
-
-    return commonErrors.badRequest('无效的请求类型');
+    return successResponse(company);
   }
-);
+
+  return commonErrors.badRequest('无效的请求类型');
+});
 
 // PUT - 更新企业信息
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body: Company = await request.json();
 
     // 检查企业信息是否存在

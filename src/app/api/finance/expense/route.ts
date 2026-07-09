@@ -1,9 +1,5 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-  validateRequestBody,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
@@ -13,40 +9,44 @@ import { query, execute } from '@/lib/db';
  */
 
 // 获取报销单列表
-export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status') || '';
-    const expenseType = searchParams.get('expenseType') || '';
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '20');
+export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get('status') || '';
+  const expenseType = searchParams.get('expenseType') || '';
+  const page = parseInt(searchParams.get('page') || '1');
+  const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
-    let where = 'WHERE e.deleted = 0';
-    const params: any[] = [];
+  let where = 'WHERE e.deleted = 0';
+  const params: any[] = [];
 
-    if (status) { where += ' AND e.status = ?'; params.push(status); }
-    if (expenseType) { where += ' AND e.expense_type = ?'; params.push(expenseType); }
+  if (status) {
+    where += ' AND e.status = ?';
+    params.push(status);
+  }
+  if (expenseType) {
+    where += ' AND e.expense_type = ?';
+    params.push(expenseType);
+  }
 
-    const countRows: any = await query(
-      `SELECT COUNT(*) as total FROM finance_expense e ${where}`,
-      params
-    );
-    const total = countRows[0]?.total || 0;
+  const countRows: any = await query(
+    `SELECT COUNT(*) as total FROM finance_expense e ${where}`,
+    params
+  );
+  const total = countRows[0]?.total || 0;
 
-    const rows: any = await query(
-      `SELECT e.*, u.real_name as applicant_name, a.real_name as approver_name
+  const rows: any = await query(
+    `SELECT e.*, u.real_name as applicant_name, a.real_name as approver_name
        FROM finance_expense e
        LEFT JOIN sys_user u ON e.applicant_id = u.id
        LEFT JOIN sys_user a ON e.approve_by = a.id
        ${where}
        ORDER BY e.create_time DESC
        LIMIT ? OFFSET ?`,
-      [...params, pageSize, (page - 1) * pageSize]
-    );
+    [...params, pageSize, (page - 1) * pageSize]
+  );
 
-    return successResponse({ list: rows, total, page, pageSize });
-  }
-);
+  return successResponse({ list: rows, total, page, pageSize });
+});
 
 // 创建报销单
 export const POST = withPermission(
@@ -73,7 +73,15 @@ export const POST = withPermission(
       `INSERT INTO finance_expense
        (expense_no, applicant_id, expense_type, amount, expense_date, description, status, create_by, create_time, update_time)
        VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, NOW(), NOW())`,
-      [expenseNo, userInfo.userId, expense_type, amount, expense_date, description || null, userInfo.userId]
+      [
+        expenseNo,
+        userInfo.userId,
+        expense_type,
+        amount,
+        expense_date,
+        description || null,
+        userInfo.userId,
+      ]
     );
 
     const expenseId = result.insertId;
@@ -86,7 +94,14 @@ export const POST = withPermission(
           `INSERT INTO finance_expense_item
            (expense_id, line_no, expense_category, description, amount, remark)
            VALUES (?, ?, ?, ?, ?, ?)`,
-          [expenseId, i + 1, item.category || '', item.description || '', item.amount || 0, item.remark || null]
+          [
+            expenseId,
+            i + 1,
+            item.category || '',
+            item.description || '',
+            item.amount || 0,
+            item.remark || null,
+          ]
         );
       }
     }

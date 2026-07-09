@@ -7,7 +7,7 @@ import { withPermission } from '@/lib/api-permissions';
  * 库存周转率报表
  * 按品类/仓库统计库存周转情况
  */
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');

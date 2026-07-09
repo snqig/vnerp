@@ -60,7 +60,6 @@ const initialForm: VehicleForm = {
 };
 
 export default function NewVehiclePage() {
-
   // 翻译钩子
   const t = useTranslations('Delivery');
   const tc = useTranslations('Common');
@@ -93,7 +92,7 @@ export default function NewVehiclePage() {
       } else {
         toast.error(result.message || t('createFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('createFailed'));
     } finally {
       setSaving(false);

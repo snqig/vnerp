@@ -4,7 +4,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo: UserInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo: UserInfo) => {
   const { searchParams } = new URL(request.url);
   const parentId = searchParams.get('parentId');
   const page = parseInt(searchParams.get('page') || '1');
@@ -53,7 +53,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo: UserInf
 
 // 创建产品分类
 export const POST = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
     const {
       categoryCode,
@@ -94,7 +94,7 @@ export const POST = withPermission(
 
 // 更新产品分类
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
     const { id, categoryName, sortOrder, description, status } = body;
 
@@ -142,7 +142,7 @@ export const PUT = withPermission(
 
 // 删除产品分类
 export const DELETE = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

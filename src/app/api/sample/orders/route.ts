@@ -11,7 +11,7 @@ import { withPermission } from '@/lib/api-permissions';
 import { generateDocumentNo } from '@/lib/document-numbering';
 
 // 获取打样订单列表
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const customerName = searchParams.get('customerName') || '';
@@ -97,134 +97,143 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // 创建打样订单
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, [
-    'notify_date',
-    'customer_name',
-    'product_name',
-    'material_no',
-  ]);
+    // 验证必填字段
+    const validation = validateRequestBody(body, [
+      'notify_date',
+      'customer_name',
+      'product_name',
+      'material_no',
+    ]);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const {
-    notify_date,
-    customer_name,
-    product_name,
-    material_no,
-    version,
-    size_spec,
-    material_spec,
-    quantity,
-    customer_require_date,
-    remark,
-  } = body;
-
-  const orderNo = await generateDocumentNo('sample');
-
-  const result = await query(
-    `INSERT INTO sal_sample_order 
-     (order_no, notify_date, customer_name, product_name, material_no, version, 
-      size_spec, material_spec, quantity, customer_require_date, 
-      delivery_status, remark, create_time) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, NOW())`,
-    [
-      orderNo,
+    const {
       notify_date,
       customer_name,
       product_name,
       material_no,
-      version || 'A',
-      size_spec || '',
-      material_spec || '',
-      quantity || 0,
-      customer_require_date || null,
-      remark || '',
-    ]
-  );
+      version,
+      size_spec,
+      material_spec,
+      quantity,
+      customer_require_date,
+      remark,
+    } = body;
 
-  const insertId = (result as any).insertId;
+    const orderNo = await generateDocumentNo('sample');
 
-  return successResponse({ id: insertId, order_no: orderNo }, '打样订单创建成功');
-}, { logTitle: '创建打样订单' });
+    const result = await query(
+      `INSERT INTO sal_sample_order 
+     (order_no, notify_date, customer_name, product_name, material_no, version, 
+      size_spec, material_spec, quantity, customer_require_date, 
+      delivery_status, remark, create_time) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, NOW())`,
+      [
+        orderNo,
+        notify_date,
+        customer_name,
+        product_name,
+        material_no,
+        version || 'A',
+        size_spec || '',
+        material_spec || '',
+        quantity || 0,
+        customer_require_date || null,
+        remark || '',
+      ]
+    );
+
+    const insertId = (result as any).insertId;
+
+    return successResponse({ id: insertId, order_no: orderNo }, '打样订单创建成功');
+  },
+  { logTitle: '创建打样订单' }
+);
 
 // 更新打样订单
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, ...updateData } = body;
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { id, ...updateData } = body;
 
-  if (!id) {
-    return errorResponse('打样订单ID不能为空', 400, 400);
-  }
-
-  // 查询打样订单
-  const orders = await query('SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0', [id]);
-
-  if (!orders || (orders as any[]).length === 0) {
-    return commonErrors.notFound('打样订单不存在');
-  }
-
-  const updateFields: string[] = [];
-  const updateParams: any[] = [];
-
-  const fieldMapping: { [key: string]: string } = {
-    notify_date: 'notify_date',
-    customer_name: 'customer_name',
-    product_name: 'product_name',
-    material_no: 'material_no',
-    version: 'version',
-    size_spec: 'size_spec',
-    material_spec: 'material_spec',
-    quantity: 'quantity',
-    customer_require_date: 'customer_require_date',
-    actual_delivery_date: 'actual_delivery_date',
-    delivery_status: 'delivery_status',
-    remark: 'remark',
-  };
-
-  for (const [key, value] of Object.entries(updateData)) {
-    if (fieldMapping[key] && value !== undefined) {
-      updateFields.push(`${fieldMapping[key]} = ?`);
-      updateParams.push(value);
+    if (!id) {
+      return errorResponse('打样订单ID不能为空', 400, 400);
     }
-  }
 
-  if (updateFields.length === 0) {
-    return errorResponse('没有要更新的字段', 400, 400);
-  }
+    // 查询打样订单
+    const orders = await query('SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0', [id]);
 
-  updateParams.push(id);
-  await query(
-    `UPDATE sal_sample_order SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
-    updateParams
-  );
+    if (!orders || (orders as any[]).length === 0) {
+      return commonErrors.notFound('打样订单不存在');
+    }
 
-  return successResponse({ id }, '打样订单更新成功');
-}, { logTitle: '更新打样订单' });
+    const updateFields: string[] = [];
+    const updateParams: any[] = [];
+
+    const fieldMapping: { [key: string]: string } = {
+      notify_date: 'notify_date',
+      customer_name: 'customer_name',
+      product_name: 'product_name',
+      material_no: 'material_no',
+      version: 'version',
+      size_spec: 'size_spec',
+      material_spec: 'material_spec',
+      quantity: 'quantity',
+      customer_require_date: 'customer_require_date',
+      actual_delivery_date: 'actual_delivery_date',
+      delivery_status: 'delivery_status',
+      remark: 'remark',
+    };
+
+    for (const [key, value] of Object.entries(updateData)) {
+      if (fieldMapping[key] && value !== undefined) {
+        updateFields.push(`${fieldMapping[key]} = ?`);
+        updateParams.push(value);
+      }
+    }
+
+    if (updateFields.length === 0) {
+      return errorResponse('没有要更新的字段', 400, 400);
+    }
+
+    updateParams.push(id);
+    await query(
+      `UPDATE sal_sample_order SET ${updateFields.join(', ')}, update_time = NOW() WHERE id = ?`,
+      updateParams
+    );
+
+    return successResponse({ id }, '打样订单更新成功');
+  },
+  { logTitle: '更新打样订单' }
+);
 
 // 删除打样订单
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return errorResponse('打样订单ID不能为空', 400, 400);
-  }
+    if (!id) {
+      return errorResponse('打样订单ID不能为空', 400, 400);
+    }
 
-  // 查询打样订单
-  const orders = await query('SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0', [id]);
+    // 查询打样订单
+    const orders = await query('SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0', [id]);
 
-  if (!orders || (orders as any[]).length === 0) {
-    return commonErrors.notFound('打样订单不存在');
-  }
+    if (!orders || (orders as any[]).length === 0) {
+      return commonErrors.notFound('打样订单不存在');
+    }
 
-  // 软删除
-  await query('UPDATE sal_sample_order SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
+    // 软删除
+    await query('UPDATE sal_sample_order SET deleted = 1, update_time = NOW() WHERE id = ?', [id]);
 
-  return successResponse(null, '打样订单删除成功');
-}, { logTitle: '删除打样订单' });
+    return successResponse(null, '打样订单删除成功');
+  },
+  { logTitle: '删除打样订单' }
+);

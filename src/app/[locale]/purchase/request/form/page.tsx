@@ -34,7 +34,9 @@ const generateOrderNo = () => {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, '0');
   return `PR${year}${month}${day}${random}`;
 };
 
@@ -45,7 +47,18 @@ const formatDateCN = (date: Date) => {
   return `${year}年${month}月${day}日`;
 };
 
-const commonUnits = ['个', '件', '套', '张', '米', '千克', '升', '包', '箱', '卷'];
+const commonUnits = [
+  tc('text_ffu'),
+  tc('text_fli'),
+  tc('text_hnb'),
+  tc('text_isg'),
+  tc('text_okz'),
+  tc('text_elwo'),
+  tc('text_gg7'),
+  tc('text_ged'),
+  tc('text_ofl'),
+  tc('text_ghj'),
+];
 
 interface Department {
   id: number;
@@ -130,15 +143,15 @@ export default function PurchaseRequestFormPage() {
   });
 
   const STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: tc('draft'), color: '#6b7280' },
-  1: { label: '已提交', color: '#2563eb' },
-  2: { label: '审校中', color: '#d97706' },
-  3: { label: '审校通过', color: '#7c3aed' },
-  4: { label: '已批准', color: '#059669' },
-  5: { label: tc('convertedToPurchase'), color: '#0891b2' },
-  6: { label: '已驳回', color: '#dc2626' },
-  9: { label: tc('closed'), color: '#9ca3af' },
-};
+    0: { label: tc('draft'), color: '#6b7280' },
+    1: { label: '已提交', color: '#2563eb' },
+    2: { label: '审校中', color: '#d97706' },
+    3: { label: '审校通过', color: '#7c3aed' },
+    4: { label: '已批准', color: '#059669' },
+    5: { label: tc('convertedToPurchase'), color: '#0891b2' },
+    6: { label: '已驳回', color: '#dc2626' },
+    9: { label: tc('closed'), color: '#9ca3af' },
+  };
 
   const router = useRouter();
   const { companyName } = useCompanyName();
@@ -401,7 +414,7 @@ export default function PurchaseRequestFormPage() {
       } else {
         toast({ title: result.message || '保存失败', variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '保存失败', variant: 'destructive' });
     }
   };
@@ -530,7 +543,7 @@ export default function PurchaseRequestFormPage() {
             <Button variant="outline" size="icon" onClick={() => router.back()}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-xl font-bold">请购单录入</h1>
+            <h1 className="text-xl font-bold">{tc('text_2tvbip')}</h1>
             {editingId && (
               <span
                 style={{
@@ -549,25 +562,25 @@ export default function PurchaseRequestFormPage() {
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleOpenList}>
               <List className="h-4 w-4 mr-1" />
-              历史记录
+              {tc('text_aw7utt')}
             </Button>
             <Button variant="outline" size="sm" onClick={resetForm}>
-              新建
+              {tc('text_htfu')}
             </Button>
             <Button variant="outline" size="sm" onClick={handlePrint}>
               <Printer className="h-4 w-4 mr-1" />
-              打印(A5横向)
+              {tc('text_35em1p')}
             </Button>
             {canEdit && (
               <Button variant="outline" size="sm" onClick={() => handleSave(0)}>
                 <Save className="h-4 w-4 mr-1" />
-                保存草稿
+                {tc('text_agnaep')}
               </Button>
             )}
             {canSubmit && (
               <Button size="sm" onClick={() => handleSave(1)}>
                 <Send className="h-4 w-4 mr-1" />
-                提交审校
+                {tc('text_cx6elw')}
               </Button>
             )}
           </div>
@@ -634,7 +647,7 @@ export default function PurchaseRequestFormPage() {
                 padding: '6px 28px',
               }}
             >
-              请购单
+              {tc('text_l6i2n')}
             </span>
           </div>
 
@@ -649,7 +662,7 @@ export default function PurchaseRequestFormPage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontWeight: 500 }}>
-              <label style={{ fontWeight: 700, color: '#0f3b5c' }}>部门：</label>
+              <label style={{ fontWeight: 700, color: '#0f3b5c' }}>{tc('text_lyzh6')}</label>
               <Select
                 value={form.department_id ? String(form.department_id) : ''}
                 onValueChange={(v) => {
@@ -814,7 +827,7 @@ export default function PurchaseRequestFormPage() {
                           }}
                         >
                           <Search style={{ width: '14px', height: '14px' }} />
-                          选择物料
+                          {tc('text_il1vtc')}
                         </button>
                       )}
                       {item.material_code && canEdit && (
@@ -829,7 +842,7 @@ export default function PurchaseRequestFormPage() {
                             padding: '2px 4px',
                           }}
                         >
-                          更换
+                          {tc('text_i226')}
                         </button>
                       )}
                     </td>
@@ -1036,10 +1049,10 @@ export default function PurchaseRequestFormPage() {
                 boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
               }}
             >
-              + 添加物料行
+              {tc('text_lr02hu')}
             </button>
             <div style={{ fontSize: '13px', color: '#6b7280' }}>
-              合计金额：
+              {tc('text_8d9uh7')}
               <span style={{ color: '#059669', fontWeight: 700, fontSize: '16px' }}>
                 ¥
                 {purchaseItems
@@ -1072,7 +1085,7 @@ export default function PurchaseRequestFormPage() {
                 fontWeight: 600,
               }}
             >
-              表单编号：DC-A-03A
+              {tc('text_rssdsg')}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '22px', alignItems: 'center' }}>
               {[
@@ -1126,22 +1139,30 @@ export default function PurchaseRequestFormPage() {
         <Dialog open={showListDialog} onOpenChange={setShowListDialog}>
           <DialogContent style={{ maxWidth: '900px', maxHeight: '80vh' }}>
             <DialogHeader>
-              <DialogTitle>历史请购单记录</DialogTitle>
+              <DialogTitle>{tc('text_wjbz60')}</DialogTitle>
             </DialogHeader>
             <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
               {loadingRecords ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
-                  加载中...
+                  {tc('text_27k1ha')}
                 </div>
               ) : savedRecords.length === 0 ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
-                  暂无记录
+                  {tc('text_dd1mmb')}
                 </div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
                     <tr>
-                      {['单号', '部门', '申请人', tc('date'), tc('status'), tc('amount'), tc('operation')].map((h) => (
+                      {[
+                        '单号',
+                        '部门',
+                        '申请人',
+                        tc('date'),
+                        tc('status'),
+                        tc('amount'),
+                        tc('operation'),
+                      ].map((h) => (
                         <th
                           key={h}
                           style={{
@@ -1207,7 +1228,7 @@ export default function PurchaseRequestFormPage() {
                               fontWeight: 600,
                             }}
                           >
-                            编辑
+                            {tc('text_mekb')}
                           </button>
                         </td>
                       </tr>

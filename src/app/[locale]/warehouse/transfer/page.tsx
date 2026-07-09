@@ -151,8 +151,7 @@ export default function TransferPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchWarehouses = async () => {
@@ -162,8 +161,7 @@ export default function TransferPage() {
       if (result.success) {
         setWarehouses(result.data?.map((w: any) => ({ id: w.id, name: w.name })) || []);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchLocations = async (whId: number) => {
@@ -171,11 +169,10 @@ export default function TransferPage() {
       const res = await authFetch(`/api/warehouse/locations?wh_id=${whId}`);
       const result = await res.json();
       if (result.success) {
-        const locationsList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const locationsList = Array.isArray(result.data) ? result.data : result.data?.list || [];
         setLocations(locationsList);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -217,7 +214,7 @@ export default function TransferPage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -239,7 +236,7 @@ export default function TransferPage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -255,7 +252,7 @@ export default function TransferPage() {
       } else {
         toast({ title: t('deleteFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (err) {
+    } catch {
       toast({ title: t('deleteFailed'), variant: 'destructive' });
     }
   };
@@ -266,13 +263,14 @@ export default function TransferPage() {
       const res = await authFetch(`/api/warehouse/transfer/${transfer.id}/items`);
       const result = await res.json();
       if (result.success) {
-        const transferitemsList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const transferitemsList = Array.isArray(result.data)
+          ? result.data
+          : result.data?.list || [];
         setTransferItems(transferitemsList);
         setScanItems([]);
         setShowOutboundDialog(true);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const executeOutbound = async () => {
@@ -295,7 +293,7 @@ export default function TransferPage() {
       } else {
         toast({ title: t('outboundFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (err) {
+    } catch {
       toast({ title: t('outboundFailed'), variant: 'destructive' });
     }
   };
@@ -306,13 +304,14 @@ export default function TransferPage() {
       const res = await authFetch(`/api/warehouse/transfer/${transfer.id}/items`);
       const result = await res.json();
       if (result.success) {
-        const transferitemsList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const transferitemsList = Array.isArray(result.data)
+          ? result.data
+          : result.data?.list || [];
         setTransferItems(transferitemsList);
         setScanItems([]);
         setShowInboundDialog(true);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const openDetailDialog = async (transfer: TransferOrder) => {
@@ -321,12 +320,11 @@ export default function TransferPage() {
       const res = await authFetch(`/api/warehouse/transfer/${transfer.id}/items`);
       const result = await res.json();
       if (result.success) {
-        const detailitemsList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const detailitemsList = Array.isArray(result.data) ? result.data : result.data?.list || [];
         setDetailItems(detailitemsList);
         setShowDetailDialog(true);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const executeInbound = async () => {
@@ -349,7 +347,7 @@ export default function TransferPage() {
       } else {
         toast({ title: t('inboundFailed'), description: result.message, variant: 'destructive' });
       }
-    } catch (err) {
+    } catch {
       toast({ title: t('inboundFailed'), variant: 'destructive' });
     }
   };
@@ -440,7 +438,7 @@ export default function TransferPage() {
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchOrderNo")}
+                placeholder={tc('searchOrderNo')}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -474,17 +472,19 @@ export default function TransferPage() {
                     />
                   </TableHead>
                   <SortableHeader field="transfer_no">{t('transferNo')}</SortableHeader>
-                  <SortableHeader field="type">{tc("type")}</SortableHeader>
-                  <SortableHeader field="from_warehouse_name">{t('sourceWarehouse')}</SortableHeader>
+                  <SortableHeader field="type">{tc('type')}</SortableHeader>
+                  <SortableHeader field="from_warehouse_name">
+                    {t('sourceWarehouse')}
+                  </SortableHeader>
                   <SortableHeader field="to_warehouse_name">{t('targetWarehouse')}</SortableHeader>
                   <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
-                    {tc("status")}
+                    {tc('status')}
                   </TableHead>
                   <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
                     {t('applicant')}
                   </TableHead>
                   <TableHead className="border border-border bg-muted/50 text-muted-foreground text-center">
-                    {tc("actions")}
+                    {tc('actions')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -691,9 +691,7 @@ export default function TransferPage() {
               {editItem.type === 1 && (
                 <>
                   <div>
-                    <Label>
-                      {t('outLocationRequired')}
-                    </Label>
+                    <Label>{t('outLocationRequired')}</Label>
                     <Select
                       value={editItem.from_location || ''}
                       onValueChange={(v) => setEditItem({ ...editItem, from_location: v })}
@@ -711,9 +709,7 @@ export default function TransferPage() {
                     </Select>
                   </div>
                   <div>
-                    <Label>
-                      {t('inLocationRequired')}
-                    </Label>
+                    <Label>{t('inLocationRequired')}</Label>
                     <Select
                       value={editItem.to_location || ''}
                       onValueChange={(v) => setEditItem({ ...editItem, to_location: v })}
@@ -753,14 +749,14 @@ export default function TransferPage() {
                 </Select>
               </div>
               <div>
-                <Label>{tc("applicant")}</Label>
+                <Label>{tc('applicant')}</Label>
                 <UserSelect
                   value={editItem.applicant_id ? String(editItem.applicant_id) : ''}
                   onChange={(v) => setEditItem({ ...editItem, applicant_id: Number(v) })}
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Input
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -771,7 +767,7 @@ export default function TransferPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -802,12 +798,12 @@ export default function TransferPage() {
                         <Input
                           value={item.qr_code}
                           onChange={(e) => updateScanItem(index, 'qr_code', e.target.value)}
-                          placeholder={tc("scanOrEnterQrCode")}
+                          placeholder={tc('scanOrEnterQrCode')}
                           className="font-mono text-xs"
                         />
                       </div>
                       <div className="col-span-3">
-                        <Label className="text-xs">{tc("quantity")}</Label>
+                        <Label className="text-xs">{tc('quantity')}</Label>
                         <Input
                           type="number"
                           value={item.quantity || ''}
@@ -881,12 +877,12 @@ export default function TransferPage() {
                         <Input
                           value={item.qr_code}
                           onChange={(e) => updateScanItem(index, 'qr_code', e.target.value)}
-                          placeholder={tc("scanOrEnterQrCode")}
+                          placeholder={tc('scanOrEnterQrCode')}
                           className="font-mono text-xs"
                         />
                       </div>
                       <div className="col-span-3">
-                        <Label className="text-xs">{tc("quantity")}</Label>
+                        <Label className="text-xs">{tc('quantity')}</Label>
                         <Input
                           type="number"
                           value={item.quantity || ''}
@@ -937,13 +933,15 @@ export default function TransferPage() {
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto" resizable>
             <DialogHeader>
-              <DialogTitle>{t('transferDetailTitle', { transferNo: currentTransfer?.transfer_no || '' })}</DialogTitle>
+              <DialogTitle>
+                {t('transferDetailTitle', { transferNo: currentTransfer?.transfer_no || '' })}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {currentTransfer && (
                 <div className="grid grid-cols-4 gap-4 p-3 border rounded bg-muted/30 text-sm">
                   <div>
-                    <span className="text-muted-foreground">{tc("type")}：</span>
+                    <span className="text-muted-foreground">{tc('type')}：</span>
                     {TYPE_MAP[currentTransfer.type]}
                   </div>
                   <div>
@@ -955,7 +953,7 @@ export default function TransferPage() {
                     {currentTransfer.to_warehouse_name || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc("status")}：</span>
+                    <span className="text-muted-foreground">{tc('status')}：</span>
                     <Badge variant={(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).variant}>
                       {(STATUS_MAP[currentTransfer.status] || STATUS_MAP[0]).label}
                     </Badge>
@@ -967,11 +965,11 @@ export default function TransferPage() {
                   <TableRow>
                     <TableHead>{t('materialName')}</TableHead>
                     <TableHead>{t('qrCodeCol')}</TableHead>
-                    <TableHead>{tc("batchNo")}</TableHead>
+                    <TableHead>{tc('batchNo')}</TableHead>
                     <TableHead>{t('qtyPlan')}</TableHead>
-                    <TableHead>{tc("stockedOut")}</TableHead>
-                    <TableHead>{tc("stockedIn")}</TableHead>
-                    <TableHead>{tc("unit")}</TableHead>
+                    <TableHead>{tc('stockedOut')}</TableHead>
+                    <TableHead>{tc('stockedIn')}</TableHead>
+                    <TableHead>{tc('unit')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

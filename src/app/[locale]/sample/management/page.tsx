@@ -199,11 +199,11 @@ export default function SampleManagementPage() {
       const res = await authFetch(`/api/sample/orders?${params}`);
       const result = await res.json();
       if (result.success) {
-        const sampleList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const sampleList = Array.isArray(result.data) ? result.data : result.data?.list || [];
         setList(sampleList);
         setTotal(result.pagination?.total || result.data?.total || sampleList.length);
       }
-    } catch (e) {
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -337,14 +337,14 @@ export default function SampleManagementPage() {
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder={tc("status")} />
+                    <SelectValue placeholder={tc('status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">{tc("all")}</SelectItem>
+                    <SelectItem value="all">{tc('all')}</SelectItem>
                     <SelectItem value="pending">{t('pendingApproval')}</SelectItem>
                     <SelectItem value="approved">{t('approved')}</SelectItem>
                     <SelectItem value="producing">{t('producing')}</SelectItem>
-                    <SelectItem value="completed">{tc("completed")}</SelectItem>
+                    <SelectItem value="completed">{tc('completed')}</SelectItem>
                     <SelectItem value="delivered">{t('delivered')}</SelectItem>
                     <SelectItem value="signed">{t('signed')}</SelectItem>
                   </SelectContent>
@@ -358,11 +358,30 @@ export default function SampleManagementPage() {
                     { key: 'order_no', label: t('sampleNo'), width: 18 },
                     { key: 'product_name', label: t('productName'), width: 25 },
                     { key: 'customer_name', label: tc('customer'), width: 20 },
-                    { key: 'notify_date', label: t('notifyDate'), width: 12, formatter: (v) => formatDate(v) },
-                    { key: 'customer_require_date', label: t('requireDeliveryDate'), width: 12, formatter: (v) => formatDate(v) },
-                    { key: 'delivery_status', label: tc('status'), width: 12, formatter: (v) => t(statusLabelMap[v] || v) },
+                    {
+                      key: 'notify_date',
+                      label: t('notifyDate'),
+                      width: 12,
+                      formatter: (v) => formatDate(v),
+                    },
+                    {
+                      key: 'customer_require_date',
+                      label: t('requireDeliveryDate'),
+                      width: 12,
+                      formatter: (v) => formatDate(v),
+                    },
+                    {
+                      key: 'delivery_status',
+                      label: tc('status'),
+                      width: 12,
+                      formatter: (v) => t(statusLabelMap[v] || v),
+                    },
                   ]}
-                  data={selectedIds.size > 0 ? sortedList.filter((s) => selectedIds.has(s.id)) : sortedList}
+                  data={
+                    selectedIds.size > 0
+                      ? sortedList.filter((s) => selectedIds.has(s.id))
+                      : sortedList
+                  }
                 />
                 <Button onClick={handleOpenAdd}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -375,7 +394,10 @@ export default function SampleManagementPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t('sampleList')}{total > 0 ? ` (${total})` : ''}</CardTitle>
+            <CardTitle>
+              {t('sampleList')}
+              {total > 0 ? ` (${total})` : ''}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -404,7 +426,8 @@ export default function SampleManagementPage() {
                         onClick={() => handleSort('order_no')}
                       >
                         <span className="inline-flex items-center">
-                          {t('sampleNo')}{getSortIcon('order_no')}
+                          {t('sampleNo')}
+                          {getSortIcon('order_no')}
                         </span>
                       </th>
                       <th
@@ -412,7 +435,8 @@ export default function SampleManagementPage() {
                         onClick={() => handleSort('product_name')}
                       >
                         <span className="inline-flex items-center">
-                          {t('productName')}{getSortIcon('product_name')}
+                          {t('productName')}
+                          {getSortIcon('product_name')}
                         </span>
                       </th>
                       <th
@@ -420,16 +444,20 @@ export default function SampleManagementPage() {
                         onClick={() => handleSort('customer_name')}
                       >
                         <span className="inline-flex items-center">
-                          {tc('customer')}{getSortIcon('customer_name')}
+                          {tc('customer')}
+                          {getSortIcon('customer_name')}
                         </span>
                       </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">{tc("specification")}</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">
+                        {tc('specification')}
+                      </th>
                       <th
                         className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
                         onClick={() => handleSort('quantity')}
                       >
                         <span className="inline-flex items-center">
-                          {tc('quantity')}{getSortIcon('quantity')}
+                          {tc('quantity')}
+                          {getSortIcon('quantity')}
                         </span>
                       </th>
                       <th
@@ -437,19 +465,25 @@ export default function SampleManagementPage() {
                         onClick={() => handleSort('notify_date')}
                       >
                         <span className="inline-flex items-center">
-                          {t('notifyDate')}{getSortIcon('notify_date')}
+                          {t('notifyDate')}
+                          {getSortIcon('notify_date')}
                         </span>
                       </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">{t('requireDeliveryDate')}</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">
+                        {t('requireDeliveryDate')}
+                      </th>
                       <th
                         className="h-12 px-4 text-left align-middle font-medium cursor-pointer select-none hover:bg-muted/80"
                         onClick={() => handleSort('delivery_status')}
                       >
                         <span className="inline-flex items-center">
-                          {tc('status')}{getSortIcon('delivery_status')}
+                          {tc('status')}
+                          {getSortIcon('delivery_status')}
                         </span>
                       </th>
-                      <th className="h-12 px-4 text-right align-middle font-medium">{tc("actions")}</th>
+                      <th className="h-12 px-4 text-right align-middle font-medium">
+                        {tc('actions')}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -545,7 +579,9 @@ export default function SampleManagementPage() {
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{t('sampleDetail')} - {detailItem?.order_no}</DialogTitle>
+            <DialogTitle>
+              {t('sampleDetail')} - {detailItem?.order_no}
+            </DialogTitle>
           </DialogHeader>
           {detailItem && (
             <div className="grid grid-cols-2 gap-4 py-4">
@@ -566,11 +602,11 @@ export default function SampleManagementPage() {
                 <p className="font-mono">{detailItem.material_no}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">{tc("version")}</Label>
+                <Label className="text-muted-foreground">{tc('version')}</Label>
                 <p>{detailItem.version || '-'}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">{tc("specification")}</Label>
+                <Label className="text-muted-foreground">{tc('specification')}</Label>
                 <p>{detailItem.size_spec || '-'}</p>
               </div>
               <div>
@@ -578,7 +614,7 @@ export default function SampleManagementPage() {
                 <p>{detailItem.material_spec || '-'}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">{tc("quantity")}</Label>
+                <Label className="text-muted-foreground">{tc('quantity')}</Label>
                 <p>{detailItem.quantity || 0}</p>
               </div>
               <div>
@@ -594,21 +630,21 @@ export default function SampleManagementPage() {
                 <p>{formatDate(detailItem.actual_delivery_date) || '-'}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">{tc("status")}</Label>
+                <Label className="text-muted-foreground">{tc('status')}</Label>
                 <p>{getStatusBadge(detailItem)}</p>
               </div>
               <div className="col-span-2">
-                <Label className="text-muted-foreground">{tc("remark")}</Label>
+                <Label className="text-muted-foreground">{tc('remark')}</Label>
                 <p>{detailItem.remark || '-'}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">{tc("createdAt")}</Label>
+                <Label className="text-muted-foreground">{tc('createdAt')}</Label>
                 <p className="text-sm text-muted-foreground">
                   {formatDate(detailItem.create_time)}
                 </p>
               </div>
               <div>
-                <Label className="text-muted-foreground">{tc("updatedAt")}</Label>
+                <Label className="text-muted-foreground">{tc('updatedAt')}</Label>
                 <p className="text-sm text-muted-foreground">
                   {formatDate(detailItem.update_time)}
                 </p>
@@ -670,7 +706,7 @@ export default function SampleManagementPage() {
               />
             </div>
             <div>
-              <Label>{tc("version")}</Label>
+              <Label>{tc('version')}</Label>
               <Input
                 value={form.version}
                 onChange={(e) => setForm((f) => ({ ...f, version: e.target.value }))}
@@ -678,7 +714,7 @@ export default function SampleManagementPage() {
               />
             </div>
             <div>
-              <Label>{tc("specification")}</Label>
+              <Label>{tc('specification')}</Label>
               <Input
                 value={form.size_spec}
                 onChange={(e) => setForm((f) => ({ ...f, size_spec: e.target.value }))}
@@ -694,7 +730,7 @@ export default function SampleManagementPage() {
               />
             </div>
             <div>
-              <Label>{tc("quantity")}</Label>
+              <Label>{tc('quantity')}</Label>
               <Input
                 type="number"
                 value={form.quantity}
@@ -710,7 +746,7 @@ export default function SampleManagementPage() {
               />
             </div>
             <div className="col-span-2">
-              <Label>{tc("remark")}</Label>
+              <Label>{tc('remark')}</Label>
               <Input
                 value={form.remark}
                 onChange={(e) => setForm((f) => ({ ...f, remark: e.target.value }))}

@@ -19,6 +19,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
 
+/* eslint-disable @next/next/no-img-element */
+
 interface PupilProps {
   size?: number;
   maxDistance?: number;
@@ -323,7 +325,7 @@ export default function LoginPage() {
       } else {
         setError(result.message || t('loginFailed'));
       }
-    } catch (err) {
+    } catch {
       setError(t('loginFailed'));
     } finally {
       setLoading(false);
@@ -367,7 +369,7 @@ export default function LoginPage() {
       } else {
         toast.error(result.message || '修改失败');
       }
-    } catch (e) {
+    } catch {
       toast.error(t('changePassword') + ' - ' + tc('error'));
     } finally {
       setChangePwdLoading(false);
@@ -682,7 +684,7 @@ export default function LoginPage() {
 
         <div className="relative z-20 flex items-center gap-8 text-sm text-primary-foreground/60">
           <span>{companyName}</span>
-          <span>丝网印刷管理系统</span>
+          <span>{tc('text_wtl1gk')}</span>
         </div>
 
         <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />

@@ -7,7 +7,7 @@ import {
 } from '@/lib/multi-color-printing';
 
 // 获取工单色序详情
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const workOrderId = searchParams.get('workOrderId');
 
@@ -20,19 +20,22 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // 计算工单油墨成本
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { workOrderId, printArea, planQty } = body;
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { workOrderId, printArea, planQty } = body;
 
-  if (!workOrderId || !printArea || !planQty) {
-    return successResponse(null, '缺少必要参数');
-  }
+    if (!workOrderId || !printArea || !planQty) {
+      return successResponse(null, '缺少必要参数');
+    }
 
-  const result = await calculateWorkOrderInkCost(
-    Number(workOrderId),
-    Number(printArea),
-    Number(planQty)
-  );
+    const result = await calculateWorkOrderInkCost(
+      Number(workOrderId),
+      Number(printArea),
+      Number(planQty)
+    );
 
-  return successResponse(result, '计算油墨成本成功');
-}, { logTitle: '计算工单油墨成本', logType: 'business' });
+    return successResponse(result, '计算油墨成本成功');
+  },
+  { logTitle: '计算工单油墨成本', logType: 'business' }
+);

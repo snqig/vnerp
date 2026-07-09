@@ -230,7 +230,7 @@ export default function ProductsPage() {
       } else {
         toast.error(result.message || t('fetchProductListFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('fetchProductListFailed'));
     } finally {
       setLoading(false);
@@ -244,8 +244,7 @@ export default function ProductsPage() {
       if (result.success || result.code === 200) {
         setCategories(result.data || []);
       }
-    } catch (error) {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -288,7 +287,7 @@ export default function ProductsPage() {
         setBomLines([]);
         toast.info(t('noBomDataForProduct'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('fetchBomFailed'));
       setBomHeader(null);
       setBomLines([]);
@@ -322,7 +321,7 @@ export default function ProductsPage() {
         setVersionHistory([]);
         toast.info(t('noVersionHistory'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('fetchVersionHistoryFailed'));
       setBomHeader(null);
       setVersionHistory([]);
@@ -373,7 +372,7 @@ export default function ProductsPage() {
       } else {
         toast.error(result.message || t('updateFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('productUpdateFailed'));
     }
   };
@@ -389,7 +388,7 @@ export default function ProductsPage() {
       } else {
         toast.error(result.message || tc('deleteFailed'));
       }
-    } catch (error) {
+    } catch {
       toast.error(tc('deleteFailed'));
     }
   };
@@ -403,11 +402,11 @@ export default function ProductsPage() {
     title.style.textAlign = 'center';
     title.style.marginBottom = '20px';
     printContent.appendChild(title);
-    
+
     const table = document.createElement('table');
     table.style.width = '100%';
     table.style.borderCollapse = 'collapse';
-    
+
     const thead = document.createElement('thead');
     thead.innerHTML = `
       <tr style="background-color: #f3f4f6;">
@@ -423,7 +422,7 @@ export default function ProductsPage() {
       </tr>
     `;
     table.appendChild(thead);
-    
+
     const tbody = document.createElement('tbody');
     sortedProducts.forEach((product) => {
       const row = document.createElement('tr');
@@ -442,7 +441,7 @@ export default function ProductsPage() {
     });
     table.appendChild(tbody);
     printContent.appendChild(table);
-    
+
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
@@ -551,7 +550,8 @@ export default function ProductsPage() {
                       onClick={() => handleSort('product_code')}
                     >
                       <span className="inline-flex items-center">
-                        {t('productCode')}{getSortIcon('product_code')}
+                        {t('productCode')}
+                        {getSortIcon('product_code')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -559,7 +559,8 @@ export default function ProductsPage() {
                       onClick={() => handleSort('product_name')}
                     >
                       <span className="inline-flex items-center">
-                        {t('productName')}{getSortIcon('product_name')}
+                        {t('productName')}
+                        {getSortIcon('product_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -567,21 +568,26 @@ export default function ProductsPage() {
                       onClick={() => handleSort('specification')}
                     >
                       <span className="inline-flex items-center">
-                        {t('specification')}{getSortIcon('specification')}
+                        {t('specification')}
+                        {getSortIcon('specification')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('unit')}
                     >
-                      <span className="inline-flex items-center">{t('unit')}{getSortIcon('unit')}</span>
+                      <span className="inline-flex items-center">
+                        {t('unit')}
+                        {getSortIcon('unit')}
+                      </span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('category_name')}
                     >
                       <span className="inline-flex items-center">
-                        {t('category')}{getSortIcon('category_name')}
+                        {t('category')}
+                        {getSortIcon('category_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -589,14 +595,18 @@ export default function ProductsPage() {
                       onClick={() => handleSort('bom_version')}
                     >
                       <span className="inline-flex items-center">
-                        {t('bomVersion')}{getSortIcon('bom_version')}
+                        {t('bomVersion')}
+                        {getSortIcon('bom_version')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted"
                       onClick={() => handleSort('status')}
                     >
-                      <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
+                      <span className="inline-flex items-center">
+                        {tc('status')}
+                        {getSortIcon('status')}
+                      </span>
                     </TableHead>
                     <TableHead className="text-right">{tc('operation')}</TableHead>
                   </TableRow>
@@ -605,8 +615,8 @@ export default function ProductsPage() {
                   {products.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      {t('noProductData')}
-                    </TableCell>
+                        {t('noProductData')}
+                      </TableCell>
                     </TableRow>
                   ) : (
                     sortedProducts.map((product) => (
@@ -630,10 +640,10 @@ export default function ProductsPage() {
                           <Badge variant="secondary">{product.bom_version || '-'}</Badge>
                         </TableCell>
                         <TableCell>
-          <Badge className={productStatusColors[product.status] || ''}>
-            {tc(PRODUCT_STATUS_KEYS[product.status] || 'unknown')}
-          </Badge>
-        </TableCell>
+                          <Badge className={productStatusColors[product.status] || ''}>
+                            {tc(PRODUCT_STATUS_KEYS[product.status] || 'unknown')}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -800,7 +810,7 @@ export default function ProductsPage() {
                     } else {
                       toast.error(result.message || t('createFailed'));
                     }
-                  } catch (error) {
+                  } catch {
                     toast.error(t('createFailed'));
                   }
                 }}
@@ -942,7 +952,9 @@ export default function ProductsPage() {
         <Dialog open={isBomOpen} onOpenChange={setIsBomOpen}>
           <DialogContent className="max-w-4xl" resizable>
             <DialogHeader>
-              <DialogTitle>{t('bomDetail')} - {selectedProduct?.product_name}</DialogTitle>
+              <DialogTitle>
+                {t('bomDetail')} - {selectedProduct?.product_name}
+              </DialogTitle>
               <DialogDescription>
                 {bomHeader
                   ? `${t('bomNo')}: ${bomHeader.bom_no || '-'} | ${t('version')}: ${bomHeader.version || '-'} | ${tc('status')}: ${bomHeader.status_name || '-'}`
@@ -1007,7 +1019,9 @@ export default function ProductsPage() {
                 </Table>
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">{t('noBomDataForProduct')}</div>
+              <div className="text-center py-8 text-muted-foreground">
+                {t('noBomDataForProduct')}
+              </div>
             )}
           </DialogContent>
         </Dialog>
@@ -1015,7 +1029,9 @@ export default function ProductsPage() {
         <Dialog open={isVersionOpen} onOpenChange={setIsVersionOpen}>
           <DialogContent className="max-w-3xl" resizable>
             <DialogHeader>
-              <DialogTitle>{t('versionHistory')} - {selectedProduct?.product_name}</DialogTitle>
+              <DialogTitle>
+                {t('versionHistory')} - {selectedProduct?.product_name}
+              </DialogTitle>
               <DialogDescription>
                 {bomHeader
                   ? `${t('currentVersion')}: ${bomHeader.version || '-'} | ${t('bomNo')}: ${bomHeader.bom_no || '-'}`

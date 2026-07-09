@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         deptStats,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: '获取薪资统计失败' }, { status: 500 });
   }
 }

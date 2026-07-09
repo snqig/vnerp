@@ -165,8 +165,14 @@ function HorizontalBarChart({
 const STATUS_MAP: Record<number, { labelKey: string; className: string }> = {
   0: { labelKey: 'draft', className: 'bg-gray-500/20 text-gray-300 border border-gray-500/30' },
   1: { labelKey: 'confirmed', className: 'bg-blue-500/20 text-blue-300 border border-blue-500/30' },
-  2: { labelKey: 'inProduction', className: 'bg-orange-500/20 text-orange-300 border border-orange-500/30' },
-  3: { labelKey: 'completed', className: 'bg-green-500/20 text-green-300 border border-green-500/30' },
+  2: {
+    labelKey: 'inProduction',
+    className: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
+  },
+  3: {
+    labelKey: 'completed',
+    className: 'bg-green-500/20 text-green-300 border border-green-500/30',
+  },
   4: { labelKey: 'cancelled', className: 'bg-red-500/20 text-red-300 border border-red-500/30' },
 };
 
@@ -202,7 +208,7 @@ export default function SalesDashboard() {
         const res = await authFetch('/api/dashboard/sales');
         const result = await res.json();
         if (result.success && result.data) setData(result.data);
-      } catch (e) {
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -348,7 +354,7 @@ export default function SalesDashboard() {
           <div className="tech-card tech-glow p-5">
             <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
-               {t('orderTrend')}
+              {t('orderTrend')}
             </h3>
             {data.orderTrend.length === 0 ? (
               <p className="text-white/40 text-center py-8">{tc('noData')}</p>
@@ -358,12 +364,12 @@ export default function SalesDashboard() {
           </div>
 
           <div className="tech-card tech-glow p-5">
-              <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
-                <PieChart className="h-4 w-4" />
-                {t('orderStatusDistribution')}
-              </h3>
-              {data.statusDistribution.length === 0 ? (
-                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+            <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+              <PieChart className="h-4 w-4" />
+              {t('orderStatusDistribution')}
+            </h3>
+            {data.statusDistribution.length === 0 ? (
+              <p className="text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <div className="space-y-4">
                 {data.statusDistribution.map((s, i) => {
@@ -380,7 +386,9 @@ export default function SalesDashboard() {
                           {tc(cfg.labelKey)}
                         </span>
                         <span className="text-white/50">
-                          {s.count} 单 ({pct}%)
+                          {s.count}
+                          {tc('text_c7fh9')}
+                          {pct}%)
                         </span>
                       </div>
                       <div className="bg-white/10 rounded-full h-3 relative overflow-hidden">
@@ -402,21 +410,29 @@ export default function SalesDashboard() {
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="tech-card tech-glow p-5">
-              <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                {t('customerTop5')}
-              </h3>
-              {data.topCustomers.length === 0 ? (
-                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+            <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              {t('customerTop5')}
+            </h3>
+            {data.topCustomers.length === 0 ? (
+              <p className="text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('rank')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('customerName')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('orderCount')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('totalAmount')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {tc('rank')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {tc('customerName')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {tc('orderCount')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {tc('totalAmount')}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -443,9 +459,9 @@ export default function SalesDashboard() {
             <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
               <Package className="h-4 w-4" />
               {t('productTop5')}
-              </h3>
-              {data.topProducts.length === 0 ? (
-                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+            </h3>
+            {data.topProducts.length === 0 ? (
+              <p className="text-white/40 text-center py-8">{tc('noData')}</p>
             ) : (
               <HorizontalBarChart
                 data={data.topProducts}
@@ -458,23 +474,35 @@ export default function SalesDashboard() {
         </div>
 
         <div className="relative z-10 tech-card tech-glow p-5">
-              <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-               {t('recentOrders')}
-              </h3>
-              {data.recentOrders.length === 0 ? (
-                <p className="text-white/40 text-center py-8">{tc('noRecords')}</p>
+          <h3 className="text-sm font-semibold text-cyan-300 mb-4 flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            {t('recentOrders')}
+          </h3>
+          {data.recentOrders.length === 0 ? (
+            <p className="text-white/40 text-center py-8">{tc('noRecords')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('orderNo')}</th>
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('customerName')}</th>
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('amount')}</th>
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('status')}</th>
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('deliveryDate')}</th>
-                    <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('createdAt')}</th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">
+                      {tc('orderNo')}
+                    </th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">
+                      {tc('customerName')}
+                    </th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">
+                      {tc('amount')}
+                    </th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">
+                      {tc('status')}
+                    </th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">
+                      {tc('deliveryDate')}
+                    </th>
+                    <th className="text-left py-2 px-3 text-white/60 font-medium">
+                      {tc('createdAt')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>

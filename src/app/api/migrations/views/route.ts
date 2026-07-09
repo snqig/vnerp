@@ -3,7 +3,7 @@ import { query, execute } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
-export const GET = withPermission(async (request: NextRequest) => {
+export const GET = withPermission(async (_request: NextRequest) => {
   const results: string[] = [];
 
   const views = [

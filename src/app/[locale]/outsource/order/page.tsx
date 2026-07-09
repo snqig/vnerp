@@ -61,7 +61,6 @@ interface OutsourceOrder {
 }
 
 export default function OutsourceOrderPage() {
-
   const t = useTranslations('Outsource');
   const tc = useTranslations('Common');
 
@@ -101,8 +100,7 @@ export default function OutsourceOrderPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
 
   const fetchSuppliers = async () => {
@@ -110,8 +108,7 @@ export default function OutsourceOrderPage() {
       const res = await authFetch('/api/purchase/suppliers?pageSize=100');
       const result = await res.json();
       if (result.success) setSuppliers(result.data?.list || result.data || []);
-    } catch (e) {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -137,7 +134,7 @@ export default function OutsourceOrderPage() {
       } else {
         toast({ title: tc('error'), description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -155,7 +152,7 @@ export default function OutsourceOrderPage() {
         toast({ title: t('cancelled') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('error'), variant: 'destructive' });
     }
   };
@@ -169,7 +166,7 @@ export default function OutsourceOrderPage() {
         toast({ title: tc('deleteSuccess') });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('deleteFailed'), variant: 'destructive' });
     }
   };

@@ -18,7 +18,7 @@ async function checkIsVisibleColumn(): Promise<boolean> {
       `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sys_menu' AND COLUMN_NAME = 'is_visible'`
     );
     isVisibleColumnExists = colCheck.length > 0;
-  } catch (e) {
+  } catch {
     isVisibleColumnExists = false;
   }
   return isVisibleColumnExists;

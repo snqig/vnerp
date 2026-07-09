@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
 // 获取终检统计
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // 待终检数量（生产中的）
     const [pendingResult] = await query(
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         passRate,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: '获取终检统计失败' }, { status: 500 });
   }
 }

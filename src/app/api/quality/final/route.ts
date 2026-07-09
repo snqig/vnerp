@@ -32,7 +32,7 @@ async function queryPaginatedLocal(
 }
 
 // 获取终检列表
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
   const cardNo = searchParams.get('cardNo');
@@ -94,31 +94,10 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // 创建终检记录
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const {
-    cardId,
-    cardNo,
-    finalResult,
-    qualifiedQty,
-    defectQty,
-    defectReason,
-    inspector,
-    packMethod,
-    remark,
-  } = body;
-
-  // 生成终检编号
-  const finalNo = generateDocNo(getFprPrefix());
-
-  // 插入终检记录到 qc_final_inspection 表
-  await query(
-    `INSERT INTO qc_final_inspection (
-      final_no, card_id, card_no, final_result, qualified_qty, 
-      defect_qty, defect_reason, inspector, pack_method, remark, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-    [
-      finalNo,
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const {
       cardId,
       cardNo,
       finalResult,
@@ -128,40 +107,67 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       inspector,
       packMethod,
       remark,
-    ]
-  );
+    } = body;
 
-  // 更新流程卡状态
-  if (finalResult === 'pass') {
+    // 生成终检编号
+    const finalNo = generateDocNo(getFprPrefix());
+
+    // 插入终检记录到 qc_final_inspection 表
     await query(
-      `UPDATE prd_process_card SET burdening_status = 3, update_time = NOW() WHERE id = ?`,
-      [cardId]
+      `INSERT INTO qc_final_inspection (
+      final_no, card_id, card_no, final_result, qualified_qty, 
+      defect_qty, defect_reason, inspector, pack_method, remark, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        finalNo,
+        cardId,
+        cardNo,
+        finalResult,
+        qualifiedQty,
+        defectQty,
+        defectReason,
+        inspector,
+        packMethod,
+        remark,
+      ]
     );
-  }
 
-  return successResponse({ finalNo }, '终检记录创建成功');
-}, { logTitle: '创建终检记录', logType: 'business' });
+    // 更新流程卡状态
+    if (finalResult === 'pass') {
+      await query(
+        `UPDATE prd_process_card SET burdening_status = 3, update_time = NOW() WHERE id = ?`,
+        [cardId]
+      );
+    }
+
+    return successResponse({ finalNo }, '终检记录创建成功');
+  },
+  { logTitle: '创建终检记录', logType: 'business' }
+);
 
 // 更新终检结果
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
-  const { id, finalResult, qualifiedQty, defectQty, inspector, remark } = body;
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
+    const { id, finalResult, qualifiedQty, defectQty, inspector, remark } = body;
 
-  // 更新终检记录
-  await query(
-    `UPDATE qc_final_inspection 
+    // 更新终检记录
+    await query(
+      `UPDATE qc_final_inspection 
      SET final_result = ?, qualified_qty = ?, defect_qty = ?, inspector = ?, remark = ?, updated_at = NOW()
      WHERE id = ?`,
-    [finalResult, qualifiedQty, defectQty, inspector, remark, id]
-  );
-
-  // 更新流程卡状态
-  if (finalResult === 'pass') {
-    await query(
-      `UPDATE prd_process_card SET burdening_status = 3, update_time = NOW() WHERE id = ?`,
-      [id]
+      [finalResult, qualifiedQty, defectQty, inspector, remark, id]
     );
-  }
 
-  return successResponse(null, '终检结果更新成功');
-}, { logTitle: '更新终检记录', logType: 'business' });
+    // 更新流程卡状态
+    if (finalResult === 'pass') {
+      await query(
+        `UPDATE prd_process_card SET burdening_status = 3, update_time = NOW() WHERE id = ?`,
+        [id]
+      );
+    }
+
+    return successResponse(null, '终检结果更新成功');
+  },
+  { logTitle: '更新终检记录', logType: 'business' }
+);

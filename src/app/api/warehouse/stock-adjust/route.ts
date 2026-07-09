@@ -4,7 +4,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { secureLog } from '@/lib/logger';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const page = Number(searchParams.get('page') || 1);
   const pageSize = Number(searchParams.get('pageSize') || 20);
@@ -36,7 +36,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
   return successResponse({ list: rows, total, page, pageSize });
 });
 
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
+export const POST = withPermission(async (request: NextRequest, _userInfo) => {
   const body = await request.json();
   const { warehouse_id, adjust_date, adjust_type, operator_name, remark, items } = body;
   const now = new Date();
@@ -73,7 +73,7 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
   return successResponse({ id: result.insertId, adjust_no: adjustNo }, '调整单创建成功');
 });
 
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
+export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
   const body = await request.json();
   const { id, status, remark, expectedStatus } = body;
 
@@ -111,11 +111,7 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
         expectedStatus,
         targetStatus: status,
       });
-      return errorResponse(
-        '并发冲突: 调整单状态已被其他操作变更，请刷新后重试',
-        409,
-        409
-      );
+      return errorResponse('并发冲突: 调整单状态已被其他操作变更，请刷新后重试', 409, 409);
     }
   }
 
@@ -127,7 +123,7 @@ export const PUT = withPermission(async (request: NextRequest, userInfo) => {
   return successResponse(null, '更新成功');
 });
 
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
+export const DELETE = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });

@@ -143,10 +143,12 @@ const getStatusConfig = (status: string, t: (key: string) => string) => {
       className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     },
   };
-  return configs[status] || {
-    label: status,
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  };
+  return (
+    configs[status] || {
+      label: status,
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    }
+  );
 };
 
 const getPriorityConfig = (priority: string, t: (key: string) => string) => {
@@ -168,17 +170,19 @@ const getPriorityConfig = (priority: string, t: (key: string) => string) => {
       className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
     },
   };
-  return configs[priority] || {
-    label: priority,
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
-  };
+  return (
+    configs[priority] || {
+      label: priority,
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    }
+  );
 };
 
 export default function WorkOrderPage() {
   const t = useTranslations('Production');
   const tc = useTranslations('Common');
   const { toast } = useToast();
-  
+
   const getStatusBadge = (status: number | string) => {
     const config = getStatusConfig(String(status), t);
     return <Badge className={config.className}>{config.label}</Badge>;
@@ -263,7 +267,7 @@ export default function WorkOrderPage() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch {
       toast({ title: tc('error'), description: t('fetchListFailed'), variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -277,8 +281,7 @@ export default function WorkOrderPage() {
       if (data.success) {
         setSalesOrders(data.data?.list || (Array.isArray(data.data) ? data.data : []));
       }
-    } catch (error) {
-    }
+    } catch {}
   }, []);
 
   const fetchBomList = useCallback(async () => {
@@ -288,8 +291,7 @@ export default function WorkOrderPage() {
       if (data.success) {
         setBomList(data.data?.list || (Array.isArray(data.data) ? data.data : []));
       }
-    } catch (error) {
-    }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -353,7 +355,7 @@ export default function WorkOrderPage() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch {
       toast({ title: tc('error'), description: t('createFailed'), variant: 'destructive' });
     }
   };
@@ -379,7 +381,7 @@ export default function WorkOrderPage() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch {
       toast({ title: tc('error'), description: t('statusUpdateFailed'), variant: 'destructive' });
     }
   };
@@ -393,9 +395,13 @@ export default function WorkOrderPage() {
         toast({ title: tc('success'), description: t('deleteSuccess') });
         fetchWorkOrders();
       } else {
-        toast({ title: tc('error'), description: data.message || t('deleteFailed'), variant: 'destructive' });
+        toast({
+          title: tc('error'),
+          description: data.message || t('deleteFailed'),
+          variant: 'destructive',
+        });
       }
-    } catch (error) {
+    } catch {
       toast({ title: tc('error'), description: t('deleteFailed'), variant: 'destructive' });
     }
   };
@@ -625,11 +631,21 @@ export default function WorkOrderPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="all">{t('all')} ({stats.total})</TabsTrigger>
-            <TabsTrigger value="producing">{t('producing')} ({stats.producing})</TabsTrigger>
-            <TabsTrigger value="confirmed">{t('status.confirmed')} ({stats.confirmed})</TabsTrigger>
-            <TabsTrigger value="pending">{t('status.pending')} ({stats.pending})</TabsTrigger>
-            <TabsTrigger value="completed">{t('status.completed')} ({stats.completed})</TabsTrigger>
+            <TabsTrigger value="all">
+              {t('all')} ({stats.total})
+            </TabsTrigger>
+            <TabsTrigger value="producing">
+              {t('producing')} ({stats.producing})
+            </TabsTrigger>
+            <TabsTrigger value="confirmed">
+              {t('status.confirmed')} ({stats.confirmed})
+            </TabsTrigger>
+            <TabsTrigger value="pending">
+              {t('status.pending')} ({stats.pending})
+            </TabsTrigger>
+            <TabsTrigger value="completed">
+              {t('status.completed')} ({stats.completed})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-4">
@@ -652,7 +668,8 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('work_order_no')}
                         >
                           <span className="inline-flex items-center">
-                            {t('workOrderNo')}{getSortIcon('work_order_no')}
+                            {t('workOrderNo')}
+                            {getSortIcon('work_order_no')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -660,7 +677,8 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('product_name')}
                         >
                           <span className="inline-flex items-center">
-                            {t('productInfo')}{getSortIcon('product_name')}
+                            {t('productInfo')}
+                            {getSortIcon('product_name')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -668,7 +686,8 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('customer_name')}
                         >
                           <span className="inline-flex items-center">
-                            {t('customer')}{getSortIcon('customer_name')}
+                            {t('customer')}
+                            {getSortIcon('customer_name')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -676,7 +695,8 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('quantity')}
                         >
                           <span className="inline-flex items-center">
-                            {t('quantity')}{getSortIcon('quantity')}
+                            {t('quantity')}
+                            {getSortIcon('quantity')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -684,7 +704,8 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('status')}
                         >
                           <span className="inline-flex items-center">
-                            {t('status.label')}{getSortIcon('status')}
+                            {t('status.label')}
+                            {getSortIcon('status')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -692,7 +713,8 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('priority')}
                         >
                           <span className="inline-flex items-center">
-                            {t('priority.label')}{getSortIcon('priority')}
+                            {t('priority.label')}
+                            {getSortIcon('priority')}
                           </span>
                         </TableHead>
                         <TableHead
@@ -700,7 +722,8 @@ export default function WorkOrderPage() {
                           onClick={() => handleSort('planned_start_date')}
                         >
                           <span className="inline-flex items-center">
-                            {t('plannedDate')}{getSortIcon('planned_start_date')}
+                            {t('plannedDate')}
+                            {getSortIcon('planned_start_date')}
                           </span>
                         </TableHead>
                         <TableHead>{t('operation')}</TableHead>
@@ -825,7 +848,9 @@ export default function WorkOrderPage() {
                 <div className="space-y-6 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('productInfo')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('productInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">{t('productName')}:</span>
                         <span>{selectedOrder.product_name || '-'}</span>
@@ -840,7 +865,9 @@ export default function WorkOrderPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('customerInfo')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('customerInfo')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">{t('customerName')}:</span>
                         <span>{selectedOrder.customer_name || '-'}</span>
@@ -854,7 +881,9 @@ export default function WorkOrderPage() {
 
                   {selectedOrder.items && selectedOrder.items.length > 0 && (
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('workOrderMaterials')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('workOrderMaterials')}
+                      </h4>
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -886,7 +915,9 @@ export default function WorkOrderPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-muted-foreground">{t('plannedTime')}</h4>
+                      <h4 className="font-semibold text-sm text-muted-foreground">
+                        {t('plannedTime')}
+                      </h4>
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <span className="text-muted-foreground">{t('startDate')}:</span>
                         <span>{formatDate(selectedOrder.plan_start_date) || '-'}</span>
@@ -897,7 +928,9 @@ export default function WorkOrderPage() {
 
                     {selectedOrder.actual_start_date && (
                       <div className="space-y-3">
-                        <h4 className="font-semibold text-sm text-muted-foreground">{t('actualTime')}</h4>
+                        <h4 className="font-semibold text-sm text-muted-foreground">
+                          {t('actualTime')}
+                        </h4>
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <span className="text-muted-foreground">{t('startDate')}:</span>
                           <span>{selectedOrder.actual_start_date}</span>

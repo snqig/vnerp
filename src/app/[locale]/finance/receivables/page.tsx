@@ -42,7 +42,6 @@ interface Receivable {
 }
 
 export default function ReceivablesPage() {
-
   // 翻译钩子
   const t = useTranslations('Finance');
   const tc = useTranslations('Common');
@@ -68,7 +67,7 @@ export default function ReceivablesPage() {
         setReceivables(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (error) {
+    } catch {
       toast.error('加载应收单失败');
     } finally {
       setLoading(false);
@@ -109,7 +108,7 @@ export default function ReceivablesPage() {
       } else {
         toast.error(result.message);
       }
-    } catch (error) {
+    } catch {
       toast.error('回款失败');
     }
   };
@@ -117,29 +116,30 @@ export default function ReceivablesPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">应收管理</h1>
+        <h1 className="text-2xl font-bold">{tc('text_ccvaxz')}</h1>
         <Button onClick={loadReceivables} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> 刷新
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          {tc('text_ejix')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>应收单列表</CardTitle>
+          <CardTitle>{tc('text_rrcn38')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>应收单号</TableHead>
-                <TableHead>来源订单</TableHead>
-                <TableHead>{tc("customer")}</TableHead>
-                <TableHead>应收金额</TableHead>
-                <TableHead>已收金额</TableHead>
-                <TableHead>{tc("balance")}</TableHead>
-                <TableHead>到期日</TableHead>
-                <TableHead>{tc("status")}</TableHead>
-                <TableHead>{tc("actions")}</TableHead>
+                <TableHead>{tc('text_cco9us')}</TableHead>
+                <TableHead>{tc('text_dicb26')}</TableHead>
+                <TableHead>{tc('customer')}</TableHead>
+                <TableHead>{tc('text_ccza1a')}</TableHead>
+                <TableHead>{tc('text_ca3u5s')}</TableHead>
+                <TableHead>{tc('balance')}</TableHead>
+                <TableHead>{tc('text_cjh06')}</TableHead>
+                <TableHead>{tc('status')}</TableHead>
+                <TableHead>{tc('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -161,11 +161,12 @@ export default function ReceivablesPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                  <TableCell>{getStatusBadge(rec.status)}</TableCell>
+                          <TableCell>{getStatusBadge(rec.status)}</TableCell>;
                           setShowReceipt(true);
                         }}
                       >
-                        <DollarSign className="w-3 h-3 mr-1" /> 回款
+                        <DollarSign className="w-3 h-3 mr-1" />
+                        {tc('text_fd40')}
                       </Button>
                     )}
                   </TableCell>
@@ -174,7 +175,7 @@ export default function ReceivablesPage() {
               {receivables.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                    暂无数据
+                    {tc('text_dcv57g')}
                   </TableCell>
                 </TableRow>
               )}
@@ -187,19 +188,22 @@ export default function ReceivablesPage() {
       <Dialog open={showReceipt} onOpenChange={setShowReceipt}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>录入回款 - {selectedRec?.receivable_no}</DialogTitle>
+            <DialogTitle>
+              {tc('text_mlzba5')}
+              {selectedRec?.receivable_no}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>应收金额</Label>
+              <Label>{tc('text_ccza1a')}</Label>
               <Input value={selectedRec ? formatAmount(selectedRec.amount) : ''} disabled />
             </div>
             <div>
-              <Label>{tc("balance")}</Label>
+              <Label>{tc('balance')}</Label>
               <Input value={selectedRec ? formatAmount(selectedRec.balance) : ''} disabled />
             </div>
             <div>
-              <Label>回款金额</Label>
+              <Label>{tc('text_beumto')}</Label>
               <Input
                 type="number"
                 value={receiptAmount}
@@ -207,21 +211,21 @@ export default function ReceivablesPage() {
               />
             </div>
             <div>
-              <Label>回款方式</Label>
+              <Label>{tc('text_bemtg6')}</Label>
               <select
                 className="w-full border rounded-md p-2"
                 value={receiptMethod}
                 onChange={(e) => setReceiptMethod(e.target.value)}
               >
-                <option value="bank_transfer">银行转账</option>
-                <option value="cash">现金</option>
-                <option value="check">支票</option>
-                <option value="wechat">微信支付</option>
-                <option value="alipay">支付宝</option>
+                <option value="bank_transfer">{tc('text_jd1cr4')}</option>
+                <option value="cash">{tc('text_kh7l')}</option>
+                <option value="check">{tc('text_hvkp')}</option>
+                <option value="wechat">{tc('text_cemv24')}</option>
+                <option value="alipay">{tc('text_f7gac')}</option>
               </select>
             </div>
             <div>
-              <Label>回款日期</Label>
+              <Label>{tc('text_bemw3e')}</Label>
               <Input
                 type="date"
                 value={receiptDate}
@@ -231,9 +235,9 @@ export default function ReceivablesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowReceipt(false)}>
-              取消
+              {tc('text_ev02')}
             </Button>
-            <Button onClick={handleReceipt}>确认回款</Button>
+            <Button onClick={handleReceipt}>{tc('text_frpeae')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

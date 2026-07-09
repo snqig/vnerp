@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         dailyStats,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, message: '获取排程统计失败' }, { status: 500 });
   }
 }

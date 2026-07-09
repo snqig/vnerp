@@ -83,8 +83,7 @@ export default function MaterialCategoryPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
   useEffect(() => {
     fetchData();
@@ -106,7 +105,7 @@ export default function MaterialCategoryPage() {
       } else {
         toast({ title: '失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -119,7 +118,7 @@ export default function MaterialCategoryPage() {
         toast({ title: '删除成功' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: '失败', variant: 'destructive' });
     }
   };
@@ -128,11 +127,11 @@ export default function MaterialCategoryPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{t("materialCategory")}</h1>
+          <h1 className="text-2xl font-bold">{t('materialCategory')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchCategoryPlaceholder")}
+                placeholder={tc('searchCategoryPlaceholder')}
                 value={searchName}
                 onChange={(e) => setSearchName(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -150,7 +149,7 @@ export default function MaterialCategoryPage() {
                 }}
               >
                 <Plus className="h-3 w-3 mr-1" />
-                {t("addCategory")}
+                {t('addCategory')}
               </Button>
             )}
           </div>
@@ -160,13 +159,13 @@ export default function MaterialCategoryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">{tc("categoryCode")}</TableHead>
-                  <TableHead className="text-xs">{tc("categoryName")}</TableHead>
-                  <TableHead className="text-xs">{tc("categoryType")}</TableHead>
-                  <TableHead className="text-xs">{tc("sortOrder")}</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("remark")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('categoryCode')}</TableHead>
+                  <TableHead className="text-xs">{tc('categoryName')}</TableHead>
+                  <TableHead className="text-xs">{tc('categoryType')}</TableHead>
+                  <TableHead className="text-xs">{tc('sortOrder')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('remark')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -215,7 +214,7 @@ export default function MaterialCategoryPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-gray-400 py-8">
-                      {tc("noRecords")}
+                      {tc('noRecords')}
                     </TableCell>
                   </TableRow>
                 )}
@@ -224,7 +223,7 @@ export default function MaterialCategoryPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">{tc("totalRecords", { count: total })}</span>
+          <span className="text-sm text-gray-500">{tc('totalRecords', { count: total })}</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -232,7 +231,7 @@ export default function MaterialCategoryPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc("prevPage")}
+              {tc('prevPage')}
             </Button>
             <Button
               size="sm"
@@ -240,32 +239,32 @@ export default function MaterialCategoryPage() {
               disabled={page * 50 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc("nextPage")}
+              {tc('nextPage')}
             </Button>
           </div>
         </div>
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-lg" resizable>
             <DialogHeader>
-              <DialogTitle>{editItem.id ? t("editCategory") : t("addCategory")}</DialogTitle>
+              <DialogTitle>{editItem.id ? t('editCategory') : t('addCategory')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{tc("categoryCode")}</Label>
+                <Label>{tc('categoryCode')}</Label>
                 <Input
                   value={editItem.category_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, category_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("categoryName")}</Label>
+                <Label>{tc('categoryName')}</Label>
                 <Input
                   value={editItem.category_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, category_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc("categoryType")}</Label>
+                <Label>{tc('categoryType')}</Label>
                 <Select
                   value={String(editItem.category_type || 1)}
                   onValueChange={(v) => setEditItem({ ...editItem, category_type: Number(v) })}
@@ -274,21 +273,21 @@ export default function MaterialCategoryPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">{tc("rawMaterial")}</SelectItem>
-                    <SelectItem value="2">{tc("semiFinished")}</SelectItem>
-                    <SelectItem value="3">{tc("finishedProduct")}</SelectItem>
-                    <SelectItem value="4">{tc("auxiliaryMaterial")}</SelectItem>
-                    <SelectItem value="5">{tc("packagingMaterial")}</SelectItem>
-                    <SelectItem value="6">{tc("ink")}</SelectItem>
-                    <SelectItem value="7">{tc("solvent")}</SelectItem>
-                    <SelectItem value="8">{tc("screen")}</SelectItem>
-                    <SelectItem value="9">{tc("tool")}</SelectItem>
-                    <SelectItem value="10">{tc("equipmentPart")}</SelectItem>
+                    <SelectItem value="1">{tc('rawMaterial')}</SelectItem>
+                    <SelectItem value="2">{tc('semiFinished')}</SelectItem>
+                    <SelectItem value="3">{tc('finishedProduct')}</SelectItem>
+                    <SelectItem value="4">{tc('auxiliaryMaterial')}</SelectItem>
+                    <SelectItem value="5">{tc('packagingMaterial')}</SelectItem>
+                    <SelectItem value="6">{tc('ink')}</SelectItem>
+                    <SelectItem value="7">{tc('solvent')}</SelectItem>
+                    <SelectItem value="8">{tc('screen')}</SelectItem>
+                    <SelectItem value="9">{tc('tool')}</SelectItem>
+                    <SelectItem value="10">{tc('equipmentPart')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>{tc("sortOrder")}</Label>
+                <Label>{tc('sortOrder')}</Label>
                 <Input
                   type="number"
                   value={editItem.sort_order ?? 0}
@@ -296,7 +295,7 @@ export default function MaterialCategoryPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Input
                   value={editItem.remark || ''}
                   onChange={(e) => setEditItem({ ...editItem, remark: e.target.value })}
@@ -305,9 +304,9 @@ export default function MaterialCategoryPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc("cancel")}
+                {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

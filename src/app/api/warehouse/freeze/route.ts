@@ -1,8 +1,5 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-} from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { query, execute } from '@/lib/db';
@@ -10,14 +7,14 @@ import { logger, generateTraceId } from '@/lib/logger';
 
 /**
  * 库存冻结/解冻 API
- * 
+ *
  * 支持按物料+仓库维度冻结库存，防止超卖
  * 冻结的库存不参与可用库存计算
  */
 
 // 获取冻结记录列表
 export const GET = withPermission(
-  async (request: NextRequest, userInfo: UserInfo) => {
+  async (request: NextRequest, _userInfo: UserInfo) => {
     const { searchParams } = new URL(request.url);
     const materialId = searchParams.get('materialId');
     const warehouseId = searchParams.get('warehouseId');
@@ -72,12 +69,24 @@ export const POST = withPermission(
     const ctx = { module: 'freeze', action: 'create', userId: userInfo.userId, traceId };
 
     const body = await request.json();
-    const { material_id, warehouse_id, freeze_quantity, freeze_type, reason, source_type, source_id } = body;
+    const {
+      material_id,
+      warehouse_id,
+      freeze_quantity,
+      freeze_type,
+      reason,
+      source_type,
+      source_id,
+    } = body;
 
     logger.stepStart(ctx, '库存冻结', { material_id, warehouse_id, freeze_quantity, freeze_type });
 
     if (!material_id || !warehouse_id || !freeze_quantity) {
-      logger.branch(ctx, '参数校验', '必填参数完整性', false, { material_id, warehouse_id, freeze_quantity });
+      logger.branch(ctx, '参数校验', '必填参数完整性', false, {
+        material_id,
+        warehouse_id,
+        freeze_quantity,
+      });
       return errorResponse('物料ID、仓库ID和冻结数量不能为空', 400, 400);
     }
 
@@ -105,7 +114,10 @@ export const POST = withPermission(
     logger.info(ctx, `可用库存: ${availableQty}, 请求冻结: ${freeze_quantity}`);
 
     if (availableQty < freeze_quantity) {
-      logger.branch(ctx, '库存检查', '可用库存>=冻结数量', false, { availableQty, freeze_quantity });
+      logger.branch(ctx, '库存检查', '可用库存>=冻结数量', false, {
+        availableQty,
+        freeze_quantity,
+      });
       return errorResponse(`可用库存不足，当前可用: ${availableQty}`, 400, 400);
     }
     logger.branch(ctx, '库存检查', '可用库存>=冻结数量', true);
@@ -117,9 +129,13 @@ export const POST = withPermission(
         source_type, source_id, status, create_by, create_time, update_time)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, NOW(), NOW())`,
       [
-        material_id, warehouse_id, freeze_quantity,
-        freeze_type || 'manual', reason || null,
-        source_type || null, source_id || null,
+        material_id,
+        warehouse_id,
+        freeze_quantity,
+        freeze_type || 'manual',
+        reason || null,
+        source_type || null,
+        source_id || null,
         userInfo.userId,
       ]
     );
@@ -168,7 +184,10 @@ export const PUT = withPermission(
       }
 
       const record = freeze[0];
-      logger.info(ctx, `解冻记录: 物料=${record.material_id}, 仓库=${record.warehouse_id}, 数量=${record.freeze_quantity}`);
+      logger.info(
+        ctx,
+        `解冻记录: 物料=${record.material_id}, 仓库=${record.warehouse_id}, 数量=${record.freeze_quantity}`
+      );
 
       // 更新冻结记录状态
       await execute(
@@ -182,7 +201,11 @@ export const PUT = withPermission(
         'UPDATE stock SET frozen_qty = GREATEST(COALESCE(frozen_qty, 0) - ?, 0), update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
         [record.freeze_quantity, record.material_id, record.warehouse_id]
       );
-      logger.db(ctx, 'UPDATE', 'stock', { material_id: record.material_id, warehouse_id: record.warehouse_id, unfreeze_qty: record.freeze_quantity });
+      logger.db(ctx, 'UPDATE', 'stock', {
+        material_id: record.material_id,
+        warehouse_id: record.warehouse_id,
+        unfreeze_qty: record.freeze_quantity,
+      });
 
       logger.stepEnd(ctx, '完全解冻');
       return successResponse(null, '库存已解冻');
@@ -209,12 +232,18 @@ export const PUT = withPermission(
 
       const record = freeze[0];
       if (unfreeze_quantity > Number(record.freeze_quantity)) {
-        logger.branch(ctx, '数量校验', '解冻数量<=冻结数量', false, { unfreeze_quantity, freeze_quantity: record.freeze_quantity });
+        logger.branch(ctx, '数量校验', '解冻数量<=冻结数量', false, {
+          unfreeze_quantity,
+          freeze_quantity: record.freeze_quantity,
+        });
         return errorResponse('解冻数量不能超过冻结数量', 400, 400);
       }
 
       const remainQty = Number(record.freeze_quantity) - unfreeze_quantity;
-      logger.info(ctx, `部分解冻: 原冻结=${record.freeze_quantity}, 本次解冻=${unfreeze_quantity}, 剩余=${remainQty}`);
+      logger.info(
+        ctx,
+        `部分解冻: 原冻结=${record.freeze_quantity}, 本次解冻=${unfreeze_quantity}, 剩余=${remainQty}`
+      );
 
       if (remainQty <= 0) {
         logger.branch(ctx, '剩余判断', '剩余<=0→完全解冻', true);
@@ -235,7 +264,11 @@ export const PUT = withPermission(
         'UPDATE stock SET frozen_qty = GREATEST(COALESCE(frozen_qty, 0) - ?, 0), update_time = NOW() WHERE material_id = ? AND warehouse_id = ?',
         [unfreeze_quantity, record.material_id, record.warehouse_id]
       );
-      logger.db(ctx, 'UPDATE', 'stock', { material_id: record.material_id, warehouse_id: record.warehouse_id, unfreeze_qty: unfreeze_quantity });
+      logger.db(ctx, 'UPDATE', 'stock', {
+        material_id: record.material_id,
+        warehouse_id: record.warehouse_id,
+        unfreeze_qty: unfreeze_quantity,
+      });
 
       logger.stepEnd(ctx, '部分解冻', { remainQty });
       return successResponse(null, remainQty > 0 ? '部分解冻成功' : '库存已解冻');

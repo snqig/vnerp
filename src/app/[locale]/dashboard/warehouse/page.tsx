@@ -188,8 +188,16 @@ function AutoScroll({
 }
 
 const COLORS = [
-  '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e',
-  '#f97316', '#eab308', '#22c55e', '#14b8a6', '#6366f1'
+  '#06b6d4',
+  '#3b82f6',
+  '#8b5cf6',
+  '#ec4899',
+  '#f43f5e',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#14b8a6',
+  '#6366f1',
 ];
 
 export default function WarehouseDashboard() {
@@ -225,7 +233,7 @@ export default function WarehouseDashboard() {
         const res = await authFetch('/api/dashboard/warehouse');
         const result = await res.json();
         if (result.success && result.data) setData(result.data);
-      } catch (e) {
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -290,7 +298,7 @@ export default function WarehouseDashboard() {
   const categoryChartUrl = useMemo(() => {
     if (data.categoryDistribution.length === 0) return '';
     const baseUrl = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=';
-    const prompt = `Business pie chart showing ${data.categoryDistribution.map(c => `${c.material_type}: ${c.count} items`).join(', ')} with professional colors, dark theme`;
+    const prompt = `Business pie chart showing ${data.categoryDistribution.map((c) => `${c.material_type}: ${c.count} items`).join(', ')} with professional colors, dark theme`;
     return baseUrl + encodeURIComponent(prompt) + '&image_size=square';
   }, [data.categoryDistribution]);
 
@@ -502,7 +510,9 @@ export default function WarehouseDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <PieChartIcon className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">{t('materialCategoryDistribution')}</span>
+              <span className="text-sm font-medium text-white/80">
+                {t('materialCategoryDistribution')}
+              </span>
             </div>
             <div className="p-4 h-[300px]">
               {data.categoryDistribution.length === 0 ? (
@@ -527,11 +537,7 @@ export default function WarehouseDashboard() {
               {data.recentTransactions.length === 0 ? (
                 <ChartPlaceholder title={t('inoutTrend')} type="empty" />
               ) : (
-                <ChartImage
-                  url={trendChartUrl}
-                  title={t('inoutTrend')}
-                  loading={loading}
-                />
+                <ChartImage url={trendChartUrl} title={t('inoutTrend')} loading={loading} />
               )}
             </div>
           </div>
@@ -542,24 +548,32 @@ export default function WarehouseDashboard() {
             <div className="px-4 py-2 border-b border-white/10 flex items-center gap-2 bg-white/5">
               <div className="w-1 h-4 rounded-full bg-gradient-to-b from-cyan-400 to-blue-600" />
               <BarChart3 className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white/80">{t('materialCategoryDistribution')}</span>
+              <span className="text-sm font-medium text-white/80">
+                {t('materialCategoryDistribution')}
+              </span>
             </div>
             <AutoScroll maxHeight={320}>
               <div className="p-4">
                 {data.categoryDistribution.length === 0 ? (
-                <p className="text-white/40 text-center py-8">{tc('noData')}</p>
-              ) : (
-                <div className="space-y-2">
-                  {data.categoryDistribution.map((c, i) => {
-                    const total = data.categoryDistribution.reduce((a, b) => a + b.count, 0);
-                    const maxCount = Math.max(...data.categoryDistribution.map(d => d.count), 1);
-                    const pct = total > 0 ? Math.round((c.count / total) * 100) : 0;
-                    return (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                        <span className="text-sm flex-1 text-white/70">
-                          {c.material_type || tc('unclassified')}
-                        </span>
+                  <p className="text-white/40 text-center py-8">{tc('noData')}</p>
+                ) : (
+                  <div className="space-y-2">
+                    {data.categoryDistribution.map((c, i) => {
+                      const total = data.categoryDistribution.reduce((a, b) => a + b.count, 0);
+                      const maxCount = Math.max(
+                        ...data.categoryDistribution.map((d) => d.count),
+                        1
+                      );
+                      const pct = total > 0 ? Math.round((c.count / total) * 100) : 0;
+                      return (
+                        <div key={i} className="flex items-center gap-3">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                          />
+                          <span className="text-sm flex-1 text-white/70">
+                            {c.material_type || tc('unclassified')}
+                          </span>
                           <div className="flex-1 bg-white/10 rounded-full h-5 relative overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all duration-500"
@@ -569,7 +583,8 @@ export default function WarehouseDashboard() {
                               }}
                             />
                             <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
-                              {c.count} 种
+                              {c.count}
+                              {tc('text_o25')}
                             </span>
                           </div>
                         </div>
@@ -635,12 +650,24 @@ export default function WarehouseDashboard() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-white/10">
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('inspectionType')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('materialCode')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('materialName')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('planQty')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('time')}</th>
-                      <th className="text-left py-2 px-3 text-white/60 font-medium">{tc('remark')}</th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {tc('inspectionType')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {tc('materialCode')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {tc('materialName')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {tc('planQty')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {tc('time')}
+                      </th>
+                      <th className="text-left py-2 px-3 text-white/60 font-medium">
+                        {tc('remark')}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>

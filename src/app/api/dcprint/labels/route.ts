@@ -1,11 +1,7 @@
 import { NextRequest } from 'next/server';
 import { escapeId } from 'mysql2';
 import { query, execute, queryOne } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  validateRequestBody,
-} from '@/lib/api-response';
+import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 // 物料标签接口
@@ -43,7 +39,7 @@ interface MaterialLabel {
 }
 
 // GET - 获取物料标签列表
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword') || '';
   const materialCode = searchParams.get('materialCode') || '';
@@ -156,60 +152,20 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
 });
 
 // POST - 创建物料标签
-export const POST = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, ['labelNo', 'materialCode']);
+    // 验证必填字段
+    const validation = validateRequestBody(body, ['labelNo', 'materialCode']);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const {
-    labelNo,
-    qrCode,
-    purchaseOrderNo,
-    supplierName,
-    receiveDate,
-    materialCode,
-    materialName,
-    specification,
-    unit,
-    batchNo,
-    quantity,
-    packageQty,
-    width,
-    lengthPerRoll,
-    remark,
-    colorCode,
-    mixRemark,
-    warehouseId,
-    locationId,
-    isMainMaterial = 1,
-    parentLabelId,
-  } = body;
-
-  // 生成二维码内容（如果没有提供）
-  const finalQrCode =
-    qrCode ||
-    JSON.stringify({
-      ID: labelNo,
-      TYPE: parentLabelId ? '1' : '0', // 0-母材, 1-分切后
-    });
-
-  // 插入数据
-  const result = await execute(
-    `INSERT INTO inv_material_label (
-      label_no, qr_code, purchase_order_no, supplier_name, receive_date,
-      material_code, material_name, specification, unit, batch_no,
-      quantity, package_qty, width, length_per_roll, remark,
-      color_code, mix_remark, warehouse_id, location_id,
-      is_main_material, parent_label_id, status, deleted
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0)`,
-    [
+    const {
       labelNo,
-      finalQrCode,
+      qrCode,
       purchaseOrderNo,
       supplierName,
       receiveDate,
@@ -227,91 +183,140 @@ export const POST = withPermission(async (request: NextRequest, userInfo) => {
       mixRemark,
       warehouseId,
       locationId,
-      isMainMaterial ? 1 : 0,
+      isMainMaterial = 1,
       parentLabelId,
-    ]
-  );
+    } = body;
 
-  return successResponse(
-    {
-      id: result.insertId,
-      labelNo,
-      message: '物料标签创建成功',
-    },
-    '物料标签创建成功'
-  );
-}, { logTitle: '创建物料标签', logType: 'business' });
+    // 生成二维码内容（如果没有提供）
+    const finalQrCode =
+      qrCode ||
+      JSON.stringify({
+        ID: labelNo,
+        TYPE: parentLabelId ? '1' : '0', // 0-母材, 1-分切后
+      });
+
+    // 插入数据
+    const result = await execute(
+      `INSERT INTO inv_material_label (
+      label_no, qr_code, purchase_order_no, supplier_name, receive_date,
+      material_code, material_name, specification, unit, batch_no,
+      quantity, package_qty, width, length_per_roll, remark,
+      color_code, mix_remark, warehouse_id, location_id,
+      is_main_material, parent_label_id, status, deleted
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0)`,
+      [
+        labelNo,
+        finalQrCode,
+        purchaseOrderNo,
+        supplierName,
+        receiveDate,
+        materialCode,
+        materialName,
+        specification,
+        unit,
+        batchNo,
+        quantity,
+        packageQty,
+        width,
+        lengthPerRoll,
+        remark,
+        colorCode,
+        mixRemark,
+        warehouseId,
+        locationId,
+        isMainMaterial ? 1 : 0,
+        parentLabelId,
+      ]
+    );
+
+    return successResponse(
+      {
+        id: result.insertId,
+        labelNo,
+        message: '物料标签创建成功',
+      },
+      '物料标签创建成功'
+    );
+  },
+  { logTitle: '创建物料标签', logType: 'business' }
+);
 
 // PUT - 更新物料标签
-export const PUT = withPermission(async (request: NextRequest, userInfo) => {
-  const body = await request.json();
+export const PUT = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const body = await request.json();
 
-  if (!body.id) {
-    return errorResponse('缺少标签ID', 400, 400);
-  }
-
-  const updateFields: string[] = [];
-  const params: any[] = [];
-
-  const fieldColumnMap: Record<string, string> = {
-    qrCode: 'qr_code',
-    purchaseOrderNo: 'purchase_order_no',
-    supplierName: 'supplier_name',
-    receiveDate: 'receive_date',
-    materialCode: 'material_code',
-    materialName: 'material_name',
-    specification: 'specification',
-    unit: 'unit',
-    batchNo: 'batch_no',
-    quantity: 'quantity',
-    packageQty: 'package_qty',
-    width: 'width',
-    lengthPerRoll: 'length_per_roll',
-    remark: 'remark',
-    colorCode: 'color_code',
-    mixRemark: 'mix_remark',
-    warehouseId: 'warehouse_id',
-    locationId: 'location_id',
-    isMainMaterial: 'is_main_material',
-    isUsed: 'is_used',
-    isCut: 'is_cut',
-    status: 'status',
-  };
-
-  Object.entries(fieldColumnMap).forEach(([field, column]) => {
-    if (body[field] !== undefined) {
-      updateFields.push(`${escapeId(column)} = ?`);
-      params.push(body[field]);
+    if (!body.id) {
+      return errorResponse('缺少标签ID', 400, 400);
     }
-  });
 
-  if (updateFields.length === 0) {
-    return errorResponse('没有要更新的字段', 400, 400);
-  }
+    const updateFields: string[] = [];
+    const params: any[] = [];
 
-  params.push(body.id);
+    const fieldColumnMap: Record<string, string> = {
+      qrCode: 'qr_code',
+      purchaseOrderNo: 'purchase_order_no',
+      supplierName: 'supplier_name',
+      receiveDate: 'receive_date',
+      materialCode: 'material_code',
+      materialName: 'material_name',
+      specification: 'specification',
+      unit: 'unit',
+      batchNo: 'batch_no',
+      quantity: 'quantity',
+      packageQty: 'package_qty',
+      width: 'width',
+      lengthPerRoll: 'length_per_roll',
+      remark: 'remark',
+      colorCode: 'color_code',
+      mixRemark: 'mix_remark',
+      warehouseId: 'warehouse_id',
+      locationId: 'location_id',
+      isMainMaterial: 'is_main_material',
+      isUsed: 'is_used',
+      isCut: 'is_cut',
+      status: 'status',
+    };
 
-  await execute(
-    `UPDATE inv_material_label SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`,
-    params
-  );
+    Object.entries(fieldColumnMap).forEach(([field, column]) => {
+      if (body[field] !== undefined) {
+        updateFields.push(`${escapeId(column)} = ?`);
+        params.push(body[field]);
+      }
+    });
 
-  return successResponse(null, '物料标签更新成功');
-}, { logTitle: '更新物料标签', logType: 'business' });
+    if (updateFields.length === 0) {
+      return errorResponse('没有要更新的字段', 400, 400);
+    }
+
+    params.push(body.id);
+
+    await execute(
+      `UPDATE inv_material_label SET ${updateFields.join(', ')} WHERE id = ? AND deleted = 0`,
+      params
+    );
+
+    return successResponse(null, '物料标签更新成功');
+  },
+  { logTitle: '更新物料标签', logType: 'business' }
+);
 
 // DELETE - 删除物料标签（软删除）
-export const DELETE = withPermission(async (request: NextRequest, userInfo) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest, _userInfo) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return errorResponse('缺少标签ID', 400, 400);
-  }
+    if (!id) {
+      return errorResponse('缺少标签ID', 400, 400);
+    }
 
-  await execute('UPDATE inv_material_label SET deleted = 1 WHERE id = ?', [id]);
+    await execute('UPDATE inv_material_label SET deleted = 1 WHERE id = ?', [id]);
 
-  return successResponse(null, '物料标签删除成功');
-}, { logTitle: '删除物料标签', logType: 'business' });
+    return successResponse(null, '物料标签删除成功');
+  },
+  { logTitle: '删除物料标签', logType: 'business' }
+);
 
 // 辅助函数：分页查询
 async function queryPaginated<T>(
@@ -337,7 +342,7 @@ async function queryPaginated<T>(
         total: countResult?.total || 0,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       list: [],
       pagination: {

@@ -87,24 +87,21 @@ export default function SalesOutboundPage() {
         setList(result.data.list || []);
         setTotal(result.data.total || 0);
       }
-    } catch (e) {
-    }
+    } catch {}
   };
   const fetchWarehouses = async () => {
     try {
       const res = await authFetch('/api/warehouse?status=1&all=true');
       const result = await res.json();
       if (result.success) setWarehouses(result.data || []);
-    } catch (e) {
-    }
+    } catch {}
   };
   const fetchCustomers = async () => {
     try {
       const res = await authFetch('/api/customers?pageSize=999');
       const result = await res.json();
       if (result.success) setCustomers(result.data?.list || result.data || []);
-    } catch (e) {
-    }
+    } catch {}
   };
   useEffect(() => {
     fetchData();
@@ -128,7 +125,7 @@ export default function SalesOutboundPage() {
       } else {
         toast({ title: '失败', description: result.message, variant: 'destructive' });
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -143,7 +140,7 @@ export default function SalesOutboundPage() {
         toast({ title: '更新成功' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -156,7 +153,7 @@ export default function SalesOutboundPage() {
         toast({ title: '删除成功' });
         fetchData();
       }
-    } catch (e) {
+    } catch {
       toast({ title: tc('failed'), variant: 'destructive' });
     }
   };
@@ -165,11 +162,11 @@ export default function SalesOutboundPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">销售出库</h1>
+          <h1 className="text-2xl font-bold">{tc('text_j5fhqf')}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
-                placeholder={tc("searchOrderNo")}
+                placeholder={tc('searchOrderNo')}
                 value={searchNo}
                 onChange={(e) => setSearchNo(e.target.value)}
                 className="w-36 h-8 text-sm"
@@ -186,7 +183,7 @@ export default function SalesOutboundPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              新增出库
+              {tc('text_d73t53')}
             </Button>
           </div>
         </div>
@@ -195,14 +192,14 @@ export default function SalesOutboundPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">出库单号</TableHead>
-                  <TableHead className="text-xs">销售订单</TableHead>
-                  <TableHead className="text-xs">{tc("customer")}</TableHead>
-                  <TableHead className="text-xs">{tc("warehouse")}</TableHead>
-                  <TableHead className="text-xs">出库日期</TableHead>
-                  <TableHead className="text-xs">发货人</TableHead>
-                  <TableHead className="text-xs">{tc("status")}</TableHead>
-                  <TableHead className="text-xs">{tc("actions")}</TableHead>
+                  <TableHead className="text-xs">{tc('text_aqhecb')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_j5p8kh')}</TableHead>
+                  <TableHead className="text-xs">{tc('customer')}</TableHead>
+                  <TableHead className="text-xs">{tc('warehouse')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_aqknsj')}</TableHead>
+                  <TableHead className="text-xs">{tc('text_cyeis')}</TableHead>
+                  <TableHead className="text-xs">{tc('status')}</TableHead>
+                  <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -230,7 +227,7 @@ export default function SalesOutboundPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              确认出库
+                              {tc('text_frohu7')}
                             </Button>
                           )}
                           <Button
@@ -296,7 +293,7 @@ export default function SalesOutboundPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{tc("warehouse")}</Label>
+                <Label>{tc('warehouse')}</Label>
                 <Select
                   value={String(editItem.warehouse_id || '')}
                   onValueChange={(v) => {
@@ -321,7 +318,7 @@ export default function SalesOutboundPage() {
                 </Select>
               </div>
               <div>
-                <Label>出库日期</Label>
+                <Label>{tc('text_aqknsj')}</Label>
                 <Input
                   type="date"
                   value={editItem.outbound_date || ''}
@@ -336,7 +333,7 @@ export default function SalesOutboundPage() {
                 />
               </div>
               <div>
-                <Label>客户名称</Label>
+                <Label>{tc('text_byvcwo')}</Label>
                 <Select
                   value={editItem.customer_name || ''}
                   onValueChange={(v) => setEditItem({ ...editItem, customer_name: v })}
@@ -365,7 +362,7 @@ export default function SalesOutboundPage() {
               <Button variant="outline" onClick={() => setShowDialog(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

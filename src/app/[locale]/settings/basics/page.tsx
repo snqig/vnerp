@@ -73,7 +73,6 @@ interface SystemConfigResponse {
 }
 
 export default function BasicsSettingsPage() {
-
   // 翻译钩子
   const t = useTranslations('Common');
   const tc = useTranslations('Common');
@@ -123,7 +122,7 @@ export default function BasicsSettingsPage() {
           setActiveTab(groups[0].category);
         }
       }
-    } catch (e) {
+    } catch {
       toast.error('加载配置失败');
     } finally {
       setLoading(false);
@@ -248,7 +247,10 @@ export default function BasicsSettingsPage() {
             {iconMap[group.category] || <Settings className="h-5 w-5" />}
             {group.display_name || group.category}
           </CardTitle>
-          <CardDescription>配置{group.display_name || group.category}</CardDescription>
+          <CardDescription>
+            {tc('text_pewx')}
+            {group.display_name || group.category}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -290,7 +292,7 @@ export default function BasicsSettingsPage() {
               ))}
             <TabsTrigger value="theme" className="flex items-center gap-1">
               <Palette className="h-4 w-4" />
-              主题设置
+              {tc('text_ai8tm5')}
             </TabsTrigger>
           </TabsList>
 
@@ -306,9 +308,9 @@ export default function BasicsSettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette className="h-5 w-5" />
-                  主题设置
+                  {tc('text_ai8tm5')}
                 </CardTitle>
-                <CardDescription>配置系统的显示主题</CardDescription>
+                <CardDescription>{tc('text_kxopjs')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ThemeSettings />

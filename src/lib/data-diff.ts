@@ -305,8 +305,8 @@ export function formatDiffToHtml(diff: ObjectDiff): string {
  * 格式化单个值
  */
 function formatValue(value: any): string {
-  if (value === null || value === undefined) return '空';
-  if (typeof value === 'boolean') return value ? '是' : '否';
+  if (value === null || value === undefined) return tc('text_o6y');
+  if (typeof value === 'boolean') return value ? tc('text_k6n') : tc('text_gme');
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
 }
@@ -420,7 +420,7 @@ export function createSnapshot(data: Record<string, any>): Record<string, any> {
 // 导出便捷方法
 // ============================================================
 
-export default {
+const dataDiffUtils = {
   diffObjects,
   diffArrays,
   formatDiffToText,
@@ -431,3 +431,5 @@ export default {
   COMMON_FIELD_LABELS,
   CRITICAL_FIELDS,
 };
+
+export default dataDiffUtils;

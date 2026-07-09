@@ -3,7 +3,7 @@ import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
-export const GET = withPermission(async (request: NextRequest, userInfo) => {
+export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const period = searchParams.get('period') || 'month';
   const startDate = searchParams.get('startDate') || '';
@@ -55,8 +55,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       otd.rate =
         otd.totalOrders > 0 ? Math.round((otd.onTimeOrders / otd.totalOrders) * 10000) / 100 : 0;
     }
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 2. 库存周转率 (Inventory Turnover)
@@ -89,15 +88,20 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         : 0;
     inventoryTurnover.daysOnHand =
       inventoryTurnover.rate > 0 ? Math.round(365 / inventoryTurnover.rate) : 0;
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 3. OEE (Overall Equipment Effectiveness) 设备综合效率
   //    公式: OEE = 可用率(A) × 表现率(P) × 质量率(Q)
   //    数据来源: eqp_equipment + 生产报工 + 质检记录
   // ========================================
-  const oee: any = { overall: 0, availability: 0, performance: 0, quality: 0, equipmentDetails: [] };
+  const oee: any = {
+    overall: 0,
+    availability: 0,
+    performance: 0,
+    quality: 0,
+    equipmentDetails: [],
+  };
   try {
     const oeeRows: any = await query(`
       SELECT
@@ -137,8 +141,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       oee.overall =
         Math.round(((oee.availability * oee.performance * oee.quality) / 10000) * 100) / 100;
     }
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 4. 质量合格率 (Quality Pass Rate)
@@ -174,8 +177,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       qualityRate.incomingTotal > 0
         ? Math.round((qualityRate.incomingPassed / qualityRate.incomingTotal) * 10000) / 100
         : 0;
-  } catch (e) {
-  }
+  } catch {}
 
   try {
     const processRows: any = await query(
@@ -194,8 +196,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       qualityRate.processTotal > 0
         ? Math.round((qualityRate.processPassed / qualityRate.processTotal) * 10000) / 100
         : 0;
-  } catch (e) {
-  }
+  } catch {}
 
   try {
     const finalRows: any = await query(
@@ -214,8 +215,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       qualityRate.finalTotal > 0
         ? Math.round((qualityRate.finalPassed / qualityRate.finalTotal) * 10000) / 100
         : 0;
-  } catch (e) {
-  }
+  } catch {}
 
   const totalInspections =
     qualityRate.incomingTotal + qualityRate.processTotal + qualityRate.finalTotal;
@@ -261,8 +261,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         };
       });
     }
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 6. 客户信用额度使用率
@@ -293,8 +292,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         usageRate: Number(c.usage_rate),
       }));
     }
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 7. FIFO合规率
@@ -337,8 +335,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       fifoCompliance.totalOutbound > 0
         ? Math.round((fifoCompliance.fifoFollowed / fifoCompliance.totalOutbound) * 10000) / 100
         : 100;
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 8. 部门协作效率
@@ -365,8 +362,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     departmentEfficiency.reviewCount = Number(reviewRows[0]?.total || 0);
     departmentEfficiency.contractReviewAvgDays =
       Math.round(Number(reviewRows[0]?.avg_days || 0) * 100) / 100;
-  } catch (e) {
-  }
+  } catch {}
 
   try {
     const conversionRows: any = await query(
@@ -383,8 +379,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     departmentEfficiency.conversionCount = Number(conversionRows[0]?.total || 0);
     departmentEfficiency.sampleToMassAvgDays =
       Math.round(Number(conversionRows[0]?.avg_days || 0) * 100) / 100;
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 9. 墨耗率 (Ink Consumption Rate)
@@ -421,8 +416,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
           (1 - inkConsumptionRate.theoreticalUsage / inkConsumptionRate.actualUsage) * 10000
         ) / 100;
     }
-  } catch (e) {
-  }
+  } catch {}
 
   try {
     const inkByWO: any = await query(
@@ -443,8 +437,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       params
     );
     inkConsumptionRate.byWorkOrder = Array.isArray(inkByWO) ? inkByWO : [];
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 10. 纸张利用率 (Paper Utilization Rate)
@@ -480,8 +473,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       paperUtilizationRate.rate =
         Math.round((paperUtilizationRate.outputQty / paperUtilizationRate.inputQty) * 10000) / 100;
     }
-  } catch (e) {
-  }
+  } catch {}
 
   try {
     const paperByProcess: any = await query(
@@ -502,8 +494,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       params
     );
     paperUtilizationRate.byProcess = Array.isArray(paperByProcess) ? paperByProcess : [];
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 11. 余墨再利用率 (Surplus Ink Reuse Rate)
@@ -541,8 +532,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
         Math.round((surplusInkReuseRate.totalReused / surplusInkReuseRate.totalReturned) * 10000) /
         100;
     }
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 12. 换版时间 (Setup/Changeover Time)
@@ -599,8 +589,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
           ? Math.round((setupTime.totalMinutes / setupTime.totalSetups) * 100) / 100
           : 0;
     }
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 13. 首次通过率 FTQ (First Time Quality)
@@ -627,8 +616,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
       ftq.totalFirstPiece > 0
         ? Math.round((ftq.passedFirstPiece / ftq.totalFirstPiece) * 10000) / 100
         : 0;
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 14. 呆滞库存率 (Stale Inventory Rate)
@@ -666,8 +654,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
             (staleInventoryRate.staleValue / staleInventoryRate.totalInventoryValue) * 10000
           ) / 100
         : 0;
-  } catch (e) {
-  }
+  } catch {}
 
   // ========================================
   // 15. OEE 六大损失分类
@@ -698,8 +685,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     oeeLossAnalysis.breakdownLoss = Number(lossRows[0]?.breakdown_count || 0);
     oeeLossAnalysis.setupLoss = Number(lossRows[0]?.setup_count || 0);
     oeeLossAnalysis.idleLoss = Number(lossRows[0]?.idle_count || 0);
-  } catch (e) {
-  }
+  } catch {}
 
   return successResponse({
     otd,

@@ -142,33 +142,39 @@ export default function PurchaseOrdersPage() {
   const tc = useTranslations('Common');
 
   const STATUS_MAP: Record<number, { label: string; className: string }> = {
-  10: { label: tc('draft'), className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200' },
-  20: {
-    label: tc('pending'),
-    className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200',
-  },
-  30: {
-    label: tc('approved'),
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
-  },
-  40: {
-    label: t('partialReceived'),
-    className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200',
-  },
-  50: {
-    label: t('completed'),
-    className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
-  },
-  90: { label: tc('closed'), className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200' },
-};
+    10: {
+      label: tc('draft'),
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    },
+    20: {
+      label: tc('pending'),
+      className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200',
+    },
+    30: {
+      label: tc('approved'),
+      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200',
+    },
+    40: {
+      label: t('partialReceived'),
+      className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200',
+    },
+    50: {
+      label: t('completed'),
+      className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200',
+    },
+    90: {
+      label: tc('closed'),
+      className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200',
+    },
+  };
 
   const getStatusBadge = (status: number) => {
-  const config = STATUS_MAP[status] || {
-    label: `${tc('unknown')}(${status})`,
-    className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    const config = STATUS_MAP[status] || {
+      label: `${tc('unknown')}(${status})`,
+      className: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+    };
+    return <Badge className={config.className}>{config.label}</Badge>;
   };
-  return <Badge className={config.className}>{config.label}</Badge>;
-};
 
   const { companyName } = useCompanyName();
   const { addToast: toast } = useToastContext();
@@ -201,18 +207,26 @@ export default function PurchaseOrdersPage() {
 
   const fetchOrders = useCallback(
     async (searchKeyword?: string) => {
-      logger.info({ module: 'Purchase', action: 'fetchOrders' }, '开始获取采购单列表', { page, pageSize, statusFilter, searchKeyword });
+      logger.info({ module: 'Purchase', action: 'fetchOrders' }, '开始获取采购单列表', {
+        page,
+        pageSize,
+        statusFilter,
+        searchKeyword,
+      });
       try {
         setLoading(true);
 
         if (USE_MOCK) {
           logger.info({ module: 'Purchase', action: 'fetchOrders' }, '使用 mock 数据');
           const filtered = searchKeyword
-            ? mockPurchaseOrders.filter(o => o.po_no?.includes(searchKeyword) || o.supplier_name?.includes(searchKeyword))
+            ? mockPurchaseOrders.filter(
+                (o) => o.po_no?.includes(searchKeyword) || o.supplier_name?.includes(searchKeyword)
+              )
             : mockPurchaseOrders;
-          const statusFiltered = statusFilter !== 'all'
-            ? filtered.filter(o => String(o.status) === statusFilter)
-            : filtered;
+          const statusFiltered =
+            statusFilter !== 'all'
+              ? filtered.filter((o) => String(o.status) === statusFilter)
+              : filtered;
           setOrders(statusFiltered);
           setTotal(statusFiltered.length);
           setSelectedOrders([]);
@@ -227,16 +241,22 @@ export default function PurchaseOrdersPage() {
         });
 
         if (data.success) {
-          const ordersList = Array.isArray(data.data) ? data.data : (data.data?.list || []);
-        setOrders(ordersList);
+          const ordersList = Array.isArray(data.data) ? data.data : data.data?.list || [];
+          setOrders(ordersList);
           setTotal(data.pagination?.total || 0);
           setSelectedOrders([]);
-          logger.info({ module: 'Purchase', action: 'fetchOrders' }, '采购单列表获取成功', { count: ordersList.length });
+          logger.info({ module: 'Purchase', action: 'fetchOrders' }, '采购单列表获取成功', {
+            count: ordersList.length,
+          });
         } else {
-          logger.warn({ module: 'Purchase', action: 'fetchOrders' }, 'API返回失败', { message: data.message });
+          logger.warn({ module: 'Purchase', action: 'fetchOrders' }, 'API返回失败', {
+            message: data.message,
+          });
         }
       } catch (error) {
-        logger.error({ module: 'Purchase', action: 'fetchOrders' }, '获取采购单列表失败', { error: (error as Error).message });
+        logger.error({ module: 'Purchase', action: 'fetchOrders' }, '获取采购单列表失败', {
+          error: (error as Error).message,
+        });
       } finally {
         setLoading(false);
       }
@@ -256,10 +276,14 @@ export default function PurchaseOrdersPage() {
       const data = await ApiClient.get('/api/purchase/suppliers');
       if (data.success) {
         setSuppliers(data.data?.list || data.data || []);
-        logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, '供应商列表获取成功', { count: (data.data?.list || []).length });
+        logger.info({ module: 'Purchase', action: 'fetchSuppliers' }, '供应商列表获取成功', {
+          count: (data.data?.list || []).length,
+        });
       }
     } catch (error) {
-      logger.error({ module: 'Purchase', action: 'fetchSuppliers' }, '获取供应商列表失败', { error: (error as Error).message });
+      logger.error({ module: 'Purchase', action: 'fetchSuppliers' }, '获取供应商列表失败', {
+        error: (error as Error).message,
+      });
     }
   }, []);
 
@@ -334,7 +358,7 @@ export default function PurchaseOrdersPage() {
       } else {
         toast({ title: '错误', description: data.message || '创建失败', variant: 'destructive' });
       }
-    } catch (error) {
+    } catch {
       toast({ title: '错误', description: '创建采购单失败', variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -350,9 +374,13 @@ export default function PurchaseOrdersPage() {
         toast({ title: tc('success'), description: tc('deleteSuccess') });
         fetchOrders();
       } else {
-        toast({ title: tc('error'), description: data.message || tc('deleteFailed'), variant: 'destructive' });
+        toast({
+          title: tc('error'),
+          description: data.message || tc('deleteFailed'),
+          variant: 'destructive',
+        });
       }
-    } catch (error) {
+    } catch {
       toast({ title: tc('error'), description: tc('deleteFailed'), variant: 'destructive' });
     }
   };
@@ -363,10 +391,7 @@ export default function PurchaseOrdersPage() {
     const selectedOrderInfo = orders.filter((o) => selectedOrders.includes(o.id));
     const orderNumbers = selectedOrderInfo.map((o) => o.po_no).join(', ');
 
-    if (
-      !confirm(tc('confirmBatchDelete', { count: selectedOrders.length, orderNumbers }))
-    )
-      return;
+    if (!confirm(tc('confirmBatchDelete', { count: selectedOrders.length, orderNumbers }))) return;
 
     try {
       setLoading(true);
@@ -386,7 +411,7 @@ export default function PurchaseOrdersPage() {
       } else {
         toast({ title: '错误', description: '删除失败', variant: 'destructive' });
       }
-    } catch (error) {
+    } catch {
       toast({ title: '错误', description: '删除失败', variant: 'destructive' });
     } finally {
       setLoading(false);
@@ -411,7 +436,7 @@ export default function PurchaseOrdersPage() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch {
       toast({ title: tc('error'), description: tc('statusUpdateFailed'), variant: 'destructive' });
     }
   };
@@ -746,12 +771,12 @@ export default function PurchaseOrdersPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{tc('allStatus')}</SelectItem>
-                    <SelectItem value="10">{tc("draft")}</SelectItem>
+                    <SelectItem value="10">{tc('draft')}</SelectItem>
                     <SelectItem value="20">{tc('pending')}</SelectItem>
                     <SelectItem value="30">{tc('approved')}</SelectItem>
                     <SelectItem value="40">{t('partialReceived')}</SelectItem>
-                    <SelectItem value="50">{tc("completed")}</SelectItem>
-                    <SelectItem value="90">{tc("closed")}</SelectItem>
+                    <SelectItem value="50">{tc('completed')}</SelectItem>
+                    <SelectItem value="90">{tc('closed')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" size="icon" onClick={handleSearch}>
@@ -761,7 +786,8 @@ export default function PurchaseOrdersPage() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={handlePrintList}>
                   <Printer className="h-4 w-4 mr-2" />
-                  {tc('print')}{selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
+                  {tc('print')}
+                  {selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}
                 </Button>
                 {selectedOrders.length > 0 && (
                   <Button variant="destructive" onClick={handleBatchDelete}>
@@ -776,10 +802,26 @@ export default function PurchaseOrdersPage() {
                   columns={[
                     { key: 'po_no', label: t('poNo'), width: 18 },
                     { key: 'supplier_name', label: t('supplier'), width: 20 },
-                    { key: 'order_date', label: t('orderDate'), width: 12, formatter: (v) => formatDate(v) },
-                    { key: 'delivery_date', label: t('expectedDelivery'), width: 12, formatter: (v) => formatDate(v) },
+                    {
+                      key: 'order_date',
+                      label: t('orderDate'),
+                      width: 12,
+                      formatter: (v) => formatDate(v),
+                    },
+                    {
+                      key: 'delivery_date',
+                      label: t('expectedDelivery'),
+                      width: 12,
+                      formatter: (v) => formatDate(v),
+                    },
                     { key: 'total_quantity', label: t('totalQty'), width: 10 },
-                    { key: 'grand_total', label: tc('amount'), width: 12, formatter: (_v, row) => Number(row.grand_total || row.total_amount || 0).toFixed(2) },
+                    {
+                      key: 'grand_total',
+                      label: tc('amount'),
+                      width: 12,
+                      formatter: (_v, row) =>
+                        Number(row.grand_total || row.total_amount || 0).toFixed(2),
+                    },
                     {
                       key: 'status',
                       label: tc('status'),
@@ -798,7 +840,11 @@ export default function PurchaseOrdersPage() {
                     },
                     { key: 'remark', label: tc('remark'), width: 20 },
                   ]}
-                  data={selectedOrders.length > 0 ? orders.filter((o) => selectedOrders.includes(o.id)) : sortedOrders}
+                  data={
+                    selectedOrders.length > 0
+                      ? orders.filter((o) => selectedOrders.includes(o.id))
+                      : sortedOrders
+                  }
                 />
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                   <DialogTrigger asChild>
@@ -856,10 +902,10 @@ export default function PurchaseOrdersPage() {
                               <TableRow>
                                 <TableHead className="min-w-[140px]">{t('materialCode')}</TableHead>
                                 <TableHead className="min-w-[140px]">{t('materialName')}</TableHead>
-                                <TableHead className="min-w-[100px]">{tc("quantity")}</TableHead>
-                                <TableHead className="min-w-[80px]">{tc("unit")}</TableHead>
+                                <TableHead className="min-w-[100px]">{tc('quantity')}</TableHead>
+                                <TableHead className="min-w-[80px]">{tc('unit')}</TableHead>
                                 <TableHead className="min-w-[100px]">{t('unitPrice')}</TableHead>
-                                <TableHead className="min-w-[100px]">{tc("amount")}</TableHead>
+                                <TableHead className="min-w-[100px]">{tc('amount')}</TableHead>
                                 <TableHead className="w-[60px]"></TableHead>
                               </TableRow>
                             </TableHeader>
@@ -945,7 +991,7 @@ export default function PurchaseOrdersPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label>{tc("remark")}</Label>
+                        <Label>{tc('remark')}</Label>
                         <Input
                           placeholder={tc('pleaseInput') + tc('remark')}
                           value={newOrder.remark}
@@ -974,7 +1020,10 @@ export default function PurchaseOrdersPage() {
         <Card>
           <CardHeader>
             <CardTitle>{t('purchaseOrders')}</CardTitle>
-            <CardDescription>{tc('totalRecords', { total })} {tc('purchase')}{tc('record')}</CardDescription>
+            <CardDescription>
+              {tc('totalRecords', { total })} {tc('purchase')}
+              {tc('record')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loading && orders.length === 0 ? (
@@ -1000,7 +1049,8 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('po_no')}
                     >
                       <span className="inline-flex items-center">
-                        {t('poNo')}{getSortIcon('po_no')}
+                        {t('poNo')}
+                        {getSortIcon('po_no')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1008,7 +1058,8 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('supplier_name')}
                     >
                       <span className="inline-flex items-center">
-                        {t('supplier')}{getSortIcon('supplier_name')}
+                        {t('supplier')}
+                        {getSortIcon('supplier_name')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1016,7 +1067,8 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('order_date')}
                     >
                       <span className="inline-flex items-center">
-                        {t('orderDate')}{getSortIcon('order_date')}
+                        {t('orderDate')}
+                        {getSortIcon('order_date')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1024,7 +1076,8 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('delivery_date')}
                     >
                       <span className="inline-flex items-center">
-                        {t('expectedDelivery')}{getSortIcon('delivery_date')}
+                        {t('expectedDelivery')}
+                        {getSortIcon('delivery_date')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1032,7 +1085,8 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('total_quantity')}
                     >
                       <span className="inline-flex items-center justify-end">
-                        {t('totalQty')}{getSortIcon('total_quantity')}
+                        {t('totalQty')}
+                        {getSortIcon('total_quantity')}
                       </span>
                     </TableHead>
                     <TableHead
@@ -1040,16 +1094,20 @@ export default function PurchaseOrdersPage() {
                       onClick={() => handleSort('grand_total')}
                     >
                       <span className="inline-flex items-center justify-end">
-                        {tc('amount')}{getSortIcon('grand_total')}
+                        {tc('amount')}
+                        {getSortIcon('grand_total')}
                       </span>
                     </TableHead>
                     <TableHead
                       className="cursor-pointer select-none hover:bg-muted/50"
                       onClick={() => handleSort('status')}
                     >
-                      <span className="inline-flex items-center">{tc('status')}{getSortIcon('status')}</span>
+                      <span className="inline-flex items-center">
+                        {tc('status')}
+                        {getSortIcon('status')}
+                      </span>
                     </TableHead>
-                    <TableHead className="text-right">{tc("actions")}</TableHead>
+                    <TableHead className="text-right">{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1227,33 +1285,33 @@ export default function PurchaseOrdersPage() {
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>采购单详情</DialogTitle>
+              <DialogTitle>{tc('text_jwi7ce')}</DialogTitle>
             </DialogHeader>
             {selectedOrder && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">采购单号</Label>
+                    <Label className="text-muted-foreground">{tc('text_iz05c8')}</Label>
                     <p className="font-mono">{selectedOrder.po_no}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">{tc("supplier")}</Label>
+                    <Label className="text-muted-foreground">{tc('supplier')}</Label>
                     <p>{selectedOrder.supplier_name}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">下单日期</Label>
+                    <Label className="text-muted-foreground">{tc('text_a72dxg')}</Label>
                     <p>{formatDate(selectedOrder.order_date)}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">期望到货</Label>
+                    <Label className="text-muted-foreground">{tc('text_dfqu37')}</Label>
                     <p>{formatDate(selectedOrder.delivery_date)}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">{tc("totalQuantity")}</Label>
+                    <Label className="text-muted-foreground">{tc('totalQuantity')}</Label>
                     <p>{selectedOrder.total_quantity}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">{tc("amount")}</Label>
+                    <Label className="text-muted-foreground">{tc('amount')}</Label>
                     <p className="font-medium">
                       ¥
                       {Number(
@@ -1262,28 +1320,28 @@ export default function PurchaseOrdersPage() {
                     </p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">{tc("status")}</Label>
+                    <Label className="text-muted-foreground">{tc('status')}</Label>
                     <p>{getStatusBadge(selectedOrder.status)}</p>
                   </div>
                   {selectedOrder.remark && (
                     <div className="col-span-2">
-                      <Label className="text-muted-foreground">{tc("remark")}</Label>
+                      <Label className="text-muted-foreground">{tc('remark')}</Label>
                       <p>{selectedOrder.remark}</p>
                     </div>
                   )}
                 </div>
                 {detailItems.length > 0 && (
                   <div>
-                    <Label className="text-muted-foreground mb-2 block">采购明细</Label>
+                    <Label className="text-muted-foreground mb-2 block">{tc('text_iz3kfy')}</Label>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>物料编码</TableHead>
-                          <TableHead>物料名称</TableHead>
-                          <TableHead>{tc("quantity")}</TableHead>
-                          <TableHead>{tc("unit")}</TableHead>
-                          <TableHead>单价</TableHead>
-                          <TableHead>{tc("amount")}</TableHead>
+                          <TableHead>{tc('text_euzqpn')}</TableHead>
+                          <TableHead>{tc('text_eusfkj')}</TableHead>
+                          <TableHead>{tc('quantity')}</TableHead>
+                          <TableHead>{tc('unit')}</TableHead>
+                          <TableHead>{tc('text_elvm')}</TableHead>
+                          <TableHead>{tc('amount')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

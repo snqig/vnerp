@@ -57,27 +57,32 @@ interface Equipment {
 }
 
 const EQUIPMENT_TYPES: Record<number, string> = {
-  1: '印刷机',
-  2: '覆膜机',
-  3: '模切机',
-  4: '全检机',
-  5: '其他',
+  1: tc('text_cmij7'),
+  2: tc('text_krrqc'),
+  3: tc('text_fy4tw'),
+  4: tc('text_cfmxu'),
+  5: tc('text_eae8'),
 };
 const CURRENT_STATUS: Record<number, { label: string; color: string }> = {
   1: {
-    label: '运行',
+    label: tc('text_p7jw'),
     color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
   },
   2: {
-    label: '待机',
+    label: tc('text_gtat'),
     color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
   },
-  3: { label: '维修', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
-  4: { label: '停机', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' },
+  3: {
+    label: tc('text_m16i'),
+    color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+  },
+  4: {
+    label: tc('text_e8gu'),
+    color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+  },
 };
 
 export default function EquipmentPage() {
-
   // 翻译钩子
   const t = useTranslations('Equipment');
   const tc = useTranslations('Common');
@@ -103,7 +108,7 @@ export default function EquipmentPage() {
         setList(result.data?.list || []);
         setTypeStats(result.data?.typeStats || []);
       }
-    } catch (e) {
+    } catch {
       toast.error('获取设备列表失败');
     } finally {
       setLoading(false);
@@ -134,7 +139,7 @@ export default function EquipmentPage() {
       } else {
         toast.error(result.message || tc('error'));
       }
-    } catch (e) {
+    } catch {
       toast.error('保存设备失败');
     }
   };
@@ -150,7 +155,7 @@ export default function EquipmentPage() {
       } else {
         toast.error(result.message || '删除失败');
       }
-    } catch (e) {
+    } catch {
       toast.error('删除设备失败');
     }
   };
@@ -167,7 +172,8 @@ export default function EquipmentPage() {
                 </div>
                 <div className="text-2xl font-bold">{s.count}</div>
                 <div className="text-xs text-gray-400">
-                  平均OEE: {parseFloat(s.avg_oee).toFixed(1)}%
+                  {tc('text_1pq601')}
+                  {parseFloat(s.avg_oee).toFixed(1)}%
                 </div>
               </CardContent>
             </Card>
@@ -179,9 +185,9 @@ export default function EquipmentPage() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Cpu className="w-5 h-5" />
-                设备台账
+                {tc('text_hzz2f3')}
               </CardTitle>
-              <CardDescription>管理印刷、覆膜、模切、全检等设备信息</CardDescription>
+              <CardDescription>{tc('text_986c7x')}</CardDescription>
             </div>
             <Button
               onClick={() => {
@@ -192,7 +198,7 @@ export default function EquipmentPage() {
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              新增设备
+              {tc('text_d7dlrr')}
             </Button>
           </CardHeader>
           <CardContent>
@@ -211,7 +217,7 @@ export default function EquipmentPage() {
                   <SelectValue placeholder="设备类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部类型</SelectItem>
+                  <SelectItem value="all">{tc('text_avglbk')}</SelectItem>
                   {Object.entries(EQUIPMENT_TYPES).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
                       {v}
@@ -232,15 +238,15 @@ export default function EquipmentPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>设备编码</TableHead>
-                    <TableHead>设备名称</TableHead>
-                    <TableHead>{tc("type")}</TableHead>
-                    <TableHead>品牌/型号</TableHead>
-                    <TableHead>位置</TableHead>
-                    <TableHead>产能</TableHead>
+                    <TableHead>{tc('text_i06agk')}</TableHead>
+                    <TableHead>{tc('text_hzyzbg')}</TableHead>
+                    <TableHead>{tc('type')}</TableHead>
+                    <TableHead>{tc('text_9c8nyo')}</TableHead>
+                    <TableHead>{tc('text_e6rl')}</TableHead>
+                    <TableHead>{tc('text_e33q')}</TableHead>
                     <TableHead>OEE</TableHead>
-                    <TableHead>{tc("status")}</TableHead>
-                    <TableHead className="text-right">{tc("actions")}</TableHead>
+                    <TableHead>{tc('status')}</TableHead>
+                    <TableHead className="text-right">{tc('actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -309,7 +315,8 @@ export default function EquipmentPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  设备编码 <span className="text-red-500">*</span>
+                  {tc('text_i06agk')}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={form.equipment_code || ''}
@@ -320,7 +327,8 @@ export default function EquipmentPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  设备名称 <span className="text-red-500">*</span>
+                  {tc('text_hzyzbg')}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   value={form.equipment_name || ''}
@@ -331,7 +339,7 @@ export default function EquipmentPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>设备类型</Label>
+                <Label>{tc('text_i05o3d')}</Label>
                 <Select
                   value={String(form.equipment_type ?? 1)}
                   onValueChange={(v) => setForm({ ...form, equipment_type: parseInt(v) })}
@@ -349,17 +357,17 @@ export default function EquipmentPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{tc("brand")}</Label>
+                <Label>{tc('brand')}</Label>
                 <Input
                   value={form.brand || ''}
                   onChange={(e) => setForm({ ...form, brand: e.target.value })}
-                  placeholder={tc("brand")}
+                  placeholder={tc('brand')}
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>型号</Label>
+                <Label>{tc('text_fcng')}</Label>
                 <Input
                   value={form.model || ''}
                   onChange={(e) => setForm({ ...form, model: e.target.value })}
@@ -367,7 +375,7 @@ export default function EquipmentPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>安装位置</Label>
+                <Label>{tc('text_c41wyl')}</Label>
                 <Input
                   value={form.location || ''}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
@@ -377,7 +385,7 @@ export default function EquipmentPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>额定产能</Label>
+                <Label>{tc('text_jmrm37')}</Label>
                 <Input
                   type="number"
                   value={form.rated_capacity || ''}
@@ -388,7 +396,7 @@ export default function EquipmentPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>运行状态</Label>
+                <Label>{tc('text_ipinbb')}</Label>
                 <Select
                   value={String(form.current_status ?? 1)}
                   onValueChange={(v) => setForm({ ...form, current_status: parseInt(v) })}
@@ -407,21 +415,21 @@ export default function EquipmentPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>{tc("remark")}</Label>
+              <Label>{tc('remark')}</Label>
               <Textarea
                 value={form.remark || ''}
                 onChange={(e) => setForm({ ...form, remark: e.target.value })}
-                placeholder={tc("remark")}
+                placeholder={tc('remark')}
                 rows={2}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              取消
+              {tc('text_ev02')}
             </Button>
             <Button onClick={saveEquipment} className="bg-blue-600 hover:bg-blue-700">
-              保存
+              {tc('text_e32z')}
             </Button>
           </DialogFooter>
         </DialogContent>

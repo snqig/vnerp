@@ -89,7 +89,7 @@ export default function DashboardPage() {
       const res = await authFetch('/api/dashboard');
       const result = await res.json();
       if (result.success && result.data) setData(result.data);
-    } catch (e) {
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -121,9 +121,9 @@ export default function DashboardPage() {
       { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
     > = {
       0: { label: tc('draft'), variant: 'secondary' },
-       1: { label: t('statusConfirmed'), variant: 'default' },
-       2: { label: t('statusInProduction'), variant: 'default' },
-       3: { label: t('statusCompleted'), variant: 'outline' },
+      1: { label: t('statusConfirmed'), variant: 'default' },
+      2: { label: t('statusInProduction'), variant: 'default' },
+      3: { label: t('statusCompleted'), variant: 'outline' },
     };
     const cfg = map[status] || { label: tc('unknown'), variant: 'secondary' as const };
     return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
@@ -135,9 +135,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">{t('title')}</h2>
-            <p className="text-muted-foreground mt-1">
-              {t('welcome', { time: currentTime })}
-            </p>
+            <p className="text-muted-foreground mt-1">{t('welcome', { time: currentTime })}</p>
           </div>
           <Button
             variant="outline"
@@ -182,7 +180,9 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{s.pendingOrders}</div>
-              <p className="text-xs text-muted-foreground">{t('producingCount', { count: s.producingOrders })}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('producingCount', { count: s.producingOrders })}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -310,7 +310,7 @@ export default function DashboardPage() {
                       ))}
                     </TableBody>
                   </Table>
-                  )}
+                )}
               </CardContent>
             </Card>
           </TabsContent>
