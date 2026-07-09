@@ -21,12 +21,7 @@ interface ChangeRequest {
   create_time?: string;
 }
 
-const APPROVAL_REQUIRED_MODULES = [
-  tc('text_6nj4ef'),
-  tc('text_bz4zwt'),
-  tc('text_48cw5i'),
-  tc('text_l8g7k2'),
-];
+const APPROVAL_REQUIRED_MODULES = ['单据编码规则', '审批规则', '仓库管理规则', '生产与品质规则'];
 
 export const GET = withPermission(async (request: NextRequest, userInfo) => {
   const { searchParams } = new URL(request.url);

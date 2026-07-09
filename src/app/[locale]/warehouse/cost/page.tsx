@@ -109,13 +109,15 @@ export default function CostPage() {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Calculator className="w-6 h-6" />
-              {tc('text_esxz5s')}
+              成本核算管理
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">{tc('text_da7v8a')}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              移动加权平均法成本核算，支持成本重算和成本分析
+            </p>
           </div>
           <Button size="sm" variant="outline" onClick={fetchData}>
             <RefreshCw className="h-3 w-3 mr-1" />
-            {tc('text_ejix')}
+            刷新
           </Button>
         </div>
 
@@ -155,7 +157,7 @@ export default function CostPage() {
                 <Calculator className="w-5 h-5 text-orange-600" />
                 <div>
                   <div className="text-sm text-muted-foreground">{tc('text_dntf4r')}</div>
-                  <div className="text-2xl font-bold">{tc('text_adlun0')}</div>
+                  <div className="text-2xl font-bold">移动加权平均</div>
                 </div>
               </div>
             </CardContent>
@@ -167,8 +169,8 @@ export default function CostPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{tc('text_euzqpn')}</TableHead>
-                  <TableHead>{tc('text_eusfkj')}</TableHead>
+                  <TableHead>物料编码</TableHead>
+                  <TableHead>物料名称</TableHead>
                   <TableHead>{tc('specification')}</TableHead>
                   <TableHead>{tc('unit')}</TableHead>
                   <TableHead>{tc('totalQuantity')}</TableHead>
@@ -188,7 +190,7 @@ export default function CostPage() {
                 ) : list.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                      {tc('text_kka3bc')}
+                      暂无成本数据
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -227,7 +229,7 @@ export default function CostPage() {
                             onClick={() => viewDetail(item.material_id)}
                           >
                             <Eye className="h-3 w-3 mr-1" />
-                            {tc('text_obrz')}
+                            详情
                           </Button>
                           <Button
                             size="sm"
@@ -236,7 +238,7 @@ export default function CostPage() {
                             onClick={() => recalculate(item.material_id)}
                           >
                             <Calculator className="h-3 w-3 mr-1" />
-                            {tc('text_ph7u')}
+                            重算
                           </Button>
                         </div>
                       </TableCell>
@@ -250,8 +252,7 @@ export default function CostPage() {
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
-            {tc('text_g35')}
-            {total}
+            共{total}
             {tc('text_ie9r1')}
           </span>
           <div className="flex gap-2">
@@ -261,7 +262,7 @@ export default function CostPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc('text_btlof')}
+              上一页
             </Button>
             <Button
               size="sm"
@@ -269,7 +270,7 @@ export default function CostPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc('text_btmf4')}
+              下一页
             </Button>
           </div>
         </div>
@@ -286,13 +287,13 @@ export default function CostPage() {
             <div className="space-y-4">
               {/* 各仓库成本 */}
               <div>
-                <h4 className="font-medium mb-2">{tc('text_gbclvk')}</h4>
+                <h4 className="font-medium mb-2">各仓库成本</h4>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-xs">{tc('warehouse')}</TableHead>
                       <TableHead className="text-xs">{tc('quantity')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_ev2aj')}</TableHead>
+                      <TableHead className="text-xs">成本价</TableHead>
                       <TableHead className="text-xs">{tc('text_cbilzl')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -326,7 +327,7 @@ export default function CostPage() {
                       <TableHead className="text-xs">{tc('time')}</TableHead>
                       <TableHead className="text-xs">{tc('type')}</TableHead>
                       <TableHead className="text-xs">{tc('quantity')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_elvm')}</TableHead>
+                      <TableHead className="text-xs">单价</TableHead>
                       <TableHead className="text-xs">{tc('amount')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -352,7 +353,7 @@ export default function CostPage() {
                           colSpan={5}
                           className="text-center text-muted-foreground text-sm py-4"
                         >
-                          {tc('text_mp1izz')}
+                          暂无入库记录
                         </TableCell>
                       </TableRow>
                     )}

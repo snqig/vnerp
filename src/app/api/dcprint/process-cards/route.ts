@@ -251,11 +251,11 @@ async function addMaterialToCard(cardIdentifier: string | number, data: any) {
   );
 
   if (!card) {
-    return errorResponse(tc('text_lnluva'), 404, 404);
+    return errorResponse('流程卡不存在', 404, 404);
   }
 
   if (card.lock_status === 'locked') {
-    return errorResponse(tc('text_gpknh0'), 400, 400);
+    return errorResponse('流程卡已锁住，不能添加辅料', 400, 400);
   }
 
   // 获取标签信息
@@ -266,7 +266,7 @@ async function addMaterialToCard(cardIdentifier: string | number, data: any) {
   );
 
   if (!label) {
-    return errorResponse(tc('text_wkfluy'), 404, 404);
+    return errorResponse('物料标签不存在', 404, 404);
   }
 
   // 添加辅料关联
@@ -292,7 +292,7 @@ async function addMaterialToCard(cardIdentifier: string | number, data: any) {
   // 更新标签为已使用
   await execute(`UPDATE inv_material_label SET is_used = 1 WHERE id = ?`, [labelId]);
 
-  return successResponse(null, tc('text_le25fc'));
+  return successResponse(null, '操作成功');
 }
 
 // 更新配料状态
@@ -302,7 +302,7 @@ async function updateBurdeningStatus(cardIdentifier: string | number, status: st
     [status, cardIdentifier]
   );
 
-  return successResponse(null, tc('text_wabaki'));
+  return successResponse(null, '配料状态更新成功');
 }
 
 // 更新锁住状态
@@ -312,7 +312,7 @@ async function updateLockStatus(cardIdentifier: string | number, status: string)
     [status, cardIdentifier]
   );
 
-  return successResponse(null, status === 'locked' ? tc('text_lq7fm1') : tc('text_lq5xax'));
+  return successResponse(null, status === 'locked' ? '流程卡已锁住' : '流程卡已解锁');
 }
 
 // 更新流程卡基本信息
@@ -337,7 +337,7 @@ async function updateCardInfo(cardIdentifier: string | number, data: any) {
   });
 
   if (updateFields.length === 0) {
-    return errorResponse(tc('text_magxwt'), 400, 400);
+    return errorResponse('没有要更新的字段', 400, 400);
   }
 
   params.push(cardIdentifier);
@@ -347,7 +347,7 @@ async function updateCardInfo(cardIdentifier: string | number, data: any) {
     params
   );
 
-  return successResponse(null, tc('text_z8gj5u'));
+  return successResponse(null, '流程卡更新成功');
 }
 
 // DELETE - 删除流程卡

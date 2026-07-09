@@ -115,10 +115,10 @@ export default function PayablesPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{tc('text_c9ld1l')}</h1>
+        <h1 className="text-2xl font-bold">应付管理</h1>
         <Button onClick={loadPayables} disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          {tc('text_ejix')}
+          刷新
         </Button>
       </div>
 
@@ -130,11 +130,11 @@ export default function PayablesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{tc('text_c9ebye')}</TableHead>
+                <TableHead>应付单号</TableHead>
                 <TableHead>{tc('text_dicb26')}</TableHead>
                 <TableHead>{tc('supplier')}</TableHead>
-                <TableHead>{tc('text_c9pc4w')}</TableHead>
-                <TableHead>{tc('text_c6tw9e')}</TableHead>
+                <TableHead>应付金额</TableHead>
+                <TableHead>已付金额</TableHead>
                 <TableHead>{tc('balance')}</TableHead>
                 <TableHead>{tc('text_cjh06')}</TableHead>
                 <TableHead>{tc('status')}</TableHead>
@@ -165,7 +165,7 @@ export default function PayablesPage() {
                         }}
                       >
                         <CreditCard className="w-3 h-3 mr-1" />
-                        {tc('text_dzza')}
+                        付款
                       </Button>
                     )}
                   </TableCell>
@@ -174,7 +174,7 @@ export default function PayablesPage() {
               {payables.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                    {tc('text_dcv57g')}
+                    暂无数据
                   </TableCell>
                 </TableRow>
               )}
@@ -194,7 +194,7 @@ export default function PayablesPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>{tc('text_c9pc4w')}</Label>
+              <Label>应付金额</Label>
               <Input value={selectedPay ? formatAmount(selectedPay.amount) : ''} disabled />
             </div>
             <div>
@@ -202,7 +202,7 @@ export default function PayablesPage() {
               <Input value={selectedPay ? formatAmount(selectedPay.balance) : ''} disabled />
             </div>
             <div>
-              <Label>{tc('text_aef3rm')}</Label>
+              <Label>付款金额</Label>
               <Input
                 type="number"
                 value={paymentAmount}
@@ -210,21 +210,21 @@ export default function PayablesPage() {
               />
             </div>
             <div>
-              <Label>{tc('text_ae7ae4')}</Label>
+              <Label>付款方式</Label>
               <select
                 className="w-full border rounded-md p-2"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
               >
-                <option value="bank_transfer">{tc('text_jd1cr4')}</option>
-                <option value="cash">{tc('text_kh7l')}</option>
-                <option value="check">{tc('text_hvkp')}</option>
+                <option value="bank_transfer">银行转账</option>
+                <option value="cash">现金</option>
+                <option value="check">支票</option>
                 <option value="wechat">{tc('text_cemv24')}</option>
-                <option value="alipay">{tc('text_f7gac')}</option>
+                <option value="alipay">支付宝</option>
               </select>
             </div>
             <div>
-              <Label>{tc('text_ae7d1c')}</Label>
+              <Label>付款日期</Label>
               <Input
                 type="date"
                 value={paymentDate}
@@ -234,7 +234,7 @@ export default function PayablesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPayment(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
             <Button onClick={handlePayment}>{tc('text_fro15o')}</Button>
           </DialogFooter>

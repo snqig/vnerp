@@ -189,7 +189,7 @@ export default function NewPurchaseRequestPage() {
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 <FileText className="h-6 w-6" />
-                {tc('text_nldgko')}
+                新增采购申请
               </h1>
               <p className="text-sm text-muted-foreground">{tc('text_sw65h4')}</p>
             </div>
@@ -197,7 +197,7 @@ export default function NewPurchaseRequestPage() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleSubmit} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
-              {tc('text_agnaep')}
+              保存草稿
             </Button>
             <Button onClick={handleSubmit} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
@@ -210,12 +210,12 @@ export default function NewPurchaseRequestPage() {
           {/* 基本信息 */}
           <Card>
             <CardHeader>
-              <CardTitle>{tc('text_biyzkw')}</CardTitle>
+              <CardTitle>基本信息</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label>
-                  {tc('text_fd5kvy')}
+                  申请日期
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -227,7 +227,7 @@ export default function NewPurchaseRequestPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc('text_fd9c44')}</Label>
+                <Label>申请类型</Label>
                 <Select
                   value={formData.request_type}
                   onValueChange={(v) => setFormData((prev) => ({ ...prev, request_type: v }))}
@@ -236,16 +236,16 @@ export default function NewPurchaseRequestPage() {
                     <SelectValue placeholder="选择类型" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="原材料">{tc('text_cr294')}</SelectItem>
-                    <SelectItem value="辅料">{tc('text_oywk')}</SelectItem>
+                    <SelectItem value="原材料">原材料</SelectItem>
+                    <SelectItem value="辅料">辅料</SelectItem>
                     <SelectItem value="设备">{tc('equipment')}</SelectItem>
-                    <SelectItem value="办公用品">{tc('text_armisn')}</SelectItem>
-                    <SelectItem value="其他">{tc('text_eae8')}</SelectItem>
+                    <SelectItem value="办公用品">办公用品</SelectItem>
+                    <SelectItem value="其他">其他</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{tc('text_fdd5ic')}</Label>
+                <Label>申请部门</Label>
                 <Select
                   value={formData.request_dept}
                   onValueChange={(v) => setFormData((prev) => ({ ...prev, request_dept: v }))}
@@ -264,7 +264,7 @@ export default function NewPurchaseRequestPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {tc('text_hu87q')}
+                  申请人
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -285,10 +285,10 @@ export default function NewPurchaseRequestPage() {
                     <SelectValue placeholder="选择优先级" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0">{tc('text_fny')}</SelectItem>
-                    <SelectItem value="1">{tc('text_ffx')}</SelectItem>
-                    <SelectItem value="2">{tc('text_ul4')}</SelectItem>
-                    <SelectItem value="3">{tc('text_ltcu')}</SelectItem>
+                    <SelectItem value="0">低</SelectItem>
+                    <SelectItem value="1">中</SelectItem>
+                    <SelectItem value="2">高</SelectItem>
+                    <SelectItem value="3">紧急</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -303,7 +303,7 @@ export default function NewPurchaseRequestPage() {
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>{tc('text_y5m1eh')}</Label>
+                <Label>建议供应商</Label>
                 <Input
                   value={formData.supplier_name}
                   onChange={(e) =>
@@ -318,10 +318,10 @@ export default function NewPurchaseRequestPage() {
           {/* 采购物料明细 */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>{tc('text_iisfle')}</CardTitle>
+              <CardTitle>采购物料明细</CardTitle>
               <Button type="button" variant="outline" size="sm" onClick={addItem}>
                 <Plus className="h-4 w-4 mr-2" />
-                {tc('text_e81ct1')}
+                添加物料
               </Button>
             </CardHeader>
             <CardContent>
@@ -332,13 +332,13 @@ export default function NewPurchaseRequestPage() {
                     className="grid grid-cols-12 gap-2 items-end p-4 border rounded-lg bg-gray-50 dark:bg-slate-800 dark:border-slate-700"
                   >
                     <div className="col-span-1">
-                      <Label className="text-xs">{tc('text_nn6z')}</Label>
+                      <Label className="text-xs">行号</Label>
                       <div className="text-sm font-medium py-2 text-gray-900 dark:text-white">
                         {index + 1}
                       </div>
                     </div>
                     <div className="col-span-2">
-                      <Label className="text-xs">{tc('text_euzqpn')}</Label>
+                      <Label className="text-xs">物料编码</Label>
                       <Input
                         value={item.material_code}
                         onChange={(e) => updateItem(index, 'material_code', e.target.value)}
@@ -347,7 +347,7 @@ export default function NewPurchaseRequestPage() {
                     </div>
                     <div className="col-span-2">
                       <Label className="text-xs">
-                        {tc('text_eusfkj')}
+                        物料名称
                         <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -357,7 +357,7 @@ export default function NewPurchaseRequestPage() {
                       />
                     </div>
                     <div className="col-span-2">
-                      <Label className="text-xs">{tc('text_ht8gjo')}</Label>
+                      <Label className="text-xs">规格型号</Label>
                       <Input
                         value={item.material_spec}
                         onChange={(e) => updateItem(index, 'material_spec', e.target.value)}
@@ -374,7 +374,7 @@ export default function NewPurchaseRequestPage() {
                     </div>
                     <div className="col-span-1">
                       <Label className="text-xs">
-                        {tc('text_i1y7')}
+                        数量
                         <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -388,7 +388,7 @@ export default function NewPurchaseRequestPage() {
                       />
                     </div>
                     <div className="col-span-1">
-                      <Label className="text-xs">{tc('text_elvm')}</Label>
+                      <Label className="text-xs">单价</Label>
                       <Input
                         type="number"
                         min="0"
@@ -423,7 +423,7 @@ export default function NewPurchaseRequestPage() {
               {/* 合计 */}
               <div className="flex justify-end mt-4 pt-4 border-t">
                 <div className="text-lg font-bold text-gray-900 dark:text-white">
-                  {tc('text_8d9uh7')}
+                  合计金额：
                   <span className="text-blue-600 dark:text-blue-400">
                     ¥{getTotalAmount().toFixed(2)}
                   </span>

@@ -399,15 +399,15 @@ export default function SchedulerPage() {
                     <TableCell>
                       {log.status === 'success' ? (
                         <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300 text-xs">
-                          {tc('text_h4sv')}
+                          成功
                         </Badge>
                       ) : log.status === 'failed' ? (
                         <Badge variant="destructive" className="text-xs">
-                          {tc('text_fy1g')}
+                          失败
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="text-xs">
-                          {tc('text_lpxkh')}
+                          运行中
                         </Badge>
                       )}
                     </TableCell>

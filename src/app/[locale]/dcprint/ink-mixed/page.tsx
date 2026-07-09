@@ -62,9 +62,9 @@ const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' }
 > = {
-  1: { label: tc('text_e5qgw'), variant: 'default' },
-  2: { label: tc('text_e5jaz'), variant: 'secondary' },
-  3: { label: tc('text_ege5m'), variant: 'destructive' },
+  1: { label: '已入库', variant: 'default' },
+  2: { label: '已使用', variant: 'secondary' },
+  3: { label: '已过期', variant: 'destructive' },
 };
 
 export default function InkMixedPage() {
@@ -185,7 +185,7 @@ export default function InkMixedPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              {tc('text_d73pks')}
+              新增入库
             </Button>
           </div>
         </div>
@@ -195,15 +195,15 @@ export default function InkMixedPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">{tc('text_i0myef')}</TableHead>
+                  <TableHead className="text-xs">记录单号</TableHead>
                   <TableHead className="text-xs">{tc('text_crwtq')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_i7d8w6')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_guoy62')}</TableHead>
+                  <TableHead className="text-xs">调色比例</TableHead>
+                  <TableHead className="text-xs">色彩名称</TableHead>
                   <TableHead className="text-xs">{tc('customer')}</TableHead>
                   <TableHead className="text-xs">{tc('quantity')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_f5hc9')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_i7cmvh')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_ikg3cm')}</TableHead>
+                  <TableHead className="text-xs">操作员</TableHead>
+                  <TableHead className="text-xs">调色时间</TableHead>
+                  <TableHead className="text-xs">过期时间</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
@@ -255,7 +255,7 @@ export default function InkMixedPage() {
                                 className="h-6 text-xs px-2"
                                 onClick={() => handleStatusChange(item.id, 2)}
                               >
-                                {tc('text_e5jaz')}
+                                已使用
                               </Button>
                               <Button
                                 size="sm"
@@ -263,7 +263,7 @@ export default function InkMixedPage() {
                                 className="h-6 text-xs px-2 text-orange-600"
                                 onClick={() => handleStatusChange(item.id, 3)}
                               >
-                                {tc('text_ege5m')}
+                                已过期
                               </Button>
                             </>
                           )}
@@ -294,7 +294,7 @@ export default function InkMixedPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center text-gray-400 py-8">
-                      {tc('text_7va1sv')}
+                      暂无调色油墨记录
                     </TableCell>
                   </TableRow>
                 )}
@@ -305,8 +305,7 @@ export default function InkMixedPage() {
 
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">
-            {tc('text_g35')}
-            {total}
+            共{total}
             {tc('text_ftebq')}
           </span>
           <div className="flex gap-2">
@@ -316,7 +315,7 @@ export default function InkMixedPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc('text_btlof')}
+              上一页
             </Button>
             <Button
               size="sm"
@@ -324,7 +323,7 @@ export default function InkMixedPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc('text_btmf4')}
+              下一页
             </Button>
           </div>
         </div>
@@ -336,21 +335,21 @@ export default function InkMixedPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{tc('text_e3uxo1')}</Label>
+                <Label>原油墨编号</Label>
                 <Input
                   value={editItem.base_ink_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, base_ink_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_e421ov')}</Label>
+                <Label>原油墨名称</Label>
                 <Input
                   value={editItem.base_ink_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, base_ink_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_i7d8w6')}</Label>
+                <Label>调色比例</Label>
                 <Input
                   value={editItem.mix_ratio || ''}
                   onChange={(e) => setEditItem({ ...editItem, mix_ratio: e.target.value })}
@@ -358,14 +357,14 @@ export default function InkMixedPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_guoy62')}</Label>
+                <Label>色彩名称</Label>
                 <Input
                   value={editItem.color_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, color_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_guw9b6')}</Label>
+                <Label>色彩编码</Label>
                 <Input
                   value={editItem.color_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, color_code: e.target.value })}
@@ -373,14 +372,14 @@ export default function InkMixedPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_byvcwo')}</Label>
+                <Label>客户名称</Label>
                 <Input
                   value={editItem.company_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, company_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_i7cmvh')}</Label>
+                <Label>调色时间</Label>
                 <Input
                   type="datetime-local"
                   value={editItem.mix_time || ''}
@@ -388,7 +387,7 @@ export default function InkMixedPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_f5hc9')}</Label>
+                <Label>操作员</Label>
                 <UserSelect
                   value={editItem.operator_name || ''}
                   onChange={(v) => setEditItem({ ...editItem, operator_name: v })}
@@ -421,7 +420,7 @@ export default function InkMixedPage() {
                 </Select>
               </div>
               <div>
-                <Label>{tc('text_ikg3cm')}</Label>
+                <Label>过期时间</Label>
                 <Input
                   type="datetime-local"
                   value={editItem.expire_time || ''}
@@ -438,7 +437,7 @@ export default function InkMixedPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>

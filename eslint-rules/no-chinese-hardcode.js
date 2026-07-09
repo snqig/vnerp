@@ -150,18 +150,11 @@ function createReport(context, node, text, options) {
     node,
     messageId: 'noChineseHardcode',
     data: { text, suggestion },
-    fix(fixer) {
-      if (!shouldGenerateKey) return null;
-      
-      const key = generateTranslationKey(text);
-      const quote = context.sourceCode.getText(node).startsWith('`') ? '`' : "'";
-      
-      // 对于模板字符串，保持原样
-      if (quote === '`') {
-        return fixer.replaceText(node, `tc(\`${key}\`)`);
-      }
-      
-      return fixer.replaceText(node, `tc('${key}')`);
+    // Auto-fix disabled: blind tc() conversion breaks module-scope code
+    // where tc (from useTranslations) is not in scope. i18n migration
+    // should be done manually with proper scope handling.
+    fix() {
+      return null;
     }
   };
 }
@@ -315,15 +308,12 @@ module.exports = {
           messageId: 'noChineseInJSX',
           data: {
             text: trimmed,
-            suggestion: shouldGenerateKey 
+            suggestion: shouldGenerateKey
               ? `建议使用: {tc('${generateTranslationKey(trimmed)}')}`
               : '建议使用国际化函数 {tc()}',
           },
-          fix(fixer) {
-            if (!shouldGenerateKey) return null;
-            
-            const key = generateTranslationKey(trimmed);
-            return fixer.replaceText(node, `{tc('${key}')}`);
+          fix() {
+            return null;
           },
         });
       },

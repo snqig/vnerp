@@ -4,15 +4,15 @@ import { successResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 const SPLIT_FLAG_MAP: Record<number, string> = {
-  0: tc('text_htb9'),
-  1: tc('text_g7sa'),
-  2: tc('text_e1y8'),
+  0: '整料',
+  1: '小料',
+  2: '余料',
 };
 
 const STATUS_MAP: Record<number, string> = {
-  0: tc('text_fotcb'),
-  1: tc('text_ec7df'),
-  2: tc('text_efqrn'),
+  0: '未盘点',
+  1: '已盘点',
+  2: '已调整',
 };
 
 export const GET = withPermission(

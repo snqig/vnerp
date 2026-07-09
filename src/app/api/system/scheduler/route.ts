@@ -227,5 +227,5 @@ async function executeDataCleanup(config: string | null): Promise<string> {
 }
 
 async function executeReportGeneration(config: string | null): Promise<string> {
-  return tc('text_6w0nzd');
+  return '报表生成任务已触发（异步执行中）';
 }

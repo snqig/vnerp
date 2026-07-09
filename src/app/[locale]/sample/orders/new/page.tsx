@@ -110,7 +110,7 @@ export default function NewSampleOrderPage() {
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 <FlaskConical className="h-6 w-6 text-blue-500" />
-                {tc('text_gzxxr1')}
+                新增打样单
               </h1>
               <p className="text-sm text-muted-foreground mt-1">{tc('text_ro2pek')}</p>
             </div>
@@ -125,12 +125,12 @@ export default function NewSampleOrderPage() {
           {/* 基本信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{tc('text_biyzkw')}</CardTitle>
+              <CardTitle className="text-base">基本信息</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{tc('text_hyid')}</Label>
+                  <Label>月份</Label>
                   <Input
                     type="number"
                     value={formData.order_month}
@@ -148,7 +148,7 @@ export default function NewSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('text_555b6m')}</Label>
+                <Label>客户名称 *</Label>
                 <Input
                   placeholder={tc('enterCustomerName')}
                   value={formData.customer_name}
@@ -157,7 +157,7 @@ export default function NewSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('text_lefi')}</Label>
+                <Label>种类</Label>
                 <Select
                   value={formData.sample_type}
                   onValueChange={(v) => handleChange('sample_type', v)}
@@ -166,9 +166,9 @@ export default function NewSampleOrderPage() {
                     <SelectValue placeholder="请选择种类" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="设变">{tc('text_o89m')}</SelectItem>
-                    <SelectItem value="测试">{tc('text_jcve')}</SelectItem>
-                    <SelectItem value="新款">{tc('text_hvv2')}</SelectItem>
+                    <SelectItem value="设变">设变</SelectItem>
+                    <SelectItem value="测试">测试</SelectItem>
+                    <SelectItem value="新款">新款</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -196,11 +196,11 @@ export default function NewSampleOrderPage() {
           {/* 产品信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{tc('text_a9xpns')}</CardTitle>
+              <CardTitle className="text-base">产品信息</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>{tc('text_evl8')}</Label>
+                <Label>品名</Label>
                 <Input
                   placeholder="请输入品名"
                   value={formData.product_name}
@@ -209,7 +209,7 @@ export default function NewSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('text_hqpq')}</Label>
+                <Label>料号</Label>
                 <Input
                   placeholder="请输入料号"
                   value={formData.material_code}
@@ -241,11 +241,11 @@ export default function NewSampleOrderPage() {
           {/* 印刷信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{tc('text_availx')}</CardTitle>
+              <CardTitle className="text-base">印刷信息</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>{tc('text_ave83h')}</Label>
+                <Label>印刷方式</Label>
                 <Select
                   value={formData.print_method}
                   onValueChange={(v) => handleChange('print_method', v)}
@@ -254,9 +254,9 @@ export default function NewSampleOrderPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="卷料丝印">{tc('text_ay8tit')}</SelectItem>
-                    <SelectItem value="轮转印">{tc('text_lp5ki')}</SelectItem>
-                    <SelectItem value="空白">{tc('text_lhdv')}</SelectItem>
+                    <SelectItem value="卷料丝印">卷料丝印</SelectItem>
+                    <SelectItem value="轮转印">轮转印</SelectItem>
+                    <SelectItem value="空白">空白</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -281,7 +281,7 @@ export default function NewSampleOrderPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>{tc('text_jhzjj0')}</Label>
+                <Label>需求日期</Label>
                 <Input
                   type="date"
                   value={formData.required_date}
@@ -294,7 +294,7 @@ export default function NewSampleOrderPage() {
           {/* 打样信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{tc('text_cu3xte')}</CardTitle>
+              <CardTitle className="text-base">打样信息</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -307,16 +307,16 @@ export default function NewSampleOrderPage() {
                     <SelectValue placeholder="请选择进展" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="产线拿">{tc('text_c4u13')}</SelectItem>
-                    <SelectItem value="等材料">{tc('text_ik7ki')}</SelectItem>
-                    <SelectItem value="冲压">{tc('text_ecrd')}</SelectItem>
-                    <SelectItem value="印刷">{tc('text_en5z')}</SelectItem>
-                    <SelectItem value="切割">{tc('text_eekr')}</SelectItem>
+                    <SelectItem value="产线拿">产线拿</SelectItem>
+                    <SelectItem value="等材料">等材料</SelectItem>
+                    <SelectItem value="冲压">冲压</SelectItem>
+                    <SelectItem value="印刷">印刷</SelectItem>
+                    <SelectItem value="切割">切割</SelectItem>
                     <SelectItem value="UV">UV</SelectItem>
-                    <SelectItem value="嗮版">{tc('text_f8re')}</SelectItem>
-                    <SelectItem value="出片">{tc('text_ekjx')}</SelectItem>
-                    <SelectItem value="检样">{tc('text_ie0n')}</SelectItem>
-                    <SelectItem value="做卡">{tc('text_e4hz')}</SelectItem>
+                    <SelectItem value="嗮版">嗮版</SelectItem>
+                    <SelectItem value="出片">出片</SelectItem>
+                    <SelectItem value="检样">检样</SelectItem>
+                    <SelectItem value="做卡">做卡</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -350,8 +350,8 @@ export default function NewSampleOrderPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="电子档">{tc('text_hm4ug')}</SelectItem>
-                    <SelectItem value="打样单">{tc('text_ewn81')}</SelectItem>
+                    <SelectItem value="电子档">电子档</SelectItem>
+                    <SelectItem value="打样单">打样单</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -370,7 +370,7 @@ export default function NewSampleOrderPage() {
           {/* 其他信息 */}
           <Card className="col-span-2">
             <CardHeader>
-              <CardTitle className="text-base">{tc('text_altlu6')}</CardTitle>
+              <CardTitle className="text-base">其他信息</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4 mb-4">
@@ -390,7 +390,7 @@ export default function NewSampleOrderPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{tc('text_bz1n63')}</Label>
+                  <Label>客户确认</Label>
                   <Input
                     value={formData.customer_confirm}
                     onChange={(e) => handleChange('customer_confirm', e.target.value)}
@@ -414,7 +414,7 @@ export default function NewSampleOrderPage() {
                     onCheckedChange={(checked) => handleChange('is_urgent', checked)}
                   />
                   <Label htmlFor="is_urgent" className="text-red-600">
-                    {tc('text_d8rnuw')}
+                    是否急件
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">

@@ -37,18 +37,7 @@ const formatDateCN = (date: Date) => {
   return `${year}年${month}月${day}日`;
 };
 
-const commonUnits = [
-  tc('text_ffu'),
-  tc('text_fli'),
-  tc('text_hnb'),
-  tc('text_isg'),
-  tc('text_okz'),
-  tc('text_elwo'),
-  tc('text_gg7'),
-  tc('text_ged'),
-  tc('text_ofl'),
-  tc('text_ghj'),
-];
+const commonUnits = ['个', '件', '套', '张', '米', '千克', '升', '包', '箱', '卷'];
 
 interface Department {
   id: number;
@@ -552,25 +541,25 @@ export default function PurchaseRequestFormPage() {
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleOpenList}>
               <List className="h-4 w-4 mr-1" />
-              {tc('text_aw7utt')}
+              历史记录
             </Button>
             <Button variant="outline" size="sm" onClick={resetForm}>
-              {tc('text_htfu')}
+              新建
             </Button>
             <Button variant="outline" size="sm" onClick={handlePrint}>
               <Printer className="h-4 w-4 mr-1" />
-              {tc('text_35em1p')}
+              打印(A5横向)
             </Button>
             {canEdit && (
               <Button variant="outline" size="sm" onClick={() => handleSave(0)}>
                 <Save className="h-4 w-4 mr-1" />
-                {tc('text_agnaep')}
+                保存草稿
               </Button>
             )}
             {canSubmit && (
               <Button size="sm" onClick={() => handleSave(1)}>
                 <Send className="h-4 w-4 mr-1" />
-                {tc('text_cx6elw')}
+                提交审校
               </Button>
             )}
           </div>
@@ -637,7 +626,7 @@ export default function PurchaseRequestFormPage() {
                 padding: '6px 28px',
               }}
             >
-              {tc('text_l6i2n')}
+              请购单
             </span>
           </div>
 
@@ -652,7 +641,7 @@ export default function PurchaseRequestFormPage() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontWeight: 500 }}>
-              <label style={{ fontWeight: 700, color: '#0f3b5c' }}>{tc('text_lyzh6')}</label>
+              <label style={{ fontWeight: 700, color: '#0f3b5c' }}>部门：</label>
               <Select
                 value={form.department_id ? String(form.department_id) : ''}
                 onValueChange={(v) => {
@@ -817,7 +806,7 @@ export default function PurchaseRequestFormPage() {
                           }}
                         >
                           <Search style={{ width: '14px', height: '14px' }} />
-                          {tc('text_il1vtc')}
+                          选择物料
                         </button>
                       )}
                       {item.material_code && canEdit && (
@@ -832,7 +821,7 @@ export default function PurchaseRequestFormPage() {
                             padding: '2px 4px',
                           }}
                         >
-                          {tc('text_i226')}
+                          更换
                         </button>
                       )}
                     </td>
@@ -1039,10 +1028,10 @@ export default function PurchaseRequestFormPage() {
                 boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
               }}
             >
-              {tc('text_lr02hu')}
+              + 添加物料行
             </button>
             <div style={{ fontSize: '13px', color: '#6b7280' }}>
-              {tc('text_8d9uh7')}
+              合计金额：
               <span style={{ color: '#059669', fontWeight: 700, fontSize: '16px' }}>
                 ¥
                 {purchaseItems
@@ -1075,7 +1064,7 @@ export default function PurchaseRequestFormPage() {
                 fontWeight: 600,
               }}
             >
-              {tc('text_rssdsg')}
+              表单编号：DC-A-03A
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '22px', alignItems: 'center' }}>
               {[
@@ -1134,11 +1123,11 @@ export default function PurchaseRequestFormPage() {
             <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
               {loadingRecords ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
-                  {tc('text_27k1ha')}
+                  加载中...
                 </div>
               ) : savedRecords.length === 0 ? (
                 <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>
-                  {tc('text_dd1mmb')}
+                  暂无记录
                 </div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
@@ -1218,7 +1207,7 @@ export default function PurchaseRequestFormPage() {
                               fontWeight: 600,
                             }}
                           >
-                            {tc('text_mekb')}
+                            编辑
                           </button>
                         </td>
                       </tr>

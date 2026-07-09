@@ -104,23 +104,23 @@ interface MaintenanceRecord {
 }
 
 const MAINT_TYPE: Record<number, string> = {
-  1: tc('text_d8ur8x'),
-  2: tc('text_ad3x9h'),
-  3: tc('text_aflbfd'),
-  4: tc('text_ad9o58'),
+  1: '日常保养',
+  2: '一级保养',
+  3: '二级保养',
+  4: '三级保养',
 };
 const CYCLE_TYPE: Record<number, string> = {
-  1: tc('text_hm1'),
-  2: tc('text_go8'),
-  3: tc('text_kco'),
-  4: tc('text_i1v'),
-  5: tc('text_ino'),
+  1: '天',
+  2: '周',
+  3: '月',
+  4: '季',
+  5: '年',
 };
 const PLAN_STATUS: Record<number, { label: string; color: string }> = {
-  1: { label: tc('text_eh5oq'), color: 'bg-yellow-100 text-yellow-800' },
-  2: { label: tc('text_f2hhk'), color: 'bg-blue-100 text-blue-800' },
-  3: { label: tc('text_e7hbq'), color: 'bg-green-100 text-green-800' },
-  4: { label: tc('text_egh03'), color: 'bg-red-100 text-red-800' },
+  1: { label: '待执行', color: 'bg-yellow-100 text-yellow-800' },
+  2: { label: '执行中', color: 'bg-blue-100 text-blue-800' },
+  3: { label: '已完成', color: 'bg-green-100 text-green-800' },
+  4: { label: '已逾期', color: 'bg-red-100 text-red-800' },
 };
 export default function EquipmentMaintenancePage() {
   // 翻译钩子
@@ -292,11 +292,11 @@ export default function EquipmentMaintenancePage() {
             <TabsList>
               <TabsTrigger value="plan" className="gap-1">
                 <ClipboardList className="w-4 h-4" />
-                {tc('text_af8h8v')}
+                保养计划
               </TabsTrigger>
               <TabsTrigger value="record" className="gap-1">
                 <Wrench className="w-4 h-4" />
-                {tc('text_af8k83')}
+                保养记录
               </TabsTrigger>
             </TabsList>
             <div className="flex gap-2">
@@ -318,12 +318,12 @@ export default function EquipmentMaintenancePage() {
               {activeTab === 'plan' ? (
                 <Button onClick={openNewPlan} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-4 h-4 mr-2" />
-                  {tc('text_w5b743')}
+                  新增保养计划
                 </Button>
               ) : (
                 <Button onClick={() => openNewRecord()} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="w-4 h-4 mr-2" />
-                  {tc('text_w5b44v')}
+                  新增保养记录
                 </Button>
               )}
             </div>
@@ -332,7 +332,7 @@ export default function EquipmentMaintenancePage() {
           <TabsContent value="plan">
             <Card>
               <CardHeader>
-                <CardTitle>{tc('text_af8h8v')}</CardTitle>
+                <CardTitle>保养计划</CardTitle>
                 <CardDescription>{tc('text_8k1159')}</CardDescription>
               </CardHeader>
               <CardContent>
@@ -344,12 +344,12 @@ export default function EquipmentMaintenancePage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{tc('text_hymw36')}</TableHead>
-                        <TableHead>{tc('text_i06agk')}</TableHead>
-                        <TableHead>{tc('text_hzyzbg')}</TableHead>
+                        <TableHead>计划编号</TableHead>
+                        <TableHead>设备编码</TableHead>
+                        <TableHead>设备名称</TableHead>
                         <TableHead>{tc('text_af5xke')}</TableHead>
                         <TableHead>{tc('text_aez791')}</TableHead>
-                        <TableHead>{tc('text_hyipm3')}</TableHead>
+                        <TableHead>计划日期</TableHead>
                         <TableHead>{tc('text_aeynbm')}</TableHead>
                         <TableHead>{tc('status')}</TableHead>
                         <TableHead className="text-right">{tc('actions')}</TableHead>
@@ -386,7 +386,7 @@ export default function EquipmentMaintenancePage() {
                                     className="h-7 text-xs"
                                     onClick={() => handlePlanStatus(p.id, 2)}
                                   >
-                                    {tc('text_cczvm8')}
+                                    开始执行
                                   </Button>
                                 )}
                                 {p.status === 2 && (
@@ -396,7 +396,7 @@ export default function EquipmentMaintenancePage() {
                                     className="h-7 text-xs"
                                     onClick={() => openNewRecord(p)}
                                   >
-                                    {tc('text_bi3jqr')}
+                                    填写记录
                                   </Button>
                                 )}
                                 <Button
@@ -427,7 +427,7 @@ export default function EquipmentMaintenancePage() {
                       {plans.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                            {tc('text_mxwydv')}
+                            暂无保养计划
                           </TableCell>
                         </TableRow>
                       )}
@@ -435,11 +435,7 @@ export default function EquipmentMaintenancePage() {
                   </Table>
                 )}
                 <div className="flex items-center justify-between mt-4">
-                  <span className="text-sm text-gray-500">
-                    {tc('text_g35')}
-                    {planTotal}
-                    {tc('text_kf5')}
-                  </span>
+                  <span className="text-sm text-gray-500">共{planTotal}条</span>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -447,7 +443,7 @@ export default function EquipmentMaintenancePage() {
                       disabled={planPage <= 1}
                       onClick={() => setPlanPage((p) => p - 1)}
                     >
-                      {tc('text_btlof')}
+                      上一页
                     </Button>
                     <Button
                       size="sm"
@@ -455,7 +451,7 @@ export default function EquipmentMaintenancePage() {
                       disabled={planPage * 20 >= planTotal}
                       onClick={() => setPlanPage((p) => p + 1)}
                     >
-                      {tc('text_btmf4')}
+                      下一页
                     </Button>
                   </div>
                 </div>
@@ -466,7 +462,7 @@ export default function EquipmentMaintenancePage() {
           <TabsContent value="record">
             <Card>
               <CardHeader>
-                <CardTitle>{tc('text_af8k83')}</CardTitle>
+                <CardTitle>保养记录</CardTitle>
                 <CardDescription>{tc('text_z9ofnv')}</CardDescription>
               </CardHeader>
               <CardContent>
@@ -478,14 +474,14 @@ export default function EquipmentMaintenancePage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{tc('text_i0uebq')}</TableHead>
-                        <TableHead>{tc('text_i06agk')}</TableHead>
-                        <TableHead>{tc('text_hzyzbg')}</TableHead>
+                        <TableHead>记录编号</TableHead>
+                        <TableHead>设备编码</TableHead>
+                        <TableHead>设备名称</TableHead>
                         <TableHead>{tc('text_af5xke')}</TableHead>
-                        <TableHead>{tc('text_cd0k3t')}</TableHead>
-                        <TableHead>{tc('text_gfi7qi')}</TableHead>
-                        <TableHead>{tc('text_aki78n')}</TableHead>
-                        <TableHead>{tc('text_onwv')}</TableHead>
+                        <TableHead>开始时间</TableHead>
+                        <TableHead>结束时间</TableHead>
+                        <TableHead>停机时长</TableHead>
+                        <TableHead>费用</TableHead>
                         <TableHead>{tc('text_m52h')}</TableHead>
                         <TableHead className="text-right">{tc('actions')}</TableHead>
                       </TableRow>
@@ -540,7 +536,7 @@ export default function EquipmentMaintenancePage() {
                       {records.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                            {tc('text_mxwven')}
+                            暂无保养记录
                           </TableCell>
                         </TableRow>
                       )}
@@ -548,11 +544,7 @@ export default function EquipmentMaintenancePage() {
                   </Table>
                 )}
                 <div className="flex items-center justify-between mt-4">
-                  <span className="text-sm text-gray-500">
-                    {tc('text_g35')}
-                    {recordTotal}
-                    {tc('text_kf5')}
-                  </span>
+                  <span className="text-sm text-gray-500">共{recordTotal}条</span>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -560,7 +552,7 @@ export default function EquipmentMaintenancePage() {
                       disabled={recordPage <= 1}
                       onClick={() => setRecordPage((p) => p - 1)}
                     >
-                      {tc('text_btlof')}
+                      上一页
                     </Button>
                     <Button
                       size="sm"
@@ -568,7 +560,7 @@ export default function EquipmentMaintenancePage() {
                       disabled={recordPage * 20 >= recordTotal}
                       onClick={() => setRecordPage((p) => p + 1)}
                     >
-                      {tc('text_btmf4')}
+                      下一页
                     </Button>
                   </div>
                 </div>
@@ -600,7 +592,7 @@ export default function EquipmentMaintenancePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>
-                      {tc('text_o9ah')}
+                      设备
                       <span className="text-red-500">*</span>
                     </Label>
                     <Select
@@ -648,7 +640,7 @@ export default function EquipmentMaintenancePage() {
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label>{tc('text_cv1wl')}</Label>
+                    <Label>周期值</Label>
                     <Input
                       type="number"
                       value={form.cycle_value || ''}
@@ -677,7 +669,7 @@ export default function EquipmentMaintenancePage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>{tc('text_hyipm3')}</Label>
+                    <Label>计划日期</Label>
                     <Input
                       type="date"
                       value={form.plan_date || ''}
@@ -708,7 +700,7 @@ export default function EquipmentMaintenancePage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>
-                      {tc('text_o9ah')}
+                      设备
                       <span className="text-red-500">*</span>
                     </Label>
                     <Select
@@ -757,7 +749,7 @@ export default function EquipmentMaintenancePage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>{tc('text_cd0k3t')}</Label>
+                    <Label>开始时间</Label>
                     <Input
                       type="datetime-local"
                       value={form.start_time || ''}
@@ -765,7 +757,7 @@ export default function EquipmentMaintenancePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>{tc('text_gfi7qi')}</Label>
+                    <Label>结束时间</Label>
                     <Input
                       type="datetime-local"
                       value={form.end_time || ''}
@@ -814,7 +806,7 @@ export default function EquipmentMaintenancePage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>{tc('text_dedoag')}</Label>
+                  <Label>故障描述</Label>
                   <Textarea
                     value={form.fault_desc || ''}
                     onChange={(e) => setForm({ ...form, fault_desc: e.target.value })}
@@ -844,10 +836,10 @@ export default function EquipmentMaintenancePage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
             <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-              {tc('text_e32z')}
+              保存
             </Button>
           </DialogFooter>
         </DialogContent>

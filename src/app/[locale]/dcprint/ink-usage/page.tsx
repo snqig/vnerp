@@ -187,7 +187,7 @@ export default function InkUsagePage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              {tc('text_d7brz3')}
+              新增耗用
             </Button>
           </div>
         </div>
@@ -197,13 +197,13 @@ export default function InkUsagePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">{tc('text_gn9imj')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_gjgb2a')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_e39t6i')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_e32i1e')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_gn9o9c')}</TableHead>
+                  <TableHead className="text-xs">耗用日期</TableHead>
+                  <TableHead className="text-xs">网版编码</TableHead>
+                  <TableHead className="text-xs">油墨编码</TableHead>
+                  <TableHead className="text-xs">油墨名称</TableHead>
+                  <TableHead className="text-xs">耗用数量</TableHead>
                   <TableHead className="text-xs">{tc('unit')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_f5g8b')}</TableHead>
+                  <TableHead className="text-xs">操作人</TableHead>
                   <TableHead className="text-xs">{tc('remark')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
@@ -234,7 +234,7 @@ export default function InkUsagePage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                      {tc('text_dd1mmb')}
+                      暂无记录
                     </TableCell>
                   </TableRow>
                 )}
@@ -244,11 +244,7 @@ export default function InkUsagePage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            {tc('text_g35')}
-            {total}
-            {tc('text_kf5')}
-          </span>
+          <span className="text-sm text-gray-500">共{total}条</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -256,7 +252,7 @@ export default function InkUsagePage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc('text_btlof')}
+              上一页
             </Button>
             <Button
               size="sm"
@@ -264,7 +260,7 @@ export default function InkUsagePage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc('text_btmf4')}
+              下一页
             </Button>
           </div>
         </div>
@@ -276,7 +272,7 @@ export default function InkUsagePage() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>{tc('text_iz9r')}</Label>
+                <Label>油墨</Label>
                 <Select
                   value={String(editItem.ink_id || '')}
                   onValueChange={(v) => {
@@ -303,7 +299,7 @@ export default function InkUsagePage() {
                 </Select>
               </div>
               <div>
-                <Label>{tc('text_gn9o9c')}</Label>
+                <Label>耗用数量</Label>
                 <Input
                   type="number"
                   value={editItem.usage_qty ?? ''}
@@ -331,7 +327,7 @@ export default function InkUsagePage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_gn9imj')}</Label>
+                <Label>耗用日期</Label>
                 <Input
                   type="datetime-local"
                   value={editItem.usage_date?.slice(0, 16) || ''}
@@ -339,7 +335,7 @@ export default function InkUsagePage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_f5g8b')}</Label>
+                <Label>操作人</Label>
                 <UserSelect
                   value={editItem.operator_name || ''}
                   onChange={(v) => setEditItem({ ...editItem, operator_name: v })}
@@ -355,7 +351,7 @@ export default function InkUsagePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>

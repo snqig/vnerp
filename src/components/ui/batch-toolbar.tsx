@@ -65,13 +65,12 @@ export function BatchToolbar({
         }}
       />
       <span className="text-sm text-muted-foreground">
-        {tc('text_grpz')}
-        <strong className="text-foreground">{selectedIds.length}</strong> / {totalItems}
-        {tc('text_u49')}
+        已选
+        <strong className="text-foreground">{selectedIds.length}</strong> / {totalItems}项
       </span>
       <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onClearSelection}>
         <X className="h-3 w-3 mr-0.5" />
-        {tc('text_b1em0i')}
+        取消选择
       </Button>
       <div className="flex-1" />
       <div className="flex items-center gap-1">

@@ -137,7 +137,7 @@ export default function DbRelationsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{tc('text_burcn4')}</CardTitle>
+            <CardTitle className="text-sm font-medium">外键关系</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-500">{totalForeignKeys}</div>
@@ -145,7 +145,7 @@ export default function DbRelationsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">{tc('text_isbtkn')}</CardTitle>
+            <CardTitle className="text-sm font-medium">逻辑关联</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-500">{totalLogicalRelations}</div>
@@ -168,7 +168,7 @@ export default function DbRelationsPage() {
         {/* 模块分布饼图 */}
         <Card>
           <CardHeader>
-            <CardTitle>{tc('text_dr32xf')}</CardTitle>
+            <CardTitle>模块分布</CardTitle>
             <CardDescription>{tc('text_k33wbg')}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -183,7 +183,7 @@ export default function DbRelationsPage() {
         {/* 关联数量柱状图 */}
         <Card>
           <CardHeader>
-            <CardTitle>{tc('text_fhhj6p')}</CardTitle>
+            <CardTitle>表关联数量 TOP 20</CardTitle>
             <CardDescription>{tc('text_v9manb')}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -199,17 +199,17 @@ export default function DbRelationsPage() {
       {/* 详细信息标签页 */}
       <Tabs defaultValue="modules" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="modules">{tc('text_dr39ec')}</TabsTrigger>
-          <TabsTrigger value="tables">{tc('text_ewce7')}</TabsTrigger>
-          <TabsTrigger value="foreignkeys">{tc('text_burcn4')}</TabsTrigger>
-          <TabsTrigger value="logical">{tc('text_isbtkn')}</TabsTrigger>
+          <TabsTrigger value="modules">模块分组</TabsTrigger>
+          <TabsTrigger value="tables">所有表</TabsTrigger>
+          <TabsTrigger value="foreignkeys">外键关系</TabsTrigger>
+          <TabsTrigger value="logical">逻辑关联</TabsTrigger>
         </TabsList>
 
         {/* 模块分组 */}
         <TabsContent value="modules">
           <Card>
             <CardHeader>
-              <CardTitle>{tc('text_dr39ec')}</CardTitle>
+              <CardTitle>模块分组</CardTitle>
               <CardDescription>{tc('text_fjr4cz')}</CardDescription>
             </CardHeader>
             <CardContent>
@@ -248,8 +248,7 @@ export default function DbRelationsPage() {
                                 </p>
                               </div>
                               <Badge variant="secondary" className="ml-2">
-                                {table.rows}
-                                {tc('text_qx8')}
+                                {table.rows}行
                               </Badge>
                             </div>
                           ))}
@@ -269,8 +268,7 @@ export default function DbRelationsPage() {
             <CardHeader>
               <CardTitle>{tc('text_yhjvgk')}</CardTitle>
               <CardDescription>
-                {tc('text_g35')}
-                {totalTables}
+                共{totalTables}
                 {tc('text_gxfs')}
               </CardDescription>
             </CardHeader>
@@ -278,10 +276,10 @@ export default function DbRelationsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{tc('text_nnvp')}</TableHead>
-                    <TableHead>{tc('text_od5m')}</TableHead>
+                    <TableHead>表名</TableHead>
+                    <TableHead>说明</TableHead>
                     <TableHead>{tc('text_d7t8gy')}</TableHead>
-                    <TableHead>{tc('text_ij4m')}</TableHead>
+                    <TableHead>模块</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -314,16 +312,15 @@ export default function DbRelationsPage() {
         <TabsContent value="foreignkeys">
           <Card>
             <CardHeader>
-              <CardTitle>{tc('text_burcn4')}</CardTitle>
+              <CardTitle>外键关系</CardTitle>
               <CardDescription>
-                {tc('text_g35')}
-                {totalForeignKeys}
+                共{totalForeignKeys}
                 {tc('text_xcm9yi')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {totalForeignKeys === 0 ? (
-                <p className="text-muted-foreground text-center py-8">{tc('text_q1zutt')}</p>
+                <p className="text-muted-foreground text-center py-8">数据库中没有定义外键关系</p>
               ) : (
                 <Table>
                   <TableHeader>
@@ -361,8 +358,7 @@ export default function DbRelationsPage() {
               <CardTitle>{tc('text_cdd1nj')}</CardTitle>
               <CardDescription>
                 {tc('text_lclylq')}
-                {totalLogicalRelations}
-                {tc('text_ffu')}
+                {totalLogicalRelations}个
               </CardDescription>
             </CardHeader>
             <CardContent>

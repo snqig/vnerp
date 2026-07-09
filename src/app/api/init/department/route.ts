@@ -17,12 +17,12 @@ interface Department {
 
 // 一级部门数据
 const departmentData = [
-  { dept_code: 'DEPT001', dept_name: tc('text_iof7n'), parent_id: 0, sort_order: 1, status: 1 },
-  { dept_code: 'DEPT002', dept_name: tc('text_buoe9'), parent_id: 0, sort_order: 2, status: 1 },
-  { dept_code: 'DEPT003', dept_name: tc('text_hjr0g'), parent_id: 0, sort_order: 3, status: 1 },
-  { dept_code: 'DEPT004', dept_name: tc('text_cu3n96'), parent_id: 0, sort_order: 4, status: 1 },
-  { dept_code: 'DEPT005', dept_name: tc('text_m1hlu'), parent_id: 0, sort_order: 5, status: 1 },
-  { dept_code: 'DEPT006', dept_name: tc('text_d3pkx'), parent_id: 0, sort_order: 6, status: 1 },
+  { dept_code: 'DEPT001', dept_name: '管理部', parent_id: 0, sort_order: 1, status: 1 },
+  { dept_code: 'DEPT002', dept_name: '业务部', parent_id: 0, sort_order: 2, status: 1 },
+  { dept_code: 'DEPT003', dept_name: '生产部', parent_id: 0, sort_order: 3, status: 1 },
+  { dept_code: 'DEPT004', dept_name: '打样中心', parent_id: 0, sort_order: 4, status: 1 },
+  { dept_code: 'DEPT005', dept_name: '采购部', parent_id: 0, sort_order: 5, status: 1 },
+  { dept_code: 'DEPT006', dept_name: '品质部', parent_id: 0, sort_order: 6, status: 1 },
 ];
 
 // 子部门数据
@@ -30,21 +30,21 @@ const subDepartmentData = [
   // 生产部子部门
   {
     dept_code: 'DEPT00301',
-    dept_name: tc('text_ii2u'),
+    dept_name: '模切',
     parent_code: 'DEPT003',
     sort_order: 1,
     status: 1,
   },
   {
     dept_code: 'DEPT00302',
-    dept_name: tc('text_f2pt'),
+    dept_name: '商标',
     parent_code: 'DEPT003',
     sort_order: 2,
     status: 1,
   },
   {
     dept_code: 'DEPT00303',
-    dept_name: tc('text_eae8'),
+    dept_name: '其他',
     parent_code: 'DEPT003',
     sort_order: 3,
     status: 1,
@@ -52,14 +52,14 @@ const subDepartmentData = [
   // 采购部子部门
   {
     dept_code: 'DEPT00501',
-    dept_name: tc('text_pkjq'),
+    dept_name: '采购',
     parent_code: 'DEPT005',
     sort_order: 1,
     status: 1,
   },
   {
     dept_code: 'DEPT00502',
-    dept_name: tc('text_dxcw'),
+    dept_name: '仓库',
     parent_code: 'DEPT005',
     sort_order: 2,
     status: 1,

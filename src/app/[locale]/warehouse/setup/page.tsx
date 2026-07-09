@@ -363,13 +363,13 @@ export default function WarehouseSetupPage() {
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      {tc('text_27k1ha')}
+                      加载中...
                     </TableCell>
                   </TableRow>
                 ) : warehouses.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                      {tc('text_n0w5s4')}
+                      暂无仓库数据
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -386,11 +386,11 @@ export default function WarehouseSetupPage() {
                       <TableCell>
                         {warehouse.includeInCalculation ? (
                           <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
-                            {tc('text_k6n')}
+                            是
                           </Badge>
                         ) : (
                           <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">
-                            {tc('text_gme')}
+                            否
                           </Badge>
                         )}
                       </TableCell>
@@ -442,14 +442,14 @@ export default function WarehouseSetupPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEdit(warehouse)}>
                               <Edit className="h-4 w-4 mr-2" />
-                              {tc('text_mekb')}
+                              编辑
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => handleDeleteClick(warehouse)}
                               className="text-red-600"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              {tc('text_eslg')}
+                              删除
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -471,7 +471,7 @@ export default function WarehouseSetupPage() {
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="code">
-                  {tc('text_acdqyz')}
+                  仓库编码
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -483,7 +483,7 @@ export default function WarehouseSetupPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="name">
-                  {tc('text_ac6ftv')}
+                  仓库名称
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -583,7 +583,9 @@ export default function WarehouseSetupPage() {
                     }
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">{tc('text_va0t6m')}</p>
+                <p className="text-xs text-muted-foreground">
+                  开启后，该仓库的库存将参与MRP需求计算
+                </p>
               </div>
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="remark">{tc('remark')}</Label>
@@ -597,7 +599,7 @@ export default function WarehouseSetupPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button onClick={handleSave} className="btn-dashboard-primary">
                 {editingWarehouse ? tc('save') : '创建'}
@@ -614,7 +616,7 @@ export default function WarehouseSetupPage() {
             </DialogHeader>
             <div className="py-4">
               <p className="text-muted-foreground">
-                {tc('text_m9latj')}
+                确定要删除仓库
                 <strong>{warehouseToDelete?.name}</strong>
                 {tc('text_fpbc')}
               </p>
@@ -622,10 +624,10 @@ export default function WarehouseSetupPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button variant="destructive" onClick={handleConfirmDelete}>
-                {tc('text_frotru')}
+                确认删除
               </Button>
             </DialogFooter>
           </DialogContent>

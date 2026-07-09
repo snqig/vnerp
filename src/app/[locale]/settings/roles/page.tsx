@@ -71,11 +71,11 @@ interface Menu {
 
 // 数据范围选项
 const _dataScopeOptions = [
-  { value: 1, label: tc('text_avcqke') },
-  { value: 2, label: tc('text_3vvdg6') },
-  { value: 3, label: tc('text_wlp4yq') },
-  { value: 4, label: tc('text_xtjdwv') },
-  { value: 5, label: tc('text_jh1ll') },
+  { value: 1, label: '全部数据' },
+  { value: 2, label: '本部门数据' },
+  { value: 3, label: '本部门及以下数据' },
+  { value: 4, label: '仅本人数据' },
+  { value: 5, label: '自定义' },
 ];
 
 // 权限模块

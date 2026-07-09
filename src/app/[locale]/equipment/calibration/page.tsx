@@ -43,10 +43,10 @@ const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: tc('text_ehzq7'), variant: 'outline' },
-  2: { label: tc('text_fscr7'), variant: 'default' },
-  3: { label: tc('text_e68iu'), variant: 'secondary' },
-  4: { label: tc('text_bufb5'), variant: 'destructive' },
+  1: { label: '待检定', variant: 'outline' },
+  2: { label: '检定中', variant: 'default' },
+  3: { label: '已合格', variant: 'secondary' },
+  4: { label: '不合格', variant: 'destructive' },
 };
 
 export default function EquipmentCalibrationPage() {
@@ -134,7 +134,7 @@ export default function EquipmentCalibrationPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{tc('text_i02c2r')}</h1>
+          <h1 className="text-2xl font-bold">设备检定</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -155,7 +155,7 @@ export default function EquipmentCalibrationPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              {tc('text_d77o08')}
+              新增检定
             </Button>
           </div>
         </div>
@@ -164,12 +164,12 @@ export default function EquipmentCalibrationPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">{tc('text_dlgbks')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_i06agk')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_hzyzbg')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_dljl10')}</TableHead>
+                  <TableHead className="text-xs">检定单号</TableHead>
+                  <TableHead className="text-xs">设备编码</TableHead>
+                  <TableHead className="text-xs">设备名称</TableHead>
+                  <TableHead className="text-xs">检定日期</TableHead>
                   <TableHead className="text-xs">{tc('text_aakafk')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_dljt9g')}</TableHead>
+                  <TableHead className="text-xs">检定机构</TableHead>
                   <TableHead className="text-xs">{tc('text_kupqq')}</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
@@ -201,7 +201,7 @@ export default function EquipmentCalibrationPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              {tc('text_cd0pnp')}
+                              开始检定
                             </Button>
                           )}
                           {item.status === 2 && (
@@ -211,7 +211,7 @@ export default function EquipmentCalibrationPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 3)}
                             >
-                              {tc('text_ev5g')}
+                              合格
                             </Button>
                           )}
                           <Button
@@ -241,7 +241,7 @@ export default function EquipmentCalibrationPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                      {tc('text_dd1mmb')}
+                      暂无记录
                     </TableCell>
                   </TableRow>
                 )}
@@ -250,11 +250,7 @@ export default function EquipmentCalibrationPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            {tc('text_g35')}
-            {total}
-            {tc('text_kf5')}
-          </span>
+          <span className="text-sm text-gray-500">共{total}条</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -262,7 +258,7 @@ export default function EquipmentCalibrationPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc('text_btlof')}
+              上一页
             </Button>
             <Button
               size="sm"
@@ -270,7 +266,7 @@ export default function EquipmentCalibrationPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc('text_btmf4')}
+              下一页
             </Button>
           </div>
         </div>
@@ -281,21 +277,21 @@ export default function EquipmentCalibrationPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{tc('text_i06agk')}</Label>
+                <Label>设备编码</Label>
                 <Input
                   value={editItem.equipment_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, equipment_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_hzyzbg')}</Label>
+                <Label>设备名称</Label>
                 <Input
                   value={editItem.equipment_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, equipment_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_dljl10')}</Label>
+                <Label>检定日期</Label>
                 <Input
                   type="date"
                   value={editItem.calibration_date || ''}
@@ -303,7 +299,7 @@ export default function EquipmentCalibrationPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_ipgqzu')}</Label>
+                <Label>下次检定日期</Label>
                 <Input
                   type="date"
                   value={editItem.next_calibration_date || ''}
@@ -313,7 +309,7 @@ export default function EquipmentCalibrationPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_dljt9g')}</Label>
+                <Label>检定机构</Label>
                 <Input
                   value={editItem.calibration_org || ''}
                   onChange={(e) => setEditItem({ ...editItem, calibration_org: e.target.value })}
@@ -329,7 +325,7 @@ export default function EquipmentCalibrationPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>

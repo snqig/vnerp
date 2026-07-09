@@ -239,7 +239,7 @@ export default function BasicsSettingsPage() {
             {group.display_name || group.category}
           </CardTitle>
           <CardDescription>
-            {tc('text_pewx')}
+            配置
             {group.display_name || group.category}
           </CardDescription>
         </CardHeader>
@@ -283,7 +283,7 @@ export default function BasicsSettingsPage() {
               ))}
             <TabsTrigger value="theme" className="flex items-center gap-1">
               <Palette className="h-4 w-4" />
-              {tc('text_ai8tm5')}
+              主题设置
             </TabsTrigger>
           </TabsList>
 
@@ -299,7 +299,7 @@ export default function BasicsSettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette className="h-5 w-5" />
-                  {tc('text_ai8tm5')}
+                  主题设置
                 </CardTitle>
                 <CardDescription>{tc('text_kxopjs')}</CardDescription>
               </CardHeader>

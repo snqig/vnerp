@@ -210,7 +210,7 @@ export default function AnnouncementPage() {
                   <TableHead>{tc('status')}</TableHead>
                   <TableHead>{tc('text_mifc')}</TableHead>
                   <TableHead>{tc('text_mnnqx')}</TableHead>
-                  <TableHead>{tc('text_ayuphs')}</TableHead>
+                  <TableHead>发布时间</TableHead>
                   <TableHead className="text-right">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -244,7 +244,7 @@ export default function AnnouncementPage() {
                       <TableCell>
                         {item.status === 'published' ? (
                           <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300">
-                            {tc('text_e656s')}
+                            已发布
                           </Badge>
                         ) : (
                           <Badge variant="secondary">{tc('draft')}</Badge>
@@ -262,7 +262,7 @@ export default function AnnouncementPage() {
                             onClick={() => viewDetail(item)}
                           >
                             <Eye className="h-3 w-3 mr-1" />
-                            {tc('text_ibpi')}
+                            查看
                           </Button>
                           {item.status === 'draft' && (
                             <Button
@@ -272,7 +272,7 @@ export default function AnnouncementPage() {
                               onClick={() => handlePublish(item.id)}
                             >
                               <Send className="h-3 w-3 mr-1" />
-                              {tc('text_erte')}
+                              发布
                             </Button>
                           )}
                           <Button
@@ -353,8 +353,8 @@ export default function AnnouncementPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="info">{tc('notice')}</SelectItem>
-                    <SelectItem value="warning">{tc('text_o690')}</SelectItem>
-                    <SelectItem value="important">{tc('text_pjys')}</SelectItem>
+                    <SelectItem value="warning">警告</SelectItem>
+                    <SelectItem value="important">重要</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -369,7 +369,7 @@ export default function AnnouncementPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label>{tc('text_ikg3cm')}</Label>
+                <Label>过期时间</Label>
                 <Input
                   type="datetime-local"
                   value={form.expire_time}

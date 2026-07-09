@@ -9,17 +9,17 @@ import {
 import { withPermission } from '@/lib/api-permissions';
 
 const ASSET_TYPE_MAP: Record<string, string> = {
-  die: tc('text_ej35'),
-  flexo_plate: tc('text_fmawc'),
-  screen_mesh: tc('text_c267o'),
+  die: '刀模',
+  flexo_plate: '柔印版',
+  screen_mesh: '丝网版',
 };
 
 const DIE_STATUS_MAP: Record<string, string> = {
-  available: tc('text_ex3t'),
-  in_use: tc('text_c7jd0'),
-  maintenance_needed: tc('text_mi91a'),
-  re_rule_needed: tc('text_mtgkt'),
-  scrap: tc('text_e8o3w'),
+  available: '可用',
+  in_use: '使用中',
+  maintenance_needed: '需保养',
+  re_rule_needed: '需重做',
+  scrap: '已报废',
 };
 
 function computeDieStatus(

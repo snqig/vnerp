@@ -39,17 +39,17 @@ interface InventoryCheckItem {
 }
 
 const TYPE_MAP: Record<number, string> = {
-  1: tc('text_bzlzl2'),
-  2: tc('text_x1ivoz'),
-  3: tc('text_cjwana'),
-  4: tc('text_hg3f'),
+  1: '定期盘点',
+  2: '不定期盘点',
+  3: '循环盘点',
+  4: '抽盘',
 };
 
 const STATUS_MAP: Record<number, string> = {
-  1: tc('text_lq5q4'),
-  2: tc('text_efsql'),
-  3: tc('text_e7hbq'),
-  4: tc('text_e68dg'),
+  1: '进行中',
+  2: '待审批',
+  3: '已完成',
+  4: '已取消',
 };
 
 function generateCheckNo(): string {

@@ -202,34 +202,34 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
 function getTypeLabel(type: string): string {
   const map: Record<string, string> = {
-    material: tc('text_es4a'),
-    product: tc('text_h581'),
-    workorder: tc('text_gff4'),
-    ink: tc('text_iz9r'),
-    screen_plate: tc('text_ma6v'),
-    die: tc('text_ee7r'),
-    shipment: tc('text_epv1'),
-    ink_open: tc('text_guvk'),
-    ink_mixed: tc('text_oj4f'),
+    material: '原料',
+    product: '成品',
+    workorder: '工单',
+    ink: '油墨',
+    screen_plate: '网版',
+    die: '刀具',
+    shipment: '出货',
+    ink_open: '开罐',
+    ink_mixed: '调色',
   };
   return map[type] || type;
 }
 
 function getScanTypeLabel(type: string): string {
   const map: Record<string, string> = {
-    inbound: tc('text_anwwsy'),
-    outbound: tc('text_aqk1ul'),
-    issue: tc('text_jnwu6v'),
-    report: tc('text_cu51us'),
-    check: tc('text_duqvtc'),
-    inventory: tc('text_fgm545'),
-    ink_open: tc('text_cihiqc'),
-    ink_use: tc('text_e31p7c'),
-    plate_use: tc('text_gjkm9l'),
-    plate_clean: tc('text_gjdceh'),
-    die_use: tc('text_aonmtc'),
-    die_sharpen: tc('text_aoo2yk'),
-    trace: tc('text_imiq27'),
+    inbound: '入库扫描',
+    outbound: '出库扫描',
+    issue: '领料扫描',
+    report: '报工扫描',
+    check: '检验扫描',
+    inventory: '盘点扫描',
+    ink_open: '开罐扫描',
+    ink_use: '油墨使用',
+    plate_use: '网版领用',
+    plate_clean: '网版清洗',
+    die_use: '刀具使用',
+    die_sharpen: '刀具刃磨',
+    trace: '追溯查询',
   };
   return map[type] || type;
 }

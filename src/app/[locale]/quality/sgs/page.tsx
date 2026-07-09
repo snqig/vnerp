@@ -76,7 +76,7 @@ const certTypeMap: Record<string, string> = {
   REACH: 'REACH',
   FDA: 'FDA',
   'EN71-3': 'EN71-3',
-  其他: tc('text_eae8'),
+  其他: '其他',
 };
 const statusMap: Record<
   number,
@@ -98,37 +98,37 @@ const testResultMap: Record<
 
 const rohsTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
   {
-    test_item_name: tc('text_dgj7n8'),
+    test_item_name: '铅(Pb)',
     test_standard: 'RoHS 2011/65/EU',
     limit_value: '1000',
     unit: 'mg/kg',
   },
   {
-    test_item_name: tc('text_fh3sdl'),
+    test_item_name: '镉(Cd)',
     test_standard: 'RoHS 2011/65/EU',
     limit_value: '100',
     unit: 'mg/kg',
   },
   {
-    test_item_name: tc('text_2g8vds'),
+    test_item_name: '汞(Hg)',
     test_standard: 'RoHS 2011/65/EU',
     limit_value: '1000',
     unit: 'mg/kg',
   },
   {
-    test_item_name: tc('text_gewps1'),
+    test_item_name: '六价铬(Cr6+)',
     test_standard: 'RoHS 2011/65/EU',
     limit_value: '1000',
     unit: 'mg/kg',
   },
   {
-    test_item_name: tc('text_vhn6ac'),
+    test_item_name: '多溴联苯(PBB)',
     test_standard: 'RoHS 2011/65/EU',
     limit_value: '1000',
     unit: 'mg/kg',
   },
   {
-    test_item_name: tc('text_ji279x'),
+    test_item_name: '多溴二苯醚(PBDE)',
     test_standard: 'RoHS 2011/65/EU',
     limit_value: '1000',
     unit: 'mg/kg',
@@ -137,13 +137,13 @@ const rohsTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
 
 const reachTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
   {
-    test_item_name: tc('text_ud7j0j'),
+    test_item_name: 'SVHC物质',
     test_standard: 'REACH EC 1907/2006',
     limit_value: '1000',
     unit: 'mg/kg',
   },
   {
-    test_item_name: tc('text_n6fwoh'),
+    test_item_name: '邻苯二甲酸酯',
     test_standard: 'REACH EC 1907/2006',
     limit_value: '1000',
     unit: 'mg/kg',
@@ -152,37 +152,37 @@ const reachTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
 
 const en71TestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
   {
-    test_item_name: tc('text_cwqbvn'),
+    test_item_name: '钡(Ba)',
     test_standard: 'EN71-3:2019',
     limit_value: '18750',
     unit: 'mg/kg',
   },
   {
-    test_item_name: tc('text_fh3sdl'),
+    test_item_name: '镉(Cd)',
     test_standard: 'EN71-3:2019',
     limit_value: '17.9',
     unit: 'mg/kg',
   },
   {
-    test_item_name: tc('text_e1yxj2'),
+    test_item_name: '铬(Cr)',
     test_standard: 'EN71-3:2019',
     limit_value: '460',
     unit: 'mg/kg',
   },
   {
-    test_item_name: tc('text_dgj7n8'),
+    test_item_name: '铅(Pb)',
     test_standard: 'EN71-3:2019',
     limit_value: '2380',
     unit: 'mg/kg',
   },
   {
-    test_item_name: tc('text_2g8vds'),
+    test_item_name: '汞(Hg)',
     test_standard: 'EN71-3:2019',
     limit_value: '94',
     unit: 'mg/kg',
   },
   {
-    test_item_name: tc('text_qqu9jz'),
+    test_item_name: '硒(Se)',
     test_standard: 'EN71-3:2019',
     limit_value: '460',
     unit: 'mg/kg',
@@ -191,13 +191,13 @@ const en71TestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
 
 const fdaTestItems: Omit<CertItem, 'test_value' | 'result'>[] = [
   {
-    test_item_name: tc('text_cqllzu'),
+    test_item_name: '总迁移量',
     test_standard: 'FDA 21 CFR 175.105',
     limit_value: '60',
     unit: 'mg/dm²',
   },
   {
-    test_item_name: tc('text_rgy1n3'),
+    test_item_name: '重金属(以Pb计)',
     test_standard: 'FDA 21 CFR 175.105',
     limit_value: '1',
     unit: 'mg/dm²',

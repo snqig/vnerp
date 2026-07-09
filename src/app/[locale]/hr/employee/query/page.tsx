@@ -81,10 +81,10 @@ function EmployeeQueryContent() {
       3: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
     };
     const labels: Record<number, string> = {
-      1: tc('text_fj1g'),
-      0: tc('text_eb7w'),
-      2: tc('text_l1tos'),
-      3: tc('text_ler5'),
+      1: '在职',
+      0: '停用',
+      2: '试用期',
+      3: '离职',
     };
     return (
       <Badge className={styles[status] || 'bg-gray-100'}>{labels[status] || tc('unknown')}</Badge>
@@ -96,7 +96,7 @@ function EmployeeQueryContent() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-          <p className="text-gray-600">{tc('text_27k1ha')}</p>
+          <p className="text-gray-600">加载中...</p>
         </div>
       </div>
     );
@@ -110,12 +110,12 @@ function EmployeeQueryContent() {
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <UserCircle className="w-8 h-8 text-red-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">{tc('text_doodpt')}</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">查询失败</h2>
             <p className="text-gray-600 mb-6">{error}</p>
             <Link href="/hr/employee">
               <Button className="w-full">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                {tc('text_q9c9ag')}
+                返回员工列表
               </Button>
             </Link>
           </CardContent>
@@ -137,7 +137,7 @@ function EmployeeQueryContent() {
             <Link href="/hr/employee">
               <Button className="w-full">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                {tc('text_q9c9ag')}
+                返回员工列表
               </Button>
             </Link>
           </CardContent>
@@ -154,7 +154,7 @@ function EmployeeQueryContent() {
           <Link href="/hr/employee">
             <Button variant="outline" className="bg-white/80 backdrop-blur">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              {tc('text_q9c9ag')}
+              返回员工列表
             </Button>
           </Link>
           <div className="text-sm text-gray-500">
@@ -177,7 +177,7 @@ function EmployeeQueryContent() {
                 <h1 className="text-3xl font-bold mb-2">{employee.name}</h1>
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                   <Badge className="bg-white/20 text-white border-0">
-                    {employee.gender === 1 ? tc('text_n5j') : tc('text_ho3')}
+                    {employee.gender === 1 ? '男' : tc('text_ho3')}
                   </Badge>
                   {getStatusBadge(employee.status)}
                 </div>
@@ -204,7 +204,7 @@ function EmployeeQueryContent() {
                   <Briefcase className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">{tc('text_m9a9')}</p>
+                  <p className="text-sm text-gray-500 mb-1">职位</p>
                   <p className="font-semibold text-gray-900">{employee.position || '-'}</p>
                 </div>
               </div>
@@ -226,7 +226,7 @@ function EmployeeQueryContent() {
                   <Calendar className="w-5 h-5 text-orange-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">{tc('text_asvc81')}</p>
+                  <p className="text-sm text-gray-500 mb-1">入职日期</p>
                   <p className="font-semibold text-gray-900">{employee.entry_date || '-'}</p>
                 </div>
               </div>
@@ -278,7 +278,7 @@ function Loading() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
-        <p className="text-gray-600">{tc('text_27k1ha')}</p>
+        <p className="text-gray-600">加载中...</p>
       </div>
     </div>
   );

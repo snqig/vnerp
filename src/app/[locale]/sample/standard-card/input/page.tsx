@@ -86,17 +86,17 @@ const STATUS_MAP: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: tc('text_n02e'), variant: 'secondary' },
-  2: { label: tc('text_ewm7d'), variant: 'default' },
-  3: { label: tc('text_ecmeg'), variant: 'default' },
-  4: { label: tc('text_e5e0l'), variant: 'outline' },
+  1: { label: '草稿', variant: 'secondary' },
+  2: { label: '打样中', variant: 'default' },
+  3: { label: '已确认', variant: 'default' },
+  4: { label: '已作废', variant: 'outline' },
 };
 
 const STEPS = [
-  { id: 1, label: tc('text_blh1h0') },
-  { id: 2, label: tc('text_euvirs') },
-  { id: 3, label: tc('text_c8vnne') },
-  { id: 4, label: tc('text_qxg4r4') },
+  { id: 1, label: '基础信息' },
+  { id: 2, label: '物料明细' },
+  { id: 3, label: '工序路线' },
+  { id: 4, label: '成本确认与提交' },
 ];
 
 export default function SampleCardInputPage() {
@@ -300,7 +300,7 @@ export default function SampleCardInputPage() {
           </Button>
           <h1 className="text-xl font-bold">
             {cardId ? '编辑工艺卡' : '新建工艺卡'}
-            {tc('text_my3hv1')}
+            {'查看工艺卡'}
           </h1>
           {form.formData.sample_no && <Badge variant="outline">{form.formData.sample_no}</Badge>}
           {form.formData.status && STATUS_MAP[form.formData.status] && (
@@ -312,7 +312,7 @@ export default function SampleCardInputPage() {
         {!isReadonly && (
           <Button variant="outline" onClick={handleSave} disabled={form.saving}>
             <Save className="h-4 w-4 mr-1" />
-            {tc('text_agnaep')}
+            保存草稿
           </Button>
         )}
       </div>
@@ -368,7 +368,7 @@ export default function SampleCardInputPage() {
       {form.validationErrors.length > 0 && (
         <Card className="mb-4 border-red-300 bg-red-50">
           <CardContent className="py-3">
-            <p className="font-semibold text-red-700 mb-1">{tc('text_12p8jd')}</p>
+            <p className="font-semibold text-red-700 mb-1">{'填写须知'}</p>
             <ul className="text-sm text-red-600 list-disc list-inside">
               {form.validationErrors.map((err, i) => (
                 <li key={i}>{err}</li>
@@ -382,12 +382,12 @@ export default function SampleCardInputPage() {
       {currentStep === 1 && (
         <Card>
           <CardHeader>
-            <CardTitle>{tc('text_ho0d5q')}</CardTitle>
+            <CardTitle>{'基本信息'}</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-3 gap-4">
             <div className="space-y-1">
               <Label>
-                {tc('text_cu4sef')}
+                {'工艺卡名称'}
                 <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -400,7 +400,7 @@ export default function SampleCardInputPage() {
               )}
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_g4id')}</Label>
+              <Label>客户</Label>
               <Select
                 value={form.formData.customer_id ? String(form.formData.customer_id) : ''}
                 onValueChange={handleCustomerChange}
@@ -419,7 +419,7 @@ export default function SampleCardInputPage() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_a9yk8t')}</Label>
+              <Label>产品名称</Label>
               <Input
                 value={form.formData.product_name || ''}
                 onChange={(e) => form.updateField('product_name', e.target.value)}
@@ -427,7 +427,7 @@ export default function SampleCardInputPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_bj5mqu')}</Label>
+              <Label>{'产品名称'}</Label>
               <Select
                 value={
                   form.formData.substrate_material_id
@@ -450,7 +450,7 @@ export default function SampleCardInputPage() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_o06w')}</Label>
+              <Label>规格</Label>
               <Input
                 value={form.formData.spec || ''}
                 onChange={(e) => form.updateField('spec', e.target.value)}
@@ -458,7 +458,7 @@ export default function SampleCardInputPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_avn2ot')}</Label>
+              <Label>{'客户名称'}</Label>
               <Input
                 value={form.formData.print_color || ''}
                 onChange={(e) => form.updateField('print_color', e.target.value)}
@@ -466,7 +466,7 @@ export default function SampleCardInputPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_e3a6ms')}</Label>
+              <Label>{'基材'}</Label>
               <Select
                 value={form.formData.ink_color_id ? String(form.formData.ink_color_id) : ''}
                 onValueChange={(v) => form.updateField('ink_color_id', Number(v))}
@@ -485,7 +485,7 @@ export default function SampleCardInputPage() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_asc8rl')}</Label>
+              <Label>{'印刷颜色'}</Label>
               <Select
                 value={form.formData.die_tool_id ? String(form.formData.die_tool_id) : ''}
                 onValueChange={(v) => form.updateField('die_tool_id', Number(v))}
@@ -504,7 +504,7 @@ export default function SampleCardInputPage() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_gjar4n')}</Label>
+              <Label>{'模切'}</Label>
               <Select
                 value={form.formData.screen_plate_id ? String(form.formData.screen_plate_id) : ''}
                 onValueChange={(v) => form.updateField('screen_plate_id', Number(v))}
@@ -523,7 +523,7 @@ export default function SampleCardInputPage() {
               </Select>
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_cdb8n7')}</Label>
+              <Label>损耗率(%)</Label>
               <Input
                 type="number"
                 value={form.formData.material_loss_rate ?? 5}
@@ -532,7 +532,7 @@ export default function SampleCardInputPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_jkkmvx')}</Label>
+              <Label>预估工时</Label>
               <Input
                 type="number"
                 value={form.formData.estimated_hour ?? ''}
@@ -546,11 +546,11 @@ export default function SampleCardInputPage() {
               />
             </div>
             <div className="space-y-1">
-              <Label>{tc('text_h8m1f')}</Label>
+              <Label>版本号</Label>
               <Input value={form.formData.version_no || 'V1.0'} disabled />
             </div>
             <div className="col-span-3 space-y-1">
-              <Label>{tc('text_fqo1')}</Label>
+              <Label>备注</Label>
               <Textarea
                 value={form.formData.remark || ''}
                 onChange={(e) => form.updateField('remark', e.target.value)}
@@ -567,11 +567,11 @@ export default function SampleCardInputPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>{tc('text_leggup')}</CardTitle>
+              <CardTitle>{'物料清单'}</CardTitle>
               {!isReadonly && (
                 <Button size="sm" variant="outline" onClick={form.addItem}>
                   <Plus className="h-4 w-4 mr-1" />
-                  {tc('text_giq5j')}
+                  {'添加物料'}
                 </Button>
               )}
             </div>
@@ -580,14 +580,14 @@ export default function SampleCardInputPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-16">{tc('text_lnjk')}</TableHead>
-                  <TableHead className="w-56">{tc('text_il1vtc')}</TableHead>
-                  <TableHead>{tc('text_euzqpn')}</TableHead>
-                  <TableHead>{tc('text_eusfkj')}</TableHead>
-                  <TableHead className="w-20">{tc('text_evky')}</TableHead>
-                  <TableHead className="w-20">{tc('text_ely0')}</TableHead>
-                  <TableHead className="w-24">{tc('text_elvm')}</TableHead>
-                  <TableHead className="w-24">{tc('text_kfxpk')}</TableHead>
+                  <TableHead className="w-16">类型</TableHead>
+                  <TableHead className="w-56">选择物料</TableHead>
+                  <TableHead>物料编码</TableHead>
+                  <TableHead>物料名称</TableHead>
+                  <TableHead className="w-20">单耗</TableHead>
+                  <TableHead className="w-20">单位</TableHead>
+                  <TableHead className="w-24">单价</TableHead>
+                  <TableHead className="w-24">{'金额'}</TableHead>
                   {!isReadonly && <TableHead className="w-12"></TableHead>}
                 </TableRow>
               </TableHeader>
@@ -609,9 +609,9 @@ export default function SampleCardInputPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="1">{tc('text_dv3y')}</SelectItem>
-                            <SelectItem value="2">{tc('text_iz9r')}</SelectItem>
-                            <SelectItem value="3">{tc('text_oywk')}</SelectItem>
+                            <SelectItem value="1">主料</SelectItem>
+                            <SelectItem value="2">油墨</SelectItem>
+                            <SelectItem value="3">辅料</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>
@@ -713,11 +713,11 @@ export default function SampleCardInputPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>{tc('text_j9i84i')}</CardTitle>
+              <CardTitle>{'工序清单'}</CardTitle>
               {!isReadonly && (
                 <Button size="sm" variant="outline" onClick={form.addStep}>
                   <Plus className="h-4 w-4 mr-1" />
-                  {tc('text_e7xtsf')}
+                  添加工序
                 </Button>
               )}
             </div>
@@ -726,12 +726,12 @@ export default function SampleCardInputPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-16">{tc('text_gjm0')}</TableHead>
-                  <TableHead>{tc('text_c8ls99')}</TableHead>
-                  <TableHead className="w-24">{tc('text_gj3l')}</TableHead>
-                  <TableHead className="w-24">{tc('text_i2r8')}</TableHead>
-                  <TableHead className="w-24">{tc('text_kfxpk')}</TableHead>
-                  <TableHead>{tc('text_cdv0mb')}</TableHead>
+                  <TableHead className="w-16">序号</TableHead>
+                  <TableHead>工序名称</TableHead>
+                  <TableHead className="w-24">工时</TableHead>
+                  <TableHead className="w-24">{'时薪'}</TableHead>
+                  <TableHead className="w-24">{'金额'}</TableHead>
+                  <TableHead>{'备注'}</TableHead>
                   {!isReadonly && <TableHead className="w-12"></TableHead>}
                 </TableRow>
               </TableHeader>
@@ -833,34 +833,34 @@ export default function SampleCardInputPage() {
           {/* 成本汇总 */}
           <Card>
             <CardHeader>
-              <CardTitle>{tc('text_cswhkg')}</CardTitle>
+              <CardTitle>成本汇总</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-4 gap-4">
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <span className="text-sm text-gray-600 flex items-center gap-1">
                   <Package className="h-4 w-4" />
-                  {tc('text_euupnw')}
+                  {'物料清单'}
                 </span>
                 <span className="font-mono">¥{form.cost.materialCost.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <span className="text-sm text-gray-600 flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  {tc('text_abp687')}
+                  人工成本
                 </span>
                 <span className="font-mono">¥{form.cost.laborCost.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
                 <span className="text-sm text-gray-600 flex items-center gap-1">
                   <Wrench className="h-4 w-4" />
-                  {tc('text_ceun4s')}
+                  {'工序清单'}
                 </span>
                 <span className="font-mono">¥{form.cost.toolCost.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-blue-50 rounded-md">
                 <span className="font-semibold flex items-center gap-1">
                   <DollarSign className="h-5 w-5" />
-                  {tc('text_eko0n')}
+                  总成本
                 </span>
                 <span className="font-mono text-lg font-bold text-blue-600">
                   ¥{form.cost.totalCost.toFixed(2)}
@@ -872,65 +872,65 @@ export default function SampleCardInputPage() {
           {/* 只读数据汇总 */}
           <Card>
             <CardHeader>
-              <CardTitle>{tc('text_d7qqus')}</CardTitle>
+              <CardTitle>{'工艺卡预览'}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* 基础信息汇总 */}
               <div>
-                <h4 className="font-medium mb-2 text-gray-700">{tc('text_blh1h0')}</h4>
+                <h4 className="font-medium mb-2 text-gray-700">基础信息</h4>
                 <div className="grid grid-cols-3 gap-3 text-sm">
                   <div>
-                    <span className="text-gray-500">{tc('text_s8ih1p')}</span>
+                    <span className="text-gray-500">{'样品名称'}</span>
                     {form.formData.sample_name || '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">{tc('text_dxa79')}</span>
+                    <span className="text-gray-500">客户：</span>
                     {customerName}
                   </div>
                   <div>
-                    <span className="text-gray-500">{tc('text_ygcm2l')}</span>
+                    <span className="text-gray-500">{'产品名称'}</span>
                     {form.formData.product_name || '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">{tc('text_2cbpmc')}</span>
+                    <span className="text-gray-500">{'基材'}</span>
                     {substrateName}
                   </div>
                   <div>
-                    <span className="text-gray-500">{tc('text_kpkbm')}</span>
+                    <span className="text-gray-500">规格：</span>
                     {form.formData.spec || '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">{tc('text_hwnk4j')}</span>
+                    <span className="text-gray-500">{'印刷颜色'}</span>
                     {form.formData.print_color || '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">{tc('text_an4s5i')}</span>
+                    <span className="text-gray-500">{'油墨色号'}</span>
                     {inkColor ? `${inkColor.color_code} - ${inkColor.color_name}` : '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">{tc('text_kqzbqf')}</span>
+                    <span className="text-gray-500">{'模切刀具'}</span>
                     {dieTool ? `${dieTool.tool_code} - ${dieTool.tool_name}` : '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">{tc('text_feidk3')}</span>
+                    <span className="text-gray-500">{'网版刀具'}</span>
                     {screenTool ? `${screenTool.tool_code} - ${screenTool.tool_name}` : '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">{tc('text_d2jw23')}</span>
+                    <span className="text-gray-500">{'损耗率'}</span>
                     {form.formData.material_loss_rate ?? 0}%
                   </div>
                   <div>
-                    <span className="text-gray-500">{tc('text_wk7dwj')}</span>
+                    <span className="text-gray-500">{'预计工时'}</span>
                     {form.formData.estimated_hour ?? '-'}
                   </div>
                   <div>
-                    <span className="text-gray-500">{tc('text_eugdlz')}</span>
+                    <span className="text-gray-500">{'版本号'}</span>
                     {form.formData.version_no || '-'}
                   </div>
                 </div>
                 {form.formData.remark && (
                   <div className="mt-2 text-sm">
-                    <span className="text-gray-500">{tc('text_dld2x')}</span>
+                    <span className="text-gray-500">备注：</span>
                     {form.formData.remark}
                   </div>
                 )}
@@ -939,21 +939,21 @@ export default function SampleCardInputPage() {
               {/* 物料明细汇总 */}
               <div>
                 <h4 className="font-medium mb-2 text-gray-700">
-                  {tc('text_yei8g0')}
+                  {'物料明细'}
                   {form.formData.items.length}
-                  {tc('text_izew')}
+                  {'项'}
                 </h4>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-12">{tc('text_gjm0')}</TableHead>
-                      <TableHead className="w-16">{tc('text_lnjk')}</TableHead>
-                      <TableHead>{tc('text_euzqpn')}</TableHead>
-                      <TableHead>{tc('text_eusfkj')}</TableHead>
-                      <TableHead className="w-20">{tc('text_evky')}</TableHead>
-                      <TableHead className="w-16">{tc('text_ely0')}</TableHead>
-                      <TableHead className="w-24">{tc('text_elvm')}</TableHead>
-                      <TableHead className="w-24">{tc('text_kfxpk')}</TableHead>
+                      <TableHead className="w-12">序号</TableHead>
+                      <TableHead className="w-16">类型</TableHead>
+                      <TableHead>物料编码</TableHead>
+                      <TableHead>物料名称</TableHead>
+                      <TableHead className="w-20">单耗</TableHead>
+                      <TableHead className="w-16">单位</TableHead>
+                      <TableHead className="w-24">单价</TableHead>
+                      <TableHead className="w-24">{'金额'}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -982,19 +982,19 @@ export default function SampleCardInputPage() {
               {/* 工序路线汇总 */}
               <div>
                 <h4 className="font-medium mb-2 text-gray-700">
-                  {tc('text_ohqhn2')}
+                  {'工序明细'}
                   {form.formData.steps.length}
-                  {tc('text_izew')}
+                  {'项'}
                 </h4>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-12">{tc('text_gjm0')}</TableHead>
-                      <TableHead>{tc('text_c8ls99')}</TableHead>
-                      <TableHead className="w-24">{tc('text_gj3l')}</TableHead>
-                      <TableHead className="w-24">{tc('text_i2r8')}</TableHead>
-                      <TableHead className="w-24">{tc('text_kfxpk')}</TableHead>
-                      <TableHead>{tc('text_cdv0mb')}</TableHead>
+                      <TableHead className="w-12">序号</TableHead>
+                      <TableHead>工序名称</TableHead>
+                      <TableHead className="w-24">工时</TableHead>
+                      <TableHead className="w-24">{'时薪'}</TableHead>
+                      <TableHead className="w-24">{'金额'}</TableHead>
+                      <TableHead>{'备注'}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1024,25 +1024,25 @@ export default function SampleCardInputPage() {
       <div className="flex items-center justify-between mt-6">
         <Button variant="outline" onClick={handleBack} disabled={currentStep === 1}>
           <ArrowLeft className="h-4 w-4 mr-1" />
-          {tc('text_btcrz')}
+          {'上一步'}
         </Button>
         <div className="flex gap-2">
           {!isReadonly && (
             <Button variant="outline" onClick={handleSave} disabled={form.saving}>
               <Save className="h-4 w-4 mr-1" />
-              {tc('text_agnaep')}
+              保存草稿
             </Button>
           )}
           {!isLastStep ? (
             <Button onClick={handleNext}>
-              {tc('text_btdio')}
+              {'下一步'}
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
             !isReadonly && (
               <Button onClick={handleSubmit} disabled={form.saving}>
                 <Send className="h-4 w-4 mr-1" />
-                {tc('text_heqc')}
+                提交
               </Button>
             )
           )}

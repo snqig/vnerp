@@ -178,7 +178,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
               color: '#6b7280',
             }}
           >
-            {tc('text_xzcyo5')}
+            ESC 关闭
           </button>
         </div>
 
@@ -194,11 +194,11 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
               color: '#6b7280',
             }}
           >
-            <span>{tc('text_euzqpn')}</span>
-            <span>{tc('text_eusfkj')}</span>
-            <span>{tc('text_o06w')}</span>
-            <span>{tc('text_ely0')}</span>
-            <span>{tc('text_b3gupv')}</span>
+            <span>物料编码</span>
+            <span>物料名称</span>
+            <span>规格</span>
+            <span>单位</span>
+            <span>参考单价</span>
           </div>
         </div>
 
@@ -207,7 +207,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
             <div
               style={{ padding: '40px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}
             >
-              {tc('text_27k1ha')}
+              加载中...
             </div>
           ) : materials.length === 0 ? (
             <div
@@ -274,11 +274,10 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
           }}
         >
           <span>
-            {tc('text_g35')}
-            {total}
-            {tc('text_fp4s1')}
+            共{total}
+            {'种物料'}
           </span>
-          <span>{tc('text_6nti4b')}</span>
+          <span>↑↓ 选择 · Enter 确认 · Esc 关闭</span>
         </div>
       </div>
     </div>

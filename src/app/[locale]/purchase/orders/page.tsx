@@ -1284,7 +1284,7 @@ export default function PurchaseOrdersPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">{tc('text_iz05c8')}</Label>
+                    <Label className="text-muted-foreground">采购单号</Label>
                     <p className="font-mono">{selectedOrder.po_no}</p>
                   </div>
                   <div>
@@ -1329,11 +1329,11 @@ export default function PurchaseOrdersPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>{tc('text_euzqpn')}</TableHead>
-                          <TableHead>{tc('text_eusfkj')}</TableHead>
+                          <TableHead>物料编码</TableHead>
+                          <TableHead>物料名称</TableHead>
                           <TableHead>{tc('quantity')}</TableHead>
                           <TableHead>{tc('unit')}</TableHead>
-                          <TableHead>{tc('text_elvm')}</TableHead>
+                          <TableHead>单价</TableHead>
                           <TableHead>{tc('amount')}</TableHead>
                         </TableRow>
                       </TableHeader>

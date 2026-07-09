@@ -722,7 +722,7 @@ export default function DeliveryPage() {
                   {list.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-8 text-gray-500">
-                        {tc('text_dcv57g')}
+                        暂无数据
                       </TableCell>
                     </TableRow>
                   )}
@@ -743,7 +743,7 @@ export default function DeliveryPage() {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>
-                  {tc('text_g4id')}
+                  客户
                   <span className="text-red-500">*</span>
                 </Label>
                 <Select
@@ -778,7 +778,7 @@ export default function DeliveryPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc('text_jxaflp')}</Label>
+                <Label>关联订单号</Label>
                 <Input
                   value={form.order_no || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, order_no: e.target.value }))}
@@ -788,7 +788,7 @@ export default function DeliveryPage() {
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>{tc('text_c3zlr2')}</Label>
+                <Label>收货联系人</Label>
                 <Input
                   value={form.contact_name || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, contact_name: e.target.value }))}
@@ -804,7 +804,7 @@ export default function DeliveryPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc('text_iqyt3q')}</Label>
+                <Label>送货地址</Label>
                 <Input
                   value={form.delivery_address || ''}
                   onChange={(e) =>
@@ -816,7 +816,7 @@ export default function DeliveryPage() {
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>{tc('text_evw5c4')}</Label>
+                <Label>物流公司</Label>
                 <Input
                   value={form.logistics_company || ''}
                   onChange={(e) =>
@@ -826,7 +826,7 @@ export default function DeliveryPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc('text_evwh16')}</Label>
+                <Label>物流单号</Label>
                 <Input
                   value={form.tracking_no || ''}
                   onChange={(e) => setForm((prev) => ({ ...prev, tracking_no: e.target.value }))}
@@ -848,17 +848,17 @@ export default function DeliveryPage() {
                 <Label className="text-base font-semibold">{tc('text_ir1jy6')}</Label>
                 <Button variant="outline" size="sm" onClick={addItem}>
                   <Plus className="w-4 h-4 mr-1" />
-                  {tc('text_e81ct1')}
+                  添加物料
                 </Button>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{tc('text_eusfkj')}</TableHead>
-                    <TableHead>{tc('text_ht8gjo')}</TableHead>
+                    <TableHead>物料名称</TableHead>
+                    <TableHead>规格型号</TableHead>
                     <TableHead>{tc('quantity')}</TableHead>
                     <TableHead>{tc('unit')}</TableHead>
-                    <TableHead>{tc('text_elvm')}</TableHead>
+                    <TableHead>单价</TableHead>
                     <TableHead>{tc('amount')}</TableHead>
                     <TableHead>{tc('batchNo')}</TableHead>
                     <TableHead></TableHead>
@@ -934,11 +934,11 @@ export default function DeliveryPage() {
               </Table>
               <div className="flex justify-end gap-6 mt-3 text-sm">
                 <span>
-                  {tc('text_ckhqcg')}
+                  总数量:
                   <strong>{calcTotalQty().toLocaleString()}</strong>
                 </span>
                 <span>
-                  {tc('text_cr0wc3')}
+                  总金额:
                   <strong className="text-blue-600">¥{calcTotal().toFixed(2)}</strong>
                 </span>
               </div>
@@ -946,10 +946,10 @@ export default function DeliveryPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
             <Button onClick={saveDelivery} className="bg-blue-600 hover:bg-blue-700">
-              {tc('text_e32z')}
+              保存
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1012,7 +1012,7 @@ export default function DeliveryPage() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-gray-500 text-sm">{tc('text_g041ab')}</div>
+                    <div className="text-gray-500 text-sm">签收状态</div>
                     <Badge className={SIGN_STATUS_MAP[detailData.sign_status ?? 0]?.color}>
                       {SIGN_STATUS_MAP[detailData.sign_status ?? 0]?.label}
                     </Badge>
@@ -1037,7 +1037,7 @@ export default function DeliveryPage() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDetailOpen(false)}>
-              {tc('text_eod6')}
+              关闭
             </Button>
           </DialogFooter>
         </DialogContent>

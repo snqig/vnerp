@@ -223,12 +223,14 @@ export default function SystemConfigPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">{tc('text_fql599')}</h1>
-            <p className="text-sm text-muted-foreground mt-1">{tc('text_qh7dj2')}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              系统核心参数配置中心，修改需审批后生效
+            </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={fetchConfig}>
               <RefreshCw className="w-4 h-4 mr-1" />
-              {tc('text_ejix')}
+              刷新
             </Button>
             <Button onClick={handleSave} disabled={!hasChanges || saving}>
               <Save className="w-4 h-4 mr-1" />
@@ -281,8 +283,7 @@ export default function SystemConfigPage() {
                     {CATEGORY_ICONS[category]}
                     {category}
                     <Badge variant="secondary" className="ml-auto">
-                      {data.grouped[category]?.length || 0}
-                      {tc('text_u49')}
+                      {data.grouped[category]?.length || 0}项
                     </Badge>
                   </CardTitle>
                 </CardHeader>
@@ -305,7 +306,7 @@ export default function SystemConfigPage() {
                                 variant="outline"
                                 className="text-xs text-red-600 border-red-200"
                               >
-                                {tc('text_grwm')}
+                                必填
                               </Badge>
                             )}
                             {item.approval_required && (
@@ -313,7 +314,7 @@ export default function SystemConfigPage() {
                                 variant="outline"
                                 className="text-xs text-orange-600 border-orange-200"
                               >
-                                {tc('text_mkcfs')}
+                                需审批
                               </Badge>
                             )}
                           </div>
@@ -325,7 +326,7 @@ export default function SystemConfigPage() {
                           {renderConfigInput(item)}
                           {modifiedConfigs[item.config_key] !== undefined && (
                             <Badge variant="default" className="bg-blue-600">
-                              {tc('text_e5it9')}
+                              已修改
                             </Badge>
                           )}
                         </div>

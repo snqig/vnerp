@@ -56,19 +56,19 @@ interface SampleOrder {
 
 const statusMap: Record<number, { label: string; color: string }> = {
   0: {
-    label: tc('text_efg7b'),
+    label: '待处理',
     color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
   },
   1: {
-    label: tc('text_lq5q4'),
+    label: '进行中',
     color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
   },
   2: {
-    label: tc('text_e7hbq'),
+    label: '已完成',
     color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
   },
   3: {
-    label: tc('text_e68dg'),
+    label: '已取消',
     color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
   },
 };
@@ -145,7 +145,7 @@ export default function SampleOrderDetailPage() {
     return (
       <MainLayout>
         <div className="container mx-auto py-6">
-          <div className="text-center py-12">{tc('text_27k1ha')}</div>
+          <div className="text-center py-12">加载中...</div>
         </div>
       </MainLayout>
     );
@@ -173,7 +173,7 @@ export default function SampleOrderDetailPage() {
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 <FlaskConical className="h-6 w-6 text-blue-500" />
-                {tc('text_s8k2s0')}
+                打样单详情
               </h1>
               <p className="text-sm text-muted-foreground mt-1">{order.sample_no}</p>
             </div>
@@ -181,11 +181,11 @@ export default function SampleOrderDetailPage() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => router.push(`/sample/orders/${id}/edit`)}>
               <Edit className="h-4 w-4 mr-2" />
-              {tc('text_mekb')}
+              编辑
             </Button>
             <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
               <Trash2 className="h-4 w-4 mr-2" />
-              {tc('text_eslg')}
+              删除
             </Button>
           </div>
         </div>
@@ -194,7 +194,7 @@ export default function SampleOrderDetailPage() {
           {/* 基本信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{tc('text_biyzkw')}</CardTitle>
+              <CardTitle className="text-base">基本信息</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -209,11 +209,8 @@ export default function SampleOrderDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_hyid')}</div>
-                  <div className="font-medium">
-                    {order.order_month}
-                    {tc('text_kco')}
-                  </div>
+                  <div className="text-sm text-muted-foreground">月份</div>
+                  <div className="font-medium">{order.order_month}月</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">{tc('text_a72dxg')}</div>
@@ -221,12 +218,12 @@ export default function SampleOrderDetailPage() {
                 </div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">{tc('text_byvcwo')}</div>
+                <div className="text-sm text-muted-foreground">客户名称</div>
                 <div className="font-medium">{order.customer_name}</div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_lefi')}</div>
+                  <div className="text-sm text-muted-foreground">种类</div>
                   <div>
                     {order.sample_type ? (
                       <span
@@ -250,15 +247,15 @@ export default function SampleOrderDetailPage() {
           {/* 产品信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{tc('text_a9xpns')}</CardTitle>
+              <CardTitle className="text-base">产品信息</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <div className="text-sm text-muted-foreground">{tc('text_evl8')}</div>
+                <div className="text-sm text-muted-foreground">品名</div>
                 <div className="font-medium">{order.product_name || '-'}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">{tc('text_hqpq')}</div>
+                <div className="text-sm text-muted-foreground">料号</div>
                 <div className="font-medium">{order.material_code || '-'}</div>
               </div>
               <div>
@@ -275,12 +272,12 @@ export default function SampleOrderDetailPage() {
           {/* 印刷信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{tc('text_availx')}</CardTitle>
+              <CardTitle className="text-base">印刷信息</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_ave83h')}</div>
+                  <div className="text-sm text-muted-foreground">印刷方式</div>
                   <div className="font-medium">{order.print_method || '-'}</div>
                 </div>
                 <div>
@@ -294,7 +291,7 @@ export default function SampleOrderDetailPage() {
                   <div className="font-medium">{order.quantity || 0} PCS</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_jhzjj0')}</div>
+                  <div className="text-sm text-muted-foreground">需求日期</div>
                   <div className="font-medium">{order.required_date || '-'}</div>
                 </div>
               </div>
@@ -304,7 +301,7 @@ export default function SampleOrderDetailPage() {
           {/* 打样信息 */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{tc('text_cu3xte')}</CardTitle>
+              <CardTitle className="text-base">打样信息</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -341,7 +338,7 @@ export default function SampleOrderDetailPage() {
           {/* 状态信息 */}
           <Card className="col-span-2">
             <CardHeader>
-              <CardTitle className="text-base">{tc('text_evb94p')}</CardTitle>
+              <CardTitle className="text-base">状态信息</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-4 gap-4 mb-4">
@@ -358,7 +355,7 @@ export default function SampleOrderDetailPage() {
                   <div className="font-medium">{order.is_confirmed ? tc('yes') : tc('no')}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_d8rnuw')}</div>
+                  <div className="text-sm text-muted-foreground">是否急件</div>
                   <div className={`font-medium ${order.is_urgent ? 'text-red-600' : ''}`}>
                     {order.is_urgent ? tc('yes') : tc('no')}
                   </div>
@@ -380,7 +377,7 @@ export default function SampleOrderDetailPage() {
                   <div className="font-medium">{order.sample_stock || '-'}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">{tc('text_bz1n63')}</div>
+                  <div className="text-sm text-muted-foreground">客户确认</div>
                   <div className="font-medium">{order.customer_confirm || '-'}</div>
                 </div>
               </div>
@@ -398,19 +395,19 @@ export default function SampleOrderDetailPage() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent resizable>
             <DialogHeader>
-              <DialogTitle>{tc('text_frotru')}</DialogTitle>
+              <DialogTitle>确认删除</DialogTitle>
               <DialogDescription>
-                {tc('text_hi5ym8')}
+                您确定要删除打样单
                 <strong>{order.sample_no}</strong>
                 {tc('text_1z638q')}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button variant="destructive" onClick={handleDelete}>
-                {tc('text_eslg')}
+                删除
               </Button>
             </DialogFooter>
           </DialogContent>

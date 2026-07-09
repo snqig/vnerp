@@ -109,49 +109,49 @@ export const PrinterManagement: React.FC = () => {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Printer className="h-5 w-5" />
-              {tc('text_uryeci')}
+              打印机配置
             </CardTitle>
-            <CardDescription>{tc('text_eqng8e')}</CardDescription>
+            <CardDescription>管理和配置打印设备</CardDescription>
           </div>
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                {tc('text_eo2cs8')}
+                添加打印机
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>{tc('text_eo2cs8')}</DialogTitle>
+                <DialogTitle>添加打印机</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>{tc('text_us8uhs')}</Label>
+                  <Label>打印机名称</Label>
                   <Input placeholder="例如：车间1号打印机" />
                 </div>
                 <div className="space-y-2">
-                  <Label>{tc('text_us25pv')}</Label>
+                  <Label>打印机类型</Label>
                   <Select defaultValue="thermal">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="thermal">{tc('text_sjhafv')}</SelectItem>
-                      <SelectItem value="laser">{tc('text_lf252s')}</SelectItem>
-                      <SelectItem value="inkjet">{tc('text_8f1nh0')}</SelectItem>
+                      <SelectItem value="thermal">热敏打印机</SelectItem>
+                      <SelectItem value="laser">激光打印机</SelectItem>
+                      <SelectItem value="inkjet">喷墨打印机</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>{tc('text_x39pg3')}</Label>
+                  <Label>型号（可选）</Label>
                   <Input placeholder="Zebra ZD420" />
                 </div>
                 <div className="space-y-2">
-                  <Label>{tc('text_dppv0e')}</Label>
+                  <Label>IP地址（可选）</Label>
                   <Input placeholder="192.168.1.100" />
                 </div>
                 <div className="space-y-2">
-                  <Label>{tc('text_1wqzf2')}</Label>
+                  <Label>默认纸张尺寸</Label>
                   <Select defaultValue="60x40">
                     <SelectTrigger>
                       <SelectValue />
@@ -164,7 +164,7 @@ export const PrinterManagement: React.FC = () => {
                   </Select>
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label>{tc('text_hdi6y3')}</Label>
+                  <Label>设为默认打印机</Label>
                   <Switch />
                 </div>
               </div>
@@ -182,7 +182,7 @@ export const PrinterManagement: React.FC = () => {
                       <span className="font-medium">{printer.name}</span>
                       {printer.isDefault && (
                         <Badge variant="outline" className="text-xs">
-                          {tc('text_rs98')}
+                          默认
                         </Badge>
                       )}
                       <Badge
@@ -198,7 +198,7 @@ export const PrinterManagement: React.FC = () => {
                         : printer.type === 'laser'
                           ? '激光'
                           : '喷墨'}
-                      {tc('text_et7x9')}
+                      打印机
                       {printer.model && ` · ${printer.model}`}
                     </div>
                   </div>
@@ -210,7 +210,7 @@ export const PrinterManagement: React.FC = () => {
                       size="sm"
                       onClick={() => setDefaultPrinter(printer.id)}
                     >
-                      {tc('text_hyquiw')}
+                      设为默认
                     </Button>
                   )}
                   <Button
@@ -234,13 +234,13 @@ export const PrinterManagement: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            {tc('text_cre905')}
+            打印队列
           </CardTitle>
-          <CardDescription>{tc('text_li9xzi')}</CardDescription>
+          <CardDescription>查看和管理打印任务</CardDescription>
         </CardHeader>
         <CardContent>
           {queue.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">{tc('text_km3a5b')}</div>
+            <div className="text-center py-8 text-muted-foreground">暂无打印任务</div>
           ) : (
             <div className="border rounded-lg divide-y">
               {queue.map((item) => (
@@ -251,7 +251,7 @@ export const PrinterManagement: React.FC = () => {
                       <div className="font-medium text-sm">{item.labelType}</div>
                       <div className="text-xs text-muted-foreground">
                         {item.copies}
-                        {tc('text_bkj10')}
+                        {'创建时间'}
                         {new Date(item.createdAt).toLocaleString()}
                       </div>
                     </div>
@@ -278,7 +278,7 @@ export const PrinterManagement: React.FC = () => {
                     </Badge>
                     {(item.status === 'pending' || item.status === 'failed') && (
                       <Button variant="ghost" size="sm">
-                        {tc('text_pkfc')}
+                        重试
                       </Button>
                     )}
                   </div>

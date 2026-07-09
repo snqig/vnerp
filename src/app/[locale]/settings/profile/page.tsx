@@ -173,18 +173,18 @@ export default function ProfilePage() {
             <TabsList>
               <TabsTrigger value="profile">
                 <User className="h-4 w-4 mr-1" />
-                {tc('text_biyzkw')}
+                基本信息
               </TabsTrigger>
               <TabsTrigger value="password">
                 <Lock className="h-4 w-4 mr-1" />
-                {tc('text_ai7i2u')}
+                修改密码
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile">
               <Card>
                 <CardHeader>
-                  <CardTitle>{tc('text_biyzkw')}</CardTitle>
+                  <CardTitle>基本信息</CardTitle>
                   <CardDescription>{tc('text_n6hg2x')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -235,7 +235,7 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label>{tc('text_fcgq3')}</Label>
+                    <Label>新密码</Label>
                     <Input
                       type="password"
                       value={passwordForm.newPassword}

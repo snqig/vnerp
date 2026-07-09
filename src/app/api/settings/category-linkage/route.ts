@@ -17,22 +17,22 @@ interface LinkageItem {
 }
 
 const MATERIAL_TYPE_NAMES: Record<number, string> = {
-  1: tc('text_cr294'),
-  2: tc('text_cobqz'),
-  3: tc('text_h581'),
-  4: tc('text_oywk'),
-  5: tc('text_eorv'),
-  6: tc('text_iz9r'),
+  1: '原材料',
+  2: '半成品',
+  3: '成品',
+  4: '辅料',
+  5: '包材',
+  6: '油墨',
 };
 
 const TYPE_WAREHOUSE_MAPPING: Record<number, { preferred_prefix: string; preferred_name: string }> =
   {
-    1: { preferred_prefix: 'WH-CAT-RAW', preferred_name: tc('text_azbdez') },
-    2: { preferred_prefix: 'WH-CAT-WIP', preferred_name: tc('text_awyjso') },
-    3: { preferred_prefix: 'WH-CAT-FG', preferred_name: tc('text_erxhe') },
-    4: { preferred_prefix: 'WH-CAT-AUX', preferred_name: tc('text_lihlr') },
-    5: { preferred_prefix: 'WH-CAT-PKG', preferred_name: tc('text_cnrk8') },
-    6: { preferred_prefix: 'WH-CAT-INK', preferred_name: tc('text_gcsys') },
+    1: { preferred_prefix: 'WH-CAT-RAW', preferred_name: '原材料仓' },
+    2: { preferred_prefix: 'WH-CAT-WIP', preferred_name: '半成品仓' },
+    3: { preferred_prefix: 'WH-CAT-FG', preferred_name: '成品仓' },
+    4: { preferred_prefix: 'WH-CAT-AUX', preferred_name: '辅料仓' },
+    5: { preferred_prefix: 'WH-CAT-PKG', preferred_name: '包材仓' },
+    6: { preferred_prefix: 'WH-CAT-INK', preferred_name: '油墨仓' },
   };
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {

@@ -249,22 +249,22 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 // 辅助函数
 function getStatusLabel(status: number): string {
   const labels: Record<number, string> = {
-    1: tc('text_n02e'),
-    2: tc('text_eftvg'),
-    3: tc('text_e6c0b'),
-    4: tc('text_e85oj'),
+    1: '草稿',
+    2: '待审核',
+    3: '已启用',
+    4: '已归档',
   };
-  return labels[status] || tc('text_i7ej');
+  return labels[status] || '未知';
 }
 
 function getApproveTypeName(type: ApproveType): string {
   const names: Record<ApproveType, string> = {
-    review: tc('text_g5o7'),
-    factory: tc('text_avq8gm'),
-    quality: tc('text_b7e46v'),
-    sales: tc('text_a76im6'),
-    approve: tc('text_i6by'),
-    reject: tc('text_qqx7'),
+    review: '审核',
+    factory: '厂务审核',
+    quality: '品管审核',
+    sales: '业务审核',
+    approve: '核准',
+    reject: '驳回',
   };
   return names[type];
 }

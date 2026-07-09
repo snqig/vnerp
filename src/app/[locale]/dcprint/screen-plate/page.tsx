@@ -78,32 +78,32 @@ interface HistoryRecord {
 }
 
 const typeMap: Record<number, string> = {
-  1: tc('text_c267o'),
-  2: tc('text_jatse'),
-  3: tc('text_iad0'),
-  4: tc('text_ekj3'),
+  1: '丝网版',
+  2: '胶印版',
+  3: '柔版',
+  4: '凹版',
 };
 const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: tc('text_hqx2'), variant: 'default' },
-  2: { label: tc('text_ex3t'), variant: 'default' },
-  3: { label: tc('text_e9bb2'), variant: 'secondary' },
-  4: { label: tc('text_hjdtx'), variant: 'default' },
-  5: { label: tc('text_gn457'), variant: 'outline' },
-  6: { label: tc('text_e5vvo'), variant: 'secondary' },
-  7: { label: tc('text_hdqo'), variant: 'destructive' },
-  8: { label: tc('text_e8o3w'), variant: 'destructive' },
+  1: { label: '新制', variant: 'default' },
+  2: { label: '可用', variant: 'default' },
+  3: { label: '已曝光', variant: 'secondary' },
+  4: { label: '生产中', variant: 'default' },
+  5: { label: '清洗中', variant: 'outline' },
+  6: { label: '已再生', variant: 'secondary' },
+  7: { label: '损坏', variant: 'destructive' },
+  8: { label: '已报废', variant: 'destructive' },
 };
 const actionMap: Record<string, string> = {
-  Created: tc('text_ehj3'),
-  Exposed: tc('text_hxxo'),
-  Printed: tc('text_en5z'),
-  Cleaned: tc('text_jb8y'),
-  Reclaimed: tc('text_eiia'),
-  Scrapped: tc('text_haqi'),
-  TensionAdjusted: tc('text_ccpaq4'),
+  Created: '创建',
+  Exposed: '曝光',
+  Printed: '印刷',
+  Cleaned: '清洗',
+  Reclaimed: '再生',
+  Scrapped: '报废',
+  TensionAdjusted: '张力调整',
 };
 
 export default function ScreenPlatePage() {
@@ -235,7 +235,7 @@ export default function ScreenPlatePage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{tc('text_gjfp3w')}</h1>
+          <h1 className="text-2xl font-bold">网版管理</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -269,7 +269,7 @@ export default function ScreenPlatePage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              {tc('text_d7bmo5')}
+              新增网版
             </Button>
           </div>
         </div>
@@ -279,10 +279,10 @@ export default function ScreenPlatePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">{tc('text_gjgb2a')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_gj8zx6')}</TableHead>
+                  <TableHead className="text-xs">网版编码</TableHead>
+                  <TableHead className="text-xs">网版名称</TableHead>
                   <TableHead className="text-xs">{tc('type')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_ksaq')}</TableHead>
+                  <TableHead className="text-xs">目数</TableHead>
                   <TableHead className="text-xs">{tc('size')}</TableHead>
                   <TableHead className="text-xs">{tc('customer')}</TableHead>
                   <TableHead className="text-xs">{tc('text_qylaao')}</TableHead>
@@ -362,7 +362,7 @@ export default function ScreenPlatePage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={11} className="text-center text-gray-400 py-8">
-                      {tc('text_dd1mmb')}
+                      暂无记录
                     </TableCell>
                   </TableRow>
                 )}
@@ -372,11 +372,7 @@ export default function ScreenPlatePage() {
         </Card>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            {tc('text_g35')}
-            {total}
-            {tc('text_kf5')}
-          </span>
+          <span className="text-sm text-gray-500">共{total}条</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -384,7 +380,7 @@ export default function ScreenPlatePage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc('text_btlof')}
+              上一页
             </Button>
             <Button
               size="sm"
@@ -392,7 +388,7 @@ export default function ScreenPlatePage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc('text_btmf4')}
+              下一页
             </Button>
           </div>
         </div>
@@ -404,14 +400,14 @@ export default function ScreenPlatePage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{tc('text_gjgb2a')}</Label>
+                <Label>网版编码</Label>
                 <Input
                   value={editItem.plate_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, plate_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_gj8zx6')}</Label>
+                <Label>网版名称</Label>
                 <Input
                   value={editItem.plate_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, plate_name: e.target.value })}
@@ -427,22 +423,22 @@ export default function ScreenPlatePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">{tc('text_c267o')}</SelectItem>
-                    <SelectItem value="2">{tc('text_jatse')}</SelectItem>
-                    <SelectItem value="3">{tc('text_iad0')}</SelectItem>
-                    <SelectItem value="4">{tc('text_ekj3')}</SelectItem>
+                    <SelectItem value="1">丝网版</SelectItem>
+                    <SelectItem value="2">胶印版</SelectItem>
+                    <SelectItem value="3">柔版</SelectItem>
+                    <SelectItem value="4">凹版</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>{tc('text_ksaq')}</Label>
+                <Label>目数</Label>
                 <Input
                   value={editItem.mesh_count || ''}
                   onChange={(e) => setEditItem({ ...editItem, mesh_count: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_adu9bg')}</Label>
+                <Label>丝网材质</Label>
                 <Input
                   value={editItem.mesh_material || ''}
                   onChange={(e) => setEditItem({ ...editItem, mesh_material: e.target.value })}
@@ -456,14 +452,14 @@ export default function ScreenPlatePage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_fvhh2')}</Label>
+                <Label>框类型</Label>
                 <Input
                   value={editItem.frame_type || ''}
                   onChange={(e) => setEditItem({ ...editItem, frame_type: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_tt1rt5')}</Label>
+                <Label>张力值(N/cm)</Label>
                 <Input
                   type="number"
                   value={editItem.tension_value ?? ''}
@@ -473,7 +469,7 @@ export default function ScreenPlatePage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_cxnt0h')}</Label>
+                <Label>最大使用次数</Label>
                 <Input
                   type="number"
                   value={editItem.max_use_count ?? ''}
@@ -501,7 +497,7 @@ export default function ScreenPlatePage() {
                 </Select>
               </div>
               <div className="col-span-2">
-                <Label>{tc('text_bxzajr')}</Label>
+                <Label>存放位置</Label>
                 <Input
                   value={editItem.storage_location || ''}
                   onChange={(e) => setEditItem({ ...editItem, storage_location: e.target.value })}
@@ -517,7 +513,7 @@ export default function ScreenPlatePage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
@@ -527,22 +523,22 @@ export default function ScreenPlatePage() {
         <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
           <DialogContent className="max-w-4xl" resizable>
             <DialogHeader>
-              <DialogTitle>{tc('text_p82rm7')}</DialogTitle>
+              <DialogTitle>网版生命周期记录</DialogTitle>
             </DialogHeader>
             <Tabs defaultValue="list">
               <TabsList>
-                <TabsTrigger value="list">{tc('text_aw7utt')}</TabsTrigger>
+                <TabsTrigger value="list">历史记录</TabsTrigger>
                 <TabsTrigger value="add">{tc('text_d7dmoj')}</TabsTrigger>
               </TabsList>
               <TabsContent value="list">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">{tc('text_d1x8m7')}</TableHead>
+                      <TableHead className="text-xs">操作类型</TableHead>
                       <TableHead className="text-xs">{tc('text_ec2zl')}</TableHead>
                       <TableHead className="text-xs">{tc('text_byix7k')}</TableHead>
                       <TableHead className="text-xs">{tc('remark')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_f5g8b')}</TableHead>
+                      <TableHead className="text-xs">操作人</TableHead>
                       <TableHead className="text-xs">{tc('time')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -566,7 +562,7 @@ export default function ScreenPlatePage() {
                     {historyList.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-gray-400 py-8">
-                          {tc('text_dd1mmb')}
+                          暂无记录
                         </TableCell>
                       </TableRow>
                     )}
@@ -576,7 +572,7 @@ export default function ScreenPlatePage() {
               <TabsContent value="add">
                 <div className="space-y-4">
                   <div>
-                    <Label>{tc('text_d1x8m7')}</Label>
+                    <Label>操作类型</Label>
                     <Select value={lifeAction} onValueChange={setLifeAction}>
                       <SelectTrigger>
                         <SelectValue placeholder={tc('pleaseSelect')} />
@@ -612,7 +608,7 @@ export default function ScreenPlatePage() {
                   </div>
                   <Button onClick={handleAddLifeRecord}>
                     <Activity className="h-3 w-3 mr-1" />
-                    {tc('text_cxej5l')}
+                    提交记录
                   </Button>
                 </div>
               </TabsContent>

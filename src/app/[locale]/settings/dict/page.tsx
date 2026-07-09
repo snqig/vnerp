@@ -326,7 +326,9 @@ export default function DictPage() {
                   </TableBody>
                 </Table>
               ) : (
-                <div className="text-center text-muted-foreground py-12">{tc('text_wxodgt')}</div>
+                <div className="text-center text-muted-foreground py-12">
+                  请从左侧选择一个字典类型
+                </div>
               )}
             </CardContent>
           </Card>

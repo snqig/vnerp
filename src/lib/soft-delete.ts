@@ -382,7 +382,7 @@ async function checkBusinessCondition(
         [recordId]
       );
       if (rows[0]?.count > 0) {
-        return { passed: false, message: tc('text_eojxth') };
+        return { passed: false, message: '采购单已存在入库记录，不可作废' };
       }
       return { passed: true, message: '' };
     }
@@ -395,7 +395,7 @@ async function checkBusinessCondition(
         [recordId]
       );
       if (rows[0]?.count > 0) {
-        return { passed: false, message: tc('text_2fnyrc') };
+        return { passed: false, message: '销售单已存在出库记录，不可作废' };
       }
       return { passed: true, message: '' };
     }
@@ -404,7 +404,7 @@ async function checkBusinessCondition(
       // 检查工单是否已开工
       const rows: any = await query(`SELECT status FROM prod_work_order WHERE id = ?`, [recordId]);
       if (rows[0]?.status === 'producing' || rows[0]?.status === 'completed') {
-        return { passed: false, message: tc('text_m221k4') };
+        return { passed: false, message: '工单已开始生产，不可作废' };
       }
       return { passed: true, message: '' };
     }
@@ -420,7 +420,7 @@ async function checkBusinessCondition(
         recordId,
       ]);
       if (rows[0]?.status === 'completed') {
-        return { passed: false, message: tc('text_1fuvuz') };
+        return { passed: false, message: '调拨单已完成，不可作废' };
       }
       return { passed: true, message: '' };
     }
@@ -431,7 +431,7 @@ async function checkBusinessCondition(
         recordId,
       ]);
       if (rows[0]?.paid_amount > 0) {
-        return { passed: false, message: tc('text_d91rwu') };
+        return { passed: false, message: '已付款记录不可作废' };
       }
       return { passed: true, message: '' };
     }
@@ -440,7 +440,7 @@ async function checkBusinessCondition(
       // 检查凭证是否已过账
       const rows: any = await query(`SELECT status FROM fin_voucher WHERE id = ?`, [recordId]);
       if (rows[0]?.status === 'posted') {
-        return { passed: false, message: tc('text_7696wk') };
+        return { passed: false, message: '凭证已过账，不可作废' };
       }
       return { passed: true, message: '' };
     }

@@ -43,10 +43,10 @@ const STATUS_MAP: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: tc('text_n02e'), variant: 'secondary' },
-  2: { label: tc('text_ewm7d'), variant: 'default' },
-  3: { label: tc('text_ecmeg'), variant: 'default' },
-  4: { label: tc('text_e5e0l'), variant: 'outline' },
+  1: { label: '草稿', variant: 'secondary' },
+  2: { label: '打样中', variant: 'default' },
+  3: { label: '已确认', variant: 'default' },
+  4: { label: '已作废', variant: 'outline' },
 };
 
 export default function SampleCardListPage() {
@@ -141,15 +141,15 @@ export default function SampleCardListPage() {
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">{tc('text_s7222g')}</h1>
+        <h1 className="text-xl font-bold">打样工艺卡</h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => router.push('/sample/standard-card/input')}>
             <Plus className="h-4 w-4 mr-1" />
-            {tc('text_fs1hnw')}
+            {'新建工艺卡'}
           </Button>
           <Button onClick={() => router.push('/sample/standard-card/input-v2')}>
             <Plus className="h-4 w-4 mr-1" />
-            {tc('text_pb0gel')}
+            {'复制'}
           </Button>
         </div>
       </div>
@@ -179,15 +179,15 @@ export default function SampleCardListPage() {
               <SelectValue placeholder="全部状态" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{tc('text_avez63')}</SelectItem>
-              <SelectItem value="1">{tc('text_n02e')}</SelectItem>
-              <SelectItem value="2">{tc('text_ewm7d')}</SelectItem>
-              <SelectItem value="3">{tc('text_ecmeg')}</SelectItem>
-              <SelectItem value="4">{tc('text_e5e0l')}</SelectItem>
+              <SelectItem value="all">全部状态</SelectItem>
+              <SelectItem value="1">草稿</SelectItem>
+              <SelectItem value="2">打样中</SelectItem>
+              <SelectItem value="3">已确认</SelectItem>
+              <SelectItem value="4">已作废</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={fetchList} disabled={loading}>
-            {tc('text_ejix')}
+            刷新
           </Button>
         </CardContent>
       </Card>
@@ -196,22 +196,22 @@ export default function SampleCardListPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{tc('text_m2sh')}</TableHead>
-              <TableHead>{tc('text_eyrn')}</TableHead>
-              <TableHead>{tc('text_g4id')}</TableHead>
-              <TableHead>{tc('text_k06c')}</TableHead>
-              <TableHead>{tc('text_k1e3')}</TableHead>
-              <TableHead className="text-right">{tc('text_eko0n')}</TableHead>
-              <TableHead>{tc('text_e5qlj')}</TableHead>
-              <TableHead>{tc('text_ar84e5')}</TableHead>
-              <TableHead className="text-center">{tc('text_hkxb')}</TableHead>
+              <TableHead>编号</TableHead>
+              <TableHead>名称</TableHead>
+              <TableHead>客户</TableHead>
+              <TableHead>版本</TableHead>
+              <TableHead>状态</TableHead>
+              <TableHead className="text-right">总成本</TableHead>
+              <TableHead>工单号</TableHead>
+              <TableHead>创建时间</TableHead>
+              <TableHead className="text-center">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {list.length === 0 && !loading && (
               <TableRow>
                 <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                  {tc('text_dcv57g')}
+                  暂无数据
                 </TableCell>
               </TableRow>
             )}
@@ -303,14 +303,14 @@ export default function SampleCardListPage() {
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
           >
-            {tc('text_btlof')}
+            上一页
           </Button>
           <span className="text-sm text-gray-600">
-            {tc('text_obw')}
+            {'第'}
             {page} / {totalPages}
-            {tc('text_njq8u')}
+            {'页，共'}
             {total}
-            {tc('text_izew')}
+            {'项'}
           </span>
           <Button
             variant="outline"
@@ -318,7 +318,7 @@ export default function SampleCardListPage() {
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
           >
-            {tc('text_btmf4')}
+            下一页
           </Button>
         </div>
       )}

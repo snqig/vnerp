@@ -72,7 +72,7 @@ export function AdvancedSearch({
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className="gap-1">
             <SlidersHorizontal className="h-3.5 w-3.5" />
-            {tc('text_k24nth')}
+            高级搜索
             {activeCount > 0 && (
               <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
                 {activeCount}
@@ -83,9 +83,9 @@ export function AdvancedSearch({
         <PopoverContent className="w-[400px] p-4" align="start">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-sm">{tc('text_g5ph6r')}</h4>
+              <h4 className="font-medium text-sm">筛选条件</h4>
               <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleReset}>
-                {tc('text_phz5')}
+                重置
               </Button>
             </div>
             <div className="space-y-3 max-h-[400px] overflow-y-auto">
@@ -109,7 +109,7 @@ export function AdvancedSearch({
                         <SelectValue placeholder={field.placeholder || `选择${field.label}`} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__all__">{tc('text_en40')}</SelectItem>
+                        <SelectItem value="__all__">全部</SelectItem>
                         {field.options.map((opt) => (
                           <SelectItem key={opt.value} value={opt.value}>
                             {opt.label}
@@ -131,11 +131,11 @@ export function AdvancedSearch({
             </div>
             <div className="flex justify-end gap-2 pt-2 border-t">
               <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button size="sm" onClick={handleSearch}>
                 <Search className="h-3 w-3 mr-1" />
-                {tc('text_hpqe')}
+                搜索
               </Button>
             </div>
           </div>
@@ -162,7 +162,7 @@ export function AdvancedSearch({
             className="h-6 text-xs text-muted-foreground"
             onClick={handleReset}
           >
-            {tc('text_ehzovz')}
+            清除全部
           </Button>
         </div>
       )}

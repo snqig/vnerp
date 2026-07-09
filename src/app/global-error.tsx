@@ -49,7 +49,7 @@ export default function GlobalError({
               <h2
                 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', color: '#1f2329' }}
               >
-                {tc('text_4cy8sw')}
+                系统发生严重错误
               </h2>
               <p style={{ fontSize: '14px', color: '#86909c' }}>
                 {error.message || '请稍后重试或联系管理员'}
@@ -72,7 +72,7 @@ export default function GlobalError({
                 }}
               >
                 <RefreshCw style={{ width: '16px', height: '16px' }} />
-                {tc('text_pkfc')}
+                重试
               </button>
               {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
@@ -92,7 +92,7 @@ export default function GlobalError({
                 }}
               >
                 <Home style={{ width: '16px', height: '16px' }} />
-                {tc('text_iijhd5')}
+                返回首页
               </a>
             </div>
           </div>

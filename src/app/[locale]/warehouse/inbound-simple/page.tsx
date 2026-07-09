@@ -94,8 +94,7 @@ export default function SimpleInboundPage() {
                         <div>
                           <p className="font-medium">{record.order_no}</p>
                           <p className="text-sm text-gray-500">
-                            {record.supplier_name} | {record.total_quantity}
-                            {tc('text_fli')}
+                            {record.supplier_name} | {record.total_quantity}件
                           </p>
                           <p className="text-sm text-gray-400">{record.inbound_date}</p>
                         </div>

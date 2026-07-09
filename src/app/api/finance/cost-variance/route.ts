@@ -228,12 +228,12 @@ function classifyVarianceReason(
   scrapRate: number
 ): string[] {
   const reasons: string[] = [];
-  if (materialVariance < -100) reasons.push(tc('text_dgo6yj'));
-  if (materialVariance > 100) reasons.push(tc('text_dgmb8t'));
-  if (laborVariance < -50) reasons.push(tc('text_c9yh8b'));
-  if (laborVariance > 50) reasons.push(tc('text_d9a9rq'));
-  if (scrapRate > 5) reasons.push(tc('text_pzdu5q'));
-  if (scrapRate > 10) reasons.push(tc('text_ier8t9'));
-  if (reasons.length === 0) reasons.push(tc('text_dxsnzo'));
+  if (materialVariance < -100) reasons.push('材料超耗');
+  if (materialVariance > 100) reasons.push('材料节约');
+  if (laborVariance < -50) reasons.push('工时超支');
+  if (laborVariance > 50) reasons.push('效率提升');
+  if (scrapRate > 5) reasons.push('废品率偏高');
+  if (scrapRate > 10) reasons.push('质量异常');
+  if (reasons.length === 0) reasons.push('正常偏差');
   return reasons;
 }

@@ -32,7 +32,7 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
       <div className="flex items-center justify-center h-full min-h-[200px] bg-white/5 rounded-lg">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-2"></div>
-          <p className="text-white/50 text-sm">{tc('text_tszxco')}</p>
+          <p className="text-white/50 text-sm">加载图表中...</p>
         </div>
       </div>
     );
@@ -42,12 +42,12 @@ export function ChartImage({ url, title, loading = false, onError }: ChartProps)
     return (
       <div className="flex items-center justify-center h-full min-h-[200px] bg-red-500/10 rounded-lg">
         <div className="text-center">
-          <p className="text-red-400 text-sm mb-2">{tc('text_7swziz')}</p>
+          <p className="text-red-400 text-sm mb-2">图表加载失败</p>
           <button
             onClick={() => window.location.reload()}
             className="text-cyan-400 hover:text-cyan-300 text-sm underline"
           >
-            {tc('text_ekjr0q')}
+            点击重试
           </button>
         </div>
       </div>
@@ -82,19 +82,19 @@ export function ChartPlaceholder({
         {type === 'loading' && (
           <>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-2"></div>
-            <p className="text-white/50 text-sm">{tc('text_tszxco')}</p>
+            <p className="text-white/50 text-sm">加载图表中...</p>
           </>
         )}
         {type === 'empty' && (
           <>
             <div className="text-white/30 text-4xl mb-2">📊</div>
-            <p className="text-white/40 text-sm">{tc('text_dcv57g')}</p>
+            <p className="text-white/40 text-sm">暂无数据</p>
           </>
         )}
         {type === 'error' && (
           <>
             <div className="text-red-400 text-4xl mb-2">⚠️</div>
-            <p className="text-red-400 text-sm">{tc('text_7swziz')}</p>
+            <p className="text-red-400 text-sm">图表加载失败</p>
           </>
         )}
       </div>

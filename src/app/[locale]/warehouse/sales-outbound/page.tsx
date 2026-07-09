@@ -162,7 +162,7 @@ export default function SalesOutboundPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{tc('text_j5fhqf')}</h1>
+          <h1 className="text-2xl font-bold">销售出库</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2">
               <Input
@@ -183,7 +183,7 @@ export default function SalesOutboundPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              {tc('text_d73t53')}
+              新增出库
             </Button>
           </div>
         </div>
@@ -192,12 +192,12 @@ export default function SalesOutboundPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">{tc('text_aqhecb')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_j5p8kh')}</TableHead>
+                  <TableHead className="text-xs">出库单号</TableHead>
+                  <TableHead className="text-xs">销售订单</TableHead>
                   <TableHead className="text-xs">{tc('customer')}</TableHead>
                   <TableHead className="text-xs">{tc('warehouse')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_aqknsj')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_cyeis')}</TableHead>
+                  <TableHead className="text-xs">出库日期</TableHead>
+                  <TableHead className="text-xs">发货人</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
@@ -227,7 +227,7 @@ export default function SalesOutboundPage() {
                               className="h-6 text-xs px-2"
                               onClick={() => handleStatusChange(item.id, 2)}
                             >
-                              {tc('text_frohu7')}
+                              确认出库
                             </Button>
                           )}
                           <Button
@@ -318,7 +318,7 @@ export default function SalesOutboundPage() {
                 </Select>
               </div>
               <div>
-                <Label>{tc('text_aqknsj')}</Label>
+                <Label>出库日期</Label>
                 <Input
                   type="date"
                   value={editItem.outbound_date || ''}
@@ -333,7 +333,7 @@ export default function SalesOutboundPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_byvcwo')}</Label>
+                <Label>客户名称</Label>
                 <Select
                   value={editItem.customer_name || ''}
                   onValueChange={(v) => setEditItem({ ...editItem, customer_name: v })}

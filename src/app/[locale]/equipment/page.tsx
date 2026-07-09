@@ -57,27 +57,27 @@ interface Equipment {
 }
 
 const EQUIPMENT_TYPES: Record<number, string> = {
-  1: tc('text_cmij7'),
-  2: tc('text_krrqc'),
-  3: tc('text_fy4tw'),
-  4: tc('text_cfmxu'),
-  5: tc('text_eae8'),
+  1: '印刷机',
+  2: '覆膜机',
+  3: '模切机',
+  4: '全检机',
+  5: '其他',
 };
 const CURRENT_STATUS: Record<number, { label: string; color: string }> = {
   1: {
-    label: tc('text_p7jw'),
+    label: '运行',
     color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
   },
   2: {
-    label: tc('text_gtat'),
+    label: '待机',
     color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
   },
   3: {
-    label: tc('text_m16i'),
+    label: '维修',
     color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
   },
   4: {
-    label: tc('text_e8gu'),
+    label: '停机',
     color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
   },
 };
@@ -185,7 +185,7 @@ export default function EquipmentPage() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Cpu className="w-5 h-5" />
-                {tc('text_hzz2f3')}
+                设备台账
               </CardTitle>
               <CardDescription>{tc('text_986c7x')}</CardDescription>
             </div>
@@ -198,7 +198,7 @@ export default function EquipmentPage() {
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              {tc('text_d7dlrr')}
+              新增设备
             </Button>
           </CardHeader>
           <CardContent>
@@ -217,7 +217,7 @@ export default function EquipmentPage() {
                   <SelectValue placeholder="设备类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{tc('text_avglbk')}</SelectItem>
+                  <SelectItem value="all">全部类型</SelectItem>
                   {Object.entries(EQUIPMENT_TYPES).map(([k, v]) => (
                     <SelectItem key={k} value={k}>
                       {v}
@@ -238,12 +238,12 @@ export default function EquipmentPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{tc('text_i06agk')}</TableHead>
-                    <TableHead>{tc('text_hzyzbg')}</TableHead>
+                    <TableHead>设备编码</TableHead>
+                    <TableHead>设备名称</TableHead>
                     <TableHead>{tc('type')}</TableHead>
                     <TableHead>{tc('text_9c8nyo')}</TableHead>
-                    <TableHead>{tc('text_e6rl')}</TableHead>
-                    <TableHead>{tc('text_e33q')}</TableHead>
+                    <TableHead>位置</TableHead>
+                    <TableHead>产能</TableHead>
                     <TableHead>OEE</TableHead>
                     <TableHead>{tc('status')}</TableHead>
                     <TableHead className="text-right">{tc('actions')}</TableHead>
@@ -315,7 +315,7 @@ export default function EquipmentPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  {tc('text_i06agk')}
+                  设备编码
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -327,7 +327,7 @@ export default function EquipmentPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {tc('text_hzyzbg')}
+                  设备名称
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -339,7 +339,7 @@ export default function EquipmentPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{tc('text_i05o3d')}</Label>
+                <Label>设备类型</Label>
                 <Select
                   value={String(form.equipment_type ?? 1)}
                   onValueChange={(v) => setForm({ ...form, equipment_type: parseInt(v) })}
@@ -367,7 +367,7 @@ export default function EquipmentPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{tc('text_fcng')}</Label>
+                <Label>型号</Label>
                 <Input
                   value={form.model || ''}
                   onChange={(e) => setForm({ ...form, model: e.target.value })}
@@ -375,7 +375,7 @@ export default function EquipmentPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc('text_c41wyl')}</Label>
+                <Label>安装位置</Label>
                 <Input
                   value={form.location || ''}
                   onChange={(e) => setForm({ ...form, location: e.target.value })}
@@ -385,7 +385,7 @@ export default function EquipmentPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>{tc('text_jmrm37')}</Label>
+                <Label>额定产能</Label>
                 <Input
                   type="number"
                   value={form.rated_capacity || ''}
@@ -396,7 +396,7 @@ export default function EquipmentPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc('text_ipinbb')}</Label>
+                <Label>运行状态</Label>
                 <Select
                   value={String(form.current_status ?? 1)}
                   onValueChange={(v) => setForm({ ...form, current_status: parseInt(v) })}
@@ -426,10 +426,10 @@ export default function EquipmentPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
             <Button onClick={saveEquipment} className="bg-blue-600 hover:bg-blue-700">
-              {tc('text_e32z')}
+              保存
             </Button>
           </DialogFooter>
         </DialogContent>

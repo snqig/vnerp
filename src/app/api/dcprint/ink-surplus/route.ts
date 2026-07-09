@@ -113,10 +113,10 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
     if (pantoneCode && ink.pantone_code) {
       if (ink.pantone_code === pantoneCode) {
         matchScore += 50;
-        matchReasons.push(tc('text_l9t79g'));
+        matchReasons.push('Pantone色号完全匹配');
       } else if (ink.pantone_code.substring(0, 3) === pantoneCode.substring(0, 3)) {
         matchScore += 30;
-        matchReasons.push(tc('text_eb9ygj'));
+        matchReasons.push('Pantone色号相近');
       }
     }
 
@@ -126,21 +126,21 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
         colorName.includes(ink.dispatch_color_name)
       ) {
         matchScore += 30;
-        matchReasons.push(tc('text_hglcc3'));
+        matchReasons.push('颜色名称匹配');
       }
     }
 
     if (ink.available_qty >= 5) {
       matchScore += 10;
-      matchReasons.push(tc('text_blexlo'));
+      matchReasons.push('可用量充足');
     }
 
     if (ink.days_until_expiry && ink.days_until_expiry > 30) {
       matchScore += 10;
-      matchReasons.push(tc('text_a454xc'));
+      matchReasons.push('有效期充裕');
     } else if (ink.days_until_expiry && ink.days_until_expiry > 7) {
       matchScore += 5;
-      matchReasons.push(tc('text_3pjx6l'));
+      matchReasons.push('有效期即将到期，优先使用');
     }
 
     if (matchScore > 0) {
@@ -182,7 +182,7 @@ async function getSurplusDetail(batchNo: string) {
   );
 
   if (batchRows.length === 0) {
-    return errorResponse(tc('text_rbfprf'), 404, 404);
+    return errorResponse('批次不存在', 404, 404);
   }
 
   const batch = batchRows[0];

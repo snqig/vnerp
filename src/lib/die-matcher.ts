@@ -45,24 +45,10 @@ const SHAPE_COMPATIBILITY: Record<string, string[]> = {
 };
 
 const MATERIAL_GROUPS: string[][] = [
-  [
-    tc('text_pujy'),
-    tc('text_pvan'),
-    tc('text_d0po9'),
-    tc('text_lcgf'),
-    tc('text_c5q3r'),
-    tc('text_f3d5'),
-  ],
-  [
-    tc('text_ea710'),
-    tc('text_ji8bg'),
-    tc('text_agy6dm'),
-    tc('text_dzh0'),
-    tc('text_mmol'),
-    tc('text_ji8o4'),
-  ],
-  [tc('text_isvp'), tc('text_l5xt'), tc('text_ieq9'), tc('text_jbzmp')],
-  [tc('text_m4ef'), tc('text_evlj'), tc('text_hbvj9')],
+  ['钢材', '铁材', '合金钢', '碳钢', '不锈钢', '合金'],
+  ['尼龙网', '聚酯网', '不锈钢网', '丝网', '聚酯', '聚酰胺'],
+  ['橡胶', '海绵', '树脂', '胶带'],
+  ['纸板', '双面胶', '牛皮纸'],
 ];
 
 function getMaterialGroup(material: string): number {

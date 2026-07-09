@@ -35,16 +35,16 @@ interface TransferItem {
 }
 
 const TYPE_MAP: Record<number, string> = {
-  1: tc('text_c9ptr3'),
-  2: tc('text_acftyd'),
+  1: '库位调拨',
+  2: '仓库调拨',
 };
 
 const STATUS_MAP: Record<number, string> = {
-  0: tc('text_n02e'),
-  1: tc('text_efsql'),
-  2: tc('text_e5u17'),
-  3: tc('text_e5qgw'),
-  4: tc('text_e68dg'),
+  0: '草稿',
+  1: '待审批',
+  2: '已出库',
+  3: '已入库',
+  4: '已取消',
 };
 
 function generateTransferNo(): string {

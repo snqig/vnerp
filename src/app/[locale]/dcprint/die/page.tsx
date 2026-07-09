@@ -47,19 +47,19 @@ interface Item {
   status: number;
 }
 const typeMap: Record<number, string> = {
-  1: tc('text_fy0my'),
-  2: tc('text_cewrj'),
-  3: tc('text_ct0gm'),
-  4: tc('text_cerfi'),
+  1: '模切刀',
+  2: '分切刀',
+  3: '压痕刀',
+  4: '冲孔刀',
 };
 const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: tc('text_fgu8'), variant: 'default' },
-  2: { label: tc('text_edpc3'), variant: 'outline' },
-  3: { label: tc('text_c3elr'), variant: 'secondary' },
-  4: { label: tc('text_e8o3w'), variant: 'destructive' },
+  1: { label: '在用', variant: 'default' },
+  2: { label: '待保养', variant: 'outline' },
+  3: { label: '保养中', variant: 'secondary' },
+  4: { label: '已报废', variant: 'destructive' },
 };
 
 export default function DieManagementPage() {
@@ -161,7 +161,7 @@ export default function DieManagementPage() {
               }}
             >
               <Plus className="h-3 w-3 mr-1" />
-              {tc('text_d73qp1')}
+              新增刀具
             </Button>
           </div>
         </div>
@@ -170,13 +170,13 @@ export default function DieManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">{tc('text_aovqsi')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_aoofne')}</TableHead>
+                  <TableHead className="text-xs">刀具编码</TableHead>
+                  <TableHead className="text-xs">刀具名称</TableHead>
                   <TableHead className="text-xs">{tc('type')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_c0winq')}</TableHead>
+                  <TableHead className="text-xs">尺寸规格</TableHead>
                   <TableHead className="text-xs">{tc('product')}</TableHead>
                   <TableHead className="text-xs">{tc('text_dd9hp2')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_gmeu')}</TableHead>
+                  <TableHead className="text-xs">已用</TableHead>
                   <TableHead className="text-xs">{tc('text_egb4')}</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
@@ -236,7 +236,7 @@ export default function DieManagementPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                      {tc('text_dd1mmb')}
+                      暂无记录
                     </TableCell>
                   </TableRow>
                 )}
@@ -245,11 +245,7 @@ export default function DieManagementPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            {tc('text_g35')}
-            {total}
-            {tc('text_kf5')}
-          </span>
+          <span className="text-sm text-gray-500">共{total}条</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -257,7 +253,7 @@ export default function DieManagementPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc('text_btlof')}
+              上一页
             </Button>
             <Button
               size="sm"
@@ -265,7 +261,7 @@ export default function DieManagementPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc('text_btmf4')}
+              下一页
             </Button>
           </div>
         </div>
@@ -276,14 +272,14 @@ export default function DieManagementPage() {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>{tc('text_aovqsi')}</Label>
+                <Label>刀具编码</Label>
                 <Input
                   value={editItem.die_code || ''}
                   onChange={(e) => setEditItem({ ...editItem, die_code: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_aoofne')}</Label>
+                <Label>刀具名称</Label>
                 <Input
                   value={editItem.die_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, die_name: e.target.value })}
@@ -299,29 +295,29 @@ export default function DieManagementPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">{tc('text_fy0my')}</SelectItem>
-                    <SelectItem value="2">{tc('text_cewrj')}</SelectItem>
-                    <SelectItem value="3">{tc('text_ct0gm')}</SelectItem>
-                    <SelectItem value="4">{tc('text_cerfi')}</SelectItem>
+                    <SelectItem value="1">模切刀</SelectItem>
+                    <SelectItem value="2">分切刀</SelectItem>
+                    <SelectItem value="3">压痕刀</SelectItem>
+                    <SelectItem value="4">冲孔刀</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>{tc('text_c0winq')}</Label>
+                <Label>尺寸规格</Label>
                 <Input
                   value={editItem.size_spec || ''}
                   onChange={(e) => setEditItem({ ...editItem, size_spec: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_a9yk8t')}</Label>
+                <Label>产品名称</Label>
                 <Input
                   value={editItem.product_name || ''}
                   onChange={(e) => setEditItem({ ...editItem, product_name: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_cxnt0h')}</Label>
+                <Label>最大使用次数</Label>
                 <Input
                   type="number"
                   value={editItem.max_use_count ?? ''}
@@ -333,7 +329,7 @@ export default function DieManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>

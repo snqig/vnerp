@@ -9,10 +9,10 @@ import {
 import { withPermission } from '@/lib/api-permissions';
 
 const MAINTENANCE_TYPE_MAP: Record<string, string> = {
-  routine: tc('text_cgdoei'),
-  grinding: tc('text_e4bfjm'),
-  re_rule: tc('text_bze2bb'),
-  replace: tc('text_i226'),
+  routine: '常规保养',
+  grinding: '磨刃/修版',
+  re_rule: '重做/翻新',
+  replace: '更换',
 };
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {

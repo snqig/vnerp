@@ -67,7 +67,7 @@ function checkFirstLogin(request: NextRequest, userInfo: UserInfo): NextResponse
         {
           code: 403,
           success: false,
-          message: tc('text_r1wt8y'),
+          message: '无权限访问',
           data: null,
           passwordExpired: true,
         },

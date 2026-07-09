@@ -72,17 +72,17 @@ import { useTranslations } from 'next-intl';
 
 // 部门选项
 const departmentOptions = [
-  { value: 'all', label: tc('text_avkeps') },
-  { value: tc('text_iof7n'), label: tc('text_iof7n') },
-  { value: tc('text_buoe9'), label: tc('text_buoe9') },
-  { value: tc('text_hjr0g'), label: tc('text_hjr0g') },
-  { value: tc('text_cu3n96'), label: tc('text_cu3n96') },
-  { value: tc('text_m1hlu'), label: tc('text_m1hlu') },
-  { value: tc('text_d3pkx'), label: tc('text_d3pkx') },
-  { value: tc('text_ii2u'), label: tc('text_ii2u') },
-  { value: tc('text_f2pt'), label: tc('text_f2pt') },
-  { value: tc('text_eae8'), label: tc('text_eae8') },
-  { value: tc('text_pkjq'), label: tc('text_pkjq') },
+  { value: 'all', label: '全部部门' },
+  { value: '管理部', label: '管理部' },
+  { value: '业务部', label: '业务部' },
+  { value: '生产部', label: '生产部' },
+  { value: '打样中心', label: '打样中心' },
+  { value: '采购部', label: '采购部' },
+  { value: '品质部', label: '品质部' },
+  { value: '模切', label: '模切' },
+  { value: '商标', label: '商标' },
+  { value: '其他', label: '其他' },
+  { value: '采购', label: '采购' },
 ];
 
 // 考勤记录接口
@@ -956,7 +956,7 @@ export default function AttendancePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="overtimeHours">{tc('text_awniae')}</Label>
+                <Label htmlFor="overtimeHours">加班时长</Label>
                 <Input
                   id="overtimeHours"
                   type="number"
@@ -979,10 +979,10 @@ export default function AttendancePage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
             <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-              {tc('text_e32z')}
+              保存
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -992,7 +992,7 @@ export default function AttendancePage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-2xl" resizable>
           <DialogHeader>
-            <DialogTitle>{tc('text_438gv')}</DialogTitle>
+            <DialogTitle>编辑考勤记录</DialogTitle>
             <DialogDescription>{tc('text_6i9gwa')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1094,7 +1094,7 @@ export default function AttendancePage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="overtimeHours">{tc('text_awniae')}</Label>
+                <Label htmlFor="overtimeHours">加班时长</Label>
                 <Input
                   id="overtimeHours"
                   type="number"
@@ -1117,10 +1117,10 @@ export default function AttendancePage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
             <Button onClick={handleUpdate} className="bg-blue-600 hover:bg-blue-700">
-              {tc('text_i2ik')}
+              更新
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1130,20 +1130,18 @@ export default function AttendancePage() {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md" resizable>
           <DialogHeader>
-            <DialogTitle>{tc('text_orkg0m')}</DialogTitle>
+            <DialogTitle>删除考勤记录</DialogTitle>
             <DialogDescription>
               {tc('text_e7q3fr')}
-              {currentRecord?.employeeName}
-              {tc('text_h7s')}
-              {currentRecord?.date} {tc('text_ybol37')}
+              {currentRecord?.employeeName}在{currentRecord?.date} 的考勤记录吗？此操作不可撤销。
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
             <Button onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
-              {tc('text_eslg')}
+              删除
             </Button>
           </DialogFooter>
         </DialogContent>

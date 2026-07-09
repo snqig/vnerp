@@ -198,7 +198,7 @@ async function triggerAlertPush(userInfo: UserInfo) {
   );
 
   if (alerts.length === 0) {
-    return successResponse({ alertCount: 0 }, tc('text_dh7pir'));
+    return successResponse({ alertCount: 0 }, '当前无库存预警');
   }
 
   // 获取需要通知的用户（仓库管理员和系统管理员）

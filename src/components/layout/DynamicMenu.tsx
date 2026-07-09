@@ -114,7 +114,7 @@ export function DynamicMenu() {
   }, [pathname, menus]);
 
   if (isLoading) {
-    return <div className="p-4 text-muted-foreground">{tc('text_27k1ha')}</div>;
+    return <div className="p-4 text-muted-foreground">加载中...</div>;
   }
 
   // 切换菜单展开状态

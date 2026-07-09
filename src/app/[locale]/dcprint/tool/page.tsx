@@ -94,14 +94,14 @@ const STATUS_MAP: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: tc('text_gw1v'), variant: 'secondary' },
-  2: { label: tc('text_fgu8'), variant: 'default' },
-  3: { label: tc('text_izg1f'), variant: 'outline' },
-  4: { label: tc('text_qpgi'), variant: 'destructive' },
-  5: { label: tc('text_e8o3w'), variant: 'destructive' },
+  1: { label: '闲置', variant: 'secondary' },
+  2: { label: '在用', variant: 'default' },
+  3: { label: '维修中', variant: 'outline' },
+  4: { label: '预警', variant: 'destructive' },
+  5: { label: '已报废', variant: 'destructive' },
 };
 
-const TYPE_MAP: Record<number, string> = { 1: tc('text_ej35'), 2: tc('text_ma6v') };
+const TYPE_MAP: Record<number, string> = { 1: '刀模', 2: '网版' };
 
 export default function ToolManagementPage() {
   const t = useTranslations();
@@ -374,10 +374,10 @@ export default function ToolManagementPage() {
     <MainLayout>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">{tc('text_6oqc3w')}</h1>
+          <h1 className="text-2xl font-bold">{'刀具管理'}</h1>
           <Button onClick={openCreate}>
             <Plus className="mr-2 h-4 w-4" />
-            {tc('text_d762ge')}
+            新增工装
           </Button>
         </div>
 
@@ -385,37 +385,37 @@ export default function ToolManagementPage() {
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">{tc('text_ceubkl')}</p>
+              <p className="text-sm text-muted-foreground">{'刀具总数'}</p>
               <p className="text-2xl font-bold">{dashboard.totalTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">{tc('text_fgu8')}</p>
+              <p className="text-sm text-muted-foreground">在用</p>
               <p className="text-2xl font-bold text-green-600">{dashboard.activeTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">{tc('text_qpgi')}</p>
+              <p className="text-sm text-muted-foreground">预警</p>
               <p className="text-2xl font-bold text-orange-600">{dashboard.warningTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">{tc('text_izg1f')}</p>
+              <p className="text-sm text-muted-foreground">维修中</p>
               <p className="text-2xl font-bold text-blue-600">{dashboard.maintenanceTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">{tc('text_e8o3w')}</p>
+              <p className="text-sm text-muted-foreground">已报废</p>
               <p className="text-2xl font-bold text-red-600">{dashboard.scrappedTools}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">{tc('text_ifh114')}</p>
+              <p className="text-sm text-muted-foreground">{'净值合计'}</p>
               <p className="text-2xl font-bold">¥{dashboard.totalNetValue.toFixed(2)}</p>
             </CardContent>
           </Card>
@@ -428,9 +428,9 @@ export default function ToolManagementPage() {
               <SelectValue placeholder="全部类型" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{tc('text_avglbk')}</SelectItem>
-              <SelectItem value="1">{tc('text_ej35')}</SelectItem>
-              <SelectItem value="2">{tc('text_ma6v')}</SelectItem>
+              <SelectItem value="">全部类型</SelectItem>
+              <SelectItem value="1">刀模</SelectItem>
+              <SelectItem value="2">网版</SelectItem>
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -438,12 +438,12 @@ export default function ToolManagementPage() {
               <SelectValue placeholder="全部状态" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{tc('text_avez63')}</SelectItem>
-              <SelectItem value="1">{tc('text_gw1v')}</SelectItem>
-              <SelectItem value="2">{tc('text_fgu8')}</SelectItem>
-              <SelectItem value="3">{tc('text_izg1f')}</SelectItem>
-              <SelectItem value="4">{tc('text_qpgi')}</SelectItem>
-              <SelectItem value="5">{tc('text_e8o3w')}</SelectItem>
+              <SelectItem value="">全部状态</SelectItem>
+              <SelectItem value="1">{'闲置'}</SelectItem>
+              <SelectItem value="2">在用</SelectItem>
+              <SelectItem value="3">维修中</SelectItem>
+              <SelectItem value="4">预警</SelectItem>
+              <SelectItem value="5">已报废</SelectItem>
             </SelectContent>
           </Select>
           <Input
@@ -464,20 +464,20 @@ export default function ToolManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{tc('text_lnjk')}</TableHead>
-                  <TableHead>{tc('text_m9wr')}</TableHead>
-                  <TableHead>{tc('text_eyrn')}</TableHead>
-                  <TableHead>{tc('text_bysdu1')}</TableHead>
-                  <TableHead>{tc('text_ecfw')}</TableHead>
-                  <TableHead>{tc('text_k1e3')}</TableHead>
-                  <TableHead>{tc('text_hkxb')}</TableHead>
+                  <TableHead>类型</TableHead>
+                  <TableHead>编码</TableHead>
+                  <TableHead>名称</TableHead>
+                  <TableHead>{'类型'}</TableHead>
+                  <TableHead>净值</TableHead>
+                  <TableHead>状态</TableHead>
+                  <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {tools.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      {tc('text_dcv57g')}
+                      暂无数据
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -590,7 +590,7 @@ export default function ToolManagementPage() {
               {!editTool && (
                 <>
                   <div>
-                    <Label>{tc('text_cez1tc')}</Label>
+                    <Label>{'刀具编码'}</Label>
                     <Select
                       value={String(formData.tool_type)}
                       onValueChange={(v) => setFormData({ ...formData, tool_type: Number(v) })}
@@ -598,14 +598,14 @@ export default function ToolManagementPage() {
                       <SelectTrigger>
                         <SelectValue />
                         <SelectContent>
-                          <SelectItem value="1">{tc('text_ej35')}</SelectItem>
-                          <SelectItem value="2">{tc('text_ma6v')}</SelectItem>
+                          <SelectItem value="1">刀模</SelectItem>
+                          <SelectItem value="2">网版</SelectItem>
                         </SelectContent>
                       </SelectTrigger>
                     </Select>
                   </div>
                   <div>
-                    <Label>{tc('text_cezo6j')}</Label>
+                    <Label>{'刀具名称'}</Label>
                     <Input
                       value={formData.tool_code}
                       onChange={(e) => setFormData({ ...formData, tool_code: e.target.value })}
@@ -614,21 +614,21 @@ export default function ToolManagementPage() {
                 </>
               )}
               <div className="col-span-2">
-                <Label>{tc('text_cesd1f')}</Label>
+                <Label>{'规格型号'}</Label>
                 <Input
                   value={formData.tool_name}
                   onChange={(e) => setFormData({ ...formData, tool_name: e.target.value })}
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc('text_o06w')}</Label>
+                <Label>规格</Label>
                 <Input
                   value={formData.spec}
                   onChange={(e) => setFormData({ ...formData, spec: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_nktn4b')}</Label>
+                <Label>{'品牌'}</Label>
                 <Input
                   type="number"
                   value={formData.total_life}
@@ -636,7 +636,7 @@ export default function ToolManagementPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_hucgoq')}</Label>
+                <Label>{'原值'}</Label>
                 <Input
                   type="number"
                   value={formData.warning_threshold}
@@ -647,7 +647,7 @@ export default function ToolManagementPage() {
               </div>
               {!editTool && (
                 <div>
-                  <Label>{tc('text_avx7q1')}</Label>
+                  <Label>{'使用寿命'}</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -659,14 +659,14 @@ export default function ToolManagementPage() {
                 </div>
               )}
               <div>
-                <Label>{tc('text_bxzajr')}</Label>
+                <Label>存放位置</Label>
                 <Input
                   value={formData.warehouse_location}
                   onChange={(e) => setFormData({ ...formData, warehouse_location: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_apeqtc')}</Label>
+                <Label>{'预警阈值'}</Label>
                 <Input
                   type="date"
                   value={formData.manufacture_date}
@@ -674,7 +674,7 @@ export default function ToolManagementPage() {
                 />
               </div>
               <div className="col-span-2">
-                <Label>{tc('text_fqo1')}</Label>
+                <Label>备注</Label>
                 <Textarea
                   value={formData.remark}
                   onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
@@ -683,9 +683,9 @@ export default function ToolManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setCreateOpen(false)}>
-                {tc('text_ev02')}
+                取消
               </Button>
-              <Button onClick={submitForm}>{tc('text_kzjg')}</Button>
+              <Button onClick={submitForm}>确定</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -695,7 +695,7 @@ export default function ToolManagementPage() {
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {tc('text_i35nw')}
+                {'刀具详情'}
                 {detailTool?.tool_code}
               </DialogTitle>
             </DialogHeader>
@@ -703,71 +703,69 @@ export default function ToolManagementPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-4 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">{tc('text_in9vu')}</span>{' '}
+                    <span className="text-muted-foreground">{'类型'}</span>{' '}
                     {TYPE_MAP[detailTool.tool_type]}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_cvxuf')}</span>{' '}
-                    {detailTool.tool_name}
+                    <span className="text-muted-foreground">{'名称'}</span> {detailTool.tool_name}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_ko5z6')}</span>{' '}
-                    {detailTool.spec || '-'}
+                    <span className="text-muted-foreground">{'规格'}</span> {detailTool.spec || '-'}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_h9767')}</span>{' '}
+                    <span className="text-muted-foreground">{'状态'}</span>{' '}
                     <Badge variant={STATUS_MAP[detailTool.status]?.variant}>
                       {STATUS_MAP[detailTool.status]?.label}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_umhogx')}</span>{' '}
+                    <span className="text-muted-foreground">{'总寿命'}</span>{' '}
                     {detailTool.total_life}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_re8gad')}</span>{' '}
+                    <span className="text-muted-foreground">{'已用次数'}</span>{' '}
                     {detailTool.used_count}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_mjeyd0')}</span>{' '}
+                    <span className="text-muted-foreground">{'剩余寿命'}</span>{' '}
                     {detailTool.remain_life}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_oqq97g')}</span>{' '}
+                    <span className="text-muted-foreground">{'预警阈值'}</span>{' '}
                     {detailTool.warning_threshold}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_cmkwt')}</span> ¥
+                    <span className="text-muted-foreground">{'原值'}</span> ¥
                     {Number(detailTool.original_cost).toFixed(2)}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_a7fw9w')}</span> ¥
+                    <span className="text-muted-foreground">{'累计折旧'}</span> ¥
                     {Number(detailTool.accumulated_cost).toFixed(2)}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_ccpq6')}</span> ¥
+                    <span className="text-muted-foreground">{'净值'}</span> ¥
                     {Number(detailTool.net_value).toFixed(2)}
                   </div>
                   <div>
-                    <span className="text-muted-foreground">{tc('text_fej5n2')}</span> ¥
+                    <span className="text-muted-foreground">{'单位成本'}</span> ¥
                     {Number(detailTool.unit_cost).toFixed(4)}
                   </div>
                 </div>
                 <Tabs defaultValue="usage">
                   <TabsList>
-                    <TabsTrigger value="usage">{tc('text_aisnou')}</TabsTrigger>
-                    <TabsTrigger value="maintenance">{tc('text_gctspr')}</TabsTrigger>
+                    <TabsTrigger value="usage">使用记录</TabsTrigger>
+                    <TabsTrigger value="maintenance">维修记录</TabsTrigger>
                   </TabsList>
                   <TabsContent value="usage">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>{tc('text_i5z2')}</TableHead>
-                          <TableHead>{tc('text_e5qlj')}</TableHead>
-                          <TableHead>{tc('text_ghmy')}</TableHead>
-                          <TableHead>{tc('text_is1b')}</TableHead>
-                          <TableHead>{tc('text_arlt0g')}</TableHead>
-                          <TableHead>{tc('text_f5g8b')}</TableHead>
+                          <TableHead>时间</TableHead>
+                          <TableHead>工单号</TableHead>
+                          <TableHead>工序</TableHead>
+                          <TableHead>{'使用时长'}</TableHead>
+                          <TableHead>{'日期'}</TableHead>
+                          <TableHead>操作人</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -777,7 +775,7 @@ export default function ToolManagementPage() {
                               colSpan={6}
                               className="text-center text-muted-foreground py-4"
                             >
-                              {tc('text_dd1mmb')}
+                              暂无记录
                             </TableCell>
                           </TableRow>
                         ) : (
@@ -799,12 +797,12 @@ export default function ToolManagementPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>{tc('text_lnjk')}</TableHead>
-                          <TableHead>{tc('text_onwv')}</TableHead>
-                          <TableHead>{tc('text_byrrn3')}</TableHead>
-                          <TableHead>{tc('text_k1e3')}</TableHead>
-                          <TableHead>{tc('text_i5z2')}</TableHead>
-                          <TableHead>{tc('text_hrlt')}</TableHead>
+                          <TableHead>类型</TableHead>
+                          <TableHead>费用</TableHead>
+                          <TableHead>{'备注'}</TableHead>
+                          <TableHead>状态</TableHead>
+                          <TableHead>时间</TableHead>
+                          <TableHead>描述</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -814,7 +812,7 @@ export default function ToolManagementPage() {
                               colSpan={6}
                               className="text-center text-muted-foreground py-4"
                             >
-                              {tc('text_dd1mmb')}
+                              暂无记录
                             </TableCell>
                           </TableRow>
                         ) : (
@@ -829,9 +827,9 @@ export default function ToolManagementPage() {
                               </TableCell>
                               <TableCell>
                                 {r.status === 1 ? (
-                                  <Badge variant="outline">{tc('text_lq5q4')}</Badge>
+                                  <Badge variant="outline">进行中</Badge>
                                 ) : (
-                                  <Badge>{tc('text_e7hbq')}</Badge>
+                                  <Badge>已完成</Badge>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -855,14 +853,14 @@ export default function ToolManagementPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {tc('text_14efe3')}
+                {'使用记录'}
                 {usageDialogTool?.tool_code}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label>
-                  {tc('text_1xw61i')}
+                  {'剩余寿命'}
                   {usageDialogTool?.remain_life})
                 </Label>
                 <Input
@@ -872,21 +870,21 @@ export default function ToolManagementPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_k3zlyy')}</Label>
+                <Label>{'使用时长'}</Label>
                 <Input
                   value={usageForm.workOrderNo}
                   onChange={(e) => setUsageForm({ ...usageForm, workOrderNo: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_c8ls99')}</Label>
+                <Label>工序名称</Label>
                 <Input
                   value={usageForm.processName}
                   onChange={(e) => setUsageForm({ ...usageForm, processName: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_fqo1')}</Label>
+                <Label>备注</Label>
                 <Input
                   value={usageForm.remark}
                   onChange={(e) => setUsageForm({ ...usageForm, remark: e.target.value })}
@@ -895,9 +893,9 @@ export default function ToolManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setUsageDialogTool(null)}>
-                {tc('text_ev02')}
+                取消
               </Button>
-              <Button onClick={submitUsage}>{tc('text_kzjg')}</Button>
+              <Button onClick={submitUsage}>确定</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -907,7 +905,7 @@ export default function ToolManagementPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {tc('text_gc5jbb')}
+                {'保养记录'}
                 {maintDialogTool?.tool_code}
               </DialogTitle>
             </DialogHeader>
@@ -917,19 +915,19 @@ export default function ToolManagementPage() {
                   variant={!maintForm.completeAction ? 'default' : 'outline'}
                   onClick={() => setMaintForm({ ...maintForm, completeAction: false })}
                 >
-                  {tc('text_b5wslc')}
+                  {'确认保养'}
                 </Button>
                 <Button
                   variant={maintForm.completeAction ? 'default' : 'outline'}
                   onClick={() => setMaintForm({ ...maintForm, completeAction: true })}
                 >
-                  {tc('text_bynkou')}
+                  {'取消'}
                 </Button>
               </div>
               {!maintForm.completeAction ? (
                 <>
                   <div>
-                    <Label>{tc('text_gcr622')}</Label>
+                    <Label>维修类型</Label>
                     <Select
                       value={String(maintForm.maintenanceType)}
                       onValueChange={(v) =>
@@ -939,14 +937,14 @@ export default function ToolManagementPage() {
                       <SelectTrigger>
                         <SelectValue />
                         <SelectContent>
-                          <SelectItem value="1">{tc('text_m16i')}</SelectItem>
-                          <SelectItem value="2">{tc('text_e14u')}</SelectItem>
+                          <SelectItem value="1">维修</SelectItem>
+                          <SelectItem value="2">保养</SelectItem>
                         </SelectContent>
                       </SelectTrigger>
                     </Select>
                   </div>
                   <div>
-                    <Label>{tc('text_gcjvta')}</Label>
+                    <Label>{'备注'}</Label>
                     <Textarea
                       value={maintForm.description}
                       onChange={(e) => setMaintForm({ ...maintForm, description: e.target.value })}
@@ -956,7 +954,7 @@ export default function ToolManagementPage() {
               ) : (
                 <>
                   <div>
-                    <Label>{tc('text_kljgmy')}</Label>
+                    <Label>{'保养费用'}</Label>
                     <Input
                       type="number"
                       value={maintForm.maintenanceId}
@@ -966,7 +964,7 @@ export default function ToolManagementPage() {
                     />
                   </div>
                   <div>
-                    <Label>{tc('text_gcu6fd')}</Label>
+                    <Label>维修费用</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -977,7 +975,7 @@ export default function ToolManagementPage() {
                     />
                   </div>
                   <div>
-                    <Label>{tc('text_6ge4se')}</Label>
+                    <Label>{'经办人'}</Label>
                     <Input
                       type="number"
                       value={maintForm.lifeAfter}
@@ -987,7 +985,7 @@ export default function ToolManagementPage() {
                     />
                   </div>
                   <div>
-                    <Label>{tc('text_gcjvta')}</Label>
+                    <Label>{'备注'}</Label>
                     <Input
                       value={maintForm.description}
                       onChange={(e) => setMaintForm({ ...maintForm, description: e.target.value })}
@@ -998,9 +996,9 @@ export default function ToolManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setMaintDialogTool(null)}>
-                {tc('text_ev02')}
+                取消
               </Button>
-              <Button onClick={submitMaintenance}>{tc('text_kzjg')}</Button>
+              <Button onClick={submitMaintenance}>确定</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -1010,17 +1008,17 @@ export default function ToolManagementPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {tc('text_kdlsk9')}
+                {'刀具报废'}
                 {scrapDialogTool?.tool_code}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-orange-600">
                 <AlertTriangle className="h-5 w-5" />
-                <span>{tc('text_qz3ind')}</span>
+                <span>{'确认报废此刀具？报废后不可恢复。'}</span>
               </div>
               <div>
-                <Label>{tc('text_cu6am3')}</Label>
+                <Label>报废原因</Label>
                 <Textarea
                   value={scrapForm.scrapReason}
                   onChange={(e) => setScrapForm({ ...scrapForm, scrapReason: e.target.value })}
@@ -1029,10 +1027,10 @@ export default function ToolManagementPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setScrapDialogTool(null)}>
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button variant="destructive" onClick={submitScrap}>
-                {tc('text_frrbww')}
+                确认报废
               </Button>
             </DialogFooter>
           </DialogContent>

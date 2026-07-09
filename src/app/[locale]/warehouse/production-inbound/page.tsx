@@ -159,7 +159,7 @@ export default function ProductionInboundPage() {
                 }}
               >
                 <Plus className="h-3 w-3 mr-1" />
-                {tc('text_d73pks')}
+                新增入库
               </Button>
             </>
           }
@@ -169,12 +169,12 @@ export default function ProductionInboundPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">{tc('text_anu9ao')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_e5qlj')}</TableHead>
+                  <TableHead className="text-xs">入库单号</TableHead>
+                  <TableHead className="text-xs">工单号</TableHead>
                   <TableHead className="text-xs">{tc('warehouse')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_anxiqw')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_i8u3s3')}</TableHead>
-                  <TableHead className="text-xs">{tc('text_f5g8b')}</TableHead>
+                  <TableHead className="text-xs">入库日期</TableHead>
+                  <TableHead className="text-xs">质检状态</TableHead>
+                  <TableHead className="text-xs">操作人</TableHead>
                   <TableHead className="text-xs">{tc('status')}</TableHead>
                   <TableHead className="text-xs">{tc('actions')}</TableHead>
                 </TableRow>
@@ -202,7 +202,7 @@ export default function ProductionInboundPage() {
                             className="h-6 text-xs px-2"
                             onClick={() => handleStatusChange(item.id, 2)}
                           >
-                            {tc('text_froe9w')}
+                            确认入库
                           </Button>
                         )}
                         <Button
@@ -231,7 +231,7 @@ export default function ProductionInboundPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                      {tc('text_dd1mmb')}
+                      暂无记录
                     </TableCell>
                   </TableRow>
                 )}
@@ -292,7 +292,7 @@ export default function ProductionInboundPage() {
                 </Select>
               </div>
               <div>
-                <Label>{tc('text_anxiqw')}</Label>
+                <Label>入库日期</Label>
                 <Input
                   type="date"
                   value={editItem.inbound_date || ''}
@@ -300,14 +300,14 @@ export default function ProductionInboundPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_e5qlj')}</Label>
+                <Label>工单号</Label>
                 <Input
                   value={editItem.work_order_no || ''}
                   onChange={(e) => setEditItem({ ...editItem, work_order_no: e.target.value })}
                 />
               </div>
               <div>
-                <Label>{tc('text_f5g8b')}</Label>
+                <Label>操作人</Label>
                 <UserSelect
                   value={editItem.operator_name || ''}
                   onChange={(v) => setEditItem({ ...editItem, operator_name: v })}
@@ -316,7 +316,7 @@ export default function ProductionInboundPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowDialog(false)}>
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>

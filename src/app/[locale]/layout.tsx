@@ -32,7 +32,7 @@ async function getCompanyName(): Promise<string> {
   } catch {
     if (cachedCompanyName) return cachedCompanyName;
   }
-  return tc('text_ki0kv1');
+  return '越南达昌科技有限公司';
 }
 
 /**

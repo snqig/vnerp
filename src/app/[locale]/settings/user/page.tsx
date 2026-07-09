@@ -614,7 +614,7 @@ export default function UserManagementPage() {
                 {list.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                      {tc('text_dd1mmb')}
+                      暂无记录
                     </TableCell>
                   </TableRow>
                 )}
@@ -623,11 +623,7 @@ export default function UserManagementPage() {
           </CardContent>
         </Card>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            {tc('text_g35')}
-            {total}
-            {tc('text_kf5')}
-          </span>
+          <span className="text-sm text-gray-500">共{total}条</span>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -635,7 +631,7 @@ export default function UserManagementPage() {
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
-              {tc('text_btlof')}
+              上一页
             </Button>
             <Button
               size="sm"
@@ -643,7 +639,7 @@ export default function UserManagementPage() {
               disabled={page * 20 >= total}
               onClick={() => setPage((p) => p + 1)}
             >
-              {tc('text_btmf4')}
+              下一页
             </Button>
           </div>
         </div>
@@ -662,7 +658,7 @@ export default function UserManagementPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>
-                  {tc('text_hmxge')}
+                  用户名
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -674,7 +670,7 @@ export default function UserManagementPage() {
               </div>
               <div>
                 <Label>
-                  {tc('text_g9ob')}
+                  密码
                   {!editItem.id && <span className="text-red-500">*</span>}
                 </Label>
                 <Input
@@ -686,7 +682,7 @@ export default function UserManagementPage() {
               </div>
               <div>
                 <Label>
-                  {tc('text_fqmy')}
+                  姓名
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -712,7 +708,7 @@ export default function UserManagementPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_haa7')}</Label>
+                <Label>手机</Label>
                 <Input
                   value={editItem.phone || ''}
                   onChange={(e) => setEditItem({ ...editItem, phone: e.target.value })}
@@ -802,7 +798,9 @@ export default function UserManagementPage() {
                   </label>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">{tc('text_6xlyt0')}</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                可同时为用户分配多个角色，权限会自动合并
+              </p>
             </div>
             <DialogFooter>
               <Button
@@ -812,7 +810,7 @@ export default function UserManagementPage() {
                   setNameWarning('');
                 }}
               >
-                {tc('text_ev02')}
+                取消
               </Button>
               <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>

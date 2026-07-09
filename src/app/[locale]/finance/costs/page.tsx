@@ -100,7 +100,7 @@ export default function CostsPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{tc('text_csvy4b')}</h1>
+        <h1 className="text-2xl font-bold">成本核算</h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowCalc(true)}>
             <Calculator className="w-4 h-4 mr-2" />
@@ -108,7 +108,7 @@ export default function CostsPage() {
           </Button>
           <Button onClick={loadCosts} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            {tc('text_ejix')}
+            刷新
           </Button>
         </div>
       </div>
@@ -121,14 +121,14 @@ export default function CostsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{tc('text_e5qlj')}</TableHead>
-                <TableHead>{tc('text_hyiv8w')}</TableHead>
-                <TableHead>{tc('text_byjlgj')}</TableHead>
+                <TableHead>工单号</TableHead>
+                <TableHead>计划数量</TableHead>
+                <TableHead>完成数量</TableHead>
                 <TableHead>{tc('text_eqnvss')}</TableHead>
-                <TableHead>{tc('text_abp687')}</TableHead>
-                <TableHead>{tc('text_az30op')}</TableHead>
-                <TableHead>{tc('text_eko0n')}</TableHead>
-                <TableHead>{tc('text_auh1h0')}</TableHead>
+                <TableHead>人工成本</TableHead>
+                <TableHead>制造费用</TableHead>
+                <TableHead>总成本</TableHead>
+                <TableHead>单位成本</TableHead>
                 <TableHead>{tc('text_i4lwt0')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -151,7 +151,7 @@ export default function CostsPage() {
               {costs.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                    {tc('text_dcv57g')}
+                    暂无数据
                   </TableCell>
                 </TableRow>
               )}
@@ -164,11 +164,11 @@ export default function CostsPage() {
       <Dialog open={showCalc} onOpenChange={setShowCalc}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{tc('text_h6eon6')}</DialogTitle>
+            <DialogTitle>计算工单成本</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>{tc('text_c6jo6j')}</Label>
+              <Label>工单ID</Label>
               <Input
                 value={calcWorkOrderId}
                 onChange={(e) => setCalcWorkOrderId(e.target.value)}
@@ -178,11 +178,11 @@ export default function CostsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCalc(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
             <Button onClick={handleCalculate}>
               <Calculator className="w-4 h-4 mr-2" />
-              {tc('text_offa')}
+              计算
             </Button>
           </DialogFooter>
         </DialogContent>

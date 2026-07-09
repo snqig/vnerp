@@ -11,53 +11,53 @@ import Link from 'next/link';
 // 功能模块
 const modules = [
   {
-    title: tc('text_18vvxo'),
-    description: tc('text_q4gmqv'),
+    title: '物料标签管理',
+    description: '管理物料标签，支持二维码追溯',
     icon: QrCode,
     href: '/dcprint/labels',
     color: 'bg-blue-500',
-    stats: tc('text_d7sljy'),
+    stats: '标签总数: 0',
   },
   {
-    title: tc('text_eurv9t'),
-    description: tc('text_mxiu5g'),
+    title: '物料分切',
+    description: '扫描标签进行分切操作',
     icon: Scissors,
     href: '/warehouse/inbound/cutting',
     color: 'bg-green-500',
-    stats: tc('text_u9u8z2'),
+    stats: '今日分切: 0',
   },
   {
-    title: tc('text_sw72y9'),
-    description: tc('text_g5tro1'),
+    title: '生产流程卡',
+    description: '生成和管理生产流程卡',
     icon: FileText,
     href: '/dcprint/process-cards',
     color: 'bg-purple-500',
-    stats: tc('text_ym8o7l'),
+    stats: '流程卡数: 0',
   },
   {
-    title: tc('text_ev2kde'),
-    description: tc('text_h8mb5x'),
+    title: '物料追溯',
+    description: '全程二维码追溯查询',
     icon: Search,
     href: '/dcprint/trace',
     color: 'bg-orange-500',
-    stats: tc('text_r5mxot'),
+    stats: '追溯记录: 0',
   },
 ];
 
 // 快捷操作
 const quickActions = [
-  { label: tc('text_ctwbd1'), icon: Scissors, href: '/warehouse/inbound/cutting' },
-  { label: tc('text_qg294q'), icon: FileText, href: '/dcprint/process-cards' },
-  { label: tc('text_imiq27'), icon: Search, href: '/dcprint/trace' },
-  { label: tc('text_dn1dss'), icon: QrCode, href: '/dcprint/labels' },
+  { label: '扫描分切', icon: Scissors, href: '/warehouse/inbound/cutting' },
+  { label: '生成流程卡', icon: FileText, href: '/dcprint/process-cards' },
+  { label: '追溯查询', icon: Search, href: '/dcprint/trace' },
+  { label: '标签管理', icon: QrCode, href: '/dcprint/labels' },
 ];
 
 // 统计数据
 const stats = [
-  { label: tc('text_ad2q8s'), value: '0', icon: Scissors, color: 'text-green-600' },
-  { label: tc('text_xs0tqc'), value: '0', icon: FileText, color: 'text-purple-600' },
-  { label: tc('text_addfcd'), value: '0', icon: Search, color: 'text-orange-600' },
-  { label: tc('text_dmwn58'), value: '0', icon: QrCode, color: 'text-blue-600' },
+  { label: '今日刀具', value: '0', icon: Scissors, color: 'text-green-600' },
+  { label: '今日流程卡', value: '0', icon: FileText, color: 'text-purple-600' },
+  { label: '今日追溯', value: '0', icon: Search, color: 'text-orange-600' },
+  { label: '标签总数', value: '0', icon: QrCode, color: 'text-blue-600' },
 ];
 
 export default function DCPrintPage() {
@@ -73,14 +73,14 @@ export default function DCPrintPage() {
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold mb-2">{tc('text_h8ptpo')}</h1>
+                <h1 className="text-3xl font-bold mb-2">全程二维码追溯系统</h1>
                 <p className="text-blue-100">{tc('text_1oztkz')}</p>
               </div>
               <div className="flex gap-3">
                 <Link href="/warehouse/inbound/cutting">
                   <Button variant="secondary" className="bg-white text-blue-600 hover:bg-blue-50">
                     <Scissors className="h-4 w-4 mr-2" />
-                    {tc('text_ccwslo')}
+                    开始分切
                   </Button>
                 </Link>
                 <Link href="/dcprint/process-cards">
@@ -89,7 +89,7 @@ export default function DCPrintPage() {
                     className="bg-white text-purple-600 hover:bg-purple-50"
                   >
                     <FileText className="h-4 w-4 mr-2" />
-                    {tc('text_qg294q')}
+                    生成流程卡
                   </Button>
                 </Link>
               </div>
@@ -144,7 +144,7 @@ export default function DCPrintPage() {
         {/* 快捷操作 */}
         <Card>
           <CardHeader>
-            <CardTitle>{tc('text_cil0yj')}</CardTitle>
+            <CardTitle>快捷操作</CardTitle>
             <CardDescription>{tc('text_bcu9r4')}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -164,7 +164,7 @@ export default function DCPrintPage() {
         {/* 系统说明 */}
         <Card>
           <CardHeader>
-            <CardTitle>{tc('text_gaqy1q')}</CardTitle>
+            <CardTitle>系统说明</CardTitle>
             <CardDescription>{tc('text_2ahj2k')}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -175,7 +175,9 @@ export default function DCPrintPage() {
                 </div>
                 <div>
                   <h4 className="font-medium">{tc('text_9gtzkr')}</h4>
-                  <p className="text-sm text-muted-foreground">{tc('text_r0lwcf')}</p>
+                  <p className="text-sm text-muted-foreground">
+                    通过二维码标签管理物料入库、出库，实现先进先出的库存管理
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -183,8 +185,10 @@ export default function DCPrintPage() {
                   <Scissors className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="font-medium">{tc('text_eurv9t')}</h4>
-                  <p className="text-sm text-muted-foreground">{tc('text_kg3hvm')}</p>
+                  <h4 className="font-medium">物料分切</h4>
+                  <p className="text-sm text-muted-foreground">
+                    支持母材分切操作，自动生成分切后的新标签，保持追溯链完整
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -192,8 +196,10 @@ export default function DCPrintPage() {
                   <FileText className="h-4 w-4" />
                 </div>
                 <div>
-                  <h4 className="font-medium">{tc('text_sw72y9')}</h4>
-                  <p className="text-sm text-muted-foreground">{tc('text_4gbp8t')}</p>
+                  <h4 className="font-medium">生产流程卡</h4>
+                  <p className="text-sm text-muted-foreground">
+                    扫描工单和物料生成流程卡，关联主材和辅料，支持配料管理
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -202,7 +208,9 @@ export default function DCPrintPage() {
                 </div>
                 <div>
                   <h4 className="font-medium">{tc('text_as7h9x')}</h4>
-                  <p className="text-sm text-muted-foreground">{tc('text_t6539f')}</p>
+                  <p className="text-sm text-muted-foreground">
+                    通过流程卡二维码追溯产品使用的所有物料信息，支持正向和反向追溯
+                  </p>
                 </div>
               </div>
             </div>

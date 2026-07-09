@@ -89,7 +89,7 @@ class AppLogger {
   ) {
     this.info(
       context,
-      `⑂ 分支[${branchName}]: 条件="${condition}" → ${taken ? tc('text_4xumbh') : tc('text_b849kh')}`,
+      `⑂ 分支[${branchName}]: 条件="${condition}" → ${taken ? '✓ 命中' : '✗ 未命中'}`,
       data
     );
   }

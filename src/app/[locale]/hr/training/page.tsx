@@ -46,20 +46,20 @@ interface Item {
   status: number;
 }
 const typeMap: Record<number, string> = {
-  1: tc('text_bvzj0z'),
-  2: tc('text_cykx01'),
-  3: tc('text_ieqapn'),
-  4: tc('text_g2s6jd'),
-  5: tc('text_hk2alr'),
+  1: '安全培训',
+  2: '技能培训',
+  3: '质量培训',
+  4: '管理培训',
+  5: '新员工培训',
 };
 const statusMap: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  0: { label: tc('text_egbo0'), variant: 'outline' },
-  1: { label: tc('text_lq5q4'), variant: 'default' },
-  2: { label: tc('text_e7hbq'), variant: 'secondary' },
-  3: { label: tc('text_e68dg'), variant: 'destructive' },
+  0: { label: '待开始', variant: 'outline' },
+  1: { label: '进行中', variant: 'default' },
+  2: { label: '已完成', variant: 'secondary' },
+  3: { label: '已取消', variant: 'destructive' },
 };
 
 const formatDate = (dateStr: string) => {

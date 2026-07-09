@@ -375,7 +375,7 @@ class GlobalExportServiceClass {
 
     const printWindow = window.open('', '_blank', 'width=1024,height=768');
     if (!printWindow) {
-      alert(tc('text_7rjfzi'));
+      alert('请允许弹出窗口以使用打印功能');
       return;
     }
 
@@ -398,7 +398,7 @@ class GlobalExportServiceClass {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>${title || tc('text_h6kd')}</title>
+        <title>${title || '打印'}</title>
         <style>
           @page { size: A4; margin: 15mm; }
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a2e; }

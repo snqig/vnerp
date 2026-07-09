@@ -640,9 +640,9 @@ export default function OrganizationPage() {
   // 角色类型标签
   const getRoleTypeBadge = (type: number) => {
     return type === 1 ? (
-      <Badge className="bg-blue-100 text-blue-800">{tc('text_gaqqlg')}</Badge>
+      <Badge className="bg-blue-100 text-blue-800">系统角色</Badge>
     ) : (
-      <Badge className="bg-purple-100 text-purple-800">{tc('text_jh1ll')}</Badge>
+      <Badge className="bg-purple-100 text-purple-800">自定义</Badge>
     );
   };
 
@@ -769,7 +769,7 @@ export default function OrganizationPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>{tc('text_e41r')}</Label>
+                        <Label>传真</Label>
                         <Input
                           value={company.fax || ''}
                           onChange={(e) => setCompany({ ...company, fax: e.target.value })}
@@ -798,7 +798,7 @@ export default function OrganizationPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>{tc('text_cegvwt')}</Label>
+                          <Label>开户银行</Label>
                           <Input
                             value={company.bank_name || ''}
                             onChange={(e) => setCompany({ ...company, bank_name: e.target.value })}
@@ -806,7 +806,7 @@ export default function OrganizationPage() {
                           />
                         </div>
                         <div className="space-y-2 md:col-span-2">
-                          <Label>{tc('text_jd0njb')}</Label>
+                          <Label>银行账号</Label>
                           <Input
                             value={company.bank_account || ''}
                             onChange={(e) =>
@@ -853,7 +853,7 @@ export default function OrganizationPage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="w-5 h-5" />
-                    {tc('text_iwitmt')}
+                    部门管理
                   </CardTitle>
                   <CardDescription>{tc('text_p2iek1')}</CardDescription>
                 </div>
@@ -866,7 +866,7 @@ export default function OrganizationPage() {
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  {tc('text_w74baj')}
+                  新增一级部门
                 </Button>
               </CardHeader>
               <CardContent>
@@ -901,7 +901,7 @@ export default function OrganizationPage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="w-5 h-5" />
-                    {tc('text_hxen9p')}
+                    角色权限
                   </CardTitle>
                   <CardDescription>{tc('text_t05ypd')}</CardDescription>
                 </div>
@@ -922,7 +922,7 @@ export default function OrganizationPage() {
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  {tc('text_d7di6m')}
+                  新增角色
                 </Button>
               </CardHeader>
               <CardContent>
@@ -935,8 +935,8 @@ export default function OrganizationPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-[60px]">{tc('serialNo')}</TableHead>
-                        <TableHead>{tc('text_hxij63')}</TableHead>
-                        <TableHead>{tc('text_hxb80z')}</TableHead>
+                        <TableHead>角色编码</TableHead>
+                        <TableHead>角色名称</TableHead>
                         <TableHead>{tc('type')}</TableHead>
                         <TableHead>{tc('description')}</TableHead>
                         <TableHead>{tc('sortOrder')}</TableHead>
@@ -1002,7 +1002,7 @@ export default function OrganizationPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>
-                  {tc('text_iwjfl7')}
+                  部门编码
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -1013,7 +1013,7 @@ export default function OrganizationPage() {
               </div>
               <div className="space-y-2">
                 <Label>
-                  {tc('text_iwc4g3')}
+                  部门名称
                   <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -1054,7 +1054,7 @@ export default function OrganizationPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{tc('text_f1kre')}</Label>
+                <Label>排序号</Label>
                 <Input
                   type="number"
                   value={deptForm.sort_order || 0}
@@ -1076,12 +1076,12 @@ export default function OrganizationPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">{tc('enable')}</SelectItem>
-                  <SelectItem value="0">{tc('text_eb7w')}</SelectItem>
+                  <SelectItem value="0">停用</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{tc('text_iwexa9')}</Label>
+              <Label>部门描述</Label>
               <Textarea
                 value={deptForm.description || ''}
                 onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })}
@@ -1092,10 +1092,10 @@ export default function OrganizationPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeptDialogOpen(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
             <Button onClick={saveDepartment} className="bg-blue-600 hover:bg-blue-700">
-              {tc('text_e32z')}
+              保存
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1113,7 +1113,7 @@ export default function OrganizationPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>
-                {tc('text_hxij63')}
+                角色编码
                 <span className="text-red-500">*</span>
               </Label>
               <div className="flex gap-2">
@@ -1143,7 +1143,7 @@ export default function OrganizationPage() {
                       setCodeError('');
                     }}
                   >
-                    {tc('text_gqkcpb')}
+                    自动生成
                   </Button>
                 )}
               </div>
@@ -1151,7 +1151,7 @@ export default function OrganizationPage() {
             </div>
             <div className="space-y-2">
               <Label>
-                {tc('text_hxb80z')}
+                角色名称
                 <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -1170,7 +1170,7 @@ export default function OrganizationPage() {
                   <SelectValue placeholder={tc('selectRoleType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">{tc('text_gaqqlg')}</SelectItem>
+                  <SelectItem value="1">系统角色</SelectItem>
                   <SelectItem value="2">{tc('text_mmvh15')}</SelectItem>
                 </SelectContent>
               </Select>
@@ -1185,14 +1185,14 @@ export default function OrganizationPage() {
                   <SelectValue placeholder={tc('selectDataScope')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">{tc('text_avcqke')}</SelectItem>
-                  <SelectItem value="2">{tc('text_3vvdg6')}</SelectItem>
+                  <SelectItem value="1">全部数据</SelectItem>
+                  <SelectItem value="2">本部门数据</SelectItem>
                   <SelectItem value="3">{tc('text_dchmrw')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{tc('text_f1kre')}</Label>
+              <Label>排序号</Label>
               <Input
                 type="number"
                 value={roleForm.sort_order || 0}
@@ -1213,7 +1213,7 @@ export default function OrganizationPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">{tc('enable')}</SelectItem>
-                  <SelectItem value="0">{tc('text_eb7w')}</SelectItem>
+                  <SelectItem value="0">停用</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1229,7 +1229,7 @@ export default function OrganizationPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRoleDialogOpen(false)} type="button">
-              {tc('text_ev02')}
+              取消
             </Button>
             <Button
               onClick={(e) => {
@@ -1240,7 +1240,7 @@ export default function OrganizationPage() {
               className="bg-blue-600 hover:bg-blue-700"
               type="button"
             >
-              {tc('text_e32z')}
+              保存
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -173,8 +173,8 @@ export default function ProjectUploaderPage() {
     <div className="container mx-auto py-6 space-y-6">
       {/* 标题 */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">{tc('text_8yiig3')}</h1>
-        <p className="text-muted-foreground">{tc('text_183rhz')}</p>
+        <h1 className="text-3xl font-bold tracking-tight">项目上传工具</h1>
+        <p className="text-muted-foreground">选择文件上传到 GitHub（已排除 . 开头的文件和目录）</p>
       </div>
 
       {/* 统计卡片 */}
@@ -228,8 +228,7 @@ export default function ProjectUploaderPage() {
                 <div>
                   <CardTitle>{tc('text_d4yym8')}</CardTitle>
                   <CardDescription>
-                    {tc('text_g35')}
-                    {files.length}
+                    共{files.length}
                     {tc('text_wxe0ol')}
                   </CardDescription>
                 </div>
@@ -242,7 +241,7 @@ export default function ProjectUploaderPage() {
                   />
                   <Button onClick={selectAll}>{tc('selectAll')}</Button>
                   <Button variant="outline" onClick={deselectAll}>
-                    {tc('text_b147f7')}
+                    取消全选
                   </Button>
                 </div>
               </div>
@@ -252,7 +251,7 @@ export default function ProjectUploaderPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-12">{tc('text_p1j4')}</TableHead>
+                      <TableHead className="w-12">选择</TableHead>
                       <TableHead>{tc('text_d58wzo')}</TableHead>
                       <TableHead className="w-24">{tc('type')}</TableHead>
                       <TableHead className="w-24">{tc('text_fo3s')}</TableHead>
@@ -288,8 +287,7 @@ export default function ProjectUploaderPage() {
                 {filteredFiles.length > 100 && (
                   <p className="text-center text-muted-foreground py-4">
                     {tc('text_j5mobk')}
-                    {filteredFiles.length}
-                    {tc('text_ffu')}
+                    {filteredFiles.length}个
                   </p>
                 )}
               </ScrollArea>
@@ -306,7 +304,7 @@ export default function ProjectUploaderPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="repoName">{tc('text_ac6ftv')}</Label>
+                  <Label htmlFor="repoName">仓库名称</Label>
                   <Input
                     id="repoName"
                     value={repoName}
@@ -343,7 +341,7 @@ export default function ProjectUploaderPage() {
 
               <div className="flex gap-4 pt-4">
                 <Button onClick={generateGitignore} variant="outline">
-                  {tc('text_kg8kgr')}
+                  生成 .gitignore
                 </Button>
                 <Button onClick={uploadToGitHub} disabled={uploading || selectedCount === 0}>
                   {uploading ? '上传中...' : `上传 ${selectedCount} 个文件到 GitHub`}

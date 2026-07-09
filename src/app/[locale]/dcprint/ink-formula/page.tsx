@@ -111,15 +111,15 @@ const STATUS_MAP: Record<
   number,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > = {
-  1: { label: tc('text_n02e'), variant: 'secondary' },
-  2: { label: tc('text_ebukb'), variant: 'default' },
-  3: { label: tc('text_e5e0l'), variant: 'outline' },
+  1: { label: '草稿', variant: 'secondary' },
+  2: { label: '启用', variant: 'default' },
+  3: { label: '已作废', variant: 'outline' },
 };
 
 const COST_STATUS_MAP: Record<number, { label: string; color: string }> = {
-  0: { label: tc('text_fserk'), color: 'text-gray-500' },
-  1: { label: tc('text_g3yc'), color: 'text-green-600' },
-  2: { label: tc('text_imlcd1'), color: 'text-orange-500' },
+  0: { label: '未核算', color: 'text-gray-500' },
+  1: { label: '完成', color: 'text-green-600' },
+  2: { label: '核算中', color: 'text-orange-500' },
 };
 
 export default function InkFormulaVersionPage() {
@@ -473,7 +473,7 @@ export default function InkFormulaVersionPage() {
           <>
             {/* 色号管理 */}
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold">{tc('text_mz8v5o')}</h1>
+              <h1 className="text-2xl font-bold">油墨配方版本管理</h1>
               <Button
                 size="sm"
                 onClick={() => {
@@ -482,7 +482,7 @@ export default function InkFormulaVersionPage() {
                 }}
               >
                 <Plus className="h-3 w-3 mr-1" />
-                {tc('text_d7bzub')}
+                新增色号
               </Button>
             </div>
 
@@ -498,23 +498,23 @@ export default function InkFormulaVersionPage() {
                   />
                   <Button size="sm" variant="outline" className="h-8" onClick={fetchColors}>
                     <Search className="h-3 w-3 mr-1" />
-                    {tc('text_hpqe')}
+                    搜索
                   </Button>
                 </div>
 
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">{tc('text_gjm0')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_gt7wog')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_gt0ljc')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_mvgp')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_bh1zha')}</TableHead>
+                      <TableHead className="text-xs">序号</TableHead>
+                      <TableHead className="text-xs">{'色号'}</TableHead>
+                      <TableHead className="text-xs">{'颜色名称'}</TableHead>
+                      <TableHead className="text-xs">{'色系'}</TableHead>
+                      <TableHead className="text-xs">基墨类型</TableHead>
                       <TableHead className="text-xs">Pantone</TableHead>
-                      <TableHead className="text-xs">{tc('text_t0i9dz')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_h8pho')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_k1e3')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_hkxb')}</TableHead>
+                      <TableHead className="text-xs">{'当前版本'}</TableHead>
+                      <TableHead className="text-xs">{'版本数'}</TableHead>
+                      <TableHead className="text-xs">状态</TableHead>
+                      <TableHead className="text-xs">操作</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -534,7 +534,7 @@ export default function InkFormulaVersionPage() {
                           {color.active_version_no ? (
                             <Badge variant="default">{color.active_version_no}</Badge>
                           ) : (
-                            <span className="text-gray-400">{tc('text_k4g')}</span>
+                            <span className="text-gray-400">无</span>
                           )}
                         </TableCell>
                         <TableCell className="text-xs">{color.version_count}</TableCell>
@@ -574,7 +574,7 @@ export default function InkFormulaVersionPage() {
                     {colors.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={10} className="text-center text-gray-400 py-8">
-                          {tc('text_oyzcd0')}
+                          {'暂无色号数据'}
                         </TableCell>
                       </TableRow>
                     )}
@@ -582,11 +582,7 @@ export default function InkFormulaVersionPage() {
                 </Table>
 
                 <div className="flex items-center justify-between mt-4">
-                  <span className="text-sm text-gray-500">
-                    {tc('text_g35')}
-                    {colorTotal}
-                    {tc('text_kf5')}
-                  </span>
+                  <span className="text-sm text-gray-500">共{colorTotal}条</span>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -594,7 +590,7 @@ export default function InkFormulaVersionPage() {
                       disabled={colorPage <= 1}
                       onClick={() => setColorPage((p) => p - 1)}
                     >
-                      {tc('text_btlof')}
+                      上一页
                     </Button>
                     <Button
                       size="sm"
@@ -602,7 +598,7 @@ export default function InkFormulaVersionPage() {
                       disabled={colorPage * 20 >= colorTotal}
                       onClick={() => setColorPage((p) => p + 1)}
                     >
-                      {tc('text_btmf4')}
+                      下一页
                     </Button>
                   </div>
                 </div>
@@ -615,7 +611,7 @@ export default function InkFormulaVersionPage() {
             <div className="flex items-center gap-4">
               <Button size="sm" variant="ghost" onClick={handleBackToColors}>
                 <ArrowLeft className="h-4 w-4 mr-1" />
-                {tc('text_w17rk0')}
+                返回色号列表
               </Button>
               <h1 className="text-xl font-bold">
                 {selectedColor.color_name}
@@ -642,7 +638,7 @@ export default function InkFormulaVersionPage() {
                 }}
               >
                 <Plus className="h-3 w-3 mr-1" />
-                {tc('text_mtuf0')}
+                {'新增版本'}
               </Button>
               <Button
                 size="sm"
@@ -655,7 +651,7 @@ export default function InkFormulaVersionPage() {
                 }}
               >
                 <GitCompare className="h-3 w-3 mr-1" />
-                {tc('text_eugxjz')}
+                {'版本对比'}
               </Button>
             </div>
 
@@ -664,15 +660,15 @@ export default function InkFormulaVersionPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs">{tc('text_h8m1f')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_eufntz')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_k1e3')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_b06uyl')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_f7rh5c')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_csxkx3')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_i6yz')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_ar84e5')}</TableHead>
-                      <TableHead className="text-xs">{tc('text_hkxb')}</TableHead>
+                      <TableHead className="text-xs">版本号</TableHead>
+                      <TableHead className="text-xs">{'版本名称'}</TableHead>
+                      <TableHead className="text-xs">状态</TableHead>
+                      <TableHead className="text-xs">变更原因</TableHead>
+                      <TableHead className="text-xs">理论成本</TableHead>
+                      <TableHead className="text-xs">{'成本状态'}</TableHead>
+                      <TableHead className="text-xs">来源</TableHead>
+                      <TableHead className="text-xs">创建时间</TableHead>
+                      <TableHead className="text-xs">操作</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -773,7 +769,7 @@ export default function InkFormulaVersionPage() {
                     {versions.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={9} className="text-center text-gray-400 py-8">
-                          {tc('text_c2uubz')}
+                          {'暂无版本数据'}
                         </TableCell>
                       </TableRow>
                     )}
@@ -793,7 +789,7 @@ export default function InkFormulaVersionPage() {
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>{tc('text_vziwxm')}</Label>
+              <Label>{'色号'}</Label>
               <Input
                 value={editingColor.color_code || ''}
                 onChange={(e) => setEditingColor({ ...editingColor, color_code: e.target.value })}
@@ -801,21 +797,21 @@ export default function InkFormulaVersionPage() {
               />
             </div>
             <div>
-              <Label>{tc('text_qkehhu')}</Label>
+              <Label>{'颜色名称'}</Label>
               <Input
                 value={editingColor.color_name || ''}
                 onChange={(e) => setEditingColor({ ...editingColor, color_name: e.target.value })}
               />
             </div>
             <div>
-              <Label>{tc('text_mvgp')}</Label>
+              <Label>{'色系'}</Label>
               <Input
                 value={editingColor.color_series || ''}
                 onChange={(e) => setEditingColor({ ...editingColor, color_series: e.target.value })}
               />
             </div>
             <div>
-              <Label>{tc('text_bh1zha')}</Label>
+              <Label>基墨类型</Label>
               <Select
                 value={editingColor.base_ink_type || '_none'}
                 onValueChange={(v) =>
@@ -828,20 +824,20 @@ export default function InkFormulaVersionPage() {
                 <SelectContent>
                   <SelectItem value="_none">-</SelectItem>
                   <SelectItem value="UV">UV</SelectItem>
-                  <SelectItem value="solvent">{tc('text_gm8xr')}</SelectItem>
-                  <SelectItem value="water">{tc('text_ixkj')}</SelectItem>
+                  <SelectItem value="solvent">溶剂型</SelectItem>
+                  <SelectItem value="water">水性</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>{tc('text_fsw5f8')}</Label>
+              <Label>Pantone色号</Label>
               <Input
                 value={editingColor.pantone_code || ''}
                 onChange={(e) => setEditingColor({ ...editingColor, pantone_code: e.target.value })}
               />
             </div>
             <div>
-              <Label>{tc('text_k1e3')}</Label>
+              <Label>状态</Label>
               <Select
                 value={String(editingColor.status || 1)}
                 onValueChange={(v) => setEditingColor({ ...editingColor, status: Number(v) })}
@@ -850,13 +846,13 @@ export default function InkFormulaVersionPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">{tc('text_eymx')}</SelectItem>
-                  <SelectItem value="2">{tc('text_eb7w')}</SelectItem>
+                  <SelectItem value="1">启用</SelectItem>
+                  <SelectItem value="2">停用</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="col-span-2">
-              <Label>{tc('text_fqo1')}</Label>
+              <Label>备注</Label>
               <Textarea
                 value={editingColor.remark || ''}
                 onChange={(e) => setEditingColor({ ...editingColor, remark: e.target.value })}
@@ -866,9 +862,9 @@ export default function InkFormulaVersionPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setColorDialog(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
-            <Button onClick={handleSaveColor}>{tc('text_e32z')}</Button>
+            <Button onClick={handleSaveColor}>保存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -877,12 +873,12 @@ export default function InkFormulaVersionPage() {
       <Dialog open={versionDialog} onOpenChange={setVersionDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{tc('text_mtuf0')}</DialogTitle>
+            <DialogTitle>{'新增版本'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label>{tc('text_eufntz')}</Label>
+                <Label>{'版本名称'}</Label>
                 <Input
                   value={editingVersion.version_name || ''}
                   onChange={(e) =>
@@ -891,7 +887,7 @@ export default function InkFormulaVersionPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_r29cju')}</Label>
+                <Label>{'变更原因'}</Label>
                 <Input
                   type="number"
                   value={editingVersion.total_weight ?? ''}
@@ -904,7 +900,7 @@ export default function InkFormulaVersionPage() {
                 />
               </div>
               <div>
-                <Label>{tc('text_j7mcvi')}</Label>
+                <Label>保质期(小时)</Label>
                 <Input
                   type="number"
                   value={editingVersion.shelf_life_hours ?? 168}
@@ -918,7 +914,7 @@ export default function InkFormulaVersionPage() {
               </div>
             </div>
             <div>
-              <Label>{tc('text_b06uyl')}</Label>
+              <Label>变更原因</Label>
               <Input
                 value={editingVersion.change_reason || ''}
                 onChange={(e) =>
@@ -927,7 +923,7 @@ export default function InkFormulaVersionPage() {
               />
             </div>
             <div>
-              <Label>{tc('text_ce4kun')}</Label>
+              <Label>{'工艺说明'}</Label>
               <Textarea
                 value={editingVersion.process_note || ''}
                 onChange={(e) =>
@@ -940,31 +936,31 @@ export default function InkFormulaVersionPage() {
             {/* 明细编辑 */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label>{tc('text_ir5mro')}</Label>
+                <Label>{'配方明细'}</Label>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={handlePreviewCost}>
                     <DollarSign className="h-3 w-3 mr-1" />
-                    {tc('text_ct48o0')}
+                    成本预览
                   </Button>
                   <Button size="sm" onClick={addItem}>
                     <Plus className="h-3 w-3 mr-1" />
-                    {tc('text_e7ze4d')}
+                    {'添加物料'}
                   </Button>
                 </div>
               </div>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-xs w-8">{tc('text_iof')}</TableHead>
-                    <TableHead className="text-xs">{tc('text_euzqpn')}</TableHead>
-                    <TableHead className="text-xs">{tc('text_eusfkj')}</TableHead>
-                    <TableHead className="text-xs">{tc('text_f1kb')}</TableHead>
-                    <TableHead className="text-xs">{tc('text_dh5c1x')}</TableHead>
-                    <TableHead className="text-xs">{tc('text_pllu')}</TableHead>
-                    <TableHead className="text-xs">{tc('text_fg8e')}</TableHead>
-                    <TableHead className="text-xs">{tc('text_aus8we')}</TableHead>
-                    <TableHead className="text-xs">{tc('text_cdvyd2')}</TableHead>
-                    <TableHead className="text-xs">{tc('text_hkxb')}</TableHead>
+                    <TableHead className="text-xs w-8">{'序号'}</TableHead>
+                    <TableHead className="text-xs">物料编码</TableHead>
+                    <TableHead className="text-xs">物料名称</TableHead>
+                    <TableHead className="text-xs">品牌</TableHead>
+                    <TableHead className="text-xs">{'比例'}</TableHead>
+                    <TableHead className="text-xs">重量</TableHead>
+                    <TableHead className="text-xs">{'单位'}</TableHead>
+                    <TableHead className="text-xs">{'加料顺序'}</TableHead>
+                    <TableHead className="text-xs">{'工艺备注'}</TableHead>
+                    <TableHead className="text-xs">操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1049,7 +1045,7 @@ export default function InkFormulaVersionPage() {
                   {(!editingVersion.items || editingVersion.items.length === 0) && (
                     <TableRow>
                       <TableCell colSpan={10} className="text-center text-gray-400 py-4">
-                        {tc('text_x2sthc')}
+                        {'暂无配方明细'}
                       </TableCell>
                     </TableRow>
                   )}
@@ -1059,9 +1055,9 @@ export default function InkFormulaVersionPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setVersionDialog(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
-            <Button onClick={handleCreateVersion}>{tc('text_arcyhh')}</Button>
+            <Button onClick={handleCreateVersion}>{'创建草稿'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1070,12 +1066,12 @@ export default function InkFormulaVersionPage() {
       <Dialog open={compareDialog} onOpenChange={setCompareDialog}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{tc('text_eugxjz')}</DialogTitle>
+            <DialogTitle>{'版本对比'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <Label>{tc('text_c6kv1h')}</Label>
+                <Label>{'对比版本'}</Label>
                 <Select value={compareLeftId} onValueChange={setCompareLeftId}>
                   <SelectTrigger>
                     <SelectValue placeholder="选择版本" />
@@ -1091,7 +1087,7 @@ export default function InkFormulaVersionPage() {
               </div>
               <GitCompare className="h-5 w-5 text-gray-400 mt-6" />
               <div className="flex-1">
-                <Label>{tc('text_axejg8')}</Label>
+                <Label>{'被对比版本'}</Label>
                 <Select value={compareRightId} onValueChange={setCompareRightId}>
                   <SelectTrigger>
                     <SelectValue placeholder="选择版本" />
@@ -1107,7 +1103,7 @@ export default function InkFormulaVersionPage() {
               </div>
               <Button size="sm" className="mt-6" onClick={handleCompare}>
                 <Search className="h-3 w-3 mr-1" />
-                {tc('text_g8hn')}
+                对比
               </Button>
             </div>
 
@@ -1123,7 +1119,7 @@ export default function InkFormulaVersionPage() {
                         {compareResult.baseInfo.left.version_name || ''}
                       </div>
                       <div className="text-xs mt-1">
-                        {tc('text_pj4m6u')}
+                        {'理论成本'}
                         {compareResult.baseInfo.left.theoretical_cost ?? '-'}
                       </div>
                     </CardContent>
@@ -1137,7 +1133,7 @@ export default function InkFormulaVersionPage() {
                         {compareResult.baseInfo.right.version_name || ''}
                       </div>
                       <div className="text-xs mt-1">
-                        {tc('text_pj4m6u')}
+                        {'理论成本'}
                         {compareResult.baseInfo.right.theoretical_cost ?? '-'}
                       </div>
                     </CardContent>
@@ -1146,7 +1142,7 @@ export default function InkFormulaVersionPage() {
 
                 {compareResult.baseInfo.diffFields.length > 0 && (
                   <div className="text-xs text-orange-600">
-                    {tc('text_xseus')}
+                    {'差异字段'}
                     {compareResult.baseInfo.diffFields.join(', ')}
                   </div>
                 )}
@@ -1156,38 +1152,38 @@ export default function InkFormulaVersionPage() {
                     <div className="text-lg font-bold text-green-600">
                       {compareResult.summary.addedCount}
                     </div>
-                    <div className="text-xs">{tc('text_hs6m')}</div>
+                    <div className="text-xs">新增</div>
                   </div>
                   <div className="text-center p-2 bg-red-50 rounded">
                     <div className="text-lg font-bold text-red-600">
                       {compareResult.summary.removedCount}
                     </div>
-                    <div className="text-xs">{tc('text_eslg')}</div>
+                    <div className="text-xs">删除</div>
                   </div>
                   <div className="text-center p-2 bg-orange-50 rounded">
                     <div className="text-lg font-bold text-orange-600">
                       {compareResult.summary.modifiedCount}
                     </div>
-                    <div className="text-xs">{tc('text_e5fv')}</div>
+                    <div className="text-xs">修改</div>
                   </div>
                   <div className="text-center p-2 bg-gray-50 rounded">
                     <div className="text-lg font-bold text-gray-600">
                       {compareResult.summary.unchangedCount}
                     </div>
-                    <div className="text-xs">{tc('text_fit3a')}</div>
+                    <div className="text-xs">{'版本差异'}</div>
                   </div>
                 </div>
 
                 {compareResult.items.modified.length > 0 && (
                   <div>
-                    <div className="text-sm font-medium mb-1">{tc('text_c7iry')}</div>
+                    <div className="text-sm font-medium mb-1">{'物料对比'}</div>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="text-xs">{tc('text_k0nk')}</TableHead>
-                          <TableHead className="text-xs">{tc('text_c8v28i')}</TableHead>
-                          <TableHead className="text-xs">{tc('text_gety')}</TableHead>
-                          <TableHead className="text-xs">{tc('text_epwp')}</TableHead>
+                          <TableHead className="text-xs">物料</TableHead>
+                          <TableHead className="text-xs">{'比例'}</TableHead>
+                          <TableHead className="text-xs">{'重量'}</TableHead>
+                          <TableHead className="text-xs">{'差异'}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1216,9 +1212,7 @@ export default function InkFormulaVersionPage() {
 
                 {compareResult.items.added.length > 0 && (
                   <div>
-                    <div className="text-sm font-medium text-green-600 mb-1">
-                      {tc('text_d79d4u')}
-                    </div>
+                    <div className="text-sm font-medium text-green-600 mb-1">新增物料</div>
                     <div className="text-xs">
                       {compareResult.items.added
                         .map((a: FormulaItem) => a.material_name)
@@ -1228,7 +1222,7 @@ export default function InkFormulaVersionPage() {
                 )}
                 {compareResult.items.removed.length > 0 && (
                   <div>
-                    <div className="text-sm font-medium text-red-600 mb-1">{tc('text_azhd3o')}</div>
+                    <div className="text-sm font-medium text-red-600 mb-1">删除物料</div>
                     <div className="text-xs">
                       {compareResult.items.removed
                         .map((r: FormulaItem) => r.material_name)
@@ -1269,7 +1263,7 @@ function VersionDetail({
       <div className="flex items-center gap-4">
         <Button size="sm" variant="ghost" onClick={onBack}>
           <ArrowLeft className="h-4 w-4 mr-1" />
-          {tc('text_u2mtun')}
+          {'返回色号列表'}
         </Button>
         <h1 className="text-xl font-bold">
           {version.version_no}
@@ -1278,7 +1272,7 @@ function VersionDetail({
           )}
         </h1>
         <Badge variant={STATUS_MAP[version.status]?.variant || 'secondary'}>
-          {STATUS_MAP[version.status]?.label || tc('text_i7ej')}
+          {STATUS_MAP[version.status]?.label || '未知'}
         </Badge>
       </div>
 
@@ -1286,7 +1280,7 @@ function VersionDetail({
       <Card>
         <CardContent className="p-4 grid grid-cols-4 gap-4 text-sm">
           <div>
-            <span className="text-gray-500">{tc('text_ji49h')}</span>
+            <span className="text-gray-500">{'色号'}</span>
             <span className="ml-2">
               {version.color_code} {version.color_name}
             </span>
@@ -1296,46 +1290,46 @@ function VersionDetail({
             <span className="ml-2">{version.pantone_code || '-'}</span>
           </div>
           <div>
-            <span className="text-gray-500">{tc('text_cqznp9')}</span>
+            <span className="text-gray-500">{'颜色名称'}</span>
             <span className="ml-2">
               {version.total_weight ? `${version.total_weight} ${version.unit}` : '-'}
             </span>
           </div>
           <div>
-            <span className="text-gray-500">{tc('text_anshly')}</span>
+            <span className="text-gray-500">{'色系'}</span>
             <span className="ml-2">
               {version.shelf_life_hours}
-              {tc('text_g7uv')}
+              小时
             </span>
           </div>
           <div>
-            <span className="text-gray-500">{tc('text_dznm1v')}</span>
+            <span className="text-gray-500">{'变更原因'}</span>
             <span className="ml-2">{version.change_reason || '-'}</span>
           </div>
           <div>
-            <span className="text-gray-500">{tc('text_7hp3v9')}</span>
+            <span className="text-gray-500">{'来源版本'}</span>
             <span className="ml-2">
-              {version.source_version_id ? `ID:${version.source_version_id}` : tc('text_ax8uvf')}
+              {version.source_version_id ? `ID:${version.source_version_id}` : '原始版本'}
             </span>
           </div>
           <div>
-            <span className="text-gray-500">{tc('text_lpkhnn')}</span>
+            <span className="text-gray-500">{'创建时间'}</span>
             <span className="ml-2">{version.create_time?.substring(0, 19)}</span>
           </div>
           {version.activate_time && (
             <div>
-              <span className="text-gray-500">{tc('text_q2e9v1')}</span>
+              <span className="text-gray-500">{'生效时间'}</span>
               <span className="ml-2">{version.activate_time.substring(0, 19)}</span>
             </div>
           )}
           {version.cancel_time && (
             <div>
-              <span className="text-gray-500">{tc('text_whpylj')}</span>
+              <span className="text-gray-500">{'作废时间'}</span>
               <span className="ml-2">{version.cancel_time.substring(0, 19)}</span>
             </div>
           )}
           <div className="col-span-4">
-            <span className="text-gray-500">{tc('text_t0dojv')}</span>
+            <span className="text-gray-500">{'工艺说明'}</span>
             <span className="ml-2">{version.process_note || '-'}</span>
           </div>
         </CardContent>
@@ -1348,20 +1342,19 @@ function VersionDetail({
             <div className="flex items-center gap-4">
               <DollarSign className="h-5 w-5 text-green-600" />
               <div>
-                <span className="text-sm text-gray-500">{tc('text_pj4m6u')}</span>
+                <span className="text-sm text-gray-500">{'理论成本'}</span>
                 <span className="ml-2 text-lg font-bold text-green-600">
-                  {Number(version.theoretical_cost).toFixed(4)}
-                  {tc('text_g1v')}
+                  {Number(version.theoretical_cost).toFixed(4)}元
                 </span>
                 <span className="ml-4 text-xs text-gray-400">
-                  {tc('text_ymbxls')}
+                  {'成本快照时间'}
                   {version.cost_snapshot_time?.substring(0, 19) || '-'}
                 </span>
               </div>
               {version.cost_calc_status === 2 && (
                 <div className="flex items-center gap-1 text-orange-600 text-xs">
                   <AlertTriangle className="h-3 w-3" />
-                  {version.cost_warning || tc('text_g74iqp')}
+                  {version.cost_warning || '暂无成本预警'}
                 </div>
               )}
             </div>
@@ -1374,31 +1367,31 @@ function VersionDetail({
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-medium">
-              {tc('text_ix94dw')}
+              {'配方明细'}
               {version.items?.length || 0}
-              {tc('text_pxow')}
+              {'项'}
             </h3>
             {isActive && (
               <Button size="sm" variant="outline" onClick={() => onDuplicate(version.id)}>
                 <Copy className="h-3 w-3 mr-1" />
-                {tc('text_agggvd')}
+                一键复用
               </Button>
             )}
           </div>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs">{tc('text_gjm0')}</TableHead>
-                <TableHead className="text-xs">{tc('text_euzqpn')}</TableHead>
-                <TableHead className="text-xs">{tc('text_eusfkj')}</TableHead>
-                <TableHead className="text-xs">{tc('text_lnjk')}</TableHead>
-                <TableHead className="text-xs">{tc('text_f1kb')}</TableHead>
-                <TableHead className="text-xs">{tc('text_dh5c1x')}</TableHead>
-                <TableHead className="text-xs">{tc('text_pllu')}</TableHead>
-                <TableHead className="text-xs">{tc('text_fg8e')}</TableHead>
-                <TableHead className="text-xs">{tc('text_aus8we')}</TableHead>
-                <TableHead className="text-xs">{tc('text_auh1h0')}</TableHead>
-                <TableHead className="text-xs">{tc('text_cdvyd2')}</TableHead>
+                <TableHead className="text-xs">序号</TableHead>
+                <TableHead className="text-xs">物料编码</TableHead>
+                <TableHead className="text-xs">物料名称</TableHead>
+                <TableHead className="text-xs">类型</TableHead>
+                <TableHead className="text-xs">品牌</TableHead>
+                <TableHead className="text-xs">{'比例'}</TableHead>
+                <TableHead className="text-xs">重量</TableHead>
+                <TableHead className="text-xs">{'单位'}</TableHead>
+                <TableHead className="text-xs">{'加料顺序'}</TableHead>
+                <TableHead className="text-xs">单位成本</TableHead>
+                <TableHead className="text-xs">{'工艺备注'}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1413,9 +1406,7 @@ function VersionDetail({
                   <TableCell className="text-xs">
                     {item.weight ? `${item.weight} ${item.unit}` : '-'}
                   </TableCell>
-                  <TableCell className="text-xs">
-                    {item.is_base === 1 ? tc('text_k6n') : tc('text_gme')}
-                  </TableCell>
+                  <TableCell className="text-xs">{item.is_base === 1 ? '是' : '否'}</TableCell>
                   <TableCell className="text-xs">{item.add_order}</TableCell>
                   <TableCell className="text-xs">
                     {item.snapshot_unit_cost ? Number(item.snapshot_unit_cost).toFixed(4) : '-'}
@@ -1426,7 +1417,7 @@ function VersionDetail({
               {(!version.items || version.items.length === 0) && (
                 <TableRow>
                   <TableCell colSpan={11} className="text-center text-gray-400 py-4">
-                    {tc('text_dcvedy')}
+                    {'暂无配方明细'}
                   </TableCell>
                 </TableRow>
               )}
@@ -1444,7 +1435,7 @@ function VersionDetail({
             onClick={() => onActivate(version.id)}
           >
             <CheckCircle className="h-3 w-3 mr-1" />
-            {tc('text_cxaq59')}
+            {'生效'}
           </Button>
         )}
         {isActive && (
@@ -1455,7 +1446,7 @@ function VersionDetail({
             onClick={() => onCancel(version.id)}
           >
             <XCircle className="h-3 w-3 mr-1" />
-            {tc('text_e0n7')}
+            作废
           </Button>
         )}
         {isDraft && (
@@ -1466,7 +1457,7 @@ function VersionDetail({
             onClick={() => onDelete(version.id)}
           >
             <Trash2 className="h-3 w-3 mr-1" />
-            {tc('text_azkcii')}
+            {'删除'}
           </Button>
         )}
       </div>

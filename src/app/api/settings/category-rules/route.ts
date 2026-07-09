@@ -26,17 +26,17 @@ interface CategoryRuleConfig {
 const CATEGORY_RULES: Record<string, CategoryRuleConfig> = {
   warehouse: {
     code_pattern: '^WH-CAT-\\d{3,}$',
-    code_pattern_desc: tc('text_q3eelc'),
+    code_pattern_desc: 'WH-CAT-XXX（3位以上数字）',
     max_depth: 3,
     status_values: [0, 1],
-    status_labels: { 0: tc('text_lb5z'), 1: tc('text_eymx') },
+    status_labels: { 0: '禁用', 1: '启用' },
   },
   material: {
     code_pattern: '^MAT-CAT-\\d{3,}$',
-    code_pattern_desc: tc('text_r3668f'),
+    code_pattern_desc: 'MAT-CAT-XXX（3位以上数字）',
     max_depth: 4,
     status_values: [0, 1],
-    status_labels: { 0: tc('text_lb5z'), 1: tc('text_eymx') },
+    status_labels: { 0: '禁用', 1: '启用' },
   },
 };
 

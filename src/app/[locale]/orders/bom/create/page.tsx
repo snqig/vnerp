@@ -63,14 +63,14 @@ const materialTypes = [
 ];
 
 const units = [
-  { value: tc('text_fli'), labelKey: 'unitPiece' },
-  { value: tc('text_ffu'), labelKey: 'unitItem' },
-  { value: tc('text_hnb'), labelKey: 'unitSet' },
-  { value: tc('text_okz'), labelKey: 'unitMeter' },
-  { value: tc('text_elwo'), labelKey: 'unitKg' },
-  { value: tc('text_g23'), labelKey: 'unitGram' },
-  { value: tc('text_ita4'), labelKey: 'unitMl' },
-  { value: tc('text_gg7'), labelKey: 'unitLiter' },
+  { value: '件', labelKey: 'unitPiece' },
+  { value: '个', labelKey: 'unitItem' },
+  { value: '套', labelKey: 'unitSet' },
+  { value: '米', labelKey: 'unitMeter' },
+  { value: '千克', labelKey: 'unitKg' },
+  { value: '克', labelKey: 'unitGram' },
+  { value: '毫升', labelKey: 'unitMl' },
+  { value: '升', labelKey: 'unitLiter' },
 ];
 
 export default function CreateBOMPage() {

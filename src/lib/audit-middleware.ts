@@ -13,17 +13,17 @@ import { maskSensitiveData } from '@/lib/logger';
 // ============================================================
 
 const MODULE_MAPPING: Record<string, string> = {
-  '/api/purchase': tc('text_iz76ff'),
-  '/api/sales': tc('text_j5mp0z'),
-  '/api/warehouse': tc('text_cbemwa'),
-  '/api/production': tc('text_f3xa0d'),
-  '/api/finance': tc('text_i5j98k'),
-  '/api/quality': tc('text_iew8do'),
-  '/api/dcprint': tc('text_aviioy'),
-  '/api/hr': tc('text_a9kn6e'),
-  '/api/system': tc('text_gao8uh'),
-  '/api/report': tc('text_d09qzd'),
-  '/api/dashboard': tc('text_d7qb82'),
+  '/api/purchase': '采购管理',
+  '/api/sales': '销售管理',
+  '/api/warehouse': '库存管理',
+  '/api/production': '生产管理',
+  '/api/finance': '财务管理',
+  '/api/quality': '质量管理',
+  '/api/dcprint': '印前管理',
+  '/api/hr': '人事管理',
+  '/api/system': '系统管理',
+  '/api/report': '报表中心',
+  '/api/dashboard': '数据看板',
 };
 
 // ============================================================
@@ -31,24 +31,18 @@ const MODULE_MAPPING: Record<string, string> = {
 // ============================================================
 
 const METHOD_TYPE_MAPPING: Record<string, string> = {
-  GET: tc('text_iftp'),
-  POST: tc('text_hs6m'),
-  PUT: tc('text_e5fv'),
-  PATCH: tc('text_e5fv'),
-  DELETE: tc('text_eslg'),
+  GET: '查询',
+  POST: '新增',
+  PUT: '修改',
+  PATCH: '修改',
+  DELETE: '删除',
 };
 
 // ============================================================
 // 需要记录详细请求/响应的模块（白名单）
 // ============================================================
 
-const DETAIL_LOG_MODULES = [
-  tc('text_iz76ff'),
-  tc('text_j5mp0z'),
-  tc('text_cbemwa'),
-  tc('text_f3xa0d'),
-  tc('text_i5j98k'),
-];
+const DETAIL_LOG_MODULES = ['采购管理', '销售管理', '库存管理', '生产管理', '财务管理'];
 
 // ============================================================
 // 辅助函数
@@ -58,19 +52,19 @@ function getModuleFromUrl(url: string): string {
   for (const [prefix, module] of Object.entries(MODULE_MAPPING)) {
     if (url.includes(prefix)) return module;
   }
-  return tc('text_gao8uh');
+  return '系统管理';
 }
 
 function getOperationType(method: string, url: string): string {
   // 根据URL中的action参数判断特殊操作
-  if (url.includes('action=audit')) return tc('text_g5o7');
-  if (url.includes('action=cancel')) return tc('text_e0n7');
-  if (url.includes('action=approve')) return tc('text_g5o7');
-  if (url.includes('action=reject')) return tc('text_er90');
-  if (url.includes('action=import')) return tc('text_g3c9');
-  if (url.includes('action=export')) return tc('text_g3ge');
-  if (url.includes('action=print')) return tc('text_h6kd');
-  if (url.includes('action=submit')) return tc('text_heqc');
+  if (url.includes('action=audit')) return '审核';
+  if (url.includes('action=cancel')) return '作废';
+  if (url.includes('action=approve')) return '审核';
+  if (url.includes('action=reject')) return '反审';
+  if (url.includes('action=import')) return '导入';
+  if (url.includes('action=export')) return '导出';
+  if (url.includes('action=print')) return '打印';
+  if (url.includes('action=submit')) return '提交';
 
   return METHOD_TYPE_MAPPING[method] || method;
 }

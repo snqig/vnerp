@@ -117,9 +117,9 @@ const capabilityColor = (value: number): string => {
 };
 
 const capabilityLabel = (value: number): string => {
-  if (value >= 1.33) return tc('text_e4dk');
-  if (value >= 1.0) return tc('text_crzlt');
-  return tc('text_mlwmj');
+  if (value >= 1.33) return '优秀';
+  if (value >= 1.0) return '可接受';
+  return '需改善';
 };
 
 export default function SPCPage() {
@@ -268,15 +268,15 @@ export default function SPCPage() {
           <TabsList>
             <TabsTrigger value="xbar-r">
               <Activity className="h-4 w-4 mr-1" />
-              {tc('text_1wfcvl')}
+              Xbar-R 控制图
             </TabsTrigger>
             <TabsTrigger value="pareto">
               <BarChart3 className="h-4 w-4 mr-1" />
-              {tc('text_swkcyw')}
+              帕累托分析
             </TabsTrigger>
             <TabsTrigger value="p-chart">
               <PieChart className="h-4 w-4 mr-1" />
-              {tc('text_gf09r')}
+              P控制图
             </TabsTrigger>
           </TabsList>
 
@@ -286,7 +286,7 @@ export default function SPCPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="h-5 w-5" />
-                    {tc('text_k7dh6l')}
+                    Xbar-R 控制图参数
                   </CardTitle>
                   <CardDescription>{tc('text_8j6lln')}</CardDescription>
                 </CardHeader>
@@ -314,9 +314,9 @@ export default function SPCPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="incoming">{tc('text_dgvhr4')}</SelectItem>
-                          <SelectItem value="process">{tc('text_in8d80')}</SelectItem>
-                          <SelectItem value="finished">{tc('text_cq7399')}</SelectItem>
+                          <SelectItem value="incoming">来料检验</SelectItem>
+                          <SelectItem value="process">过程检验</SelectItem>
+                          <SelectItem value="finished">成品检验</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -366,7 +366,7 @@ export default function SPCPage() {
                         ) : (
                           <Activity className="h-4 w-4 mr-2" />
                         )}
-                        {tc('text_f6li9n')}
+                        生成图表
                       </Button>
                     </div>
                   </div>
@@ -453,7 +453,7 @@ export default function SPCPage() {
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
                             <AlertTriangle className="h-5 w-5" />
-                            {tc('text_sonhlz')}
+                            异常点警告
                           </CardTitle>
                           <CardDescription>
                             {tc('text_fvdvp')}
@@ -670,8 +670,8 @@ export default function SPCPage() {
                                 <TableHead>{tc('text_g86s')}</TableHead>
                                 <TableHead>{tc('time')}</TableHead>
                                 <TableHead>{tc('text_gpjh4')}</TableHead>
-                                <TableHead className="text-right">{tc('text_h3jh')}</TableHead>
-                                <TableHead className="text-right">{tc('text_flr39')}</TableHead>
+                                <TableHead className="text-right">X均值</TableHead>
+                                <TableHead className="text-right">极差R</TableHead>
                                 <TableHead>{tc('status')}</TableHead>
                               </TableRow>
                             </TableHeader>
@@ -708,12 +708,12 @@ export default function SPCPage() {
                                     <TableCell>
                                       {isOocXbar && (
                                         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 mr-1">
-                                          {tc('text_ihn2')}
+                                          X异常
                                         </Badge>
                                       )}
                                       {isOocRange && (
                                         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                          {tc('text_id6w')}
+                                          R异常
                                         </Badge>
                                       )}
                                       {!isOocXbar && !isOocRange && (
@@ -721,7 +721,7 @@ export default function SPCPage() {
                                           variant="outline"
                                           className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                         >
-                                          {tc('text_is6t')}
+                                          正常
                                         </Badge>
                                       )}
                                     </TableCell>
@@ -745,7 +745,7 @@ export default function SPCPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5" />
-                    {tc('text_48vjx2')}
+                    帕累托分析参数
                   </CardTitle>
                   <CardDescription>{tc('text_ty23k3')}</CardDescription>
                 </CardHeader>
@@ -778,7 +778,7 @@ export default function SPCPage() {
                           <SelectValue placeholder="全部物料" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">{tc('text_aveyfk')}</SelectItem>
+                          <SelectItem value="all">全部物料</SelectItem>
                           {materials.map((m: Material) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               {m.material_code} - {m.material_name}
@@ -798,7 +798,7 @@ export default function SPCPage() {
                         ) : (
                           <BarChart3 className="h-4 w-4 mr-2" />
                         )}
-                        {tc('text_eiq2')}
+                        分析
                       </Button>
                     </div>
                   </div>
@@ -910,11 +910,11 @@ export default function SPCPage() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>{tc('text_ae3saa')}</TableHead>
+                                <TableHead>不良类型</TableHead>
                                 <TableHead className="text-right">{tc('quantity')}</TableHead>
                                 <TableHead className="text-right">{tc('text_eruc')}</TableHead>
                                 <TableHead className="text-right">{tc('text_gd9tty')}</TableHead>
-                                <TableHead>{tc('text_emut')}</TableHead>
+                                <TableHead>分类</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -938,15 +938,15 @@ export default function SPCPage() {
                                   <TableCell>
                                     {item.cumulative_percentage <= 80 ? (
                                       <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                                        {tc('text_kn94tc')}
+                                        A类(关键)
                                       </Badge>
                                     ) : item.cumulative_percentage <= 95 ? (
                                       <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                                        {tc('text_ldo3dy')}
+                                        B类(重要)
                                       </Badge>
                                     ) : (
                                       <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                                        {tc('text_lkqygd')}
+                                        C类(一般)
                                       </Badge>
                                     )}
                                   </TableCell>
@@ -969,7 +969,7 @@ export default function SPCPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PieChart className="h-5 w-5" />
-                    {tc('text_c2cpcd')}
+                    P控制图参数
                   </CardTitle>
                   <CardDescription>{tc('text_n5r8jf')}</CardDescription>
                 </CardHeader>
@@ -1002,7 +1002,7 @@ export default function SPCPage() {
                           <SelectValue placeholder="全部物料" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">{tc('text_aveyfk')}</SelectItem>
+                          <SelectItem value="all">全部物料</SelectItem>
                           {materials.map((m: Material) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               {m.material_code} - {m.material_name}
@@ -1022,7 +1022,7 @@ export default function SPCPage() {
                         ) : (
                           <PieChart className="h-4 w-4 mr-2" />
                         )}
-                        {tc('text_kgk1')}
+                        生成
                       </Button>
                     </div>
                   </div>
@@ -1042,7 +1042,7 @@ export default function SPCPage() {
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
                             <AlertTriangle className="h-5 w-5" />
-                            {tc('text_sonhlz')}
+                            异常点警告
                           </CardTitle>
                           <CardDescription>
                             {tc('text_fvdvp')}
@@ -1183,10 +1183,10 @@ export default function SPCPage() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>{tc('text_hxmn')}</TableHead>
+                                <TableHead>时段</TableHead>
                                 <TableHead className="text-right">{tc('text_g36sk')}</TableHead>
                                 <TableHead className="text-right">{tc('text_c2awe')}</TableHead>
-                                <TableHead className="text-right">{tc('text_c2dol')}</TableHead>
+                                <TableHead className="text-right">不良率</TableHead>
                                 <TableHead>{tc('status')}</TableHead>
                               </TableRow>
                             </TableHeader>
@@ -1215,14 +1215,14 @@ export default function SPCPage() {
                                       {isOoc ? (
                                         <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
                                           <AlertTriangle className="h-3 w-3 mr-1" />
-                                          {tc('text_gody')}
+                                          异常
                                         </Badge>
                                       ) : (
                                         <Badge
                                           variant="outline"
                                           className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                         >
-                                          {tc('text_is6t')}
+                                          正常
                                         </Badge>
                                       )}
                                     </TableCell>

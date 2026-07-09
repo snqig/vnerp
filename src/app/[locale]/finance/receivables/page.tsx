@@ -115,10 +115,10 @@ export default function ReceivablesPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{tc('text_ccvaxz')}</h1>
+        <h1 className="text-2xl font-bold">应收管理</h1>
         <Button onClick={loadReceivables} disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          {tc('text_ejix')}
+          刷新
         </Button>
       </div>
 
@@ -130,11 +130,11 @@ export default function ReceivablesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{tc('text_cco9us')}</TableHead>
+                <TableHead>应收单号</TableHead>
                 <TableHead>{tc('text_dicb26')}</TableHead>
                 <TableHead>{tc('customer')}</TableHead>
-                <TableHead>{tc('text_ccza1a')}</TableHead>
-                <TableHead>{tc('text_ca3u5s')}</TableHead>
+                <TableHead>应收金额</TableHead>
+                <TableHead>已收金额</TableHead>
                 <TableHead>{tc('balance')}</TableHead>
                 <TableHead>{tc('text_cjh06')}</TableHead>
                 <TableHead>{tc('status')}</TableHead>
@@ -174,7 +174,7 @@ export default function ReceivablesPage() {
               {receivables.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                    {tc('text_dcv57g')}
+                    暂无数据
                   </TableCell>
                 </TableRow>
               )}
@@ -194,7 +194,7 @@ export default function ReceivablesPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>{tc('text_ccza1a')}</Label>
+              <Label>应收金额</Label>
               <Input value={selectedRec ? formatAmount(selectedRec.amount) : ''} disabled />
             </div>
             <div>
@@ -216,11 +216,11 @@ export default function ReceivablesPage() {
                 value={receiptMethod}
                 onChange={(e) => setReceiptMethod(e.target.value)}
               >
-                <option value="bank_transfer">{tc('text_jd1cr4')}</option>
-                <option value="cash">{tc('text_kh7l')}</option>
-                <option value="check">{tc('text_hvkp')}</option>
+                <option value="bank_transfer">银行转账</option>
+                <option value="cash">现金</option>
+                <option value="check">支票</option>
                 <option value="wechat">{tc('text_cemv24')}</option>
-                <option value="alipay">{tc('text_f7gac')}</option>
+                <option value="alipay">支付宝</option>
               </select>
             </div>
             <div>
@@ -234,7 +234,7 @@ export default function ReceivablesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowReceipt(false)}>
-              {tc('text_ev02')}
+              取消
             </Button>
             <Button onClick={handleReceipt}>{tc('text_frpeae')}</Button>
           </DialogFooter>

@@ -583,8 +583,7 @@ export default function WarehouseDashboard() {
                               }}
                             />
                             <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white">
-                              {c.count}
-                              {tc('text_o25')}
+                              {c.count}种
                             </span>
                           </div>
                         </div>
