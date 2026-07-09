@@ -234,6 +234,12 @@ docker-compose -f docker-compose.prod.yml up -d
 
 完整项目文档位于 [docs/](docs/)，入口索引见 [docs/README.md](docs/README.md)。
 
+## 微信交流群
+
+扫码加入微信交流群，获取最新动态与技术支持：
+
+![微信交流群二维码](wechat-community-qrcode.jpg)
+
 ## 许可证
 
 本报告及其所含全部内容（包括但不限于文字、图表、代码示例、数据分析结论、架构设计描述等）的版权归 **落尘** 所有，保留一切权利。未经书面授权，任何单位与个人不得以任何形式复制、转载、摘编、镜像或用于商业用途。
