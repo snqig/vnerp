@@ -8,8 +8,6 @@ import { MainLayout } from '@/components/layout';
 import {
   ArrowDownLeft,
   CheckCircle2,
-  AlertCircle,
-  X,
   QrCode,
   Printer,
   Scissors,
@@ -26,7 +24,7 @@ import { useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { authFetch } from '@/lib/auth-fetch';
 
-import type { InboundItem, InboundRecord, PrintLabel, ScanResult, InboundFormData } from './types';
+import type { InboundItem, PrintLabel, ScanResult, InboundFormData } from './types';
 import { statusConfig, INITIAL_FORM_DATA, isCuttableMaterial } from './types';
 
 import { InboundToolbar } from './components/InboundToolbar';
@@ -44,7 +42,7 @@ export default function InboundManagementPage() {
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
 
-  const router = useRouter();
+  const _router = useRouter();
   const { user } = useAuth();
   const {
     setSearchQuery,
@@ -164,7 +162,7 @@ export default function InboundManagementPage() {
   );
 
   // 状态选项
-  const statusOptions = [
+  const _statusOptions = [
     { value: 'all', label: tc('all') },
     { value: 'draft', label: tc('draft') },
     { value: 'pending', label: tc('pending') },
@@ -173,7 +171,7 @@ export default function InboundManagementPage() {
   ];
 
   // 日期范围选项
-  const dateRangeOptions = [
+  const _dateRangeOptions = [
     { value: 'all', label: tc('all') },
     { value: 'today', label: tc('today') },
     { value: 'week', label: tc('thisWeek') },

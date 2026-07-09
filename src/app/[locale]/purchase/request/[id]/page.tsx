@@ -7,7 +7,6 @@ import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { MainLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,

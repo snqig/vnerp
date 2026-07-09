@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
-import { successResponse, paginatedResponse, errorResponse } from '@/lib/api-response';
+import { paginatedResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { FinanceApplicationService } from '@/application/services/FinanceApplicationService';
-import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 
 const financeService = FinanceApplicationService.create();
 

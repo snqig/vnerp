@@ -5,8 +5,6 @@
  * 的关键组件，输入工单编号和仓库信息，输出物料供需平衡的完整计算报告。
  */
 
-import { query, execute, transaction } from '@/lib/db';
-import { generateDocumentNo } from '@/lib/document-numbering';
 import { CalcParamService } from '@/lib/calc-param-service';
 
 /**
@@ -79,7 +77,7 @@ interface MaterialInfoRow {
 
 /**
  * 展开 BOM（物料清单）树
- * 
+ *
  * 使用迭代栈（非递归）方式从上往下展开指定产品的 BOM 结构。
  * 算法流程：
  * 1. 查询产品基础信息，创建根节点
@@ -87,7 +85,7 @@ interface MaterialInfoRow {
  * 3. 计算子物料数量时考虑损耗率：grossQty = parentQty × quantity × (1 + scrapRate)
  * 4. 通过 path 路径和 visited 集合防止循环引用和无限递归
  * 5. 最多展开 maxDepth 层
- * 
+ *
  * @param conn - 数据库连接对象
  * @param productId - 产品/物料 ID
  * @param quantity - 顶层产品的需求数量
@@ -264,7 +262,7 @@ export interface TimeBucket {
 
 /**
  * 计算指定物料的时间分段供需平衡
- * 
+ *
  * 按 day/week/month 粒度将时间范围划分为多个分段，逐段计算 MRP 核心指标。
  * 计算逻辑：
  * 1. 获取物料提前期和当前库存
@@ -272,7 +270,7 @@ export interface TimeBucket {
  * 3. 逐段滚动计算：在手库存 = max(0, 上期库存 + 计划收货 - 毛需求)
  * 4. 净需求 = max(0, 毛需求 - 在手库存 - 计划收货)
  * 5. 根据提前期前移计划订单下达日期
- * 
+ *
  * @param conn - 数据库连接对象
  * @param materialId - 物料 ID
  * @param warehouseId - 仓库 ID
@@ -521,12 +519,12 @@ export interface NetRequirement {
 
 /**
  * 计算工单的净需求
- * 
+ *
  * 针对指定的工单列表，展开每个工单产品的 BOM 树，汇总所有叶子物料的毛需求量，
  * 再结合库存、已分配量、在途量和安全库存计算每个物料的净需求。
- * 
+ *
  * 净需求公式：netReq = max(0, grossRequirement - onHandQty + allocatedQty - inTransitQty + safetyStock)
- * 
+ *
  * @param conn - 数据库连接对象
  * @param workOrderIds - 工单 ID 数组
  * @param warehouseId - 仓库 ID
@@ -692,9 +690,7 @@ export async function calculateNetRequirements(
   return results;
 }
 
-function collectLeafMaterials(
-  node: BOMNode
-): Array<{
+function collectLeafMaterials(node: BOMNode): Array<{
   material_id: number;
   material_code: string;
   material_name: string;
@@ -747,13 +743,13 @@ export interface PlannedOrder {
 
 /**
  * 根据净需求生成计划订单
- * 
+ *
  * 将净需求计算结果转化为计划订单。按物料聚合净需求量，根据需求日期距离今天的天数
  * 自动设置优先级：
  * - 距今天 ≤3 天：紧急（urgent）
  * - 距今天 ≤14 天：正常（normal）
  * - 其他：低（low）
- * 
+ *
  * @param conn - 数据库连接对象
  * @param workOrderIds - 工单 ID 数组
  * @param warehouseId - 仓库 ID
@@ -823,11 +819,11 @@ export async function generatePlannedOrders(
 
 /**
  * 根据 MRP 计划订单自动生成采购申请
- * 
+ *
  * 将计划订单按供应商分组，为每组创建一条采购申请（pur_request），
  * 并为每个物料创建采购申请明细行（pur_request_item）。
  * 采购申请编号格式：PR + 日期 + 4位随机数。
- * 
+ *
  * @param conn - 数据库连接对象
  * @param plannedOrders - 计划订单数组
  * @param operatorId - 操作人 ID
@@ -952,14 +948,14 @@ export async function generatePurchaseRequestsFromMRP(
 
 /**
  * 运行完整的 MRP 计算流程
- * 
+ *
  * 这是 MRP 引擎的入口函数，串联执行以下完整流程：
  * 1. BOM 展开：对每个工单产品展开 BOM 树
  * 2. 净需求计算：汇总叶子物料需求，结合库存计算缺口
  * 3. 计划订单生成：将净需求转化为计划订单
  * 4. （可选）自动生成采购申请：根据计划订单创建采购申请
  * 5. 汇总统计：总物料数、短缺数、计划数量、计划金额
- * 
+ *
  * @param conn - 数据库连接对象
  * @param workOrderIds - 工单 ID 数组
  * @param warehouseId - 仓库 ID

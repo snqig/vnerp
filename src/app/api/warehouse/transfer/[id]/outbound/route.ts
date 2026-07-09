@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { query, execute, queryOne, transaction } from '@/lib/db';
+import { queryOne, transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
@@ -14,9 +14,10 @@ export const POST = withPermission(
       return errorResponse('缺少出库明细数据', 400, 400);
     }
 
-    const transfer: any = await queryOne(`SELECT * FROM inv_transfer_order WHERE id = ? AND deleted = 0`, [
-      transferId,
-    ]);
+    const transfer: any = await queryOne(
+      `SELECT * FROM inv_transfer_order WHERE id = ? AND deleted = 0`,
+      [transferId]
+    );
 
     if (!transfer) {
       return commonErrors.notFound('调拨单不存在');
@@ -78,7 +79,13 @@ export const POST = withPermission(
         await conn.execute(
           `INSERT INTO inv_inventory_log (material_id, warehouse_id, change_qty, change_type, ref_no, ref_id, create_time)
            VALUES (?, ?, ?, 'TRANSFER_OUT', ?, ?, NOW())`,
-          [inventoryItem.material_id, transfer.from_warehouse_id, -quantity, transfer.transfer_no, transferId]
+          [
+            inventoryItem.material_id,
+            transfer.from_warehouse_id,
+            -quantity,
+            transfer.transfer_no,
+            transferId,
+          ]
         );
 
         // 更新调拨明细

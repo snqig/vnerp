@@ -8,7 +8,7 @@ import {
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
-import { getConfig, isInkUnopenedShelfLife, getInkOpenedShelfLife } from '@/lib/global-config';
+import { isInkUnopenedShelfLife, getInkOpenedShelfLife } from '@/lib/global-config';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);

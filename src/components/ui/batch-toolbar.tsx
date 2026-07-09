@@ -3,14 +3,13 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { CheckSquare, Trash2, Download, MoreHorizontal, X } from 'lucide-react';
+import { MoreHorizontal, X } from 'lucide-react';
 
 export interface BatchAction {
   key: string;
@@ -41,15 +40,18 @@ export function BatchToolbar({
 }: BatchToolbarProps) {
   const [loading, setLoading] = useState(false);
 
-  const handleAction = useCallback(async (action: BatchAction) => {
-    if (action.confirm && !confirm(action.confirm)) return;
-    setLoading(true);
-    try {
-      await action.onClick(selectedIds);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedIds]);
+  const handleAction = useCallback(
+    async (action: BatchAction) => {
+      if (action.confirm && !confirm(action.confirm)) return;
+      setLoading(true);
+      try {
+        await action.onClick(selectedIds);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [selectedIds]
+  );
 
   if (selectedIds.length === 0) return null;
 
@@ -63,16 +65,13 @@ export function BatchToolbar({
         }}
       />
       <span className="text-sm text-muted-foreground">
-        已选 <strong className="text-foreground">{selectedIds.length}</strong> / {totalItems} 项
+        {tc('text_grpz')}
+        <strong className="text-foreground">{selectedIds.length}</strong> / {totalItems}
+        {tc('text_u49')}
       </span>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 text-xs"
-        onClick={onClearSelection}
-      >
+      <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onClearSelection}>
         <X className="h-3 w-3 mr-0.5" />
-        取消选择
+        {tc('text_b1em0i')}
       </Button>
       <div className="flex-1" />
       <div className="flex items-center gap-1">

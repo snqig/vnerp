@@ -4,7 +4,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
 // 创建入库管理相关表
-const CREATE_TABLES_SQL = `
+const _CREATE_TABLES_SQL = `
 -- 1. 入库订单主表
 CREATE TABLE IF NOT EXISTS inv_inbound_order (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',

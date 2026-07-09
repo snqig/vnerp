@@ -18,9 +18,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QRCodeSVG } from 'qrcode.react';
-import { Printer, Eye, Loader2, Download } from 'lucide-react';
+import { Printer, Eye, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
@@ -179,8 +178,14 @@ export function QRCodePrinter({
         toast({ title: t('printFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (error) {
-      logger.error(ctx, '打印异常', { error: error instanceof Error ? error.message : String(error) });
-      toast({ title: t('printFailed'), description: t('printServiceError'), variant: 'destructive' });
+      logger.error(ctx, '打印异常', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      toast({
+        title: t('printFailed'),
+        description: t('printServiceError'),
+        variant: 'destructive',
+      });
     } finally {
       setIsPrinting(false);
     }
@@ -207,7 +212,9 @@ export function QRCodePrinter({
             </div>
             <div className="font-mono text-[10px] text-gray-500 truncate">{qrCode}</div>
             {template.fields.includes('batchNo') && printData.batchNo && (
-              <div className="truncate">{tc('batch')}: {printData.batchNo}</div>
+              <div className="truncate">
+                {tc('batch')}: {printData.batchNo}
+              </div>
             )}
             {template.fields.includes('quantity') && printData.quantity && (
               <div className="truncate">
@@ -215,16 +222,24 @@ export function QRCodePrinter({
               </div>
             )}
             {template.fields.includes('supplier') && printData.supplier && (
-              <div className="truncate">{tc('supplier')}: {printData.supplier}</div>
+              <div className="truncate">
+                {tc('supplier')}: {printData.supplier}
+              </div>
             )}
             {template.fields.includes('workOrderNo') && printData.workOrderNo && (
-              <div className="truncate">{tc('workOrder')}: {printData.workOrderNo}</div>
+              <div className="truncate">
+                {tc('workOrder')}: {printData.workOrderNo}
+              </div>
             )}
             {template.fields.includes('quality') && printData.quality && (
-              <div className="truncate">{t('quality')}: {printData.quality}</div>
+              <div className="truncate">
+                {t('quality')}: {printData.quality}
+              </div>
             )}
             {template.fields.includes('date') && printData.date && (
-              <div className="truncate">{tc('date')}: {printData.date}</div>
+              <div className="truncate">
+                {tc('date')}: {printData.date}
+              </div>
             )}
           </div>
         </div>
@@ -263,7 +278,9 @@ export function QRCodePrinter({
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('labelPreview')} - {t(selectedLabel.nameKey)}</DialogTitle>
+            <DialogTitle>
+              {t('labelPreview')} - {t(selectedLabel.nameKey)}
+            </DialogTitle>
           </DialogHeader>
           <div className="flex justify-center py-4">{renderLabelPreview()}</div>
           <DialogFooter>

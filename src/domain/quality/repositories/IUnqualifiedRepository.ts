@@ -1,4 +1,4 @@
-import { UnqualifiedProduct, UnqualifiedProductProps } from '../aggregates/UnqualifiedProduct';
+import { UnqualifiedProduct } from '../aggregates/UnqualifiedProduct';
 
 export interface Pagination {
   page: number;
@@ -46,7 +46,12 @@ export interface IUnqualifiedRepository {
   save(
     record: UnqualifiedProduct
   ): Promise<{ id: number; unqualifiedNo: string; handleNo: string }>;
-  updateStatus(id: number, status: string, currentStatus: string, updateBy?: number): Promise<boolean>;
+  updateStatus(
+    id: number,
+    status: string,
+    currentStatus: string,
+    updateBy?: number
+  ): Promise<boolean>;
   updateHandleInfo(id: number, fields: UpdateHandleInfoFields): Promise<void>;
   softDelete(id: number): Promise<void>;
 }

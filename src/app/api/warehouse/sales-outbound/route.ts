@@ -306,7 +306,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
       );
 
       if (outbound.order_id) {
-        const totalOutQty = itemRows.reduce(
+        const _totalOutQty = itemRows.reduce(
           (sum: number, item: any) => sum + Number(item.quantity || 0),
           0
         );

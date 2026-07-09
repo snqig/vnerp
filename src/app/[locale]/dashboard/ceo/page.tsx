@@ -1,7 +1,7 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import GlassKnob from '@/components/GlassKnob';
@@ -11,12 +11,9 @@ import {
   Factory,
   AlertTriangle,
   DollarSign,
-  ArrowUpRight,
-  ArrowDownRight,
   Zap,
   TrendingUp,
   Truck,
-  Users,
   ShoppingCart,
   BarChart3,
   Maximize,

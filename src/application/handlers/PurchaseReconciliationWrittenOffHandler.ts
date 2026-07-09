@@ -1,6 +1,6 @@
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { PurchaseReconciliationWrittenOffEvent } from '@/domain/purchase/events/PurchaseReconciliationEvents';
-import { query, execute, transaction } from '@/lib/db';
+import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 
 /**
@@ -9,9 +9,7 @@ import { secureLog } from '@/lib/logger';
  * 2. 全额核销的应付单状态变为 3（已结清）
  * 3. 部分核销的应付单状态变为 2（部分付款）
  */
-export class PurchaseReconciliationWrittenOffHandler
-  implements EventHandler<PurchaseReconciliationWrittenOffEvent>
-{
+export class PurchaseReconciliationWrittenOffHandler implements EventHandler<PurchaseReconciliationWrittenOffEvent> {
   async handle(event: PurchaseReconciliationWrittenOffEvent): Promise<void> {
     const { reconciliationId, reconciliationNo, supplierId, totalWriteOffAmount, writeOffRecords } =
       event.payload;

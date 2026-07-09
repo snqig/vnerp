@@ -3,7 +3,6 @@ import { tracer, healthChecker, alertManager, checkThresholds } from '@/lib/moni
 import { queryAnalyzer } from '@/lib/performance/db-optimization';
 import { apiMetrics } from '@/lib/performance/api-optimization';
 import { performanceMonitor } from '@/lib/performance/frontend-optimization';
-import { handleError } from '@/lib/error-handling';
 import { withPermission } from '@/lib/api-permissions';
 
 async function handler(req: NextRequest) {
@@ -16,7 +15,7 @@ async function handler(req: NextRequest) {
       return NextResponse.json({
         success: true,
         data: {
-          status: Object.values(health).every(h => h.healthy) ? 'healthy' : 'unhealthy',
+          status: Object.values(health).every((h) => h.healthy) ? 'healthy' : 'unhealthy',
           checks: health,
           timestamp: new Date().toISOString(),
         },
@@ -44,7 +43,7 @@ async function handler(req: NextRequest) {
     case 'traces':
       const slowOnly = url.searchParams.get('slowOnly') === 'true';
       const threshold = parseInt(url.searchParams.get('threshold') || '1000');
-      
+
       return NextResponse.json({
         success: true,
         data: slowOnly ? tracer.getSlowSpans(threshold) : tracer.exportTraces(),
@@ -72,7 +71,8 @@ async function handler(req: NextRequest) {
           health: overview,
           summary: {
             totalApiCalls: Object.values(apiMetrics.getMetrics()).reduce(
-              (sum, m) => sum + m.count, 0
+              (sum, m) => sum + m.count,
+              0
             ),
             slowQueries: queryAnalyzer.getSlowQueries().length,
             activeAlerts: alertManager.getActiveAlerts().length,

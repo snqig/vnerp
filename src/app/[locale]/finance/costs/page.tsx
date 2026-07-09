@@ -1,6 +1,5 @@
 'use client';
 
-import { authFetch } from '@/lib/auth-fetch';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from 'next-intl';

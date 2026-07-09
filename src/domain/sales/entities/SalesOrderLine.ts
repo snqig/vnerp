@@ -1,5 +1,5 @@
 import { DomainError } from '../../shared/DomainTypes';
-import { roundPrice, roundAmount, multiplyDecimal } from '@/lib/decimal-utils';
+import { roundAmount, multiplyDecimal } from '@/lib/decimal-utils';
 
 export interface SalesOrderLineProps {
   id?: number;

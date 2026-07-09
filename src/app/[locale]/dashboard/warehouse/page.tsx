@@ -1,11 +1,11 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import GlassGauge from '@/components/GlassGauge';
-import { ChartImage, ChartPlaceholder, ChartCard } from '@/components/WarehouseCharts';
+import { ChartImage, ChartPlaceholder } from '@/components/WarehouseCharts';
 import {
   Package,
   ArrowDown,
@@ -564,7 +564,7 @@ export default function WarehouseDashboard() {
                         ...data.categoryDistribution.map((d) => d.count),
                         1
                       );
-                      const pct = total > 0 ? Math.round((c.count / total) * 100) : 0;
+                      const _pct = total > 0 ? Math.round((c.count / total) * 100) : 0;
                       return (
                         <div key={i} className="flex items-center gap-3">
                           <div

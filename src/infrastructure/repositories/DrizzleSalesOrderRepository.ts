@@ -16,7 +16,7 @@
  *   默认 REPOSITORY_IMPL=mysql 时不会被调用。
  */
 
-import { eq, and, like, or, gte, lte, desc, inArray, sql, count } from 'drizzle-orm';
+import { eq, and, like, or, gte, lte, desc, inArray, count } from 'drizzle-orm';
 import { drizzleDb } from '@/lib/db';
 import { salOrder, salOrderDetail } from '@/lib/db/schema';
 import { transaction } from '@/lib/db';

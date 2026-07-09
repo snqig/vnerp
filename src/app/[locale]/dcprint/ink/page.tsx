@@ -34,14 +34,12 @@ import { Plus, Search, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'luc
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  TableExportToolbar,
   printTable,
   exportTableToPDF,
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 import { useTranslations } from 'next-intl';
 
 interface Item {

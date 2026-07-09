@@ -11,7 +11,6 @@ import {
   queryLoginLogs,
   queryStockFlows,
   queryFinanceFlows,
-  generateAuditReport,
 } from '@/lib/audit-logger';
 
 // ============================================================

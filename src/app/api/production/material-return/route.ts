@@ -48,7 +48,7 @@ export const POST = withPermission(
       remark,
       items,
     } = body;
-    const now = new Date();
+    const _now = new Date();
     const returnNo = generateDocNo(getMrPrefix());
 
     const result: any = await execute(

@@ -7,16 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  BarChart3,
-  Package,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Factory,
-  ShoppingCart,
-  AlertTriangle,
-} from 'lucide-react';
+import { Package, DollarSign, Factory, ShoppingCart, AlertTriangle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
 import type { ExportColumn } from '@/lib/global-export-service';

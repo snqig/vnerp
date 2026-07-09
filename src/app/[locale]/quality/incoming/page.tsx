@@ -6,13 +6,10 @@ import { useTranslations } from 'next-intl';
 import { logger } from '@/lib/logger';
 import { mockQualityIncoming, USE_MOCK } from '@/lib/mock-data';
 import {
-  FileCheck,
   Search,
   Plus,
-  Filter,
   Calendar,
   CheckCircle2,
-  Clock,
   AlertCircle,
   RefreshCw,
   RotateCcw,
@@ -56,14 +53,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  TableExportToolbar,
-  exportTableToXLS,
-  exportTableToPDF,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { toast } from 'sonner';
 
@@ -99,35 +89,35 @@ const initialIncomingInspections: any[] = [
   {
     id: 'IQC20250303001',
     date: '2025-03-03',
-    supplier: '恒翌达',
-    materialName: '厚0.3热缩套管',
+    supplier: tc('text_eqf5w'),
+    materialName: tc('text_48n3vj'),
     specification: 'Ф32',
     batchNo: 'B20250303001',
     quantity: 1000,
     unit: 'M',
-    inspectionType: '抽检',
+    inspectionType: tc('text_hdb7'),
     result: 'pass',
-    inspector: '张三',
-    remark: '检验合格',
+    inspector: tc('text_glwp'),
+    remark: tc('text_duoglc'),
     items: [
       {
-        itemName: '外观检查',
-        standard: '无划痕、变形、色差',
-        actualValue: '无划痕、无变形、无色差',
+        itemName: tc('text_bt6yz5'),
+        standard: tc('text_7chng5'),
+        actualValue: tc('text_vegbr'),
         result: 'pass',
         itemRemark: '',
       },
       {
-        itemName: '尺寸检查',
+        itemName: tc('text_c0qwf7'),
         standard: 'Ф32±0.1mm',
         actualValue: 'Ф32.05mm',
         result: 'pass',
         itemRemark: '',
       },
       {
-        itemName: '材质检查',
-        standard: '符合材质标准',
-        actualValue: '符合标准',
+        itemName: tc('text_dmaebh'),
+        standard: tc('text_2qacbr'),
+        actualValue: tc('text_fvzd1d'),
         result: 'pass',
         itemRemark: '',
       },
@@ -136,35 +126,35 @@ const initialIncomingInspections: any[] = [
   {
     id: 'IQC20250303002',
     date: '2025-03-03',
-    supplier: '华通材料',
-    materialName: 'PVC绝缘胶带',
+    supplier: tc('text_b3v5cl'),
+    materialName: tc('text_oyth1k'),
     specification: '20mm*20m',
     batchNo: 'B20250303002',
     quantity: 500,
-    unit: '卷',
-    inspectionType: '全检',
+    unit: tc('text_ghj'),
+    inspectionType: tc('text_ef6g'),
     result: 'pass',
-    inspector: '李四',
-    remark: '检验合格',
+    inspector: tc('text_i1ql'),
+    remark: tc('text_duoglc'),
     items: [
       {
-        itemName: '外观检查',
-        standard: '无破损、无异味',
-        actualValue: '无破损、无异味',
+        itemName: tc('text_bt6yz5'),
+        standard: tc('text_e7kbgl'),
+        actualValue: tc('text_e7kbgl'),
         result: 'pass',
         itemRemark: '',
       },
       {
-        itemName: '尺寸检查',
+        itemName: tc('text_c0qwf7'),
         standard: '20mm*20m',
         actualValue: '20mm*20.5m',
         result: 'pass',
-        itemRemark: '长度略有盈余',
+        itemRemark: tc('text_xfnvs4'),
       },
       {
-        itemName: '粘性测试',
-        standard: '符合粘性要求',
-        actualValue: '符合要求',
+        itemName: tc('text_g4cqt5'),
+        standard: tc('text_834j2'),
+        actualValue: tc('text_fw579f'),
         result: 'pass',
         itemRemark: '',
       },
@@ -173,35 +163,35 @@ const initialIncomingInspections: any[] = [
   {
     id: 'IQC20250302001',
     date: '2025-03-02',
-    supplier: '江南电缆',
-    materialName: '铜芯线',
+    supplier: tc('text_e0uo21'),
+    materialName: tc('text_mfuto'),
     specification: '1.5mm²',
     batchNo: 'B20250302001',
     quantity: 2000,
     unit: 'M',
-    inspectionType: '抽检',
+    inspectionType: tc('text_hdb7'),
     result: 'reject',
-    inspector: '张三',
-    remark: '部分线材直径不达标',
+    inspector: tc('text_glwp'),
+    remark: tc('text_fzi047'),
     items: [
       {
-        itemName: '外观检查',
-        standard: '无破损、无氧化',
-        actualValue: '无破损、无氧化',
+        itemName: tc('text_bt6yz5'),
+        standard: tc('text_e7i38n'),
+        actualValue: tc('text_e7i38n'),
         result: 'pass',
         itemRemark: '',
       },
       {
-        itemName: '尺寸检查',
+        itemName: tc('text_c0qwf7'),
         standard: '1.5mm²±0.1mm²',
         actualValue: '1.3mm²',
         result: 'reject',
-        itemRemark: '直径偏小',
+        itemRemark: tc('text_fei5yo'),
       },
       {
-        itemName: '电阻测试',
-        standard: '符合电阻要求',
-        actualValue: '符合要求',
+        itemName: tc('text_feqg40'),
+        standard: tc('text_xpf87'),
+        actualValue: tc('text_fw579f'),
         result: 'pass',
         itemRemark: '',
       },
@@ -210,21 +200,24 @@ const initialIncomingInspections: any[] = [
   {
     id: 'IQC20250301001',
     date: '2025-03-01',
-    supplier: '恒翌达',
-    materialName: 'PE管',
+    supplier: tc('text_eqf5w'),
+    materialName: tc('text_2de4'),
     specification: '25mm',
     batchNo: 'B20250301001',
     quantity: 1500,
     unit: 'M',
-    inspectionType: '抽检',
+    inspectionType: tc('text_hdb7'),
     result: 'pending',
-    inspector: '李四',
-    remark: '待检验',
+    inspector: tc('text_i1ql'),
+    remark: tc('text_eic5t'),
     items: [],
   },
 ];
 
-const getStatusConfig = (t: (key: string) => string, tc: (key: string) => string): Record<
+const getStatusConfig = (
+  t: (key: string) => string,
+  tc: (key: string) => string
+): Record<
   string,
   { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
 > => ({
@@ -264,16 +257,35 @@ export default function IncomingInspectionPage() {
         batchNo: item.batch_no,
         quantity: item.inspect_qty,
         unit: 'pcs',
-        inspectionType: item.inspection_type === 'sampling' ? '抽检' : item.inspection_type === 'full' ? '全检' : '抽检',
+        inspectionType:
+          item.inspection_type === 'sampling'
+            ? '抽检'
+            : item.inspection_type === 'full'
+              ? '全检'
+              : '抽检',
         result: item.result,
         inspector: item.inspector,
         remark: item.remark || '',
         items: [
-          { itemName: '外观检查', standard: item.standard || '符合标准', actualValue: '合格', result: 'pass', itemRemark: '' },
-          { itemName: '尺寸检查', standard: item.standard || '符合标准', actualValue: '合格', result: 'pass', itemRemark: '' },
+          {
+            itemName: '外观检查',
+            standard: item.standard || '符合标准',
+            actualValue: '合格',
+            result: 'pass',
+            itemRemark: '',
+          },
+          {
+            itemName: '尺寸检查',
+            standard: item.standard || '符合标准',
+            actualValue: '合格',
+            result: 'pass',
+            itemRemark: '',
+          },
         ],
       }));
-      logger.info({ module: 'Quality', action: 'incoming' }, '使用 mock 来料检验数据', { count: mapped.length });
+      logger.info({ module: 'Quality', action: 'incoming' }, '使用 mock 来料检验数据', {
+        count: mapped.length,
+      });
       return mapped;
     }
     return initialIncomingInspections;
@@ -518,7 +530,7 @@ export default function IncomingInspectionPage() {
       ? Math.round((totalPassInspections / incomingInspections.length) * 100)
       : 0;
 
-  const exportColumns = [
+  const _exportColumns = [
     { key: 'id', header: t('inspectionNo') },
     { key: 'date', header: tc('date') },
     { key: 'supplier', header: tc('supplier') },
@@ -547,7 +559,7 @@ export default function IncomingInspectionPage() {
           <Input
             value={formData.supplierName}
             onChange={(e) => setFormData({ ...formData, supplierName: e.target.value })}
-            placeholder={tc("enterSupplierName")}
+            placeholder={tc('enterSupplierName')}
           />
         </div>
         <div className="space-y-2">
@@ -555,7 +567,7 @@ export default function IncomingInspectionPage() {
           <Input
             value={formData.materialCode}
             onChange={(e) => setFormData({ ...formData, materialCode: e.target.value })}
-            placeholder={tc("enterMaterialCode")}
+            placeholder={tc('enterMaterialCode')}
           />
         </div>
         <div className="space-y-2">
@@ -563,7 +575,7 @@ export default function IncomingInspectionPage() {
           <Input
             value={formData.materialName}
             onChange={(e) => setFormData({ ...formData, materialName: e.target.value })}
-            placeholder={tc("enterMaterialName")}
+            placeholder={tc('enterMaterialName')}
           />
         </div>
         <div className="space-y-2">
@@ -571,7 +583,7 @@ export default function IncomingInspectionPage() {
           <Input
             value={formData.specification}
             onChange={(e) => setFormData({ ...formData, specification: e.target.value })}
-            placeholder={tc("enterSpecification")}
+            placeholder={tc('enterSpecification')}
           />
         </div>
         <div className="space-y-2">
@@ -579,7 +591,7 @@ export default function IncomingInspectionPage() {
           <Input
             value={formData.batchNo}
             onChange={(e) => setFormData({ ...formData, batchNo: e.target.value })}
-            placeholder={tc("enterBatchNo")}
+            placeholder={tc('enterBatchNo')}
           />
         </div>
         <div className="space-y-2">
@@ -588,7 +600,7 @@ export default function IncomingInspectionPage() {
             type="number"
             value={formData.quantity}
             onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-            placeholder={tc("enterQuantity")}
+            placeholder={tc('enterQuantity')}
           />
         </div>
         <div className="space-y-2">
@@ -598,7 +610,7 @@ export default function IncomingInspectionPage() {
             onValueChange={(value) => setFormData({ ...formData, unit: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder={tc("selectUnit")} />
+              <SelectValue placeholder={tc('selectUnit')} />
             </SelectTrigger>
             <SelectContent>
               {unitOptions.map((option) => (
@@ -616,7 +628,7 @@ export default function IncomingInspectionPage() {
             onValueChange={(value) => setFormData({ ...formData, inspectionType: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder={t("selectInspectionType")} />
+              <SelectValue placeholder={t('selectInspectionType')} />
             </SelectTrigger>
             <SelectContent>
               {inspectionTypeOptions.map((option) => (
@@ -634,12 +646,12 @@ export default function IncomingInspectionPage() {
             onValueChange={(value) => setFormData({ ...formData, inspectionResult: value })}
           >
             <SelectTrigger>
-              <SelectValue placeholder={t("selectInspectionResult")} />
+              <SelectValue placeholder={t('selectInspectionResult')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="pending">{t('pendingInspection')}</SelectItem>
-              <SelectItem value="pass">{tc("qualified")}</SelectItem>
-              <SelectItem value="reject">{tc("unqualified")}</SelectItem>
+              <SelectItem value="pass">{tc('qualified')}</SelectItem>
+              <SelectItem value="reject">{tc('unqualified')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -648,15 +660,15 @@ export default function IncomingInspectionPage() {
           <Input
             value={formData.inspectorName}
             onChange={(e) => setFormData({ ...formData, inspectorName: e.target.value })}
-            placeholder={t("enterInspectorName")}
+            placeholder={t('enterInspectorName')}
           />
         </div>
         <div className="space-y-2">
-          <Label>{tc("remark")}</Label>
+          <Label>{tc('remark')}</Label>
           <Input
             value={formData.remark}
             onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-            placeholder={tc("enterRemark")}
+            placeholder={tc('enterRemark')}
           />
         </div>
       </div>
@@ -710,17 +722,17 @@ export default function IncomingInspectionPage() {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={t("selectResult")} />
+                      <SelectValue placeholder={t('selectResult')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="pending">{t('pendingInspection')}</SelectItem>
-                      <SelectItem value="pass">{tc("qualified")}</SelectItem>
-                      <SelectItem value="reject">{tc("unqualified")}</SelectItem>
+                      <SelectItem value="pass">{tc('qualified')}</SelectItem>
+                      <SelectItem value="reject">{tc('unqualified')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="col-span-4 space-y-2">
-                  <Label>{tc("remark")}</Label>
+                  <Label>{tc('remark')}</Label>
                   <Input
                     value={item.itemRemark}
                     onChange={(e) => {
@@ -728,7 +740,7 @@ export default function IncomingInspectionPage() {
                       newItems[index].itemRemark = e.target.value;
                       setFormData({ ...formData, items: newItems });
                     }}
-                    placeholder={tc("enterRemark")}
+                    placeholder={tc('enterRemark')}
                   />
                 </div>
               </div>
@@ -755,7 +767,7 @@ export default function IncomingInspectionPage() {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-32">
-                <SelectValue placeholder={tc("selectStatus")} />
+                <SelectValue placeholder={tc('selectStatus')} />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map((option) => (
@@ -792,10 +804,19 @@ export default function IncomingInspectionPage() {
                 { key: 'batchNo', label: tc('batchNo'), width: 15 },
                 { key: 'quantity', label: tc('quantity'), width: 10 },
                 { key: 'inspectionType', label: t('inspectionType'), width: 10 },
-                { key: 'result', label: t('inspectionResult'), width: 10, formatter: (v) => statusConfig[v]?.label || v },
+                {
+                  key: 'result',
+                  label: t('inspectionResult'),
+                  width: 10,
+                  formatter: (v) => statusConfig[v]?.label || v,
+                },
                 { key: 'inspector', label: t('inspector'), width: 10 },
               ]}
-              data={selectedInspections.length > 0 ? sortedData.filter((i) => selectedInspections.includes(i.id)) : sortedData}
+              data={
+                selectedInspections.length > 0
+                  ? sortedData.filter((i) => selectedInspections.includes(i.id))
+                  : sortedData
+              }
             />
           </div>
         </div>
@@ -862,7 +883,9 @@ export default function IncomingInspectionPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between border-b">
             <CardTitle>{t('incomingInspectionRecord')}</CardTitle>
-            <span className="text-sm text-muted-foreground">{tc('totalRecords')}: {sortedData.length}</span>
+            <span className="text-sm text-muted-foreground">
+              {tc('totalRecords')}: {sortedData.length}
+            </span>
           </CardHeader>
           <CardContent>
             <Table>
@@ -876,7 +899,7 @@ export default function IncomingInspectionPage() {
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
-                  <TableHead className="w-12 text-center">{tc("serialNo")}</TableHead>
+                  <TableHead className="w-12 text-center">{tc('serialNo')}</TableHead>
                   <SortableTableHeader
                     field="id"
                     sortField={sortField}
@@ -909,9 +932,9 @@ export default function IncomingInspectionPage() {
                   >
                     {tc('materialName')}
                   </SortableTableHeader>
-                  <TableHead>{tc("specification")}</TableHead>
-                  <TableHead>{tc("batchNo")}</TableHead>
-                  <TableHead>{tc("quantity")}</TableHead>
+                  <TableHead>{tc('specification')}</TableHead>
+                  <TableHead>{tc('batchNo')}</TableHead>
+                  <TableHead>{tc('quantity')}</TableHead>
                   <TableHead>{t('inspectionType')}</TableHead>
                   <SortableTableHeader
                     field="result"
@@ -922,7 +945,7 @@ export default function IncomingInspectionPage() {
                     {tc('status')}
                   </SortableTableHeader>
                   <TableHead>{t('inspector')}</TableHead>
-                  <TableHead className="text-right">{tc("actions")}</TableHead>
+                  <TableHead className="text-right">{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -998,7 +1021,7 @@ export default function IncomingInspectionPage() {
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                 {tc('cancel')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

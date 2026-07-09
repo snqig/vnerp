@@ -252,16 +252,18 @@ export function calculateScheduleWithColorDependencies(
           drying: [5],
           plate_making: [5],
         };
-        const matchingTypes = typeMap[colorSeq.equipment_type_required.toLowerCase()] || [colorSeq.equipment_type_required];
+        const matchingTypes = typeMap[colorSeq.equipment_type_required.toLowerCase()] || [
+          colorSeq.equipment_type_required,
+        ];
         typeMatch = matchingTypes.includes(Number(eq.equipment_type));
       } else {
         // 如果工序要求的是数字类型，直接匹配
         typeMatch = eq.equipment_type === colorSeq.equipment_type_required;
       }
-      
+
       // 状态匹配：'1' 表示可用
       const statusMatch = eq.status === '1';
-      
+
       return typeMatch && statusMatch;
     });
 
@@ -394,7 +396,10 @@ function findEarliestSlot(
   durationHours: number
 ): { start: Date; end: Date } | null {
   const candidateStart = new Date(afterTime);
-  const maxSearchDays = CalcParamService.getCachedInt('schedule.search_days_ahead', DAYS_AHEAD_DEFAULT);
+  const maxSearchDays = CalcParamService.getCachedInt(
+    'schedule.search_days_ahead',
+    DAYS_AHEAD_DEFAULT
+  );
 
   for (let day = 0; day < maxSearchDays; day++) {
     const dateStr = candidateStart.toISOString().split('T')[0];
@@ -403,7 +408,12 @@ function findEarliestSlot(
     );
 
     const workStart = CalcParamService.getCachedInt('schedule.work_start_hour', 8);
-    const workEnd = workStart + CalcParamService.getCachedInt('schedule.working_hours_per_day', WORKING_HOURS_PER_DAY_DEFAULT);
+    const workEnd =
+      workStart +
+      CalcParamService.getCachedInt(
+        'schedule.working_hours_per_day',
+        WORKING_HOURS_PER_DAY_DEFAULT
+      );
 
     for (
       let hour = Math.max(workStart, candidateStart.getHours());
@@ -614,7 +624,7 @@ export function generateGanttData(
   }>;
 }> {
   const startTime = dateRange.start.getTime();
-  const totalDays = (dateRange.end.getTime() - startTime) / (1000 * 60 * 60 * 24);
+  const _totalDays = (dateRange.end.getTime() - startTime) / (1000 * 60 * 60 * 24);
 
   return results.map((result) => {
     const woInfo: any = query(`SELECT product_name FROM prod_work_order WHERE id = ?`, [

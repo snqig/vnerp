@@ -1,8 +1,7 @@
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { SalesOrderApprovedEvent } from '@/domain/sales/events/SalesOrderEvents';
 import { WorkOrderCreatedEvent } from '@/domain/production/events/WorkOrderEvents';
-import { query, execute, transaction } from '@/lib/db';
-import { getEventBus } from '@/infrastructure/event-bus/EventBus';
+import { query, transaction } from '@/lib/db';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { secureLog } from '@/lib/logger';
 

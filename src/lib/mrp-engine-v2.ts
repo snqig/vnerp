@@ -6,7 +6,7 @@
  * 的高级计算组件，提供更加灵活和精细化的物料供需平衡分析能力。
  */
 
-import { query, execute, transaction, getConnection } from '@/lib/db';
+import { getConnection } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { secureLog } from '@/lib/logger';
 import { CalcParamService } from '@/lib/calc-param-service';
@@ -198,10 +198,10 @@ const DEFAULT_CONFIG: MRPConfig = {
 
 /**
  * 计算经济订购批量（EOQ）
- * 
+ *
  * 使用经典的 EOQ 公式：EOQ = sqrt(2 × 年需求 × 订购成本 / 单位持有成本)
  * 其中单位持有成本 = 单价 × 持有成本率
- * 
+ *
  * @param annualDemand - 年需求量
  * @param orderingCost - 每次订购成本
  * @param holdingCostRate - 持有成本率（小数，如 0.2 表示 20%）
@@ -223,13 +223,13 @@ export function calculateEOQ(
 
 /**
  * 应用批量化规则调整订单数量
- * 
+ *
  * 支持四种策略：
  * - lot_for_lot：按需订购，不做调整
  * - fixed：按固定批量向上取整
  * - eoq：按经济订购批量向上取整
  * - period_supply：按需订购（周期内合并由上游处理）
- * 
+ *
  * @param netRequirement - 净需求数量
  * @param lotSizing - 批量化策略类型
  * @param fixedLotSize - 固定批量大小
@@ -268,12 +268,12 @@ export function applyLotSizing(
 
 /**
  * 计算安全库存量
- * 
+ *
  * 支持三种策略：
  * - none：不使用安全库存，返回 0
  * - fixed：使用固定的安全库存值
  * - days_of_coverage：按日均需求 × 覆盖天数计算
- * 
+ *
  * @param policy - 安全库存策略
  * @param fixedSafetyStock - 固定安全库存量（policy 为 'fixed' 时使用）
  * @param dailyAvgDemand - 日均需求量
@@ -300,10 +300,10 @@ export function calculateSafetyStock(
 
 /**
  * 生成时间分段日期列表
- * 
+ *
  * 从起始日期开始，按 day/week/month 粒度将时间范围划分为等长分段，
  * 每个分段包含一个标识日期和该段内的所有日期。
- * 
+ *
  * @param startDate - 起始日期（YYYY-MM-DD）
  * @param days - 时间范围总天数
  * @param bucketSize - 分段粒度：'day' | 'week' | 'month'
@@ -379,13 +379,13 @@ export function generateBucketDates(
 
 /**
  * MRP 计算引擎 V2
- * 
+ *
  * 面向对象的 MRP 计算引擎，支持完整的物料需求计划流程：
  * 1. 收集毛需求（销售订单）
  * 2. 多层级 BOM 展开，逐级传递依赖需求
  * 3. 时间分段供需平衡计算
  * 4. 产能负荷分析
- * 
+ *
  * 使用方式：
  * ```typescript
  * const engine = new MRPEngine({ horizonDays: 90, bucketSize: 'week' });
@@ -404,7 +404,7 @@ export class MRPEngine {
 
   /**
    * 创建 MRP 引擎实例
-   * 
+   *
    * @param config - 可选，部分 MRP 配置参数，未指定的使用默认值
    * @param conn - 可选，外部数据库连接，不传则 run 时自动获取
    */
@@ -415,14 +415,14 @@ export class MRPEngine {
 
   /**
    * 执行 MRP 计算
-   * 
+   *
    * 完整执行一次 MRP 运算，包括：
    * 1. 生成运行编号
    * 2. 收集销售订单毛需求
    * 3. 多层级物料展开，逐级计算供需平衡
    * 4. 产能负荷分析
    * 5. 汇总统计（计划订单数、采购申请数、工单数）
-   * 
+   *
    * @param params - MRP 运行参数
    * @returns MRP 运行完整结果，包含物料分析、产能负荷和警告信息
    */
@@ -632,9 +632,9 @@ export class MRPEngine {
         warehouseId
       );
 
-    // 外购物料标记为 purchase，自制件标记为 produce 后续展开子件
-    const isPurchase = materialInfo.material_type === 'purchase';
-    const actionType: MRPActionType = isPurchase ? 'purchase' : 'produce';
+      // 外购物料标记为 purchase，自制件标记为 produce 后续展开子件
+      const isPurchase = materialInfo.material_type === 'purchase';
+      const actionType: MRPActionType = isPurchase ? 'purchase' : 'produce';
 
       for (const bucket of buckets) {
         bucket.actionType = actionType;
@@ -651,7 +651,10 @@ export class MRPEngine {
             : 'product',
         unit: materialInfo.unit,
         safetyStock: Number(materialInfo.safety_stock || 0),
-        leadTimeDays: Number(materialInfo.lead_time_days || await CalcParamService.getInt('mrp.default_lead_time_days', 7)),
+        leadTimeDays: Number(
+          materialInfo.lead_time_days ||
+            (await CalcParamService.getInt('mrp.default_lead_time_days', 7))
+        ),
         lotSizing: this.config.defaultLotSizing,
         fixedLotSize: this.config.defaultFixedLotSize,
         buckets,
@@ -722,7 +725,10 @@ export class MRPEngine {
       warehouseId
     );
 
-    const leadTimeDays = Number(materialInfo.lead_time_days || await CalcParamService.getInt('mrp.default_lead_time_days', 7));
+    const leadTimeDays = Number(
+      materialInfo.lead_time_days ||
+        (await CalcParamService.getInt('mrp.default_lead_time_days', 7))
+    );
     const lotSizing = materialInfo.lot_sizing || this.config.defaultLotSizing;
     const fixedLotSize = Number(materialInfo.fixed_lot_size || this.config.defaultFixedLotSize);
 
@@ -940,10 +946,10 @@ export class MRPEngine {
 
   /**
    * 计算产能负荷需求
-   * 
+   *
    * 遍历所有非采购物料（产品/半成品）的计划订单，根据工艺路线计算各工位中心的
    * 标准工时需求。负荷率 = 需求工时 / 标准产能，负荷率 > 1 表示超负荷。
-   * 
+   *
    * @param conn - 数据库连接
    * @param materials - 所有物料的 MRP 分析结果
    * @param startDate - 计算起始日期
@@ -1015,7 +1021,7 @@ export class MRPEngine {
 
 /**
  * 将 Date 或日期字符串格式化为 YYYY-MM-DD 格式
- * 
+ *
  * @param d - Date 对象或日期字符串
  * @returns YYYY-MM-DD 格式的日期字符串
  */
@@ -1031,7 +1037,7 @@ function formatDateStr(d: Date | string): string {
 
 /**
  * 四舍五入保留 4 位小数
- * 
+ *
  * @param v - 要舍入的数值
  * @returns 保留 4 位小数的数值
  */

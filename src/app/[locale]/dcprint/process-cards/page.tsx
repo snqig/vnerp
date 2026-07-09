@@ -17,18 +17,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   QrCode,
   FileText,
   Printer,
-  Lock,
-  Unlock,
   CheckCircle,
   AlertCircle,
   Plus,

@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { BookOpen, Plus, RefreshCw, Edit, Trash2, ChevronRight } from 'lucide-react';
+import { BookOpen, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface DictType {

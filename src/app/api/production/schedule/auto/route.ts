@@ -17,7 +17,7 @@ export const POST = withPermission(
       respectDeadline: respect_deadline,
     });
 
-    const savedCount = 0;
+    const _savedCount = 0;
     for (const result of results) {
       if (result.conflicts.length === 0) {
         await saveScheduleResult(result);

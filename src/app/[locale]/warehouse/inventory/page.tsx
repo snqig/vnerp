@@ -13,7 +13,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { SearchInput } from '@/components/ui/search-input';
@@ -25,7 +24,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Search,
   AlertTriangle,
   TrendingDown,
   Barcode,

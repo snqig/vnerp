@@ -44,10 +44,8 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  Building2,
   Phone,
   MapPin,
-  Mail,
   User,
   RefreshCw,
   Eye,
@@ -57,15 +55,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  TableExportToolbar,
-  printTable,
-  exportTableToPDF,
-  exportTableToXLS,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 
 // 客户列表项接口（基于 crm_customer 表）
 interface CustomerListItem {

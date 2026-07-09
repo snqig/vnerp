@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 export const GET = withPermission(

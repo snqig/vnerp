@@ -4,7 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Clock, RefreshCw, Play, Pause, Plus, Eye, AlertCircle } from 'lucide-react';
+import { Clock, RefreshCw, Play, Pause, Plus, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface TaskItem {

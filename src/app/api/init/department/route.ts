@@ -1,7 +1,6 @@
 ﻿import { NextRequest } from 'next/server';
-import mysql from 'mysql2/promise';
-import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse } from '@/lib/api-response';
+import { query, transaction } from '@/lib/db';
+import { successResponse } from '@/lib/api-response';
 
 import { withPermission } from '@/lib/api-permissions';
 // 部门接口

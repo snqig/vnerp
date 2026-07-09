@@ -34,7 +34,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Plus,
   Search,
-  Edit,
   Trash2,
   ArrowUpDown,
   ArrowUp,

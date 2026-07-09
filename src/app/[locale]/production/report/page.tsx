@@ -43,7 +43,6 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
-  Play,
   RotateCcw,
   LogOut,
   Plus,
@@ -841,7 +840,7 @@ export default function ProductionReportPage() {
                 <Select
                   value={String(form.die_template_id || '')}
                   onValueChange={(v) => {
-                    const die = dieTemplateList.find((d) => d.id === Number(v));
+                    const _die = dieTemplateList.find((d) => d.id === Number(v));
                     setForm({ ...form, die_template_id: Number(v) });
                   }}
                 >

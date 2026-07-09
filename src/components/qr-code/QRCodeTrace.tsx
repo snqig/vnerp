@@ -25,26 +25,19 @@ import { QRCodeSVG } from 'qrcode.react';
 import {
   Search,
   Package,
-  ArrowRight,
   Truck,
   Factory,
-  ClipboardList,
   CheckCircle2,
   Clock,
   User,
-  MapPin,
-  FileText,
-  Download,
-  RefreshCw,
   Loader2,
-  ChevronRight,
   Box,
   Layers,
   ScanLine,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLocale, useTranslations } from 'next-intl';
-import type { TraceData, TraceEvent } from './qr-code-types';
+import type { TraceData } from './qr-code-types';
 
 interface QRCodeTraceProps {
   qrCode?: string;

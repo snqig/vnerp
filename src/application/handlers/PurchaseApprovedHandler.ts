@@ -1,6 +1,5 @@
 import { EventHandler } from '../../infrastructure/event-bus/EventBus';
 import { PurchaseOrderApprovedEvent } from '@/domain/purchase/events/PurchaseOrderEvents';
-import { transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 
 export class PurchaseApprovedHandler implements EventHandler<PurchaseOrderApprovedEvent> {

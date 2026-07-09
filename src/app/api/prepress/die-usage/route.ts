@@ -1,11 +1,6 @@
 ﻿import { NextRequest } from 'next/server';
-import { query, execute, queryOne, transaction } from '@/lib/db';
-import {
-  successResponse,
-  errorResponse,
-  commonErrors,
-  validateRequestBody,
-} from '@/lib/api-response';
+import { query, queryOne, transaction } from '@/lib/db';
+import { successResponse, errorResponse, validateRequestBody } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {

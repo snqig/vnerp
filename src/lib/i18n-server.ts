@@ -1,4 +1,3 @@
-import { getRequestConfig } from 'next-intl/server';
 import { headers } from 'next/headers';
 
 // 支持的语言列表
@@ -15,13 +14,13 @@ export async function getLocaleFromHeader(): Promise<Locale> {
   try {
     const headersList = await headers();
     const acceptLanguage = headersList.get('accept-language') || '';
-    
+
     // 解析 Accept-Language 头
-    const languages = acceptLanguage.split(',').map(lang => {
+    const languages = acceptLanguage.split(',').map((lang) => {
       const [code] = lang.trim().split(';');
       return code.trim().substring(0, 5); // 取前5个字符,如 zh-CN
     });
-    
+
     // 查找匹配的语言
     for (const lang of languages) {
       if (locales.includes(lang as Locale)) {
@@ -32,7 +31,7 @@ export async function getLocaleFromHeader(): Promise<Locale> {
         return 'zh-CN';
       }
     }
-    
+
     return defaultLocale;
   } catch {
     return defaultLocale;
@@ -59,11 +58,11 @@ export async function getTranslations(locale: Locale) {
 export async function getTranslator(namespace?: string) {
   const locale = await getLocaleFromHeader();
   const messages = await getTranslations(locale);
-  
+
   return (key: string, params?: Record<string, any>): string => {
     const fullKey = namespace ? `${namespace}.${key}` : key;
     const keys = fullKey.split('.');
-    
+
     let value: any = messages;
     for (const k of keys) {
       value = value?.[k];
@@ -72,11 +71,11 @@ export async function getTranslator(namespace?: string) {
         return fullKey;
       }
     }
-    
+
     if (typeof value !== 'string') {
       return fullKey;
     }
-    
+
     // 处理插值参数
     if (params) {
       return Object.entries(params).reduce(
@@ -84,7 +83,7 @@ export async function getTranslator(namespace?: string) {
         value
       );
     }
-    
+
     return value;
   };
 }

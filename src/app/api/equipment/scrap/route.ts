@@ -45,7 +45,7 @@ export const POST = withPermission(
       approval_person,
       remark,
     } = body;
-    const now = new Date();
+    const _now = new Date();
     const scrapNo = generateDocNo(getBfPrefix());
 
     const result: any = await execute(

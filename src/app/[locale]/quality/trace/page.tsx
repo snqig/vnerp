@@ -43,18 +43,10 @@ import {
   AlertCircle,
   ArrowRight,
   RefreshCw,
-  Printer,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  TableExportToolbar,
-  exportTableToXLS,
-  exportTableToPDF,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
 

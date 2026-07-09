@@ -14,7 +14,15 @@ import * as schema from './schema';
 // NEVER concatenate user input directly into SQL strings.
 
 /** SQL 参数值类型（mysql2 接受的基本类型；undefined 在预处理前应被替换为 null；数组用于 IN (?) 子句） */
-export type SqlValue = string | number | null | boolean | Date | Buffer | undefined | readonly SqlValue[];
+export type SqlValue =
+  | string
+  | number
+  | null
+  | boolean
+  | Date
+  | Buffer
+  | undefined
+  | readonly SqlValue[];
 
 /** MySQL 错误对象结构（mysql2 抛出的错误非标准 Error 子类） */
 interface DbError {
@@ -132,7 +140,7 @@ export async function execute(sql: string, values?: SqlValue[]): Promise<mysql.R
   try {
     const pool = getPool();
     if (DEBUG_DB) {
-      const sqlStr = typeof sql === 'string' ? sql : String(sql);
+      const _sqlStr = typeof sql === 'string' ? sql : String(sql);
     }
     // mysql2 的 execute 类型签名比 query 更严格（不接受 undefined），实际运行时支持
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -377,8 +385,15 @@ export const db = {
    * @param whereValues - WHERE 条件参数值
    * @returns 受影响行数
    */
-  update: async (table: string, data: Record<string, SqlValue>, where: string, whereValues: SqlValue[] = []): Promise<number> => {
-    const sets = Object.keys(data).map(k => `${k} = ?`).join(', ');
+  update: async (
+    table: string,
+    data: Record<string, SqlValue>,
+    where: string,
+    whereValues: SqlValue[] = []
+  ): Promise<number> => {
+    const sets = Object.keys(data)
+      .map((k) => `${k} = ?`)
+      .join(', ');
     const values = [...Object.values(data), ...whereValues];
     const sql = `UPDATE ${table} SET ${sets} WHERE ${where}`;
     const result = await execute(sql, values);

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
-import { query, execute, transaction } from '@/lib/db';
-import { successResponse, errorResponse } from '@/lib/api-response';
+import { transaction } from '@/lib/db';
+import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
@@ -881,7 +881,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       'hr',
       'settings',
     ];
-    const topLevelIds = topLevelCodes.filter((c) => menuCodeToId[c]).map((c) => menuCodeToId[c]);
+    const _topLevelIds = topLevelCodes.filter((c) => menuCodeToId[c]).map((c) => menuCodeToId[c]);
 
     function getMenuIdsByParentCode(parentCode: string): number[] {
       const parentId = menuCodeToId[parentCode];

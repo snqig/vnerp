@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { query, transaction } from '@/lib/db';
+import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
@@ -7,19 +7,18 @@ import { withPermission } from '@/lib/api-permissions';
  * 获取BOM详情
  * GET /api/orders/bom/{id}
  */
-export const GET = withPermission(
-  async (request: NextRequest, userInfo, context) => {
-    const { id } = await context.params;
+export const GET = withPermission(async (request: NextRequest, userInfo, context) => {
+  const { id } = await context.params;
 
-    if (!id || isNaN(parseInt(id))) {
-      return errorResponse('无效的BOM ID', 400, 400);
-    }
+  if (!id || isNaN(parseInt(id))) {
+    return errorResponse('无效的BOM ID', 400, 400);
+  }
 
-    const bomId = parseInt(id);
+  const bomId = parseInt(id);
 
-    // 查询BOM主表
-    const bomHeader = await query(
-      `SELECT 
+  // 查询BOM主表
+  const bomHeader = await query(
+    `SELECT 
        bh.id, bh.bom_no, bh.product_id, bh.product_code, bh.product_name, bh.product_spec,
        bh.version, bh.is_default, bh.status, bh.unit, bh.base_qty,
        bh.total_material_count, bh.total_cost, bh.remark,
@@ -32,49 +31,49 @@ export const GET = withPermission(
        END as status_name
      FROM bom_header bh
      WHERE bh.id = ? AND bh.deleted = 0`,
-      [bomId]
-    );
+    [bomId]
+  );
 
-    if ((bomHeader as any[]).length === 0) {
-      return errorResponse('BOM不存在', 404, 404);
-    }
+  if ((bomHeader as any[]).length === 0) {
+    return errorResponse('BOM不存在', 404, 404);
+  }
 
-    // 查询BOM明细
-    const bomLines = await query(
-      `SELECT 
+  // 查询BOM明细
+  const bomLines = await query(
+    `SELECT 
        bl.id, bl.line_no, bl.material_id, bl.material_code, bl.material_name, bl.material_spec,
        bl.unit, bl.consumption_qty, bl.loss_rate, bl.actual_qty, bl.unit_cost, bl.total_cost,
        bl.material_type, bl.is_key_material, bl.position_no, bl.process_seq, bl.process_name, bl.remark
      FROM bom_line bl
      WHERE bl.bom_id = ?
      ORDER BY bl.line_no`,
-      [bomId]
-    );
+    [bomId]
+  );
 
-    // 查询版本历史
-    const versionHistory = await query(
-      `SELECT 
+  // 查询版本历史
+  const versionHistory = await query(
+    `SELECT 
        version, change_type, change_content, change_reason, operator_name, operate_time
      FROM bom_version_history
      WHERE bom_id = ?
      ORDER BY operate_time DESC`,
-      [bomId]
-    );
+    [bomId]
+  );
 
-    // 查询替代料
-    const alternatives = await query(
-      `SELECT 
+  // 查询替代料
+  const alternatives = await query(
+    `SELECT 
        ba.bom_line_id, ba.priority, ba.material_code as alt_material_code, 
        ba.material_name as alt_material_name, ba.conversion_rate
      FROM bom_alternative ba
      WHERE ba.bom_id = ? AND ba.is_enabled = 1`,
-      [bomId]
-    );
+    [bomId]
+  );
 
-    return successResponse({
-      header: (bomHeader as any[])[0],
-      lines: bomLines,
-      version_history: versionHistory,
-      alternatives,
-    });
+  return successResponse({
+    header: (bomHeader as any[])[0],
+    lines: bomLines,
+    version_history: versionHistory,
+    alternatives,
   });
+});

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { escapeId } from 'mysql2';
 import { query } from '@/lib/db';
-import { successResponse, errorResponse } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 interface RuleViolation {
@@ -43,7 +43,7 @@ const CATEGORY_RULES: Record<string, CategoryRuleConfig> = {
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const categoryType = searchParams.get('type') || 'all';
-  const autoFix = searchParams.get('autoFix') === 'true';
+  const _autoFix = searchParams.get('autoFix') === 'true';
 
   const violations: RuleViolation[] = [];
 

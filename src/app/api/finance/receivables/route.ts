@@ -1,7 +1,7 @@
 ﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
-import { generateReceivable, recordReceipt, queryReceivableSummary } from '@/lib/finance-core';
+import { generateReceivable } from '@/lib/finance-core';
 
 import { withPermission } from '@/lib/api-permissions';
 // 查询应收单列表

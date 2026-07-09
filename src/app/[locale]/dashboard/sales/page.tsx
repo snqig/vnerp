@@ -12,12 +12,8 @@ import {
   TrendingUp,
   ShoppingCart,
   BarChart3,
-  Clock,
   Maximize,
   Minimize,
-  ArrowUpRight,
-  Activity,
-  Target,
   PieChart,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';

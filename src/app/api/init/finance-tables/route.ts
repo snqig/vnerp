@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { execute, query } from '@/lib/db';
+import { execute } from '@/lib/db';
 
 export async function POST(_request: NextRequest) {
   const results: string[] = [];

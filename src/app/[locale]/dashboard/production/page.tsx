@@ -1,26 +1,20 @@
 'use client';
 
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { MainLayout } from '@/components/layout';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import GlassGauge from '@/components/GlassGauge';
-import GlassKnob from '@/components/GlassKnob';
 import {
-  Factory,
   TrendingUp,
   TrendingDown,
-  Clock,
   CheckCircle,
   AlertTriangle,
-  PauseCircle,
   PlayCircle,
   BarChart3,
   Activity,
-  Zap,
   Users,
   Package,
-  Timer,
   Settings,
   Maximize,
   Minimize,

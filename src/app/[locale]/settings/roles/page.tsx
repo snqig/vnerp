@@ -39,14 +39,11 @@ import {
   Shield,
   RefreshCw,
   Search,
-  Users,
-  CheckSquare,
-  Square,
   LayoutGrid,
   MousePointer,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getPermissionModules, Permission } from '@/hooks/usePermission';
+import { getPermissionModules } from '@/hooks/usePermission';
 import { useTranslations } from 'next-intl';
 import { authFetch } from '@/lib/auth-fetch';
 
@@ -73,7 +70,7 @@ interface Menu {
 }
 
 // 数据范围选项
-const dataScopeOptions = [
+const _dataScopeOptions = [
   { value: 1, label: tc('text_avcqke') },
   { value: 2, label: tc('text_3vvdg6') },
   { value: 3, label: tc('text_wlp4yq') },

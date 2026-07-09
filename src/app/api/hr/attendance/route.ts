@@ -1,5 +1,5 @@
 ﻿import { NextRequest } from 'next/server';
-import { query, execute, transaction, queryPaginated } from '@/lib/db';
+import { query, execute, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,
@@ -101,123 +101,127 @@ export const GET = withPermission(async (request: NextRequest) => {
 });
 
 // 创建考勤记录
-export const POST = withPermission(async (request: NextRequest) => {
-  const body = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest) => {
+    const body = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, [
-    'attendanceDate',
-    'employeeId',
-    'employeeName',
-    'departmentName',
-    'checkInTime',
-    'checkOutTime',
-    'status',
-  ]);
+    // 验证必填字段
+    const validation = validateRequestBody(body, [
+      'attendanceDate',
+      'employeeId',
+      'employeeName',
+      'departmentName',
+      'checkInTime',
+      'checkOutTime',
+      'status',
+    ]);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
-
-  const {
-    attendanceDate,
-    employeeId,
-    employeeName,
-    departmentName,
-    checkInTime,
-    checkOutTime,
-    status,
-    workingHours,
-    overtimeHours,
-    remark,
-  } = body;
-
-  if (!isValidDate(attendanceDate)) {
-    return errorResponse('考勤日期格式不正确，应为 YYYY-MM-DD', 400, 400);
-  }
-
-  if (!isValidTime(checkInTime)) {
-    return errorResponse('上班时间格式不正确，应为 HH:mm', 400, 400);
-  }
-
-  if (!isValidTime(checkOutTime)) {
-    return errorResponse('下班时间格式不正确，应为 HH:mm', 400, 400);
-  }
-
-  if (!isValidStatus(status)) {
-    return errorResponse('考勤状态值不正确，应为 normal/late/absent/leave', 400, 400);
-  }
-
-  // 计算工作时长（如果未提供）
-  let calculatedWorkingHours = workingHours;
-  if (!calculatedWorkingHours && checkInTime && checkOutTime) {
-    const checkIn = new Date(`${attendanceDate} ${checkInTime}`);
-    const checkOut = new Date(`${attendanceDate} ${checkOutTime}`);
-    if (checkOut < checkIn) {
-      // 跨天情况
-      checkOut.setDate(checkOut.getDate() + 1);
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
     }
-    calculatedWorkingHours = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60);
-  }
 
-  // 插入考勤记录
-  const result = await execute(
-    `INSERT INTO hr_attendance (
-      attendance_date, employee_id, employee_id_int, employee_name,
-      department_name, check_in_time, check_out_time,
-      status, working_hours, overtime_hours, remark
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
+    const {
       attendanceDate,
       employeeId,
-      parseInt(employeeId) || null,
       employeeName,
       departmentName,
       checkInTime,
       checkOutTime,
       status,
-      calculatedWorkingHours,
-      overtimeHours || 0,
+      workingHours,
+      overtimeHours,
       remark,
-    ]
-  );
+    } = body;
 
-  return successResponse({ id: result.insertId }, '考勤记录创建成功');
-}, { errorMessage: '创建考勤记录失败' });
+    if (!isValidDate(attendanceDate)) {
+      return errorResponse('考勤日期格式不正确，应为 YYYY-MM-DD', 400, 400);
+    }
+
+    if (!isValidTime(checkInTime)) {
+      return errorResponse('上班时间格式不正确，应为 HH:mm', 400, 400);
+    }
+
+    if (!isValidTime(checkOutTime)) {
+      return errorResponse('下班时间格式不正确，应为 HH:mm', 400, 400);
+    }
+
+    if (!isValidStatus(status)) {
+      return errorResponse('考勤状态值不正确，应为 normal/late/absent/leave', 400, 400);
+    }
+
+    // 计算工作时长（如果未提供）
+    let calculatedWorkingHours = workingHours;
+    if (!calculatedWorkingHours && checkInTime && checkOutTime) {
+      const checkIn = new Date(`${attendanceDate} ${checkInTime}`);
+      const checkOut = new Date(`${attendanceDate} ${checkOutTime}`);
+      if (checkOut < checkIn) {
+        // 跨天情况
+        checkOut.setDate(checkOut.getDate() + 1);
+      }
+      calculatedWorkingHours = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60);
+    }
+
+    // 插入考勤记录
+    const result = await execute(
+      `INSERT INTO hr_attendance (
+      attendance_date, employee_id, employee_id_int, employee_name,
+      department_name, check_in_time, check_out_time,
+      status, working_hours, overtime_hours, remark
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        attendanceDate,
+        employeeId,
+        parseInt(employeeId) || null,
+        employeeName,
+        departmentName,
+        checkInTime,
+        checkOutTime,
+        status,
+        calculatedWorkingHours,
+        overtimeHours || 0,
+        remark,
+      ]
+    );
+
+    return successResponse({ id: result.insertId }, '考勤记录创建成功');
+  },
+  { errorMessage: '创建考勤记录失败' }
+);
 
 // 更新考勤记录
-export const PUT = withPermission(async (request: NextRequest) => {
-  const body = await request.json();
-  const { id, ...updateData } = body;
+export const PUT = withPermission(
+  async (request: NextRequest) => {
+    const body = await request.json();
+    const { id, ...updateData } = body;
 
-  if (!id) {
-    return commonErrors.badRequest('考勤记录ID不能为空');
-  }
-
-  // 检查考勤记录是否存在
-  const [attendance] = await query<{ id: number }>(
-    'SELECT id FROM hr_attendance WHERE id = ? AND deleted = 0',
-    [id]
-  );
-
-  if (!attendance) {
-    return commonErrors.notFound('考勤记录不存在');
-  }
-
-  // 计算工作时长（如果未提供）
-  let calculatedWorkingHours = updateData.workingHours;
-  if (!calculatedWorkingHours && updateData.checkInTime && updateData.checkOutTime) {
-    const checkIn = new Date(`${updateData.attendanceDate} ${updateData.checkInTime}`);
-    const checkOut = new Date(`${updateData.attendanceDate} ${updateData.checkOutTime}`);
-    if (checkOut < checkIn) {
-      // 跨天情况
-      checkOut.setDate(checkOut.getDate() + 1);
+    if (!id) {
+      return commonErrors.badRequest('考勤记录ID不能为空');
     }
-    calculatedWorkingHours = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60);
-  }
 
-  await execute(
-    `UPDATE hr_attendance SET
+    // 检查考勤记录是否存在
+    const [attendance] = await query<{ id: number }>(
+      'SELECT id FROM hr_attendance WHERE id = ? AND deleted = 0',
+      [id]
+    );
+
+    if (!attendance) {
+      return commonErrors.notFound('考勤记录不存在');
+    }
+
+    // 计算工作时长（如果未提供）
+    let calculatedWorkingHours = updateData.workingHours;
+    if (!calculatedWorkingHours && updateData.checkInTime && updateData.checkOutTime) {
+      const checkIn = new Date(`${updateData.attendanceDate} ${updateData.checkInTime}`);
+      const checkOut = new Date(`${updateData.attendanceDate} ${updateData.checkOutTime}`);
+      if (checkOut < checkIn) {
+        // 跨天情况
+        checkOut.setDate(checkOut.getDate() + 1);
+      }
+      calculatedWorkingHours = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60);
+    }
+
+    await execute(
+      `UPDATE hr_attendance SET
       attendance_date = ?,
       employee_id = ?,
       employee_name = ?,
@@ -229,44 +233,49 @@ export const PUT = withPermission(async (request: NextRequest) => {
       overtime_hours = ?,
       remark = ?
     WHERE id = ?`,
-    [
-      updateData.attendanceDate,
-      updateData.employeeId,
-      updateData.employeeName,
-      updateData.departmentName,
-      updateData.checkInTime,
-      updateData.checkOutTime,
-      updateData.status,
-      calculatedWorkingHours,
-      updateData.overtimeHours || 0,
-      updateData.remark,
-      id,
-    ]
-  );
+      [
+        updateData.attendanceDate,
+        updateData.employeeId,
+        updateData.employeeName,
+        updateData.departmentName,
+        updateData.checkInTime,
+        updateData.checkOutTime,
+        updateData.status,
+        calculatedWorkingHours,
+        updateData.overtimeHours || 0,
+        updateData.remark,
+        id,
+      ]
+    );
 
-  return successResponse(null, '考勤记录更新成功');
-}, { errorMessage: '更新考勤记录失败' });
+    return successResponse(null, '考勤记录更新成功');
+  },
+  { errorMessage: '更新考勤记录失败' }
+);
 
 // 删除考勤记录（软删除）
-export const DELETE = withPermission(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return commonErrors.badRequest('考勤记录ID不能为空');
-  }
+    if (!id) {
+      return commonErrors.badRequest('考勤记录ID不能为空');
+    }
 
-  // 检查考勤记录是否存在
-  const [attendance] = await query<{ id: number }>(
-    'SELECT id FROM hr_attendance WHERE id = ? AND deleted = 0',
-    [id]
-  );
+    // 检查考勤记录是否存在
+    const [attendance] = await query<{ id: number }>(
+      'SELECT id FROM hr_attendance WHERE id = ? AND deleted = 0',
+      [id]
+    );
 
-  if (!attendance) {
-    return commonErrors.notFound('考勤记录不存在');
-  }
+    if (!attendance) {
+      return commonErrors.notFound('考勤记录不存在');
+    }
 
-  await execute('UPDATE hr_attendance SET deleted = 1 WHERE id = ?', [id]);
+    await execute('UPDATE hr_attendance SET deleted = 1 WHERE id = ?', [id]);
 
-  return successResponse(null, '考勤记录删除成功');
-}, { errorMessage: '删除考勤记录失败' });
+    return successResponse(null, '考勤记录删除成功');
+  },
+  { errorMessage: '删除考勤记录失败' }
+);

@@ -3,7 +3,6 @@
 import { authFetch } from '@/lib/auth-fetch';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import QRCode from 'qrcode';
 import {
   ArrowUpRight,
   Package,
@@ -45,7 +44,7 @@ import {
   QrCode,
   ScanLine,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -70,7 +69,6 @@ interface OutboundRecord {
   batchNo?: string;
   batch_no?: string;
 }
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -86,7 +84,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
@@ -96,8 +93,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { MainLayout } from '@/components/layout';
 import {
   DropdownMenu,
@@ -156,7 +151,7 @@ const outboundTypeOptions = [
 // 单位选项映射到 Warehouse 命名空间的翻译键
 
 // 基础信息数据（物料主数据）
-const materials = [
+const _materials = [
   {
     id: 1,
     category: tc('text_cr294'),

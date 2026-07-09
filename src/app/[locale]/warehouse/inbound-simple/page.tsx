@@ -4,7 +4,6 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTranslations } from 'next-intl';
 
@@ -54,7 +53,7 @@ export default function SimpleInboundPage() {
     pending: tc('pending'),
     approved: tc('approved'),
     completed: tc('completed'),
-    cancelled: tc('cancelled')
+    cancelled: tc('cancelled'),
   };
 
   const statusColors: Record<string, string> = {
@@ -62,7 +61,7 @@ export default function SimpleInboundPage() {
     pending: 'bg-blue-100 text-blue-700',
     approved: 'bg-green-100 text-green-700',
     completed: 'bg-green-100 text-green-700',
-    cancelled: 'bg-gray-100 text-gray-700'
+    cancelled: 'bg-gray-100 text-gray-700',
   };
 
   return (
@@ -74,7 +73,11 @@ export default function SimpleInboundPage() {
           </CardHeader>
           <CardContent>
             {loading && <p>{t('loading')}</p>}
-            {error && <p className="text-red-600">{tc('error')}: {error}</p>}
+            {error && (
+              <p className="text-red-600">
+                {tc('error')}: {error}
+              </p>
+            )}
 
             {!loading && !error && (
               <>
@@ -91,11 +94,10 @@ export default function SimpleInboundPage() {
                         <div>
                           <p className="font-medium">{record.order_no}</p>
                           <p className="text-sm text-gray-500">
-                            {record.supplier_name} | {record.total_quantity}件
+                            {record.supplier_name} | {record.total_quantity}
+                            {tc('text_fli')}
                           </p>
-                          <p className="text-sm text-gray-400">
-                            {record.inbound_date}
-                          </p>
+                          <p className="text-sm text-gray-400">{record.inbound_date}</p>
                         </div>
                         <Badge className={statusColors[record.status] || 'bg-gray-100'}>
                           {statusLabels[record.status] || record.status}

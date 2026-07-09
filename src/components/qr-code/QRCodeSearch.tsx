@@ -13,8 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { QRCodeSVG } from 'qrcode.react';
-import { Search, ScanLine, List, Filter, X } from 'lucide-react';
+import { Search, ScanLine, List } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeTypeLabels, QRCodeStatusLabels } from './qr-code-types';
 import type { QRCodeRecord } from './qr-code-types';

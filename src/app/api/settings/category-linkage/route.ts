@@ -37,7 +37,7 @@ const TYPE_WAREHOUSE_MAPPING: Record<number, { preferred_prefix: string; preferr
 
 export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
-  const checkType = searchParams.get('checkType') || 'all';
+  const _checkType = searchParams.get('checkType') || 'all';
 
   const results: LinkageItem[] = [];
   const summary = {

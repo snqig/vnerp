@@ -1,6 +1,5 @@
 import { transaction, query } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
-import { getConfig } from '@/lib/global-config';
 
 export type VoucherSource =
   | 'sales_outbound' // 销售出库
@@ -39,13 +38,13 @@ export interface VoucherResult {
 }
 
 const VOUCHER_SOURCE_LABELS: Record<VoucherSource, string> = {
-  sales_outbound: '销售出库',
-  purchase_inbound: '采购入库',
-  production_inbound: '生产入库',
-  material_issue: '生产领料',
-  material_return: '材料退回',
-  stock_adjust: '库存调整',
-  cost_allocation: '成本分摊',
+  sales_outbound: tc('text_j5fhqf'),
+  purchase_inbound: tc('text_iyzvkk'),
+  production_inbound: tc('text_f3pz5i'),
+  material_issue: tc('text_f4243f'),
+  material_return: tc('text_dgoe07'),
+  stock_adjust: tc('text_cbhcc6'),
+  cost_allocation: tc('text_css1ls'),
 };
 
 export class FinanceVoucherHandler {

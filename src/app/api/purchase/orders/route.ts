@@ -4,7 +4,6 @@ import {
   paginatedResponse,
   errorResponse,
   commonErrors,
-  withErrorHandler,
   validateRequestBody,
 } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
@@ -13,7 +12,6 @@ import { DomainError, NotFoundError, VersionConflictError } from '@/domain/share
 import { PurchaseApplicationService } from '@/application/services/PurchaseApplicationService';
 import { RepositoryRegistry } from '@/infrastructure/RepositoryRegistry';
 import { registerEventHandlers } from '@/application/EventRegistry';
-import { PurchaseOrderStatus } from '@/domain/purchase/value-objects/PurchaseOrderStatus';
 
 function getPurchaseService(): PurchaseApplicationService {
   registerEventHandlers();

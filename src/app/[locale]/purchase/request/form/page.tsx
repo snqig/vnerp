@@ -14,17 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import {
-  ArrowLeft,
-  Printer,
-  Save,
-  Plus,
-  List,
-  ChevronDown,
-  Search,
-  Send,
-  CheckCircle,
-} from 'lucide-react';
+import { ArrowLeft, Printer, Save, List, ChevronDown, Search, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { MaterialPicker } from '@/components/ui/material-picker';

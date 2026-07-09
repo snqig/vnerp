@@ -33,14 +33,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Search, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  TableExportToolbar,
-  exportTableToXLS,
-  exportTableToPDF,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 import { SortableTableHeader, useTableSort } from '@/components/ui/sortable-table';
 import { useTranslations } from 'next-intl';
 
@@ -93,7 +86,7 @@ export default function UnqualifiedPage() {
     3: { label: 'completed', variant: 'secondary' },
   };
 
-  const exportColumns = [
+  const _exportColumns = [
     { key: 'handle_no', header: t('handleNo') },
     { key: 'material_code', header: tc('materialCode') },
     { key: 'material_name', header: tc('materialName') },

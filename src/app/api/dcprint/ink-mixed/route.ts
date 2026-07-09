@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { query, execute } from '@/lib/db';
-import { successResponse, logOperation } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { randomUUID } from 'crypto';
 import { getMrPrefix, generateDocNo } from '@/lib/global-config';
@@ -62,7 +62,7 @@ export const POST = withPermission(
       remark,
     } = body;
 
-    const now = new Date();
+    const _now = new Date();
     const recordNo = generateDocNo(getMrPrefix());
 
     const result: any = await execute(

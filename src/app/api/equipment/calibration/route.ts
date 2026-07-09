@@ -49,7 +49,7 @@ export const POST = withPermission(
       calibration_cost,
       remark,
     } = body;
-    const now = new Date();
+    const _now = new Date();
     const calibrationNo = generateDocNo(getJdPrefix());
 
     const result: any = await execute(

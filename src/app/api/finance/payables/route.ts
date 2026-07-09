@@ -1,7 +1,7 @@
 ﻿import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { generatePayable, recordPayment, queryPayableSummary } from '@/lib/finance-core';
+import { generatePayable } from '@/lib/finance-core';
 
 import { withPermission } from '@/lib/api-permissions';
 // 查询应付单列表

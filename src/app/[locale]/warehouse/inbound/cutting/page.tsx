@@ -15,20 +15,11 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, RefreshCw, FileText, Trash2, Scissors, Package, QrCode } from 'lucide-react';
+import { Search, RefreshCw, Trash2, Scissors } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from 'next-intl';
-import {
-  TableExportToolbar,
-  printTable,
-  exportTableToPDF,
-  exportTableToXLS,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 
 // 分切记录类型
 interface CuttingRecord {
@@ -89,7 +80,7 @@ export default function CuttingRecordsPage() {
   const [total, setTotal] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-  const exportColumns = [
+  const _exportColumns = [
     { key: 'recordNo', header: t('recordNoCol') },
     { key: 'sourceLabelNo', header: t('sourceLabelNoCol') },
     { key: 'materialName', header: t('materialName') },
@@ -103,7 +94,7 @@ export default function CuttingRecordsPage() {
     { key: 'cutTime', header: t('cutTime') },
     { key: tc('status'), header: tc('status') },
   ];
-  const getExportData = () =>
+  const _getExportData = () =>
     records.map((r) => ({
       recordNo: r.recordNo,
       sourceLabelNo: r.sourceLabelNo,
@@ -116,7 +107,12 @@ export default function CuttingRecordsPage() {
       remainWidth: r.remainWidth,
       operator: r.operatorName,
       cutTime: new Date(r.cutTime).toLocaleString(),
-      status: r.status === 'active' ? tc('normal') : r.status === 'frozen' ? tc('frozen') : tc('disabled'),
+      status:
+        r.status === 'active'
+          ? tc('normal')
+          : r.status === 'frozen'
+            ? tc('frozen')
+            : tc('disabled'),
     }));
 
   useEffect(() => {
@@ -240,10 +236,27 @@ export default function CuttingRecordsPage() {
                     { key: 'cutTotalWidth', label: t('cutTotalMM'), width: 12 },
                     { key: 'remainWidth', label: t('remainWidthMM'), width: 12 },
                     { key: 'operatorName', label: t('operator'), width: 10 },
-                    { key: 'cutTime', label: t('cutTime'), width: 18, formatter: (v) => new Date(v).toLocaleString() },
-                    { key: 'status', label: tc('status'), width: 10, formatter: (v) => v === 'active' ? tc('normal') : v === 'frozen' ? tc('frozen') : tc('disabled') },
+                    {
+                      key: 'cutTime',
+                      label: t('cutTime'),
+                      width: 18,
+                      formatter: (v) => new Date(v).toLocaleString(),
+                    },
+                    {
+                      key: 'status',
+                      label: tc('status'),
+                      width: 10,
+                      formatter: (v) =>
+                        v === 'active'
+                          ? tc('normal')
+                          : v === 'frozen'
+                            ? tc('frozen')
+                            : tc('disabled'),
+                    },
                   ]}
-                  data={selectedIds.size > 0 ? records.filter((r) => selectedIds.has(r.id)) : records}
+                  data={
+                    selectedIds.size > 0 ? records.filter((r) => selectedIds.has(r.id)) : records
+                  }
                 />
                 <Button variant="outline" onClick={() => setPage((prevPage) => prevPage)}>
                   <RefreshCw className="h-4 w-4 mr-2" />

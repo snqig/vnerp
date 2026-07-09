@@ -1,13 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import { query, transaction } from '@/lib/db';
+import { transaction } from '@/lib/db';
 import {
   explodeBOM,
   calculateTimeBuckets,
   calculateNetRequirements,
-  generatePlannedOrders,
-  generatePurchaseRequestsFromMRP,
   runFullMRP,
 } from '@/lib/mrp-engine';
 

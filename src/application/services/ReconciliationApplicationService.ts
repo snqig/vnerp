@@ -1,7 +1,6 @@
 import { IReconciliationRepository } from '@/domain/sales/repositories/IReconciliationRepository';
 import { IReceivableRepository } from '@/domain/finance/repositories/IReceivableRepository';
 import { Reconciliation, ReconciliationProps } from '@/domain/sales/aggregates/Reconciliation';
-import { Receivable } from '@/domain/finance/aggregates/Receivable';
 import { DomainError, NotFoundError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { transaction } from '@/lib/db';
@@ -27,7 +26,9 @@ export class ReconciliationApplicationService {
     return recon;
   }
 
-  async createReconciliation(props: ReconciliationProps): Promise<{ id: number; reconciliationNo: string }> {
+  async createReconciliation(
+    props: ReconciliationProps
+  ): Promise<{ id: number; reconciliationNo: string }> {
     const recon = Reconciliation.create(props);
     const id = await this.reconciliationRepo.save(recon);
     await this.persistAndPublishEvents('Reconciliation', id, recon);
@@ -62,9 +63,7 @@ export class ReconciliationApplicationService {
 
     const receivableBalance = receivable.balance.amount;
     if (input.amount > receivableBalance) {
-      throw new DomainError(
-        `核销金额${input.amount}超过应收单余额${receivableBalance}`
-      );
+      throw new DomainError(`核销金额${input.amount}超过应收单余额${receivableBalance}`);
     }
 
     // 调用聚合 writeOff 方法（校验对账单状态和余额）
@@ -103,12 +102,7 @@ export class ReconciliationApplicationService {
         `UPDATE sal_reconciliation
          SET received_amount = ?, balance_amount = ?, status = ?, update_time = NOW()
          WHERE id = ?`,
-        [
-          recon.receivedAmount,
-          recon.balanceAmount,
-          recon.status.value,
-          input.reconciliationId,
-        ]
+        [recon.receivedAmount, recon.balanceAmount, recon.status.value, input.reconciliationId]
       );
 
       // 更新应收单

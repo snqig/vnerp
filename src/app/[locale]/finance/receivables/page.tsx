@@ -1,6 +1,5 @@
 'use client';
 
-import { authFetch } from '@/lib/auth-fetch';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +25,7 @@ import { Label } from '@/components/ui/label';
 import { ApiClient } from '@/lib/api-client';
 import { formatDate, formatAmount } from '@/lib/utils';
 import { toast } from 'sonner';
-import { RefreshCw, Plus, DollarSign } from 'lucide-react';
+import { RefreshCw, DollarSign } from 'lucide-react';
 
 interface Receivable {
   id: number;

@@ -47,16 +47,12 @@ import {
   Eye,
   Play,
   CheckCircle,
-  Pause,
   RotateCcw,
   Factory,
   Calendar,
-  TrendingUp,
   Package,
   Clock,
   ChevronRight,
-  Printer,
-  QrCode,
 } from 'lucide-react';
 
 interface ProcessCard {

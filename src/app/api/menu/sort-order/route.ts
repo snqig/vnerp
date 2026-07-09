@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { execute, queryOne, transaction } from '@/lib/db';
+import { transaction } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { jwtVerify } from 'jose';

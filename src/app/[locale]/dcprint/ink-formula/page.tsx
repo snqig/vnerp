@@ -31,7 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Plus,
   Search,
@@ -43,7 +42,6 @@ import {
   GitCompare,
   ArrowLeft,
   DollarSign,
-  RefreshCw,
   AlertTriangle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';

@@ -31,31 +31,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Eye,
-  Award,
-  Star,
-  Printer,
-  Download,
-  FileSpreadsheet,
-  FileText,
-} from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Award, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { useTranslations } from 'next-intl';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 
 interface EvalItem {
   id?: number;
@@ -98,7 +79,11 @@ export default function SupplierEvalPage() {
   const t = useTranslations('Srm');
   const tc = useTranslations('Common');
 
-  const periodMap: Record<string, string> = { month: t('monthly'), quarter: t('quarterly'), year: t('yearly') };
+  const periodMap: Record<string, string> = {
+    month: t('monthly'),
+    quarter: t('quarterly'),
+    year: t('yearly'),
+  };
   const levelMap: Record<
     string,
     { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
@@ -552,16 +537,35 @@ export default function SupplierEvalPage() {
               columns={[
                 { key: 'eval_no', label: t('evalNo'), width: 18 },
                 { key: 'supplier_name', label: tc('supplier'), width: 20 },
-                { key: 'eval_period', label: t('evalPeriod'), width: 12, formatter: (v) => periodMap[v] || v },
+                {
+                  key: 'eval_period',
+                  label: t('evalPeriod'),
+                  width: 12,
+                  formatter: (v) => periodMap[v] || v,
+                },
                 { key: 'quality_score', label: t('qualityScore'), width: 10 },
                 { key: 'delivery_score', label: t('deliveryScore'), width: 10 },
                 { key: 'price_score', label: t('priceScore'), width: 10 },
                 { key: 'service_score', label: t('serviceScore'), width: 10 },
                 { key: 'total_score', label: t('totalScore'), width: 10 },
-                { key: 'supplier_level', label: t('level'), width: 8, formatter: (v) => levelMap[v]?.label || v },
-                { key: 'status', label: tc('status'), width: 10, formatter: (v) => evalStatusMap[v]?.label || '-' },
+                {
+                  key: 'supplier_level',
+                  label: t('level'),
+                  width: 8,
+                  formatter: (v) => levelMap[v]?.label || v,
+                },
+                {
+                  key: 'status',
+                  label: tc('status'),
+                  width: 10,
+                  formatter: (v) => evalStatusMap[v]?.label || '-',
+                },
               ]}
-              data={selectedIds.length > 0 ? records.filter((r) => r.id && selectedIds.includes(r.id)) : records}
+              data={
+                selectedIds.length > 0
+                  ? records.filter((r) => r.id && selectedIds.includes(r.id))
+                  : records
+              }
             />
           </div>
         </div>
@@ -612,8 +616,8 @@ export default function SupplierEvalPage() {
                   <TableHead>{t('serviceScore')}</TableHead>
                   <TableHead>{t('totalScore')}</TableHead>
                   <TableHead>{t('level')}</TableHead>
-                  <TableHead>{tc("status")}</TableHead>
-                  <TableHead>{tc("actions")}</TableHead>
+                  <TableHead>{tc('status')}</TableHead>
+                  <TableHead>{tc('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -702,13 +706,22 @@ export default function SupplierEvalPage() {
                   <div>
                     {t('evalNo')}: <span className="font-mono">{detailRecord.eval_no}</span>
                   </div>
-                  <div>{tc('supplier')}: {detailRecord.supplier_name}</div>
                   <div>
-                    {t('evalPeriod')}: {periodMap[detailRecord.eval_period] || detailRecord.eval_period}
+                    {tc('supplier')}: {detailRecord.supplier_name}
                   </div>
-                  <div>{t('qualityRate')}: {detailRecord.quality_rate ?? '-'}%</div>
-                  <div>{t('onTimeRate')}: {detailRecord.on_time_rate ?? '-'}%</div>
-                  <div>{t('orderCount')}: {detailRecord.order_count}</div>
+                  <div>
+                    {t('evalPeriod')}:{' '}
+                    {periodMap[detailRecord.eval_period] || detailRecord.eval_period}
+                  </div>
+                  <div>
+                    {t('qualityRate')}: {detailRecord.quality_rate ?? '-'}%
+                  </div>
+                  <div>
+                    {t('onTimeRate')}: {detailRecord.on_time_rate ?? '-'}%
+                  </div>
+                  <div>
+                    {t('orderCount')}: {detailRecord.order_count}
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
                   <Card>
@@ -992,7 +1005,7 @@ export default function SupplierEvalPage() {
               </div>
 
               <div>
-                <Label>{tc("remark")}</Label>
+                <Label>{tc('remark')}</Label>
                 <Textarea
                   value={form.remark || ''}
                   onChange={(e) => setForm({ ...form, remark: e.target.value })}
@@ -1002,9 +1015,9 @@ export default function SupplierEvalPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                取消
+                {tc('text_ev02')}
               </Button>
-              <Button onClick={handleSave}>{tc("save")}</Button>
+              <Button onClick={handleSave}>{tc('save')}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -31,11 +31,10 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { useCompanyName } from '@/hooks/useCompanyName';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -51,7 +50,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
@@ -61,8 +59,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { MainLayout } from '@/components/layout';
 import {
   DropdownMenu,
@@ -581,7 +577,7 @@ export default function AttendancePage() {
   const normalRecords = attendanceRecords.filter((r) => r.status === 'normal').length;
   const lateRecords = attendanceRecords.filter((r) => r.status === 'late').length;
   const absentRecords = attendanceRecords.filter((r) => r.status === 'absent').length;
-  const leaveRecords = attendanceRecords.filter((r) => r.status === 'leave').length;
+  const _leaveRecords = attendanceRecords.filter((r) => r.status === 'leave').length;
   const attendanceRate =
     totalRecords > 0 ? Math.round(((totalRecords - absentRecords) / totalRecords) * 100) : 0;
 

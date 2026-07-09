@@ -15,7 +15,7 @@
  * 原始 raw SQL 版本仍保留运行（未删除），便于对比验证。
  */
 
-import { eq, and, like, or, gte, lte, desc, inArray, sql, count } from 'drizzle-orm';
+import { eq, and, like, or, gte, lte, desc, inArray, count } from 'drizzle-orm';
 import { drizzleDb } from '@/lib/db';
 import { invInboundOrders, invInboundItems } from '@/lib/db/schema';
 import { transaction } from '@/lib/db';

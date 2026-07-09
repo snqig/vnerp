@@ -1,6 +1,5 @@
-import { execute, query, getPool } from '@/lib/db';
+import { execute, query } from '@/lib/db';
 import { DomainEvent } from '@/domain/shared/DomainTypes';
-import { secureLog } from '@/lib/logger';
 
 export class DomainEventOutbox {
   static async saveEvents(

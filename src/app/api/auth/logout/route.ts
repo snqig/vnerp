@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { successResponse, withErrorHandler } from '@/lib/api-response';
+import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { UserInfo } from '@/lib/auth';
 import { revokeToken, removeRefreshToken } from '@/lib/token-blacklist';

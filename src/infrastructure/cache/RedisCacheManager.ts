@@ -1,4 +1,4 @@
-import Redis, { type Callback } from 'ioredis';
+import Redis from 'ioredis';
 import type { CacheManager } from './CacheManager';
 import { secureLog } from '@/lib/logger';
 

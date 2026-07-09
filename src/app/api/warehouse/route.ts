@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import mysql from 'mysql2/promise';
-import { query, execute, queryOne, transaction } from '@/lib/db';
+import { query, queryOne, transaction } from '@/lib/db';
 import {
   successResponse,
   errorResponse,

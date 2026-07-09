@@ -33,14 +33,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  TableExportToolbar,
   printTable,
   exportTableToPDF,
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 import { Plus, Search, Edit, Trash2, Printer, QrCode } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import QRCode from 'qrcode';
@@ -270,10 +268,10 @@ export default function ProductLabelPage() {
     }));
 
   const handlePrint = () => printTable(getExportData(), exportColumns, '成品标签');
-  const handleExportPDF = () =>
+  const _handleExportPDF = () =>
     exportTableToPDF(getExportData(), '成品标签', exportColumns, '成品标签');
   const handleExportXLS = () => exportTableToXLS(getExportData(), '成品标签', exportColumns);
-  const handleExportWORD = () =>
+  const _handleExportWORD = () =>
     exportTableToWORD(getExportData(), '成品标签', exportColumns, '成品标签');
 
   return (

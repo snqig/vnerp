@@ -656,7 +656,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       const pIdx = i % productIds.length;
       const stage = lifecycleStages[i % lifecycleStages.length];
       const effectiveDate = randomDate(yearStart, now);
-      const user = users[i % users.length];
+      const _user = users[i % users.length];
       await conn.execute(
         `INSERT INTO plm_product_lifecycle (product_id, product_code, product_name, lifecycle_stage, stage_status, version, change_type, change_reason, change_desc, approver, approve_time, effective_date, remark, create_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [

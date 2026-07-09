@@ -24,7 +24,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   Plus,
-  Search,
   MoreHorizontal,
   Edit,
   Trash2,
@@ -33,8 +32,6 @@ import {
   CheckCircle,
   XCircle,
   Printer,
-  Download,
-  FileSpreadsheet,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
@@ -47,7 +44,6 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { SearchInput } from '@/components/ui/search-input';
 import { useCompanyName } from '@/hooks/useCompanyName';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 
 interface PurchaseRequest {
   id: number;

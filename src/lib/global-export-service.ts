@@ -31,8 +31,16 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
-  Document, Packer, Paragraph, Table, TableCell, TableRow,
-  TextRun, HeadingLevel, AlignmentType, WidthType,
+  Document,
+  Packer,
+  Paragraph,
+  Table,
+  TableCell,
+  TableRow,
+  TextRun,
+  HeadingLevel,
+  AlignmentType,
+  WidthType,
 } from 'docx';
 import { saveAs } from 'file-saver';
 
@@ -205,12 +213,15 @@ class GlobalExportServiceClass {
       alternateRowStyles: {
         fillColor: [245, 247, 250],
       },
-      columnStyles: columns.reduce((acc, col, idx) => {
-        if (col.width) {
-          acc[idx] = { cellWidth: col.width };
-        }
-        return acc;
-      }, {} as Record<number, { cellWidth: number }>),
+      columnStyles: columns.reduce(
+        (acc, col, idx) => {
+          if (col.width) {
+            acc[idx] = { cellWidth: col.width };
+          }
+          return acc;
+        },
+        {} as Record<number, { cellWidth: number }>
+      ),
     });
 
     // 页脚
@@ -337,14 +348,14 @@ class GlobalExportServiceClass {
 
   async exportToCSV(options: ExportOptions): Promise<void> {
     const { filename, columns, data, exportTime } = options;
-    const now = exportTime || new Date();
+    const _now = exportTime || new Date();
 
     const header = columns.map((c) => this.escapeCSV(c.label)).join(',');
     const rows = data.map((row) =>
       columns
         .map((col) => {
           const rawValue = row[col.key];
-          const value = col.formatter ? col.formatter(rawValue, row) : rawValue ?? '';
+          const value = col.formatter ? col.formatter(rawValue, row) : (rawValue ?? '');
           return this.escapeCSV(String(value));
         })
         .join(',')
@@ -364,7 +375,7 @@ class GlobalExportServiceClass {
 
     const printWindow = window.open('', '_blank', 'width=1024,height=768');
     if (!printWindow) {
-      alert('请允许弹出窗口以使用打印功能');
+      alert(tc('text_7rjfzi'));
       return;
     }
 
@@ -375,7 +386,7 @@ class GlobalExportServiceClass {
           `<tr>${columns
             .map((col) => {
               const rawValue = row[col.key];
-              const value = col.formatter ? col.formatter(rawValue, row) : rawValue ?? '';
+              const value = col.formatter ? col.formatter(rawValue, row) : (rawValue ?? '');
               return `<td>${value}</td>`;
             })
             .join('')}</tr>`
@@ -387,7 +398,7 @@ class GlobalExportServiceClass {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>${title || '打印'}</title>
+        <title>${title || tc('text_h6kd')}</title>
         <style>
           @page { size: A4; margin: 15mm; }
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a2e; }

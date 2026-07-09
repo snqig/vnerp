@@ -16,15 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  QrCode,
-  Search,
-  FileText,
-  Printer,
-  CheckCircle,
-  AlertCircle,
-  RefreshCw,
-} from 'lucide-react';
+import { QrCode, Search, Printer, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 // 追溯结果类型

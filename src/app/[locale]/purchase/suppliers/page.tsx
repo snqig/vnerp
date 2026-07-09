@@ -33,7 +33,6 @@ import {
 } from '@/components/ui/dialog';
 import {
   Plus,
-  Search,
   Edit,
   Trash2,
   Star,
@@ -41,9 +40,6 @@ import {
   Loader2,
   RefreshCw,
   Printer,
-  Download,
-  FileSpreadsheet,
-  FileText,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
@@ -51,16 +47,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCompanyName } from '@/hooks/useCompanyName';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { useDebounce } from '@/hooks/use-debounce';
 import { SearchInput } from '@/components/ui/search-input';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 
 interface Supplier {
   id: number;

@@ -30,21 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Plus, Search, Trash2, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { useTranslations } from 'next-intl';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  TableExportToolbar,
-  printTable,
-  exportTableToPDF,
-  exportTableToXLS,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 
 interface OutsourceIssue {
   id: number;
@@ -97,7 +88,7 @@ export default function OutsourceIssuePage() {
   const [materials, setMaterials] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-  const exportColumns = [
+  const _exportColumns = [
     { key: t('issueNo'), header: t('issueNo') },
     { key: t('orderNo'), header: t('orderNo') },
     { key: tc('warehouse'), header: tc('warehouse') },
@@ -106,7 +97,7 @@ export default function OutsourceIssuePage() {
     { key: t('operatorName'), header: t('operatorName') },
     { key: tc('status'), header: tc('status') },
   ];
-  const getExportData = () =>
+  const _getExportData = () =>
     list.map((item) => ({
       [t('issueNo')]: item.issue_no,
       [t('orderNo')]: item.outsource_order_no || '-',

@@ -3,7 +3,7 @@
  * @description 该模块提供总账核心功能，包括会计凭证的创建、审核、记账，
  * 科目余额计算、资产负债表与利润表生成，以及期末损益结转等会计核算流程。
  */
-import { query, execute, getConnection, transaction } from '@/lib/db';
+import { getConnection } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import { roundAmount as roundAmountUtil } from '@/lib/decimal-utils';
 import type { RowDataPacket, ResultSetHeader } from 'mysql2/promise';

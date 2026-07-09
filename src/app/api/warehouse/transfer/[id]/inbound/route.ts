@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { query, execute, queryOne } from '@/lib/db';
+import { execute, queryOne } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 import { getTrPrefix, generateDocNo } from '@/lib/global-config';

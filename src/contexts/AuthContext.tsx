@@ -142,7 +142,7 @@ export function AuthProvider({
   const abortControllerRef = useRef<AbortController | null>(null);
   const menusCountRef = useRef(0);
   /** 后台刷新标记：避免重复触发 */
-  const backgroundRefreshDone = useRef(false);
+  const _backgroundRefreshDone = useRef(false);
   /** 缓存 initialAuth 引用，供 useEffect 中判断是否跳过首次 fetch */
   const initialAuthRef = useRef<InitialAuthData | null | undefined>(initialAuth);
 

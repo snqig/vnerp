@@ -23,7 +23,7 @@ async function refreshAccessToken(): Promise<string | null> {
     return null;
   }
 
-  const startTime = Date.now();
+  const _startTime = Date.now();
 
   refreshPromise = (async () => {
     try {

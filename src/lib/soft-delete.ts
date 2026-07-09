@@ -6,7 +6,7 @@
 
 import { escapeId } from 'mysql2';
 import { query, execute, transaction } from '@/lib/db';
-import { logDocumentCancel, logOperation, logDataChange } from '@/lib/audit-logger';
+import { logDocumentCancel, logOperation } from '@/lib/audit-logger';
 import { createSnapshot } from '@/lib/data-diff';
 
 /**

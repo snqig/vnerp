@@ -4,7 +4,7 @@
  * 按批次入库时间排序依次分配数量，使用 Decimal 保证金额精度，
  * 内置乐观锁冲突重试机制与缺料预警，支持事务化的多物料批量出库和指定批次出库。
  */
-import { query, execute, transaction } from './db';
+import { query, transaction } from './db';
 import Decimal from 'decimal.js';
 
 /**

@@ -39,7 +39,6 @@ import {
 } from '@/components/ui/select';
 import {
   Plus,
-  Search,
   MoreHorizontal,
   Edit,
   Trash2,

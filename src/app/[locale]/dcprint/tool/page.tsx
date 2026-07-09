@@ -40,9 +40,7 @@ import {
   Play,
   Wrench,
   Ban,
-  RefreshCw,
   AlertTriangle,
-  CheckCircle,
   Activity,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';

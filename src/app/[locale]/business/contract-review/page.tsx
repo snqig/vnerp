@@ -34,15 +34,13 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  TableExportToolbar,
   printTable,
   exportTableToPDF,
   exportTableToXLS,
   exportTableToWORD,
 } from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
-import { Plus, Search, Edit, Trash2, FileCheck, Upload, FileText, X } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Upload, FileText, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
 

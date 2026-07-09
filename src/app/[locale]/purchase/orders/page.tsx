@@ -40,20 +40,15 @@ import {
 } from '@/components/ui/select';
 import {
   Plus,
-  Search,
   MoreHorizontal,
   Eye,
-  Edit,
   Trash2,
   ShoppingCart,
   Send,
   FileText,
-  Download,
   RefreshCw,
   ChevronDown,
   ChevronRight,
-  FileSpreadsheet,
-  FileDown,
   Printer,
   ArrowUpDown,
   ArrowUp,
@@ -66,9 +61,7 @@ import { useCompanyName } from '@/hooks/useCompanyName';
 import ApiClient from '@/lib/api-client';
 import { logger } from '@/lib/logger';
 import { mockPurchaseOrders, mockSuppliers, USE_MOCK } from '@/lib/mock-data';
-import { authFetch } from '@/lib/auth-fetch';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 
 interface PurchaseOrder {
   id: number;

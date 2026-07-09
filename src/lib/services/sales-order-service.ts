@@ -20,7 +20,7 @@ export async function createWorkOrderFromSalesOrder(
       throw new Error('销售订单不存在');
     }
 
-    const salesOrder = salesRows[0];
+    const _salesOrder = salesRows[0];
 
     const [orderItems]: any = await conn.execute(
       `SELECT material_id, material_name, quantity FROM sal_order_detail WHERE order_id = ? AND deleted = 0 LIMIT 1`,

@@ -32,7 +32,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import { SearchInput } from '@/components/ui/search-input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -45,21 +44,15 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import {
   Plus,
-  Search,
   MoreHorizontal,
   Eye,
-  Edit,
   Play,
-  Pause,
-  QrCode,
   Factory,
-  AlertTriangle,
   CheckCircle,
   Clock,
   Package,
   TrendingUp,
   Filter,
-  Download,
   Printer,
   Trash2,
   ArrowUpDown,

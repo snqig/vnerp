@@ -3,9 +3,12 @@
  * @description 该模块提供生产成本核算核心功能，包括移动加权平均法、全月一次加权平均法、
  * 标准成本差异分析等成本计算方法，以及产品成本卷积（BOM 材料成本 + 人工成本 + 制造费用 + 委外费用）核算。
  */
-import { query, execute, getConnection } from '@/lib/db';
-import { secureLog } from '@/lib/logger';
-import { roundTo as roundToUtil, roundPrice as roundPriceUtil, roundAmount as roundAmountUtil } from '@/lib/decimal-utils';
+import { getConnection } from '@/lib/db';
+import {
+  roundTo as roundToUtil,
+  roundPrice as roundPriceUtil,
+  roundAmount as roundAmountUtil,
+} from '@/lib/decimal-utils';
 import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
 
 /** 成本计算方法：移动加权平均、全月加权平均、标准成本 */

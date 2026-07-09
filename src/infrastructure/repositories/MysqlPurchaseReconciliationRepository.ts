@@ -7,7 +7,6 @@ import {
 import {
   PurchaseReconciliation,
   PurchaseReconciliationProps,
-  PurchaseReconciliationLineProps,
 } from '@/domain/purchase/aggregates/PurchaseReconciliation';
 import { PurchaseWriteOffRecordProps } from '@/domain/purchase/entities/PurchaseWriteOffRecord';
 import { PurchaseReconciliationStatusValue } from '@/domain/purchase/value-objects/PurchaseReconciliationStatus';

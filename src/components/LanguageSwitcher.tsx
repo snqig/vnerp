@@ -18,7 +18,7 @@ export function LanguageSwitcher() {
   const pathname = usePathname();
 
   const handleLocaleChange = (newLocale: string) => {
-    const oldLocale = locale;
+    const _oldLocale = locale;
     router.replace(pathname, { locale: newLocale as Locale });
   };
 
@@ -32,10 +32,7 @@ export function LanguageSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {locales.map((l) => (
-          <DropdownMenuItem
-            key={l}
-            onClick={() => handleLocaleChange(l)}
-          >
+          <DropdownMenuItem key={l} onClick={() => handleLocaleChange(l)}>
             {localeNames[l]}
             {locale === l && <span className="ml-auto text-primary">✓</span>}
           </DropdownMenuItem>

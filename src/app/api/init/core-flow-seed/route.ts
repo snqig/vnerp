@@ -134,7 +134,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
     const whMap: Record<string, number> = {};
     for (let i = 0; i < whNames.length; i++) {
-      const cat = whCats[i % whCats.length];
+      const _cat = whCats[i % whCats.length];
       await conn.execute(
         `INSERT INTO inv_warehouse (warehouse_code, warehouse_name, warehouse_type, province, city, address, manager_id, contact_phone, status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
@@ -253,7 +253,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const materials = Object.values(matInfoMap);
     const mainMats = materials.filter((m: any) => m.cat_type === 1);
     const inkMats = materials.filter((m: any) => m.cat_type === 2);
-    const auxMats = materials.filter((m: any) => m.cat_type === 3);
+    const _auxMats = materials.filter((m: any) => m.cat_type === 3);
     const productMats = materials.filter((m: any) => m.cat_type === 4);
 
     // ===== 重建基础数据：客户 =====
@@ -366,7 +366,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       customerProductMap[customers[i].id] = productNames[i % productNames.length];
     }
 
-    const BATCH_SIZE = 50;
+    const _BATCH_SIZE = 50;
     const TOTAL_ORDERS = 50;
 
     // ===== 1. 销售订单 (sal_order + sal_order_detail) =====
@@ -937,7 +937,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     // ===== 9. 成品入库 (inv_production_inbound + inv_production_inbound_item + prd_product_label) =====
     for (let i = 1; i <= 30; i++) {
       const wo = woData[(i - 1) % woData.length];
-      const card = cardData[(i - 1) % cardData.length];
+      const _card = cardData[(i - 1) % cardData.length];
       const inboundDate = randomDate(yearStart, now);
       const prodQty = Math.round(wo.qty * randomAmount(0.5, 1.0));
       const prodMat = productMats[(i - 1) % productMats.length];

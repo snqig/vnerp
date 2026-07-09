@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   ArrowRight,
   Database,
@@ -220,21 +219,21 @@ const moduleGroups: ModuleGroup[] = [
     color: 'text-slate-400',
     bgColor: 'bg-slate-500/10',
     tables: [
-      { name: 'sys_user', comment: '用户表', fks: ['department_id → sys_department'] },
-      { name: 'sys_department', comment: '部门表', fks: [] },
-      { name: 'sys_role', comment: '角色表', fks: [] },
+      { name: 'sys_user', comment: tc('text_hn7sp'), fks: ['department_id → sys_department'] },
+      { name: 'sys_department', comment: tc('text_lyc14'), fks: [] },
+      { name: 'sys_role', comment: tc('text_ktnrc'), fks: [] },
       {
         name: 'sys_user_role',
-        comment: '用户角色关联',
+        comment: tc('text_tzwh1s'),
         fks: ['user_id → sys_user', 'role_id → sys_role'],
       },
-      { name: 'sys_menu', comment: '菜单表', fks: [] },
-      { name: 'sys_role_menu', comment: '角色菜单关联', fks: [] },
-      { name: 'sys_operation_log', comment: '操作日志', fks: [] },
-      { name: 'sys_login_log', comment: '登录日志', fks: [] },
-      { name: 'sys_dict_type', comment: '字典类型', fks: [] },
-      { name: 'sys_dict_data', comment: '字典数据', fks: [] },
-      { name: 'sys_config', comment: '系统配置', fks: [] },
+      { name: 'sys_menu', comment: tc('text_jq7pr'), fks: [] },
+      { name: 'sys_role_menu', comment: tc('text_sdy5uu'), fks: [] },
+      { name: 'sys_operation_log', comment: tc('text_d1tfy9'), fks: [] },
+      { name: 'sys_login_log', comment: tc('text_fcfmmk'), fks: [] },
+      { name: 'sys_dict_type', comment: tc('text_bv9usx'), fks: [] },
+      { name: 'sys_dict_data', comment: tc('text_bv601r'), fks: [] },
+      { name: 'sys_config', comment: tc('text_garzt1'), fks: [] },
     ],
   },
   {
@@ -243,9 +242,17 @@ const moduleGroups: ModuleGroup[] = [
     color: 'text-pink-400',
     bgColor: 'bg-pink-500/10',
     tables: [
-      { name: 'crm_customer', comment: '客户表', fks: [] },
-      { name: 'crm_customer_contact', comment: '客户联系人', fks: ['customer_id → crm_customer'] },
-      { name: 'crm_customer_follow_up', comment: '客户跟进', fks: ['customer_id → crm_customer'] },
+      { name: 'crm_customer', comment: tc('text_dwmr7'), fks: [] },
+      {
+        name: 'crm_customer_contact',
+        comment: tc('text_g1y9ha'),
+        fks: ['customer_id → crm_customer'],
+      },
+      {
+        name: 'crm_customer_follow_up',
+        comment: tc('text_bz5bap'),
+        fks: ['customer_id → crm_customer'],
+      },
     ],
   },
   {
@@ -254,10 +261,10 @@ const moduleGroups: ModuleGroup[] = [
     color: 'text-indigo-400',
     bgColor: 'bg-indigo-500/10',
     tables: [
-      { name: 'pur_supplier', comment: '供应商表', fks: [] },
+      { name: 'pur_supplier', comment: tc('text_afqgaj'), fks: [] },
       {
         name: 'pur_supplier_material',
-        comment: '供应商物料',
+        comment: tc('text_vlvffn'),
         fks: ['supplier_id → pur_supplier', 'material_id → inv_material'],
       },
     ],
@@ -268,17 +275,21 @@ const moduleGroups: ModuleGroup[] = [
     color: 'text-teal-400',
     bgColor: 'bg-teal-500/10',
     tables: [
-      { name: 'inv_material_category', comment: '物料分类', fks: [] },
-      { name: 'inv_material', comment: '物料表', fks: ['category_id → inv_material_category'] },
-      { name: 'inv_warehouse', comment: '仓库表', fks: [] },
+      { name: 'inv_material_category', comment: tc('text_eus3np'), fks: [] },
+      {
+        name: 'inv_material',
+        comment: tc('text_h9b88'),
+        fks: ['category_id → inv_material_category'],
+      },
+      { name: 'inv_warehouse', comment: tc('text_c0h1k'), fks: [] },
       {
         name: 'inv_inventory',
-        comment: '库存表',
+        comment: tc('text_eaz1f'),
         fks: ['material_id → inv_material', 'warehouse_id → inv_warehouse'],
       },
       {
         name: 'inv_inventory_log',
-        comment: '库存日志',
+        comment: tc('text_cbattj'),
         fks: ['material_id → inv_material', 'warehouse_id → inv_warehouse'],
       },
     ],
@@ -289,24 +300,24 @@ const moduleGroups: ModuleGroup[] = [
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/10',
     tables: [
-      { name: 'pur_request', comment: '采购申请', fks: [] },
+      { name: 'pur_request', comment: tc('text_iz67sa'), fks: [] },
       {
         name: 'pur_request_detail',
-        comment: '采购申请明细',
+        comment: tc('text_i0i7tq'),
         fks: ['request_id → pur_request', 'material_id → inv_material'],
       },
-      { name: 'pur_order', comment: '采购订单', fks: ['supplier_id → pur_supplier'] },
+      { name: 'pur_order', comment: tc('text_iz9pyx'), fks: ['supplier_id → pur_supplier'] },
       {
         name: 'pur_order_detail',
-        comment: '采购订单明细',
+        comment: tc('text_fexslr'),
         fks: ['order_id → pur_order', 'material_id → inv_material'],
       },
       {
         name: 'pur_receipt',
-        comment: '采购收货',
+        comment: tc('text_iz3i47'),
         fks: ['order_id → pur_order', 'supplier_id → pur_supplier', 'warehouse_id → inv_warehouse'],
       },
-      { name: 'pur_receipt_detail', comment: '收货明细', fks: [] },
+      { name: 'pur_receipt_detail', comment: tc('text_dcqind'), fks: [] },
     ],
   },
   {
@@ -315,18 +326,18 @@ const moduleGroups: ModuleGroup[] = [
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/10',
     tables: [
-      { name: 'sal_order', comment: '销售订单', fks: ['customer_id → crm_customer'] },
+      { name: 'sal_order', comment: tc('text_j5p8kh'), fks: ['customer_id → crm_customer'] },
       {
         name: 'sal_order_detail',
-        comment: '销售订单明细',
+        comment: tc('text_e71kux'),
         fks: ['order_id → sal_order', 'material_id → inv_material'],
       },
       {
         name: 'sal_delivery',
-        comment: '销售发货',
+        comment: tc('text_j5g278'),
         fks: ['order_id → sal_order', 'customer_id → crm_customer', 'warehouse_id → inv_warehouse'],
       },
-      { name: 'sal_delivery_detail', comment: '发货明细', fks: [] },
+      { name: 'sal_delivery_detail', comment: tc('text_b5r626'), fks: [] },
     ],
   },
   {
@@ -335,16 +346,16 @@ const moduleGroups: ModuleGroup[] = [
     color: 'text-orange-400',
     bgColor: 'bg-orange-500/10',
     tables: [
-      { name: 'prd_standard_card', comment: '标准工艺卡', fks: [] },
+      { name: 'prd_standard_card', comment: tc('text_8q6reb'), fks: [] },
       {
         name: 'prd_work_order',
-        comment: '生产工单',
+        comment: tc('text_f3s1h4'),
         fks: ['sales_order_id → sal_order', 'material_id → inv_material'],
       },
-      { name: 'prd_bom', comment: 'BOM表', fks: ['material_id → inv_material'] },
+      { name: 'prd_bom', comment: tc('text_18ki0'), fks: ['material_id → inv_material'] },
       {
         name: 'prd_bom_detail',
-        comment: 'BOM明细',
+        comment: tc('text_128i6w'),
         fks: ['bom_id → prd_bom', 'material_id → inv_material'],
       },
     ],
@@ -355,13 +366,13 @@ const moduleGroups: ModuleGroup[] = [
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/10',
     tables: [
-      { name: 'inv_inbound_order', comment: '入库单', fks: [] },
-      { name: 'inv_outbound_order', comment: '出库单', fks: [] },
-      { name: 'inv_transfer_order', comment: '调拨单', fks: [] },
-      { name: 'inv_material_label', comment: '物料标签', fks: [] },
-      { name: 'inv_cutting_record', comment: '分切记录', fks: [] },
-      { name: 'inv_scan_log', comment: '扫码日志', fks: [] },
-      { name: 'inv_stocktaking', comment: '盘点记录', fks: [] },
+      { name: 'inv_inbound_order', comment: tc('text_cdqh3'), fks: [] },
+      { name: 'inv_outbound_order', comment: tc('text_cgsyk'), fks: [] },
+      { name: 'inv_transfer_order', comment: tc('text_kzk4w'), fks: [] },
+      { name: 'inv_material_label', comment: tc('text_euvu7b'), fks: [] },
+      { name: 'inv_cutting_record', comment: tc('text_ap4js6'), fks: [] },
+      { name: 'inv_scan_log', comment: tc('text_cwy9e0'), fks: [] },
+      { name: 'inv_stocktaking', comment: tc('text_fgt4xy'), fks: [] },
     ],
   },
   {
@@ -370,9 +381,9 @@ const moduleGroups: ModuleGroup[] = [
     color: 'text-rose-400',
     bgColor: 'bg-rose-500/10',
     tables: [
-      { name: 'qc_inspection', comment: '检验记录', fks: [] },
-      { name: 'qc_unqualified', comment: '不合格记录', fks: [] },
-      { name: 'inv_trace_record', comment: '追溯记录', fks: [] },
+      { name: 'qc_inspection', comment: tc('text_duxvn5'), fks: [] },
+      { name: 'qc_unqualified', comment: tc('text_w3eqna'), fks: [] },
+      { name: 'inv_trace_record', comment: tc('text_imokfr'), fks: [] },
     ],
   },
   {
@@ -383,15 +394,15 @@ const moduleGroups: ModuleGroup[] = [
     tables: [
       {
         name: 'fin_receivable',
-        comment: '应收款',
+        comment: tc('text_ecifw'),
         fks: ['customer_id → crm_customer', 'source_id → sal_order'],
       },
       {
         name: 'fin_payable',
-        comment: '应付款',
+        comment: tc('text_e8ph6'),
         fks: ['supplier_id → pur_supplier', 'source_id → pur_order'],
       },
-      { name: 'fin_receipt_record', comment: '收款记录', fks: [] },
+      { name: 'fin_receipt_record', comment: tc('text_d7xxt9'), fks: [] },
     ],
   },
   {
@@ -400,9 +411,9 @@ const moduleGroups: ModuleGroup[] = [
     color: 'text-violet-400',
     bgColor: 'bg-violet-500/10',
     tables: [
-      { name: 'hr_employee', comment: '员工表', fks: [] },
-      { name: 'hr_attendance', comment: '考勤记录', fks: [] },
-      { name: 'hr_training', comment: '培训记录', fks: [] },
+      { name: 'hr_employee', comment: tc('text_ctgmz'), fks: [] },
+      { name: 'hr_attendance', comment: tc('text_gi2g86'), fks: [] },
+      { name: 'hr_training', comment: tc('text_bol01l'), fks: [] },
     ],
   },
   {
@@ -411,9 +422,9 @@ const moduleGroups: ModuleGroup[] = [
     color: 'text-lime-400',
     bgColor: 'bg-lime-500/10',
     tables: [
-      { name: 'eqp_equipment', comment: '设备表', fks: [] },
-      { name: 'eqp_maintenance_record', comment: '保养记录', fks: [] },
-      { name: 'eqp_repair', comment: '维修记录', fks: [] },
+      { name: 'eqp_equipment', comment: tc('text_kwqyn'), fks: [] },
+      { name: 'eqp_maintenance_record', comment: tc('text_af8k83'), fks: [] },
+      { name: 'eqp_repair', comment: tc('text_gctspr'), fks: [] },
     ],
   },
 ];
@@ -451,7 +462,7 @@ const architectureLayers = [
     items: [
       { name: 'Next.js App Router', desc: 'Pages & Layouts', icon: LayoutGrid },
       { name: 'React Components', desc: 'UI/UX', icon: Cog },
-      { name: 'Tailwind CSS + shadcn/ui', desc: '样式系统', icon: Palette },
+      { name: 'Tailwind CSS + shadcn/ui', desc: tc('text_djqe4c'), icon: Palette },
       { name: 'framer-motion', desc: 'Animations', icon: Workflow },
     ],
   },
@@ -464,10 +475,10 @@ const architectureLayers = [
     textColor: 'text-cyan-400',
     items: [
       { name: 'Next.js Route Handlers', desc: '/api/*', icon: Server },
-      { name: 'RESTful API Endpoints', desc: '接口规范', icon: Link2 },
-      { name: 'JWT Authentication', desc: '认证中间件', icon: Lock },
+      { name: 'RESTful API Endpoints', desc: tc('text_cxelul'), icon: Link2 },
+      { name: 'JWT Authentication', desc: tc('text_4agksu'), icon: Lock },
       { name: 'Permission Middleware', desc: 'RBAC', icon: Shield },
-      { name: 'Zod Schema Validation', desc: '数据校验', icon: CheckSquare },
+      { name: 'Zod Schema Validation', desc: tc('text_d7o1zd'), icon: CheckSquare },
     ],
   },
   {
@@ -478,11 +489,11 @@ const architectureLayers = [
     borderColor: 'border-purple-500/40',
     textColor: 'text-purple-400',
     items: [
-      { name: 'Work Order State Machine', desc: '工单状态机', icon: Workflow },
-      { name: 'FIFO/FEFO Inventory', desc: '库存分配策略', icon: BarChart3 },
+      { name: 'Work Order State Machine', desc: tc('text_mylri7'), icon: Workflow },
+      { name: 'FIFO/FEFO Inventory', desc: tc('text_us4vgl'), icon: BarChart3 },
       { name: 'Label Service', desc: 'ZPL/Thermal', icon: QrCode },
-      { name: 'Production Scheduling', desc: '生产排程引擎', icon: Factory },
-      { name: 'Operation Logging', desc: '操作日志服务', icon: FileText },
+      { name: 'Production Scheduling', desc: tc('text_qggta2'), icon: Factory },
+      { name: 'Operation Logging', desc: tc('text_uxgwzv'), icon: FileText },
     ],
   },
   {
@@ -493,10 +504,10 @@ const architectureLayers = [
     borderColor: 'border-emerald-500/40',
     textColor: 'text-emerald-400',
     items: [
-      { name: 'MySQL2 Driver', desc: '数据库驱动', icon: Database },
+      { name: 'MySQL2 Driver', desc: tc('text_gmckgk'), icon: Database },
       { name: 'Transaction Helper', desc: 'with FOR UPDATE', icon: Lock },
       { name: 'Optimistic Locking', desc: 'version field', icon: Shield },
-      { name: 'Connection Pool', desc: '连接池管理', icon: Server },
+      { name: 'Connection Pool', desc: tc('text_7aneny'), icon: Server },
     ],
   },
   {
@@ -508,9 +519,9 @@ const architectureLayers = [
     textColor: 'text-rose-400',
     items: [
       { name: 'MySQL 8.0', desc: 'vnerpdacahng', icon: Database },
-      { name: '48 Business Tables', desc: '业务表', icon: Table },
-      { name: 'InnoDB Engine', desc: '存储引擎', icon: Cog },
-      { name: 'utf8mb4 Charset', desc: '字符集', icon: FileText },
+      { name: '48 Business Tables', desc: tc('text_bumpt'), icon: Table },
+      { name: 'InnoDB Engine', desc: tc('text_bv1a5l'), icon: Cog },
+      { name: 'utf8mb4 Charset', desc: tc('text_dzenr'), icon: FileText },
     ],
   },
 ];
@@ -680,7 +691,8 @@ function ModuleGroupSection({
         </div>
         <span className="font-semibold text-sm">{t(group.nameKey)}</span>
         <Badge variant="secondary" className="text-[10px] h-4">
-          {group.tables.length} 表
+          {group.tables.length}
+          {tc('text_qy0')}
         </Badge>
         <div className="ml-auto">
           {open ? (
@@ -802,24 +814,22 @@ export default function FlowPage() {
       <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">{t('flowVisualization')}</h2>
-          <p className="text-muted-foreground mt-1">
-            丝网印刷ERP系统 — 业务链路、表间关联与系统架构全景视图
-          </p>
+          <p className="text-muted-foreground mt-1">{tc('text_8ztv1l')}</p>
         </div>
 
         <Tabs defaultValue="flow" className="space-y-4">
           <TabsList>
             <TabsTrigger value="flow" className="gap-1.5">
               <Workflow className="h-4 w-4" />
-              业务流转链路
+              {tc('text_1tx85f')}
             </TabsTrigger>
             <TabsTrigger value="relation" className="gap-1.5">
               <Database className="h-4 w-4" />
-              表间关联关系
+              {tc('text_cdkdpx')}
             </TabsTrigger>
             <TabsTrigger value="architecture" className="gap-1.5">
               <Layers className="h-4 w-4" />
-              系统架构层次
+              {tc('text_vkmkj5')}
             </TabsTrigger>
           </TabsList>
 
@@ -828,7 +838,7 @@ export default function FlowPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Workflow className="h-5 w-5 text-blue-400" />
-                  丝网印刷生产业务流转链路
+                  {tc('text_e7rmh2')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -849,7 +859,7 @@ export default function FlowPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Link2 className="h-5 w-5 text-amber-400" />
-                  关键字段贯穿路径
+                  {tc('text_xfn0e6')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -865,9 +875,9 @@ export default function FlowPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Database className="h-5 w-5 text-cyan-400" />
-                  业务表模块分组
+                  {tc('text_fwp8b9')}
                   <Badge variant="secondary" className="ml-2">
-                    48 张表 · 12 个模块
+                    {tc('text_zfh2km')}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -890,9 +900,10 @@ export default function FlowPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Link2 className="h-5 w-5 text-amber-400" />
-                  外键关联清单
+                  {tc('text_r74iix')}
                   <Badge variant="secondary" className="ml-2">
-                    {fkConnections.length} 条关联
+                    {fkConnections.length}
+                    {tc('text_fjo82')}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -917,7 +928,7 @@ export default function FlowPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Layers className="h-5 w-5 text-purple-400" />
-                  系统架构层次图
+                  {tc('text_fo4lzn')}
                 </CardTitle>
               </CardHeader>
               <CardContent>

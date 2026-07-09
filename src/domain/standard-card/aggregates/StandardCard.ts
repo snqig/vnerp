@@ -1,4 +1,4 @@
-import { StandardCardStatus, canTransition } from '../value-objects/StandardCardStatus';
+import { StandardCardStatus } from '../value-objects/StandardCardStatus';
 import { StandardCardType, getTypePrefix } from '../value-objects/StandardCardType';
 import { ColorStandardItem } from '../entities/ColorStandardItem';
 import { ProcessStandardItem } from '../entities/ProcessStandardItem';

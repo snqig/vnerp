@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { query, execute, queryOne, queryPaginated } from '@/lib/db';
+import { execute, queryOne, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   paginatedResponse,

@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   ScanLine,
   Camera,
@@ -231,7 +230,7 @@ export function QRCodeScanner({
             ) : (
               <>
                 <ScanLine className="h-4 w-4 mr-1" />
-                确认
+                {tc('text_l912')}
               </>
             )}
           </Button>
@@ -261,10 +260,13 @@ export function QRCodeScanner({
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <History className="h-4 w-4" />
-                <span>最近扫描 ({history.length})</span>
+                <span>
+                  {tc('text_9zob8j')}
+                  {history.length})
+                </span>
               </div>
               <Button variant="ghost" size="sm" onClick={handleClearHistory}>
-                清空
+                {tc('text_jdw5')}
               </Button>
             </div>
             <div className="space-y-1 max-h-32 overflow-y-auto">

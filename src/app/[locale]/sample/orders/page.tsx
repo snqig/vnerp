@@ -47,15 +47,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
 import { formatDate } from '@/lib/date-utils';
-import {
-  TableExportToolbar,
-  printTable,
-  exportTableToPDF,
-  exportTableToXLS,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 import { useTranslations } from 'next-intl';
 
 interface SampleOrder {
@@ -174,7 +166,7 @@ export default function SampleOrdersPage() {
       const response = await authFetch(`/api/sample/orders?${params}`);
       const result = await response.json();
       if (result.success) {
-        const orderList = Array.isArray(result.data) ? result.data : (result.data?.list || []);
+        const orderList = Array.isArray(result.data) ? result.data : result.data?.list || [];
         setOrders(orderList);
         const total = result.pagination?.total || result.data?.total || orderList.length;
         setPagination((prev) => ({
@@ -362,7 +354,7 @@ export default function SampleOrdersPage() {
     else setSelectedIds(new Set(sortedOrders.map((o) => o.id)));
   };
 
-  const exportColumns = [
+  const _exportColumns = [
     { key: 'notify_date', header: t('notifyDate') },
     { key: 'customer_name', header: tc('customer') },
     { key: 'product_name', header: t('productName') },
@@ -373,7 +365,7 @@ export default function SampleOrdersPage() {
     { key: 'customer_require_date', header: t('requireDate') },
     { key: 'delivery_status', header: tc('status') },
   ];
-  const getExportData = () =>
+  const _getExportData = () =>
     sortedOrders.map((s, i) => ({
       [tc('serialNo')]: i + 1,
       [t('notifyDate')]: formatDate(s.notify_date),
@@ -481,18 +473,18 @@ export default function SampleOrdersPage() {
         />
       </div>
       <div className="space-y-2">
-        <Label>{tc("version")}</Label>
+        <Label>{tc('version')}</Label>
         <Input
-          placeholder={tc("version")}
+          placeholder={tc('version')}
           value={formData.version}
           onChange={(e) => handleInputChange('version', e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <Label>{tc("quantity")}</Label>
+        <Label>{tc('quantity')}</Label>
         <Input
           type="number"
-          placeholder={tc("quantity")}
+          placeholder={tc('quantity')}
           value={formData.quantity}
           onChange={(e) => handleInputChange('quantity', e.target.value)}
         />
@@ -522,9 +514,9 @@ export default function SampleOrdersPage() {
         />
       </div>
       <div className="col-span-2 space-y-2">
-        <Label>{tc("remark")}</Label>
+        <Label>{tc('remark')}</Label>
         <Input
-          placeholder={tc("remark")}
+          placeholder={tc('remark')}
           value={formData.remark}
           onChange={(e) => handleInputChange('remark', e.target.value)}
         />
@@ -578,17 +570,36 @@ export default function SampleOrdersPage() {
                   filename="样品订单列表"
                   title="样品订单列表"
                   columns={[
-                    { key: 'notify_date', label: t('notifyDate'), width: 12, formatter: (v) => formatDate(v) },
+                    {
+                      key: 'notify_date',
+                      label: t('notifyDate'),
+                      width: 12,
+                      formatter: (v) => formatDate(v),
+                    },
                     { key: 'customer_name', label: tc('customer'), width: 18 },
                     { key: 'product_name', label: t('productName'), width: 22 },
                     { key: 'material_no', label: t('materialNo'), width: 12 },
                     { key: 'version', label: tc('version'), width: 8 },
                     { key: 'size_spec', label: tc('size'), width: 12 },
                     { key: 'quantity', label: tc('quantity'), width: 8 },
-                    { key: 'customer_require_date', label: t('requireDate'), width: 12, formatter: (v) => formatDate(v) },
-                    { key: 'delivery_status', label: tc('status'), width: 12, formatter: (v) => t(statusLabelMap[v] || v) },
+                    {
+                      key: 'customer_require_date',
+                      label: t('requireDate'),
+                      width: 12,
+                      formatter: (v) => formatDate(v),
+                    },
+                    {
+                      key: 'delivery_status',
+                      label: tc('status'),
+                      width: 12,
+                      formatter: (v) => t(statusLabelMap[v] || v),
+                    },
                   ]}
-                  data={selectedIds.size > 0 ? sortedOrders.filter((o) => selectedIds.has(o.id)) : sortedOrders}
+                  data={
+                    selectedIds.size > 0
+                      ? sortedOrders.filter((o) => selectedIds.has(o.id))
+                      : sortedOrders
+                  }
                 />
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                   <DialogTrigger asChild>
@@ -636,7 +647,9 @@ export default function SampleOrdersPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : sortedOrders.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">{t('noSampleOrderData')}</div>
+              <div className="text-center py-12 text-muted-foreground">
+                {t('noSampleOrderData')}
+              </div>
             ) : (
               <div className="rounded-md border overflow-x-auto">
                 <table className="w-full">
@@ -660,8 +673,12 @@ export default function SampleOrdersPage() {
                       {sortableHeader('size_spec', tc('size'))}
                       {sortableHeader('quantity', tc('quantity'))}
                       {sortableHeader('customer_require_date', t('requireDate'))}
-                      <th className="h-12 px-4 text-left align-middle font-medium">{tc("status")}</th>
-                      <th className="h-12 px-4 text-right align-middle font-medium">{tc("actions")}</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">
+                        {tc('status')}
+                      </th>
+                      <th className="h-12 px-4 text-right align-middle font-medium">
+                        {tc('actions')}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -737,7 +754,11 @@ export default function SampleOrdersPage() {
             {pagination.totalPages > 1 && (
               <div className="flex items-center justify-between mt-4">
                 <span className="text-sm text-muted-foreground">
-                  {t('paginationInfo', { total: pagination.total, page: pagination.page, totalPages: pagination.totalPages })}
+                  {t('paginationInfo', {
+                    total: pagination.total,
+                    page: pagination.page,
+                    totalPages: pagination.totalPages,
+                  })}
                 </span>
                 <div className="flex gap-2">
                   <Button

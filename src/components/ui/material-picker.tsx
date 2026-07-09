@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Search, X, Check } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 interface Material {
   id: number;
@@ -178,7 +178,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
               color: '#6b7280',
             }}
           >
-            ESC 关闭
+            {tc('text_xzcyo5')}
           </button>
         </div>
 
@@ -194,11 +194,11 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
               color: '#6b7280',
             }}
           >
-            <span>物料编码</span>
-            <span>物料名称</span>
-            <span>规格</span>
-            <span>单位</span>
-            <span>参考单价</span>
+            <span>{tc('text_euzqpn')}</span>
+            <span>{tc('text_eusfkj')}</span>
+            <span>{tc('text_o06w')}</span>
+            <span>{tc('text_ely0')}</span>
+            <span>{tc('text_b3gupv')}</span>
           </div>
         </div>
 
@@ -207,7 +207,7 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
             <div
               style={{ padding: '40px', textAlign: 'center', color: '#9ca3af', fontSize: '14px' }}
             >
-              加载中...
+              {tc('text_27k1ha')}
             </div>
           ) : materials.length === 0 ? (
             <div
@@ -273,8 +273,12 @@ export function MaterialPicker({ open, onClose, onSelect }: MaterialPickerProps)
             color: '#9ca3af',
           }}
         >
-          <span>共 {total} 条物料</span>
-          <span>↑↓ 选择 · Enter 确认 · Esc 关闭</span>
+          <span>
+            {tc('text_g35')}
+            {total}
+            {tc('text_fp4s1')}
+          </span>
+          <span>{tc('text_6nti4b')}</span>
         </div>
       </div>
     </div>

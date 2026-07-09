@@ -2,15 +2,7 @@
 
 import { MainLayout } from '@/components/layout';
 import { useTranslations } from 'next-intl';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -58,8 +50,8 @@ const workOrders = [
   {
     id: 'WO20240115001',
     qrCode: 'DCERP:WO:001',
-    product: '包装膜-透明',
-    customer: '深圳伟业',
+    product: tc('text_u9m7f4'),
+    customer: tc('text_e8cyil'),
     quantity: 5000,
     completedQty: 3750,
     scrapQty: 50,
@@ -67,31 +59,31 @@ const workOrders = [
     planStartDate: '2024-01-15',
     planEndDate: '2024-01-17',
     status: 'producing',
-    currentProcess: '印刷',
+    currentProcess: tc('text_en5z'),
     efficiency: 92,
     priority: 8,
   },
   {
     id: 'WO20240115002',
     qrCode: 'DCERP:WO:002',
-    product: '标签贴纸',
-    customer: '广州华达',
+    product: tc('text_dn4fiz'),
+    customer: tc('text_cb8gq7'),
     quantity: 10000,
     completedQty: 4500,
     scrapQty: 100,
-    unit: '张',
+    unit: tc('text_isg'),
     planStartDate: '2024-01-15',
     planEndDate: '2024-01-18',
     status: 'producing',
-    currentProcess: '模切',
+    currentProcess: tc('text_ii2u'),
     efficiency: 78,
     priority: 6,
   },
   {
     id: 'WO20240115003',
     qrCode: 'DCERP:WO:003',
-    product: '彩印膜-蓝',
-    customer: '东莞恒通',
+    product: tc('text_sy5lk5'),
+    customer: tc('text_aef4i2'),
     quantity: 3000,
     completedQty: 0,
     scrapQty: 0,
@@ -99,15 +91,15 @@ const workOrders = [
     planStartDate: '2024-01-16',
     planEndDate: '2024-01-18',
     status: 'scheduled',
-    currentProcess: '待开工',
+    currentProcess: tc('text_egch6'),
     efficiency: 0,
     priority: 5,
   },
   {
     id: 'WO20240115004',
     qrCode: 'DCERP:WO:004',
-    product: '热收缩膜',
-    customer: '中山新材',
+    product: tc('text_eo74n0'),
+    customer: tc('text_a903gk'),
     quantity: 6000,
     completedQty: 5400,
     scrapQty: 30,
@@ -115,15 +107,15 @@ const workOrders = [
     planStartDate: '2024-01-14',
     planEndDate: '2024-01-16',
     status: 'producing',
-    currentProcess: '检验',
+    currentProcess: tc('text_inyk'),
     efficiency: 95,
     priority: 9,
   },
   {
     id: 'WO20240114001',
     qrCode: 'DCERP:WO:005',
-    product: '防静电膜',
-    customer: '佛山利达',
+    product: tc('text_jkpyum'),
+    customer: tc('text_ae9twr'),
     quantity: 8000,
     completedQty: 8000,
     scrapQty: 120,
@@ -131,7 +123,7 @@ const workOrders = [
     planStartDate: '2024-01-13',
     planEndDate: '2024-01-15',
     status: 'completed',
-    currentProcess: '已完成',
+    currentProcess: tc('text_e7hbq'),
     efficiency: 88,
     priority: 7,
   },
@@ -139,16 +131,14 @@ const workOrders = [
 
 // 工序列表
 const processes = [
-  { code: 'P01', name: '切料', status: 'completed' },
-  { code: 'P02', name: '磨切', status: 'completed' },
-  { code: 'P03', name: '印刷', status: 'producing' },
-  { code: 'P04', name: '烘干', status: 'pending' },
-  { code: 'P05', name: '模切', status: 'pending' },
-  { code: 'P06', name: '检验', status: 'pending' },
-  { code: 'P07', name: '包装', status: 'pending' },
+  { code: 'P01', name: tc('text_eicy'), status: 'completed' },
+  { code: 'P02', name: tc('text_l0kf'), status: 'completed' },
+  { code: 'P03', name: tc('text_en5z'), status: 'producing' },
+  { code: 'P04', name: tc('text_jpne'), status: 'pending' },
+  { code: 'P05', name: tc('text_ii2u'), status: 'pending' },
+  { code: 'P06', name: tc('text_inyk'), status: 'pending' },
+  { code: 'P07', name: tc('text_evds'), status: 'pending' },
 ];
-
-
 
 export default function WorkOrdersPage() {
   // 翻译钩子
@@ -172,7 +162,9 @@ export default function WorkOrdersPage() {
       closed: tc('closed'),
     };
     const label = statusLabels[status] || status;
-    const className = ORDER_STATUS_CLASSES[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200';
+    const className =
+      ORDER_STATUS_CLASSES[status] ||
+      'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200';
     return <Badge className={className}>{label}</Badge>;
   };
 
@@ -219,14 +211,14 @@ export default function WorkOrdersPage() {
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                          <Label>{t('salesOrder')}</Label>
+                        <Label>{t('salesOrder')}</Label>
                         <Select>
                           <SelectTrigger>
-                              <SelectValue placeholder={t('selectSalesOrder')} />
+                            <SelectValue placeholder={t('selectSalesOrder')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="SO001">SO20240115001 - 深圳伟业</SelectItem>
-                            <SelectItem value="SO002">SO20240115002 - 广州华达</SelectItem>
+                            <SelectItem value="SO001">{tc('text_lb1db4')}</SelectItem>
+                            <SelectItem value="SO002">{tc('text_mtkpe7')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -238,7 +230,7 @@ export default function WorkOrdersPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>{t('plannedQuantity')}</Label>
-                          <Input type="number" placeholder={t('productionQtyPlaceholder')} />
+                        <Input type="number" placeholder={t('productionQtyPlaceholder')} />
                       </div>
                       <div className="space-y-2">
                         <Label>{t('priorityRange')}</Label>
@@ -354,7 +346,9 @@ export default function WorkOrdersPage() {
                           {order.completedQty.toLocaleString()} / {order.quantity.toLocaleString()}{' '}
                           {order.unit}
                           {order.scrapQty > 0 && (
-                            <span className="text-red-500 ml-2">({t('scrapLabel')}: {order.scrapQty})</span>
+                            <span className="text-red-500 ml-2">
+                              ({t('scrapLabel')}: {order.scrapQty})
+                            </span>
                           )}
                         </span>
                       </div>

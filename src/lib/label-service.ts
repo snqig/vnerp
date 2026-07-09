@@ -1,4 +1,4 @@
-import { query, execute, transaction } from '@/lib/db';
+import { query, transaction } from '@/lib/db';
 import { randomUUID } from 'crypto';
 
 export interface LabelGenerationResult {

@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-import { successResponse, errorResponse } from '@/lib/api-response';
 import { query } from '@/lib/db';
 
 /**

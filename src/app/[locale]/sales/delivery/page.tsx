@@ -32,23 +32,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Plus,
-  Search,
-  RefreshCw,
-  Truck,
-  Eye,
-  Edit,
-  Trash2,
-  Printer,
-  QrCode,
-  Package,
-  AlertTriangle,
-} from 'lucide-react';
+import { Plus, Search, RefreshCw, Truck, Eye, Trash2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
-import { mockShipments, mockCustomers, USE_MOCK, mockApiListResponse } from '@/lib/mock-data';
+import { mockShipments, mockCustomers, USE_MOCK } from '@/lib/mock-data';
 
 // ============================================================
 // 发货类型定义（符合设计文档 3.1 节）

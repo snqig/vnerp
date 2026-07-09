@@ -1,6 +1,6 @@
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { PurchaseReturnCompletedEvent } from '@/domain/purchase/events/PurchaseReturnEvents';
-import { query, execute, transaction } from '@/lib/db';
+import { query, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import type { PoolConnection, RowDataPacket } from 'mysql2/promise';
 

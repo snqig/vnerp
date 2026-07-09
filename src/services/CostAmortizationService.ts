@@ -1,4 +1,4 @@
-import { query, execute, transaction } from '@/lib/db';
+import { query, execute } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 
 export interface CostAmortizationParams {

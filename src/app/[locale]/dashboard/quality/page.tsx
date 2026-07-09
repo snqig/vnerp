@@ -8,17 +8,14 @@ import GlassGauge from '@/components/GlassGauge';
 import {
   Shield,
   CheckCircle,
-  XCircle,
   AlertTriangle,
   TrendingDown,
   BarChart3,
-  Clock,
   Maximize,
   Minimize,
   Activity,
   Target,
   AlertCircle,
-  Zap,
   ClipboardCheck,
   Calendar,
 } from 'lucide-react';

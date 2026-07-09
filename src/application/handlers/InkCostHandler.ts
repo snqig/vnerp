@@ -1,6 +1,6 @@
 import { EventHandler } from '@/infrastructure/event-bus/EventBus';
 import { WorkOrderCompletedEvent } from '@/domain/production/events/WorkOrderEvents';
-import { query, execute, transaction } from '@/lib/db';
+import { query, execute } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 
 export interface InkUsageRecord {

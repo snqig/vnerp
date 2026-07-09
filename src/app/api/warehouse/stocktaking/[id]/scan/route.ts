@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
-import { query, execute, queryOne } from '@/lib/db';
+import { execute, queryOne } from '@/lib/db';
 import { successResponse, errorResponse, commonErrors } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 
 const SPLIT_FLAG_MAP: Record<number, string> = {
-  0: '整料',
-  1: '小料',
-  2: '余料',
+  0: tc('text_htb9'),
+  1: tc('text_g7sa'),
+  2: tc('text_e1y8'),
 };
 
 export const POST = withPermission(

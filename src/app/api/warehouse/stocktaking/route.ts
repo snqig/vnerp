@@ -39,17 +39,17 @@ interface InventoryCheckItem {
 }
 
 const TYPE_MAP: Record<number, string> = {
-  1: '定期盘点',
-  2: '不定期盘点',
-  3: '循环盘点',
-  4: '抽盘',
+  1: tc('text_bzlzl2'),
+  2: tc('text_x1ivoz'),
+  3: tc('text_cjwana'),
+  4: tc('text_hg3f'),
 };
 
 const STATUS_MAP: Record<number, string> = {
-  1: '进行中',
-  2: '待审批',
-  3: '已完成',
-  4: '已取消',
+  1: tc('text_lq5q4'),
+  2: tc('text_efsql'),
+  3: tc('text_e7hbq'),
+  4: tc('text_e68dg'),
 };
 
 function generateCheckNo(): string {
@@ -125,7 +125,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     return errorResponse('INVALID_STOCKTAKING_TYPE', 400, 400);
   }
 
-  const now = new Date();
+  const _now = new Date();
   const checkNo = generateCheckNo();
 
   const result: any = await execute(
@@ -249,21 +249,22 @@ export const PUT = withPermission(async (request: NextRequest) => {
         return errorResponse('APPROVER_REQUIRED', 400, 400);
       }
 
-      const stocktakingThreshold = Number(getConfig('stocktaking_diff_threshold') || 100);
+      const _stocktakingThreshold = Number(getConfig('stocktaking_diff_threshold') || 100);
 
       // 使用事务保护盘点审批操作，确保数据一致性
       await transaction(async (conn) => {
-        const diffItems: any[] = await conn.execute(
-          `SELECT * FROM inv_stocktaking_item WHERE taking_id = ? AND diff_qty != 0`,
-          [id]
-        ).then(([rows]) => rows as any[]);
+        const diffItems: any[] = await conn
+          .execute(`SELECT * FROM inv_stocktaking_item WHERE taking_id = ? AND diff_qty != 0`, [id])
+          .then(([rows]) => rows as any[]);
 
         for (const item of diffItems) {
           // 检查是否会产生负库存
-          const currentStock: any = await conn.execute(
-            `SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
-            [item.material_id, check.warehouse_id]
-          ).then(([rows]) => (rows as any[])[0]);
+          const currentStock: any = await conn
+            .execute(
+              `SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
+              [item.material_id, check.warehouse_id]
+            )
+            .then(([rows]) => (rows as any[])[0]);
 
           if (currentStock && currentStock.quantity + item.diff_qty < 0) {
             throw new Error(`物料ID ${item.material_id} 盘点后将产生负库存，请检查盘点数据`);
@@ -290,10 +291,9 @@ export const PUT = withPermission(async (request: NextRequest) => {
         );
 
         // 解锁库存
-        await conn.execute(
-          `UPDATE inv_inventory SET stocktaking_flag = 0 WHERE warehouse_id = ?`,
-          [check.warehouse_id]
-        );
+        await conn.execute(`UPDATE inv_inventory SET stocktaking_flag = 0 WHERE warehouse_id = ?`, [
+          check.warehouse_id,
+        ]);
       });
 
       return successResponse(null, 'STOCKTAKING_APPROVED');

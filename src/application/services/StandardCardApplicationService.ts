@@ -8,11 +8,9 @@ import {
   StandardCardConfirmedEvent,
   StandardCardObsoletedEvent,
 } from '@/domain/standard-card/events/StandardCardEvents';
-import { getEventBus, EventBus } from '@/infrastructure/event-bus/EventBus';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import { DomainEvent } from '@/domain/shared/DomainTypes';
 import { transaction } from '@/lib/db';
-import { secureLog } from '@/lib/logger';
 import type { ColorStandardItemProps } from '@/domain/standard-card/entities/ColorStandardItem';
 import type { ProcessStandardItemProps } from '@/domain/standard-card/entities/ProcessStandardItem';
 import type { QualityStandardItemProps } from '@/domain/standard-card/entities/QualityStandardItem';
@@ -438,9 +436,8 @@ export class StandardCardApplicationService {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (newCard as any).id = newId;
 
-    const {
-      ColorStandardItemRepository,
-    } = await import('@/infrastructure/repositories/MysqlStandardCardRepository');
+    const { ColorStandardItemRepository } =
+      await import('@/infrastructure/repositories/MysqlStandardCardRepository');
 
     const colorRepo = new ColorStandardItemRepository();
     const colorItems = (await colorRepo.findByStandardCardId(id)) as ColorItemRow[];
@@ -672,10 +669,7 @@ export class StandardCardApplicationService {
     });
   }
 
-  private async saveDetailItems(
-    standardCardId: number,
-    dto: CreateStandardCardDTO
-  ): Promise<void> {
+  private async saveDetailItems(standardCardId: number, dto: CreateStandardCardDTO): Promise<void> {
     const {
       ColorStandardItemRepository,
       ProcessStandardItemRepository,

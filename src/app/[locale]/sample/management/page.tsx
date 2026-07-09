@@ -42,15 +42,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useDebounce } from '@/hooks/use-debounce';
-import {
-  TableExportToolbar,
-  printTable,
-  exportTableToPDF,
-  exportTableToXLS,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 import { formatDate } from '@/lib/date-utils';
 import { useTranslations } from 'next-intl';
 
@@ -290,7 +282,7 @@ export default function SampleManagementPage() {
     }
   };
 
-  const exportColumns = [
+  const _exportColumns = [
     { key: 'order_no', header: t('sampleNo') },
     { key: 'product_name', header: t('productName') },
     { key: 'customer_name', header: tc('customer') },
@@ -298,7 +290,7 @@ export default function SampleManagementPage() {
     { key: 'customer_require_date', header: t('requireDeliveryDate') },
     { key: 'delivery_status', header: tc('status') },
   ];
-  const getExportData = () =>
+  const _getExportData = () =>
     sortedList.map((s) => ({
       order_no: s.order_no,
       product_name: s.product_name,

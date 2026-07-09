@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { query, execute } from '@/lib/db';
+import { execute } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
 

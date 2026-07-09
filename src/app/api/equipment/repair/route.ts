@@ -44,7 +44,7 @@ export const POST = withPermission(
       repair_person,
       remark,
     } = body;
-    const now = new Date();
+    const _now = new Date();
     const repairNo = generateDocNo(getWxPrefix());
 
     const result: any = await execute(

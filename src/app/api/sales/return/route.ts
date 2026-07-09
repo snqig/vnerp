@@ -7,7 +7,7 @@ import {
   validateRequestBody,
 } from '@/lib/api-response';
 import { withPermission } from '@/lib/api-permissions';
-import { query, execute, transaction } from '@/lib/db';
+import { query, transaction } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
 import { ReturnOrderApplicationService } from '@/application/services/ReturnOrderApplicationService';
 import { MysqlReturnOrderRepository } from '@/infrastructure/repositories/MysqlReturnOrderRepository';

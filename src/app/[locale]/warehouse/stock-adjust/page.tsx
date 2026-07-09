@@ -35,15 +35,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from 'next-intl';
-import {
-  TableExportToolbar,
-  printTable,
-  exportTableToPDF,
-  exportTableToXLS,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 
 interface Item {
   id: number;
@@ -83,7 +75,7 @@ export default function StockAdjustPage() {
   const [warehouses, setWarehouses] = useState<{ id: number; name: string; code: string }[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-  const exportColumns = [
+  const _exportColumns = [
     { key: t('adjustNo'), header: t('adjustNo') },
     { key: t('warehouse'), header: t('warehouse') },
     { key: t('adjustDate'), header: t('adjustDate') },
@@ -91,7 +83,7 @@ export default function StockAdjustPage() {
     { key: t('operator'), header: t('operator') },
     { key: tc('status'), header: tc('status') },
   ];
-  const getExportData = () =>
+  const _getExportData = () =>
     list.map((item) => ({
       [t('adjustNo')]: item.adjust_no,
       [t('warehouse')]: item.warehouse_name || '-',

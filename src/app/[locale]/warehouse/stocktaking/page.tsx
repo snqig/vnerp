@@ -30,30 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  QrCode,
-  ClipboardList,
-  CheckCircle,
-  XCircle,
-  Eye,
-} from 'lucide-react';
+import { Plus, Search, Edit, Trash2, QrCode, CheckCircle, XCircle, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserSelect } from '@/components/ui/user-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslations } from 'next-intl';
-import {
-  TableExportToolbar,
-  printTable,
-  exportTableToPDF,
-  exportTableToXLS,
-  exportTableToWORD,
-} from '@/components/ui/table-export-toolbar';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 
 interface InventoryCheck {
   id: number;
@@ -146,7 +128,7 @@ export default function StocktakingPage() {
 
   const [showApproveDialog, setShowApproveDialog] = useState(false);
 
-  const exportColumns = [
+  const _exportColumns = [
     { key: 'check_no', header: t('checkNo') },
     { key: 'warehouse_name', header: t('warehouse') },
     { key: 'type_name', header: t('checkType') },
@@ -156,7 +138,7 @@ export default function StocktakingPage() {
     { key: 'status_name', header: tc('status') },
   ];
 
-  const getExportData = () =>
+  const _getExportData = () =>
     list.map((item) => ({
       check_no: item.check_no,
       warehouse_name: item.warehouse_name || '-',

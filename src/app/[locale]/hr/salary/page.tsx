@@ -4,7 +4,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -30,7 +30,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -50,7 +49,6 @@ import {
   Calendar,
   FileText,
   Printer,
-  Download,
   Users,
   DollarSign,
   CreditCard,
@@ -64,10 +62,8 @@ import {
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
 import { useTranslations } from 'next-intl';
 import { GlobalExportToolbar } from '@/components/ui/global-export-toolbar';
-import type { ExportColumn } from '@/lib/global-export-service';
 
 // 薪资数据类型
 interface Salary {

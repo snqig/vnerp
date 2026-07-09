@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { query, queryOne, execute } from '@/lib/db';
+import { query, queryOne } from '@/lib/db';
 import {
   successResponse,
   errorResponse,

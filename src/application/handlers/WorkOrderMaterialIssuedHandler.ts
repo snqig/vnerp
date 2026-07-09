@@ -9,9 +9,7 @@ import { secureLog } from '@/lib/logger';
  * - inv_inventory_batch.available_qty / quantity 减少
  * - inv_inventory_transaction 记录出库流水
  */
-export class WorkOrderMaterialIssuedHandler
-  implements EventHandler<WorkOrderMaterialIssuedEvent>
-{
+export class WorkOrderMaterialIssuedHandler implements EventHandler<WorkOrderMaterialIssuedEvent> {
   async handle(event: WorkOrderMaterialIssuedEvent): Promise<void> {
     const { workOrderId, workOrderNo, issuedItems } = event.payload;
 
@@ -38,7 +36,7 @@ export class WorkOrderMaterialIssuedHandler
 
         const inv = invRows[0];
         const currentQty = Number(inv.quantity || 0);
-        const currentAvail = Number(inv.available_qty || 0);
+        const _currentAvail = Number(inv.available_qty || 0);
 
         if (currentQty < item.quantity) {
           throw new Error(

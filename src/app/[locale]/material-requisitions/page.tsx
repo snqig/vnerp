@@ -23,18 +23,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ApiClient } from '@/lib/api-client';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
-import { RefreshCw, Plus, Search, ScanLine, FileCheck, RotateCcw } from 'lucide-react';
+import { RefreshCw, Plus, ScanLine, FileCheck, RotateCcw } from 'lucide-react';
 
 interface Requisition {
   id: number;

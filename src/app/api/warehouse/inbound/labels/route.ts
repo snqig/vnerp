@@ -1,5 +1,5 @@
 ﻿import { NextRequest } from 'next/server';
-import { query, execute, queryOne, queryPaginated } from '@/lib/db';
+import { execute, queryOne, queryPaginated } from '@/lib/db';
 import {
   successResponse,
   errorResponse,
@@ -41,40 +41,41 @@ interface InboundLabel {
 }
 
 // GET - 获取物料标签列表
-export const GET = withPermission(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url);
-  const keyword = searchParams.get('keyword') || '';
-  const status = searchParams.get('status') || '';
-  const materialCode = searchParams.get('materialCode') || '';
-  const batchNo = searchParams.get('batchNo') || '';
-  const page = parseInt(searchParams.get('page') || '1');
-  const pageSize = parseInt(searchParams.get('pageSize') || '20');
+export const GET = withPermission(
+  async (request: NextRequest) => {
+    const { searchParams } = new URL(request.url);
+    const keyword = searchParams.get('keyword') || '';
+    const status = searchParams.get('status') || '';
+    const materialCode = searchParams.get('materialCode') || '';
+    const batchNo = searchParams.get('batchNo') || '';
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
-  let whereClause = 'WHERE l.deleted = 0';
-  const params: any[] = [];
+    let whereClause = 'WHERE l.deleted = 0';
+    const params: any[] = [];
 
-  if (keyword) {
-    whereClause += ` AND (l.label_id LIKE ? OR l.material_code LIKE ? OR l.material_name LIKE ? OR l.supplier_name LIKE ?)`;
-    params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
-  }
+    if (keyword) {
+      whereClause += ` AND (l.label_id LIKE ? OR l.material_code LIKE ? OR l.material_name LIKE ? OR l.supplier_name LIKE ?)`;
+      params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
+    }
 
-  if (status) {
-    whereClause += ` AND l.label_status = ?`;
-    params.push(status);
-  }
+    if (status) {
+      whereClause += ` AND l.label_status = ?`;
+      params.push(status);
+    }
 
-  if (materialCode) {
-    whereClause += ` AND l.material_code = ?`;
-    params.push(materialCode);
-  }
+    if (materialCode) {
+      whereClause += ` AND l.material_code = ?`;
+      params.push(materialCode);
+    }
 
-  if (batchNo) {
-    whereClause += ` AND l.batch_no = ?`;
-    params.push(batchNo);
-  }
+    if (batchNo) {
+      whereClause += ` AND l.batch_no = ?`;
+      params.push(batchNo);
+    }
 
-  const result = await queryPaginated<InboundLabel>(
-    `SELECT
+    const result = await queryPaginated<InboundLabel>(
+      `SELECT
       l.id,
       l.label_id as labelId,
       l.order_no as orderNo,
@@ -106,201 +107,212 @@ export const GET = withPermission(async (request: NextRequest) => {
     FROM inv_inbound_label l
     ${whereClause}
     ORDER BY l.create_time DESC`,
-    `SELECT COUNT(*) as total FROM inv_inbound_label l ${whereClause}`,
-    params,
-    { page, pageSize }
-  );
+      `SELECT COUNT(*) as total FROM inv_inbound_label l ${whereClause}`,
+      params,
+      { page, pageSize }
+    );
 
-  return successResponse(result);
-}, { errorMessage: '获取物料标签列表失败' });
+    return successResponse(result);
+  },
+  { errorMessage: '获取物料标签列表失败' }
+);
 
 // POST - 生成物料标签
-export const POST = withPermission(async (request: NextRequest) => {
-  const body = await request.json();
+export const POST = withPermission(
+  async (request: NextRequest) => {
+    const body = await request.json();
 
-  // 验证必填字段
-  const validation = validateRequestBody(body, [
-    'orderId',
-    'materialCode',
-    'materialName',
-    'qty',
-    'unit',
-    'operatorId',
-    'operatorName',
-  ]);
+    // 验证必填字段
+    const validation = validateRequestBody(body, [
+      'orderId',
+      'materialCode',
+      'materialName',
+      'qty',
+      'unit',
+      'operatorId',
+      'operatorName',
+    ]);
 
-  if (!validation.valid) {
-    return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
-  }
+    if (!validation.valid) {
+      return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
+    }
 
-  const {
-    orderId,
-    orderNo,
-    itemId,
-    purchaseOrderNo,
-    supplierName,
-    inboundDate,
-    warehouseCode,
-    materialCode,
-    materialName,
-    specification,
-    width,
-    batchNo,
-    qty,
-    unit,
-    isRawMaterial,
-    packageQty,
-    labelQty,
-    colorCode,
-    mixedMaterialRemark,
-    machineNo,
-    remark,
-    operatorId,
-    operatorName,
-  } = body;
+    const {
+      orderId,
+      orderNo,
+      itemId,
+      purchaseOrderNo,
+      supplierName,
+      inboundDate,
+      warehouseCode,
+      materialCode,
+      materialName,
+      specification,
+      width,
+      batchNo,
+      qty,
+      unit,
+      isRawMaterial,
+      packageQty,
+      labelQty,
+      colorCode,
+      mixedMaterialRemark,
+      machineNo,
+      remark,
+      operatorId,
+      operatorName,
+    } = body;
 
-  // 生成标签ID
-  const date = new Date();
-  const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const maxLabel = await queryOne<{ maxId: string }>(
-    `SELECT MAX(label_id) as maxId FROM inv_inbound_label WHERE label_id LIKE ?`,
-    [`${dateStr}%`]
-  );
-  const seq = maxLabel?.maxId
-    ? String(parseInt(maxLabel.maxId.slice(-5)) + 1).padStart(5, '0')
-    : '00001';
-  const labelId = `${dateStr}${seq}`;
+    // 生成标签ID
+    const date = new Date();
+    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+    const maxLabel = await queryOne<{ maxId: string }>(
+      `SELECT MAX(label_id) as maxId FROM inv_inbound_label WHERE label_id LIKE ?`,
+      [`${dateStr}%`]
+    );
+    const seq = maxLabel?.maxId
+      ? String(parseInt(maxLabel.maxId.slice(-5)) + 1).padStart(5, '0')
+      : '00001';
+    const labelId = `${dateStr}${seq}`;
 
-  await execute(
-    `INSERT INTO inv_inbound_label (
+    await execute(
+      `INSERT INTO inv_inbound_label (
       label_id, order_id, order_no, item_id, purchase_order_no, supplier_name,
       inbound_date, warehouse_code, material_code, material_name, specification,
       width, batch_no, qty, unit, is_raw_material, package_qty, label_qty,
       label_status, operator_id, operator_name, color_code, mixed_material_remark,
       machine_no, remark
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'generated', ?, ?, ?, ?, ?, ?)`,
-    [
-      labelId,
-      orderId,
-      orderNo || null,
-      itemId || null,
-      purchaseOrderNo || null,
-      supplierName || null,
-      inboundDate || null,
-      warehouseCode || null,
-      materialCode,
-      materialName,
-      specification || null,
-      width || 0,
-      batchNo || null,
-      qty,
-      unit,
-      isRawMaterial ? 1 : 0,
-      packageQty || 0,
-      labelQty || 1,
-      operatorId,
-      operatorName,
-      colorCode || null,
-      mixedMaterialRemark || null,
-      machineNo || null,
-      remark || null,
-    ]
-  );
+      [
+        labelId,
+        orderId,
+        orderNo || null,
+        itemId || null,
+        purchaseOrderNo || null,
+        supplierName || null,
+        inboundDate || null,
+        warehouseCode || null,
+        materialCode,
+        materialName,
+        specification || null,
+        width || 0,
+        batchNo || null,
+        qty,
+        unit,
+        isRawMaterial ? 1 : 0,
+        packageQty || 0,
+        labelQty || 1,
+        operatorId,
+        operatorName,
+        colorCode || null,
+        mixedMaterialRemark || null,
+        machineNo || null,
+        remark || null,
+      ]
+    );
 
-  return successResponse({ labelId }, '物料标签生成成功');
-}, { errorMessage: '生成物料标签失败' });
+    return successResponse({ labelId }, '物料标签生成成功');
+  },
+  { errorMessage: '生成物料标签失败' }
+);
 
 // PUT - 更新标签状态（分切、使用、作废等）
-export const PUT = withPermission(async (request: NextRequest) => {
-  const body = await request.json();
-  const { id, labelStatus, auditStatus, auditorId, auditorName } = body;
+export const PUT = withPermission(
+  async (request: NextRequest) => {
+    const body = await request.json();
+    const { id, labelStatus, auditStatus, auditorId, auditorName } = body;
 
-  if (!id) {
-    return commonErrors.badRequest('标签ID不能为空');
-  }
+    if (!id) {
+      return commonErrors.badRequest('标签ID不能为空');
+    }
 
-  // 检查标签是否存在
-  const existingLabel = await queryOne<{ id: number; label_status: string }>(
-    'SELECT id, label_status FROM inv_inbound_label WHERE id = ? AND deleted = 0',
-    [id]
-  );
+    // 检查标签是否存在
+    const existingLabel = await queryOne<{ id: number; label_status: string }>(
+      'SELECT id, label_status FROM inv_inbound_label WHERE id = ? AND deleted = 0',
+      [id]
+    );
 
-  if (!existingLabel) {
-    return commonErrors.notFound('标签不存在');
-  }
+    if (!existingLabel) {
+      return commonErrors.notFound('标签不存在');
+    }
 
-  const updates: string[] = [];
-  const params: any[] = [];
+    const updates: string[] = [];
+    const params: any[] = [];
 
-  if (labelStatus) {
-    updates.push('label_status = ?');
-    params.push(labelStatus);
-  }
+    if (labelStatus) {
+      updates.push('label_status = ?');
+      params.push(labelStatus);
+    }
 
-  if (auditStatus !== undefined) {
-    updates.push('audit_status = ?');
-    params.push(auditStatus ? 1 : 0);
-  }
+    if (auditStatus !== undefined) {
+      updates.push('audit_status = ?');
+      params.push(auditStatus ? 1 : 0);
+    }
 
-  if (auditorId) {
-    updates.push('auditor_id = ?');
-    params.push(auditorId);
-  }
+    if (auditorId) {
+      updates.push('auditor_id = ?');
+      params.push(auditorId);
+    }
 
-  if (auditorName) {
-    updates.push('auditor_name = ?');
-    params.push(auditorName);
-  }
+    if (auditorName) {
+      updates.push('auditor_name = ?');
+      params.push(auditorName);
+    }
 
-  if (auditStatus) {
-    updates.push('audit_time = NOW()');
-  }
+    if (auditStatus) {
+      updates.push('audit_time = NOW()');
+    }
 
-  if (updates.length === 0) {
-    return commonErrors.badRequest('没有要更新的字段');
-  }
+    if (updates.length === 0) {
+      return commonErrors.badRequest('没有要更新的字段');
+    }
 
-  params.push(id);
+    params.push(id);
 
-  const result = await execute(
-    `UPDATE inv_inbound_label SET ${updates.join(', ')} WHERE id = ?`,
-    params
-  );
+    const result = await execute(
+      `UPDATE inv_inbound_label SET ${updates.join(', ')} WHERE id = ?`,
+      params
+    );
 
-  if (result.affectedRows === 0) {
-    return commonErrors.notFound('标签不存在');
-  }
+    if (result.affectedRows === 0) {
+      return commonErrors.notFound('标签不存在');
+    }
 
-  return successResponse(null, '标签状态更新成功');
-}, { errorMessage: '更新标签状态失败' });
+    return successResponse(null, '标签状态更新成功');
+  },
+  { errorMessage: '更新标签状态失败' }
+);
 
 // DELETE - 删除物料标签（软删除）
-export const DELETE = withPermission(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+export const DELETE = withPermission(
+  async (request: NextRequest) => {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
 
-  if (!id) {
-    return commonErrors.badRequest('标签ID不能为空');
-  }
+    if (!id) {
+      return commonErrors.badRequest('标签ID不能为空');
+    }
 
-  const labelId = parseInt(id);
+    const labelId = parseInt(id);
 
-  // 检查标签是否存在
-  const existingLabel = await queryOne<{ id: number; label_status: string }>(
-    'SELECT id, label_status FROM inv_inbound_label WHERE id = ? AND deleted = 0',
-    [labelId]
-  );
+    // 检查标签是否存在
+    const existingLabel = await queryOne<{ id: number; label_status: string }>(
+      'SELECT id, label_status FROM inv_inbound_label WHERE id = ? AND deleted = 0',
+      [labelId]
+    );
 
-  if (!existingLabel) {
-    return commonErrors.notFound('标签不存在');
-  }
+    if (!existingLabel) {
+      return commonErrors.notFound('标签不存在');
+    }
 
-  // 检查标签状态，已使用的标签不能删除
-  if (existingLabel.label_status === 'used') {
-    return errorResponse('已使用的标签不能删除', 409, 409);
-  }
+    // 检查标签状态，已使用的标签不能删除
+    if (existingLabel.label_status === 'used') {
+      return errorResponse('已使用的标签不能删除', 409, 409);
+    }
 
-  await execute('UPDATE inv_inbound_label SET deleted = 1 WHERE id = ?', [labelId]);
+    await execute('UPDATE inv_inbound_label SET deleted = 1 WHERE id = ?', [labelId]);
 
-  return successResponse(null, '物料标签删除成功');
-}, { errorMessage: '删除物料标签失败' });
+    return successResponse(null, '物料标签删除成功');
+  },
+  { errorMessage: '删除物料标签失败' }
+);

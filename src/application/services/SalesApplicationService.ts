@@ -3,13 +3,11 @@ import { SalesOrder, SalesOrderProps } from '@/domain/sales/aggregates/SalesOrde
 import { SalesOrderStatus } from '@/domain/sales/value-objects/SalesOrderStatus';
 import { DomainError, NotFoundError, VersionConflictError } from '@/domain/shared/DomainTypes';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
-import { transaction, query } from '@/lib/db';
+import { transaction } from '@/lib/db';
 import { InventoryValidationService } from '@/application/services/InventoryValidationService';
 
 export class SalesApplicationService {
-  constructor(
-    private readonly orderRepo: ISalesOrderRepository
-  ) {}
+  constructor(private readonly orderRepo: ISalesOrderRepository) {}
 
   async getOrderById(id: number): Promise<SalesOrder> {
     const order = await this.orderRepo.findById(id);
