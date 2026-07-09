@@ -11,6 +11,10 @@
 !.github/
 !.husky/
 
+# 但排除 Trae IDE Agent 配置（与项目无关，不同步）
+.github/hooks/
+.github/skills/
+
 # 明确排除 IDE/工具/Agent 相关目录（与项目无关，不同步）
 .agentic-tools-mcp/
 .agents/
@@ -97,6 +101,14 @@ eslint_current_report.json
 # 临时调试脚本（下划线前缀）
 scripts/_*.js
 scripts/_*.mjs
+scripts/_*.cjs
+
+# 临时 eslint any 清理脚本与分析输出
+scripts/fix-any-batch.mjs
+scripts/fix-remaining-ts-errors.mjs
+scripts/show-remaining-any.mjs
+scripts/any-pattern-*.txt
+git-all-diffs.txt
 
 # 审计结果输出（临时生成）
 scripts/audit-final-result.json

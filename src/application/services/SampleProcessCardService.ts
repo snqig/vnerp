@@ -11,6 +11,11 @@
  */
 import { query, execute, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
+import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
+import {
+  SampleCardQuoteGeneratedEvent,
+  SampleCardConvertedToWorkOrderEvent,
+} from '@/domain/sample-card/events/SampleCardEvents';
 import type {
   SampleProcessCardInput,
   SampleProcessItemInput,
@@ -19,7 +24,10 @@ import type {
 
 // ===== 类型定义 =====
 
-export interface SampleProcessCard extends Omit<SampleProcessCardInput, 'items' | 'steps'> {
+export interface SampleProcessCard extends Omit<
+  SampleProcessCardInput,
+  'items' | 'steps' | 'diagram_url'
+> {
   id: number;
   sample_no: string;
   sample_work_order_id: number | null;
@@ -33,6 +41,7 @@ export interface SampleProcessCard extends Omit<SampleProcessCardInput, 'items' 
   total_labor_cost: number;
   total_tool_cost: number;
   total_cost: number;
+  diagram_url: string | null | undefined;
   create_by: number | null;
   create_time: string;
   update_by: number | null;
@@ -217,9 +226,9 @@ export class SampleProcessCardService {
         `INSERT INTO dcprint_sample_process_card
          (sample_no, sample_name, customer_id, customer_name, product_id, product_name, version_no, status,
           substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
-          material_loss_rate, estimated_hour, total_material_cost, total_labor_cost, total_tool_cost, total_cost, remark,
+          material_loss_rate, estimated_hour, total_material_cost, total_labor_cost, total_tool_cost, total_cost, diagram_url, remark,
           create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           sampleNo,
           data.sample_name,
@@ -241,6 +250,7 @@ export class SampleProcessCardService {
           baseCost.laborCost,
           totalToolCost,
           totalCost,
+          data.diagram_url || null,
           data.remark || null,
           userId,
         ] as Loose[]
@@ -334,6 +344,7 @@ export class SampleProcessCardService {
         data.die_tool_id || null,
         data.material_loss_rate || 5,
         data.estimated_hour || null,
+        data.diagram_url || null,
         data.remark || null,
         userId,
       ];
@@ -351,7 +362,7 @@ export class SampleProcessCardService {
          sample_name = ?, customer_id = ?, customer_name = ?, product_id = ?, product_name = ?,
          substrate_material_id = ?, substrate_material_name = ?, spec = ?, print_color = ?,
          ink_color_id = ?, screen_plate_id = ?, die_tool_id = ?,
-         material_loss_rate = ?, estimated_hour = ?, remark = ?, update_by = ?, update_time = NOW()
+         material_loss_rate = ?, estimated_hour = ?, diagram_url = ?, remark = ?, update_by = ?, update_time = NOW()
          ${baseCost ? ', total_material_cost = ?, total_labor_cost = ?, total_tool_cost = ?, total_cost = ?' : ''}
          WHERE id = ?`,
         params
@@ -513,9 +524,9 @@ export class SampleProcessCardService {
         `INSERT INTO dcprint_sample_process_card
          (sample_no, sample_name, customer_id, customer_name, product_id, product_name, version_no, status,
           substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
-          material_loss_rate, estimated_hour, total_material_cost, total_labor_cost, total_tool_cost, total_cost, remark,
+          material_loss_rate, estimated_hour, total_material_cost, total_labor_cost, total_tool_cost, total_cost, diagram_url, remark,
           source_version_id, create_by, create_time)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
           newSampleNo,
           source.sample_name,
@@ -537,6 +548,7 @@ export class SampleProcessCardService {
           source.total_labor_cost,
           source.total_tool_cost,
           source.total_cost,
+          source.diagram_url || null,
           source.remark,
           sourceId,
           userId,
@@ -597,5 +609,261 @@ export class SampleProcessCardService {
       });
       return newCardId;
     });
+  }
+
+  // ===== 阶段 3: 一键生成报价单 =====
+
+  /** 生成报价单号：QT{YYYYMMDD}{5位序号} */
+  private async generateQuoteNo(): Promise<string> {
+    const today = new Date();
+    const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    const prefix = `QT${ymd}`;
+    const [rows]: Loose = await query(
+      `SELECT quote_no FROM sal_quote WHERE quote_no LIKE ? ORDER BY id DESC LIMIT 1`,
+      [`${prefix}%`]
+    );
+    let seq = 1;
+    if (rows.length > 0) {
+      const lastSeq = parseInt(rows[0].quote_no.slice(-5), 10);
+      if (!isNaN(lastSeq)) seq = lastSeq + 1;
+    }
+    return `${prefix}${String(seq).padStart(5, '0')}`;
+  }
+
+  /** 一键生成报价单（已确认工艺卡 → 报价单） */
+  async generateQuote(
+    cardId: number,
+    options: { markupRate?: number; quantity?: number; validUntil?: string; remark?: string },
+    userId: number
+  ): Promise<{ quoteId: number; quoteNo: string; quotedPrice: number }> {
+    const card = await this.getCardDetail(cardId);
+    if (!card) throw new Error('工艺卡不存在');
+    if (card.status !== 3) throw new Error('仅已确认状态可生成报价');
+
+    const markupRate = options.markupRate ?? 30;
+    const quantity = options.quantity ?? 1;
+    const quoteNo = await this.generateQuoteNo();
+    const totalCost = Number(card.total_cost || 0);
+    const quotedPrice = Math.round(totalCost * (1 + markupRate / 100) * quantity * 10000) / 10000;
+
+    return await transaction(async (conn) => {
+      const [result]: Loose = await conn.execute(
+        `INSERT INTO sal_quote
+         (quote_no, quote_date, customer_id, customer_name, sample_card_id, sample_no, product_name,
+          quantity, unit, material_cost, labor_cost, tool_cost, total_cost, markup_rate, quoted_price,
+          currency, status, valid_until, remark, create_by, create_time)
+         VALUES (?, CURDATE(), ?, ?, ?, ?, ?, ?, 'pcs', ?, ?, ?, ?, ?, ?, ?, 'CNY', 1, ?, ?, ?, NOW())`,
+        [
+          quoteNo,
+          card.customer_id || null,
+          card.customer_name || null,
+          cardId,
+          card.sample_no,
+          card.sample_name || card.product_name || null,
+          quantity,
+          Number(card.total_material_cost || 0),
+          Number(card.total_labor_cost || 0),
+          Number(card.total_tool_cost || 0),
+          totalCost,
+          markupRate,
+          quotedPrice,
+          options.validUntil || null,
+          options.remark || null,
+          userId,
+        ] as Loose[]
+      );
+      const quoteId = result.insertId;
+
+      await conn.execute(
+        `UPDATE dcprint_sample_process_card SET quote_id = ?, update_by = ?, update_time = NOW() WHERE id = ?`,
+        [quoteId, userId, cardId]
+      );
+
+      await getDomainEventOutbox().saveEvents(conn, 'SampleProcessCard', cardId, [
+        new SampleCardQuoteGeneratedEvent({
+          cardId,
+          quoteId,
+          quoteNo,
+          quotedPrice,
+          markupRate,
+          userId,
+        }),
+      ]);
+
+      secureLog('info', 'Quote generated from sample card', {
+        cardId,
+        quoteId,
+        quoteNo,
+        quotedPrice,
+        userId,
+      });
+      return { quoteId, quoteNo, quotedPrice };
+    });
+  }
+
+  // ===== 阶段 4: 转正式生产工单 =====
+
+  /** 生成正式工单号：PWO{YYYYMMDD}{5位序号} */
+  private async generateFormalWorkOrderNo(): Promise<string> {
+    const today = new Date();
+    const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    const prefix = `PWO${ymd}`;
+    const [rows]: Loose = await query(
+      `SELECT work_order_no FROM prod_work_order WHERE work_order_no LIKE ? ORDER BY id DESC LIMIT 1`,
+      [`${prefix}%`]
+    );
+    let seq = 1;
+    if (rows.length > 0) {
+      const lastSeq = parseInt(rows[0].work_order_no.slice(-5), 10);
+      if (!isNaN(lastSeq)) seq = lastSeq + 1;
+    }
+    return `${prefix}${String(seq).padStart(5, '0')}`;
+  }
+
+  /** 转正式生产工单（已确认工艺卡 → prod_work_order + BOM 明细） */
+  async convertToFormalWorkOrder(
+    cardId: number,
+    options: { planQty?: number; planStartDate?: string; planEndDate?: string; priority?: string },
+    userId: number
+  ): Promise<{ workOrderId: number; workOrderNo: string }> {
+    const card = await this.getCardDetail(cardId);
+    if (!card) throw new Error('工艺卡不存在');
+    if (card.status !== 3) throw new Error('仅已确认状态可转正式工单');
+    if (card.formal_work_order_id) throw new Error('该工艺卡已转过正式工单，不可重复转换');
+
+    const planQty = options.planQty ?? 1000;
+    const workOrderNo = await this.generateFormalWorkOrderNo();
+    const productName = card.sample_name || card.product_name || `打样产品 ${card.sample_no}`;
+
+    return await transaction(async (conn) => {
+      const [result]: Loose = await conn.execute(
+        `INSERT INTO prod_work_order
+         (work_order_no, order_no, customer_name, product_name, quantity, unit, status, priority,
+          plan_start_date, plan_end_date, create_time)
+         VALUES (?, ?, ?, ?, ?, 'pcs', 1, ?, ?, ?, NOW())`,
+        [
+          workOrderNo,
+          card.sample_no,
+          card.customer_name || '',
+          productName,
+          planQty,
+          options.priority || 'normal',
+          options.planStartDate || null,
+          options.planEndDate || null,
+        ] as Loose[]
+      );
+      const workOrderId = result.insertId;
+
+      if (card.items && card.items.length > 0) {
+        let lineNo = 1;
+        for (const item of card.items) {
+          await conn.execute(
+            `INSERT INTO prod_work_order_item
+             (work_order_id, line_no, material_id, material_name, quantity, unit, unit_price, total_price, create_time)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+            [
+              workOrderId,
+              lineNo++,
+              item.material_id || null,
+              item.material_name || '',
+              Number(item.unit_dosage || 0) * planQty,
+              item.unit || 'pcs',
+              Number(item.unit_cost || 0),
+              Number(item.unit_dosage || 0) * planQty * Number(item.unit_cost || 0),
+            ] as Loose[]
+          );
+        }
+      }
+
+      await conn.execute(
+        `UPDATE dcprint_sample_process_card SET formal_work_order_id = ?, update_by = ?, update_time = NOW() WHERE id = ?`,
+        [workOrderId, userId, cardId]
+      );
+
+      await getDomainEventOutbox().saveEvents(conn, 'SampleProcessCard', cardId, [
+        new SampleCardConvertedToWorkOrderEvent({
+          cardId,
+          workOrderId,
+          workOrderNo,
+          planQty,
+          userId,
+        }),
+      ]);
+
+      secureLog('info', 'Sample card converted to formal work order', {
+        cardId,
+        workOrderId,
+        workOrderNo,
+        planQty,
+        userId,
+      });
+      return { workOrderId, workOrderNo };
+    });
+  }
+
+  // ===== 阶段 5: 成本差异分析 =====
+
+  /** 成本差异分析（预估 vs 实际） */
+  async getCostVariance(cardId: number): Promise<{
+    estimated: { materialCost: number; laborCost: number; toolCost: number; totalCost: number };
+    actual: { materialCost: number; laborCost: number; toolCost: number; totalCost: number };
+    variance: {
+      materialCost: number;
+      laborCost: number;
+      toolCost: number;
+      totalCost: number;
+      varianceRate: number;
+    };
+    workOrderNo: string | null;
+  }> {
+    const card = await this.getCardDetail(cardId);
+    if (!card) throw new Error('工艺卡不存在');
+
+    const estimated = {
+      materialCost: Number(card.total_material_cost || 0),
+      laborCost: Number(card.total_labor_cost || 0),
+      toolCost: Number(card.total_tool_cost || 0),
+      totalCost: Number(card.total_cost || 0),
+    };
+
+    let actual = { ...estimated };
+    let workOrderNo: string | null = null;
+
+    if (card.formal_work_order_id) {
+      const [woRows]: Loose = await query(
+        `SELECT work_order_no FROM prod_work_order WHERE id = ? LIMIT 1`,
+        [card.formal_work_order_id]
+      );
+      if (woRows.length > 0) workOrderNo = woRows[0].work_order_no;
+
+      const [itemRows]: Loose = await query(
+        `SELECT COALESCE(SUM(total_price), 0) AS actual_material
+         FROM prod_work_order_item WHERE work_order_id = ?`,
+        [card.formal_work_order_id]
+      );
+      const actualMaterial = Number(itemRows[0]?.actual_material || 0);
+
+      // 实际人工成本暂取预估（无实际工时回填表，后续扩展）
+      actual = {
+        materialCost: actualMaterial,
+        laborCost: estimated.laborCost,
+        toolCost: estimated.toolCost,
+        totalCost: actualMaterial + estimated.laborCost + estimated.toolCost,
+      };
+    }
+
+    const variance = {
+      materialCost: Math.round((actual.materialCost - estimated.materialCost) * 10000) / 10000,
+      laborCost: Math.round((actual.laborCost - estimated.laborCost) * 10000) / 10000,
+      toolCost: Math.round((actual.toolCost - estimated.toolCost) * 10000) / 10000,
+      totalCost: Math.round((actual.totalCost - estimated.totalCost) * 10000) / 10000,
+      varianceRate:
+        estimated.totalCost > 0
+          ? Math.round(((actual.totalCost - estimated.totalCost) / estimated.totalCost) * 10000) /
+            100
+          : 0,
+    };
+
+    return { estimated, actual, variance, workOrderNo };
   }
 }

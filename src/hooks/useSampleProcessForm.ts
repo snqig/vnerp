@@ -82,6 +82,7 @@ const emptyForm = (): SampleProcessCardData => ({
   die_tool_id: undefined,
   material_loss_rate: 5,
   estimated_hour: undefined,
+  diagram_url: '',
   remark: '',
   items: [emptyItem()],
   steps: [emptyStep()],
@@ -267,6 +268,76 @@ export function useSampleProcessForm(cardId?: number) {
     localStorage.removeItem(DRAFT_KEY);
   }, []);
 
+  // 上传工艺图示（图文混排）
+  const uploadDiagram = useCallback(
+    async (file: File): Promise<string | null> => {
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const res = await authFetch('/api/dcprint/sample-card/upload-diagram', {
+          method: 'POST',
+          body: fd,
+        });
+        const result = await res.json();
+        if (result.success) {
+          updateField('diagram_url', result.data.url);
+          toast({ title: '图示上传成功' });
+          return result.data.url;
+        }
+        toast({ title: '上传失败', description: result.message, variant: 'destructive' });
+        return null;
+      } catch {
+        toast({ title: '上传失败', variant: 'destructive' });
+        return null;
+      }
+    },
+    [toast, updateField]
+  );
+
+  // 从标准模板导入（录入即沉淀 / 快速翻单）
+  const importFromTemplate = useCallback(
+    async (templateId: number): Promise<boolean> => {
+      setLoading(true);
+      try {
+        const res = await authFetch(`/api/dcprint/sample-card/template/${templateId}`);
+        const result = await res.json();
+        if (result.success) {
+          const t = result.data;
+          setFormData({
+            ...emptyForm(),
+            sample_name: t.template_name || '',
+            customer_id: t.customer_id,
+            customer_name: t.customer_name || '',
+            product_name: t.product_name || '',
+            substrate_material_id: t.substrate_material_id,
+            substrate_material_name: t.substrate_material_name || '',
+            spec: t.spec || '',
+            print_color: t.print_color || '',
+            ink_color_id: t.ink_color_id,
+            screen_plate_id: t.screen_plate_id,
+            die_tool_id: t.die_tool_id,
+            material_loss_rate: t.material_loss_rate || 5,
+            estimated_hour: t.estimated_hour,
+            diagram_url: t.diagram_url || '',
+            remark: t.remark || '',
+            items: t.items?.length ? t.items : [emptyItem()],
+            steps: t.steps?.length ? t.steps : [emptyStep()],
+          });
+          toast({ title: '模板已导入' });
+          return true;
+        }
+        toast({ title: '导入失败', variant: 'destructive' });
+        return false;
+      } catch {
+        toast({ title: '导入失败', variant: 'destructive' });
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toast]
+  );
+
   // 校验
   const validate = useCallback((): boolean => {
     setValidationErrors([]);
@@ -377,5 +448,7 @@ export function useSampleProcessForm(cardId?: number) {
     reset,
     restoreDraft,
     clearDraft,
+    uploadDiagram,
+    importFromTemplate,
   };
 }

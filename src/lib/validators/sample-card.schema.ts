@@ -55,6 +55,7 @@ export const sampleProcessCardSchema = z.object({
   die_tool_id: z.number().int().positive().optional(),
   material_loss_rate: z.number().min(0).max(100).default(5),
   estimated_hour: z.number().min(0).optional(),
+  diagram_url: z.string().max(500).optional(),
   remark: z.string().optional(),
   items: z.array(sampleProcessItemSchema).min(1, '至少需要一条物料明细'),
   steps: z.array(sampleProcessStepSchema).min(1, '至少需要一条工序明细'),

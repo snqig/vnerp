@@ -5,7 +5,7 @@
  * 本文件包含被 Drizzle ORM 构建器实际消费的表定义。
  * 新增 ORM 消费表时，从 SQL DDL 对应翻译并在此追加。
  *
- * 覆盖范围：20 张核心业务表（仓库 8 + 销售 5 + 采购 4 + 财务 2 + 生产 1）
+ * 覆盖范围：29 张核心业务表（仓库 8 + 销售 5 + 采购 4 + 财务 2 + 生产 1 + 正式工单 3 + 报价 2 + 工艺模板 3 + 打样 1）
  * drizzle-kit 迁移路径已废弃（drizzle/ 目录已清理），ORM 查询构建器活跃使用中。
  */
 
@@ -708,6 +708,222 @@ export const prdWorkOrder = mysqlTable(
   })
 );
 
+// ==================== 正式生产工单（prod_work_order 系列） ====================
+
+// 正式生产工单主表
+export const prodWorkOrder = mysqlTable(
+  'prod_work_order',
+  {
+    id: serial('id').primaryKey(),
+    workOrderNo: varchar('work_order_no', { length: 50 }).notNull(),
+    orderNo: varchar('order_no', { length: 50 }),
+    bomId: bigint('bom_id', { mode: 'number', unsigned: true }),
+    customerName: varchar('customer_name', { length: 100 }),
+    productName: varchar('product_name', { length: 200 }),
+    quantity: decimal('quantity', { precision: 18, scale: 4 }).notNull(),
+    unit: varchar('unit', { length: 20 }).default('pcs'),
+    status: tinyint('status').default(1),
+    priority: varchar('priority', { length: 20 }).default('normal'),
+    planStartDate: date('plan_start_date'),
+    planEndDate: date('plan_end_date'),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    workOrderNoIdx: uniqueIndex('uk_prod_work_order_no').on(table.workOrderNo),
+    orderNoIdx: index('idx_prod_order_no').on(table.orderNo),
+  })
+);
+
+// 正式生产工单 BOM 明细
+export const prodWorkOrderItem = mysqlTable(
+  'prod_work_order_item',
+  {
+    id: serial('id').primaryKey(),
+    workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }).notNull(),
+    lineNo: int('line_no').notNull().default(1),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }),
+    materialName: varchar('material_name', { length: 200 }),
+    quantity: decimal('quantity', { precision: 18, scale: 4 }).notNull(),
+    unit: varchar('unit', { length: 20 }).default('pcs'),
+    unitPrice: decimal('unit_price', { precision: 12, scale: 4 }).default('0.0000'),
+    totalPrice: decimal('total_price', { precision: 12, scale: 4 }).default('0.0000'),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    workOrderIdIdx: index('idx_prod_wo_item_work_order').on(table.workOrderId),
+  })
+);
+
+// 正式生产工单物料需求
+export const prodWorkOrderMaterialReq = mysqlTable(
+  'prod_work_order_material_req',
+  {
+    id: serial('id').primaryKey(),
+    workOrderId: bigint('work_order_id', { mode: 'number', unsigned: true }).notNull(),
+    bomLineId: bigint('bom_line_id', { mode: 'number', unsigned: true }),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }),
+    materialName: varchar('material_name', { length: 200 }),
+    requiredQty: decimal('required_qty', { precision: 18, scale: 4 }).notNull(),
+    unit: varchar('unit', { length: 20 }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    workOrderIdIdx: index('idx_prod_wo_req_work_order').on(table.workOrderId),
+  })
+);
+
+// ==================== 报价单（sal_quote 系列，migration 052） ====================
+
+// 报价单主表
+export const salQuote = mysqlTable(
+  'sal_quote',
+  {
+    id: serial('id').primaryKey(),
+    quoteNo: varchar('quote_no', { length: 50 }).notNull(),
+    quoteDate: date('quote_date').notNull(),
+    customerId: bigint('customer_id', { mode: 'number', unsigned: true }),
+    customerName: varchar('customer_name', { length: 100 }),
+    sampleCardId: bigint('sample_card_id', { mode: 'number', unsigned: true }),
+    sampleNo: varchar('sample_no', { length: 50 }),
+    productName: varchar('product_name', { length: 200 }),
+    quantity: int('quantity').notNull().default(1),
+    unit: varchar('unit', { length: 20 }).default('pcs'),
+    materialCost: decimal('material_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    laborCost: decimal('labor_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    toolCost: decimal('tool_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    totalCost: decimal('total_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    markupRate: decimal('markup_rate', { precision: 5, scale: 2 }).default('30.00'),
+    quotedPrice: decimal('quoted_price', { precision: 12, scale: 4 }).default('0.0000'),
+    currency: varchar('currency', { length: 10 }).default('CNY'),
+    status: tinyint('status').default(1),
+    validUntil: date('valid_until'),
+    remark: text('remark'),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: boolean('deleted').default(false),
+  },
+  (table) => ({
+    quoteNoIdx: uniqueIndex('uk_sal_quote_no').on(table.quoteNo),
+    customerIdx: index('idx_sal_quote_customer').on(table.customerId),
+    sampleCardIdx: index('idx_sal_quote_sample_card').on(table.sampleCardId),
+  })
+);
+
+// 报价单明细
+export const salQuoteItem = mysqlTable(
+  'sal_quote_item',
+  {
+    id: serial('id').primaryKey(),
+    quoteId: bigint('quote_id', { mode: 'number', unsigned: true }).notNull(),
+    lineNo: int('line_no').notNull().default(1),
+    itemName: varchar('item_name', { length: 200 }).notNull(),
+    quantity: decimal('quantity', { precision: 10, scale: 4 }).notNull().default('1.0000'),
+    unit: varchar('unit', { length: 20 }).default('pcs'),
+    unitCost: decimal('unit_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    unitPrice: decimal('unit_price', { precision: 12, scale: 4 }).default('0.0000'),
+    totalPrice: decimal('total_price', { precision: 12, scale: 4 }).default('0.0000'),
+    remark: varchar('remark', { length: 255 }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    quoteIdIdx: index('idx_sal_quote_item_quote').on(table.quoteId),
+  })
+);
+
+// ==================== 打样工艺模板（dcprint_sample_process_template 系列，migration 051） ====================
+
+// 模板主表
+export const sampleProcessTemplate = mysqlTable(
+  'dcprint_sample_process_template',
+  {
+    id: serial('id').primaryKey(),
+    templateNo: varchar('template_no', { length: 50 }).notNull(),
+    templateName: varchar('template_name', { length: 100 }).notNull(),
+    category: varchar('category', { length: 50 }),
+    tags: varchar('tags', { length: 255 }),
+    description: text('description'),
+    sourceCardId: bigint('source_card_id', { mode: 'number', unsigned: true }),
+    customerId: bigint('customer_id', { mode: 'number', unsigned: true }),
+    customerName: varchar('customer_name', { length: 100 }),
+    productName: varchar('product_name', { length: 200 }),
+    substrateMaterialId: bigint('substrate_material_id', { mode: 'number', unsigned: true }),
+    substrateMaterialName: varchar('substrate_material_name', { length: 100 }),
+    spec: varchar('spec', { length: 255 }),
+    printColor: varchar('print_color', { length: 100 }),
+    inkColorId: bigint('ink_color_id', { mode: 'number', unsigned: true }),
+    screenPlateId: bigint('screen_plate_id', { mode: 'number', unsigned: true }),
+    dieToolId: bigint('die_tool_id', { mode: 'number', unsigned: true }),
+    materialLossRate: decimal('material_loss_rate', { precision: 5, scale: 2 }).default('5.00'),
+    estimatedHour: decimal('estimated_hour', { precision: 6, scale: 2 }),
+    diagramUrl: varchar('diagram_url', { length: 500 }),
+    totalMaterialCost: decimal('total_material_cost', { precision: 12, scale: 4 }).default(
+      '0.0000'
+    ),
+    totalLaborCost: decimal('total_labor_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    totalToolCost: decimal('total_tool_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    totalCost: decimal('total_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    remark: text('remark'),
+    status: tinyint('status').default(1),
+    usageCount: int('usage_count').notNull().default(0),
+    createBy: bigint('create_by', { mode: 'number', unsigned: true }),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+    updateBy: bigint('update_by', { mode: 'number', unsigned: true }),
+    updateTime: datetime('update_time').default(sql`CURRENT_TIMESTAMP`),
+    deleted: boolean('deleted').default(false),
+  },
+  (table) => ({
+    templateNoIdx: uniqueIndex('uk_spt_template_no').on(table.templateNo),
+    categoryIdx: index('idx_spt_category').on(table.category),
+    customerIdx: index('idx_spt_customer').on(table.customerId),
+  })
+);
+
+// 模板物料明细
+export const sampleProcessTemplateItem = mysqlTable(
+  'dcprint_sample_process_template_item',
+  {
+    id: serial('id').primaryKey(),
+    templateId: bigint('template_id', { mode: 'number', unsigned: true }).notNull(),
+    itemType: tinyint('item_type').default(1),
+    materialId: bigint('material_id', { mode: 'number', unsigned: true }),
+    materialCode: varchar('material_code', { length: 50 }).notNull(),
+    materialName: varchar('material_name', { length: 100 }).notNull(),
+    specification: varchar('specification', { length: 255 }),
+    unitDosage: decimal('unit_dosage', { precision: 10, scale: 4 }).notNull(),
+    unit: varchar('unit', { length: 20 }),
+    unitCost: decimal('unit_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    lineCost: decimal('line_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    remark: varchar('remark', { length: 255 }),
+    sort: int('sort').notNull().default(0),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    templateIdIdx: index('idx_spt_item_template').on(table.templateId),
+  })
+);
+
+// 模板工序明细
+export const sampleProcessTemplateStep = mysqlTable(
+  'dcprint_sample_process_template_step',
+  {
+    id: serial('id').primaryKey(),
+    templateId: bigint('template_id', { mode: 'number', unsigned: true }).notNull(),
+    processId: bigint('process_id', { mode: 'number', unsigned: true }),
+    processName: varchar('process_name', { length: 100 }).notNull(),
+    workHour: decimal('work_hour', { precision: 6, scale: 2 }).notNull(),
+    hourlyRate: decimal('hourly_rate', { precision: 10, scale: 2 }).default('0.00'),
+    lineCost: decimal('line_cost', { precision: 12, scale: 4 }).default('0.0000'),
+    processParam: text('process_param'),
+    sort: int('sort').notNull().default(0),
+    createTime: datetime('create_time').default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => ({
+    templateIdIdx: index('idx_spt_step_template').on(table.templateId),
+  })
+);
+
 // ==================== 类型导出 ====================
 
 // 仓库入库
@@ -739,3 +955,15 @@ export type FinPayable = typeof finPayable.$inferSelect;
 
 // 生产
 export type PrdWorkOrder = typeof prdWorkOrder.$inferSelect;
+export type ProdWorkOrder = typeof prodWorkOrder.$inferSelect;
+export type ProdWorkOrderItem = typeof prodWorkOrderItem.$inferSelect;
+export type ProdWorkOrderMaterialReq = typeof prodWorkOrderMaterialReq.$inferSelect;
+
+// 报价单
+export type SalQuote = typeof salQuote.$inferSelect;
+export type SalQuoteItem = typeof salQuoteItem.$inferSelect;
+
+// 打样工艺模板
+export type SampleProcessTemplate = typeof sampleProcessTemplate.$inferSelect;
+export type SampleProcessTemplateItem = typeof sampleProcessTemplateItem.$inferSelect;
+export type SampleProcessTemplateStep = typeof sampleProcessTemplateStep.$inferSelect;

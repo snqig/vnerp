@@ -26,6 +26,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
   Plus,
   Trash2,
   Save,
@@ -35,8 +42,11 @@ import {
   Clock,
   Wrench,
   Package,
+  Image as ImageIcon,
+  Library,
 } from 'lucide-react';
 import { useSampleProcessForm } from '@/hooks/useSampleProcessForm';
+import { useToast } from '@/hooks/use-toast';
 
 interface Customer {
   id: number;
@@ -90,6 +100,50 @@ export default function SampleCardInputV2Page() {
   const [tools, setTools] = useState<Tool[]>([]);
   const [processSteps, setProcessSteps] = useState<ProcessStep[]>([]);
   const [materialSearch, setMaterialSearch] = useState<Record<number, string>>({});
+
+  const { toast } = useToast();
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [templates, setTemplates] = useState<
+    Array<{
+      id: number;
+      template_no: string;
+      template_name: string;
+      category: string | null;
+      total_cost: number;
+    }>
+  >([]);
+  const [templateLoading, setTemplateLoading] = useState(false);
+
+  const fetchTemplates = useCallback(async () => {
+    setTemplateLoading(true);
+    try {
+      const res = await authFetch('/api/dcprint/sample-card/template?page=1&pageSize=50');
+      const result = await res.json();
+      if (result.success) {
+        setTemplates(result.data.list || []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setTemplateLoading(false);
+    }
+  }, []);
+
+  const handleOpenTemplateDialog = () => {
+    fetchTemplates();
+    setTemplateDialogOpen(true);
+  };
+
+  const handleImportFromTemplate = async (templateId: number) => {
+    if (!confirm('导入将覆盖当前表单内容，确定继续？')) return;
+    try {
+      await form.importFromTemplate(templateId);
+      toast({ title: '模板已导入', description: '表单内容已更新' });
+      setTemplateDialogOpen(false);
+    } catch {
+      toast({ title: '导入失败', variant: 'destructive' });
+    }
+  };
 
   // 加载参考数据
   useEffect(() => {
@@ -232,6 +286,10 @@ export default function SampleCardInputV2Page() {
         <div className="flex gap-2">
           {!isReadonly && (
             <>
+              <Button variant="outline" onClick={handleOpenTemplateDialog}>
+                <Library className="h-4 w-4 mr-1" />
+                从模板导入
+              </Button>
               <Button variant="outline" onClick={handleSave} disabled={form.saving}>
                 <Save className="h-4 w-4 mr-1" />
                 保存草稿
@@ -428,6 +486,56 @@ export default function SampleCardInputV2Page() {
                 <Label>版本号</Label>
                 <Input value={form.formData.version_no || 'V1.0'} disabled />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* 工艺图示（图文混排） */}
+          <Card>
+            <CardHeader>
+              <CardTitle>工艺图示</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {form.formData.diagram_url ? (
+                <div className="space-y-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={form.formData.diagram_url}
+                    alt="工艺图示"
+                    className="max-w-md rounded border"
+                  />
+                  {!isReadonly && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => form.updateField('diagram_url', '')}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      移除图示
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                !isReadonly && (
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-50">
+                    <div className="flex flex-col items-center gap-2 text-gray-500">
+                      <ImageIcon className="h-8 w-8" />
+                      <span className="text-sm">点击上传工艺简图</span>
+                      <span className="text-xs text-gray-400">
+                        支持 jpg/png/gif/webp/svg，最大 10MB
+                      </span>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) await form.uploadDiagram(file);
+                      }}
+                    />
+                  </label>
+                )
+              )}
             </CardContent>
           </Card>
 
@@ -738,6 +846,57 @@ export default function SampleCardInputV2Page() {
           </div>
         </div>
       </div>
+
+      <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>从模板导入</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto">
+            {templateLoading ? (
+              <p className="text-center text-gray-400 py-8">加载中...</p>
+            ) : templates.length === 0 ? (
+              <p className="text-center text-gray-400 py-8">
+                暂无模板，请先在已确认工艺卡中「存为模板」
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>模板编号</TableHead>
+                    <TableHead>模板名称</TableHead>
+                    <TableHead>分类</TableHead>
+                    <TableHead className="text-right">总成本</TableHead>
+                    <TableHead className="text-center">操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {templates.map((t) => (
+                    <TableRow key={t.id}>
+                      <TableCell className="font-mono text-sm">{t.template_no}</TableCell>
+                      <TableCell className="font-medium">{t.template_name}</TableCell>
+                      <TableCell>{t.category || '-'}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        ¥{(t.total_cost || 0).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button size="sm" onClick={() => handleImportFromTemplate(t.id)}>
+                          选用
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
+              取消
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

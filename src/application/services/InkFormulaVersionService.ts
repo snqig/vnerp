@@ -1,23 +1,32 @@
 /**
  * 油墨配方版本管理 — 应用服务
  *
- * 封装核心业务规则：
- * - 同一色号同一时间有且仅有一个已生效版本
- * - 新版本生效时旧生效版本自动归档（状态置为已作废）
- * - 已生效版本不可编辑，必须通过「一键复用」生成草稿
- * - 版本号生成：复用时次版本号+1，重大调整可指定主版本号升级
+ * 编排业务流程，不包含业务规则：
+ * - 业务规则委托给领域层（InkFormulaVersion 聚合根）
+ * - 数据访问委托给仓储层（MysqlFormulaVersionRepository）
+ * - 版本对比委托给 FormulaCompareService
+ * - 成本计算委托给 FormulaCostService + MaterialCostProvider
  *
- * 依据: docs/油墨配方版本管理完整落地方案.md
+ * 依据: docs/油墨配方版本管理完整落地方案.md 第三、四节
  */
-import { query, execute, transaction } from '@/lib/db';
+import { query, transaction } from '@/lib/db';
 import { secureLog } from '@/lib/logger';
 import { getDomainEventOutbox } from '@/infrastructure/event-bus/DomainEventOutboxFactory';
 import {
   FormulaVersionActivatedEvent,
   FormulaVersionCancelledEvent,
 } from '@/domain/dcprint/events/FormulaVersionEvents';
+import { InkFormulaVersion } from '@/domain/dcprint/aggregates/InkFormulaVersion';
+import { FormulaItemVO, FormulaItemProps } from '@/domain/dcprint/value-objects/FormulaItemVO';
+import { FormulaCompareService } from '@/domain/dcprint/services/FormulaCompareService';
+import { FormulaCostService } from '@/domain/dcprint/services/FormulaCostService';
+import {
+  MysqlFormulaVersionRepository,
+  MysqlInkColorRepository,
+} from '@/infrastructure/repositories/MysqlFormulaVersionRepository';
+import { MaterialCostProvider } from '@/infrastructure/providers/MaterialCostProvider';
 
-// ===== 类型定义 =====
+// ===== DTO 类型定义（保持与 API 路由兼容）=====
 
 export interface InkColor {
   id: number;
@@ -57,7 +66,7 @@ export interface FormulaVersion {
   color_id: number;
   version_no: string;
   version_name: string | null;
-  status: number; // 1-草稿 2-已生效 3-已作废
+  status: number;
   change_reason: string | null;
   source_version_id: number | null;
   process_note: string | null;
@@ -103,6 +112,87 @@ export interface CompareResult {
   };
 }
 
+// ===== 领域服务 & 仓储实例 =====
+
+const versionRepo = new MysqlFormulaVersionRepository();
+const colorRepo = new MysqlInkColorRepository();
+const compareService = new FormulaCompareService();
+const costProvider = new MaterialCostProvider();
+const costService = new FormulaCostService(costProvider);
+
+// ===== 映射函数：领域对象 → DTO =====
+
+function itemVOToDTO(vo: FormulaItemVO): FormulaItem {
+  return {
+    id: vo.id,
+    version_id: vo.versionId,
+    material_id: vo.materialId,
+    material_code: vo.materialCode,
+    material_name: vo.materialName,
+    ink_type: vo.inkType,
+    brand: vo.brand,
+    ratio: Number(vo.ratio),
+    weight: vo.weight != null ? Number(vo.weight) : null,
+    unit: vo.unit,
+    add_order: vo.addOrder,
+    process_remark: vo.processRemark,
+    sort: vo.sort,
+    is_base: vo.isBase,
+    snapshot_unit_cost: vo.snapshotUnitCost != null ? Number(vo.snapshotUnitCost) : null,
+  };
+}
+
+function itemDTOToProps(item: FormulaItem): FormulaItemProps {
+  return {
+    id: item.id,
+    versionId: item.version_id,
+    materialId: item.material_id,
+    materialCode: item.material_code,
+    materialName: item.material_name,
+    inkType: item.ink_type,
+    brand: item.brand,
+    ratio: Number(item.ratio),
+    weight: item.weight != null ? Number(item.weight) : null,
+    unit: item.unit,
+    addOrder: item.add_order,
+    processRemark: item.process_remark,
+    sort: item.sort,
+    isBase: item.is_base,
+    snapshotUnitCost: item.snapshot_unit_cost != null ? Number(item.snapshot_unit_cost) : null,
+  };
+}
+
+function aggregateToDTO(agg: InkFormulaVersion): FormulaVersion {
+  const props = agg.toProps();
+  return {
+    id: props.id!,
+    color_id: props.colorId,
+    version_no: props.versionNo,
+    version_name: props.versionName ?? null,
+    status: props.status,
+    change_reason: props.changeReason ?? null,
+    source_version_id: props.sourceVersionId ?? null,
+    process_note: props.processNote ?? null,
+    total_weight: props.totalWeight != null ? Number(props.totalWeight) : null,
+    unit: props.unit ?? 'kg',
+    shelf_life_hours: props.shelfLifeHours ?? 168,
+    theoretical_cost: props.theoreticalCost != null ? Number(props.theoreticalCost) : null,
+    cost_snapshot_time: props.costSnapshotTime?.toISOString() ?? null,
+    cost_calc_status: props.costCalcStatus ?? 0,
+    cost_warning: props.costWarning ?? null,
+    activate_by: props.activateBy ?? null,
+    activate_time: props.activateTime?.toISOString() ?? null,
+    cancel_by: props.cancelBy ?? null,
+    cancel_reason: props.cancelReason ?? null,
+    cancel_time: props.cancelTime?.toISOString() ?? null,
+    create_by: props.createBy ?? null,
+    create_time: props.createTime?.toISOString() ?? '',
+    update_by: props.updateBy ?? null,
+    update_time: props.updateTime?.toISOString() ?? '',
+    items: props.items?.map(itemVOToDTO),
+  };
+}
+
 // ===== 色号管理 =====
 
 export async function listColors(params: {
@@ -114,62 +204,23 @@ export async function listColors(params: {
   list: (InkColor & { active_version_no: string | null; version_count: number })[];
   total: number;
 }> {
-  const { page, pageSize, keyword, status } = params;
-  let where = 'WHERE c.is_deleted = 0';
-  const sqlParams: (string | number)[] = [];
-
-  if (keyword) {
-    where += ' AND (c.color_code LIKE ? OR c.color_name LIKE ? OR c.pantone_code LIKE ?)';
-    const like = `%${keyword}%`;
-    sqlParams.push(like, like, like);
-  }
-  if (status) {
-    where += ' AND c.status = ?';
-    sqlParams.push(Number(status));
-  }
-
-  const totalRows: Loose = await query(
-    `SELECT COUNT(*) as total FROM dcprint_ink_color c ${where}`,
-    sqlParams
-  );
-  const total = totalRows[0]?.total || 0;
-
-  const rows: Loose = await query(
-    `SELECT c.*,
-       (SELECT v.version_no FROM dcprint_ink_formula_version v
-        WHERE v.color_id = c.id AND v.status = 2 AND v.is_deleted = 0
-        ORDER BY v.activate_time DESC LIMIT 1) as active_version_no,
-       (SELECT COUNT(*) FROM dcprint_ink_formula_version v
-        WHERE v.color_id = c.id AND v.is_deleted = 0) as version_count
-     FROM dcprint_ink_color c ${where}
-     ORDER BY c.create_time DESC
-     LIMIT ? OFFSET ?`,
-    [...sqlParams, pageSize, (page - 1) * pageSize]
-  );
-
-  return { list: rows as Loose[], total };
+  const result = await colorRepo.findList({
+    page: params.page,
+    pageSize: params.pageSize,
+    keyword: params.keyword,
+    status: params.status ? Number(params.status) : undefined,
+  });
+  return {
+    list: result.list as (InkColor & { active_version_no: string | null; version_count: number })[],
+    total: result.total,
+  };
 }
 
 export async function createColor(
   data: Omit<InkColor, 'id' | 'create_time' | 'update_time' | 'create_by' | 'update_by'>,
   operatorId: number
 ): Promise<number> {
-  const result: Loose = await execute(
-    `INSERT INTO dcprint_ink_color (color_code, color_name, color_series, base_ink_type, pantone_code, remark, status, create_by, update_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      data.color_code,
-      data.color_name,
-      data.color_series || null,
-      data.base_ink_type || null,
-      data.pantone_code || null,
-      data.remark || null,
-      data.status || 1,
-      operatorId,
-      operatorId,
-    ]
-  );
-  return result.insertId;
+  return colorRepo.save(data, operatorId);
 }
 
 export async function updateColor(
@@ -177,69 +228,44 @@ export async function updateColor(
   data: Partial<InkColor>,
   operatorId: number
 ): Promise<void> {
-  const fields: string[] = [];
-  const values: (string | number | null)[] = [];
-
-  const editable = [
-    'color_code',
-    'color_name',
-    'color_series',
-    'base_ink_type',
-    'pantone_code',
-    'remark',
-    'status',
-  ];
-  for (const f of editable) {
-    if (data[f as keyof InkColor] !== undefined) {
-      fields.push(`${f} = ?`);
-      values.push(data[f as keyof InkColor] as Loose);
-    }
-  }
-  if (fields.length === 0) return;
-
-  fields.push('update_by = ?');
-  values.push(operatorId);
-  values.push(id);
-
-  await execute(
-    `UPDATE dcprint_ink_color SET ${fields.join(', ')} WHERE id = ? AND is_deleted = 0`,
-    values
-  );
+  await colorRepo.update(id, data, operatorId);
 }
 
 export async function deleteColor(id: number): Promise<void> {
-  await execute('UPDATE dcprint_ink_color SET is_deleted = 1 WHERE id = ?', [id]);
+  await colorRepo.softDelete(id);
 }
 
 // ===== 版本管理 =====
 
 export async function listVersions(colorId: number): Promise<FormulaVersion[]> {
-  const rows: Loose = await query(
-    `SELECT v.* FROM dcprint_ink_formula_version v
-     WHERE v.color_id = ? AND v.is_deleted = 0
-     ORDER BY v.status ASC, v.create_time DESC`,
-    [colorId]
-  );
-  return rows as FormulaVersion[];
+  const versions = await versionRepo.findByColorId(colorId);
+  return versions.map(aggregateToDTO);
 }
 
 export async function getVersionDetail(id: number): Promise<FormulaVersion | null> {
-  const versions: Loose = await query(
-    `SELECT v.*, c.color_code, c.color_name, c.pantone_code, c.base_ink_type
-     FROM dcprint_ink_formula_version v
-     LEFT JOIN dcprint_ink_color c ON v.color_id = c.id
-     WHERE v.id = ? AND v.is_deleted = 0`,
-    [id]
-  );
-  if (!versions || versions.length === 0) return null;
+  const agg = await versionRepo.findByIdWithItems(id);
+  if (!agg) return null;
 
-  const version = versions[0];
-  const items: Loose = await query(
-    `SELECT * FROM dcprint_ink_formula_item WHERE version_id = ? ORDER BY sort, add_order`,
-    [id]
-  );
-  version.items = items;
-  return version as FormulaVersion;
+  // 补充色号关联信息（保持兼容）
+  const dto = aggregateToDTO(agg);
+  const color = await colorRepo.findById(agg.colorId);
+  if (color) {
+    dto.color = {
+      id: color.id,
+      color_code: color.color_code,
+      color_name: color.color_name,
+      color_series: color.color_series,
+      base_ink_type: color.base_ink_type,
+      pantone_code: color.pantone_code,
+      remark: color.remark,
+      status: color.status,
+      create_by: color.create_by,
+      create_time: color.create_time,
+      update_by: color.update_by,
+      update_time: color.update_time,
+    };
+  }
+  return dto;
 }
 
 export async function createDraftVersion(
@@ -255,72 +281,28 @@ export async function createDraftVersion(
   },
   operatorId: number
 ): Promise<number> {
-  // 生成版本号：查找该色号已有版本数，生成 V1.0, V1.1, ...
-  const existing: Loose = await query(
-    `SELECT version_no FROM dcprint_ink_formula_version
-     WHERE color_id = ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1`,
-    [data.color_id]
+  // 通过仓储获取已有版本号，生成新版本号
+  const existingVersionNos = await versionRepo.getVersionNos(data.color_id);
+  const versionNo = InkFormulaVersion.generateVersionNo(existingVersionNos);
+
+  // 使用聚合根工厂方法创建草稿版本
+  const version = InkFormulaVersion.createDraft(
+    data.color_id,
+    {
+      versionNo,
+      versionName: data.version_name ?? null,
+      changeReason: data.change_reason ?? null,
+      processNote: data.process_note ?? null,
+      totalWeight: data.total_weight ?? null,
+      unit: data.unit ?? 'kg',
+      shelfLifeHours: data.shelf_life_hours ?? 168,
+    },
+    data.items.map(itemDTOToProps),
+    operatorId
   );
 
-  let versionNo = 'V1.0';
-  if (existing && existing.length > 0) {
-    const lastNo = existing[0].version_no as string;
-    const match = lastNo.match(/^V(\d+)\.(\d+)$/);
-    if (match) {
-      const major = parseInt(match[1], 10);
-      const minor = parseInt(match[2], 10);
-      versionNo = `V${major}.${minor + 1}`;
-    }
-  }
-
-  const result = await transaction(async (conn) => {
-    const [insertResult]: Loose = await conn.execute(
-      `INSERT INTO dcprint_ink_formula_version
-       (color_id, version_no, version_name, status, change_reason, process_note, total_weight, unit, shelf_life_hours, cost_calc_status, create_by, update_by)
-       VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, 0, ?, ?)`,
-      [
-        data.color_id,
-        versionNo,
-        data.version_name || null,
-        data.change_reason || null,
-        data.process_note || null,
-        data.total_weight || null,
-        data.unit || 'kg',
-        data.shelf_life_hours || 168,
-        operatorId,
-        operatorId,
-      ]
-    );
-    const versionId = insertResult.insertId;
-
-    for (let i = 0; i < data.items.length; i++) {
-      const item = data.items[i];
-      await conn.execute(
-        `INSERT INTO dcprint_ink_formula_item
-         (version_id, material_id, material_code, material_name, ink_type, brand, ratio, weight, unit, add_order, process_remark, sort, is_base)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          versionId,
-          item.material_id || null,
-          item.material_code,
-          item.material_name,
-          item.ink_type || null,
-          item.brand || null,
-          item.ratio,
-          item.weight || null,
-          item.unit || 'kg',
-          item.add_order || 0,
-          item.process_remark || null,
-          item.sort || i + 1,
-          item.is_base || 0,
-        ]
-      );
-    }
-
-    return { id: versionId, version_no: versionNo };
-  });
-
-  return result.id;
+  // 通过仓储持久化
+  return versionRepo.save(version);
 }
 
 export async function duplicateVersion(
@@ -328,103 +310,51 @@ export async function duplicateVersion(
   data: { version_name?: string; change_reason?: string; major_version?: boolean },
   operatorId: number
 ): Promise<number> {
-  const source = await getVersionDetail(sourceId);
+  // 通过仓储获取源版本（含明细）
+  const source = await versionRepo.findByIdWithItems(sourceId);
   if (!source) {
     throw new Error('源版本不存在');
   }
 
-  // 生成新版本号
-  const match = source.version_no.match(/^V(\d+)\.(\d+)$/);
-  let newVersionNo = 'V1.0';
-  if (match) {
-    const major = parseInt(match[1], 10);
-    const minor = parseInt(match[2], 10);
-    if (data.major_version) {
-      newVersionNo = `V${major + 1}.0`;
-    } else {
-      newVersionNo = `V${major}.${minor + 1}`;
-    }
-  }
+  // 使用聚合根工厂方法一键复用
+  const newVersion = InkFormulaVersion.duplicateFrom(
+    source,
+    {
+      versionName: data.version_name ?? null,
+      changeReason: data.change_reason ?? null,
+      majorVersion: data.major_version ?? false,
+    },
+    operatorId
+  );
 
-  const result = await transaction(async (conn) => {
-    const [insertResult]: Loose = await conn.execute(
-      `INSERT INTO dcprint_ink_formula_version
-       (color_id, version_no, version_name, status, change_reason, source_version_id, process_note, total_weight, unit, shelf_life_hours, cost_calc_status, create_by, update_by)
-       VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
-      [
-        source.color_id,
-        newVersionNo,
-        data.version_name || `复制自 ${source.version_no}`,
-        data.change_reason || `从 ${source.version_no} 一键复用`,
-        sourceId,
-        source.process_note,
-        source.total_weight,
-        source.unit,
-        source.shelf_life_hours,
-        operatorId,
-        operatorId,
-      ]
-    );
-    const newVersionId = insertResult.insertId;
-
-    // 复制明细
-    if (source.items && source.items.length > 0) {
-      for (const item of source.items) {
-        await conn.execute(
-          `INSERT INTO dcprint_ink_formula_item
-           (version_id, material_id, material_code, material_name, ink_type, brand, ratio, weight, unit, add_order, process_remark, sort, is_base)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            newVersionId,
-            item.material_id,
-            item.material_code,
-            item.material_name,
-            item.ink_type,
-            item.brand,
-            item.ratio,
-            item.weight,
-            item.unit,
-            item.add_order,
-            item.process_remark,
-            item.sort,
-            item.is_base,
-          ]
-        );
-      }
-    }
-
-    return { id: newVersionId, version_no: newVersionNo };
-  });
+  // 通过仓储持久化
+  const newId = await versionRepo.save(newVersion);
 
   secureLog('info', 'Formula version duplicated', {
     sourceId,
-    newId: result.id,
-    newVersionNo,
+    newId,
+    newVersionNo: newVersion.versionNo,
     operatorId,
   });
 
-  return result.id;
+  return newId;
 }
 
 export async function activateVersion(id: number, operatorId: number): Promise<void> {
-  const version = await getVersionDetail(id);
-  if (!version) {
+  // 通过仓储获取版本
+  const agg = await versionRepo.findByIdWithItems(id);
+  if (!agg) {
     throw new Error('版本不存在');
   }
-  if (version.status !== 1) {
-    throw new Error('只有草稿版本可以生效');
-  }
+
+  // 聚合根执行业务规则
+  agg.activate(operatorId);
 
   await transaction(async (conn) => {
     // 将同色号下其他已生效版本置为已作废
-    await conn.execute(
-      `UPDATE dcprint_ink_formula_version
-       SET status = 3, cancel_by = ?, cancel_time = NOW(), cancel_reason = '新版本生效自动归档', update_by = ?
-       WHERE color_id = ? AND status = 2 AND is_deleted = 0 AND id != ?`,
-      [operatorId, operatorId, version.color_id, id]
-    );
+    await versionRepo.archiveOtherActiveVersions(agg.colorId, id, operatorId);
 
-    // 当前版本生效
+    // 更新版本状态为已生效
     await conn.execute(
       `UPDATE dcprint_ink_formula_version
        SET status = 2, activate_by = ?, activate_time = NOW(), update_by = ?
@@ -442,8 +372,8 @@ export async function activateVersion(id: number, operatorId: number): Promise<v
     await getDomainEventOutbox().saveEvents(conn, 'InkFormulaVersion', id, [
       new FormulaVersionActivatedEvent({
         versionId: id,
-        colorId: version.color_id,
-        versionNo: version.version_no,
+        colorId: agg.colorId,
+        versionNo: agg.versionNo,
         activatedBy: operatorId,
         theoreticalCost: costRows[0]?.theoretical_cost ?? null,
       }),
@@ -454,13 +384,14 @@ export async function activateVersion(id: number, operatorId: number): Promise<v
 }
 
 export async function cancelVersion(id: number, operatorId: number, reason: string): Promise<void> {
-  const version = await getVersionDetail(id);
-  if (!version) {
+  // 通过仓储获取版本
+  const agg = await versionRepo.findById(id);
+  if (!agg) {
     throw new Error('版本不存在');
   }
-  if (version.status !== 2) {
-    throw new Error('只有已生效版本可以作废');
-  }
+
+  // 聚合根执行业务规则
+  agg.cancel(operatorId, reason);
 
   await transaction(async (conn) => {
     await conn.execute(
@@ -473,8 +404,8 @@ export async function cancelVersion(id: number, operatorId: number, reason: stri
     await getDomainEventOutbox().saveEvents(conn, 'InkFormulaVersion', id, [
       new FormulaVersionCancelledEvent({
         versionId: id,
-        colorId: version.color_id,
-        versionNo: version.version_no,
+        colorId: agg.colorId,
+        versionNo: agg.versionNo,
         cancelledBy: operatorId,
         reason,
       }),
@@ -497,86 +428,46 @@ export async function updateVersion(
   },
   operatorId: number
 ): Promise<void> {
-  const version = await getVersionDetail(id);
-  if (!version) {
+  // 通过仓储获取版本
+  const agg = await versionRepo.findByIdWithItems(id);
+  if (!agg) {
     throw new Error('版本不存在');
   }
-  if (version.status !== 1) {
-    throw new Error('只有草稿版本可以编辑');
+
+  // 聚合根执行业务规则（内部校验状态）
+  agg.updateBaseInfo({
+    versionName: data.version_name ?? null,
+    changeReason: data.change_reason ?? null,
+    processNote: data.process_note ?? null,
+    totalWeight: data.total_weight ?? null,
+    unit: data.unit,
+    shelfLifeHours: data.shelf_life_hours,
+  });
+
+  if (data.items && Array.isArray(data.items)) {
+    agg.updateItems(data.items.map(itemDTOToProps));
   }
 
-  await transaction(async (conn) => {
-    const fields: string[] = [];
-    const values: (string | number | null)[] = [];
+  agg.toProps(); // 触发内部状态
+  // 更新 updateBy
+  (agg as Loose)._updateBy = operatorId;
 
-    const editable = [
-      'version_name',
-      'change_reason',
-      'process_note',
-      'total_weight',
-      'unit',
-      'shelf_life_hours',
-    ];
-    for (const f of editable) {
-      if (data[f as keyof typeof data] !== undefined) {
-        fields.push(`${f} = ?`);
-        values.push((data as Loose)[f]);
-      }
-    }
-
-    if (fields.length > 0) {
-      fields.push('update_by = ?');
-      values.push(operatorId);
-      values.push(id);
-      await conn.execute(
-        `UPDATE dcprint_ink_formula_version SET ${fields.join(', ')} WHERE id = ?`,
-        values
-      );
-    }
-
-    // 更新明细
-    if (data.items && Array.isArray(data.items)) {
-      await conn.execute('DELETE FROM dcprint_ink_formula_item WHERE version_id = ?', [id]);
-      for (let i = 0; i < data.items.length; i++) {
-        const item = data.items[i];
-        await conn.execute(
-          `INSERT INTO dcprint_ink_formula_item
-           (version_id, material_id, material_code, material_name, ink_type, brand, ratio, weight, unit, add_order, process_remark, sort, is_base)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            id,
-            item.material_id || null,
-            item.material_code,
-            item.material_name,
-            item.ink_type || null,
-            item.brand || null,
-            item.ratio,
-            item.weight || null,
-            item.unit || 'kg',
-            item.add_order || 0,
-            item.process_remark || null,
-            item.sort || i + 1,
-            item.is_base || 0,
-          ]
-        );
-      }
-    }
-  });
+  await versionRepo.update(agg);
 }
 
 export async function deleteVersion(id: number): Promise<void> {
-  const version = await getVersionDetail(id);
-  if (!version) {
+  // 通过仓储获取版本（检查状态）
+  const agg = await versionRepo.findById(id);
+  if (!agg) {
     throw new Error('版本不存在');
   }
-  if (version.status === 2) {
+
+  // 聚合根业务规则校验
+  if (!agg.canDelete) {
     throw new Error('已生效版本不可删除，请先作废');
   }
 
-  await transaction(async (conn) => {
-    await conn.execute('UPDATE dcprint_ink_formula_version SET is_deleted = 1 WHERE id = ?', [id]);
-    await conn.execute('DELETE FROM dcprint_ink_formula_item WHERE version_id = ?', [id]);
-  });
+  await versionRepo.softDelete(id);
 }
 
 // 独立更新草稿版本明细（对应 API：POST /version/:id/items）
@@ -585,45 +476,49 @@ export async function updateVersionItems(
   items: FormulaItem[],
   operatorId: number
 ): Promise<void> {
-  const version = await getVersionDetail(id);
-  if (!version) {
+  // 通过仓储获取版本
+  const agg = await versionRepo.findById(id);
+  if (!agg) {
     throw new Error('版本不存在');
   }
-  if (version.status !== 1) {
-    throw new Error('只有草稿版本可以编辑明细');
-  }
-  if (!Array.isArray(items)) {
-    throw new Error('items 必须为数组');
-  }
 
+  // 聚合根执行业务规则
+  agg.updateItems(items.map(itemDTOToProps));
+
+  // 更新 updateBy
+  (agg as Loose)._updateBy = operatorId;
+
+  // 通过仓储更新明细
+  const props = agg.toProps();
+  const versionId = props.id!;
   await transaction(async (conn) => {
-    await conn.execute('DELETE FROM dcprint_ink_formula_item WHERE version_id = ?', [id]);
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
+    await conn.execute('DELETE FROM dcprint_ink_formula_item WHERE version_id = ?', [versionId]);
+    for (let i = 0; i < (props.items?.length ?? 0); i++) {
+      const item = props.items![i];
       await conn.execute(
         `INSERT INTO dcprint_ink_formula_item
          (version_id, material_id, material_code, material_name, ink_type, brand, ratio, weight, unit, add_order, process_remark, sort, is_base)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          id,
-          item.material_id || null,
-          item.material_code,
-          item.material_name,
-          item.ink_type || null,
+          versionId,
+          item.materialId || null,
+          item.materialCode,
+          item.materialName,
+          item.inkType || null,
           item.brand || null,
           item.ratio,
           item.weight || null,
           item.unit || 'kg',
-          item.add_order || 0,
-          item.process_remark || null,
+          item.addOrder || 0,
+          item.processRemark || null,
           item.sort || i + 1,
-          item.is_base || 0,
+          item.isBase || 0,
         ]
       );
     }
     await conn.execute(
       'UPDATE dcprint_ink_formula_version SET update_by = ?, cost_calc_status = 0 WHERE id = ?',
-      [operatorId, id]
+      [operatorId, versionId]
     );
   });
 }
@@ -631,100 +526,51 @@ export async function updateVersionItems(
 // ===== 版本对比 =====
 
 export async function compareVersions(leftId: number, rightId: number): Promise<CompareResult> {
-  const left = await getVersionDetail(leftId);
-  const right = await getVersionDetail(rightId);
+  // 通过仓储获取两个版本
+  const leftAgg = await versionRepo.findByIdWithItems(leftId);
+  const rightAgg = await versionRepo.findByIdWithItems(rightId);
 
-  if (!left || !right) {
+  if (!leftAgg || !rightAgg) {
     throw new Error('版本不存在');
   }
-  if (left.color_id !== right.color_id) {
-    throw new Error('只能对比同色号的版本');
-  }
 
-  // 以 material_code 为匹配键
-  const leftMap = new Map<string, FormulaItem>();
-  const rightMap = new Map<string, FormulaItem>();
+  // 使用领域服务计算差异
+  const result = compareService.compare(leftAgg, rightAgg);
 
-  (left.items || []).forEach((item) => leftMap.set(item.material_code, item));
-  (right.items || []).forEach((item) => rightMap.set(item.material_code, item));
-
-  const added: FormulaItem[] = [];
-  const removed: FormulaItem[] = [];
-  const modified: { left: FormulaItem; right: FormulaItem; fields: string[] }[] = [];
-  const unchanged: FormulaItem[] = [];
-
-  const allCodes = new Set([...leftMap.keys(), ...rightMap.keys()]);
-  for (const code of allCodes) {
-    const lItem = leftMap.get(code);
-    const rItem = rightMap.get(code);
-
-    if (!lItem && rItem) {
-      added.push(rItem);
-    } else if (lItem && !rItem) {
-      removed.push(lItem);
-    } else if (lItem && rItem) {
-      const fields: string[] = [];
-      if (Number(lItem.ratio) !== Number(rItem.ratio)) fields.push('ratio');
-      if (Number(lItem.weight || 0) !== Number(rItem.weight || 0)) fields.push('weight');
-      if ((lItem.add_order || 0) !== (rItem.add_order || 0)) fields.push('add_order');
-      if ((lItem.process_remark || '') !== (rItem.process_remark || ''))
-        fields.push('process_remark');
-
-      if (fields.length > 0) {
-        modified.push({ left: lItem, right: rItem, fields });
-      } else {
-        unchanged.push(rItem);
-      }
-    }
-  }
-
-  // 基础信息差异
-  const diffFields: string[] = [];
-  const baseFields = [
-    'version_no',
-    'version_name',
-    'change_reason',
-    'process_note',
-    'total_weight',
-    'theoretical_cost',
-  ];
-  for (const f of baseFields) {
-    if (String((left as Loose)[f] ?? '') !== String((right as Loose)[f] ?? '')) {
-      diffFields.push(f);
-    }
-  }
-
+  // 转为 DTO 格式
   return {
     baseInfo: {
       left: {
-        id: left.id,
-        version_no: left.version_no,
-        version_name: left.version_name,
-        change_reason: left.change_reason,
-        process_note: left.process_note,
-        total_weight: left.total_weight,
-        theoretical_cost: left.theoretical_cost,
+        id: result.baseInfo.left.id,
+        version_no: result.baseInfo.left.versionNo,
+        version_name: result.baseInfo.left.versionName,
+        change_reason: result.baseInfo.left.changeReason,
+        process_note: result.baseInfo.left.processNote,
+        total_weight: result.baseInfo.left.totalWeight,
+        theoretical_cost: result.baseInfo.left.theoreticalCost,
       },
       right: {
-        id: right.id,
-        version_no: right.version_no,
-        version_name: right.version_name,
-        change_reason: right.change_reason,
-        process_note: right.process_note,
-        total_weight: right.total_weight,
-        theoretical_cost: right.theoretical_cost,
+        id: result.baseInfo.right.id,
+        version_no: result.baseInfo.right.versionNo,
+        version_name: result.baseInfo.right.versionName,
+        change_reason: result.baseInfo.right.changeReason,
+        process_note: result.baseInfo.right.processNote,
+        total_weight: result.baseInfo.right.totalWeight,
+        theoretical_cost: result.baseInfo.right.theoreticalCost,
       },
-      diffFields,
+      diffFields: result.baseInfo.diffFields,
     },
-    items: { added, removed, modified, unchanged },
-    summary: {
-      totalLeft: left.items?.length || 0,
-      totalRight: right.items?.length || 0,
-      addedCount: added.length,
-      removedCount: removed.length,
-      modifiedCount: modified.length,
-      unchangedCount: unchanged.length,
+    items: {
+      added: result.items.added.map(itemVOToDTO),
+      removed: result.items.removed.map(itemVOToDTO),
+      modified: result.items.modified.map((m) => ({
+        left: itemVOToDTO(m.left),
+        right: itemVOToDTO(m.right),
+        fields: m.fields,
+      })),
+      unchanged: result.items.unchanged.map(itemVOToDTO),
     },
+    summary: result.summary,
   };
 }
 
@@ -733,7 +579,7 @@ export async function compareVersions(leftId: number, rightId: number): Promise<
 /**
  * 计算配方理论成本并快照到版本表及明细表
  * 理论成本 = Σ (配比比例% × 原料单位成本)
- * 成本取值：base_ink.unit_price（计划价）
+ * 成本取值：优先 inv_material.weighted_avg_cost，降级 base_ink.unit_price
  */
 async function calculateAndSnapshotCost(conn: Loose, versionId: number): Promise<void> {
   const items: Loose = await query(
@@ -794,47 +640,35 @@ export async function previewCost(items: FormulaItem[]): Promise<{
     return { totalCost: 0, itemCosts: [], warnings: [] };
   }
 
-  const materialIds = items.filter((i) => i.material_id).map((i) => i.material_id);
-  const costMap = new Map<number, number>();
-  if (materialIds.length > 0) {
-    const costs: Loose = await query(`SELECT id, unit_price FROM base_ink WHERE id IN (?)`, [
-      materialIds,
-    ]);
-    for (const c of costs) {
-      costMap.set(c.id, Number(c.unit_price) || 0);
-    }
-  }
+  // 使用领域服务计算成本
+  const itemVOs = items.map((item) => new FormulaItemVO(itemDTOToProps(item)));
+  const result = await costService.calculate(itemVOs);
 
-  let totalCost = 0;
-  const warnings: string[] = [];
-  const itemCosts = items.map((item) => {
-    const unitCost = item.material_id ? costMap.get(item.material_id) || 0 : 0;
-    if (unitCost === 0 && item.material_id) {
-      warnings.push(`${item.material_name} 缺少成本数据`);
-    }
-    const itemCost = (Number(item.ratio) / 100) * unitCost;
-    totalCost += itemCost;
-    return {
-      material_code: item.material_code,
-      material_name: item.material_name,
-      ratio: Number(item.ratio),
-      unit_cost: unitCost,
-      item_cost: Number(itemCost.toFixed(4)),
-    };
-  });
-
-  return { totalCost: Number(totalCost.toFixed(4)), itemCosts, warnings };
+  return {
+    totalCost: result.totalCost,
+    itemCosts: result.itemCosts.map((c) => ({
+      material_code: c.materialCode,
+      material_name: c.materialName,
+      ratio: c.ratio,
+      unit_cost: c.unitCost,
+      item_cost: c.itemCost,
+    })),
+    warnings: result.warnings,
+  };
 }
 
 /**
  * 手动重算草稿版本成本（更新预览值）
  */
 export async function recalculateCost(versionId: number): Promise<void> {
-  const version = await getVersionDetail(versionId);
-  if (!version) {
+  // 通过仓储获取版本
+  const agg = await versionRepo.findByIdWithItems(versionId);
+  if (!agg) {
     throw new Error('版本不存在');
   }
-  if (version.status !== 1) {
+
+  // 聚合根业务规则校验
+  if (!agg.isDraft) {
     throw new Error('只有草稿版本可以重算成本');
   }
 

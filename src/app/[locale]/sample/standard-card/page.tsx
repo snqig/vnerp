@@ -23,7 +23,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Edit, FileText, Copy, CheckCircle, XCircle } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Plus,
+  Search,
+  Edit,
+  FileText,
+  Copy,
+  CheckCircle,
+  XCircle,
+  Bookmark,
+  Library,
+  FileText as QuoteIcon,
+  ArrowRightCircle,
+  TrendingUp,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface SampleCard {
@@ -36,6 +56,8 @@ interface SampleCard {
   status: number;
   total_cost: number;
   sample_work_order_no: string | null;
+  formal_work_order_id: number | null;
+  quote_id: number | null;
   create_time: string;
 }
 
@@ -136,6 +158,97 @@ export default function SampleCardListPage() {
     }
   };
 
+  const handleSaveAsTemplate = async (card: SampleCard) => {
+    const templateName = window.prompt('请输入模板名称', `${card.sample_name} - 模板`);
+    if (!templateName?.trim()) return;
+    const category = window.prompt('请输入分类（可留空）', '') || '';
+    try {
+      const res = await authFetch(`/api/dcprint/sample-card/${card.id}/save-as-template`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          templateName: templateName.trim(),
+          category: category.trim() || undefined,
+        }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast({ title: '已存为模板', description: `模板ID: ${result.data.id}` });
+      } else {
+        toast({ title: '保存失败', description: result.message, variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: '保存失败', variant: 'destructive' });
+    }
+  };
+
+  const handleGenerateQuote = async (card: SampleCard) => {
+    const markupInput = window.prompt('请输入加价率（%，默认 30）', '30');
+    if (markupInput === null) return;
+    const markupRate = Number(markupInput) || 30;
+    try {
+      const res = await authFetch(`/api/dcprint/sample-card/${card.id}/generate-quote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markupRate }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast({
+          title: '报价单已生成',
+          description: `${result.data.quoteNo} - ¥${result.data.quotedPrice.toFixed(2)}`,
+        });
+      } else {
+        toast({ title: '生成失败', description: result.message, variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: '生成失败', variant: 'destructive' });
+    }
+  };
+
+  const handleConvertWorkOrder = async (card: SampleCard) => {
+    const qtyInput = window.prompt('请输入计划数量', '1000');
+    if (qtyInput === null) return;
+    const planQty = Number(qtyInput) || 1000;
+    try {
+      const res = await authFetch(`/api/dcprint/sample-card/${card.id}/convert-work-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planQty }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        toast({
+          title: '正式生产工单已生成',
+          description: result.data.workOrderNo,
+        });
+        fetchList();
+      } else {
+        toast({ title: '转换失败', description: result.message, variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: '转换失败', variant: 'destructive' });
+    }
+  };
+
+  const [varianceDialogOpen, setVarianceDialogOpen] = useState(false);
+  const [varianceData, setVarianceData] = useState<Loose | null>(null);
+
+  const handleViewVariance = async (card: SampleCard) => {
+    try {
+      const res = await authFetch(`/api/dcprint/sample-card/${card.id}/cost-variance`);
+      const result = await res.json();
+      if (result.success) {
+        setVarianceData(result.data);
+        setVarianceDialogOpen(true);
+      } else {
+        toast({ title: '查询失败', description: result.message, variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: '查询失败', variant: 'destructive' });
+    }
+  };
+
   const totalPages = Math.ceil(total / 20);
 
   return (
@@ -143,6 +256,10 @@ export default function SampleCardListPage() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold">打样工艺卡</h1>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => router.push('/sample/standard-card/template')}>
+            <Library className="h-4 w-4 mr-1" />
+            模板库
+          </Button>
           <Button variant="outline" onClick={() => router.push('/sample/standard-card/input')}>
             <Plus className="h-4 w-4 mr-1" />
             {'新建工艺卡'}
@@ -277,6 +394,46 @@ export default function SampleCardListPage() {
                         <CheckCircle className="h-3.5 w-3.5 text-green-600" />
                       </Button>
                     )}
+                    {card.status === 3 && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="存为模板"
+                        onClick={() => handleSaveAsTemplate(card)}
+                      >
+                        <Bookmark className="h-3.5 w-3.5 text-blue-600" />
+                      </Button>
+                    )}
+                    {card.status === 3 && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="生成报价"
+                        onClick={() => handleGenerateQuote(card)}
+                      >
+                        <QuoteIcon className="h-3.5 w-3.5 text-green-600" />
+                      </Button>
+                    )}
+                    {card.status === 3 && !card.formal_work_order_id && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="转正式工单"
+                        onClick={() => handleConvertWorkOrder(card)}
+                      >
+                        <ArrowRightCircle className="h-3.5 w-3.5 text-orange-600" />
+                      </Button>
+                    )}
+                    {card.status === 3 && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="成本差异"
+                        onClick={() => handleViewVariance(card)}
+                      >
+                        <TrendingUp className="h-3.5 w-3.5 text-purple-600" />
+                      </Button>
+                    )}
                     {card.status !== 4 && (
                       <Button
                         size="icon"
@@ -322,6 +479,88 @@ export default function SampleCardListPage() {
           </Button>
         </div>
       )}
+
+      <Dialog open={varianceDialogOpen} onOpenChange={setVarianceDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>成本差异分析</DialogTitle>
+          </DialogHeader>
+          {varianceData && (
+            <div className="space-y-3 py-2">
+              {varianceData.workOrderNo && (
+                <p className="text-sm text-gray-600">关联工单：{varianceData.workOrderNo}</p>
+              )}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>项目</TableHead>
+                    <TableHead className="text-right">预估</TableHead>
+                    <TableHead className="text-right">实际</TableHead>
+                    <TableHead className="text-right">差异</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>物料成本</TableCell>
+                    <TableCell className="text-right font-mono">
+                      ¥{varianceData.estimated.materialCost.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      ¥{varianceData.actual.materialCost.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      ¥{varianceData.variance.materialCost.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>人工成本</TableCell>
+                    <TableCell className="text-right font-mono">
+                      ¥{varianceData.estimated.laborCost.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      ¥{varianceData.actual.laborCost.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      ¥{varianceData.variance.laborCost.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>工装成本</TableCell>
+                    <TableCell className="text-right font-mono">
+                      ¥{varianceData.estimated.toolCost.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      ¥{varianceData.actual.toolCost.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      ¥{varianceData.variance.toolCost.toFixed(2)}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="font-semibold">
+                    <TableCell>合计</TableCell>
+                    <TableCell className="text-right font-mono">
+                      ¥{varianceData.estimated.totalCost.toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      ¥{varianceData.actual.totalCost.toFixed(2)}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right font-mono ${varianceData.variance.totalCost >= 0 ? 'text-red-600' : 'text-green-600'}`}
+                    >
+                      ¥{varianceData.variance.totalCost.toFixed(2)}
+                      {' ('}
+                      {varianceData.variance.varianceRate.toFixed(2)}%{')'}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setVarianceDialogOpen(false)}>关闭</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
