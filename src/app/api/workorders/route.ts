@@ -38,11 +38,11 @@ export const GET = withPermission(
        WHERE wo.work_order_no = ? AND wo.deleted = 0`,
         [id]
       );
-      if (!workOrders || (workOrders as any[]).length === 0) {
+      if (!workOrders || (workOrders as Loose[]).length === 0) {
         return commonErrors.notFound('工单不存在');
       }
 
-      const workOrder = (workOrders as any[])[0];
+      const workOrder = (workOrders as Loose[])[0];
 
       const items = await query(
         `SELECT * FROM prod_work_order_item WHERE work_order_id = ? ORDER BY line_no ASC`,
@@ -61,7 +61,7 @@ export const GET = withPermission(
       return successResponse({
         ...workOrder,
         items,
-        bom_info: (bomInfo as any[])[0] || null,
+        bom_info: (bomInfo as Loose[])[0] || null,
       });
     }
 
@@ -72,14 +72,14 @@ export const GET = withPermission(
       );
       return successResponse({
         list: workOrders,
-        total: (workOrders as any[]).length,
+        total: (workOrders as Loose[]).length,
       });
     }
 
     let sql = `SELECT wo.*, 
     (SELECT COUNT(*) FROM prod_work_order_item WHERE work_order_id = wo.id) as item_count
     FROM prod_work_order wo WHERE wo.deleted = 0`;
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (status && status !== 'all') {
       sql += ' AND wo.status = ?';
@@ -100,7 +100,7 @@ export const GET = withPermission(
 
     return successResponse({
       list: workOrders,
-      total: (countResult as any[])[0]?.total || (workOrders as any[]).length,
+      total: (countResult as Loose[])[0]?.total || (workOrders as Loose[]).length,
       page,
       pageSize,
     });
@@ -123,7 +123,7 @@ export const POST = withPermission(
         [order_no]
       );
 
-      const saleOrder = (orderRows as any[])[0];
+      const saleOrder = (orderRows as Loose[])[0];
       if (!saleOrder) {
         throw new Error('销售订单不存在');
       }
@@ -137,13 +137,16 @@ export const POST = withPermission(
         [order_no, WORK_ORDER_STATUS.CANCELLED]
       );
 
-      if ((existingWO as any[])[0].cnt > 0) {
+      if ((existingWO as Loose[])[0].cnt > 0) {
         throw new Error('该销售订单已存在未取消的工单');
       }
 
       const workOrderNo = await generateDocumentNo('work_order');
 
-      const totalQuantity = items.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0);
+      const totalQuantity = items.reduce(
+        (sum: number, item: Loose) => sum + (item.quantity || 0),
+        0
+      );
       const product_name = items.length === 1 ? items[0].material_name : `${items.length}种产品`;
 
       const [orderResult] = await connection.execute(
@@ -165,7 +168,7 @@ export const POST = withPermission(
         ]
       );
 
-      const workOrderId = (orderResult as any).insertId;
+      const workOrderId = (orderResult as Loose).insertId;
 
       let lineNo = 1;
       for (const item of items) {
@@ -193,7 +196,7 @@ export const POST = withPermission(
           [bom_id]
         );
 
-        for (const bomLine of bomLines as any[]) {
+        for (const bomLine of bomLines as Loose[]) {
           const requiredQty =
             bomLine.quantity * totalQuantity * (1 + (bomLine.scrap_rate || 0) / 100);
           await connection.execute(
@@ -270,13 +273,13 @@ export const PUT = withPermission(
         [id]
       );
 
-      const workOrder = (woRows as any[])[0];
+      const workOrder = (woRows as Loose[])[0];
       if (!workOrder) {
         throw new Error('工单不存在');
       }
 
       const updateFields: string[] = [];
-      const updateParams: any[] = [];
+      const updateParams: Loose[] = [];
 
       if (status) {
         if (workOrder.status === WORK_ORDER_STATUS.COMPLETED) {
@@ -324,7 +327,7 @@ export const PUT = withPermission(
           ]
         );
 
-        if ((otherWO as any[])[0].cnt === 0) {
+        if ((otherWO as Loose[])[0].cnt === 0) {
           await connection.execute(
             `UPDATE sal_order SET status = 4, update_time = NOW() WHERE order_no = ? AND deleted = 0`,
             [workOrder.order_no]
@@ -339,7 +342,7 @@ export const PUT = withPermission(
           [workOrder.order_no, WORK_ORDER_STATUS.CANCELLED]
         );
 
-        if ((otherActiveWO as any[])[0].cnt === 0) {
+        if ((otherActiveWO as Loose[])[0].cnt === 0) {
           await connection.execute(
             `UPDATE sal_order SET status = 2, update_time = NOW() WHERE order_no = ? AND deleted = 0`,
             [workOrder.order_no]
@@ -384,7 +387,7 @@ export const DELETE = withPermission(
         [id]
       );
 
-      const workOrder = (woRows as any[])[0];
+      const workOrder = (woRows as Loose[])[0];
       if (!workOrder) {
         throw new Error('工单不存在');
       }
@@ -405,7 +408,7 @@ export const DELETE = withPermission(
           [workOrder.order_no, WORK_ORDER_STATUS.CANCELLED]
         );
 
-        if ((otherActiveWO as any[])[0].cnt === 0) {
+        if ((otherActiveWO as Loose[])[0].cnt === 0) {
           await connection.execute(
             `UPDATE sal_order SET status = 2, update_time = NOW() WHERE order_no = ? AND deleted = 0`,
             [workOrder.order_no]

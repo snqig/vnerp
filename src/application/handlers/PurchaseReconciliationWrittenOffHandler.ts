@@ -25,7 +25,7 @@ export class PurchaseReconciliationWrittenOffHandler implements EventHandler<Pur
     await transaction(async (conn) => {
       for (const record of writeOffRecords) {
         // SELECT ... FOR UPDATE 锁定应付单行，防止并发核销导致 paid_amount/balance 丢失更新
-        const [payableRow]: any[] = await conn.execute(
+        const [payableRow]: Loose[] = await conn.execute(
           `SELECT id, payable_no, amount, paid_amount, balance, status
            FROM fin_payable
            WHERE id = ?

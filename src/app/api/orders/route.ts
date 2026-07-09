@@ -43,16 +43,16 @@ export const GET = withPermission(
         [id]
       );
 
-      if (!orders || (orders as any[]).length === 0) {
+      if (!orders || (orders as Loose[]).length === 0) {
         return commonErrors.notFound('订单不存在');
       }
 
-      const order = (orders as any[])[0];
+      const order = (orders as Loose[])[0];
 
       // 获取订单明细
       let items = await query('SELECT * FROM sal_order_item WHERE order_id = ?', [order.id]);
 
-      if (!items || (items as any[]).length === 0) {
+      if (!items || (items as Loose[]).length === 0) {
         items = await query(
           `SELECT od.material_id, m.material_name, od.quantity, od.unit, od.unit_price, od.total_amount as total_price
          FROM sal_order_detail od
@@ -72,7 +72,7 @@ export const GET = withPermission(
         status: order.status,
         total_amount: parseFloat(order.total_amount),
         total_with_tax: order.total_with_tax ? parseFloat(order.total_with_tax) : undefined,
-        items: (items as any[]).map((item: any) => ({
+        items: (items as Loose[]).map((item: Loose) => ({
           material_name: item.material_name || '',
           quantity: parseFloat(item.quantity),
           unit: item.unit || '',
@@ -89,7 +89,7 @@ export const GET = withPermission(
 
     // 获取订单列表
     let sql = `SELECT so.*, c.customer_name FROM sal_order so LEFT JOIN crm_customer c ON so.customer_id = c.id WHERE so.deleted = 0`;
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (status && status !== 'all') {
       sql += ' AND so.status = ?';
@@ -106,10 +106,10 @@ export const GET = withPermission(
     const orders = await query(sql, params);
 
     const orderList = await Promise.all(
-      (orders as any[]).map(async (order: any) => {
+      (orders as Loose[]).map(async (order: Loose) => {
         let items = await query('SELECT * FROM sal_order_item WHERE order_id = ?', [order.id]);
 
-        if (!items || (items as any[]).length === 0) {
+        if (!items || (items as Loose[]).length === 0) {
           items = await query(
             `SELECT od.material_id, m.material_name, od.quantity, od.unit, od.unit_price, od.total_amount as total_price
            FROM sal_order_detail od
@@ -129,7 +129,7 @@ export const GET = withPermission(
           status: order.status,
           total_amount: parseFloat(order.total_amount),
           total_with_tax: order.total_with_tax ? parseFloat(order.total_with_tax) : undefined,
-          items: (items as any[]).map((item: any) => ({
+          items: (items as Loose[]).map((item: Loose) => ({
             material_name: item.material_name || '',
             quantity: parseFloat(item.quantity),
             unit: item.unit || '',
@@ -167,7 +167,7 @@ export const POST = withPermission(
         [finalCustomerId]
       );
       if (customer) {
-        finalCustomerName = (customer as any).customer_name;
+        finalCustomerName = (customer as Loose).customer_name;
       }
     }
 
@@ -192,7 +192,7 @@ export const POST = withPermission(
     }
 
     const total_amount = items.reduce(
-      (sum: number, item: any) => sum + item.quantity * item.unit_price,
+      (sum: number, item: Loose) => sum + item.quantity * item.unit_price,
       0
     );
 
@@ -204,7 +204,7 @@ export const POST = withPermission(
       [orderNo, finalCustomerId, delivery_date, total_amount, remark || '']
     );
 
-    const orderId = (orderResult as any).insertId;
+    const orderId = (orderResult as Loose).insertId;
 
     for (const item of items) {
       await query(
@@ -238,18 +238,18 @@ export const PUT = withPermission(
 
     const orders = await query('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
 
-    if (!orders || (orders as any[]).length === 0) {
+    if (!orders || (orders as Loose[]).length === 0) {
       return commonErrors.notFound('订单不存在');
     }
 
-    const order = (orders as any[])[0];
+    const order = (orders as Loose[])[0];
 
     if (order.status === 'completed' || order.status === 'cancelled') {
       return errorResponse('已完成的订单不能修改', 400, 400);
     }
 
     const updateFields: string[] = [];
-    const updateParams: any[] = [];
+    const updateParams: Loose[] = [];
 
     if (status) {
       updateFields.push('status = ?');
@@ -292,11 +292,11 @@ export const DELETE = withPermission(
     // 查询订单
     const orders = await query('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
 
-    if (!orders || (orders as any[]).length === 0) {
+    if (!orders || (orders as Loose[]).length === 0) {
       return commonErrors.notFound('订单不存在');
     }
 
-    const order = (orders as any[])[0];
+    const order = (orders as Loose[])[0];
 
     if (order.status === 'completed') {
       return errorResponse('已完成的订单不能删除', 400, 400);

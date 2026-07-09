@@ -40,7 +40,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     { label: '365天以上', min: 366, max: 9999 },
   ];
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT r.id, r.${escDocNoCol} as doc_no, r.${escPartnerIdCol} as partner_id, r.amount, r.balance,
               r.due_date, r.status,
               DATEDIFF(?, r.due_date) as age_days,
@@ -52,7 +52,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     [asOfDate]
   );
 
-  const partnerSummary: Record<string, any> = {};
+  const partnerSummary: Record<string, Loose> = {};
 
   for (const row of rows) {
     const partnerId = row.partner_id || 0;
@@ -90,7 +90,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     buckets: ageBuckets.map((b) => ({ ...b, amount: 0, count: 0 })),
   };
 
-  for (const summary of Object.values(partnerSummary) as any[]) {
+  for (const summary of Object.values(partnerSummary) as Loose[]) {
     totalSummary.total_amount += summary.total_amount;
     totalSummary.remaining_amount += summary.remaining_amount;
     for (let i = 0; i < summary.buckets.length; i++) {

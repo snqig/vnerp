@@ -126,8 +126,8 @@ export function EditDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {suppliers
-                    .filter((s: any) => s.status !== 0 && s.status !== 'inactive')
-                    .map((s: any) => (
+                    .filter((s: Loose) => s.status !== 0 && s.status !== 'inactive')
+                    .map((s: Loose) => (
                       <SelectItem key={s.id} value={s.name || s.supplier_name}>
                         {s.name || s.supplier_name}
                       </SelectItem>
@@ -146,8 +146,8 @@ export function EditDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {warehouseCategories
-                    .filter((wh: any) => wh.status !== 0)
-                    .map((wh: any) => (
+                    .filter((wh: Loose) => wh.status !== 0)
+                    .map((wh: Loose) => (
                       <SelectItem key={wh.id} value={wh.name}>
                         {wh.name}
                       </SelectItem>

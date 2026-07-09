@@ -24,8 +24,8 @@ export const GET = withPermission(async (request: NextRequest) => {
     try {
       const result = await compareVersions(Number(leftId), Number(rightId));
       return successResponse(result);
-    } catch (e: any) {
-      return errorResponse(e.message || '对比失败', 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message || '对比失败', 400, 400);
     }
   }
 
@@ -69,8 +69,8 @@ export const POST = withPermission(
     try {
       const id = await createDraftVersion(body, userInfo.userId);
       return successResponse({ id }, '草稿版本创建成功');
-    } catch (e: any) {
-      return errorResponse(e.message || '创建失败', 500, 500);
+    } catch (e) {
+      return errorResponse((e as Error).message || '创建失败', 500, 500);
     }
   },
   { logTitle: '创建油墨配方版本', logType: 'business' }

@@ -47,8 +47,8 @@ export const GET = withPermission(
   `;
 
     let countSql = `SELECT COUNT(*) as total FROM sys_employee e WHERE e.status = 1`;
-    const params: any[] = [month];
-    const countParams: any[] = [];
+    const params: Loose[] = [month];
+    const countParams: Loose[] = [];
 
     if (deptId) {
       const deptIdNum = parseInt(deptId);
@@ -76,7 +76,7 @@ export const GET = withPermission(
 
     const salaries = await query(sql, params);
     const countResult = await query(countSql, countParams);
-    const total = (countResult as any[])[0]?.total || 0;
+    const total = (countResult as Loose[])[0]?.total || 0;
 
     return successResponse({
       list: salaries,

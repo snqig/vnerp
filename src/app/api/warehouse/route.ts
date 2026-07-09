@@ -47,7 +47,7 @@ function buildQueryConditions(params: {
   type?: string;
   status?: string;
   categoryId?: string;
-}): { sql: string; values: any[] } {
+}): { sql: string; values: Loose[] } {
   let sql = `
     SELECT
       id,
@@ -62,7 +62,7 @@ function buildQueryConditions(params: {
     FROM inv_warehouse
     WHERE deleted = 0
   `;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (params.keyword) {
     sql += ` AND (warehouse_code LIKE ? OR warehouse_name LIKE ?)`;
@@ -98,7 +98,7 @@ function buildQueryConditions(params: {
 }
 
 // 格式化仓库数据
-function formatWarehouse(warehouse: any): Warehouse {
+function formatWarehouse(warehouse: Loose): Warehouse {
   return {
     ...warehouse,
     type: warehouseTypeReverseMap[warehouse.warehouse_type] || 'other',
@@ -124,7 +124,7 @@ export const GET = withPermission(
     });
 
     let countSql = `SELECT COUNT(*) as total FROM inv_warehouse WHERE deleted = 0`;
-    const countValues: any[] = [];
+    const countValues: Loose[] = [];
     if (keyword) {
       countSql += ` AND (warehouse_code LIKE ? OR warehouse_name LIKE ?)`;
       countValues.push(`%${keyword}%`, `%${keyword}%`);
@@ -146,19 +146,19 @@ export const GET = withPermission(
     }
 
     const countResult = await query(countSql, countValues);
-    const total = (countResult as any[])[0]?.total || 0;
+    const total = (countResult as Loose[])[0]?.total || 0;
 
     const paginatedSql = `${sql} LIMIT ? OFFSET ?`;
     const paginatedValues = [...values, pageSize, (page - 1) * pageSize];
 
     const warehouses = await query(paginatedSql, paginatedValues);
-    const formattedWarehouses = (warehouses as any[]).map(formatWarehouse);
+    const formattedWarehouses = (warehouses as Loose[]).map(formatWarehouse);
 
     // 支持 all=true 参数，直接返回数组（用于下拉选择等场景）
     const fetchAll = searchParams.get('all') === 'true';
     if (fetchAll) {
       const allWarehouses = await query(sql, values);
-      const formattedAll = (allWarehouses as any[]).map(formatWarehouse);
+      const formattedAll = (allWarehouses as Loose[]).map(formatWarehouse);
       return successResponse(formattedAll);
     }
 
@@ -196,7 +196,7 @@ export const POST = withPermission(
 
     // 使用事务创建仓库并记录日志
     const result = await transaction(async (connection) => {
-      const [insertResult] = await (connection as any).execute(
+      const [insertResult] = await (connection as Loose).execute(
         `INSERT INTO inv_warehouse (
           warehouse_code, warehouse_name, warehouse_type,
           address, remark, status
@@ -267,7 +267,7 @@ export const PUT = withPermission(
 
     // 使用事务更新仓库并记录日志
     await transaction(async (connection) => {
-      const [updateResult] = await (connection as any).execute(
+      const [updateResult] = await (connection as Loose).execute(
         `UPDATE inv_warehouse SET
         warehouse_code = ?,
         warehouse_name = ?,
@@ -333,11 +333,11 @@ export const DELETE = withPermission(
         [warehouseId]
       );
 
-      if ((rows as any[]).length === 0) {
+      if ((rows as Loose[]).length === 0) {
         throw new Error('仓库不存在或已被删除');
       }
 
-      const name = (rows as any[])[0].name;
+      const name = (rows as Loose[])[0].name;
 
       await connection.execute('UPDATE inv_warehouse SET deleted = 1 WHERE id = ?', [warehouseId]);
 

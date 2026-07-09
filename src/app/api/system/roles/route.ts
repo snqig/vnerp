@@ -10,17 +10,19 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
   const withPermissions = searchParams.get('withPermissions') === 'true';
 
-  const countResult: any = await query('SELECT COUNT(*) as total FROM sys_role WHERE deleted = 0');
+  const countResult: Loose = await query(
+    'SELECT COUNT(*) as total FROM sys_role WHERE deleted = 0'
+  );
   const total = countResult[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT id, role_name, role_code, parent_id, inherit_mode, description, data_scope, status, permissions, create_time
      FROM sys_role WHERE deleted = 0 ORDER BY id LIMIT ? OFFSET ?`,
     [pageSize, (page - 1) * pageSize]
   );
 
   // 解析权限JSON
-  const list = rows.map((row: any) => ({
+  const list = rows.map((row: Loose) => ({
     ...row,
     permissions:
       typeof row.permissions === 'string'
@@ -47,7 +49,7 @@ async function resolveEffectivePermissions(
   if (visited.has(roleId)) return []; // 防止循环继承
   visited.add(roleId);
 
-  const role: any = await query(
+  const role: Loose = await query(
     'SELECT id, parent_id, inherit_mode, permissions FROM sys_role WHERE id = ? AND deleted = 0',
     [roleId]
   );
@@ -75,7 +77,7 @@ async function resolveEffectivePermissions(
 }
 
 async function getParentRoleName(parentId: number): Promise<string | null> {
-  const rows: any = await query('SELECT role_name FROM sys_role WHERE id = ? AND deleted = 0', [
+  const rows: Loose = await query('SELECT role_name FROM sys_role WHERE id = ? AND deleted = 0', [
     parentId,
   ]);
   return rows.length > 0 ? rows[0].role_name : null;
@@ -96,21 +98,22 @@ export const POST = withPermission(async (request: NextRequest, _userInfo: UserI
 
   if (!role_name || !role_code) return errorResponse('ROLE_NAME_CODE_REQUIRED', 400, 400);
 
-  const existing: any = await query('SELECT id FROM sys_role WHERE role_code = ? AND deleted = 0', [
-    role_code,
-  ]);
+  const existing: Loose = await query(
+    'SELECT id FROM sys_role WHERE role_code = ? AND deleted = 0',
+    [role_code]
+  );
   if (existing.length > 0) return errorResponse('ROLE_CODE_EXISTS', 400, 400);
 
   // 验证父角色是否存在且不形成循环
   if (parent_id) {
-    const parent: any = await query(
+    const parent: Loose = await query(
       'SELECT id, parent_id FROM sys_role WHERE id = ? AND deleted = 0',
       [parent_id]
     );
     if (parent.length === 0) return errorResponse('PARENT_ROLE_NOT_FOUND', 400, 400);
   }
 
-  const result: any = await execute(
+  const result: Loose = await execute(
     'INSERT INTO sys_role (role_name, role_code, parent_id, inherit_mode, description, data_scope, status, permissions) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     [
       role_name,
@@ -153,7 +156,7 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo: UserIn
       if (checkId === id) return errorResponse('CANNOT_FORM_CIRCULAR_INHERITANCE', 400, 400);
       if (visited.has(checkId)) break;
       visited.add(checkId);
-      const parent: any = await query(
+      const parent: Loose = await query(
         'SELECT parent_id FROM sys_role WHERE id = ? AND deleted = 0',
         [checkId]
       );
@@ -162,7 +165,7 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo: UserIn
   }
 
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: Loose[] = [];
   if (role_name !== undefined) {
     fields.push('role_name = ?');
     values.push(role_name);
@@ -210,9 +213,10 @@ export const DELETE = withPermission(async (request: NextRequest, _userInfo: Use
   if (!id) return errorResponse('ROLE_ID_REQUIRED', 400, 400);
 
   // 检查是否有子角色
-  const children: any = await query('SELECT id FROM sys_role WHERE parent_id = ? AND deleted = 0', [
-    Number(id),
-  ]);
+  const children: Loose = await query(
+    'SELECT id FROM sys_role WHERE parent_id = ? AND deleted = 0',
+    [Number(id)]
+  );
   if (children.length > 0) return errorResponse('ROLE_HAS_CHILDREN', 400, 400);
 
   await execute('UPDATE sys_role SET deleted = 1 WHERE id = ?', [Number(id)]);

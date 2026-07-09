@@ -12,7 +12,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const adjustType = searchParams.get('adjustType') || '';
 
   let where = 'WHERE a.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (adjustNo) {
     where += ' AND a.adjust_no LIKE ?';
     params.push('%' + adjustNo + '%');
@@ -22,12 +22,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(adjustType));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM inv_stock_adjust a ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT a.*, w.warehouse_name FROM inv_stock_adjust a LEFT JOIN inv_warehouse w ON a.warehouse_id = w.id ' +
       where +
       ' ORDER BY a.create_time DESC LIMIT ? OFFSET ?',
@@ -47,7 +47,7 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
     String(now.getDate()).padStart(2, '0') +
     String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-  const result: any = await execute(
+  const result: Loose = await execute(
     'INSERT INTO inv_stock_adjust (adjust_no, warehouse_id, adjust_date, adjust_type, operator_name, remark) VALUES (?, ?, ?, ?, ?, ?)',
     [adjustNo, warehouse_id, adjust_date, adjust_type || 1, operator_name || null, remark || null]
   );
@@ -91,7 +91,7 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
       expectedStatus,
     });
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       'UPDATE inv_stock_adjust SET status = ?, update_time = NOW() WHERE id = ? AND deleted = 0 AND status = ?',
       [status, id, expectedStatus]
     );

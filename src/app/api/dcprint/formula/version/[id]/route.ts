@@ -33,8 +33,8 @@ export const PUT = withPermission(
         await recalculateCost(Number(id));
         const version = await getVersionDetail(Number(id));
         return successResponse(version, '成本重算完成');
-      } catch (e: any) {
-        return errorResponse(e.message || '重算失败', 400, 400);
+      } catch (e) {
+        return errorResponse((e as Error).message || '重算失败', 400, 400);
       }
     }
 
@@ -43,8 +43,8 @@ export const PUT = withPermission(
     try {
       await updateVersion(Number(id), body, userInfo.userId);
       return successResponse(null, '版本更新成功');
-    } catch (e: any) {
-      return errorResponse(e.message || '更新失败', 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message || '更新失败', 400, 400);
     }
   },
   { logTitle: '更新油墨配方版本', logType: 'business' }
@@ -58,8 +58,8 @@ export const DELETE = withPermission(
     try {
       await deleteVersion(Number(id));
       return successResponse(null, '版本删除成功');
-    } catch (e: any) {
-      return errorResponse(e.message || '删除失败', 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message || '删除失败', 400, 400);
     }
   },
   { logTitle: '删除油墨配方版本', logType: 'business' }

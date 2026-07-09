@@ -12,7 +12,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (scrapNo) {
     where += ' AND scrap_no LIKE ?';
     params.push('%' + scrapNo + '%');
@@ -22,9 +22,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM eqp_scrap ' + where, params);
+  const totalRows: Loose = await query('SELECT COUNT(*) as total FROM eqp_scrap ' + where, params);
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM eqp_scrap ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -48,7 +48,7 @@ export const POST = withPermission(
     const _now = new Date();
     const scrapNo = generateDocNo(getBfPrefix());
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       'INSERT INTO eqp_scrap (scrap_no, equipment_id, equipment_code, equipment_name, scrap_date, scrap_reason, original_value, net_value, approval_person, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         scrapNo,

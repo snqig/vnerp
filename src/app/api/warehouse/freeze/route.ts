@@ -23,7 +23,7 @@ export const GET = withPermission(
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
     let where = 'WHERE f.status = ?';
-    const params: any[] = ['active'];
+    const params: Loose[] = ['active'];
 
     if (materialId) {
       where += ' AND f.material_id = ?';
@@ -38,13 +38,13 @@ export const GET = withPermission(
       params.push(freezeType);
     }
 
-    const countRows: any = await query(
+    const countRows: Loose = await query(
       `SELECT COUNT(*) as total FROM inv_stock_freeze f ${where}`,
       params
     );
     const total = countRows[0]?.total || 0;
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT f.*, m.material_name, m.material_code, m.unit,
               w.warehouse_name, u.real_name as operator_name
        FROM inv_stock_freeze f
@@ -99,7 +99,7 @@ export const POST = withPermission(
 
     // 检查可用库存
     logger.stepStart(ctx, '查询库存', { material_id, warehouse_id });
-    const stock: any = await query(
+    const stock: Loose = await query(
       'SELECT quantity, frozen_qty FROM stock WHERE material_id = ? AND warehouse_id = ?',
       [material_id, warehouse_id]
     );
@@ -123,7 +123,7 @@ export const POST = withPermission(
     logger.branch(ctx, '库存检查', '可用库存>=冻结数量', true);
 
     // 创建冻结记录
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO inv_stock_freeze
        (material_id, warehouse_id, freeze_quantity, freeze_type, reason,
         source_type, source_id, status, create_by, create_time, update_time)
@@ -172,7 +172,7 @@ export const PUT = withPermission(
 
     if (action === 'unfreeze') {
       logger.branch(ctx, '操作类型', '完全解冻', true);
-      const freeze: any = await query(
+      const freeze: Loose = await query(
         'SELECT * FROM inv_stock_freeze WHERE id = ? AND status = ?',
         [id, 'active']
       );
@@ -219,7 +219,7 @@ export const PUT = withPermission(
         return errorResponse('解冻数量必须大于0', 400, 400);
       }
 
-      const freeze: any = await query(
+      const freeze: Loose = await query(
         'SELECT * FROM inv_stock_freeze WHERE id = ? AND status = ?',
         [id, 'active']
       );

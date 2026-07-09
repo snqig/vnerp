@@ -17,7 +17,7 @@ export class WorkOrderMaterialIssuedHandler implements EventHandler<WorkOrderMat
 
     await transaction(async (conn) => {
       for (const item of issuedItems) {
-        const [invRows]: any = await conn.execute(
+        const [invRows]: Loose = await conn.execute(
           `SELECT id, quantity, available_qty
            FROM inv_inventory
            WHERE material_id = ? AND warehouse_id = ?
@@ -52,7 +52,7 @@ export class WorkOrderMaterialIssuedHandler implements EventHandler<WorkOrderMat
         );
 
         if (item.batchNo) {
-          const [batchRows]: any = await conn.execute(
+          const [batchRows]: Loose = await conn.execute(
             `SELECT id, available_qty, quantity
              FROM inv_inventory_batch
              WHERE batch_no = ? AND material_id = ? AND warehouse_id = ?

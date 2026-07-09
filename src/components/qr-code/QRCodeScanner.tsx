@@ -119,20 +119,20 @@ export function QRCodeScanner({
 
       // 清空输入
       setInputValue('');
-    } catch (error: any) {
-      setLastResult({ success: false, message: error.message || '处理失败' });
+    } catch (error) {
+      setLastResult({ success: false, message: (error as Error).message || '处理失败' });
       setHistory((prev) => [
         {
           qrCode: trimmedCode,
           time: new Date().toISOString(),
           success: false,
-          message: error.message || '处理失败',
+          message: (error as Error).message || '处理失败',
         },
         ...prev.slice(0, 19),
       ]);
       toast({
         title: '扫描失败',
-        description: error.message || '请重试',
+        description: (error as Error).message || '请重试',
         variant: 'destructive',
       });
     } finally {

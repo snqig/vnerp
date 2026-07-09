@@ -91,7 +91,7 @@ export const GET = withPermission(
       AND TABLE_NAME IN ('inv_inbound_order', 'inv_inbound_item', 'inv_inventory_batch')
     `);
 
-      const existingTables = (tables as any[]).map((t) => t.TABLE_NAME);
+      const existingTables = (tables as Loose[]).map((t) => t.TABLE_NAME);
       const results: string[] = [];
 
       // 创建入库订单主表
@@ -192,7 +192,7 @@ export const GET = withPermission(
       const orderCount = await query(
         'SELECT COUNT(*) as count FROM inv_inbound_order WHERE deleted = 0'
       );
-      if ((orderCount as any[])[0].count === 0) {
+      if ((orderCount as Loose[])[0].count === 0) {
         // 添加入库订单测试数据
         await query(`
         INSERT INTO inv_inbound_order (order_no, order_type, warehouse_id, supplier_name, total_amount, total_quantity, status, inbound_date, remark) VALUES
@@ -229,8 +229,8 @@ export const GET = withPermission(
         message: '入库管理表初始化完成',
         details: results,
       });
-    } catch (error: any) {
-      return errorResponse(`创建表失败: ${error.message}`, 500, 500);
+    } catch (error) {
+      return errorResponse(`创建表失败: ${(error as Error).message}`, 500, 500);
     }
   },
   { errorMessage: '初始化入库管理表失败' }

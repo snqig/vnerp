@@ -41,7 +41,7 @@ export const POST = withPermission(
     }
 
     // 计算偏差
-    const deviations: any[] = [];
+    const deviations: Loose[] = [];
     let hasDeviation = false;
     let warningLevel = 'success';
 

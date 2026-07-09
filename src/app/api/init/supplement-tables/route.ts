@@ -11,11 +11,11 @@ export const POST = withPermission(async (_request: NextRequest) => {
       try {
         await conn.execute(sql);
         results.push(`${name}: 创建成功`);
-      } catch (e: any) {
-        if (e.code === 'ER_TABLE_EXISTS_ERROR') {
+      } catch (e) {
+        if ((e as Error & { code?: string }).code === 'ER_TABLE_EXISTS_ERROR') {
           results.push(`${name}: 已存在，跳过`);
         } else {
-          results.push(`${name}: 创建失败 - ${e.message}`);
+          results.push(`${name}: 创建失败 - ${(e as Error).message}`);
         }
       }
     };
@@ -901,11 +901,11 @@ export const POST = withPermission(async (_request: NextRequest) => {
       try {
         await conn.execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
         results.push(`${table}.${column}: 列已添加`);
-      } catch (e: any) {
-        if (e.code === 'ER_DUP_FIELDNAME') {
+      } catch (e) {
+        if ((e as Error & { code?: string }).code === 'ER_DUP_FIELDNAME') {
           results.push(`${table}.${column}: 列已存在，跳过`);
         } else {
-          results.push(`${table}.${column}: 添加失败 - ${e.message}`);
+          results.push(`${table}.${column}: 添加失败 - ${(e as Error).message}`);
         }
       }
     };
@@ -1014,7 +1014,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     );
 
     const seedCategories = async () => {
-      const [existing]: any = await conn.execute(
+      const [existing]: Loose = await conn.execute(
         'SELECT COUNT(*) as cnt FROM inv_material_category WHERE deleted = 0'
       );
       if (existing.cnt > 0) {
@@ -1062,7 +1062,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         { code: 'SLV-04', name: '718洗网水', type: 7, sort: 20, remark: '718环保洗网水' },
       ];
       for (const cat of categories) {
-        const existing: any = await conn.execute(
+        const existing: Loose = await conn.execute(
           'SELECT id FROM inv_material_category WHERE category_code = ?',
           [cat.code]
         );

@@ -552,7 +552,7 @@ export const POST = withPermission(
       }
       stats.prd_die_template = dieTemplates.length;
 
-      const [dieRows]: any = await conn.execute(
+      const [dieRows]: Loose = await conn.execute(
         'SELECT id, template_code FROM prd_die_template ORDER BY id'
       );
       const dieMap: Record<string, number> = {};
@@ -1060,34 +1060,34 @@ export const POST = withPermission(
 
 async function verifyDataIntegrity() {
   const errors: string[] = [];
-  const details: Record<string, any> = {};
+  const details: Record<string, Loose> = {};
 
-  const dieCount: any = await queryOne(
+  const dieCount: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM prd_die_template WHERE deleted = 0'
   );
   details.die_template_count = dieCount?.cnt || 0;
   if (details.die_template_count !== 20)
     errors.push(`刀模/网版数量不正确: 期望20, 实际${details.die_template_count}`);
 
-  const maintCount: any = await queryOne(
+  const maintCount: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM prd_die_maintenance WHERE deleted = 0'
   );
   details.maintenance_count = maintCount?.cnt || 0;
   if (details.maintenance_count !== 20)
     errors.push(`保养记录数量不正确: 期望20, 实际${details.maintenance_count}`);
 
-  const usageCount: any = await queryOne('SELECT COUNT(*) as cnt FROM prd_die_usage_log');
+  const usageCount: Loose = await queryOne('SELECT COUNT(*) as cnt FROM prd_die_usage_log');
   details.usage_log_count = usageCount?.cnt || 0;
   if (details.usage_log_count !== 20)
     errors.push(`使用记录数量不正确: 期望20, 实际${details.usage_log_count}`);
 
-  const typeDist: any = await queryOne(`SELECT
+  const typeDist: Loose = await queryOne(`SELECT
     COALESCE(SUM(CASE WHEN template_type = 1 THEN 1 ELSE 0 END), 0) as die_count,
     COALESCE(SUM(CASE WHEN template_type = 2 THEN 1 ELSE 0 END), 0) as screen_count
   FROM prd_die_template WHERE deleted = 0`);
   details.type_distribution = typeDist;
 
-  const statusDist: any = await queryOne(`SELECT
+  const statusDist: Loose = await queryOne(`SELECT
     COALESCE(SUM(CASE WHEN die_status = 'available' THEN 1 ELSE 0 END), 0) as available,
     COALESCE(SUM(CASE WHEN die_status = 'maintenance_needed' THEN 1 ELSE 0 END), 0) as maint_needed,
     COALESCE(SUM(CASE WHEN die_status = 're_rule_needed' THEN 1 ELSE 0 END), 0) as re_rule,
@@ -1095,12 +1095,12 @@ async function verifyDataIntegrity() {
   FROM prd_die_template WHERE deleted = 0`);
   details.die_status_distribution = statusDist;
 
-  const totalCost: any = await queryOne(
+  const totalCost: Loose = await queryOne(
     'SELECT COALESCE(SUM(cost), 0) as total FROM prd_die_maintenance WHERE deleted = 0'
   );
   details.total_maintenance_cost = totalCost?.total || 0;
 
-  const totalUsage: any = await queryOne(
+  const totalUsage: Loose = await queryOne(
     'SELECT COALESCE(SUM(impressions), 0) as total FROM prd_die_usage_log'
   );
   details.total_usage_impressions = totalUsage?.total || 0;

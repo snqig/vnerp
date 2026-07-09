@@ -63,9 +63,10 @@ export const POST = withPermission(
     await transaction(async (connection) => {
       for (const item of orders) {
         // 检查菜单是否存在
-        const [menuResult]: any = await connection.execute('SELECT id FROM sys_menu WHERE id = ?', [
-          item.id,
-        ]);
+        const [menuResult]: Loose = await connection.execute(
+          'SELECT id FROM sys_menu WHERE id = ?',
+          [item.id]
+        );
 
         if (menuResult.length > 0) {
           await connection.execute('UPDATE sys_menu SET sort_order = ? WHERE id = ?', [

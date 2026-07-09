@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (testNo) {
     where += ' AND test_no LIKE ?';
     params.push('%' + testNo + '%');
@@ -31,9 +31,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM qms_lab_test ' + where, params);
+  const totalRows: Loose = await query(
+    'SELECT COUNT(*) as total FROM qms_lab_test ' + where,
+    params
+  );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM qms_lab_test ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -70,7 +73,7 @@ export const POST = withPermission(
       String(now.getDate()).padStart(2, '0') +
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO qms_lab_test (test_no, product_id, product_code, product_name, batch_no, test_type, test_items, test_standard, test_equipment, tester, test_date, result_summary, detail_data, conclusion, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -122,7 +125,7 @@ export const PUT = withPermission(
     if (!id) return errorResponse('ID不能为空', 400, 400);
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: Loose[] = [];
 
     if (product_id !== undefined) {
       fields.push('product_id = ?');

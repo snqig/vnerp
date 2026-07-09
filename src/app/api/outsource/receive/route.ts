@@ -12,7 +12,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE r.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (receiveNo) {
     where += ' AND r.receive_no LIKE ?';
     params.push('%' + receiveNo + '%');
@@ -26,12 +26,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM outsource_receive r ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT r.*, w.warehouse_name FROM outsource_receive r LEFT JOIN inv_warehouse w ON r.warehouse_id = w.id ' +
       where +
       ' ORDER BY r.create_time DESC LIMIT ? OFFSET ?',
@@ -67,7 +67,7 @@ export const POST = withPermission(
       String(now.getDate()).padStart(2, '0') +
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO outsource_receive (receive_no, outsource_order_id, outsource_order_no, warehouse_id, receive_date, receive_qty, qualified_qty, defective_qty, qc_status, status, operator_name, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?)`,
       [
@@ -98,7 +98,7 @@ export const PUT = withPermission(
 
     if (action === 'post') {
       const result = await transaction(async (conn) => {
-        const [receiveRows]: any = await conn.execute(
+        const [receiveRows]: Loose = await conn.execute(
           'SELECT id, receive_no, outsource_order_id, outsource_order_no, warehouse_id, status, qc_status, receive_qty, qualified_qty FROM outsource_receive WHERE id = ? AND deleted = 0 FOR UPDATE',
           [id]
         );
@@ -107,13 +107,13 @@ export const PUT = withPermission(
         if (receive.status >= 3) throw new Error('收货单已完成或已取消，不能重复过账');
         if (receive.qc_status === 3) throw new Error('质检不合格，不能入库');
 
-        const orderRows: any = await query(
+        const orderRows: Loose = await query(
           'SELECT product_id, product_code, product_name FROM outsource_order WHERE id = ? AND deleted = 0',
           [receive.outsource_order_id]
         );
         const order = orderRows && orderRows.length > 0 ? orderRows[0] : {};
 
-        const [existing]: any = await conn.execute(
+        const [existing]: Loose = await conn.execute(
           'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
           [order.product_id, receive.warehouse_id]
         );
@@ -183,7 +183,7 @@ export const PUT = withPermission(
     }
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: Loose[] = [];
     if (status !== undefined) {
       fields.push('status = ?');
       values.push(status);

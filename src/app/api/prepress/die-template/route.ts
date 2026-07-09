@@ -45,7 +45,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let sql = `SELECT * FROM prd_die_template WHERE deleted = 0`;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (keyword) {
     sql += ' AND (template_code LIKE ? OR template_name LIKE ? OR qr_code LIKE ?)';
@@ -75,7 +75,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const list = await query(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM prd_die_template WHERE deleted = 0`;
-  const countResult = (await queryOne(countSql)) as any;
+  const countResult = (await queryOne(countSql)) as Loose;
 
   const warningList = (await query(
     `SELECT * FROM prd_die_template WHERE deleted = 0 AND (
@@ -83,7 +83,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       (current_usage >= warning_usage AND status = 1) OR
       (cumulative_impressions >= max_impressions * warning_threshold / 100 AND max_impressions > 0)
     )`
-  )) as any[];
+  )) as Loose[];
 
   const typeStats = (await query(
     `SELECT template_type, asset_type, COUNT(*) as count,
@@ -92,7 +92,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       SUM(CASE WHEN die_status = 're_rule_needed' THEN 1 ELSE 0 END) as re_rule_needed_count,
       SUM(CASE WHEN die_status = 'scrap' THEN 1 ELSE 0 END) as scrap_count
     FROM prd_die_template WHERE deleted = 0 GROUP BY template_type, asset_type`
-  )) as any[];
+  )) as Loose[];
 
   const dashboardStats = (await query(
     `SELECT
@@ -103,7 +103,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       SUM(CASE WHEN die_status = 'scrap' OR status = 4 THEN 1 ELSE 0 END) as scrap_count,
       SUM(CASE WHEN maintenance_interval > 0 AND (cumulative_impressions - last_maintenance_impressions) >= maintenance_interval THEN 1 ELSE 0 END) as maintenance_due_count
     FROM prd_die_template WHERE deleted = 0`
-  )) as any[];
+  )) as Loose[];
 
   return successResponse({
     list,

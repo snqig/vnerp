@@ -47,7 +47,7 @@ function buildQueryConditions(params: {
   customerType?: string;
   followUpStatus?: string;
   keyword?: string;
-}): { sql: string; countSql: string; values: any[] } {
+}): { sql: string; countSql: string; values: Loose[] } {
   let sql = `
     SELECT
       id, customer_code, customer_name, short_name, customer_type,
@@ -59,7 +59,7 @@ function buildQueryConditions(params: {
     WHERE deleted = 0
   `;
   let countSql = 'SELECT COUNT(*) as total FROM crm_customer WHERE deleted = 0';
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (params.status && params.status !== 'all') {
     const condition = ' AND status = ?';

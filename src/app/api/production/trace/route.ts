@@ -13,12 +13,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return errorResponse('请提供至少一个查询参数: sn, batchNo, workorderNo', 400, 400);
   }
 
-  let traceLinks: any[] = [];
+  let traceLinks: Loose[] = [];
 
   if (sn) {
     traceLinks = await buildTraceChain(sn);
   } else if (batchNo) {
-    const rows: any = await query(
+    const rows: Loose = await query(
       'SELECT sn FROM prd_product_trace_link WHERE material_batch = ? AND deleted = 0',
       [batchNo]
     );
@@ -26,7 +26,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       traceLinks = await buildTraceChain(rows[0].sn);
     }
   } else if (workorderNo) {
-    const rows: any = await query(
+    const rows: Loose = await query(
       'SELECT sn FROM prd_product_trace_link WHERE workorder_no = ? AND deleted = 0',
       [workorderNo]
     );
@@ -68,7 +68,7 @@ export const POST = withPermission(
     }
 
     const result = await transaction(async (conn) => {
-      const [existing]: any = await conn.execute(
+      const [existing]: Loose = await conn.execute(
         'SELECT id FROM prd_product_trace_link WHERE sn = ? AND material_batch = ? AND deleted = 0',
         [sn, material_batch || '']
       );
@@ -104,7 +104,7 @@ export const POST = withPermission(
         return { id: existing[0].id, sn, updated: true };
       }
 
-      const [insertResult]: any = await conn.execute(
+      const [insertResult]: Loose = await conn.execute(
         `INSERT INTO prd_product_trace_link (sn, parent_sn, material_batch, workorder_id, workorder_no, material_id, material_code, material_name, supplier_id, supplier_name, inbound_date, inbound_no, inspection_id, inspection_result, trace_level, trace_type)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
@@ -135,15 +135,15 @@ export const POST = withPermission(
   { logTitle: '创建追溯链记录', logType: 'business' }
 );
 
-async function buildTraceChain(startSn: string): Promise<any[]> {
-  const chain: any[] = [];
+async function buildTraceChain(startSn: string): Promise<Loose[]> {
+  const chain: Loose[] = [];
   const visited = new Set<string>();
 
   async function traverse(sn: string, level: number) {
     if (visited.has(sn)) return;
     visited.add(sn);
 
-    const links: any = await query(
+    const links: Loose = await query(
       'SELECT * FROM prd_product_trace_link WHERE sn = ? AND deleted = 0',
       [sn]
     );
@@ -172,7 +172,7 @@ async function buildTraceChain(startSn: string): Promise<any[]> {
         await traverse(link.parent_sn, level + 1);
       }
 
-      const childLinks: any = await query(
+      const childLinks: Loose = await query(
         'SELECT sn FROM prd_product_trace_link WHERE parent_sn = ? AND deleted = 0',
         [sn]
       );

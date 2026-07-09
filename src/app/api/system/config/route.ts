@@ -12,7 +12,7 @@ export const GET = withPermission(
     const configKey = searchParams.get('configKey') || '';
 
     let where = 'WHERE 1=1';
-    const params: any[] = [];
+    const params: Loose[] = [];
     if (configName) {
       where += ' AND config_name LIKE ?';
       params.push(`%${configName}%`);
@@ -22,10 +22,13 @@ export const GET = withPermission(
       params.push(`%${configKey}%`);
     }
 
-    const totalRows: any = await query(`SELECT COUNT(*) as total FROM sys_config ${where}`, params);
+    const totalRows: Loose = await query(
+      `SELECT COUNT(*) as total FROM sys_config ${where}`,
+      params
+    );
     const total = totalRows[0]?.total || 0;
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT * FROM sys_config ${where} ORDER BY id DESC LIMIT ? OFFSET ?`,
       [...params, pageSize, (page - 1) * pageSize]
     );
@@ -40,7 +43,7 @@ export const POST = withPermission(
     const body = await request.json();
     const { config_name, config_key, config_value, config_type, description } = body;
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO sys_config (config_name, config_key, config_value, config_type, description) VALUES (?, ?, ?, ?, ?)`,
       [config_name, config_key, config_value, config_type ?? 1, description || null]
     );

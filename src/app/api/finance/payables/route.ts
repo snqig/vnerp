@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const supplierId = searchParams.get('supplierId') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (status) {
     where += ' AND status = ?';
@@ -24,10 +24,13 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push(Number(supplierId));
   }
 
-  const totalRows: any = await query(`SELECT COUNT(*) as total FROM fin_payable ${where}`, params);
+  const totalRows: Loose = await query(
+    `SELECT COUNT(*) as total FROM fin_payable ${where}`,
+    params
+  );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT p.*, s.supplier_name
      FROM fin_payable p
      LEFT JOIN pur_supplier s ON p.supplier_id = s.id

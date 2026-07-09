@@ -20,7 +20,7 @@ export class WorkOrderCompletedHandler implements EventHandler<WorkOrderComplete
     const today = new Date().toISOString().slice(0, 10);
 
     await transaction(async (conn) => {
-      const [invRows]: any = await conn.execute(
+      const [invRows]: Loose = await conn.execute(
         `SELECT id, quantity, available_qty, unit
          FROM inv_inventory
          WHERE material_id = ? AND warehouse_id = ?
@@ -31,7 +31,7 @@ export class WorkOrderCompletedHandler implements EventHandler<WorkOrderComplete
       let materialCode = '';
       let unit = '件';
 
-      const [matRows]: any = await conn.execute(
+      const [matRows]: Loose = await conn.execute(
         `SELECT material_code, unit FROM inv_material WHERE id = ?`,
         [productId]
       );

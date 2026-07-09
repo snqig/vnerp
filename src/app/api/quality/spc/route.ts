@@ -49,19 +49,19 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const materialId = searchParams.get('material_id');
 
     let whereClause = 'WHERE DATE(create_time) BETWEEN ? AND ?';
-    const params: any[] = [startDate, endDate];
+    const params: Loose[] = [startDate, endDate];
     if (materialId) {
       whereClause += ' AND material_id = ?';
       params.push(parseInt(materialId));
     }
 
-    const defects: any = await query(
+    const defects: Loose = await query(
       `SELECT defect_type, COUNT(*) as count FROM qc_unqualified ${whereClause} GROUP BY defect_type ORDER BY count DESC`,
       params
     );
 
     const pareto = calculatePareto(
-      defects.map((d: any) => ({
+      defects.map((d: Loose) => ({
         defect_type: d.defect_type || '未分类',
         count: Number(d.count),
       }))
@@ -78,19 +78,19 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const materialId = searchParams.get('material_id');
 
     let whereClause = 'WHERE inspection_date BETWEEN ? AND ?';
-    const params: any[] = [startDate, endDate];
+    const params: Loose[] = [startDate, endDate];
     if (materialId) {
       whereClause += ' AND material_id = ?';
       params.push(parseInt(materialId));
     }
 
-    const data: any = await query(
+    const data: Loose = await query(
       `SELECT DATE(inspection_date) as period, COUNT(*) as inspected, SUM(CASE WHEN inspection_result = 2 THEN 1 ELSE 0 END) as defective FROM qc_inspection ${whereClause} GROUP BY DATE(inspection_date) ORDER BY period`,
       params
     );
 
     const pChart = calculatePChart(
-      data.map((d: any) => ({
+      data.map((d: Loose) => ({
         period: d.period,
         inspected: Number(d.inspected),
         defective: Number(d.defective),

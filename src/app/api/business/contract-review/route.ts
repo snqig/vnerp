@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (reviewNo) {
     where += ' AND review_no LIKE ?';
     params.push('%' + reviewNo + '%');
@@ -31,12 +31,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM biz_contract_review ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM biz_contract_review ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -82,7 +82,7 @@ export const POST = withPermission(
       String(now.getDate()).padStart(2, '0') +
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO biz_contract_review (review_no, order_id, order_no, customer_id, customer_name, product_id, product_code, product_name, quantity, amount, delivery_date, sample_status, quality_requirement, production_capacity, material_availability, engineering_feasibility, biz_opinion, eng_opinion, quality_opinion, prod_opinion, purchase_opinion, review_date, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -150,7 +150,7 @@ export const PUT = withPermission(
     if (!id) return errorResponse('ID不能为空', 400, 400);
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: Loose[] = [];
 
     if (order_id !== undefined) {
       fields.push('order_id = ?');

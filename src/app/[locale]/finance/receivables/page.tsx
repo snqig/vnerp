@@ -77,7 +77,7 @@ export default function ReceivablesPage() {
   }, [page]);
 
   const getStatusBadge = (status: number) => {
-    const map: Record<number, { label: string; variant: any }> = {
+    const map: Record<number, { label: string; variant: Loose }> = {
       1: { label: '未收款', variant: 'secondary' },
       2: { label: '部分收款', variant: 'warning' },
       3: { label: '已结清', variant: 'success' },

@@ -70,7 +70,7 @@ export function TableExportToolbar({
 }
 
 export function exportToCSV(
-  data: Record<string, any>[],
+  data: Record<string, Loose>[],
   filename: string,
   columns: { key: string; header: string }[]
 ) {
@@ -96,7 +96,7 @@ export function exportToCSV(
 }
 
 export function exportToHTML(
-  data: Record<string, any>[],
+  data: Record<string, Loose>[],
   filename: string,
   columns: { key: string; header: string }[],
   title: string
@@ -125,7 +125,7 @@ export function exportToHTML(
 }
 
 export function printTable(
-  data: Record<string, any>[],
+  data: Record<string, Loose>[],
   columns: { key: string; header: string }[],
   title: string
 ) {
@@ -141,7 +141,7 @@ export function printTable(
 }
 
 export function exportTableToPDF(
-  data: Record<string, any>[],
+  data: Record<string, Loose>[],
   filename: string,
   columns: { key: string; header: string }[],
   title: string
@@ -158,7 +158,7 @@ export function exportTableToPDF(
 }
 
 export function exportTableToXLS(
-  data: Record<string, any>[],
+  data: Record<string, Loose>[],
   filename: string,
   columns: { key: string; header: string }[]
 ) {
@@ -175,7 +175,7 @@ export function exportTableToXLS(
 }
 
 export function exportTableToWORD(
-  data: Record<string, any>[],
+  data: Record<string, Loose>[],
   filename: string,
   columns: { key: string; header: string }[],
   title: string

@@ -37,7 +37,7 @@ interface AddDialogProps {
   poDropdownVisible: boolean;
   setPoDropdownVisible: React.Dispatch<React.SetStateAction<boolean>>;
   handlePoSearchChange: (value: string) => void;
-  handlePoSelect: (po: any) => void;
+  handlePoSelect: (po: Loose) => void;
   onSuccess: () => void;
 }
 
@@ -188,8 +188,8 @@ export function AddDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {suppliers
-                    .filter((s: any) => s.status !== 0 && s.status !== 'inactive')
-                    .map((s: any) => (
+                    .filter((s: Loose) => s.status !== 0 && s.status !== 'inactive')
+                    .map((s: Loose) => (
                       <SelectItem key={s.id} value={s.name || s.supplier_name}>
                         {s.name || s.supplier_name}
                       </SelectItem>
@@ -210,8 +210,8 @@ export function AddDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {warehouseCategories
-                    .filter((wh: any) => wh.status !== 0)
-                    .map((wh: any) => (
+                    .filter((wh: Loose) => wh.status !== 0)
+                    .map((wh: Loose) => (
                       <SelectItem key={wh.id} value={wh.name}>
                         {wh.name}
                       </SelectItem>
@@ -242,7 +242,7 @@ export function AddDialog({
                 )}
                 {poDropdownVisible && poSearchResults.length > 0 && (
                   <div className="absolute z-50 w-full mt-1 bg-card border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {poSearchResults.map((po: any) => (
+                    {poSearchResults.map((po: Loose) => (
                       <div
                         key={po.id}
                         className="px-3 py-2 hover:bg-blue-50 dark:hover:bg-slate-700 cursor-pointer border-b last:border-b-0 transition-colors dark:border-slate-700"
@@ -267,7 +267,7 @@ export function AddDialog({
                         </div>
                         {po.lines && po.lines.length > 0 && (
                           <div className="mt-1 text-xs text-gray-400">
-                            {po.lines.slice(0, 2).map((line: any, idx: number) => (
+                            {po.lines.slice(0, 2).map((line: Loose, idx: number) => (
                               <span key={idx} className="mr-2">
                                 {line.material_name || line.material_code}
                                 {line.order_qty ? ` ×${line.order_qty}${line.unit || ''}` : ''}

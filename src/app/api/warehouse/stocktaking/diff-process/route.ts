@@ -19,7 +19,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let where = 'WHERE si.difference != 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (type === 'pending') {
     where += ' AND si.diff_status = ?';
@@ -32,13 +32,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     params.push('processed');
   }
 
-  const countRows: any = await query(
+  const countRows: Loose = await query(
     `SELECT COUNT(*) as total FROM inv_stocktaking_item si ${where}`,
     params
   );
   const total = countRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT si.*, m.material_name, m.material_code, m.unit,
               s.taking_no, s.warehouse_id, w.warehouse_name,
               u1.real_name as checker_name,
@@ -56,7 +56,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   );
 
   // 统计
-  const summary: any = await query(
+  const summary: Loose = await query(
     `SELECT 
          COUNT(CASE WHEN diff_status = 'pending' THEN 1 END) as pending_count,
          COUNT(CASE WHEN diff_status = 'approved' THEN 1 END) as approved_count,
@@ -90,7 +90,7 @@ export const POST = withPermission(
       }
 
       for (const itemId of item_ids) {
-        const item: any = await query(
+        const item: Loose = await query(
           'SELECT * FROM inv_stocktaking_item WHERE id = ? AND diff_status = ?',
           [itemId, 'pending']
         );
@@ -119,7 +119,7 @@ export const POST = withPermission(
       let processedCount = 0;
 
       for (const itemId of item_ids) {
-        const items: any = await query(
+        const items: Loose = await query(
           `SELECT si.*, s.warehouse_id FROM inv_stocktaking_item si
            LEFT JOIN inv_stocktaking s ON si.check_id = s.id
            WHERE si.id = ? AND si.diff_status = 'approved'`,

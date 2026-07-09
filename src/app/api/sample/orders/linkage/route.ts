@@ -34,7 +34,7 @@ export const POST = withPermission(
         [sample_order_id]
       );
 
-      const sampleOrder = (sampleRows as any[])[0];
+      const sampleOrder = (sampleRows as Loose[])[0];
       if (!sampleOrder) {
         throw new Error('打样订单不存在');
       }
@@ -53,7 +53,7 @@ export const POST = withPermission(
         [sample_order_id, WORK_ORDER_STATUS.CANCELLED]
       );
 
-      if ((existingWO as any[])[0].cnt > 0) {
+      if ((existingWO as Loose[])[0].cnt > 0) {
         throw new Error('该打样订单已存在未取消的工单');
       }
 
@@ -80,7 +80,7 @@ export const POST = withPermission(
         ]
       );
 
-      const workOrderId = (orderResult as any).insertId;
+      const workOrderId = (orderResult as Loose).insertId;
 
       await connection.execute(
         `INSERT INTO prod_work_order_item 
@@ -98,7 +98,7 @@ export const POST = withPermission(
         [sampleOrder.material_no]
       );
 
-      const bomInfo = (bomRows as any[])[0] || null;
+      const bomInfo = (bomRows as Loose[])[0] || null;
 
       if (bomInfo) {
         await connection.execute(`UPDATE prod_work_order SET bom_id = ? WHERE id = ?`, [
@@ -112,7 +112,7 @@ export const POST = withPermission(
           [bomInfo.id]
         );
 
-        for (const bomLine of bomLines as any[]) {
+        for (const bomLine of bomLines as Loose[]) {
           const requiredQty =
             bomLine.quantity * (sampleOrder.quantity || 1) * (1 + (bomLine.scrap_rate || 0) / 100);
           await connection.execute(
@@ -162,7 +162,7 @@ export const PUT = withPermission(
         [sample_order_id]
       );
 
-      const sampleOrder = (sampleRows as any[])[0];
+      const sampleOrder = (sampleRows as Loose[])[0];
       if (!sampleOrder) {
         throw new Error('打样订单不存在');
       }
@@ -179,7 +179,7 @@ export const PUT = withPermission(
           [sample_order_id]
         );
 
-        const workOrder = (woRows as any[])[0];
+        const workOrder = (woRows as Loose[])[0];
         if (workOrder && workOrder.status !== WORK_ORDER_STATUS.COMPLETED) {
           throw new Error('关联工单尚未完成，不能交付');
         }
@@ -243,7 +243,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     sample_order_id,
   ]);
 
-  if ((sampleOrder as any[]).length === 0) {
+  if ((sampleOrder as Loose[]).length === 0) {
     return commonErrors.notFound('打样订单不存在');
   }
 
@@ -271,7 +271,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   return successResponse({
-    sample_order: (sampleOrder as any[])[0],
+    sample_order: (sampleOrder as Loose[])[0],
     work_orders: workOrders,
     material_requirements: materialReqs,
   });

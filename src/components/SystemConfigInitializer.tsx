@@ -21,10 +21,10 @@ export default function SystemConfigInitializer() {
         const result = await res.json();
 
         if (result.success && Array.isArray(result.data?.list)) {
-          const configMap: Record<string, any> = {};
+          const configMap: Record<string, Loose> = {};
 
-          result.data.list.forEach((item: any) => {
-            let value: any = item.config_value;
+          result.data.list.forEach((item: Loose) => {
+            let value: Loose = item.config_value;
 
             switch (item.config_type) {
               case 'number':

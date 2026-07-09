@@ -141,7 +141,7 @@ export const POST = withPermission(
     // 使用事务创建用户和绑定角色
     const userId = await transaction<number>(async (connection) => {
       // 创建用户
-      const [result]: any = await connection.execute(
+      const [result]: Loose = await connection.execute(
         `INSERT INTO sys_user (username, password, real_name, email, phone, department_id, status, first_login, create_time)
        VALUES (?, ?, ?, ?, ?, ?, 1, 1, NOW())`,
         [
@@ -159,7 +159,7 @@ export const POST = withPermission(
       let roleBound = false;
 
       if (role_id) {
-        const [roleResult]: any = await connection.execute(
+        const [roleResult]: Loose = await connection.execute(
           'SELECT id FROM sys_role WHERE id = ? AND deleted = 0',
           [role_id]
         );
@@ -172,7 +172,7 @@ export const POST = withPermission(
           roleBound = true;
         }
       } else {
-        const [defaultRole]: any = await connection.execute(
+        const [defaultRole]: Loose = await connection.execute(
           "SELECT id FROM sys_role WHERE role_code = 'operator' AND deleted = 0 LIMIT 1"
         );
         if (defaultRole.length > 0) {

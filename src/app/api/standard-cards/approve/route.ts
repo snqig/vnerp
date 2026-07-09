@@ -52,7 +52,7 @@ export const POST = withPermission(
       id: number;
       status: number;
       card_no: string;
-      [key: string]: any;
+      [key: string]: Loose;
     }>(`SELECT id, status, card_no, ${field} FROM prd_standard_card WHERE id = ? AND deleted = 0`, [
       id,
     ]);
@@ -139,7 +139,7 @@ export const PUT = withPermission(
     const [card] = await query<{
       id: number;
       status: number;
-      [key: string]: any;
+      [key: string]: Loose;
     }>(`SELECT id, status, ${field} FROM prd_standard_card WHERE id = ? AND deleted = 0`, [id]);
 
     if (!card) {

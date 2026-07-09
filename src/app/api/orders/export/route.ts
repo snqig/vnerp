@@ -47,7 +47,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       t('status'),
       t('remark'),
     ];
-    const rows = (orders as any[]).map((order) => [
+    const rows = (orders as Loose[]).map((order) => [
       `"${order.order_no || ''}"`,
       `"${order.customer_name || ''}"`,
       order.order_date || '',
@@ -76,11 +76,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     [id]
   );
 
-  if (!orders || (orders as any[]).length === 0) {
+  if (!orders || (orders as Loose[]).length === 0) {
     return commonErrors.notFound(t('orderNotFound'));
   }
 
-  const order = (orders as any[])[0];
+  const order = (orders as Loose[])[0];
 
   const items = await query('SELECT * FROM sal_order_item WHERE order_id = ?', [order.id]);
 
@@ -127,7 +127,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       </tr>
     </thead>
     <tbody>
-      ${(items as any[])
+      ${(items as Loose[])
         .map(
           (item) => `
         <tr>

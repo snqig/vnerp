@@ -46,7 +46,7 @@ interface QRCodeTraceProps {
   initialQRCode?: string;
 }
 
-const eventIcons: Record<string, any> = {
+const eventIcons: Record<string, Loose> = {
   原材料入库: Package,
   小料拆分: Layers,
   生产领料: Box,
@@ -274,7 +274,8 @@ export function QRCodeTrace({
                         <div className="text-sm">
                           <div className="font-mono font-medium">{qrCode}</div>
                           <Badge variant="outline" className="mt-1">
-                            {typeMap[traceData.record?.qr_type as any] || traceData.record?.qr_type}
+                            {typeMap[traceData.record?.qr_type as Loose] ||
+                              traceData.record?.qr_type}
                           </Badge>
                         </div>
                       </div>
@@ -296,13 +297,13 @@ export function QRCodeTrace({
                       <div className="text-sm">
                         <span className="text-muted-foreground">{tc('type')}：</span>
                         <Badge variant="outline">
-                          {typeMap[traceData.record.qr_type as any] || traceData.record.qr_type}
+                          {typeMap[traceData.record.qr_type as Loose] || traceData.record.qr_type}
                         </Badge>
                       </div>
                       <div className="text-sm">
                         <span className="text-muted-foreground">{tc('status')}：</span>
-                        <Badge variant={statusMap[traceData.record.status as any]?.variant}>
-                          {statusMap[traceData.record.status as any]?.label}
+                        <Badge variant={statusMap[traceData.record.status as Loose]?.variant}>
+                          {statusMap[traceData.record.status as Loose]?.label}
                         </Badge>
                       </div>
                       <div className="text-sm">
@@ -362,7 +363,7 @@ export function QRCodeTrace({
                           <TableCell className="font-mono text-xs">{record.qr_code}</TableCell>
                           <TableCell>
                             <Badge variant="outline">
-                              {typeMap[record.qr_type as any] || record.qr_type}
+                              {typeMap[record.qr_type as Loose] || record.qr_type}
                             </Badge>
                           </TableCell>
                           <TableCell className="font-mono text-sm">
@@ -371,8 +372,8 @@ export function QRCodeTrace({
                           <TableCell>{record.material_name || '-'}</TableCell>
                           <TableCell>{record.quantity}</TableCell>
                           <TableCell>
-                            <Badge variant={statusMap[record.status as any]?.variant}>
-                              {statusMap[record.status as any]?.label}
+                            <Badge variant={statusMap[record.status as Loose]?.variant}>
+                              {statusMap[record.status as Loose]?.label}
                             </Badge>
                           </TableCell>
                         </TableRow>

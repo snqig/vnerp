@@ -18,10 +18,10 @@ export const POST = withPermission(
       return errorResponse('出库单ID不能为空', 400);
     }
 
-    const deductionDetails: any[] = [];
+    const deductionDetails: Loose[] = [];
 
     await transaction(async (connection) => {
-      const [orderRows]: any = await connection.execute(
+      const [orderRows]: Loose = await connection.execute(
         `SELECT id, order_no, status, warehouse_id, warehouse_code, warehouse_name, version
        FROM inv_outbound_order WHERE id = ? AND deleted = 0 FOR UPDATE`,
         [id]
@@ -39,7 +39,7 @@ export const POST = withPermission(
         );
       }
 
-      const [itemRows]: any = await connection.execute(
+      const [itemRows]: Loose = await connection.execute(
         `SELECT id, material_id, material_code, material_name, batch_no, qty, unit, location_code
        FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
         [id]
@@ -99,7 +99,7 @@ export const POST = withPermission(
           deductionDetails.push(...fifoDetails);
 
           await connection.execute(`UPDATE inv_outbound_item SET batch_no = ? WHERE id = ?`, [
-            allocation.allocations.map((a: any) => a.batch_no).join(','),
+            allocation.allocations.map((a: Loose) => a.batch_no).join(','),
             item.id,
           ]);
         }
@@ -129,7 +129,7 @@ export const POST = withPermission(
       );
 
       // 自动生成应收单（如果出库单关联了客户）
-      const [orderInfo]: any = await connection.execute(
+      const [orderInfo]: Loose = await connection.execute(
         `SELECT customer_id, customer_name, total_amount, sales_order_no FROM inv_outbound_order WHERE id = ?`,
         [id]
       );
@@ -164,7 +164,7 @@ export const POST = withPermission(
         const salesOrderNo = orderInfo[0].sales_order_no;
 
         const totalOutQty = itemRows.reduce(
-          (sum: number, item: any) => sum + parseFloat(String(item.qty)),
+          (sum: number, item: Loose) => sum + parseFloat(String(item.qty)),
           0
         );
 
@@ -177,11 +177,11 @@ export const POST = withPermission(
         );
 
         // 检查是否全部出库完成
-        const [soItems]: any = await connection.execute(
+        const [soItems]: Loose = await connection.execute(
           `SELECT SUM(quantity) as total_qty FROM sales_order_item WHERE sales_order_id = (SELECT id FROM sales_order WHERE order_no = ?)`,
           [salesOrderNo]
         );
-        const [soOutbound]: any = await connection.execute(
+        const [soOutbound]: Loose = await connection.execute(
           `SELECT COALESCE(total_out_quantity, 0) as total_out FROM sales_order WHERE order_no = ?`,
           [salesOrderNo]
         );
@@ -240,7 +240,7 @@ export const PUT = withPermission(
     let orderNo = '';
 
     await transaction(async (connection) => {
-      const [orderRows]: any = await connection.execute(
+      const [orderRows]: Loose = await connection.execute(
         `SELECT id, order_no, status, warehouse_id, version
        FROM inv_outbound_order WHERE id = ? AND deleted = 0 FOR UPDATE`,
         [id]
@@ -259,7 +259,7 @@ export const PUT = withPermission(
         );
       }
 
-      const [itemRows]: any = await connection.execute(
+      const [itemRows]: Loose = await connection.execute(
         `SELECT material_id, batch_no, qty FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
         [id]
       );
@@ -273,7 +273,7 @@ export const PUT = withPermission(
           : [];
 
         if (batchNos.length <= 1) {
-          const [updateResult]: any = await connection.execute(
+          const [updateResult]: Loose = await connection.execute(
             `UPDATE inv_inventory_batch SET
             quantity = quantity + ?,
             available_qty = available_qty + ?,
@@ -287,7 +287,7 @@ export const PUT = withPermission(
             throw new Error(`库存恢复失败，可能已被其他操作修改: ${item.batch_no}`);
           }
         } else {
-          const [allocations]: any = await connection.execute(
+          const [allocations]: Loose = await connection.execute(
             `SELECT batch_no, allocated_qty FROM inv_outbound_batch_allocation
            WHERE source_id = ? AND material_id = ? AND source_type = 'outbound_order'
            ORDER BY batch_no`,

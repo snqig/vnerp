@@ -334,23 +334,23 @@ export const POST = withPermission(
 
 async function verifyDataIntegrity() {
   const errors: string[] = [];
-  const details: Record<string, any> = {};
+  const details: Record<string, Loose> = {};
 
-  const count: any = await queryOne(
+  const count: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM sal_sample_order WHERE deleted = 0'
   );
   details.sample_order_count = count?.cnt || 0;
   if (details.sample_order_count !== 20)
     errors.push(`样品订单数量不正确: 期望20, 实际${details.sample_order_count}`);
 
-  const statusDist: any = await queryOne(`SELECT
+  const statusDist: Loose = await queryOne(`SELECT
     COALESCE(SUM(CASE WHEN delivery_status = 'pending' THEN 1 ELSE 0 END), 0) as pending,
     COALESCE(SUM(CASE WHEN delivery_status = 'delivered' THEN 1 ELSE 0 END), 0) as delivered,
     COALESCE(SUM(CASE WHEN delivery_status = 'signed' THEN 1 ELSE 0 END), 0) as signed
   FROM sal_sample_order WHERE deleted = 0`);
   details.status_distribution = statusDist;
 
-  const totalQty: any = await queryOne(
+  const totalQty: Loose = await queryOne(
     'SELECT COALESCE(SUM(quantity), 0) as total FROM sal_sample_order WHERE deleted = 0'
   );
   details.total_quantity = totalQty?.total || 0;

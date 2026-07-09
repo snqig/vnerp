@@ -308,7 +308,7 @@ export class StandardCard {
     this._colorItems = items;
     this._colorItems.forEach((item) => {
       if (!item.standardCardId && this.id) {
-        (item as any).standardCardId = this.id;
+        (item as Loose).standardCardId = this.id;
       }
     });
   }
@@ -317,7 +317,7 @@ export class StandardCard {
     this._processItems = items;
     this._processItems.forEach((item) => {
       if (!item.standardCardId && this.id) {
-        (item as any).standardCardId = this.id;
+        (item as Loose).standardCardId = this.id;
       }
     });
   }
@@ -326,7 +326,7 @@ export class StandardCard {
     this._qualityItems = items;
     this._qualityItems.forEach((item) => {
       if (!item.standardCardId && this.id) {
-        (item as any).standardCardId = this.id;
+        (item as Loose).standardCardId = this.id;
       }
     });
   }

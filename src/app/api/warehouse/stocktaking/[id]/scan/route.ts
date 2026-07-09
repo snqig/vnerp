@@ -24,7 +24,7 @@ export const POST = withPermission(
       return errorResponse('请输入实际数量', 400, 400);
     }
 
-    const check: any = await queryOne(
+    const check: Loose = await queryOne(
       `SELECT * FROM inventory_checks WHERE id = ? AND deleted = 0`,
       [checkId]
     );
@@ -44,7 +44,7 @@ export const POST = withPermission(
       return errorResponse(`当前状态为"${statusMap[check.status]}"，不能执行盘点操作`, 400, 400);
     }
 
-    const inventoryItem: any = await queryOne(
+    const inventoryItem: Loose = await queryOne(
       `SELECT i.*, m.material_name, m.unit
      FROM wh_inventory i
      LEFT JOIN bas_material m ON i.material_id = m.id
@@ -56,7 +56,7 @@ export const POST = withPermission(
       return errorResponse('未找到对应的库存记录', 404, 404);
     }
 
-    const checkItem: any = await queryOne(
+    const checkItem: Loose = await queryOne(
       `SELECT * FROM inventory_check_items
      WHERE check_id = ? AND qr_code = ?`,
       [checkId, qr_code]
@@ -71,9 +71,10 @@ export const POST = withPermission(
     let split_flag = 0;
     let parent_qr_code = null;
 
-    const splitInfo: any = await queryOne(`SELECT * FROM material_splits WHERE child_qr_code = ?`, [
-      qr_code,
-    ]);
+    const splitInfo: Loose = await queryOne(
+      `SELECT * FROM material_splits WHERE child_qr_code = ?`,
+      [qr_code]
+    );
 
     if (splitInfo) {
       split_flag = 1;
@@ -90,7 +91,7 @@ export const POST = withPermission(
       [actual_quantity, difference, checkItem.id]
     );
 
-    const stats: any = await queryOne(
+    const stats: Loose = await queryOne(
       `SELECT
       COUNT(CASE WHEN status = 1 THEN 1 END) as checked_count,
       COUNT(*) as total_count

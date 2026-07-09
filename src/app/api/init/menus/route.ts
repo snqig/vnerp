@@ -21,7 +21,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const menu of topLevelMenus) {
-      const [existing]: any = await conn.execute(
+      const [existing]: Loose = await conn.execute(
         'SELECT id FROM sys_menu WHERE menu_code = ? AND parent_id = 0',
         [menu.menu_code]
       );
@@ -72,10 +72,10 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const mig of menuMigrations) {
-      const [fromMenu]: any = await conn.execute('SELECT id FROM sys_menu WHERE menu_code = ?', [
+      const [fromMenu]: Loose = await conn.execute('SELECT id FROM sys_menu WHERE menu_code = ?', [
         mig.from,
       ]);
-      const [toMenu]: any = await conn.execute('SELECT id FROM sys_menu WHERE menu_code = ?', [
+      const [toMenu]: Loose = await conn.execute('SELECT id FROM sys_menu WHERE menu_code = ?', [
         mig.to,
       ]);
 
@@ -125,7 +125,9 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const code of duplicateDeletes) {
-      const [dup]: any = await conn.execute('SELECT id FROM sys_menu WHERE menu_code = ?', [code]);
+      const [dup]: Loose = await conn.execute('SELECT id FROM sys_menu WHERE menu_code = ?', [
+        code,
+      ]);
       if (dup && dup.length > 0) {
         await conn.execute('DELETE FROM sys_role_menu WHERE menu_id = ?', [dup[0].id]);
         await conn.execute('DELETE FROM sys_menu WHERE id = ?', [dup[0].id]);
@@ -133,7 +135,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       }
     }
 
-    const [pathDups]: any = await conn.execute(
+    const [pathDups]: Loose = await conn.execute(
       `SELECT m1.id, m1.menu_code, m1.menu_name, m1.path
        FROM sys_menu m1
        JOIN sys_menu m2 ON m1.path = m2.path AND m1.id > m2.id AND m1.path IS NOT NULL AND m1.path != ''
@@ -147,15 +149,16 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     const moveMenusToEngineering = ['dcprint_ink', 'dcprint_process_cards', 'dcprint_labels'];
 
-    const [engMenu]: any = await conn.execute(
+    const [engMenu]: Loose = await conn.execute(
       "SELECT id FROM sys_menu WHERE menu_code = 'engineering' AND parent_id = 0"
     );
     if (engMenu && engMenu.length > 0) {
       const engId = engMenu[0].id;
       for (const code of moveMenusToEngineering) {
-        const [menuItem]: any = await conn.execute('SELECT id FROM sys_menu WHERE menu_code = ?', [
-          code,
-        ]);
+        const [menuItem]: Loose = await conn.execute(
+          'SELECT id FROM sys_menu WHERE menu_code = ?',
+          [code]
+        );
         if (menuItem && menuItem.length > 0) {
           await conn.execute('UPDATE sys_menu SET parent_id = ? WHERE id = ?', [
             engId,
@@ -1180,14 +1183,14 @@ export const POST = withPermission(async (_request: NextRequest) => {
     ];
 
     for (const menu of newMenus) {
-      const [parentRow]: any = await conn.execute(
+      const [parentRow]: Loose = await conn.execute(
         'SELECT id FROM sys_menu WHERE menu_code = ? AND parent_id = 0',
         [menu.parent_code]
       );
       if (!parentRow || parentRow.length === 0) continue;
 
       const parentId = parentRow[0].id;
-      const [existing]: any = await conn.execute('SELECT id FROM sys_menu WHERE menu_code = ?', [
+      const [existing]: Loose = await conn.execute('SELECT id FROM sys_menu WHERE menu_code = ?', [
         menu.menu_code,
       ]);
 
@@ -1226,7 +1229,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             ]
           );
           results.push(`${menu.menu_code}: 创建成功(含is_visible)`);
-        } catch (insertErr: any) {
+        } catch (insertErr) {
           try {
             await conn.execute(
               'INSERT INTO sys_menu (parent_id, menu_name, menu_code, menu_type, icon, path, component, permission, sort_order, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -1243,22 +1246,22 @@ export const POST = withPermission(async (_request: NextRequest) => {
               ]
             );
             results.push(`${menu.menu_code}: 创建成功`);
-          } catch (insertErr2: any) {
-            results.push(`${menu.menu_code}: 创建失败 - ${insertErr2.message}`);
+          } catch (insertErr2) {
+            results.push(`${menu.menu_code}: 创建失败 - ${(insertErr2 as Error).message}`);
           }
         }
       }
     }
 
-    const [roles]: any = await conn.execute(
+    const [roles]: Loose = await conn.execute(
       "SELECT id FROM sys_role WHERE role_code = 'super_admin' LIMIT 1"
     );
     if (roles && roles.length > 0) {
       const adminRoleId = roles[0].id;
 
-      const [allMenus]: any = await conn.execute('SELECT id FROM sys_menu WHERE status = 1');
+      const [allMenus]: Loose = await conn.execute('SELECT id FROM sys_menu WHERE status = 1');
       for (const menu of allMenus) {
-        const [existing]: any = await conn.execute(
+        const [existing]: Loose = await conn.execute(
           'SELECT id FROM sys_role_menu WHERE role_id = ? AND menu_id = ?',
           [adminRoleId, menu.id]
         );

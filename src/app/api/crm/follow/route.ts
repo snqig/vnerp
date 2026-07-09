@@ -12,7 +12,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (customerName) {
     where += ' AND customer_name LIKE ?';
     params.push('%' + customerName + '%');
@@ -26,12 +26,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM crm_follow_record ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM crm_follow_record ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -56,7 +56,7 @@ export const POST = withPermission(
 
     if (!customer_id) return errorResponse('客户ID不能为空', 400, 400);
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO crm_follow_record (customer_id, customer_name, follow_type, follow_content, contact_name, salesman_name, next_follow_date, opportunity, status, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -85,7 +85,7 @@ export const PUT = withPermission(
     if (!id) return errorResponse('ID不能为空', 400, 400);
 
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: Loose[] = [];
     const allowedFields = [
       'follow_type',
       'follow_content',

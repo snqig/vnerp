@@ -24,12 +24,12 @@ export const GET = withPermission(async (_request: NextRequest) => {
         ),
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
-        stack: error.stack,
+        error: (error as Error).message,
+        stack: (error as Error).stack,
       },
       { status: 500 }
     );

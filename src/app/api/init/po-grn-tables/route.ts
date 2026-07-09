@@ -11,15 +11,15 @@ async function columnExists(tableName: string, columnName: string): Promise<bool
      AND COLUMN_NAME = ?`,
     [tableName, columnName]
   );
-  return (result as any[]).length > 0;
+  return (result as Loose[]).length > 0;
 }
 
 // 辅助函数：安全地添加列
 async function addColumnSafe(tableName: string, columnDef: string) {
   try {
     await query(`ALTER TABLE ${tableName} ADD COLUMN ${columnDef}`);
-  } catch (e: any) {
-    if (e.code === 'ER_DUP_FIELDNAME') {
+  } catch (e) {
+    if ((e as Error & { code?: string }).code === 'ER_DUP_FIELDNAME') {
       // 列已存在，忽略错误
       return;
     }
@@ -37,7 +37,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pur_purchase_order'`
     );
 
-    if ((poTableExists as any[]).length === 0) {
+    if ((poTableExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE pur_purchase_order (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -90,7 +90,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pur_purchase_order_line'`
     );
 
-    if ((poLineTableExists as any[]).length === 0) {
+    if ((poLineTableExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE pur_purchase_order_line (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -133,7 +133,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'inv_inventory_transaction'`
     );
 
-    if ((transTableExists as any[]).length === 0) {
+    if ((transTableExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE inv_inventory_transaction (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -178,7 +178,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pur_return_order'`
     );
 
-    if ((rtvTableExists as any[]).length === 0) {
+    if ((rtvTableExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE pur_return_order (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -220,7 +220,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pur_supplier'`
     );
 
-    if ((supplierTableExists as any[]).length === 0) {
+    if ((supplierTableExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE pur_supplier (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -348,7 +348,7 @@ export async function GET(_request: NextRequest) {
     const supplierCount = await query(
       `SELECT COUNT(*) as count FROM pur_supplier WHERE deleted = 0`
     );
-    if ((supplierCount as any[])[0].count === 0) {
+    if ((supplierCount as Loose[])[0].count === 0) {
       await query(`
         INSERT INTO pur_supplier (supplier_code, supplier_name, supplier_type, contact_person, contact_phone, over_receipt_tolerance) VALUES
         ('SUP001', 'ABC造纸厂', 'material', '张经理', '13800138001', 5.00),
@@ -361,7 +361,7 @@ export async function GET(_request: NextRequest) {
     const poCount = await query(
       `SELECT COUNT(*) as count FROM pur_purchase_order WHERE deleted = 0`
     );
-    if ((poCount as any[])[0].count === 0) {
+    if ((poCount as Loose[])[0].count === 0) {
       // 创建测试采购单
       await query(`
         INSERT INTO pur_purchase_order 
@@ -406,7 +406,7 @@ export async function GET(_request: NextRequest) {
       message: '采购单与入库单逻辑关系表初始化完成',
       details: results,
     });
-  } catch (error: any) {
-    return errorResponse(`初始化失败: ${error.message}`, 500, 500);
+  } catch (error) {
+    return errorResponse(`初始化失败: ${(error as Error).message}`, 500, 500);
   }
 }

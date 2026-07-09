@@ -15,7 +15,7 @@ export const POST = withPermission(
       return errorResponse('缺少入库明细数据', 400, 400);
     }
 
-    const transfer: any = await queryOne(`SELECT * FROM transfers WHERE id = ? AND deleted = 0`, [
+    const transfer: Loose = await queryOne(`SELECT * FROM transfers WHERE id = ? AND deleted = 0`, [
       transferId,
     ]);
 
@@ -53,7 +53,7 @@ export const POST = withPermission(
 
       const targetQrCode = qr_code || `${transfer.transfer_no}-${Date.now()}`;
 
-      const existingInventory: any = await queryOne(
+      const existingInventory: Loose = await queryOne(
         `SELECT * FROM wh_inventory
        WHERE warehouse_id = ?
          AND material_id = ?
@@ -100,7 +100,7 @@ export const POST = withPermission(
       totalInQty += parseFloat(quantity);
     }
 
-    const allItemsIn: any = await queryOne(
+    const allItemsIn: Loose = await queryOne(
       `SELECT
       SUM(CASE WHEN in_quantity >= quantity THEN 1 ELSE 0 END) as complete_count,
       COUNT(*) as total_count

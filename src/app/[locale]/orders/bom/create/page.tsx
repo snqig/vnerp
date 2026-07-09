@@ -96,7 +96,7 @@ export default function CreateBOMPage() {
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
   const [currentLineIndex, setCurrentLineIndex] = useState<number>(-1);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [materials, setMaterials] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<Loose[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -139,7 +139,7 @@ export default function CreateBOMPage() {
     setLines((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updateLine = (index: number, field: keyof BOMLine, value: any) => {
+  const updateLine = (index: number, field: keyof BOMLine, value: Loose) => {
     setLines((prev) => {
       const newLines = [...prev];
       newLines[index] = {
@@ -186,7 +186,7 @@ export default function CreateBOMPage() {
     }
   };
 
-  const selectMaterial = (material: any) => {
+  const selectMaterial = (material: Loose) => {
     if (currentLineIndex < 0) return;
     updateLine(currentLineIndex, 'material_id', material.id);
     updateLine(currentLineIndex, 'material_code', material.material_code);

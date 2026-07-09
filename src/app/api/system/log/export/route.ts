@@ -23,7 +23,7 @@ export const GET = withPermission(
     const format = searchParams.get('format') || 'csv';
 
     let where = 'WHERE 1=1';
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (userId) {
       where += ' AND l.user_id = ?';
@@ -54,7 +54,7 @@ export const GET = withPermission(
       params.push(endDate + ' 23:59:59');
     }
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT l.*, u.real_name as operator_name
        FROM sys_operation_log l
        LEFT JOIN sys_user u ON l.user_id = u.id
@@ -82,7 +82,7 @@ export const GET = withPermission(
         t('time'),
       ];
 
-      const csvRows = rows.map((r: any) => [
+      const csvRows = rows.map((r: Loose) => [
         r.id,
         r.operator_name || r.username || '',
         r.operation || '',
@@ -97,7 +97,7 @@ export const GET = withPermission(
 
       const csvContent = [
         headers.join(','),
-        ...csvRows.map((row: any[]) => row.map((v: any) => `"${v}"`).join(',')),
+        ...csvRows.map((row: Loose[]) => row.map((v: Loose) => `"${v}"`).join(',')),
       ].join('\n');
 
       const bom = '\uFEFF';

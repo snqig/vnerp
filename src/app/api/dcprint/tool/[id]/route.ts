@@ -6,7 +6,11 @@ import { ToolManagementService } from '@/application/services/ToolManagementServ
 const service = new ToolManagementService();
 
 export const GET = withPermission(
-  async (request: NextRequest, _userInfo: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    _userInfo: Loose,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
     const tool = await service.getToolDetail(Number(id));
     if (!tool) return errorResponse('Tool not found', 404, 404);
@@ -16,7 +20,11 @@ export const GET = withPermission(
 );
 
 export const PUT = withPermission(
-  async (request: NextRequest, _userInfo: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    _userInfo: Loose,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
     const body = await request.json();
     await service.updateTool(Number(id), body);
@@ -26,13 +34,17 @@ export const PUT = withPermission(
 );
 
 export const DELETE = withPermission(
-  async (request: NextRequest, _userInfo: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    _userInfo: Loose,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
     try {
       await service.deleteTool(Number(id));
       return successResponse({ id }, 'Tool deleted');
-    } catch (e: any) {
-      return errorResponse(e.message, 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message, 400, 400);
     }
   },
   { logTitle: '删除工装' }

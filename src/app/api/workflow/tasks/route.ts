@@ -22,9 +22,9 @@ export const GET = withPermission(async (request: NextRequest, user: UserInfo) =
        ORDER BY create_time DESC
        LIMIT ? OFFSET ?`,
       [user.userId, pageSize, (page - 1) * pageSize]
-    )) as any[];
+    )) as Loose[];
 
-    const countResult: any = await query(
+    const countResult: Loose = await query(
       'SELECT COUNT(*) as total FROM wf_approval_instance WHERE initiator_id = ?',
       [user.userId]
     );
@@ -53,9 +53,9 @@ export const GET = withPermission(async (request: NextRequest, user: UserInfo) =
      ORDER BY t.create_time DESC
      LIMIT ? OFFSET ?`,
     [user.userId, pageSize, (page - 1) * pageSize]
-  )) as any[];
+  )) as Loose[];
 
-  const countResult: any = await query(
+  const countResult: Loose = await query(
     `SELECT COUNT(*) as total FROM wf_approval_task t
      LEFT JOIN wf_approval_instance i ON t.instance_id = i.id
      WHERE t.approver_id = ? AND t.status = 1 AND i.status = 1`,

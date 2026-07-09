@@ -20,11 +20,11 @@ async function getHandler(request: NextRequest, user: UserInfo) {
       code: 200,
       data: cards.map((card) => card.toProps()),
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         code: 400,
-        message: error.message || '查询失败',
+        message: (error as Error).message || '查询失败',
       },
       { status: 400 }
     );

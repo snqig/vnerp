@@ -8,7 +8,7 @@ async function tableExists(name: string): Promise<boolean> {
     `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
     [name]
   );
-  return (rows as any[]).length > 0;
+  return (rows as Loose[]).length > 0;
 }
 
 async function columnExists(table: string, column: string): Promise<boolean> {
@@ -16,7 +16,7 @@ async function columnExists(table: string, column: string): Promise<boolean> {
     `SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
     [table, column]
   );
-  return (rows as any[]).length > 0;
+  return (rows as Loose[]).length > 0;
 }
 
 async function constraintExists(name: string): Promise<boolean> {
@@ -24,7 +24,7 @@ async function constraintExists(name: string): Promise<boolean> {
     `SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND CONSTRAINT_NAME = ?`,
     [name]
   );
-  return (rows as any[]).length > 0;
+  return (rows as Loose[]).length > 0;
 }
 
 async function indexExists(table: string, indexName: string): Promise<boolean> {
@@ -32,7 +32,7 @@ async function indexExists(table: string, indexName: string): Promise<boolean> {
     `SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?`,
     [table, indexName]
   );
-  return (rows as any[]).length > 0;
+  return (rows as Loose[]).length > 0;
 }
 
 async function addConstraintSafe(sql: string, constraintName: string): Promise<string> {
@@ -42,8 +42,8 @@ async function addConstraintSafe(sql: string, constraintName: string): Promise<s
   try {
     await execute(sql);
     return `Added: ${constraintName}`;
-  } catch (e: any) {
-    return `Failed ${constraintName}: ${e.message}`;
+  } catch (e) {
+    return `Failed ${constraintName}: ${(e as Error).message}`;
   }
 }
 
@@ -54,8 +54,8 @@ async function addIndexSafe(table: string, indexName: string, columns: string): 
   try {
     await execute(`CREATE INDEX ${indexName} ON ${table} (${columns})`);
     return `Added index: ${indexName}`;
-  } catch (e: any) {
-    return `Failed index ${indexName}: ${e.message}`;
+  } catch (e) {
+    return `Failed index ${indexName}: ${(e as Error).message}`;
   }
 }
 
@@ -66,8 +66,8 @@ async function addColumnSafe(table: string, column: string, definition: string):
   try {
     await execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
     return `Added: ${table}.${column}`;
-  } catch (e: any) {
-    return `Failed ${table}.${column}: ${e.message}`;
+  } catch (e) {
+    return `Failed ${table}.${column}: ${(e as Error).message}`;
   }
 }
 

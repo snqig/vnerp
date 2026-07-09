@@ -22,7 +22,10 @@ export async function POST(request: NextRequest) {
     ]);
 
     return NextResponse.json({ success: true, message: `Lock reset for ${username}` });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, message: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

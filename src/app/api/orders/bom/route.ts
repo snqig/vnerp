@@ -31,7 +31,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const materialCode = searchParams.get('materialCode') || '';
 
   let whereClause = 'WHERE bh.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     whereClause += ' AND (bh.bom_no LIKE ? OR bh.product_name LIKE ? OR bh.product_code LIKE ?)';
@@ -120,7 +120,7 @@ export const POST = withPermission(
       return errorResponse('产品编码和产品名称不能为空', 400, 400);
     }
 
-    const hasInvalidLine = lines.some((line: any) => !line.material_code || !line.material_name);
+    const hasInvalidLine = lines.some((line: Loose) => !line.material_code || !line.material_name);
     if (hasInvalidLine) {
       return errorResponse('BOM明细中物料编码和名称不能为空', 400, 400);
     }
@@ -137,7 +137,7 @@ export const POST = withPermission(
         [product_id]
       );
 
-      const isDefault = (existingDefault as any[]).length === 0 ? 1 : 0;
+      const isDefault = (existingDefault as Loose[]).length === 0 ? 1 : 0;
 
       let totalCost = 0;
       let lineNo = 1;
@@ -178,7 +178,7 @@ export const POST = withPermission(
         ]
       );
 
-      const bomId = (headerResult as any).insertId;
+      const bomId = (headerResult as Loose).insertId;
 
       for (const line of processedLines) {
         await connection.execute(
@@ -244,11 +244,11 @@ export const PUT = withPermission(
         [id]
       );
 
-      if ((bomRows as any[]).length === 0) {
+      if ((bomRows as Loose[]).length === 0) {
         throw new Error('BOM不存在');
       }
 
-      const bom = (bomRows as any[])[0];
+      const bom = (bomRows as Loose[])[0];
 
       // 状态流转处理
       if (action === 'audit') {
@@ -307,7 +307,7 @@ export const PUT = withPermission(
       }
 
       const updateFields: string[] = [];
-      const updateValues: any[] = [];
+      const updateValues: Loose[] = [];
 
       if (updateData.product_name) {
         updateFields.push('product_name = ?');
@@ -405,11 +405,11 @@ export const DELETE = withPermission(
       id,
     ]);
 
-    if ((bom as any[]).length === 0) {
+    if ((bom as Loose[]).length === 0) {
       return errorResponse('BOM不存在', 404, 404);
     }
 
-    const bomData = (bom as any[])[0];
+    const bomData = (bom as Loose[])[0];
 
     if (bomData.status >= BOM_STATUS.PUBLISHED) {
       return errorResponse('已发布的BOM不能删除，请停用它', 400, 400);

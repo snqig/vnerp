@@ -17,8 +17,8 @@ export const POST = withPermission(
         screen_plate_id: body.screen_plate_id,
       });
       return successResponse(cost);
-    } catch (e: any) {
-      return errorResponse(e.message, 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message, 400, 400);
     }
   },
   { logTitle: '打样工艺卡成本预览' }

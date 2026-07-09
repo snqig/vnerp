@@ -76,7 +76,7 @@ export default function MaterialRequisitionsPage() {
   const loadRequisitions = async () => {
     setLoading(true);
     try {
-      const params: any = { page, pageSize };
+      const params: Loose = { page, pageSize };
       if (activeTab !== 'all') params.type = activeTab;
 
       const result = await ApiClient.get('/api/material-requisitions', params);
@@ -96,7 +96,7 @@ export default function MaterialRequisitionsPage() {
   }, [page, activeTab]);
 
   const getStatusBadge = (status: number) => {
-    const map: Record<number, { label: string; variant: any }> = {
+    const map: Record<number, { label: string; variant: Loose }> = {
       0: { label: tc('pending'), variant: 'secondary' },
       1: { label: t('pendingIssue'), variant: 'warning' },
       2: { label: t('issued'), variant: 'success' },

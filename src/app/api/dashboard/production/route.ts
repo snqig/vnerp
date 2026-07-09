@@ -3,9 +3,9 @@ import { query } from '@/lib/db';
 
 export async function GET(_request: NextRequest) {
   try {
-    let orderStats: any = { total_orders: 0, active_orders: 0, completed_today: 0 };
+    let orderStats: Loose = { total_orders: 0, active_orders: 0, completed_today: 0 };
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT
           COUNT(*) as total_orders,
           SUM(CASE WHEN burdening_status IN (1, 2) THEN 1 ELSE 0 END) as active_orders,
@@ -15,9 +15,9 @@ export async function GET(_request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0) orderStats = rows[0];
     } catch {}
 
-    let equipStats: any = { total: 0, running: 0, idle: 0, maintenance: 0, error_count: 0 };
+    let equipStats: Loose = { total: 0, running: 0, idle: 0, maintenance: 0, error_count: 0 };
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT
           COUNT(*) as total,
           SUM(CASE WHEN current_status = 1 THEN 1 ELSE 0 END) as running,
@@ -29,9 +29,9 @@ export async function GET(_request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0) equipStats = rows[0];
     } catch {}
 
-    let equipmentList: any[] = [];
+    let equipmentList: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT
           id, equipment_code, equipment_name, equipment_type, current_status,
           oee, total_run_hours
@@ -42,7 +42,7 @@ export async function GET(_request: NextRequest) {
 
     let qualityRate = 96.8;
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT
           COUNT(*) as total_inspections,
           SUM(CASE WHEN inspection_result = 1 THEN 1 ELSE 0 END) as passed
@@ -55,9 +55,9 @@ export async function GET(_request: NextRequest) {
       }
     } catch {}
 
-    let recentOrders: any[] = [];
+    let recentOrders: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT
           pc.id, pc.card_no, pc.work_order_no, pc.product_code, pc.product_name,
           pc.plan_qty, pc.burdening_status, pc.work_order_date, pc.update_time,
@@ -70,9 +70,9 @@ export async function GET(_request: NextRequest) {
       recentOrders = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let inkStats: any = { total_opened: 0, in_use: 0, expired: 0, expiring_soon: 0 };
+    let inkStats: Loose = { total_opened: 0, in_use: 0, expired: 0, expiring_soon: 0 };
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT
           COUNT(*) as total_opened,
           SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as in_use,
@@ -83,9 +83,9 @@ export async function GET(_request: NextRequest) {
       if (Array.isArray(rows) && rows.length > 0) inkStats = rows[0];
     } catch {}
 
-    const dieStats: any = { total: 0, normal: 0, warning: 0, locked: 0, scrapped: 0 };
+    const dieStats: Loose = { total: 0, normal: 0, warning: 0, locked: 0, scrapped: 0 };
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT
           COUNT(*) as total,
           SUM(CASE WHEN status = 1 AND max_usage > 0 AND (current_usage / max_usage) >= 0.8 THEN 1 ELSE 0 END) as warning,
@@ -118,7 +118,7 @@ export async function GET(_request: NextRequest) {
           oee,
           qualityRate,
         },
-        equipmentStatus: equipmentList.map((e: any) => ({
+        equipmentStatus: equipmentList.map((e: Loose) => ({
           id: e.equipment_code,
           name: e.equipment_name,
           type: e.equipment_type,
@@ -135,7 +135,7 @@ export async function GET(_request: NextRequest) {
           operator: '-',
           runtime: Number(e.total_run_hours || 0),
         })),
-        recentOrders: recentOrders.map((o: any) => ({
+        recentOrders: recentOrders.map((o: Loose) => ({
           id: o.id,
           orderNo: o.work_order_no || o.card_no,
           product: o.product_name || '-',

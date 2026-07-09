@@ -16,7 +16,7 @@ export const POST = withPermission(
     }
 
     // 查询发货单
-    const shipment = await queryOne<any>(`SELECT * FROM shipments WHERE id = ? AND deleted = 0`, [
+    const shipment = await queryOne<Loose>(`SELECT * FROM shipments WHERE id = ? AND deleted = 0`, [
       shipmentId,
     ]);
 
@@ -42,7 +42,7 @@ export const POST = withPermission(
       const { qr_code } = item;
 
       // 查询二维码记录
-      const qrRecord = await queryOne<any>(
+      const qrRecord = await queryOne<Loose>(
         `SELECT * FROM qrcode_record WHERE qr_code = ? AND deleted = 0`,
         [qr_code]
       );

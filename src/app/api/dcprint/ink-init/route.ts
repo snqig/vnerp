@@ -7,14 +7,14 @@ async function safeCreateTable(tableName: string, sql: string) {
   try {
     await execute(sql);
     return { table: tableName, status: 'created' };
-  } catch (e: any) {
-    return { table: tableName, status: 'error', message: e.message };
+  } catch (e) {
+    return { table: tableName, status: 'error', message: (e as Error).message };
   }
 }
 
 export const POST = withPermission(
   async (_request: NextRequest, _userInfo) => {
-    const results: any[] = [];
+    const results: Loose[] = [];
 
     results.push(
       await safeCreateTable(
@@ -202,7 +202,9 @@ export const POST = withPermission(
     );
 
     try {
-      const [cols]: any = await execute("SHOW COLUMNS FROM ink_opening_record LIKE 'workorder_id'");
+      const [cols]: Loose = await execute(
+        "SHOW COLUMNS FROM ink_opening_record LIKE 'workorder_id'"
+      );
       if (cols.length === 0) {
         await execute(
           "ALTER TABLE ink_opening_record ADD COLUMN workorder_id BIGINT UNSIGNED COMMENT '工单ID' AFTER remark"
@@ -216,17 +218,17 @@ export const POST = withPermission(
           columns: ['workorder_id', 'workorder_no'],
         });
       }
-    } catch (e: any) {
+    } catch (e) {
       results.push({
         table: 'ink_opening_record',
         action: 'add_columns',
         status: 'error',
-        message: e.message,
+        message: (e as Error).message,
       });
     }
 
     try {
-      const [cols]: any = await execute(
+      const [cols]: Loose = await execute(
         "SHOW COLUMNS FROM inv_inventory_batch LIKE 'inspection_id'"
       );
       if (cols.length === 0) {
@@ -239,29 +241,29 @@ export const POST = withPermission(
           column: 'inspection_id',
         });
       }
-    } catch (e: any) {
+    } catch (e) {
       results.push({
         table: 'inv_inventory_batch',
         action: 'add_column',
         status: 'error',
-        message: e.message,
+        message: (e as Error).message,
       });
     }
 
     try {
-      const [cols]: any = await execute("SHOW COLUMNS FROM inv_scan_log LIKE 'batch_no'");
+      const [cols]: Loose = await execute("SHOW COLUMNS FROM inv_scan_log LIKE 'batch_no'");
       if (cols.length === 0) {
         await execute(
           "ALTER TABLE inv_scan_log ADD COLUMN batch_no VARCHAR(50) COMMENT '批次号' AFTER sn"
         );
         results.push({ table: 'inv_scan_log', action: 'add_column', column: 'batch_no' });
       }
-    } catch (e: any) {
+    } catch (e) {
       results.push({
         table: 'inv_scan_log',
         action: 'add_column',
         status: 'error',
-        message: e.message,
+        message: (e as Error).message,
       });
     }
 

@@ -107,7 +107,7 @@ export const POST = withPermission(
     }
 
     try {
-      const employees: any = await query(
+      const employees: Loose = await query(
         'SELECT id, employee_no, name, dept_name, position, email, phone FROM sys_employee'
       );
 
@@ -159,8 +159,11 @@ export const POST = withPermission(
         message: `修正完成：员工表 ${empUpdated} 条，用户表 ${userUpdated} 条`,
         details: results,
       });
-    } catch (error: any) {
-      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, message: (error as Error).message },
+        { status: 500 }
+      );
     }
   },
   { logTitle: '修正员工数据', logType: 'system' }

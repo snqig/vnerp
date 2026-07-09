@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const customerId = searchParams.get('customerId') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (status) {
     where += ' AND status = ?';
@@ -24,13 +24,13 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push(Number(customerId));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM fin_receivable ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT r.*, c.customer_name
      FROM fin_receivable r
      LEFT JOIN crm_customer c ON r.customer_id = c.id

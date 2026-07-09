@@ -16,8 +16,8 @@ export const POST = withPermission(
     try {
       await updateVersionItems(Number(id), body.items, userInfo.userId);
       return successResponse(null, '明细更新成功');
-    } catch (e: any) {
-      return errorResponse(e.message || '更新失败', 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message || '更新失败', 400, 400);
     }
   },
   { logTitle: '更新油墨配方明细', logType: 'business' }

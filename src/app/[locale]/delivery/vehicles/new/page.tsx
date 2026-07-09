@@ -99,7 +99,7 @@ export default function NewVehiclePage() {
     }
   };
 
-  const updateField = (field: keyof VehicleForm, value: any) => {
+  const updateField = (field: keyof VehicleForm, value: Loose) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

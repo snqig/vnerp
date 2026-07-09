@@ -116,7 +116,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         await conn.execute(`DELETE FROM ${table}`);
         await conn.execute(`ALTER TABLE ${table} AUTO_INCREMENT = 1`);
         clearedCount++;
-      } catch (_e: any) {}
+      } catch (_e) {}
     }
     stats.businessTablesCleared = clearedCount;
 
@@ -140,7 +140,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       try {
         await conn.execute(`DELETE FROM ${table}`);
         await conn.execute(`ALTER TABLE ${table} AUTO_INCREMENT = 1`);
-      } catch (_e: any) {}
+      } catch (_e) {}
     }
 
     const departments = [
@@ -161,7 +161,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         [dept.dept_code, dept.dept_name, dept.parent_id, dept.sort_order]
       );
     }
-    const [deptRows]: any = await conn.execute(
+    const [deptRows]: Loose = await conn.execute(
       'SELECT id, dept_name FROM sys_department ORDER BY id'
     );
     const deptMap: Record<string, number> = {};
@@ -273,7 +273,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
     }
-    const [roleRows]: any = await conn.execute('SELECT id, role_code FROM sys_role ORDER BY id');
+    const [roleRows]: Loose = await conn.execute('SELECT id, role_code FROM sys_role ORDER BY id');
     const roleMap: Record<string, number> = {};
     for (const row of roleRows) {
       roleMap[row.role_code] = row.id;
@@ -369,7 +369,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         `INSERT INTO sys_user (username, password, real_name, email, phone, department_id, status, first_login) VALUES (?, ?, ?, ?, ?, ?, 1, 1)`,
         [user.username, passwordHash, user.real_name, user.email, user.phone, deptId]
       );
-      const [userRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [userRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const userId = userRow[0].id;
       const roleId = roleMap[user.role_code];
       if (roleId) {
@@ -523,7 +523,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         ]
       );
     }
-    const [matCatRows]: any = await conn.execute(
+    const [matCatRows]: Loose = await conn.execute(
       'SELECT id, category_code, category_name FROM inv_material_category ORDER BY id'
     );
     const matCatMap: Record<string, number> = {};
@@ -596,7 +596,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         [dt.dict_name, dt.dict_code, dt.status, dt.description]
       );
     }
-    const [dictTypeRows]: any = await conn.execute(
+    const [dictTypeRows]: Loose = await conn.execute(
       'SELECT id, dict_code FROM sys_dict_type ORDER BY id'
     );
     const dictTypeMap: Record<string, number> = {};
@@ -859,7 +859,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     }
     stats.sys_config = configs.length;
 
-    const [allMenus]: any = await conn.execute(
+    const [allMenus]: Loose = await conn.execute(
       'SELECT id, menu_code, parent_id FROM sys_menu WHERE status = 1'
     );
     const menuCodeToId: Record<string, number> = {};
@@ -886,7 +886,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     function getMenuIdsByParentCode(parentCode: string): number[] {
       const parentId = menuCodeToId[parentCode];
       if (!parentId) return [];
-      return allMenus.filter((m: any) => m.parent_id === parentId).map((m: any) => m.id);
+      return allMenus.filter((m: Loose) => m.parent_id === parentId).map((m: Loose) => m.id);
     }
 
     const dashboardMenuIds = getMenuIdsByParentCode('dashboard_center');
@@ -909,7 +909,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     const financeTopId = menuCodeToId['finance'] ? [menuCodeToId['finance']] : [];
 
     const roleMenuAssignments: Record<string, number[]> = {
-      super_admin: allMenus.map((m: any) => m.id),
+      super_admin: allMenus.map((m: Loose) => m.id),
       business_manager: [...dashboardTopId, ...dashboardMenuIds, ...ordersTopId, ...ordersMenuIds],
       sales: [
         ...dashboardTopId,

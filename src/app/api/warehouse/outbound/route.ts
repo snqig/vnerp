@@ -49,7 +49,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   `;
 
   let countSql = `SELECT COUNT(*) as total FROM inv_outbound_order o WHERE o.deleted = 0`;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     const keywordCondition = ` AND (o.order_no LIKE ? OR o.remark LIKE ?)`;
@@ -83,7 +83,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   // 获取每个订单的明细（使用IN查询优化N+1问题）
   if (result.data.length > 0) {
-    const orderIds = result.data.map((o: any) => o.id);
+    const orderIds = result.data.map((o: Loose) => o.id);
     const placeholders = orderIds.map(() => '?').join(',');
 
     const items = await query(
@@ -106,14 +106,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
     // 将明细分组到对应的订单
     const itemsMap = new Map();
-    for (const item of items as any[]) {
+    for (const item of items as Loose[]) {
       if (!itemsMap.has(item.orderId)) {
         itemsMap.set(item.orderId, []);
       }
       itemsMap.get(item.orderId).push(item);
     }
 
-    for (const order of result.data as any[]) {
+    for (const order of result.data as Loose[]) {
       order.items = itemsMap.get(order.id) || [];
     }
   }
@@ -159,11 +159,11 @@ export const POST = withPermission(
     const result = await transaction(async (connection) => {
       // 计算总金额
       const totalQty = items.reduce(
-        (sum: number, item: any) => sum + (parseFloat(item.qty) || 0),
+        (sum: number, item: Loose) => sum + (parseFloat(item.qty) || 0),
         0
       );
       const totalAmount = items.reduce(
-        (sum: number, item: any) =>
+        (sum: number, item: Loose) =>
           sum + (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0),
         0
       );
@@ -190,11 +190,11 @@ export const POST = withPermission(
         ]
       );
 
-      const orderId = (orderResult as any).insertId;
+      const orderId = (orderResult as Loose).insertId;
 
       // 批量插入出库单明细
       if (items.length > 0) {
-        const itemValues = items.map((item: any) => [
+        const itemValues = items.map((item: Loose) => [
           orderId,
           item.materialId,
           item.materialName,

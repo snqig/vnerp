@@ -12,7 +12,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE r.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (returnNo) {
     where += ' AND r.return_no LIKE ?';
     params.push('%' + returnNo + '%');
@@ -22,12 +22,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM prd_material_return r ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT r.*, w.warehouse_name FROM prd_material_return r LEFT JOIN inv_warehouse w ON r.warehouse_id = w.id ' +
       where +
       ' ORDER BY r.create_time DESC LIMIT ? OFFSET ?',
@@ -51,7 +51,7 @@ export const POST = withPermission(
     const _now = new Date();
     const returnNo = generateDocNo(getMrPrefix());
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       'INSERT INTO prd_material_return (return_no, work_order_id, work_order_no, warehouse_id, return_date, operator_name, remark) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [
         returnNo,

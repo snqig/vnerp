@@ -11,7 +11,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const keyword = searchParams.get('keyword') || '';
 
   let where = 'WHERE mb.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (status) {
     where += ' AND mb.status = ?';
@@ -23,19 +23,19 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push(like, like);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM ink_mixed_batch mb ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT mb.* FROM ink_mixed_batch mb ${where} ORDER BY mb.mixed_date DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
 
   for (const row of rows) {
-    const details: any = await query(
+    const details: Loose = await query(
       'SELECT * FROM ink_mixed_batch_detail WHERE mixed_batch_id = ?',
       [row.id]
     );
@@ -68,7 +68,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     const now = new Date();
     const batchNo = `MIX${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
 
-    const [insertResult]: any = await conn.execute(
+    const [insertResult]: Loose = await conn.execute(
       `INSERT INTO ink_mixed_batch (batch_no, formula_no, formula_name, total_qty, unit, mixed_date, expire_date, operator_id, operator_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
       [
@@ -91,7 +91,7 @@ export const POST = withPermission(async (request: NextRequest) => {
         throw new Error(`原墨批次 ${detail.source_batch_no || ''} 用量必须大于0`);
       }
 
-      const [sourceBatchRows]: any = await conn.execute(
+      const [sourceBatchRows]: Loose = await conn.execute(
         'SELECT id, available_qty, material_name FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0 FOR UPDATE',
         [detail.source_batch_no]
       );
@@ -135,7 +135,7 @@ export const POST = withPermission(async (request: NextRequest) => {
       );
     }
 
-    const [warehouseRows]: any = await conn.execute(
+    const [warehouseRows]: Loose = await conn.execute(
       'SELECT id FROM inv_warehouse WHERE warehouse_name LIKE ? AND deleted = 0 LIMIT 1',
       ['%调色%']
     );
@@ -171,7 +171,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
   if (status === 2) {
     await transaction(async (conn) => {
-      const [batchRows]: any = await conn.execute(
+      const [batchRows]: Loose = await conn.execute(
         'SELECT batch_no FROM ink_mixed_batch WHERE id = ? AND deleted = 0',
         [id]
       );
@@ -185,7 +185,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
     });
   } else if (status === 3) {
     await transaction(async (conn) => {
-      const [batchRows]: any = await conn.execute(
+      const [batchRows]: Loose = await conn.execute(
         'SELECT batch_no FROM ink_mixed_batch WHERE id = ? AND deleted = 0',
         [id]
       );

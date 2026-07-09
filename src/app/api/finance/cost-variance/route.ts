@@ -15,7 +15,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let where = 'WHERE wo.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (workOrderId) {
     where += ' AND wo.id = ?';
@@ -34,7 +34,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push(endDate + ' 23:59:59');
   }
 
-  const workOrders: any = await query(
+  const workOrders: Loose = await query(
     `
     SELECT
       wo.id,
@@ -54,7 +54,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     [...params, pageSize, (page - 1) * pageSize]
   );
 
-  const countResult: any = await query(
+  const countResult: Loose = await query(
     `
     SELECT COUNT(*) as total FROM prod_work_order wo ${where}
   `,
@@ -62,10 +62,10 @@ export const GET = withPermission(async (request: NextRequest) => {
   );
   const total = countResult[0]?.total || 0;
 
-  const varianceDetails: any[] = [];
+  const varianceDetails: Loose[] = [];
 
   for (const wo of workOrders) {
-    const materialCostRows: any = await query(
+    const materialCostRows: Loose = await query(
       `
       SELECT
         COALESCE(SUM(wr.completed_qty * bom.unit_price), 0) as standard_material_cost,
@@ -81,7 +81,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       [wo.id, wo.id]
     );
 
-    const laborCostRows: any = await query(
+    const laborCostRows: Loose = await query(
       `
       SELECT
         COALESCE(SUM(wr.work_hours), 0) as actual_work_hours,
@@ -120,7 +120,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     const totalActualCost = Math.abs(actualMaterialCost) + actualLaborCost + actualOverheadCost;
     const totalVariance = totalStandardCost - totalActualCost;
 
-    const scrapRows: any = await query(
+    const scrapRows: Loose = await query(
       `
       SELECT
         COALESCE(SUM(scrap_qty), 0) as total_scrap,
@@ -135,7 +135,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     const totalCompleted = Number(scrapRows[0]?.total_completed || 0);
     const scrapRate = totalCompleted > 0 ? (totalScrap / (totalCompleted + totalScrap)) * 100 : 0;
 
-    const detail: any = {
+    const detail: Loose = {
       work_order_id: wo.id,
       work_order_no: wo.work_order_no,
       product_name: wo.product_name,
@@ -187,7 +187,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     }
   }
 
-  const summaryResult: any = await query(`
+  const summaryResult: Loose = await query(`
     SELECT
       COALESCE(SUM(wr.completed_qty), 0) as total_completed_qty,
       COALESCE(SUM(wr.scrap_qty), 0) as total_scrap_qty,

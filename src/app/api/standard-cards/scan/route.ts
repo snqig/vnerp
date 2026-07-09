@@ -21,7 +21,7 @@ export const POST = withPermission(
     }
 
     // 通过二维码查找关联的工单
-    const qrRecord = await queryOne<any>(
+    const qrRecord = await queryOne<Loose>(
       'SELECT * FROM qrcode_record WHERE qr_code = ? AND deleted = 0',
       [qr_code]
     );
@@ -58,9 +58,9 @@ export const POST = withPermission(
     );
 
     // 为每个标准卡加载明细数据
-    const cardsWithItems: any[] = [];
+    const cardsWithItems: Loose[] = [];
     for (const card of cards) {
-      let items: any[] = [];
+      let items: Loose[] = [];
 
       switch (card.type as StandardCardType) {
         case 'color':

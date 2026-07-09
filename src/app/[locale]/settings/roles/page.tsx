@@ -147,7 +147,7 @@ export default function RolesPage() {
       const menuResponse = await authFetch(`/api/role-permissions?roleId=${roleId}`);
       const menuResult = await menuResponse.json();
       if (menuResult.success) {
-        setSelectedMenus(menuResult.data.map((p: any) => p.menu_id));
+        setSelectedMenus(menuResult.data.map((p: Loose) => p.menu_id));
       }
 
       // 获取按钮权限
@@ -318,7 +318,7 @@ export default function RolesPage() {
       const whResult = await whRes.json();
       if (whResult.success) {
         setWarehouses(
-          (whResult.data || []).map((w: any) => ({ id: w.id, name: w.warehouse_name || w.name }))
+          (whResult.data || []).map((w: Loose) => ({ id: w.id, name: w.warehouse_name || w.name }))
         );
       }
     } catch {}
@@ -330,7 +330,7 @@ export default function RolesPage() {
       if (custResult.success) {
         setCustomers(
           (Array.isArray(custResult.data) ? custResult.data : custResult.data?.list || []).map(
-            (c: any) => ({ id: c.id, name: c.customer_name || c.name })
+            (c: Loose) => ({ id: c.id, name: c.customer_name || c.name })
           )
         );
       }
@@ -343,7 +343,7 @@ export default function RolesPage() {
       if (supResult.success) {
         setSuppliers(
           (Array.isArray(supResult.data) ? supResult.data : supResult.data?.list || []).map(
-            (s: any) => ({ id: s.id, name: s.supplier_name || s.name })
+            (s: Loose) => ({ id: s.id, name: s.supplier_name || s.name })
           )
         );
       }

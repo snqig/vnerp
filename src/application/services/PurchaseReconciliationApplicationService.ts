@@ -89,7 +89,7 @@ export class PurchaseReconciliationApplicationService {
       );
 
       // 乐观锁：仅当余额未被其他事务修改时才更新（WHERE balance_amount = 原始余额）
-      const [updateResult]: any = await conn.execute(
+      const [updateResult]: Loose = await conn.execute(
         `UPDATE pur_purchase_reconciliation
          SET paid_amount = ?, balance_amount = ?, status = ?, update_time = NOW()
          WHERE id = ? AND balance_amount = ?`,
@@ -155,7 +155,7 @@ export class PurchaseReconciliationApplicationService {
   private async persistAndPublishEvents(
     aggregateType: string,
     aggregateId: number,
-    aggregate: { getDomainEvents(): any[]; clearDomainEvents(): void }
+    aggregate: { getDomainEvents(): Loose[]; clearDomainEvents(): void }
   ): Promise<void> {
     const events = aggregate.getDomainEvents();
     if (events.length === 0) return;

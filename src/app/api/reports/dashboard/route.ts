@@ -16,7 +16,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const startDateStr = startDate.toISOString().split('T')[0];
 
   // 1. 订单指标
-  const orderStats: any = await query(
+  const orderStats: Loose = await query(
     `SELECT
       COUNT(*) as total_orders,
       SUM(CASE WHEN status >= 3 THEN 1 ELSE 0 END) as completed_orders,
@@ -29,7 +29,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   // 2. 生产指标
-  const productionStats: any = await query(
+  const productionStats: Loose = await query(
     `SELECT
       COUNT(*) as total_work_orders,
       SUM(CASE WHEN status >= 3 THEN 1 ELSE 0 END) as completed_work_orders,
@@ -42,7 +42,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   // 3. 库存指标
-  const inventoryStats: any = await query(
+  const inventoryStats: Loose = await query(
     `SELECT
       COUNT(DISTINCT material_id) as material_count,
       COALESCE(SUM(quantity), 0) as total_stock,
@@ -55,7 +55,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   // 4. 采购指标
-  const purchaseStats: any = await query(
+  const purchaseStats: Loose = await query(
     `SELECT
       COUNT(*) as total_purchase_orders,
       SUM(CASE WHEN status >= 3 THEN 1 ELSE 0 END) as received_orders,
@@ -66,7 +66,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   // 5. 财务指标（应收应付）
-  const financeStats: any = await query(
+  const financeStats: Loose = await query(
     `SELECT
       COALESCE(SUM(CASE WHEN type = 'receivable' AND status = 1 THEN amount ELSE 0 END), 0) as pending_receivable,
       COALESCE(SUM(CASE WHEN type = 'payable' AND status = 1 THEN amount ELSE 0 END), 0) as pending_payable

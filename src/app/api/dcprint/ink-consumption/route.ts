@@ -11,7 +11,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const endDate = searchParams.get('endDate') || '';
 
   let dateFilter = '';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (workorderNo) {
     dateFilter = 'AND u.workorder_no = ?';
@@ -27,7 +27,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     dateFilter = 'AND u.usage_time >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)';
   }
 
-  let workorderAnalysis: any[] = [];
+  let workorderAnalysis: Loose[] = [];
   try {
     workorderAnalysis = await query(
       `
@@ -55,7 +55,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   } catch {}
 
-  let inkTypeSummary: any[] = [];
+  let inkTypeSummary: Loose[] = [];
   try {
     inkTypeSummary = await query(
       `
@@ -77,7 +77,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   } catch {}
 
-  let topWasteItems: any[] = [];
+  let topWasteItems: Loose[] = [];
   try {
     topWasteItems = await query(
       `
@@ -102,7 +102,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   } catch {}
 
-  let dailyTrend: any[] = [];
+  let dailyTrend: Loose[] = [];
   try {
     dailyTrend = await query(
       `
@@ -121,7 +121,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   } catch {}
 
-  const summary: any = {
+  const summary: Loose = {
     total_dispatch: 0,
     total_consumed: 0,
     total_returned: 0,
@@ -130,7 +130,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     avg_per_workorder: 0,
   };
   try {
-    const summaryRows: any = await query(
+    const summaryRows: Loose = await query(
       `
       SELECT
         COALESCE(SUM(d.total_weight), 0) as total_dispatch,

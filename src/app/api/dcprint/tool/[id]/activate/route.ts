@@ -6,13 +6,17 @@ import { ToolManagementService } from '@/application/services/ToolManagementServ
 const service = new ToolManagementService();
 
 export const POST = withPermission(
-  async (request: NextRequest, _userInfo: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    _userInfo: Loose,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
     try {
       await service.activateTool(Number(id));
       return successResponse({ id }, 'Tool activated');
-    } catch (e: any) {
-      return errorResponse(e.message, 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message, 400, 400);
     }
   },
   { logTitle: '激活工装' }

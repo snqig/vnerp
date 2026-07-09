@@ -64,11 +64,11 @@ async function postHandler(request: NextRequest, user: UserInfo) {
       default:
         return NextResponse.json({ code: 400, message: '无效的操作' }, { status: 400 });
     }
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         code: 400,
-        message: error.message || '操作失败',
+        message: (error as Error).message || '操作失败',
       },
       { status: 400 }
     );

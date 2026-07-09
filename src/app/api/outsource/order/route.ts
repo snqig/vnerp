@@ -12,7 +12,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE o.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (orderNo) {
     where += ' AND o.order_no LIKE ?';
     params.push('%' + orderNo + '%');
@@ -26,12 +26,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM outsource_order o ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT o.* FROM outsource_order o ' + where + ' ORDER BY o.create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -71,7 +71,7 @@ export const POST = withPermission(
 
     const totalAmount = (Number(plan_qty) || 0) * (Number(unit_price) || 0);
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO outsource_order (order_no, work_order_id, work_order_no, supplier_id, supplier_name, product_id, product_code, product_name, plan_qty, unit, unit_price, total_amount, delivery_date, outsource_type, process_name, status, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
       [
@@ -112,7 +112,7 @@ export const PUT = withPermission(
     }
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: Loose[] = [];
     if (status !== undefined) {
       fields.push('status = ?');
       values.push(status);
@@ -134,7 +134,7 @@ export const PUT = withPermission(
 
     if (fields.length > 0) {
       if (unit_price !== undefined) {
-        const order: any = await query(
+        const order: Loose = await query(
           'SELECT plan_qty FROM outsource_order WHERE id = ? AND deleted = 0',
           [id]
         );

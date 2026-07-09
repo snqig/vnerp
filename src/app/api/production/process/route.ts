@@ -42,8 +42,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   `;
 
   let countSql = `SELECT COUNT(*) as total FROM prd_process_card pc WHERE pc.deleted = 0 AND pc.burdening_status >= 1`;
-  const params: any[] = [];
-  const countParams: any[] = [];
+  const params: Loose[] = [];
+  const countParams: Loose[] = [];
 
   if (status) {
     sql += ` AND pc.burdening_status = ?`;
@@ -64,7 +64,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   const processes = await query(sql, params);
   const countResult = await query(countSql, countParams);
-  const total = (countResult as any[])[0]?.total || 0;
+  const total = (countResult as Loose[])[0]?.total || 0;
 
   return successResponse({
     list: processes,

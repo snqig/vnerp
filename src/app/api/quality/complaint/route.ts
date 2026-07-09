@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (complaintNo) {
     where += ' AND complaint_no LIKE ?';
     params.push('%' + complaintNo + '%');
@@ -31,12 +31,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM qms_complaint ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM qms_complaint ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -75,7 +75,7 @@ export const POST = withPermission(
       String(now.getDate()).padStart(2, '0') +
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO qms_complaint (complaint_no, complaint_source, customer_id, customer_name, product_id, product_code, product_name, order_no, defect_date, defect_qty, defect_desc, defect_type, severity, reporter, report_date, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -145,7 +145,7 @@ export const PUT = withPermission(
     if (!id) return errorResponse('ID不能为空', 400, 400);
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: Loose[] = [];
 
     if (complaint_source !== undefined) {
       fields.push('complaint_source = ?');

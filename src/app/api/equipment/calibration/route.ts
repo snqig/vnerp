@@ -12,7 +12,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (calibrationNo) {
     where += ' AND calibration_no LIKE ?';
     params.push('%' + calibrationNo + '%');
@@ -22,12 +22,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM eqp_calibration ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM eqp_calibration ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -52,7 +52,7 @@ export const POST = withPermission(
     const _now = new Date();
     const calibrationNo = generateDocNo(getJdPrefix());
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       'INSERT INTO eqp_calibration (calibration_no, equipment_id, equipment_code, equipment_name, calibration_date, next_calibration_date, calibration_org, calibration_result, certificate_no, calibration_cost, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         calibrationNo,

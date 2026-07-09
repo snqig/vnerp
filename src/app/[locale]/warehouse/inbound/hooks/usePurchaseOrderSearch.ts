@@ -53,7 +53,7 @@ export function usePurchaseOrderSearch(setFormData: Dispatch<SetStateAction<Inbo
   );
 
   const handlePoSelect = useCallback(
-    (po: any) => {
+    (po: Loose) => {
       const firstLine = po.lines?.[0] || {};
       setFormData((prev) => ({
         ...prev,

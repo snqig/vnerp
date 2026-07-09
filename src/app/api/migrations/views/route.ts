@@ -183,8 +183,8 @@ export const GET = withPermission(async (_request: NextRequest) => {
     try {
       await execute(view.sql);
       results.push(`Created/Updated view: ${view.name}`);
-    } catch (e: any) {
-      results.push(`View ${view.name} failed: ${e.message}`);
+    } catch (e) {
+      results.push(`View ${view.name} failed: ${(e as Error).message}`);
     }
   }
 

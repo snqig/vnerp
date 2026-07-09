@@ -58,7 +58,7 @@ export interface ExportColumn {
   /** 列宽（Excel 列宽 / PDF 列宽百分比） */
   width?: number;
   /** 值格式化函数 */
-  formatter?: (value: any, row: any) => string | number;
+  formatter?: (value: Loose, row: Loose) => string | number;
 }
 
 export interface ExportOptions {
@@ -71,7 +71,7 @@ export interface ExportOptions {
   /** 列定义 */
   columns: ExportColumn[];
   /** 数据行 */
-  data: Record<string, any>[];
+  data: Record<string, Loose>[];
   /** 副标题/描述 */
   subtitle?: string;
   /** 是否横向（仅 PDF） */
@@ -225,7 +225,7 @@ class GlobalExportServiceClass {
     });
 
     // 页脚
-    const finalY = (doc as any).lastAutoTable?.finalY || 25;
+    const finalY = (doc as Loose).lastAutoTable?.finalY || 25;
     if (footer) {
       doc.setFontSize(8);
       doc.setTextColor(128);

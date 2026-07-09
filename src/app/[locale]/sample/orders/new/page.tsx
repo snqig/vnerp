@@ -58,7 +58,7 @@ export default function NewSampleOrderPage() {
     status: 0,
   });
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: Loose) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

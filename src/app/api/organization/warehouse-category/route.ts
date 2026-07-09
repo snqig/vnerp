@@ -29,7 +29,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     FROM sys_warehouse_category
     WHERE 1=1
   `;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     sql += ' AND (name LIKE ? OR code LIKE ?)';

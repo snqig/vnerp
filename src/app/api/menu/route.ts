@@ -5,7 +5,7 @@ import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 
 // 构建菜单树
-function buildMenuTree(menus: any[], parentId: number = 0): any[] {
+function buildMenuTree(menus: Loose[], parentId: number = 0): Loose[] {
   return menus
     .filter((menu) => (menu.parent_id ?? 0) === parentId)
     .sort((a, b) => a.sort_order - b.sort_order)
@@ -40,7 +40,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
       FROM sys_menu
       WHERE status = 1
     `;
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (status !== null && status !== '') {
       sql += ' AND status = ?';
@@ -52,7 +52,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     const menus = await query(sql, params);
 
     // 构建树形结构
-    const menuTree = buildMenuTree(menus as any[]);
+    const menuTree = buildMenuTree(menus as Loose[]);
 
     return successResponse(menuTree, '获取菜单列表成功');
   } catch {

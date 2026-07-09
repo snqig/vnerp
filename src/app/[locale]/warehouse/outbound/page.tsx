@@ -316,7 +316,7 @@ const initialOutboundRecords: OutboundRecord[] = [
 
 const statusConfig: Record<
   string,
-  { labelKey: string; color: string; icon: React.ComponentType<any> }
+  { labelKey: string; color: string; icon: React.ComponentType<Loose> }
 > = {
   completed: {
     labelKey: 'completed',
@@ -393,8 +393,8 @@ export default function OutboundManagementPage() {
   // 数据状态
   const [outboundRecords, setOutboundRecords] = useState(initialOutboundRecords);
   const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
-  const [warehouses, setWarehouses] = useState<any[]>([]);
-  const [warehouseCategories, setWarehouseCategories] = useState<any[]>([]);
+  const [warehouses, setWarehouses] = useState<Loose[]>([]);
+  const [warehouseCategories, setWarehouseCategories] = useState<Loose[]>([]);
 
   // 对话框状态
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -402,10 +402,10 @@ export default function OutboundManagementPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAuditDialogOpen, setIsAuditDialogOpen] = useState(false);
   const [isFifoDialogOpen, setIsFifoDialogOpen] = useState(false);
-  const [currentRecord, setCurrentRecord] = useState<any>(null);
+  const [currentRecord, setCurrentRecord] = useState<Loose>(null);
 
   // FIFO分配状态
-  const [fifoAllocation, setFifoAllocation] = useState<any>(null);
+  const [fifoAllocation, setFifoAllocation] = useState<Loose>(null);
   const [fifoLoading, setFifoLoading] = useState(false);
   const [fifoConfirming, setFifoConfirming] = useState(false);
 
@@ -528,7 +528,7 @@ export default function OutboundManagementPage() {
   };
 
   // 编辑出库单
-  const handleEdit = (record: any) => {
+  const handleEdit = (record: Loose) => {
     setCurrentRecord(record);
     setFormData({
       materialCode: record.materialCode || '',
@@ -661,7 +661,7 @@ export default function OutboundManagementPage() {
   };
 
   // 删除出库单
-  const handleDelete = (record: any) => {
+  const handleDelete = (record: Loose) => {
     setCurrentRecord(record);
     setIsDeleteDialogOpen(true);
   };
@@ -689,7 +689,7 @@ export default function OutboundManagementPage() {
   };
 
   // 审核/撤审
-  const handleAudit = (record: any, action: 'approve' | 'reject') => {
+  const handleAudit = (record: Loose, action: 'approve' | 'reject') => {
     setCurrentRecord({ ...record, auditAction: action });
     setIsAuditDialogOpen(true);
   };
@@ -726,7 +726,7 @@ export default function OutboundManagementPage() {
   };
 
   // FIFO分配预览
-  const handleFifoPreview = async (record: any) => {
+  const handleFifoPreview = async (record: Loose) => {
     setCurrentRecord(record);
     setFifoLoading(true);
     setIsFifoDialogOpen(true);
@@ -1733,7 +1733,7 @@ export default function OutboundManagementPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {fifoAllocation.allocation_plan.map((alloc: any, idx: number) => (
+                        {fifoAllocation.allocation_plan.map((alloc: Loose, idx: number) => (
                           <TableRow key={idx}>
                             <TableCell className="font-mono text-sm">{alloc.batch_no}</TableCell>
                             <TableCell>{alloc.inbound_date || '-'}</TableCell>
@@ -1786,7 +1786,7 @@ export default function OutboundManagementPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {fifoAllocation.batches.map((batch: any, idx: number) => (
+                          {fifoAllocation.batches.map((batch: Loose, idx: number) => (
                             <TableRow key={idx}>
                               <TableCell className="font-mono text-sm">{batch.batch_no}</TableCell>
                               <TableCell>{batch.inbound_date || '-'}</TableCell>

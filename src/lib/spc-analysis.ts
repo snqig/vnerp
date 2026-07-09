@@ -299,11 +299,11 @@ export function calculatePChart(
 }
 
 export async function handleInspectionFailure(
-  conn: any,
+  conn: Loose,
   inspectionId: number,
   operatorName: string
 ): Promise<void> {
-  const [inspectionRows]: any = await conn.query(
+  const [inspectionRows]: Loose = await conn.query(
     `SELECT id, inspection_no, inspection_type, source_type, source_id, source_no,
             material_id, batch_no, inspection_qty, unqualified_qty, inspection_result,
             inspector_id, remark
@@ -320,7 +320,7 @@ export async function handleInspectionFailure(
   await conn.execute(`UPDATE qc_inspection SET inspection_result = 2 WHERE id = ?`, [inspectionId]);
 
   if (inspection.batch_no) {
-    const [batchRows]: any = await conn.query(
+    const [batchRows]: Loose = await conn.query(
       `SELECT id FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0`,
       [inspection.batch_no]
     );
@@ -377,7 +377,7 @@ export async function handleInspectionFailure(
 }
 
 export async function getSPCDataFromDB(
-  conn: any,
+  conn: Loose,
   materialId: number,
   inspectionType: string,
   startDate: string,
@@ -399,7 +399,7 @@ export async function getSPCDataFromDB(
     WHERE material_id = ? AND deleted = 0
       AND create_time >= ? AND create_time <= ?
   `;
-  const params: any[] = [materialId, startDate, endDate];
+  const params: Loose[] = [materialId, startDate, endDate];
 
   if (typeValue !== undefined) {
     sql += ` AND inspection_type = ?`;
@@ -408,13 +408,13 @@ export async function getSPCDataFromDB(
 
   sql += ` ORDER BY create_time ASC`;
 
-  const [rows]: any = await conn.query(sql, params);
+  const [rows]: Loose = await conn.query(sql, params);
 
   if (!rows || rows.length === 0) {
     return [];
   }
 
-  const measurements: { timestamp: string; value: number }[] = rows.map((row: any) => ({
+  const measurements: { timestamp: string; value: number }[] = rows.map((row: Loose) => ({
     timestamp: row.create_time?.toISOString?.() || String(row.create_time),
     value: Number(row.inspection_qty || 0),
   }));

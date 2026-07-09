@@ -6,7 +6,11 @@ import { ToolManagementService } from '@/application/services/ToolManagementServ
 const service = new ToolManagementService();
 
 export const GET = withPermission(
-  async (request: NextRequest, _userInfo: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    _userInfo: Loose,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
     const records = await service.listMaintenanceRecords(Number(id));
     return successResponse({ list: records });
@@ -15,7 +19,11 @@ export const GET = withPermission(
 );
 
 export const POST = withPermission(
-  async (request: NextRequest, userInfo: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    userInfo: Loose,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
     const body = await request.json();
     try {
@@ -37,8 +45,8 @@ export const POST = withPermission(
         remark: body.remark,
       });
       return successResponse({ maintenanceId }, 'Maintenance started');
-    } catch (e: any) {
-      return errorResponse(e.message, 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message, 400, 400);
     }
   },
   { logTitle: '工装维修操作' }

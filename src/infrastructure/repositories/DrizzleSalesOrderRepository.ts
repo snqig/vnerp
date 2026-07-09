@@ -245,7 +245,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
         `[DrizzleSalesRepo] save (entry)\n  TABLE: sal_order (INSERT)\n  CONDITIONS: N/A (new row)\n  SQL: ${orderSql}\n  PARAMS: ${JSON.stringify(orderParams)}`
       );
 
-      const [orderResult]: any = await conn.execute(
+      const [orderResult]: Loose = await conn.execute(
         `INSERT INTO sal_order
          (order_no, order_date, customer_id, contact_name, contact_phone, delivery_address,
           salesman_id, total_amount, tax_amount, total_with_tax, discount_amount,
@@ -316,7 +316,7 @@ export class DrizzleSalesOrderRepository implements ISalesOrderRepository {
       .set({ status: dbStatus, updateTime: new Date() })
       .where(and(eq(salOrder.id, id), eq(salOrder.status, dbCurrentStatus)));
 
-    const affected = (result[0] as any)?.affectedRows > 0;
+    const affected = (result[0] as Loose)?.affectedRows > 0;
     logOp(
       'updateStatus',
       'sal_order (UPDATE)',

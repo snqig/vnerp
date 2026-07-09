@@ -46,7 +46,7 @@ async function getToleranceConfig(materialId?: number, orderType: string = 'PURC
     [materialId || null, orderType]
   );
 
-  if ((config as any[]).length === 0) {
+  if ((config as Loose[]).length === 0) {
     return {
       over_delivery_tolerance: 5.0,
       under_delivery_tolerance: 5.0,
@@ -54,7 +54,7 @@ async function getToleranceConfig(materialId?: number, orderType: string = 'PURC
     };
   }
 
-  const c = (config as any[])[0];
+  const c = (config as Loose[])[0];
   return {
     over_delivery_tolerance: c.over_delivery_tolerance,
     under_delivery_tolerance: c.under_delivery_tolerance,
@@ -92,9 +92,9 @@ async function updateBizOrderStatus(orderId: number, triggerBy: string) {
     [orderId]
   );
 
-  if ((order as any[]).length === 0) return;
+  if ((order as Loose[]).length === 0) return;
 
-  const orderData = (order as any[])[0];
+  const orderData = (order as Loose[])[0];
   const oldStatus = orderData.status;
 
   // 计算汇总指标
@@ -108,7 +108,7 @@ async function updateBizOrderStatus(orderId: number, triggerBy: string) {
     [orderId]
   );
 
-  const summary = (lines as any[])[0];
+  const summary = (lines as Loose[])[0];
   const totalReq = summary.total_req || 0;
   const totalOrdered = summary.total_ordered || 0;
   const totalReceived = summary.total_received || 0;
@@ -173,7 +173,7 @@ export const POST = withPermission(
         [sourceOrderLineId]
       );
 
-      const orderLine = (orderLineRows as any[])[0];
+      const orderLine = (orderLineRows as Loose[])[0];
       if (!orderLine) {
         throw new Error('来源业务订单行不存在');
       }
@@ -262,7 +262,7 @@ export const PUT = withPermission(
 
         const updatedOrders = new Set<number>();
 
-        for (const poLine of poLines as any[]) {
+        for (const poLine of poLines as Loose[]) {
           // 更新业务订单行已订购数量
           await connection.execute(
             `UPDATE biz_order_line 
@@ -302,7 +302,7 @@ export const PUT = withPermission(
 
         const updatedOrders = new Set<number>();
 
-        for (const item of grnItems as any[]) {
+        for (const item of grnItems as Loose[]) {
           // 更新业务订单行已收货数量
           await connection.execute(
             `UPDATE biz_order_line 
@@ -353,7 +353,7 @@ export const PUT = withPermission(
           [orderLineId]
         );
 
-        const orderLine = (orderLineRows as any[])[0];
+        const orderLine = (orderLineRows as Loose[])[0];
         if (!orderLine) {
           throw new Error('业务订单行不存在');
         }
@@ -439,11 +439,11 @@ export const GET = withPermission(
       [orderId]
     );
 
-    if ((order as any[]).length === 0) {
+    if ((order as Loose[]).length === 0) {
       return errorResponse('业务订单不存在', 404, 404);
     }
 
-    const orderData = (order as any[])[0];
+    const orderData = (order as Loose[])[0];
 
     // 计算行级别汇总
     const lines = await query(
@@ -456,7 +456,7 @@ export const GET = withPermission(
       [orderId]
     );
 
-    const lineSummary = (lines as any[])[0];
+    const lineSummary = (lines as Loose[])[0];
     const totalReq = lineSummary.total_req || 0;
     const totalOrdered = lineSummary.total_ordered || 0;
     const totalReceived = lineSummary.total_received || 0;

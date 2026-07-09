@@ -27,7 +27,7 @@ export const GET = withPermission(async (request: NextRequest) => {
       dateFormat = '%Y-%m';
   }
 
-  const revenueRows: any = await query(`
+  const revenueRows: Loose = await query(`
     SELECT DATE_FORMAT(create_time, '${dateFormat}') as period,
       'revenue' as type, '销售收入' as category,
       COALESCE(SUM(amount), 0) as revenue, 0 as cost,
@@ -37,7 +37,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     GROUP BY period ORDER BY period DESC
   `);
 
-  const costRows: any = await query(`
+  const costRows: Loose = await query(`
     SELECT DATE_FORMAT(cost_date, '${dateFormat}') as period,
       'cost' as type, cost_type as category,
       0 as revenue, COALESCE(SUM(amount), 0) as cost,
@@ -52,7 +52,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const start = (page - 1) * pageSize;
   const list = allRows.slice(start, start + pageSize);
 
-  const summary: any = await query(`
+  const summary: Loose = await query(`
     SELECT
       COALESCE((SELECT SUM(amount) FROM fin_receivable WHERE deleted = 0 AND status IN (2, 3)), 0) as total_revenue,
       COALESCE((SELECT SUM(amount) FROM fin_cost_record WHERE deleted = 0), 0) as total_cost,

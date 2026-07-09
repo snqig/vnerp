@@ -153,8 +153,8 @@ export default function SuppliersPage() {
   const sortedList = useMemo(() => {
     if (!sortField || !sortOrder) return list;
     return [...list].sort((a, b) => {
-      const aVal = String((a as any)[sortField] ?? '').toLowerCase();
-      const bVal = String((b as any)[sortField] ?? '').toLowerCase();
+      const aVal = String((a as Loose)[sortField] ?? '').toLowerCase();
+      const bVal = String((b as Loose)[sortField] ?? '').toLowerCase();
       if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
       return 0;

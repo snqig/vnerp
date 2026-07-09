@@ -22,7 +22,7 @@ export const GET = withPermission(
     const format = searchParams.get('format') || 'csv';
 
     let where = 'WHERE 1=1';
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (materialId) {
       where += ' AND sm.material_id = ?';
@@ -45,7 +45,7 @@ export const GET = withPermission(
       params.push(endDate + ' 23:59:59');
     }
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT sm.id, sm.movement_type, sm.quantity, sm.unit_price,
               sm.source_type, sm.source_no, sm.remark, sm.create_time,
               m.material_code, m.material_name, m.unit,
@@ -96,7 +96,7 @@ export const GET = withPermission(
         adjustment: t('movementTypeAdjustment'),
       };
 
-      const csvRows = rows.map((r: any) => [
+      const csvRows = rows.map((r: Loose) => [
         r.id,
         r.material_code || '',
         r.material_name || '',
@@ -114,7 +114,7 @@ export const GET = withPermission(
 
       const csvContent = [
         headers.join(','),
-        ...csvRows.map((row: any[]) => row.map((v: any) => `"${v}"`).join(',')),
+        ...csvRows.map((row: Loose[]) => row.map((v: Loose) => `"${v}"`).join(',')),
       ].join('\n');
 
       const bom = '\uFEFF';

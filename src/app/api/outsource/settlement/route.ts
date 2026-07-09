@@ -12,7 +12,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE s.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (settlementNo) {
     where += ' AND s.settlement_no LIKE ?';
     params.push('%' + settlementNo + '%');
@@ -26,12 +26,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM outsource_settlement s ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT s.* FROM outsource_settlement s ' +
       where +
       ' ORDER BY s.create_time DESC LIMIT ? OFFSET ?',
@@ -71,7 +71,7 @@ export const POST = withPermission(
     const deductAmt = Number(deduct_amount) || 0;
     const actualAmount = settlementAmount - deductAmt;
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO outsource_settlement (settlement_no, outsource_order_id, outsource_order_no, supplier_id, supplier_name, settlement_date, settlement_qty, unit_price, settlement_amount, deduct_amount, actual_amount, payment_status, status, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?)`,
       [
@@ -107,7 +107,7 @@ export const PUT = withPermission(
 
     if (action === 'confirm') {
       const result = await transaction(async (conn) => {
-        const [settlementRows]: any = await conn.execute(
+        const [settlementRows]: Loose = await conn.execute(
           'SELECT id, outsource_order_id, actual_amount FROM outsource_settlement WHERE id = ? AND deleted = 0 FOR UPDATE',
           [id]
         );
@@ -139,7 +139,7 @@ export const PUT = withPermission(
     }
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: Loose[] = [];
     if (status !== undefined) {
       fields.push('status = ?');
       values.push(status);
@@ -155,7 +155,7 @@ export const PUT = withPermission(
     if (deduct_amount !== undefined) {
       fields.push('ded_amount = ?');
       values.push(deduct_amount);
-      const settlement: any = await query(
+      const settlement: Loose = await query(
         'SELECT settlement_amount FROM outsource_settlement WHERE id = ? AND deleted = 0',
         [id]
       );

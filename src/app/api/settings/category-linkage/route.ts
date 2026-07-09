@@ -51,11 +51,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     const materialCategories = (await query(
       `SELECT id, category_code, category_name, category_type, parent_id, status
        FROM inv_material_category WHERE deleted = 0 AND status = 1`
-    )) as any[];
+    )) as Loose[];
 
     const warehouseCategories = (await query(
       `SELECT id, code, name, status FROM sys_warehouse_category WHERE deleted = 0 AND status = 1`
-    )) as any[];
+    )) as Loose[];
 
     summary.total_material_categories = materialCategories.length;
 
@@ -65,7 +65,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
       const linkedWh =
         warehouseCategories.find(
-          (wh: any) =>
+          (wh: Loose) =>
             preferred &&
             (wh.code.startsWith(preferred.preferred_prefix) ||
               wh.name.includes(preferred.preferred_name))
@@ -102,8 +102,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
       results.push(item);
     }
-  } catch (e: any) {
-    return errorResponse(`联动校验查询失败: ${e.message}`, 500);
+  } catch (e) {
+    return errorResponse(`联动校验查询失败: ${(e as Error).message}`, 500);
   }
 
   return successResponse({
@@ -125,7 +125,7 @@ export const POST = withPermission(
     const mc = (await query(
       `SELECT id, category_code, category_name, category_type FROM inv_material_category WHERE id = ? AND deleted = 0`,
       [materialCategoryId]
-    )) as any[];
+    )) as Loose[];
 
     if (mc.length === 0) {
       return errorResponse('物料分类不存在', 404);
@@ -134,7 +134,7 @@ export const POST = withPermission(
     const wh = (await query(
       `SELECT id, code, name FROM sys_warehouse_category WHERE id = ? AND deleted = 0`,
       [warehouseCategoryId]
-    )) as any[];
+    )) as Loose[];
 
     if (wh.length === 0) {
       return errorResponse('仓库分类不存在', 404);

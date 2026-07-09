@@ -11,7 +11,7 @@ export interface ConvertResult {
 
 export async function convertRequestToPurchaseOrder(requestId: number): Promise<ConvertResult> {
   return await transaction(async (conn) => {
-    const [requestRows]: any = await conn.execute(
+    const [requestRows]: Loose = await conn.execute(
       `SELECT id, request_no, request_dept_id, requester_id, supplier_id, supplier_name, expected_date, status
        FROM pur_request WHERE id = ? AND deleted = 0`,
       [requestId]
@@ -27,7 +27,7 @@ export async function convertRequestToPurchaseOrder(requestId: number): Promise<
       throw new Error(`请购单状态不是"已审批"，无法转采购。当前状态: ${request.status}`);
     }
 
-    const [items]: any = await conn.execute(
+    const [items]: Loose = await conn.execute(
       `SELECT id, line_no, material_id, material_code, material_name, material_spec, quantity, price, amount, unit
        FROM pur_request_item WHERE request_id = ? AND deleted = 0 ORDER BY line_no`,
       [requestId]
@@ -37,15 +37,15 @@ export async function convertRequestToPurchaseOrder(requestId: number): Promise<
       throw new Error('请购单无物料明细');
     }
 
-    const itemsWithoutMaterialId = items.filter((i: any) => !i.material_id);
+    const itemsWithoutMaterialId = items.filter((i: Loose) => !i.material_id);
     if (itemsWithoutMaterialId.length > 0) {
       throw new Error(`存在 ${itemsWithoutMaterialId.length} 条明细缺少物料ID，请先完善物料信息`);
     }
 
     const poCode = await generateDocumentNo('purchase_order');
-    const totalAmount = items.reduce((sum: number, i: any) => sum + Number(i.amount || 0), 0);
+    const totalAmount = items.reduce((sum: number, i: Loose) => sum + Number(i.amount || 0), 0);
 
-    const [poResult]: any = await conn.execute(
+    const [poResult]: Loose = await conn.execute(
       `INSERT INTO pur_order_std (po_code, request_id, supplier_id, supplier_name, order_date, delivery_date, total_amount, status, create_by)
        VALUES (?, ?, ?, ?, CURDATE(), ?, ?, ?, ?)`,
       [
@@ -102,7 +102,7 @@ export async function batchConvertRequestToPurchaseOrder(
     try {
       const result = await convertRequestToPurchaseOrder(id);
       results.push(result);
-    } catch (_e: any) {}
+    } catch (_e) {}
   }
   return results;
 }

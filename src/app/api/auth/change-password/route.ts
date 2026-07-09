@@ -48,7 +48,7 @@ export const POST = withPermission(
     let requireUpperCase = false;
     let passwordExpireDays = 0;
     try {
-      const configs: any = await query(
+      const configs: Loose = await query(
         'SELECT config_key, config_value FROM sys_config WHERE config_key IN (?, ?, ?, ?)',
         [
           'system.password_min_length',
@@ -87,7 +87,7 @@ export const POST = withPermission(
       return errorResponse('新密码必须包含特殊字符', 400, 400);
     }
 
-    const users: any = await query(
+    const users: Loose = await query(
       'SELECT id, password, username FROM sys_user WHERE id = ? AND deleted = 0',
       [effectiveUserId]
     );

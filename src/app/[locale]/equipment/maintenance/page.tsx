@@ -597,7 +597,7 @@ export default function EquipmentMaintenancePage() {
                     <Select
                       value={String(form.equipment_id || '')}
                       onValueChange={(v) => {
-                        const eq = equipmentList.find((e: any) => e.id === Number(v));
+                        const eq = equipmentList.find((e: Loose) => e.id === Number(v));
                         setForm({
                           ...form,
                           equipment_id: Number(v),
@@ -610,7 +610,7 @@ export default function EquipmentMaintenancePage() {
                         <SelectValue placeholder="选择设备" />
                       </SelectTrigger>
                       <SelectContent>
-                        {equipmentList.map((eq: any) => (
+                        {equipmentList.map((eq: Loose) => (
                           <SelectItem key={eq.id} value={String(eq.id)}>
                             {eq.equipment_code} - {eq.equipment_name}
                           </SelectItem>
@@ -705,7 +705,7 @@ export default function EquipmentMaintenancePage() {
                     <Select
                       value={String(form.equipment_id || '')}
                       onValueChange={(v) => {
-                        const eq = equipmentList.find((e: any) => e.id === Number(v));
+                        const eq = equipmentList.find((e: Loose) => e.id === Number(v));
                         setForm({
                           ...form,
                           equipment_id: Number(v),
@@ -719,7 +719,7 @@ export default function EquipmentMaintenancePage() {
                         <SelectValue placeholder="选择设备" />
                       </SelectTrigger>
                       <SelectContent>
-                        {equipmentList.map((eq: any) => (
+                        {equipmentList.map((eq: Loose) => (
                           <SelectItem key={eq.id} value={String(eq.id)}>
                             {eq.equipment_code} - {eq.equipment_name}
                           </SelectItem>

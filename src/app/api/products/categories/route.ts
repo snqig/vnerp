@@ -26,8 +26,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   `;
 
   let countSql = `SELECT COUNT(*) as total FROM mdm_product_category WHERE deleted = 0`;
-  const params: any[] = [];
-  const countParams: any[] = [];
+  const params: Loose[] = [];
+  const countParams: Loose[] = [];
 
   if (parentId !== null) {
     sql += ` AND parent_id = ?`;
@@ -41,7 +41,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
 
   const categories = await query(sql, params);
   const countResult = await query(countSql, countParams);
-  const total = (countResult as any[])[0]?.total || 0;
+  const total = (countResult as Loose[])[0]?.total || 0;
 
   return successResponse({
     list: categories,
@@ -74,7 +74,7 @@ export const POST = withPermission(
       [categoryCode]
     );
 
-    if ((existingCategories as any[]).length > 0) {
+    if ((existingCategories as Loose[]).length > 0) {
       return errorResponse('分类编码已存在', 400, 400);
     }
 
@@ -85,7 +85,7 @@ export const POST = withPermission(
       [categoryCode, categoryName, parentId, level, sortOrder, description || '']
     );
 
-    const insertId = (result as any).insertId;
+    const insertId = (result as Loose).insertId;
 
     return successResponse({ id: insertId, categoryCode }, '产品分类创建成功');
   },
@@ -103,7 +103,7 @@ export const PUT = withPermission(
     }
 
     const updateFields: string[] = [];
-    const updateParams: any[] = [];
+    const updateParams: Loose[] = [];
 
     if (categoryName !== undefined) {
       updateFields.push('category_name = ?');
@@ -156,7 +156,7 @@ export const DELETE = withPermission(
       [id]
     );
 
-    if ((childCategories as any[]).length > 0) {
+    if ((childCategories as Loose[]).length > 0) {
       return errorResponse('该分类下有子分类，不能删除', 400, 400);
     }
 
@@ -166,7 +166,7 @@ export const DELETE = withPermission(
       [id]
     );
 
-    if ((products as any[]).length > 0) {
+    if ((products as Loose[]).length > 0) {
       return errorResponse('该分类下有关联产品，不能删除', 400, 400);
     }
 

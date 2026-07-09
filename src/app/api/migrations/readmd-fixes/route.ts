@@ -8,7 +8,7 @@ async function tableExists(name: string): Promise<boolean> {
     `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
     [name]
   );
-  return (rows as any[]).length > 0;
+  return (rows as Loose[]).length > 0;
 }
 
 async function columnExists(table: string, column: string): Promise<boolean> {
@@ -16,7 +16,7 @@ async function columnExists(table: string, column: string): Promise<boolean> {
     `SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
     [table, column]
   );
-  return (rows as any[]).length > 0;
+  return (rows as Loose[]).length > 0;
 }
 
 async function addColumnSafe(table: string, column: string, definition: string) {
@@ -32,7 +32,7 @@ async function indexExists(table: string, indexName: string): Promise<boolean> {
     `SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?`,
     [table, indexName]
   );
-  return (rows as any[]).length > 0;
+  return (rows as Loose[]).length > 0;
 }
 
 async function addIndexSafe(table: string, indexName: string, columns: string) {
@@ -154,8 +154,8 @@ export const GET = withPermission(async (request: NextRequest) => {
           WHERE mm.deleted = 0
         `);
         results.push(`Migrated ${res.affectedRows} rows from mdm_material`);
-      } catch (e: any) {
-        results.push(`mdm_material migration skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`mdm_material migration skipped: ${(e as Error).message}`);
       }
     }
   }
@@ -518,7 +518,7 @@ export const GET = withPermission(async (request: NextRequest) => {
           WHERE a.emp_id IS NULL
         `);
         results.push(`Backfilled emp_id from sys_employee: ${res.affectedRows} rows`);
-      } catch (_e: any) {
+      } catch (_e) {
         try {
           const res = await execute(`
             UPDATE hr_attendance a
@@ -527,8 +527,8 @@ export const GET = withPermission(async (request: NextRequest) => {
             WHERE a.emp_id IS NULL
           `);
           results.push(`Backfilled emp_id (numeric match): ${res.affectedRows} rows`);
-        } catch (e2: any) {
-          results.push(`emp_id backfill skipped: ${e2.message}`);
+        } catch (e2) {
+          results.push(`emp_id backfill skipped: ${(e2 as Error).message}`);
         }
       }
 
@@ -679,8 +679,8 @@ export const GET = withPermission(async (request: NextRequest) => {
           WHERE pri.material_id IS NULL
         `);
         results.push(`Backfilled material_id from inv_material_std: ${res.affectedRows} rows`);
-      } catch (e: any) {
-        results.push(`material_id backfill skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`material_id backfill skipped: ${(e as Error).message}`);
       }
     }
   }
@@ -739,12 +739,12 @@ export const GET = withPermission(async (request: NextRequest) => {
     ];
 
     for (const menu of newMenuItems) {
-      const [parent]: any = await query(
+      const [parent]: Loose = await query(
         'SELECT id FROM sys_menu WHERE menu_code = ? AND parent_id = 0',
         [menu.parent_code]
       );
       if (parent && parent.length > 0) {
-        const [existing]: any = await query('SELECT id FROM sys_menu WHERE menu_code = ?', [
+        const [existing]: Loose = await query('SELECT id FROM sys_menu WHERE menu_code = ?', [
           menu.menu_code,
         ]);
         if (!existing || existing.length === 0) {

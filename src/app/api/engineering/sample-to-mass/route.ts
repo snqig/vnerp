@@ -11,7 +11,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const sampleOrderNo = searchParams.get('sampleOrderNo') || '';
 
   let where = 'WHERE stm.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (status) {
     where += ' AND stm.status = ?';
@@ -22,13 +22,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(`%${sampleOrderNo}%`);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM eng_sample_to_mass stm ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT stm.* FROM eng_sample_to_mass stm ${where} ORDER BY stm.create_time DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -57,7 +57,7 @@ export const POST = withPermission(
     }
 
     const result = await transaction(async (conn) => {
-      const [existing]: any = await conn.execute(
+      const [existing]: Loose = await conn.execute(
         'SELECT id, status FROM eng_sample_to_mass WHERE sample_order_id = ? AND deleted = 0',
         [sample_order_id]
       );
@@ -88,7 +88,7 @@ export const POST = withPermission(
         return { id: existing[0].id, updated: true };
       }
 
-      const [insertResult]: any = await conn.execute(
+      const [insertResult]: Loose = await conn.execute(
         `INSERT INTO eng_sample_to_mass (sample_order_id, sample_order_no, product_id, product_name, customer_id, customer_name, standard_card_id, standard_card_no, process_card_id, process_card_no, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
         [
@@ -124,7 +124,7 @@ export const PUT = withPermission(
 
     if (action === 'convert') {
       const result = await transaction(async (conn) => {
-        const [recordRows]: any = await conn.execute(
+        const [recordRows]: Loose = await conn.execute(
           'SELECT * FROM eng_sample_to_mass WHERE id = ? AND deleted = 0 FOR UPDATE',
           [id]
         );

@@ -60,7 +60,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   `;
 
   let countSql = `SELECT COUNT(*) as total FROM hr_attendance a WHERE a.deleted = 0`;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     const keywordCondition = ` AND (a.employee_name LIKE ? OR a.employee_id LIKE ? OR a.department_name LIKE ?)`;

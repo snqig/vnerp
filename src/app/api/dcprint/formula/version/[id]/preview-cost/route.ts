@@ -14,7 +14,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   try {
     const result = await previewCost(body.items);
     return successResponse(result);
-  } catch (e: any) {
-    return errorResponse(e.message || '成本预览失败', 500, 500);
+  } catch (e) {
+    return errorResponse((e as Error).message || '成本预览失败', 500, 500);
   }
 });

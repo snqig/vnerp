@@ -27,7 +27,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     FROM prd_die_maintenance m
     LEFT JOIN prd_die_template dt ON m.die_id = dt.id
     WHERE m.deleted = 0`;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (die_id) {
     sql += ' AND m.die_id = ?';
@@ -48,7 +48,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const list = await query(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM prd_die_maintenance WHERE deleted = 0`;
-  const countResult = (await queryOne(countSql)) as any;
+  const countResult = (await queryOne(countSql)) as Loose;
 
   const costStats = (await query(
     `SELECT
@@ -58,11 +58,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       AVG(cost) as avg_cost
     FROM prd_die_maintenance WHERE deleted = 0 AND status = 3
     GROUP BY maintenance_type`
-  )) as any[];
+  )) as Loose[];
 
   const pendingCount = (await queryOne(
     `SELECT COUNT(*) as count FROM prd_die_maintenance WHERE deleted = 0 AND status IN (1, 2)`
-  )) as any;
+  )) as Loose;
 
   return successResponse({
     list,
@@ -87,7 +87,7 @@ export const POST = withPermission(
     const maintenanceType = body.maintenance_type;
 
     return await transaction(async (conn) => {
-      const [dieRows]: any = await conn.execute(
+      const [dieRows]: Loose = await conn.execute(
         'SELECT id, template_code, template_name, cumulative_impressions, max_impressions, warning_threshold, maintenance_interval, maintenance_count, last_maintenance_impressions, die_status FROM prd_die_template WHERE id = ? AND deleted = 0',
         [dieId]
       );
@@ -189,7 +189,7 @@ export const PUT = withPermission(
 
     return await transaction(async (conn) => {
       if (body.status === 3 && existing.status !== 3) {
-        const [dieRows]: any = await conn.execute(
+        const [dieRows]: Loose = await conn.execute(
           'SELECT id, cumulative_impressions, max_impressions, warning_threshold, maintenance_interval, maintenance_count, last_maintenance_impressions FROM prd_die_template WHERE id = ? AND deleted = 0',
           [existing.die_id]
         );
@@ -249,7 +249,7 @@ export const PUT = withPermission(
         );
       } else {
         const fields: string[] = [];
-        const values: any[] = [];
+        const values: Loose[] = [];
         const allowedFields = [
           'maintenance_type',
           'impressions_after',

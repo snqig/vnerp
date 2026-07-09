@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const groupBy = searchParams.get('groupBy') || 'category'; // category, warehouse
 
   let dateFilter = '';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (startDate && endDate) {
     dateFilter = ' AND iil.create_time BETWEEN ? AND ?';
@@ -23,7 +23,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   if (groupBy === 'category') {
     // 按品类统计
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT
         m.material_type,
         m.material_code,
@@ -46,7 +46,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
 
-    const result = rows.map((row: any) => {
+    const result = rows.map((row: Loose) => {
       const avgStock = parseFloat(row.avg_stock) || 1;
       const outboundQty = parseFloat(row.outbound_qty);
       // 周转率 = 出库量 / 平均库存
@@ -75,12 +75,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         list: result,
         summary: {
           totalMaterials: result.length,
-          totalInbound: result.reduce((sum: number, r: any) => sum + r.inboundQty, 0),
-          totalOutbound: result.reduce((sum: number, r: any) => sum + r.outboundQty, 0),
+          totalInbound: result.reduce((sum: number, r: Loose) => sum + r.inboundQty, 0),
+          totalOutbound: result.reduce((sum: number, r: Loose) => sum + r.outboundQty, 0),
           avgTurnoverRate:
             result.length > 0
               ? Math.round(
-                  (result.reduce((sum: number, r: any) => sum + r.turnoverRate, 0) /
+                  (result.reduce((sum: number, r: Loose) => sum + r.turnoverRate, 0) /
                     result.length) *
                     100
                 ) / 100
@@ -91,7 +91,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   } else {
     // 按仓库统计
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT
         w.id as warehouse_id,
         w.warehouse_name,
@@ -111,7 +111,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
 
-    const result = rows.map((row: any) => {
+    const result = rows.map((row: Loose) => {
       const totalStock = parseFloat(row.total_stock) || 1;
       const outboundQty = parseFloat(row.outbound_qty);
       const turnoverRate = totalStock > 0 ? Math.round((outboundQty / totalStock) * 100) / 100 : 0;
@@ -135,8 +135,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         list: result,
         summary: {
           totalWarehouses: result.length,
-          totalStock: result.reduce((sum: number, r: any) => sum + r.totalStock, 0),
-          totalOutbound: result.reduce((sum: number, r: any) => sum + r.outboundQty, 0),
+          totalStock: result.reduce((sum: number, r: Loose) => sum + r.totalStock, 0),
+          totalOutbound: result.reduce((sum: number, r: Loose) => sum + r.outboundQty, 0),
         },
       },
       '获取仓库库存报表成功'

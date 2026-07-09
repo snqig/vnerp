@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let whereClause = 'WHERE 1=1';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (materialKeyword) {
     whereClause += ' AND (bi.material_name LIKE ? OR bi.material_code LIKE ?)';
@@ -37,7 +37,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   }
 
   const offset = (page - 1) * pageSize;
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT bi.*, w.warehouse_name 
      FROM inv_batch_inventory bi
      LEFT JOIN inv_warehouse w ON bi.warehouse_id = w.id
@@ -47,7 +47,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     [...params, pageSize, offset]
   );
 
-  const countRows: any = await query(
+  const countRows: Loose = await query(
     `SELECT COUNT(*) as total FROM inv_batch_inventory bi ${whereClause}`,
     params
   );
@@ -70,7 +70,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   }
 
   let whereClause = 'WHERE bi.material_id = ? AND bi.available_quantity > 0 AND bi.status = 1';
-  const params: any[] = [material_id];
+  const params: Loose[] = [material_id];
 
   if (warehouse_id) {
     whereClause += ' AND bi.warehouse_id = ?';
@@ -78,7 +78,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   }
 
   // 按入库日期升序（先进先出）
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT bi.*, w.warehouse_name 
      FROM inv_batch_inventory bi
      LEFT JOIN inv_warehouse w ON bi.warehouse_id = w.id
@@ -89,7 +89,7 @@ export const POST = withPermission(async (request: NextRequest) => {
 
   // 计算自动分配方案（先进先出）
   let remaining = required_qty || 0;
-  const allocationPlan: any[] = [];
+  const allocationPlan: Loose[] = [];
 
   if (required_qty) {
     for (const batch of rows) {
@@ -111,7 +111,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     batches: rows,
     allocation_plan: allocationPlan,
     total_available: rows.reduce(
-      (sum: number, b: any) => sum + parseFloat(b.available_quantity),
+      (sum: number, b: Loose) => sum + parseFloat(b.available_quantity),
       0
     ),
     shortage: remaining > 0 ? remaining : 0,
@@ -129,7 +129,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
   return await transaction(async (conn) => {
     // 1. 创建入库单
-    const [orderResult]: any = await conn.execute(
+    const [orderResult]: Loose = await conn.execute(
       `INSERT INTO inv_production_inbound (inbound_no, warehouse_id, inbound_date, qc_status, status, operator_name, remark) 
        VALUES (?, ?, ?, 1, 2, '系统', ?)`,
       [
@@ -178,7 +178,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
       );
 
       // 2b. 检查批次库存是否已存在
-      const [existing]: any = await conn.execute(
+      const [existing]: Loose = await conn.execute(
         `SELECT id, inbound_quantity, available_quantity FROM inv_batch_inventory 
          WHERE batch_no = ? AND material_id = ? AND warehouse_id = ?`,
         [finalBatchNo, material_id, warehouse_id]
@@ -245,7 +245,7 @@ export const PATCH = withPermission(async (request: NextRequest) => {
 
   return await transaction(async (conn) => {
     // 1. 创建出库单
-    const [orderResult]: any = await conn.execute(
+    const [orderResult]: Loose = await conn.execute(
       `INSERT INTO inv_sales_outbound (outbound_no, customer_id, customer_name, warehouse_id, outbound_date, status, remark) 
        VALUES (?, ?, ?, ?, ?, 2, ?)`,
       [
@@ -277,7 +277,7 @@ export const PATCH = withPermission(async (request: NextRequest) => {
 
       // 如果没有指定批次，自动按先进先出分配
       if (!targetBatchId) {
-        const [availableBatches]: any = await conn.execute(
+        const [availableBatches]: Loose = await conn.execute(
           `SELECT id, batch_no, available_quantity FROM inv_batch_inventory 
            WHERE material_id = ? AND warehouse_id = ? AND available_quantity > 0 AND status = 1
            ORDER BY inbound_date ASC, batch_no ASC`,
@@ -305,7 +305,7 @@ export const PATCH = withPermission(async (request: NextRequest) => {
       }
 
       // 3. 校验批次库存
-      const [batch]: any = await conn.execute(
+      const [batch]: Loose = await conn.execute(
         `SELECT id, batch_no, material_code, material_name, available_quantity, unit 
          FROM inv_batch_inventory WHERE id = ? FOR UPDATE`,
         [targetBatchId]

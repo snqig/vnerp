@@ -307,7 +307,7 @@ export default function ProductionReportPage() {
   };
 
   const handleFinishWork = () => {
-    setForm((prev: any) => ({
+    setForm((prev: Loose) => ({
       ...prev,
       end_time: new Date().toISOString().slice(0, 16),
     }));
@@ -508,13 +508,13 @@ export default function ProductionReportPage() {
                       key: 'efficiency',
                       label: '效率',
                       width: 10,
-                      formatter: (v: any) => `${Number(v || 0).toFixed(1)}%`,
+                      formatter: (v: Loose) => `${Number(v || 0).toFixed(1)}%`,
                     },
                     {
                       key: 'work_hours',
                       label: '工时',
                       width: 10,
-                      formatter: (v: any) => `${Number(v || 0).toFixed(1)}h`,
+                      formatter: (v: Loose) => `${Number(v || 0).toFixed(1)}h`,
                     },
                     { key: 'report_time', label: '报工时间', width: 18 },
                   ] as ExportColumn[]

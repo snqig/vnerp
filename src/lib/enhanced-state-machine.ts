@@ -16,7 +16,7 @@ export type ProcessStatus =
 
 export type AnyStatus = InspectStatus | ProcessStatus;
 
-export type TransitionCondition = (context: Record<string, any>) => boolean;
+export type TransitionCondition = (context: Record<string, Loose>) => boolean;
 
 export interface TransitionConfig<S extends string> {
   label: string;
@@ -28,8 +28,8 @@ export interface TransitionConfig<S extends string> {
     condition?: TransitionCondition;
     conditionDesc?: string;
   }>;
-  onEnter?: (context: Record<string, any>) => void;
-  onExit?: (context: Record<string, any>) => void;
+  onEnter?: (context: Record<string, Loose>) => void;
+  onExit?: (context: Record<string, Loose>) => void;
 }
 
 export const inspectStateMachine: Record<InspectStatus, TransitionConfig<InspectStatus>> = {
@@ -249,7 +249,7 @@ export class EnhancedStateMachineValidator {
   static canTransitionInspect(
     from: InspectStatus,
     to: InspectStatus,
-    context: Record<string, any> = {}
+    context: Record<string, Loose> = {}
   ): { allowed: boolean; reason?: string } {
     if (from === to) return { allowed: true };
 
@@ -276,7 +276,7 @@ export class EnhancedStateMachineValidator {
   static canTransitionProcess(
     from: ProcessStatus,
     to: ProcessStatus,
-    context: Record<string, any> = {}
+    context: Record<string, Loose> = {}
   ): { allowed: boolean; reason?: string } {
     if (from === to) return { allowed: true };
 
@@ -302,7 +302,7 @@ export class EnhancedStateMachineValidator {
 
   static getAvailableTransitionsInspect(
     status: InspectStatus,
-    context: Record<string, any> = {}
+    context: Record<string, Loose> = {}
   ): Array<{ to: InspectStatus; conditionDesc?: string }> {
     const config = inspectStateMachine[status];
     return config.allowedTransitions
@@ -312,7 +312,7 @@ export class EnhancedStateMachineValidator {
 
   static getAvailableTransitionsProcess(
     status: ProcessStatus,
-    context: Record<string, any> = {}
+    context: Record<string, Loose> = {}
   ): Array<{ to: ProcessStatus; conditionDesc?: string }> {
     const config = processStateMachine[status];
     return config.allowedTransitions
@@ -324,7 +324,7 @@ export class EnhancedStateMachineValidator {
 export class StateTransitionLogger {
   static async logTransition(record: TransitionRecord): Promise<number> {
     try {
-      const [result]: any = await execute(
+      const [result]: Loose = await execute(
         `INSERT INTO sys_state_transition_log
          (entity_type, entity_id, from_status, to_status, condition_check, passed, operator_id, operator_name, remark, create_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
@@ -365,7 +365,7 @@ export class StateTransitionLogger {
     entityId: number
   ): Promise<TransitionRecord[]> {
     const { query } = await import('@/lib/db');
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT id, entity_type, entity_id, from_status, to_status, condition_check, passed,
               operator_id, operator_name, remark, create_time
        FROM sys_state_transition_log
@@ -374,7 +374,7 @@ export class StateTransitionLogger {
       [entityType, entityId]
     );
 
-    return (rows || []).map((row: any) => ({
+    return (rows || []).map((row: Loose) => ({
       id: row.id,
       entityType: row.entity_type,
       entityId: row.entity_id,
@@ -403,7 +403,7 @@ export class StateMachineExecutor {
     entityId: number,
     from: InspectStatus,
     to: InspectStatus,
-    context: Record<string, any> = {},
+    context: Record<string, Loose> = {},
     operatorId?: number,
     operatorName?: string,
     remark?: string
@@ -435,7 +435,7 @@ export class StateMachineExecutor {
     entityId: number,
     from: ProcessStatus,
     to: ProcessStatus,
-    context: Record<string, any> = {},
+    context: Record<string, Loose> = {},
     operatorId?: number,
     operatorName?: string,
     remark?: string

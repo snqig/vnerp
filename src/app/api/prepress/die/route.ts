@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (dieCode) {
     where += ' AND die_code LIKE ?';
     params.push('%' + dieCode + '%');
@@ -27,9 +27,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM prd_die ' + where, params);
+  const totalRows: Loose = await query('SELECT COUNT(*) as total FROM prd_die ' + where, params);
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM prd_die ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -52,7 +52,7 @@ export const POST = withPermission(
       location_id,
       remark,
     } = body;
-    const result: any = await execute(
+    const result: Loose = await execute(
       'INSERT INTO prd_die (die_code, die_name, die_type, size_spec, customer_id, product_name, max_use_count, remaining_count, maintenance_days, warehouse_id, location_id, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         die_code,

@@ -29,7 +29,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const workOrderId = searchParams.get('workOrderId') || '';
 
   let where = 'WHERE mi.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (issueType) {
     where += ' AND mi.issue_type = ?';
@@ -44,13 +44,13 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push(Number(workOrderId));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM prd_material_issue mi ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT mi.*, w.warehouse_name,
             wo.order_no as work_order_no
      FROM prd_material_issue mi
@@ -64,7 +64,7 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   return successResponse(
     {
-      list: rows.map((row: any) => ({
+      list: rows.map((row: Loose) => ({
         ...row,
         requisition_no: row.issue_no,
         type_name: ISSUE_TYPE_MAP[row.issue_type] || '未知',
@@ -98,7 +98,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     return errorResponse('缺少仓库ID', 400, 400);
   }
 
-  const workOrder: any = await queryOne(
+  const workOrder: Loose = await queryOne(
     `SELECT id, order_no FROM prod_work_order WHERE id = ? AND deleted = 0`,
     [Number(workOrderId)]
   );
@@ -109,7 +109,7 @@ export const POST = withPermission(async (request: NextRequest) => {
 
   const issueNo = generateIssueNo();
 
-  const result: any = await execute(
+  const result: Loose = await execute(
     `INSERT INTO prd_material_issue (
       issue_no, work_order_id, work_order_no, warehouse_id,
       issue_date, issue_type, status, operator_id, operator_name,
@@ -133,7 +133,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     for (const item of items) {
       if (!item.materialId) continue;
 
-      const material: any = await queryOne(
+      const material: Loose = await queryOne(
         `SELECT id, material_code, material_name FROM bas_material WHERE id = ?`,
         [Number(item.materialId)]
       );
@@ -175,7 +175,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
     return errorResponse('缺少领料单ID', 400, 400);
   }
 
-  const issue: any = await queryOne(
+  const issue: Loose = await queryOne(
     `SELECT * FROM prd_material_issue WHERE id = ? AND deleted = 0`,
     [Number(id)]
   );

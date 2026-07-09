@@ -6,7 +6,7 @@ import { withPermission } from '@/lib/api-permissions';
 export const GET = withPermission(async (_request: NextRequest) => {
   try {
     const tables = await query('SHOW TABLES LIKE "%material%"');
-    let material: Record<string, any> = { exists: false };
+    let material: Record<string, Loose> = { exists: false };
 
     if (tables.length > 0) {
       const tableName = tables[0][Object.keys(tables[0])[0]];
@@ -15,7 +15,7 @@ export const GET = withPermission(async (_request: NextRequest) => {
       material = {
         exists: true,
         tableName,
-        columns: columns.map((c: any) => c.Field),
+        columns: columns.map((c: Loose) => c.Field),
         sampleData: data,
       };
     }
@@ -24,11 +24,11 @@ export const GET = withPermission(async (_request: NextRequest) => {
       success: true,
       material,
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: (error as Error).message,
       },
       { status: 500 }
     );

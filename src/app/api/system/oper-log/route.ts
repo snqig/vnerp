@@ -16,7 +16,7 @@ export const GET = withPermission(
     const endDate = searchParams.get('endDate') || '';
 
     let where = 'WHERE 1=1';
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (title) {
       where += ' AND (operation LIKE ? OR request_url LIKE ?)';
@@ -43,13 +43,13 @@ export const GET = withPermission(
       params.push(endDate + ' 23:59:59');
     }
 
-    const totalRows: any = await query(
+    const totalRows: Loose = await query(
       `SELECT COUNT(*) as total FROM sys_operation_log ${where}`,
       params
     );
     const total = totalRows[0]?.total || 0;
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT id, COALESCE(operation, '') as title, COALESCE(username, '') as oper_name,
             COALESCE(operation, '') as oper_type, COALESCE(method, '') as oper_method,
             COALESCE(request_url, '') as oper_url, COALESCE(ip, '') as oper_ip,
@@ -92,7 +92,7 @@ export const POST = withPermission(
     if (action === 'export') {
       const { startDate, endDate, businessType } = body;
       let where = 'WHERE 1=1';
-      const params: any[] = [];
+      const params: Loose[] = [];
 
       if (startDate) {
         where += ' AND create_time >= ?';
@@ -107,7 +107,7 @@ export const POST = withPermission(
         params.push(businessType);
       }
 
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT id, operation, username, method, request_url, ip, status,
               business_type, business_id, create_time
        FROM sys_operation_log ${where}
@@ -129,7 +129,7 @@ export const POST = withPermission(
         '业务ID',
         '操作时间',
       ];
-      const csvRows = rows.map((row: any) => [
+      const csvRows = rows.map((row: Loose) => [
         row.id,
         row.operation || '',
         row.username || '',

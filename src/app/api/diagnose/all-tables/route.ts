@@ -22,14 +22,14 @@ const tables = [
 ];
 
 export const GET = withPermission(async (_request: NextRequest) => {
-  const results: any = {};
+  const results: Loose = {};
 
   for (const table of tables) {
     try {
       const columns = await query(`SHOW COLUMNS FROM ${escapeId(table)}`);
-      results[table] = { exists: true, columns: columns.map((c: any) => c.Field) };
-    } catch (error: any) {
-      results[table] = { exists: false, error: error.message };
+      results[table] = { exists: true, columns: columns.map((c: Loose) => c.Field) };
+    } catch (error) {
+      results[table] = { exists: false, error: (error as Error).message };
     }
   }
 

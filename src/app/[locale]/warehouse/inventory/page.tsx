@@ -47,10 +47,10 @@ export default function InventoryPage() {
   const t = useTranslations('Warehouse');
   const tc = useTranslations('Common');
 
-  const [inventoryItems, setInventoryItems] = useState<any[]>([]);
-  const [warehouseStats, setWarehouseStats] = useState<any[]>([]);
-  const [alerts, setAlerts] = useState<any[]>([]);
-  const [warehouses, setWarehouses] = useState<any[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<Loose[]>([]);
+  const [warehouseStats, setWarehouseStats] = useState<Loose[]>([]);
+  const [alerts, setAlerts] = useState<Loose[]>([]);
+  const [warehouses, setWarehouses] = useState<Loose[]>([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
   const [warehouseId, setWarehouseId] = useState('all');
@@ -247,10 +247,10 @@ export default function InventoryPage() {
         setInventoryItems(list);
 
         const alertItems = list.filter(
-          (item: any) => item.alertLevel === 'warning' || item.alertLevel === 'critical'
+          (item: Loose) => item.alertLevel === 'warning' || item.alertLevel === 'critical'
         );
         setAlerts(
-          alertItems.map((item: any) => ({
+          alertItems.map((item: Loose) => ({
             material: item.material_name,
             current: parseFloat(item.available_qty) || 0,
             safety: parseFloat(item.safety_stock) || 0,
@@ -260,7 +260,7 @@ export default function InventoryPage() {
         );
 
         const whMap = new Map<number, { name: string; count: number; value: number }>();
-        list.forEach((item: any) => {
+        list.forEach((item: Loose) => {
           const wid = item.warehouse_id;
           if (!whMap.has(wid)) {
             whMap.set(wid, { name: item.warehouse_name || t('unknown'), count: 0, value: 0 });
@@ -412,7 +412,7 @@ export default function InventoryPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t('allWarehouses')}</SelectItem>
-                    {warehouses.map((wh: any) => (
+                    {warehouses.map((wh: Loose) => (
                       <SelectItem key={wh.id} value={String(wh.id)}>
                         {wh.warehouse_name}
                       </SelectItem>
@@ -486,7 +486,7 @@ export default function InventoryPage() {
             <BatchToolbar
               selectedIds={selectedIds}
               totalItems={inventoryItems.length}
-              onSelectAll={() => setSelectedIds(sortedInventory.map((i: any) => i.id))}
+              onSelectAll={() => setSelectedIds(sortedInventory.map((i: Loose) => i.id))}
               onClearSelection={() => setSelectedIds([])}
               actions={batchActions}
             />
@@ -505,7 +505,7 @@ export default function InventoryPage() {
                           sortedInventory.length > 0
                         }
                         onCheckedChange={(checked) => {
-                          if (checked) setSelectedIds(sortedInventory.map((i: any) => i.id));
+                          if (checked) setSelectedIds(sortedInventory.map((i: Loose) => i.id));
                           else setSelectedIds([]);
                         }}
                       />
@@ -605,7 +605,7 @@ export default function InventoryPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedInventory.map((item: any) => (
+                  {sortedInventory.map((item: Loose) => (
                     <TableRow key={item.id}>
                       <TableCell className="w-[40px]">
                         <Checkbox

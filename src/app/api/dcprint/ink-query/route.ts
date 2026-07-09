@@ -16,7 +16,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   let actualBatchNo = batchNo;
 
   if (qrCode && !batchNo) {
-    const qrRows: any = await query(
+    const qrRows: Loose = await query(
       'SELECT batch_no, qr_type, ref_id, ref_no, extra_data FROM qrcode_record WHERE qr_code = ? AND deleted = 0',
       [qrCode]
     );
@@ -30,7 +30,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return errorResponse('无法确定批次号', 400, 400);
   }
 
-  const result: any = {};
+  const result: Loose = {};
 
   if (queryType === 'all' || queryType === 'formula') {
     result.formula = await queryFormulaTrace(actualBatchNo);
@@ -52,9 +52,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 });
 
 async function queryFormulaTrace(batchNo: string) {
-  const trace: any = { batch_no: batchNo, formula: null, raw_inks: [], dispatch: null };
+  const trace: Loose = { batch_no: batchNo, formula: null, raw_inks: [], dispatch: null };
 
-  const dispatchRows: any = await query(
+  const dispatchRows: Loose = await query(
     'SELECT * FROM ink_dispatch WHERE batch_no = ? AND deleted = 0',
     [batchNo]
   );
@@ -73,13 +73,13 @@ async function queryFormulaTrace(batchNo: string) {
     };
 
     if (dispatch.formula_id) {
-      const formulaRows: any = await query(
+      const formulaRows: Loose = await query(
         'SELECT * FROM ink_formula WHERE id = ? AND deleted = 0',
         [dispatch.formula_id]
       );
       if (formulaRows.length > 0) {
         const formula = formulaRows[0];
-        const items: any = await query(
+        const items: Loose = await query(
           'SELECT * FROM ink_formula_item WHERE formula_id = ? AND deleted = 0 ORDER BY sort_order',
           [formula.id]
         );
@@ -92,7 +92,7 @@ async function queryFormulaTrace(batchNo: string) {
           ink_type: formula.ink_type,
           total_weight: formula.total_weight,
           shelf_life_hours: formula.shelf_life_hours,
-          items: items.map((item: any) => ({
+          items: items.map((item: Loose) => ({
             ink_name: item.ink_name,
             ink_code: item.ink_code,
             brand: item.brand,
@@ -104,12 +104,12 @@ async function queryFormulaTrace(batchNo: string) {
       }
     }
 
-    const dispatchItems: any = await query(
+    const dispatchItems: Loose = await query(
       'SELECT * FROM ink_dispatch_item WHERE dispatch_id = ? AND deleted = 0 ORDER BY sort_order',
       [dispatch.id]
     );
 
-    trace.raw_inks = dispatchItems.map((item: any) => ({
+    trace.raw_inks = dispatchItems.map((item: Loose) => ({
       ink_name: item.ink_name,
       ink_code: item.ink_code,
       brand: item.brand,
@@ -121,7 +121,7 @@ async function queryFormulaTrace(batchNo: string) {
     }));
   }
 
-  const mixedRows: any = await query(
+  const mixedRows: Loose = await query(
     'SELECT * FROM ink_mixed_record WHERE record_no = ? AND deleted = 0',
     [batchNo]
   );
@@ -143,17 +143,18 @@ async function queryFormulaTrace(batchNo: string) {
 }
 
 async function queryProcessGuide(batchNo: string) {
-  const guide: any = { batch_no: batchNo, workorder: null, sop: null, process_card: null };
+  const guide: Loose = { batch_no: batchNo, workorder: null, sop: null, process_card: null };
 
-  const dispatchRows: any = await query(
+  const dispatchRows: Loose = await query(
     'SELECT workorder_id, workorder_no, formula_id FROM ink_dispatch WHERE batch_no = ? AND deleted = 0',
     [batchNo]
   );
 
   if (dispatchRows.length > 0 && dispatchRows[0].workorder_id) {
-    const woRows: any = await query('SELECT * FROM prod_work_order WHERE id = ? AND deleted = 0', [
-      dispatchRows[0].workorder_id,
-    ]);
+    const woRows: Loose = await query(
+      'SELECT * FROM prod_work_order WHERE id = ? AND deleted = 0',
+      [dispatchRows[0].workorder_id]
+    );
 
     if (woRows.length > 0) {
       const wo = woRows[0];
@@ -167,7 +168,7 @@ async function queryProcessGuide(batchNo: string) {
       };
 
       if (wo.process_card_id) {
-        const pcRows: any = await query(
+        const pcRows: Loose = await query(
           'SELECT * FROM prd_process_card WHERE id = ? AND deleted = 0',
           [wo.process_card_id]
         );
@@ -182,7 +183,7 @@ async function queryProcessGuide(batchNo: string) {
       }
 
       if (wo.standard_card_id) {
-        const scRows: any = await query(
+        const scRows: Loose = await query(
           'SELECT * FROM eng_standard_card WHERE id = ? AND deleted = 0',
           [wo.standard_card_id]
         );
@@ -203,9 +204,9 @@ async function queryProcessGuide(batchNo: string) {
 }
 
 async function queryQualityTrace(batchNo: string) {
-  const trace: any = { batch_no: batchNo, inspection: null, usage_history: [], supplier: null };
+  const trace: Loose = { batch_no: batchNo, inspection: null, usage_history: [], supplier: null };
 
-  const batchRows: any = await query(
+  const batchRows: Loose = await query(
     'SELECT * FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0',
     [batchNo]
   );
@@ -214,7 +215,7 @@ async function queryQualityTrace(batchNo: string) {
     const batch = batchRows[0];
 
     if (batch.inspection_id) {
-      const inspRows: any = await query(
+      const inspRows: Loose = await query(
         'SELECT * FROM qc_incoming_inspection WHERE id = ? AND deleted = 0',
         [batch.inspection_id]
       );
@@ -228,27 +229,27 @@ async function queryQualityTrace(batchNo: string) {
       }
     }
 
-    const usageRows: any = await query(
+    const usageRows: Loose = await query(
       `SELECT usage_type, workorder_no, weight, operator_name, machine_name, usage_time
        FROM ink_usage WHERE batch_no = ? AND deleted = 0 ORDER BY usage_time DESC`,
       [batchNo]
     );
     trace.usage_history = usageRows;
 
-    const dispatchRows: any = await query(
+    const dispatchRows: Loose = await query(
       'SELECT id FROM ink_dispatch WHERE batch_no = ? AND deleted = 0',
       [batchNo]
     );
 
     if (dispatchRows.length > 0) {
-      const dispatchItems: any = await query(
+      const dispatchItems: Loose = await query(
         'SELECT source_batch_no, ink_name, brand FROM ink_dispatch_item WHERE dispatch_id = ? AND deleted = 0',
         [dispatchRows[0].id]
       );
 
       for (const item of dispatchItems) {
         if (item.source_batch_no) {
-          const sourceBatch: any = await query(
+          const sourceBatch: Loose = await query(
             'SELECT supplier_name FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0',
             [item.source_batch_no]
           );
@@ -270,9 +271,9 @@ async function queryQualityTrace(batchNo: string) {
 }
 
 async function queryInventoryExpiry(batchNo: string) {
-  const info: any = { batch_no: batchNo, inventory: null, expiry: null, opening: null };
+  const info: Loose = { batch_no: batchNo, inventory: null, expiry: null, opening: null };
 
-  const batchRows: any = await query(
+  const batchRows: Loose = await query(
     `SELECT ib.*, w.warehouse_name
      FROM inv_inventory_batch ib
      LEFT JOIN inv_warehouse w ON ib.warehouse_id = w.id
@@ -315,7 +316,7 @@ async function queryInventoryExpiry(batchNo: string) {
     };
   }
 
-  const openingRows: any = await query(
+  const openingRows: Loose = await query(
     'SELECT * FROM ink_opening_record WHERE batch_no = ? AND deleted = 0 ORDER BY open_time DESC LIMIT 1',
     [batchNo]
   );

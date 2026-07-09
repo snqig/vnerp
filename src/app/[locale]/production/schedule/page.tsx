@@ -328,7 +328,7 @@ export default function ProductionSchedulePage() {
       const data = await res.json();
       if (data.success && data.data?.workshopCapacity) {
         setCapacityData(
-          data.data.workshopCapacity.map((item: any) => ({
+          data.data.workshopCapacity.map((item: Loose) => ({
             workshop: item.workshop,
             equipmentCount: item.equipmentCount,
             totalCapacity: item.totalCapacity,

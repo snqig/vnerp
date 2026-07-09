@@ -12,7 +12,7 @@ export class SalesReceivableHandler implements EventHandler<SalesOrderShippedEve
     let created = false;
     await transaction(async (conn) => {
       const receivableNo = 'AR' + Date.now();
-      const [existing]: any = await conn.execute(
+      const [existing]: Loose = await conn.execute(
         'SELECT id FROM fin_receivable WHERE source_no = ? AND deleted = 0 LIMIT 1',
         [orderNo]
       );

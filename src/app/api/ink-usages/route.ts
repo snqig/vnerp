@@ -20,7 +20,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `,
       [id]
     );
-    return successResponse((rows as any[])[0], '油墨耗用详情');
+    return successResponse((rows as Loose[])[0], '油墨耗用详情');
   }
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -28,7 +28,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const offset = (page - 1) * pageSize;
 
   let whereClause = 'iu.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (workOrderId) {
     whereClause += ' AND iu.work_order_id = ?';
@@ -69,7 +69,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   return successResponse(
     {
       list: rows,
-      total: (countResult as any[])[0].total,
+      total: (countResult as Loose[])[0].total,
       page,
       pageSize,
     },
@@ -99,7 +99,7 @@ export const POST = withPermission(
     const inkInfo = await query(`SELECT ink_code, ink_name, unit FROM base_ink WHERE id = ?`, [
       inkId,
     ]);
-    const ink = (inkInfo as any[])[0];
+    const ink = (inkInfo as Loose[])[0];
 
     if (!ink) {
       return errorResponse('油墨不存在', 404);
@@ -127,7 +127,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: (result as any).insertId }, '油墨耗用记录成功');
+    return successResponse({ id: (result as Loose).insertId }, '油墨耗用记录成功');
   },
   { logTitle: '记录油墨耗用', logType: 'business' }
 );

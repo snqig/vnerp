@@ -27,12 +27,12 @@ interface FIFOAllocationResult {
 }
 
 async function allocateFIFO(
-  conn: any,
+  conn: Loose,
   materialId: number,
   warehouseId: number,
   requiredQty: number
 ): Promise<FIFOAllocationResult> {
-  const [batches]: any = await conn.query(
+  const [batches]: Loose = await conn.query(
     `SELECT 
       id, batch_no, material_id, material_code, material_name,
       available_qty, unit_price, inbound_date, unit, expire_date, version
@@ -63,7 +63,7 @@ async function allocateFIFO(
   };
 
   result.total_available = batches.reduce(
-    (sum: number, b: any) => sum + parseFloat(b.available_qty),
+    (sum: number, b: Loose) => sum + parseFloat(b.available_qty),
     0
   );
 
@@ -126,7 +126,7 @@ export const GET = withPermission(
       [materialId, warehouseId]
     );
 
-    const totalAvailable = (batches as any[]).reduce(
+    const totalAvailable = (batches as Loose[]).reduce(
       (sum, b) => sum + parseFloat(b.available_qty),
       0
     );
@@ -136,7 +136,7 @@ export const GET = withPermission(
 
     if (requiredQty > 0) {
       let remaining = requiredQty;
-      for (const batch of batches as any[]) {
+      for (const batch of batches as Loose[]) {
         if (remaining <= 0) break;
         const availableQty = parseFloat(batch.available_qty);
         const allocateQty = Math.min(remaining, availableQty);
@@ -188,7 +188,7 @@ export const POST = withPermission(
     return await transaction(async (conn) => {
       const date = new Date();
       const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-      const [maxOrder]: any = await conn.query(
+      const [maxOrder]: Loose = await conn.query(
         `SELECT MAX(order_no) as maxNo FROM inv_outbound_order WHERE order_no LIKE ?`,
         [`CK${dateStr}%`]
       );
@@ -197,14 +197,14 @@ export const POST = withPermission(
       const orderNo = `CK${dateStr}${seq}`;
 
       const allAllocations: FIFOAllocationResult[] = [];
-      const allOutboundItems: any[] = [];
+      const allOutboundItems: Loose[] = [];
 
       for (const item of items) {
         const { material_id, material_code, material_name, qty, unit, batch_no, batch_id } = item;
         const requiredQty = parseFloat(qty);
 
         if (batch_id || batch_no) {
-          const [batch]: any = await conn.query(
+          const [batch]: Loose = await conn.query(
             `SELECT id, batch_no, material_id, material_code, material_name, available_qty, unit_price, inbound_date, unit
            FROM inv_inventory_batch 
            WHERE id = ? OR batch_no = ?
@@ -279,7 +279,7 @@ export const POST = withPermission(
         }
       }
 
-      const [orderResult]: any = await conn.execute(
+      const [orderResult]: Loose = await conn.execute(
         `INSERT INTO inv_outbound_order (
         order_no, order_date, outbound_type,
         warehouse_id, warehouse_code, warehouse_name,
@@ -357,7 +357,7 @@ export const PATCH = withPermission(
     }
 
     return await transaction(async (conn) => {
-      const [orders]: any = await conn.execute(
+      const [orders]: Loose = await conn.execute(
         `SELECT id, order_no, status, warehouse_id, warehouse_code, version FROM inv_outbound_order WHERE id = ? AND deleted = 0 FOR UPDATE`,
         [orderId]
       );
@@ -372,7 +372,7 @@ export const PATCH = withPermission(
         throw new Error('出库单已完成，不能重复确认');
       }
 
-      const [items]: any = await conn.execute(
+      const [items]: Loose = await conn.execute(
         `SELECT id, material_id, material_name, quantity, unit, batch_no FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
         [orderId]
       );
@@ -381,13 +381,13 @@ export const PATCH = withPermission(
         throw new Error('出库单没有明细');
       }
 
-      const deductionDetails: any[] = [];
+      const deductionDetails: Loose[] = [];
 
       for (const item of items) {
         const requiredQty = parseFloat(item.quantity);
 
         if (item.batch_no) {
-          const [batch]: any = await conn.execute(
+          const [batch]: Loose = await conn.execute(
             `SELECT id, batch_no, available_qty, unit_price, version FROM inv_inventory_batch 
            WHERE batch_no = ? AND material_id = ? AND warehouse_id = ? AND deleted = 0
            FOR UPDATE`,
@@ -405,7 +405,7 @@ export const PATCH = withPermission(
             );
           }
 
-          const [batchUpdateResult]: any = await conn.execute(
+          const [batchUpdateResult]: Loose = await conn.execute(
             `UPDATE inv_inventory_batch SET
             quantity = quantity - ?,
             available_qty = available_qty - ?,
@@ -441,14 +441,14 @@ export const PATCH = withPermission(
           }
 
           for (const alloc of allocation.allocations) {
-            const [fifoUpdateResult]: any = await conn.execute(
+            const [fifoUpdateResult]: Loose = await conn.execute(
               `UPDATE inv_inventory_batch SET
               quantity = quantity - ?,
               available_qty = available_qty - ?,
               version = version + 1,
               update_time = NOW()
             WHERE id = ? AND version = ?`,
-              [alloc.allocate_qty, alloc.allocate_qty, alloc.batch_id, (alloc as any).version]
+              [alloc.allocate_qty, alloc.allocate_qty, alloc.batch_id, (alloc as Loose).version]
             );
 
             if (fifoUpdateResult.affectedRows === 0) {
@@ -474,7 +474,7 @@ export const PATCH = withPermission(
           [requiredQty, requiredQty, item.material_id, order.warehouse_id]
         );
 
-        const [currentInv]: any = await conn.execute(
+        const [currentInv]: Loose = await conn.execute(
           'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0',
           [item.material_id, order.warehouse_id]
         );

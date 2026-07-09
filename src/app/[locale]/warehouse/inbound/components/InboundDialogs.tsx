@@ -63,7 +63,7 @@ interface InboundDialogsProps {
   poDropdownVisible: boolean;
   setPoDropdownVisible: Dispatch<SetStateAction<boolean>>;
   handlePoSearchChange: (value: string) => void;
-  handlePoSelect: (po: any) => void;
+  handlePoSelect: (po: Loose) => void;
   fetchInboundRecords: () => Promise<void>;
 
   isMixedAddDialogOpen: boolean;
@@ -79,27 +79,47 @@ interface InboundDialogsProps {
 
 export function InboundDialogs(props: InboundDialogsProps) {
   const {
-    isCuttingDialogOpen, setIsCuttingDialogOpen,
-    cuttingForm, setCuttingForm, currentLabel, handleCutting,
-    isCuttingResultOpen, setIsCuttingResultOpen,
+    isCuttingDialogOpen,
+    setIsCuttingDialogOpen,
+    cuttingForm,
+    setCuttingForm,
+    currentLabel,
+    handleCutting,
+    isCuttingResultOpen,
+    setIsCuttingResultOpen,
     printLabels,
-    isQRCodeDialogOpen, setIsQRCodeDialogOpen,
+    isQRCodeDialogOpen,
+    setIsQRCodeDialogOpen,
     qrCodeDataUrl,
-    isPrintPreviewOpen, setIsPrintPreviewOpen,
-    isQRScanDialogOpen, setIsQRScanDialogOpen,
+    isPrintPreviewOpen,
+    setIsPrintPreviewOpen,
+    isQRScanDialogOpen,
+    setIsQRScanDialogOpen,
     scanResult,
-    isGenerateDialogOpen, setIsGenerateDialogOpen,
-    labelSupplier, setLabelSupplier, suppliers,
-    isAddDialogOpen, setIsAddDialogOpen,
-    formData, setFormData,
+    isGenerateDialogOpen,
+    setIsGenerateDialogOpen,
+    labelSupplier,
+    setLabelSupplier,
+    suppliers,
+    isAddDialogOpen,
+    setIsAddDialogOpen,
+    formData,
+    setFormData,
     warehouseCategories,
-    poSearchResults, poSearchLoading, poDropdownVisible, setPoDropdownVisible,
-    handlePoSearchChange, handlePoSelect,
+    poSearchResults,
+    poSearchLoading,
+    poDropdownVisible,
+    setPoDropdownVisible,
+    handlePoSearchChange,
+    handlePoSelect,
     fetchInboundRecords,
-    isMixedAddDialogOpen, setIsMixedAddDialogOpen,
-    isAuditDialogOpen, setIsAuditDialogOpen,
+    isMixedAddDialogOpen,
+    setIsMixedAddDialogOpen,
+    isAuditDialogOpen,
+    setIsAuditDialogOpen,
     currentRecord,
-    isEditDialogOpen, setIsEditDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
   } = props;
 
   return (

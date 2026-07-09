@@ -14,7 +14,7 @@ export const GET = withPermission(
       return errorResponse('缺少父二维码参数', 400, 400);
     }
 
-    const check: any = await queryOne(
+    const check: Loose = await queryOne(
       `SELECT * FROM inventory_checks WHERE id = ? AND deleted = 0`,
       [checkId]
     );
@@ -23,7 +23,7 @@ export const GET = withPermission(
       return commonErrors.notFound('盘点单不存在');
     }
 
-    const parentItem: any[] = await query(
+    const parentItem: Loose[] = await query(
       `SELECT ici.*,
             m.material_name,
             m.unit
@@ -38,7 +38,7 @@ export const GET = withPermission(
       return errorResponse('未找到整料盘点记录', 404, 404);
     }
 
-    const smallItems: any[] = await query(
+    const smallItems: Loose[] = await query(
       `SELECT ici.*
      FROM inventory_check_items ici
      WHERE ici.check_id = ?

@@ -99,7 +99,7 @@ export default function TracePage() {
 
     try {
       // 解析二维码内容
-      let qrData: any;
+      let qrData: Loose;
       try {
         qrData = JSON.parse(qrCode);
       } catch {

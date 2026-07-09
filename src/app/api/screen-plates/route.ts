@@ -20,7 +20,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `,
       [id]
     );
-    return successResponse((rows as any[])[0], '网版详情');
+    return successResponse((rows as Loose[])[0], '网版详情');
   }
 
   if (plateCode) {
@@ -35,7 +35,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `,
       [plateCode]
     );
-    return successResponse((rows as any[])[0], '网版详情');
+    return successResponse((rows as Loose[])[0], '网版详情');
   }
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -45,7 +45,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const customerName = searchParams.get('customerName');
 
   let whereClause = 'sp.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (status) {
     whereClause += ' AND sp.status = ?';
@@ -79,7 +79,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   return successResponse(
     {
       list: rows,
-      total: (countResult as any[])[0].total,
+      total: (countResult as Loose[])[0].total,
       page,
       pageSize,
     },
@@ -136,7 +136,7 @@ export const POST = withPermission(
       ]
     );
 
-    const plateId = (result as any).insertId;
+    const plateId = (result as Loose).insertId;
 
     await execute(
       `
@@ -161,7 +161,7 @@ export const PUT = withPermission(
     }
 
     const updateFields: string[] = [];
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     const fieldMap: Record<string, string> = {
       plateName: 'plate_name',

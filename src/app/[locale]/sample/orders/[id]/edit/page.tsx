@@ -150,7 +150,7 @@ export default function EditSampleOrderPage() {
     }
   };
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: Loose) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

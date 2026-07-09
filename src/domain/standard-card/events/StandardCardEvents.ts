@@ -2,7 +2,7 @@ export interface DomainEvent {
   eventId: string;
   eventType: string;
   occurredAt: Date;
-  payload: any;
+  payload: Loose;
 }
 
 export class StandardCardCreatedEvent implements DomainEvent {

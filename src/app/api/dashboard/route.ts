@@ -13,7 +13,7 @@ export async function GET(_request: NextRequest) {
       productionChange = 0;
 
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT
           COUNT(*) as total,
           SUM(CASE WHEN DATE(create_time) = CURDATE() THEN 1 ELSE 0 END) as today,
@@ -31,13 +31,15 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const rows: any = await query(`SELECT COUNT(*) as total FROM crm_customer WHERE deleted = 0`);
+      const rows: Loose = await query(
+        `SELECT COUNT(*) as total FROM crm_customer WHERE deleted = 0`
+      );
       if (Array.isArray(rows) && rows.length > 0) totalCustomers = Number(rows[0].total || 0);
     } catch {}
 
     let inventoryAlert = 0;
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT COUNT(*) as total FROM inv_inventory i
         JOIN inv_material m ON i.material_id = m.id
         WHERE i.deleted = 0 AND m.status = 1 AND i.quantity <= COALESCE(m.safety_stock, 0)
@@ -47,15 +49,15 @@ export async function GET(_request: NextRequest) {
 
     let totalEmployees = 0;
     try {
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT COUNT(*) as total FROM sys_user WHERE deleted = 0 AND status = 1`
       );
       if (Array.isArray(rows) && rows.length > 0) totalEmployees = Number(rows[0].total || 0);
     } catch {}
 
-    let recentOrders: any[] = [];
+    let recentOrders: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT pc.id, pc.card_no, pc.work_order_no, pc.product_name, pc.plan_qty,
           pc.burdening_status, pc.work_order_date, pc.update_time, sc.customer_name
         FROM prd_process_card pc
@@ -65,9 +67,9 @@ export async function GET(_request: NextRequest) {
       recentOrders = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    const alerts: any[] = [];
+    const alerts: Loose[] = [];
     try {
-      const inkRows: any = await query(`
+      const inkRows: Loose = await query(`
         SELECT COUNT(*) as total FROM ink_opening_record WHERE deleted = 0 AND status = 1 AND DATEDIFF(expire_time, NOW()) <= 1
       `);
       const inkAlert =
@@ -80,7 +82,7 @@ export async function GET(_request: NextRequest) {
           time: '刚刚',
         });
 
-      const dieRows: any = await query(`
+      const dieRows: Loose = await query(`
         SELECT COUNT(*) as total FROM prd_die_template WHERE deleted = 0 AND status = 1 AND max_usage > 0 AND (current_usage / max_usage) >= 0.8
       `);
       const dieAlert =
@@ -102,9 +104,9 @@ export async function GET(_request: NextRequest) {
         });
     } catch {}
 
-    let orderStats: any[] = [];
+    let orderStats: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT DATE(create_time) as date, COUNT(*) as count
         FROM sal_order WHERE deleted = 0 AND create_time >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
         GROUP BY DATE(create_time) ORDER BY date
@@ -127,7 +129,7 @@ export async function GET(_request: NextRequest) {
           todayProduction,
           productionChange,
         },
-        recentOrders: recentOrders.map((o: any) => ({
+        recentOrders: recentOrders.map((o: Loose) => ({
           id: o.id,
           orderNo: o.work_order_no || o.card_no,
           customer: o.customer_name || '-',

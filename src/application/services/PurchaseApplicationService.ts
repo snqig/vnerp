@@ -59,7 +59,7 @@ export class PurchaseApplicationService {
     order.approve(auditBy);
 
     await transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         'UPDATE pur_purchase_order SET status = ?, audit_by = ?, audit_time = NOW(), update_time = NOW() WHERE id = ? AND status = ?',
         [order.status.toDbCode(), auditBy, id, PurchaseOrderStatus.from(previousStatus).toDbCode()]
       );

@@ -35,7 +35,7 @@ export interface LabelData {
   warehouseName?: string;
   supplierName?: string;
   labelNo?: string;
-  [key: string]: any;
+  [key: string]: Loose;
 }
 
 export interface LabelTemplate {

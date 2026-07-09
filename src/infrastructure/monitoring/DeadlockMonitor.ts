@@ -38,8 +38,8 @@ export class DeadlockMonitor {
     };
 
     try {
-      const statusRows: any = await query('SHOW ENGINE INNODB STATUS');
-      const statusText = (statusRows as any[])[0]?.Status || '';
+      const statusRows: Loose = await query('SHOW ENGINE INNODB STATUS');
+      const statusText = (statusRows as Loose[])[0]?.Status || '';
 
       const deadlockMatch = statusText.match(/LATEST DETECTED DEADLOCK[\s\S]*?TRANSACTIONS/);
       if (deadlockMatch) {
@@ -56,12 +56,12 @@ export class DeadlockMonitor {
           result.alerts.push(`当前有${result.innodbStatus.lockWaitCount}个锁等待，可能存在锁竞争`);
         }
       }
-    } catch (error: any) {
-      secureLog('error', 'Failed to check InnoDB status', { error: error?.message });
+    } catch (error) {
+      secureLog('error', 'Failed to check InnoDB status', { error: (error as Error)?.message });
     }
 
     try {
-      const longTxRows: any = await query(
+      const longTxRows: Loose = await query(
         `SELECT
           trx_id as id,
           trx_started as startTime,
@@ -75,7 +75,7 @@ export class DeadlockMonitor {
          LIMIT 10`
       );
 
-      result.longTransactions = (longTxRows as any[]).map((row: any) => ({
+      result.longTransactions = (longTxRows as Loose[]).map((row: Loose) => ({
         id: row.id,
         startTime: row.startTime,
         duration: row.duration,
@@ -93,15 +93,15 @@ export class DeadlockMonitor {
           maxDuration: Math.max(...result.longTransactions.map((t) => t.duration)),
         });
       }
-    } catch (error: any) {
-      secureLog('error', 'Failed to check long transactions', { error: error?.message });
+    } catch (error) {
+      secureLog('error', 'Failed to check long transactions', { error: (error as Error)?.message });
     }
 
     try {
-      const deadlockHistory: any = await query(
+      const deadlockHistory: Loose = await query(
         `SELECT * FROM mysql.deadlocks ORDER BY id DESC LIMIT 5`
       );
-      result.innodbStatus.deadlocks = (deadlockHistory as any[]).map((row: any) => ({
+      result.innodbStatus.deadlocks = (deadlockHistory as Loose[]).map((row: Loose) => ({
         id: row.id,
         timestamp: row.timestamp,
         victimQuery: row.victim_query?.substring(0, 200) || '',
@@ -116,19 +116,19 @@ export class DeadlockMonitor {
 
   static async killLongTransaction(trxId: number): Promise<boolean> {
     try {
-      const trxRows: any = await query(
+      const trxRows: Loose = await query(
         `SELECT trx_mysql_thread_id FROM information_schema.innodb_trx WHERE trx_id = ?`,
         [trxId]
       );
-      if ((trxRows as any[]).length === 0) {
+      if ((trxRows as Loose[]).length === 0) {
         return false;
       }
-      const threadId = (trxRows as any[])[0].trx_mysql_thread_id;
+      const threadId = (trxRows as Loose[])[0].trx_mysql_thread_id;
       await query(`KILL ?`, [threadId]);
       secureLog('warn', 'Killed long transaction', { trxId, threadId });
       return true;
-    } catch (error: any) {
-      secureLog('error', 'Failed to kill transaction', { trxId, error: error?.message });
+    } catch (error) {
+      secureLog('error', 'Failed to kill transaction', { trxId, error: (error as Error)?.message });
       return false;
     }
   }

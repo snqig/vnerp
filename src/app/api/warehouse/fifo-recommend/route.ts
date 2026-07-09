@@ -17,7 +17,11 @@ function computeExpiryWeight(expireDate: string | null): number {
   return 0;
 }
 
-function computeCompatibilityScore(batch: any, workOrderNo?: string, pantoneCode?: string): number {
+function computeCompatibilityScore(
+  batch: Loose,
+  workOrderNo?: string,
+  pantoneCode?: string
+): number {
   let score = 0;
   if (batch.material_code && pantoneCode) {
     if (batch.material_code.includes(pantoneCode)) score += 50;
@@ -29,7 +33,7 @@ function computeCompatibilityScore(batch: any, workOrderNo?: string, pantoneCode
   return score;
 }
 
-function computeOverrideRiskScore(batch: any): number {
+function computeOverrideRiskScore(batch: Loose): number {
   const expiryWeight = computeExpiryWeight(batch.expire_date);
   const availableQty = Number(batch.available_qty || 0);
   let risk = 0;
@@ -54,7 +58,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     return errorResponse('缺少必填参数: materialId, warehouseId', 400, 400);
   }
 
-  const batchRows: any = await query(
+  const batchRows: Loose = await query(
     `
     SELECT
       ib.id,
@@ -102,8 +106,8 @@ export const GET = withPermission(async (request: NextRequest) => {
   );
 
   const availableBatches = batchRows
-    .filter((b: any) => b.fifo_status === 'AVAILABLE')
-    .map((b: any) => {
+    .filter((b: Loose) => b.fifo_status === 'AVAILABLE')
+    .map((b: Loose) => {
       const expiryWeight = computeExpiryWeight(b.expire_date);
       const compatibilityScore = computeCompatibilityScore(b, workOrderNo, pantoneCode);
       const overrideRiskScore = computeOverrideRiskScore(b);
@@ -116,7 +120,7 @@ export const GET = withPermission(async (request: NextRequest) => {
         is_urgent_expiry: expiryWeight >= 70,
       };
     })
-    .sort((a: any, b: any) => {
+    .sort((a: Loose, b: Loose) => {
       if (a.is_urgent_expiry && !b.is_urgent_expiry) return -1;
       if (!a.is_urgent_expiry && b.is_urgent_expiry) return 1;
       if (a.compatibility_score !== b.compatibility_score)
@@ -124,10 +128,10 @@ export const GET = withPermission(async (request: NextRequest) => {
       return new Date(a.inbound_date).getTime() - new Date(b.inbound_date).getTime();
     });
 
-  const frozenBatches = batchRows.filter((b: any) => b.fifo_status === 'FROZEN');
-  const expiredBatches = batchRows.filter((b: any) => b.fifo_status === 'EXPIRED');
+  const frozenBatches = batchRows.filter((b: Loose) => b.fifo_status === 'FROZEN');
+  const expiredBatches = batchRows.filter((b: Loose) => b.fifo_status === 'EXPIRED');
 
-  const recommendedBatches: any[] = [];
+  const recommendedBatches: Loose[] = [];
   let totalAvailable = 0;
   let remainingQty = requiredQty;
 
@@ -162,9 +166,9 @@ export const GET = withPermission(async (request: NextRequest) => {
   }
 
   const alternativeBatches = availableBatches
-    .filter((b: any) => !recommendedBatches.some((r: any) => r.id === b.id))
+    .filter((b: Loose) => !recommendedBatches.some((r: Loose) => r.id === b.id))
     .slice(0, 5)
-    .map((b: any) => ({
+    .map((b: Loose) => ({
       batch_no: b.batch_no,
       available_qty: Number(b.available_qty),
       unit_price: Number(b.unit_price),
@@ -174,24 +178,24 @@ export const GET = withPermission(async (request: NextRequest) => {
     }));
 
   const totalRecommendedQty = recommendedBatches.reduce(
-    (sum: number, b: any) => sum + Number(b.allocated_qty),
+    (sum: number, b: Loose) => sum + Number(b.allocated_qty),
     0
   );
   const totalRecommendedCost = recommendedBatches.reduce(
-    (sum: number, b: any) => sum + Number(b.allocated_qty) * Number(b.unit_price),
+    (sum: number, b: Loose) => sum + Number(b.allocated_qty) * Number(b.unit_price),
     0
   );
   const avgCost = totalRecommendedQty > 0 ? totalRecommendedCost / totalRecommendedQty : 0;
 
   const firstBatch = availableBatches.length > 0 ? availableBatches[0] : null;
 
-  const nearExpiryBatches = availableBatches.filter((b: any) => b.is_near_expiry);
+  const nearExpiryBatches = availableBatches.filter((b: Loose) => b.is_near_expiry);
   const nearExpiryValue = nearExpiryBatches.reduce(
-    (sum: number, b: any) => sum + Number(b.available_qty) * Number(b.unit_price),
+    (sum: number, b: Loose) => sum + Number(b.available_qty) * Number(b.unit_price),
     0
   );
 
-  const overrideLogs: any = await query(
+  const overrideLogs: Loose = await query(
     `
     SELECT id, source_type, source_no, recommended_batch, actual_batch, reason, approval_status, create_time
     FROM inv_fifo_override_log
@@ -236,7 +240,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     nearExpiryWarning: {
       count: nearExpiryBatches.length,
       totalValue: Math.round(nearExpiryValue * 100) / 100,
-      batches: nearExpiryBatches.map((b: any) => ({
+      batches: nearExpiryBatches.map((b: Loose) => ({
         batch_no: b.batch_no,
         available_qty: Number(b.available_qty),
         days_to_expire: b.days_to_expire,

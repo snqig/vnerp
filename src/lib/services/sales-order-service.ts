@@ -11,7 +11,7 @@ export async function createWorkOrderFromSalesOrder(
   salesOrderId: number
 ): Promise<WorkOrderResult> {
   return await transaction(async (conn) => {
-    const [salesRows]: any = await conn.execute(
+    const [salesRows]: Loose = await conn.execute(
       `SELECT id, order_no, customer_id, total_amount FROM sal_order WHERE id = ? AND deleted = 0`,
       [salesOrderId]
     );
@@ -22,7 +22,7 @@ export async function createWorkOrderFromSalesOrder(
 
     const _salesOrder = salesRows[0];
 
-    const [orderItems]: any = await conn.execute(
+    const [orderItems]: Loose = await conn.execute(
       `SELECT material_id, material_name, quantity FROM sal_order_detail WHERE order_id = ? AND deleted = 0 LIMIT 1`,
       [salesOrderId]
     );
@@ -38,7 +38,7 @@ export async function createWorkOrderFromSalesOrder(
       throw new Error('销售订单缺少产品ID，无法查找BOM');
     }
 
-    const [bomRows]: any = await conn.execute(
+    const [bomRows]: Loose = await conn.execute(
       `SELECT id, bom_code, version FROM prd_bom_std WHERE product_id = ? AND status = 1 AND deleted = 0 LIMIT 1`,
       [productId]
     );
@@ -50,7 +50,7 @@ export async function createWorkOrderFromSalesOrder(
     const bom = bomRows[0];
     const workOrderNo = await generateDocumentNo('work_order');
 
-    const [woResult]: any = await conn.execute(
+    const [woResult]: Loose = await conn.execute(
       `INSERT INTO prod_work_order (work_order_no, sales_order_id, product_id, product_name, bom_id, plan_qty, status, create_time)
        VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
       [
@@ -65,7 +65,7 @@ export async function createWorkOrderFromSalesOrder(
 
     const workOrderId = woResult.insertId;
 
-    const [bomLines]: any = await conn.execute(
+    const [bomLines]: Loose = await conn.execute(
       `SELECT material_id, material_code, material_name, consumption_qty, waste_rate
        FROM prd_bom_line_std WHERE bom_id = ? AND deleted = 0`,
       [bom.id]

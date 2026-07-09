@@ -30,11 +30,11 @@ export const POST = withPermission(
     try {
       const id = await createColor(body, userInfo.userId);
       return successResponse({ id }, '色号创建成功');
-    } catch (e: any) {
-      if (e.code === 'ER_DUP_ENTRY') {
+    } catch (e) {
+      if ((e as Error & { code?: string }).code === 'ER_DUP_ENTRY') {
         return errorResponse('色号编码已存在', 409, 409);
       }
-      return errorResponse(e.message || '创建失败', 500, 500);
+      return errorResponse((e as Error).message || '创建失败', 500, 500);
     }
   },
   { logTitle: '创建油墨色号', logType: 'business' }
@@ -52,8 +52,8 @@ export const PUT = withPermission(
     try {
       await updateColor(Number(id), data, userInfo.userId);
       return successResponse(null, '色号更新成功');
-    } catch (e: any) {
-      return errorResponse(e.message || '更新失败', 500, 500);
+    } catch (e) {
+      return errorResponse((e as Error).message || '更新失败', 500, 500);
     }
   },
   { logTitle: '更新油墨色号', logType: 'business' }
@@ -68,8 +68,8 @@ export const DELETE = withPermission(
     try {
       await deleteColor(Number(id));
       return successResponse(null, '色号删除成功');
-    } catch (e: any) {
-      return errorResponse(e.message || '删除失败', 500, 500);
+    } catch (e) {
+      return errorResponse((e as Error).message || '删除失败', 500, 500);
     }
   },
   { logTitle: '删除油墨色号', logType: 'business' }

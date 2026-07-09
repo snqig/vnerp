@@ -50,7 +50,7 @@ export const POST = withPermission(
       const result = await service.createInboundFromPO({
         poId: body.po_id,
         warehouseId: body.warehouse_id,
-        items: body.items.map((item: any) => ({
+        items: body.items.map((item: Loose) => ({
           lineNo: item.line_no,
           materialId: item.material_id,
           materialCode: item.material_code || '',

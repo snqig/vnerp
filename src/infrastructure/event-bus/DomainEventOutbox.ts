@@ -3,7 +3,7 @@ import { DomainEvent } from '@/domain/shared/DomainTypes';
 
 export class DomainEventOutbox {
   static async saveEvents(
-    conn: any,
+    conn: Loose,
     aggregateType: string,
     aggregateId: number,
     events: DomainEvent[]
@@ -17,16 +17,16 @@ export class DomainEventOutbox {
     }
   }
 
-  static async fetchPendingEvents(limit: number = 50): Promise<any[]> {
+  static async fetchPendingEvents(limit: number = 50): Promise<Loose[]> {
     // 1.4 指数退避：仅查询 next_execute_at 已到期或为 NULL 的待处理事件
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT * FROM domain_event_outbox
        WHERE status = 'pending'
          AND (next_execute_at IS NULL OR next_execute_at <= NOW())
        ORDER BY create_time ASC LIMIT ?`,
       [limit]
     );
-    return rows as any[];
+    return rows as Loose[];
   }
 
   static async markAsProcessed(id: number): Promise<void> {

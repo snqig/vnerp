@@ -1,7 +1,8 @@
+import { ITransferOrderRepository } from '@/domain/warehouse/repositories/ITransferOrderRepository';
 import {
-  ITransferOrderRepository,
-} from '@/domain/warehouse/repositories/ITransferOrderRepository';
-import { Pagination, PaginatedResult } from '@/domain/warehouse/repositories/IInboundOrderRepository';
+  Pagination,
+  PaginatedResult,
+} from '@/domain/warehouse/repositories/IInboundOrderRepository';
 import { TransferOrder, TransferOrderProps } from '@/domain/warehouse/aggregates/TransferOrder';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
@@ -12,14 +13,14 @@ const ITEM_COLUMNS = `id, transfer_id, material_id, material_code, material_name
 
 export class MysqlTransferOrderRepository implements ITransferOrderRepository {
   async findById(id: number): Promise<TransferOrder | null> {
-    const orders = await query<any>(
+    const orders = await query<Loose>(
       'SELECT * FROM inv_transfer_order WHERE id = ? AND deleted = 0',
       [id]
     );
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
-    const items = await query<any>(
+    const items = await query<Loose>(
       `SELECT ${ITEM_COLUMNS} FROM inv_transfer_item WHERE transfer_id = ? AND deleted = 0`,
       [id]
     );
@@ -28,14 +29,14 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
   }
 
   async findByTransferNo(transferNo: string): Promise<TransferOrder | null> {
-    const orders = await query<any>(
+    const orders = await query<Loose>(
       'SELECT * FROM inv_transfer_order WHERE transfer_no = ? AND deleted = 0',
       [transferNo]
     );
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
-    const items = await query<any>(
+    const items = await query<Loose>(
       `SELECT ${ITEM_COLUMNS} FROM inv_transfer_item WHERE transfer_id = ? AND deleted = 0`,
       [order.id]
     );
@@ -62,7 +63,7 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
                t.remark, t.create_time, t.update_time
                FROM inv_transfer_order t WHERE t.deleted = 0`;
     let countSql = `SELECT COUNT(*) as total FROM inv_transfer_order t WHERE t.deleted = 0`;
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (filters?.keyword) {
       const condition = ` AND (t.transfer_no LIKE ? OR t.applicant_name LIKE ?)`;
@@ -112,28 +113,28 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
     const result = await queryPaginated(sql, countSql, params, pagination);
 
     if (result.data.length > 0) {
-      const orderIds = result.data.map((t: any) => t.id);
+      const orderIds = result.data.map((t: Loose) => t.id);
       const placeholders = orderIds.map(() => '?').join(',');
       const items = await query(
         `SELECT ${ITEM_COLUMNS} FROM inv_transfer_item WHERE transfer_id IN (${placeholders}) AND deleted = 0`,
         orderIds
       );
 
-      const itemsMap = new Map<number, any[]>();
-      for (const item of items as any[]) {
+      const itemsMap = new Map<number, Loose[]>();
+      for (const item of items as Loose[]) {
         if (!itemsMap.has(item.transfer_id)) {
           itemsMap.set(item.transfer_id, []);
         }
         itemsMap.get(item.transfer_id)!.push(item);
       }
 
-      for (const order of result.data as any[]) {
+      for (const order of result.data as Loose[]) {
         order.items = itemsMap.get(order.id) || [];
       }
     }
 
     return {
-      data: result.data.map((t: any) =>
+      data: result.data.map((t: Loose) =>
         TransferOrder.reconstitute(this.mapRowToProps(t, t.items || []))
       ),
       pagination: result.pagination,
@@ -145,7 +146,7 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
     const items = order.items;
 
     return await transaction(async (conn) => {
-      const [orderResult]: any = await conn.execute(
+      const [orderResult]: Loose = await conn.execute(
         `INSERT INTO inv_transfer_order
          (transfer_no, type, from_warehouse_id, to_warehouse_id, from_location, to_location,
           status, applicant_id, applicant_name, operator_id, operator_name,
@@ -209,17 +210,17 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
   }
 
   async updateOutTime(id: number, outTime: string): Promise<void> {
-    await execute(
-      'UPDATE inv_transfer_order SET out_time = ?, update_time = NOW() WHERE id = ?',
-      [outTime, id]
-    );
+    await execute('UPDATE inv_transfer_order SET out_time = ?, update_time = NOW() WHERE id = ?', [
+      outTime,
+      id,
+    ]);
   }
 
   async updateInTime(id: number, inTime: string): Promise<void> {
-    await execute(
-      'UPDATE inv_transfer_order SET in_time = ?, update_time = NOW() WHERE id = ?',
-      [inTime, id]
-    );
+    await execute('UPDATE inv_transfer_order SET in_time = ?, update_time = NOW() WHERE id = ?', [
+      inTime,
+      id,
+    ]);
   }
 
   async updateApprover(id: number, approverId: number, approverName: string): Promise<void> {
@@ -235,7 +236,7 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
     ]);
   }
 
-  private mapRowToProps(order: any, items: any[]): TransferOrderProps {
+  private mapRowToProps(order: Loose, items: Loose[]): TransferOrderProps {
     return {
       id: order.id,
       transferNo: order.transfer_no,
@@ -254,7 +255,7 @@ export class MysqlTransferOrderRepository implements ITransferOrderRepository {
       outTime: order.out_time,
       inTime: order.in_time,
       remark: order.remark,
-      items: items.map((item: any) => ({
+      items: items.map((item: Loose) => ({
         id: item.id,
         transferId: item.transfer_id,
         materialId: item.material_id,

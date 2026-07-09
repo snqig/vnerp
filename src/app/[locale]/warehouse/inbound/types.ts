@@ -1,9 +1,4 @@
-import {
-  Clock,
-  AlertCircle,
-  CheckCircle2,
-  X,
-} from 'lucide-react';
+import { Clock, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 // 接口定义（符合 inv_production_inbound 表结构）
@@ -86,8 +81,8 @@ export interface PrintLabel {
   material_name?: string;
   material_spec?: string;
   specification?: string;
-  record?: any;
-  item?: any;
+  record?: Loose;
+  item?: Loose;
   itemIdx?: number;
   order_no?: string;
   orderNo?: string;
@@ -109,7 +104,7 @@ export interface PrintLabel {
   cutWidth?: number;
   operatorName?: string;
   createTime?: string;
-  [key: string]: any;
+  [key: string]: Loose;
 }
 
 export interface LabelItem {

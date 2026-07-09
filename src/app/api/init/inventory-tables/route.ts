@@ -56,16 +56,16 @@ export const POST = withPermission(
           success: true,
           statement: statement.substring(0, 50) + '...',
         });
-      } catch (error: any) {
+      } catch (error) {
         // 忽略表已存在的错误
-        if (error.code === 'ER_TABLE_EXISTS_ERROR') {
+        if ((error as Error & { code?: string }).code === 'ER_TABLE_EXISTS_ERROR') {
           results.push({
             success: true,
             statement: statement.substring(0, 50) + '...',
             message: '表已存在，跳过',
           });
         } else {
-          errors.push(`执行失败: ${statement.substring(0, 50)}... - ${error.message}`);
+          errors.push(`执行失败: ${statement.substring(0, 50)}... - ${(error as Error).message}`);
         }
       }
     }
@@ -94,11 +94,11 @@ export const GET = withPermission(
       try {
         await query(`SELECT 1 FROM ${table} LIMIT 1`);
         results.push({ table, exists: true });
-      } catch (error: any) {
-        if (error.code === 'ER_NO_SUCH_TABLE') {
+      } catch (error) {
+        if ((error as Error & { code?: string }).code === 'ER_NO_SUCH_TABLE') {
           results.push({ table, exists: false });
         } else {
-          results.push({ table, exists: false, error: error.message });
+          results.push({ table, exists: false, error: (error as Error).message });
         }
       }
     }

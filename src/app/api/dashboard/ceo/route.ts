@@ -6,7 +6,7 @@ export async function GET(_request: NextRequest) {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
-    const overview: any = {
+    const overview: Loose = {
       todayOrders: 0,
       todayProduction: 0,
       todayDelivery: 0,
@@ -17,21 +17,21 @@ export async function GET(_request: NextRequest) {
       inventoryChange: 0,
     };
     try {
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT COUNT(*) as total FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE()`
       );
       if (Array.isArray(rows) && rows.length > 0) overview.todayOrders = Number(rows[0].total || 0);
     } catch {}
 
     try {
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT COUNT(*) as total FROM sal_order WHERE deleted = 0 AND DATE(create_time) = CURDATE()`
       );
       if (Array.isArray(rows) && rows.length > 0) overview.todayOrders = Number(rows[0].total || 0);
     } catch {}
 
     try {
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT COALESCE(SUM(plan_qty), 0) as total FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE()`
       );
       if (Array.isArray(rows) && rows.length > 0)
@@ -39,7 +39,7 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT COUNT(*) as total FROM inv_outbound_order WHERE deleted = 0 AND DATE(create_time) = CURDATE()`
       );
       if (Array.isArray(rows) && rows.length > 0)
@@ -47,14 +47,14 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT COALESCE(SUM(stock_qty * unit_price), 0) as total FROM inv_material WHERE deleted = 0 AND status = 1`
       );
       if (Array.isArray(rows) && rows.length > 0)
         overview.inventoryValue = Number(rows[0].total || 0);
     } catch {}
 
-    const production: any = {
+    const production: Loose = {
       efficiency: 0,
       activeOrders: 0,
       completedToday: 0,
@@ -62,7 +62,7 @@ export async function GET(_request: NextRequest) {
       equipmentStatus: [],
     };
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT
           COUNT(*) as total,
           SUM(CASE WHEN burdening_status IN (1,2) THEN 1 ELSE 0 END) as active,
@@ -76,13 +76,13 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const woRows: any = await query(`
+      const woRows: Loose = await query(`
         SELECT work_order_no, product_name, customer_name, status, priority
         FROM prod_work_order WHERE deleted = 0 AND status IN ('pending','producing')
         ORDER BY update_time DESC LIMIT 20
       `);
       production.activeWorkOrders = Array.isArray(woRows)
-        ? woRows.map((r: any) => ({
+        ? woRows.map((r: Loose) => ({
             work_order_no: r.work_order_no || '',
             product_name: r.product_name || '',
             customer_name: r.customer_name || '',
@@ -93,12 +93,12 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT equipment_code as name, current_status as status, oee as efficiency
         FROM eqp_equipment WHERE deleted = 0 AND status = 1 ORDER BY equipment_code
       `);
       production.equipmentStatus = Array.isArray(rows)
-        ? rows.map((r: any) => ({
+        ? rows.map((r: Loose) => ({
             name: r.name,
             status:
               r.status === 1
@@ -111,7 +111,9 @@ export async function GET(_request: NextRequest) {
             efficiency: Number(r.efficiency || 0),
           }))
         : [];
-      const running = production.equipmentStatus.filter((e: any) => e.status === 'running').length;
+      const running = production.equipmentStatus.filter(
+        (e: Loose) => e.status === 'running'
+      ).length;
       production.efficiency =
         production.equipmentStatus.length > 0
           ? Math.round((running / production.equipmentStatus.length) * 100)
@@ -119,7 +121,7 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT COUNT(*) as total FROM prod_work_order WHERE deleted = 0 AND status IN ('pending','producing')
         AND (plan_end_date < CURDATE() OR priority = 'urgent')
       `);
@@ -127,7 +129,7 @@ export async function GET(_request: NextRequest) {
         production.warningCount = Number(rows[0].total || 0);
     } catch {}
 
-    const quality: any = {
+    const quality: Loose = {
       passRate: 0,
       totalInspections: 0,
       passedInspections: 0,
@@ -135,7 +137,7 @@ export async function GET(_request: NextRequest) {
       recentDefects: [],
     };
     try {
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT COUNT(*) as total FROM qc_inspection WHERE deleted = 0`
       );
       if (Array.isArray(rows) && rows.length > 0)
@@ -143,7 +145,7 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT 
           COUNT(*) as total,
           SUM(CASE WHEN inspection_result = 1 THEN 1 ELSE 0 END) as passed,
@@ -161,7 +163,7 @@ export async function GET(_request: NextRequest) {
       }
     } catch {}
 
-    const finance: any = {
+    const finance: Loose = {
       totalReceivable: 0,
       totalPayable: 0,
       monthRevenue: 0,
@@ -170,10 +172,10 @@ export async function GET(_request: NextRequest) {
       expenseChange: 0,
     };
     try {
-      const recRows: any = await query(
+      const recRows: Loose = await query(
         `SELECT COALESCE(SUM(amount), 0) as total FROM fin_receivable WHERE deleted = 0 AND status = 1`
       );
-      const payRows: any = await query(
+      const payRows: Loose = await query(
         `SELECT COALESCE(SUM(amount), 0) as total FROM fin_payable WHERE deleted = 0 AND status = 1`
       );
       if (Array.isArray(recRows) && recRows.length > 0)
@@ -183,10 +185,10 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const revRows: any = await query(
+      const revRows: Loose = await query(
         `SELECT COALESCE(SUM(amount), 0) as total FROM fin_receivable WHERE deleted = 0 AND DATE(create_time) >= DATE_FORMAT(CURDATE(), '%Y-%m-01')`
       );
-      const expRows: any = await query(
+      const expRows: Loose = await query(
         `SELECT COALESCE(SUM(amount), 0) as total FROM fin_payable WHERE deleted = 0 AND DATE(create_time) >= DATE_FORMAT(CURDATE(), '%Y-%m-01')`
       );
       if (Array.isArray(revRows) && revRows.length > 0)
@@ -195,9 +197,9 @@ export async function GET(_request: NextRequest) {
         finance.monthExpense = Number(expRows[0].total || 0);
     } catch {}
 
-    const inventory: any = { totalItems: 0, lowStock: 0, totalValue: 0, warehouseUtilization: 0 };
+    const inventory: Loose = { totalItems: 0, lowStock: 0, totalValue: 0, warehouseUtilization: 0 };
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT COUNT(*) as total,
           SUM(CASE WHEN stock_qty <= min_stock THEN 1 ELSE 0 END) as low_stock
         FROM inv_material WHERE deleted = 0 AND status = 1
@@ -209,14 +211,14 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT COALESCE(SUM(stock_qty * unit_price), 0) as total FROM inv_material WHERE deleted = 0 AND status = 1`
       );
       if (Array.isArray(rows) && rows.length > 0) inventory.totalValue = Number(rows[0].total || 0);
     } catch {}
 
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT COUNT(*) as total FROM inv_warehouse WHERE deleted = 0
       `);
       if (Array.isArray(rows) && rows.length > 0) {
@@ -224,9 +226,9 @@ export async function GET(_request: NextRequest) {
       }
     } catch {}
 
-    let orderTrend: any[] = [];
+    let orderTrend: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT DATE(create_time) as date, COUNT(*) as count
         FROM sal_order WHERE deleted = 0 AND create_time >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
         GROUP BY DATE(create_time) ORDER BY date
@@ -234,9 +236,9 @@ export async function GET(_request: NextRequest) {
       orderTrend = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let topProducts: any[] = [];
+    let topProducts: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT product_name, SUM(plan_qty) as total_qty
         FROM prd_process_card WHERE deleted = 0 AND burdening_status = 3
         GROUP BY product_name ORDER BY total_qty DESC LIMIT 5
@@ -244,15 +246,15 @@ export async function GET(_request: NextRequest) {
       topProducts = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let workshopDaily: any[] = [];
+    let workshopDaily: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT product_name, SUM(plan_qty) as total_qty
         FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE()
         GROUP BY product_name ORDER BY total_qty DESC
       `);
       workshopDaily = Array.isArray(rows)
-        ? rows.map((r: any) => ({
+        ? rows.map((r: Loose) => ({
             name: r.product_name || '',
             total: Number(r.total_qty || 0),
             completed: Number(r.total_qty || 0),
@@ -260,64 +262,64 @@ export async function GET(_request: NextRequest) {
         : [];
     } catch {}
 
-    let materialConsumption: any[] = [];
+    let materialConsumption: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT material_name, SUM(order_qty) as total_qty
         FROM pur_purchase_order_line WHERE DATE(create_time) = CURDATE()
         GROUP BY material_name ORDER BY total_qty DESC LIMIT 5
       `);
       materialConsumption = Array.isArray(rows)
-        ? rows.map((r: any) => ({
+        ? rows.map((r: Loose) => ({
             name: r.material_name || '',
             qty: Number(r.total_qty || 0),
           }))
         : [];
     } catch {}
 
-    let monthlyMaterialConsumption: any[] = [];
+    let monthlyMaterialConsumption: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT material_name, SUM(order_qty) as total_qty
         FROM pur_purchase_order_line WHERE create_time >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
         GROUP BY material_name ORDER BY total_qty DESC LIMIT 5
       `);
       monthlyMaterialConsumption = Array.isArray(rows)
-        ? rows.map((r: any) => ({
+        ? rows.map((r: Loose) => ({
             name: r.material_name || '',
             qty: Number(r.total_qty || 0),
           }))
         : [];
     } catch {}
 
-    let workshopHistory: any[] = [];
+    let workshopHistory: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT YEAR(create_time) as year, SUM(plan_qty) as total_qty
         FROM prd_process_card WHERE deleted = 0 AND create_time >= DATE_SUB(CURDATE(), INTERVAL 4 YEAR)
         GROUP BY YEAR(create_time) ORDER BY year DESC
       `);
       workshopHistory = Array.isArray(rows)
-        ? rows.map((r: any) => ({
+        ? rows.map((r: Loose) => ({
             year: Number(r.year || 0),
             total: Number(r.total_qty || 0),
           }))
         : [];
     } catch {}
 
-    const shiftData: any = {
+    const shiftData: Loose = {
       dayShift: { plan: 0, actual: 0, rate: 0 },
       middleShift: { plan: 0, actual: 0, rate: 0 },
       nightShift: { plan: 0, actual: 0, rate: 0 },
     };
     try {
-      const dayRows: any = await query(
+      const dayRows: Loose = await query(
         `SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(plan_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND HOUR(create_time) BETWEEN 8 AND 15`
       );
-      const midRows: any = await query(
+      const midRows: Loose = await query(
         `SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(plan_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND HOUR(create_time) BETWEEN 16 AND 23`
       );
-      const nightRows: any = await query(
+      const nightRows: Loose = await query(
         `SELECT COALESCE(SUM(plan_qty), 0) as plan, COALESCE(SUM(plan_qty), 0) as actual FROM prd_process_card WHERE deleted = 0 AND DATE(create_time) = CURDATE() AND (HOUR(create_time) < 8 OR HOUR(create_time) > 23)`
       );
       if (Array.isArray(dayRows) && dayRows.length > 0) {
@@ -346,18 +348,18 @@ export async function GET(_request: NextRequest) {
       }
     } catch {}
 
-    const powerConsumption: any[] = [];
+    const powerConsumption: Loose[] = [];
 
-    const materialUsage: any[] = [];
+    const materialUsage: Loose[] = [];
 
-    let processRelations: any[] = [];
+    let processRelations: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT DISTINCT product_name
         FROM prd_process_card WHERE deleted = 0 AND product_name IS NOT NULL AND product_name != ''
         ORDER BY product_name
       `);
-      processRelations = Array.isArray(rows) ? rows.map((r: any) => r.product_name) : [];
+      processRelations = Array.isArray(rows) ? rows.map((r: Loose) => r.product_name) : [];
     } catch {}
 
     return NextResponse.json({

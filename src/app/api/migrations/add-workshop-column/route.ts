@@ -130,11 +130,11 @@ export async function POST() {
       success: true,
       message: results.join('; '),
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: (error as Error).message,
       },
       { status: 500 }
     );

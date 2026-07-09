@@ -150,8 +150,8 @@ export default function BasicsSettingsPage() {
       } else {
         toast.error(result.message || '保存失败');
       }
-    } catch (e: any) {
-      toast.error(e.message || '保存失败');
+    } catch (e) {
+      toast.error((e as Error).message || '保存失败');
     } finally {
       setSaving(false);
     }

@@ -12,8 +12,8 @@ export const POST = withPermission(
       await recalculateCost(Number(id));
       const version = await getVersionDetail(Number(id));
       return successResponse(version, '成本重算完成');
-    } catch (e: any) {
-      return errorResponse(e.message || '重算失败', 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message || '重算失败', 400, 400);
     }
   },
   { logTitle: '重算油墨配方成本', logType: 'business' }

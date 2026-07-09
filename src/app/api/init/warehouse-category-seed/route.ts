@@ -12,26 +12,26 @@ export const POST = withPermission(
         await conn.execute(
           `ALTER TABLE inv_warehouse ADD COLUMN category_id INT UNSIGNED DEFAULT NULL COMMENT '仓库分类ID' AFTER id`
         );
-      } catch (_e: any) {}
+      } catch (_e) {}
       try {
         await conn.execute(`ALTER TABLE inv_warehouse ADD KEY idx_category_id (category_id)`);
-      } catch (_e: any) {}
+      } catch (_e) {}
 
       try {
         await conn.execute(
           `ALTER TABLE inv_inventory ADD COLUMN locked_qty DECIMAL(12,4) DEFAULT 0 COMMENT '锁定数量' AFTER quantity`
         );
-      } catch (_e: any) {}
+      } catch (_e) {}
       try {
         await conn.execute(
           `ALTER TABLE inv_inventory ADD COLUMN available_qty DECIMAL(12,4) DEFAULT 0 COMMENT '可用数量' AFTER locked_qty`
         );
-      } catch (_e: any) {}
+      } catch (_e) {}
       try {
         await conn.execute(
           `ALTER TABLE inv_inventory ADD COLUMN batch_no VARCHAR(100) DEFAULT NULL COMMENT '批次号' AFTER available_qty`
         );
-      } catch (_e: any) {}
+      } catch (_e) {}
 
       await conn.execute('DELETE FROM inv_inventory');
       await conn.execute('ALTER TABLE inv_inventory AUTO_INCREMENT = 1');
@@ -174,7 +174,7 @@ export const POST = withPermission(
       }
       stats.sys_warehouse_category = warehouseCategories.length;
 
-      const [whCatRows]: any = await conn.execute(
+      const [whCatRows]: Loose = await conn.execute(
         'SELECT id, code FROM sys_warehouse_category ORDER BY id'
       );
       const whCatMap: Record<string, number> = {};
@@ -421,7 +421,7 @@ export const POST = withPermission(
       }
       stats.inv_warehouse = warehouses.length;
 
-      const [whRows]: any = await conn.execute(
+      const [whRows]: Loose = await conn.execute(
         'SELECT id, warehouse_code FROM inv_warehouse ORDER BY id'
       );
       const whMap: Record<string, number> = {};
@@ -597,7 +597,7 @@ export const POST = withPermission(
       }
       stats.inv_material_category = materialCategories.length;
 
-      const [matCatRows]: any = await conn.execute(
+      const [matCatRows]: Loose = await conn.execute(
         'SELECT id, category_code FROM inv_material_category ORDER BY id'
       );
       const matCatMap: Record<string, number> = {};
@@ -823,7 +823,7 @@ export const POST = withPermission(
       }
       stats.inv_material = materials.length;
 
-      const [matRows]: any = await conn.execute(
+      const [matRows]: Loose = await conn.execute(
         'SELECT id, material_code FROM inv_material ORDER BY id'
       );
       const matMap: Record<string, number> = {};
@@ -963,67 +963,67 @@ export const POST = withPermission(
 
 async function verifyDataIntegrity() {
   const errors: string[] = [];
-  const details: Record<string, any> = {};
+  const details: Record<string, Loose> = {};
 
-  const whCatCount: any = await queryOne(
+  const whCatCount: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM sys_warehouse_category WHERE deleted = 0'
   );
   details.warehouse_category_count = whCatCount?.cnt || 0;
   if (details.warehouse_category_count !== 20)
     errors.push(`仓库分类数量不正确: 期望20, 实际${details.warehouse_category_count}`);
 
-  const whCount: any = await queryOne(
+  const whCount: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM inv_warehouse WHERE deleted = 0'
   );
   details.warehouse_count = whCount?.cnt || 0;
   if (details.warehouse_count !== 20)
     errors.push(`仓库数量不正确: 期望20, 实际${details.warehouse_count}`);
 
-  const matCatCount: any = await queryOne(
+  const matCatCount: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM inv_material_category WHERE deleted = 0'
   );
   details.material_category_count = matCatCount?.cnt || 0;
   if (details.material_category_count !== 20)
     errors.push(`物料分类数量不正确: 期望20, 实际${details.material_category_count}`);
 
-  const matCount: any = await queryOne(
+  const matCount: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM inv_material WHERE deleted = 0'
   );
   details.material_count = matCount?.cnt || 0;
   if (details.material_count !== 20)
     errors.push(`物料数量不正确: 期望20, 实际${details.material_count}`);
 
-  const invCount: any = await queryOne(
+  const invCount: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM inv_inventory WHERE deleted = 0'
   );
   details.inventory_count = invCount?.cnt || 0;
   if (details.inventory_count !== 20)
     errors.push(`库存数量不正确: 期望20, 实际${details.inventory_count}`);
 
-  const orphanWh: any = await query(
+  const orphanWh: Loose = await query(
     'SELECT id, warehouse_code FROM inv_warehouse WHERE category_id IS NULL AND deleted = 0'
   );
   details.orphan_warehouses = orphanWh?.length || 0;
   if (orphanWh?.length > 0) errors.push(`存在${orphanWh.length}个仓库未关联分类`);
 
-  const orphanMat: any = await query(
+  const orphanMat: Loose = await query(
     'SELECT id, material_code FROM inv_material WHERE category_id IS NULL AND deleted = 0'
   );
   details.orphan_materials = orphanMat?.length || 0;
   if (orphanMat?.length > 0) errors.push(`存在${orphanMat.length}个物料未关联分类`);
 
-  const orphanInv: any = await query(
+  const orphanInv: Loose = await query(
     'SELECT id FROM inv_inventory WHERE (material_id IS NULL OR warehouse_id IS NULL) AND deleted = 0'
   );
   details.orphan_inventory = orphanInv?.length || 0;
   if (orphanInv?.length > 0) errors.push(`存在${orphanInv.length}条库存未关联物料或仓库`);
 
-  const totalQty: any = await queryOne(
+  const totalQty: Loose = await queryOne(
     'SELECT COALESCE(SUM(quantity), 0) as total FROM inv_inventory WHERE deleted = 0'
   );
   details.total_inventory_quantity = totalQty?.total || 0;
 
-  const totalValue: any = await queryOne(`
+  const totalValue: Loose = await queryOne(`
     SELECT COALESCE(SUM(i.quantity * m.purchase_price), 0) as total
     FROM inv_inventory i
     JOIN inv_material m ON i.material_id = m.id

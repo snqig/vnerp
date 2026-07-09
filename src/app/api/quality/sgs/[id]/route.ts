@@ -11,7 +11,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return errorResponse('ID不能为空', 400, 400);
   }
 
-  const certRows: any = await query('SELECT * FROM qms_sgs_cert WHERE id = ? AND deleted = 0', [
+  const certRows: Loose = await query('SELECT * FROM qms_sgs_cert WHERE id = ? AND deleted = 0', [
     id,
   ]);
 
@@ -19,7 +19,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return errorResponse('SGS认证记录不存在', 404, 404);
   }
 
-  const items: any = await query(
+  const items: Loose = await query(
     'SELECT * FROM qms_sgs_cert_item WHERE cert_id = ? ORDER BY sort_order',
     [id]
   );

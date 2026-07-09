@@ -93,7 +93,7 @@ export default function EquipmentPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Equipment>>({});
-  const [typeStats, setTypeStats] = useState<any[]>([]);
+  const [typeStats, setTypeStats] = useState<Loose[]>([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -163,7 +163,7 @@ export default function EquipmentPage() {
     <MainLayout title="设备管理">
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {typeStats.map((s: any) => (
+          {typeStats.map((s: Loose) => (
             <Card key={s.equipment_type}>
               <CardContent className="pt-4">
                 <div className="text-sm text-gray-500">

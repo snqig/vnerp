@@ -1,8 +1,5 @@
 import { NextRequest } from 'next/server';
-import {
-  successResponse,
-  errorResponse,
-} from '@/lib/api-response';
+import { successResponse, errorResponse } from '@/lib/api-response';
 import { UserInfo } from '@/lib/api-auth';
 import { withPermission } from '@/lib/api-permissions';
 import { query, execute } from '@/lib/db';
@@ -16,7 +13,7 @@ import bcrypt from 'bcryptjs';
 
 export const GET = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT id, username, real_name, avatar, email, phone, department_id,
               last_login_time, last_login_ip, pwd_update_time
        FROM sys_user WHERE id = ? AND deleted = 0`,
@@ -61,10 +58,9 @@ export const PUT = withPermission(
         return errorResponse('新密码长度不能少于6位', 400, 400);
       }
 
-      const users: any = await query(
-        'SELECT password FROM sys_user WHERE id = ?',
-        [userInfo.userId]
-      );
+      const users: Loose = await query('SELECT password FROM sys_user WHERE id = ?', [
+        userInfo.userId,
+      ]);
 
       if (users.length === 0) {
         return errorResponse('用户不存在', 404, 404);
@@ -87,11 +83,20 @@ export const PUT = withPermission(
     // 更新基本信息
     const { realName, phone, email } = body;
     const updates: string[] = [];
-    const params: any[] = [];
+    const params: Loose[] = [];
 
-    if (realName !== undefined) { updates.push('real_name = ?'); params.push(realName); }
-    if (phone !== undefined) { updates.push('phone = ?'); params.push(phone); }
-    if (email !== undefined) { updates.push('email = ?'); params.push(email); }
+    if (realName !== undefined) {
+      updates.push('real_name = ?');
+      params.push(realName);
+    }
+    if (phone !== undefined) {
+      updates.push('phone = ?');
+      params.push(phone);
+    }
+    if (email !== undefined) {
+      updates.push('email = ?');
+      params.push(email);
+    }
 
     if (updates.length === 0) {
       return errorResponse('没有需要更新的字段', 400, 400);
@@ -100,10 +105,7 @@ export const PUT = withPermission(
     updates.push('update_time = NOW()');
     params.push(userInfo.userId);
 
-    await execute(
-      `UPDATE sys_user SET ${updates.join(', ')} WHERE id = ?`,
-      params
-    );
+    await execute(`UPDATE sys_user SET ${updates.join(', ')} WHERE id = ?`, params);
 
     return successResponse(null, '个人信息更新成功');
   },

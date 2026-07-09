@@ -172,14 +172,14 @@ export async function getAvailableEquipment(workshop?: string): Promise<Equipmen
     FROM eqp_equipment
     WHERE current_status = 1
   `;
-  const params: any[] = [defaultMaxColors, defaultSetupTime];
+  const params: Loose[] = [defaultMaxColors, defaultSetupTime];
   if (workshop) {
     sql += ' AND workshop = ?';
     params.push(workshop);
   }
   sql += ' ORDER BY workshop, equipment_type, equipment_code';
 
-  const rows: any = await query(sql, params);
+  const rows: Loose = await query(sql, params);
   return rows;
 }
 
@@ -191,7 +191,7 @@ export async function getAvailableEquipment(workshop?: string): Promise<Equipmen
  * @throws 数据库查询异常
  */
 export async function getWorkOrderColorSequences(workOrderId: number): Promise<ColorSequence[]> {
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT seq_no, color_name, screen_plate_id, ink_formula_id,
             estimated_duration_hours, equipment_type_required, depends_on_seq
      FROM prd_work_order_color_seq
@@ -475,7 +475,7 @@ export async function autoScheduleWorkOrders(
 
   const workOrders: WorkOrderWithColors[] = [];
   for (const woId of workOrderIds) {
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT id, work_order_no, product_name, quantity, priority, plan_end_date as deadline
        FROM prod_work_order WHERE id = ? AND deleted = 0`,
       [woId]
@@ -583,9 +583,9 @@ export async function saveScheduleResult(result: SchedulingResultEnhanced): Prom
     });
 
     return true;
-  } catch (error: any) {
+  } catch (error) {
     secureLog('error', '保存排程结果失败', {
-      error: error.message,
+      error: (error as Error).message,
       workOrderId: result.work_order_id,
     });
     return false;
@@ -627,7 +627,7 @@ export function generateGanttData(
   const _totalDays = (dateRange.end.getTime() - startTime) / (1000 * 60 * 60 * 24);
 
   return results.map((result) => {
-    const woInfo: any = query(`SELECT product_name FROM prod_work_order WHERE id = ?`, [
+    const woInfo: Loose = query(`SELECT product_name FROM prod_work_order WHERE id = ?`, [
       result.work_order_id,
     ]);
 

@@ -72,7 +72,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
       try {
         await conn.execute(`DELETE FROM ${table}`);
         await conn.execute(`ALTER TABLE ${table} AUTO_INCREMENT = 1`);
-      } catch (_e: any) {}
+      } catch (_e) {}
     }
 
     const warehouses = [
@@ -706,7 +706,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         `INSERT INTO prd_process_route (route_code, route_name, product_id, version, is_default, status) VALUES (?, ?, ?, '1.0', 1, 1)`,
         [pr.code, pr.name, pr.pid]
       );
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const routeId = rows[0].id;
       for (const step of pr.steps) {
         await conn.execute(
@@ -814,7 +814,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           order.delivery,
         ]
       );
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const orderId = rows[0].id;
       saleOrderIds.push(orderId);
       for (const item of order.items) {
@@ -823,7 +823,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           `INSERT INTO sal_order_detail (order_id, material_id, quantity, unit_price, amount, total_amount, delivered_qty) VALUES (?, ?, ?, ?, ?, ?, 0)`,
           [orderId, item.mid, item.qty, item.price, amount, Math.round(amount * 1.13 * 100) / 100]
         );
-        const [matRows]: any = await conn.execute(
+        const [matRows]: Loose = await conn.execute(
           `SELECT material_name, unit FROM inv_material WHERE id = ?`,
           [item.mid]
         );
@@ -932,7 +932,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     for (const bom of bomList) {
       let totalCost = 0;
       for (const item of bom.items) {
-        const [matRows]: any = await conn.execute(
+        const [matRows]: Loose = await conn.execute(
           `SELECT purchase_price FROM inv_material WHERE id = ?`,
           [item.mid]
         );
@@ -942,11 +942,11 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         `INSERT INTO prd_bom (bom_name, product_id, version, total_cost, status, create_time) VALUES (?, ?, '1.0', ?, 1, NOW())`,
         [bom.name, bom.pid, Math.round(totalCost * 100) / 100]
       );
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const bomId = rows[0].id;
       bomIds.push(bomId);
       for (const item of bom.items) {
-        const [matRows]: any = await conn.execute(
+        const [matRows]: Loose = await conn.execute(
           `SELECT material_name, purchase_price, unit FROM inv_material WHERE id = ?`,
           [item.mid]
         );
@@ -1128,7 +1128,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           grandTotal,
         ]
       );
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const poId = rows[0].id;
       for (let i = 0; i < po.items.length; i++) {
         const item = po.items[i];
@@ -1282,7 +1282,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         `INSERT INTO inv_inbound_order (order_no, supplier_name, inbound_date, warehouse_id, po_id, po_no, grn_type, total_quantity, total_amount, status, remark) VALUES (?, ?, ?, ?, ?, ?, 'po', ?, ?, 'approved', '采购入库')`,
         [io.no, io.supplier, io.date, io.wh, io.poId, io.poNo, totalQty, totalAmt]
       );
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const orderId = rows[0].id;
       for (const item of io.items) {
         await conn.execute(
@@ -1548,7 +1548,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           wo.aed,
         ]
       );
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const woId = rows[0].id;
       const soItem = salesOrders[wo.soi].items[0];
       await conn.execute(
@@ -1914,7 +1914,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           dn.status,
         ]
       );
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const dnId = rows[0].id;
       let lineNo = 1;
       for (const item of dn.items) {
@@ -1991,7 +1991,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           totalAmount,
         ]
       );
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const rtId = rows[0].id;
       let lineNo = 1;
       for (const item of rt.items) {
@@ -2109,7 +2109,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         `INSERT INTO inv_outbound_order (order_no, order_date, outbound_type, warehouse_id, warehouse_name, total_qty, total_amount, status, audit_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'approved')`,
         [ob.no, ob.date, ob.type, ob.wh, ob.whname, totalQty, totalAmount, ob.status]
       );
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const obId = rows[0].id;
       for (const item of ob.items) {
         await conn.execute(
@@ -2556,11 +2556,11 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           rc.netAmt,
         ]
       );
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const rcId = rows[0].id;
       const dnList = deliveryOrders.filter((d) => d.cid === rc.cid);
       for (const dn of dnList) {
-        const [dnRows]: any = await conn.execute(
+        const [dnRows]: Loose = await conn.execute(
           'SELECT id, delivery_date, total_amount FROM sal_delivery WHERE delivery_no = ?',
           [dn.no]
         );
@@ -3253,7 +3253,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
         `INSERT INTO inv_cutting_record (record_no, source_label_id, source_label_no, cut_width_str, original_width, cut_total_width, remain_width, operator_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
         [cr.no, cr.srcId, cr.srcLabel, cr.cutStr, cr.origW, cr.cutW, cr.remainW, cr.op]
       );
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const cutId = rows[0].id;
       const widths = cr.cutStr.split('+').map(Number);
       for (let i = 0; i < widths.length; i++) {
@@ -3274,7 +3274,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
             cr.srcId,
           ]
         );
-        const [newRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [newRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const newLabelId = newRows[0].id;
         await conn.execute(
           `INSERT INTO inv_cutting_detail (record_id, new_label_id, new_label_no, cut_width, sequence) VALUES (?, ?, ?, ?, ?)`,

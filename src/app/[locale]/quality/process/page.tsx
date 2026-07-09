@@ -449,7 +449,7 @@ export default function QualityProcessPage() {
       if (data.success) {
         const rawData = data.data;
         const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
-        const list = rawList.map((item: any) => ({
+        const list = rawList.map((item: Loose) => ({
           id: item.id,
           card_no: item.cardNo || item.card_no,
           qr_code: item.qrCode || item.qr_code,

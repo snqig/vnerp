@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE m.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (issueNo) {
     where += ' AND m.issue_no LIKE ?';
     params.push('%' + issueNo + '%');
@@ -27,12 +27,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM prd_material_issue m ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT m.*, w.warehouse_name FROM prd_material_issue m LEFT JOIN inv_warehouse w ON m.warehouse_id = w.id ' +
       where +
       ' ORDER BY m.create_time DESC LIMIT ? OFFSET ?',
@@ -40,7 +40,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   for (const row of rows) {
-    const items: any = await query('SELECT * FROM prd_material_issue_item WHERE issue_id = ?', [
+    const items: Loose = await query('SELECT * FROM prd_material_issue_item WHERE issue_id = ?', [
       row.id,
     ]);
     row.items = items;
@@ -78,9 +78,9 @@ export const POST = withPermission(
       String(now.getDate()).padStart(2, '0') +
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-    const result: any = await transaction(async (conn) => {
+    const result: Loose = await transaction(async (conn) => {
       if (work_order_id) {
-        const [woRows]: any = await conn.execute(
+        const [woRows]: Loose = await conn.execute(
           'SELECT id, order_no, status, plan_qty FROM prod_work_order WHERE id = ? AND deleted = 0 FOR UPDATE',
           [work_order_id]
         );
@@ -101,7 +101,7 @@ export const POST = withPermission(
           if (!item.material_id) continue;
 
           // 获取BOM需求量
-          const [bomRows]: any = await conn.execute(
+          const [bomRows]: Loose = await conn.execute(
             `SELECT bm.quantity, bm.loss_rate 
            FROM prod_bom b 
            JOIN prod_bom_material bm ON b.id = bm.bom_id 
@@ -115,7 +115,7 @@ export const POST = withPermission(
           if (bomRows.length > 0) {
             const bomQty = Number(bomRows[0].quantity);
             const lossRate = Number(bomRows[0].loss_rate || 0);
-            const [planRows]: any = await conn.execute(
+            const [planRows]: Loose = await conn.execute(
               'SELECT plan_qty FROM prod_work_order WHERE id = ?',
               [work_order_id]
             );
@@ -125,7 +125,7 @@ export const POST = withPermission(
             const requiredQty = bomQty * planQty * (1 + lossRate / 100);
 
             // 已领料数量
-            const [issuedRows]: any = await conn.execute(
+            const [issuedRows]: Loose = await conn.execute(
               `SELECT COALESCE(SUM(ii.issued_qty), 0) as total_issued 
              FROM prd_material_issue i 
              JOIN prd_material_issue_item ii ON i.id = ii.issue_id 
@@ -157,7 +157,7 @@ export const POST = withPermission(
           throw new Error(`物料 ${item.material_name || item.material_id} 发料数量必须大于0`);
         }
 
-        const [invRows]: any = await conn.execute(
+        const [invRows]: Loose = await conn.execute(
           'SELECT id, quantity, material_code, material_name FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
           [item.material_id, warehouse_id]
         );
@@ -174,7 +174,7 @@ export const POST = withPermission(
         }
       }
 
-      const [orderResult]: any = await conn.execute(
+      const [orderResult]: Loose = await conn.execute(
         'INSERT INTO prd_material_issue (issue_no, work_order_id, work_order_no, warehouse_id, issue_date, issue_type, operator_name, status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)',
         [
           issueNo,
@@ -224,7 +224,7 @@ export const PUT = withPermission(
 
     if (action === 'post') {
       const result = await transaction(async (conn) => {
-        const [issueRows]: any = await conn.execute(
+        const [issueRows]: Loose = await conn.execute(
           'SELECT id, issue_no, work_order_id, work_order_no, warehouse_id, status FROM prd_material_issue WHERE id = ? AND deleted = 0 FOR UPDATE',
           [id]
         );
@@ -239,13 +239,13 @@ export const PUT = withPermission(
           throw new Error('发料单已完成或已取消，不能重复过账');
         }
 
-        const [itemRows]: any = await conn.execute(
+        const [itemRows]: Loose = await conn.execute(
           'SELECT * FROM prd_material_issue_item WHERE issue_id = ?',
           [id]
         );
 
         for (const item of itemRows) {
-          const [invRows]: any = await conn.execute(
+          const [invRows]: Loose = await conn.execute(
             'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
             [item.material_id, issue.warehouse_id]
           );
@@ -316,7 +316,7 @@ export const PUT = withPermission(
           );
 
           const transNo = 'TRX' + Date.now() + String(item.id).slice(-4);
-          const [matRows]: any = await conn.execute(
+          const [matRows]: Loose = await conn.execute(
             'SELECT material_code FROM inv_material WHERE id = ?',
             [item.material_id]
           );
@@ -394,7 +394,7 @@ export const DELETE = withPermission(
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
 
-    const issue: any = await query(
+    const issue: Loose = await query(
       'SELECT status FROM prd_material_issue WHERE id = ? AND deleted = 0',
       [Number(id)]
     );

@@ -13,7 +13,7 @@ export const GET = withPermission(
     const status = searchParams.get('status') || '';
 
     let where = 'WHERE 1=1';
-    const params: any[] = [];
+    const params: Loose[] = [];
     if (dictName) {
       where += ' AND dict_name LIKE ?';
       params.push(`%${dictName}%`);
@@ -27,13 +27,13 @@ export const GET = withPermission(
       params.push(Number(status));
     }
 
-    const totalRows: any = await query(
+    const totalRows: Loose = await query(
       `SELECT COUNT(*) as total FROM sys_dict_type ${where}`,
       params
     );
     const total = totalRows[0]?.total || 0;
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT id, dict_name, dict_code as dict_type, status, description as remark, create_time, update_time FROM sys_dict_type ${where} ORDER BY id DESC LIMIT ? OFFSET ?`,
       [...params, pageSize, (page - 1) * pageSize]
     );
@@ -51,7 +51,7 @@ export const POST = withPermission(
     const status = body.status;
     const description = body.remark || body.description;
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO sys_dict_type (dict_name, dict_code, status, description) VALUES (?, ?, ?, ?)`,
       [dict_name, dict_code, status ?? 1, description || null]
     );

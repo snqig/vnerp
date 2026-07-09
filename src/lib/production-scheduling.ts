@@ -204,7 +204,7 @@ export async function checkMaterialAvailability(params: {
 }> {
   const { workOrderId, warehouseId } = params;
 
-  const workOrders = await query<any>(
+  const workOrders = await query<Loose>(
     `SELECT id, bom_id, quantity FROM prod_work_order WHERE id = ? AND deleted = 0`,
     [workOrderId]
   );
@@ -219,7 +219,7 @@ export async function checkMaterialAvailability(params: {
     return { available: true, shortages: [] };
   }
 
-  const bomLines = await query<any>(
+  const bomLines = await query<Loose>(
     `SELECT material_id, material_name, consumption_qty, loss_rate
      FROM bom_line WHERE bom_id = ?`,
     [workOrder.bom_id]
@@ -241,7 +241,7 @@ export async function checkMaterialAvailability(params: {
     const lossRate = Number(line.loss_rate || 0) / 100;
     const requiredQty = Number(line.consumption_qty) * Number(workOrder.quantity) * (1 + lossRate);
 
-    const inventoryResult = await query<any>(
+    const inventoryResult = await query<Loose>(
       `SELECT COALESCE(SUM(available_qty), 0) as total_available
        FROM inv_inventory_batch
        WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 AND status = 'normal'`,
@@ -287,7 +287,7 @@ export async function autoSchedule(params: {
     FROM prod_work_order
     WHERE deleted = 0 AND status IN ('pending', 'confirmed')
   `;
-  const queryParams: any[] = [];
+  const queryParams: Loose[] = [];
 
   if (workOrderIds && workOrderIds.length > 0) {
     const placeholders = workOrderIds.map(() => '?').join(',');
@@ -356,7 +356,7 @@ export async function getCapacityLoad(params: {
 }): Promise<CapacityLoad[]> {
   const { startDate, endDate } = params;
 
-  const workOrders = await query<any>(
+  const workOrders = await query<Loose>(
     `SELECT work_order_no, product_name, quantity, priority,
             plan_start_date, plan_end_date
      FROM prod_work_order

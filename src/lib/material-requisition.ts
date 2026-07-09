@@ -55,7 +55,7 @@ export async function autoGenerateRequisition(
 ): Promise<{ success: boolean; requisitionId?: number; requisitionNo?: string; message: string }> {
   try {
     // 1. 查询工单信息
-    const workOrderRows: any = await query(
+    const workOrderRows: Loose = await query(
       `SELECT wo.*, m.material_code, m.material_name, m.unit
        FROM prd_work_order wo
        LEFT JOIN inv_material m ON wo.material_id = m.id
@@ -70,7 +70,7 @@ export async function autoGenerateRequisition(
     const workOrder = workOrderRows[0];
 
     // 2. 查询BOM明细
-    const bomRows: any = await query(
+    const bomRows: Loose = await query(
       `SELECT bd.*, m.material_code, m.material_name, m.unit
        FROM prd_bom_detail bd
        LEFT JOIN prd_bom b ON bd.bom_id = b.id
@@ -87,7 +87,7 @@ export async function autoGenerateRequisition(
     const result = await transaction(async (conn) => {
       const requisitionNo = generateDocNo(getConfig('mr_prefix') || 'MR');
 
-      const [reqResult]: any = await conn.execute(
+      const [reqResult]: Loose = await conn.execute(
         `INSERT INTO material_requisitions (
           requisition_no, work_order_id, work_order_no, type, status,
           applicant_id, applicant_name, total_quantity, warehouse_id, remark
@@ -160,9 +160,9 @@ export async function autoGenerateRequisition(
       requisitionNo: result.requisitionNo,
       message: `领料单生成成功: ${result.requisitionNo}`,
     };
-  } catch (error: any) {
-    secureLog('error', '领料单生成失败', { error: error.message, workOrderId });
-    return { success: false, message: `生成失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '领料单生成失败', { error: (error as Error).message, workOrderId });
+    return { success: false, message: `生成失败: ${(error as Error).message}` };
   }
 }
 
@@ -191,7 +191,7 @@ export async function submitOverRequisition(
   try {
     const requisitionNo = generateDocNo(getConfig('mr_prefix') || 'MR');
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO material_requisitions (
         requisition_no, work_order_id, type, status,
         applicant_id, applicant_name, total_quantity, reason, remark
@@ -221,9 +221,13 @@ export async function submitOverRequisition(
       requisitionId: result.insertId,
       message: overApproval ? '超领申请已提交，等待审批' : '超领单已生成',
     };
-  } catch (error: any) {
-    secureLog('error', '超领申请失败', { error: error.message, workOrderId, materialId });
-    return { success: false, message: `申请失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '超领申请失败', {
+      error: (error as Error).message,
+      workOrderId,
+      materialId,
+    });
+    return { success: false, message: `申请失败: ${(error as Error).message}` };
   }
 }
 
@@ -247,7 +251,7 @@ export async function submitSupplementaryRequisition(
   }
 
   // 验证原领料单
-  const originalRows: any = await query(
+  const originalRows: Loose = await query(
     `SELECT * FROM material_requisitions WHERE id = ? AND deleted = 0`,
     [originalRequisitionId]
   );
@@ -263,7 +267,7 @@ export async function submitSupplementaryRequisition(
     const requisitionNo = generateDocNo(getConfig('mr_prefix') || 'MR');
     const original = originalRows[0];
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO material_requisitions (
         requisition_no, work_order_id, work_order_no, type, status,
         applicant_id, applicant_name, total_quantity, original_requisition_id, reason, remark
@@ -294,9 +298,9 @@ export async function submitSupplementaryRequisition(
       requisitionId: result.insertId,
       message: dualApproval ? '补料申请已提交，等待双重审批' : '补料单已生成',
     };
-  } catch (error: any) {
-    secureLog('error', '补料申请失败', { error: error.message, originalRequisitionId });
-    return { success: false, message: `申请失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '补料申请失败', { error: (error as Error).message, originalRequisitionId });
+    return { success: false, message: `申请失败: ${(error as Error).message}` };
   }
 }
 
@@ -311,10 +315,10 @@ export async function issueMaterial(
   requisitionId: number,
   items: IssueItem[],
   operatorId?: number
-): Promise<{ success: boolean; message: string; issuedItems?: any[] }> {
+): Promise<{ success: boolean; message: string; issuedItems?: Loose[] }> {
   try {
     // 1. 查询领料单
-    const reqRows: any = await query(
+    const reqRows: Loose = await query(
       `SELECT * FROM material_requisitions WHERE id = ? AND deleted = 0`,
       [requisitionId]
     );
@@ -328,7 +332,7 @@ export async function issueMaterial(
       return { success: false, message: '领料单状态不正确，无法出库' };
     }
 
-    const issuedItems: any[] = [];
+    const issuedItems: Loose[] = [];
 
     const result = await transaction(async (conn) => {
       for (const item of items) {
@@ -425,9 +429,9 @@ export async function issueMaterial(
       message: `出库成功：共${result.length}项物料`,
       issuedItems: result,
     };
-  } catch (error: any) {
-    secureLog('error', '领料出库失败', { error: error.message, requisitionId });
-    return { success: false, message: `出库失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '领料出库失败', { error: (error as Error).message, requisitionId });
+    return { success: false, message: `出库失败: ${(error as Error).message}` };
   }
 }
 
@@ -450,7 +454,7 @@ export async function createReturn(
       const returnNo = generateDocNo('RT');
       let totalQuantity = 0;
 
-      const [returnResult]: any = await conn.execute(
+      const [returnResult]: Loose = await conn.execute(
         `INSERT INTO material_returns (
           return_no, work_order_id, requisition_id, status,
           applicant_id, applicant_name, total_quantity, remark
@@ -464,14 +468,14 @@ export async function createReturn(
         totalQuantity += item.quantity;
 
         // 查询物料信息
-        const [matRows]: any = await conn.execute(
+        const [matRows]: Loose = await conn.execute(
           `SELECT material_code, material_name, unit FROM inv_material WHERE id = ?`,
           [item.materialId]
         );
         const material = matRows[0] || {};
 
         // 查询批次成本
-        const [costRows]: any = await conn.execute(
+        const [costRows]: Loose = await conn.execute(
           `SELECT unit_cost FROM material_batch_costs WHERE qr_code = ?`,
           [item.qrCode]
         );
@@ -512,9 +516,9 @@ export async function createReturn(
       returnNo: result.returnNo,
       message: `退料单创建成功: ${result.returnNo}`,
     };
-  } catch (error: any) {
-    secureLog('error', '退料单创建失败', { error: error.message, workOrderId });
-    return { success: false, message: `创建失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '退料单创建失败', { error: (error as Error).message, workOrderId });
+    return { success: false, message: `创建失败: ${(error as Error).message}` };
   }
 }
 
@@ -527,7 +531,7 @@ export async function confirmReturn(
   operatorId?: number
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const returnRows: any = await query(
+    const returnRows: Loose = await query(
       `SELECT * FROM material_returns WHERE id = ? AND deleted = 0`,
       [returnId]
     );
@@ -541,7 +545,7 @@ export async function confirmReturn(
       return { success: false, message: '退料单状态不正确' };
     }
 
-    const itemRows: any = await query(`SELECT * FROM material_return_items WHERE return_id = ?`, [
+    const itemRows: Loose = await query(`SELECT * FROM material_return_items WHERE return_id = ?`, [
       returnId,
     ]);
 
@@ -574,9 +578,9 @@ export async function confirmReturn(
     );
 
     return { success: true, message: '退料入库确认成功' };
-  } catch (error: any) {
-    secureLog('error', '退料确认失败', { error: error.message, returnId });
-    return { success: false, message: `确认失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '退料确认失败', { error: (error as Error).message, returnId });
+    return { success: false, message: `确认失败: ${(error as Error).message}` };
   }
 }
 
@@ -611,8 +615,8 @@ export async function approveRequisition(
       success: true,
       message: approved ? '审批通过' : '审批已驳回',
     };
-  } catch (error: any) {
-    secureLog('error', '审批失败', { error: error.message, requisitionId });
-    return { success: false, message: `审批失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '审批失败', { error: (error as Error).message, requisitionId });
+    return { success: false, message: `审批失败: ${(error as Error).message}` };
   }
 }

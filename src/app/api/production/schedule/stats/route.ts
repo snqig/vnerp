@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
 
     let dateFilter = '';
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (startDate && endDate) {
       dateFilter = ' AND work_order_date BETWEEN ? AND ?';

@@ -20,20 +20,20 @@ export const GET = withPermission(
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
     let where = 'WHERE 1=1';
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (materialId) {
       where += ' AND u.material_id = ?';
       params.push(Number(materialId));
     }
 
-    const countRows: any = await query(
+    const countRows: Loose = await query(
       `SELECT COUNT(*) as total FROM inv_unit_conversion u ${where}`,
       params
     );
     const total = countRows[0]?.total || 0;
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT u.*, m.material_name, m.material_code, m.unit as base_unit
        FROM inv_unit_conversion u
        LEFT JOIN materials m ON u.material_id = m.id
@@ -65,7 +65,7 @@ export const POST = withPermission(
     }
 
     // 检查是否已存在相同换算
-    const existing: any = await query(
+    const existing: Loose = await query(
       'SELECT id FROM inv_unit_conversion WHERE material_id = ? AND from_unit = ? AND to_unit = ?',
       [material_id, from_unit, to_unit]
     );
@@ -80,7 +80,7 @@ export const POST = withPermission(
     }
 
     // 创建
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO inv_unit_conversion
        (material_id, from_unit, to_unit, ratio, is_default, create_time, update_time)
        VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -119,7 +119,7 @@ export const PUT = withPermission(
     }
 
     // 查找换算关系
-    const conversions: any = await query(
+    const conversions: Loose = await query(
       'SELECT * FROM inv_unit_conversion WHERE material_id = ? AND ((from_unit = ? AND to_unit = ?) OR (from_unit = ? AND to_unit = ?))',
       [material_id, from_unit, to_unit, to_unit, from_unit]
     );

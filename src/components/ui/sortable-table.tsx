@@ -58,8 +58,8 @@ export function useTableSort<T>(data: T[], defaultField: string = '') {
   const sortedData = (() => {
     if (!sortField) return data;
     return [...data].sort((a, b) => {
-      const aVal = (a as any)[sortField];
-      const bVal = (b as any)[sortField];
+      const aVal = (a as Loose)[sortField];
+      const bVal = (b as Loose)[sortField];
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
       }

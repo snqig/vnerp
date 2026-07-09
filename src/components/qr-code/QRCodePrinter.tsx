@@ -106,7 +106,7 @@ interface QRCodePrinterProps {
   printData?: PrintData;
   showDialog?: boolean;
   onDialogChange?: (open: boolean) => void;
-  onPrintSuccess?: (result: any) => void;
+  onPrintSuccess?: (result: Loose) => void;
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   icon?: 'print' | 'preview' | 'both';

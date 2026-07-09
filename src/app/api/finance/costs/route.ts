@@ -12,20 +12,20 @@ export const GET = withPermission(async (request: NextRequest) => {
   const workOrderId = searchParams.get('workOrderId') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (workOrderId) {
     where += ' AND work_order_id = ?';
     params.push(Number(workOrderId));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM work_order_costs ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT c.*, wo.work_order_no, wo.plan_qty, wo.completed_qty
      FROM work_order_costs c
      LEFT JOIN prd_work_order wo ON c.work_order_id = wo.id

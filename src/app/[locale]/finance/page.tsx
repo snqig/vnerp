@@ -144,11 +144,11 @@ export default function FinancePage() {
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [detailData, setDetailData] = useState<any>(null);
+  const [detailData, setDetailData] = useState<Loose>(null);
   const [detailType, setDetailType] = useState<'receivable' | 'payable'>('receivable');
 
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<Loose[]>([]);
+  const [suppliers, setSuppliers] = useState<Loose[]>([]);
 
   const [receivableForm, setReceivableForm] = useState({
     customer_id: '',
@@ -478,7 +478,7 @@ export default function FinancePage() {
     }
   };
 
-  const formatAmount = (val: any) => {
+  const formatAmount = (val: Loose) => {
     const num = parseFloat(val || 0);
     return isNaN(num)
       ? '0.00'
@@ -886,7 +886,7 @@ export default function FinancePage() {
                     <SelectValue placeholder="选择客户" />
                   </SelectTrigger>
                   <SelectContent>
-                    {customers.map((c: any) => (
+                    {customers.map((c: Loose) => (
                       <SelectItem key={c.id} value={String(c.id)}>
                         {c.customer_name}
                       </SelectItem>
@@ -963,7 +963,7 @@ export default function FinancePage() {
                     <SelectValue placeholder="选择供应商" />
                   </SelectTrigger>
                   <SelectContent>
-                    {suppliers.map((s: any) => (
+                    {suppliers.map((s: Loose) => (
                       <SelectItem key={s.id} value={String(s.id)}>
                         {s.supplier_name}
                       </SelectItem>
@@ -1290,7 +1290,7 @@ export default function FinancePage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {detailData.receipts.map((r: any) => (
+                        {detailData.receipts.map((r: Loose) => (
                           <TableRow key={r.id}>
                             <TableCell>{r.receipt_no}</TableCell>
                             <TableCell>¥{formatAmount(r.amount)}</TableCell>
@@ -1317,7 +1317,7 @@ export default function FinancePage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {detailData.payments.map((p: any) => (
+                        {detailData.payments.map((p: Loose) => (
                           <TableRow key={p.id}>
                             <TableCell>{p.payment_no}</TableCell>
                             <TableCell>¥{formatAmount(p.amount)}</TableCell>

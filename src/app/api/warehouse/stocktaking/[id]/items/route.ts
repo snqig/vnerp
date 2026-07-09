@@ -20,7 +20,7 @@ export const GET = withPermission(
     const resolvedParams = await params;
     const checkId = parseInt(resolvedParams.id);
 
-    const check: any = await queryOne(
+    const check: Loose = await queryOne(
       `SELECT * FROM inventory_checks WHERE id = ? AND deleted = 0`,
       [checkId]
     );
@@ -29,7 +29,7 @@ export const GET = withPermission(
       return commonErrors.notFound('盘点单不存在');
     }
 
-    const items: any[] = await query(
+    const items: Loose[] = await query(
       `SELECT ici.*,
             m.material_name,
             m.unit
@@ -41,7 +41,7 @@ export const GET = withPermission(
     );
 
     return successResponse(
-      items.map((item: any) => ({
+      items.map((item: Loose) => ({
         ...item,
         split_flag_name: SPLIT_FLAG_MAP[item.split_flag] || '未知',
         status_name: STATUS_MAP[item.status] || '未知',

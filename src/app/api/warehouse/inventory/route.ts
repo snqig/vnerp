@@ -39,7 +39,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     ) ib ON m.id = ib.material_id
     WHERE m.deleted = 0
   `;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (keyword) {
     logger.branch(ctx, '筛选条件', '关键词搜索', true, { keyword });
@@ -70,7 +70,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   const materials = await query(sql, values);
 
-  const result = (materials as any[]).map((item: any) => ({
+  const result = (materials as Loose[]).map((item: Loose) => ({
     id: item.id,
     material_code: item.material_code,
     material_name: item.material_name,
@@ -106,7 +106,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     WHERE deleted = 0
     GROUP BY material_id
   ) ib ON m.id = ib.material_id WHERE m.deleted = 0`;
-  const countValues: any[] = [];
+  const countValues: Loose[] = [];
   if (keyword) {
     countSql += ` AND (m.material_code LIKE ? OR m.material_name LIKE ?)`;
     countValues.push(`%${keyword}%`, `%${keyword}%`);
@@ -123,7 +123,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     countSql += ` AND m.safety_stock > 0 AND COALESCE(ib.stock_qty, 0) <= m.safety_stock`;
   }
   const countResult = await query(countSql, countValues);
-  const total = (countResult as any[])[0]?.total || 0;
+  const total = (countResult as Loose[])[0]?.total || 0;
 
   logger.stepEnd(ctx, '查询库存列表', { total, page, pageSize });
   return successResponse({

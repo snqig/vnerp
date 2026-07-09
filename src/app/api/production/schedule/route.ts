@@ -48,7 +48,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   if (searchParams.get('action') === 'stats') {
-    const statsRows: any = await query(
+    const statsRows: Loose = await query(
       `SELECT 
         COUNT(*) as total,
         SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as pending,
@@ -69,7 +69,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (workshop) {
     where += ' AND workshop = ?';
     params.push(workshop);
@@ -79,9 +79,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM prd_schedule ' + where, params);
+  const totalRows: Loose = await query(
+    'SELECT COUNT(*) as total FROM prd_schedule ' + where,
+    params
+  );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM prd_schedule ' +
       where +
       ' ORDER BY planned_start ASC, priority ASC LIMIT ? OFFSET ?',
@@ -143,7 +146,7 @@ export const POST = withPermission(
     if (!product_name) return errorResponse('产品名称不能为空', 400, 400);
 
     if (planned_start && planned_end && workshop) {
-      const conflicts: any = await query(
+      const conflicts: Loose = await query(
         `SELECT id, schedule_no, product_name, planned_start, planned_end 
        FROM prd_schedule 
        WHERE workshop = ? AND deleted = 0 AND status IN (1, 2, 3)
@@ -167,7 +170,7 @@ export const POST = withPermission(
       String(now.getDate()).padStart(2, '0') +
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO prd_schedule (schedule_no, order_id, order_no, product_id, product_code, product_name, workshop, planned_qty, planned_start, planned_end, priority, scheduler, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -199,7 +202,7 @@ export const PUT = withPermission(
     if (!id) return errorResponse('ID不能为空', 400, 400);
 
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: Loose[] = [];
     const allowedFields = [
       'workshop',
       'planned_qty',

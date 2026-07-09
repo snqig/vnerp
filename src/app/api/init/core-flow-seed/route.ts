@@ -81,21 +81,21 @@ export const POST = withPermission(async (_request: NextRequest) => {
     }
     stats.tables_cleared = clearTables.length;
 
-    const [catRows]: any = await conn.execute(
+    const [catRows]: Loose = await conn.execute(
       'SELECT id, code, name FROM sys_warehouse_category WHERE deleted = 0 ORDER BY id'
     );
-    const whCats: any[] = catRows;
-    const [matCatRows]: any = await conn.execute(
+    const whCats: Loose[] = catRows;
+    const [matCatRows]: Loose = await conn.execute(
       'SELECT id, category_code, category_name, category_type FROM inv_material_category ORDER BY id'
     );
-    const matCats: any[] = matCatRows;
-    const [userRows]: any = await conn.execute(
+    const matCats: Loose[] = matCatRows;
+    const [userRows]: Loose = await conn.execute(
       'SELECT id, username, real_name FROM sys_user WHERE deleted=0 ORDER BY id'
     );
-    const adminUser = userRows.find((u: any) => u.username === 'admin') || userRows[0];
-    const whUser = userRows.find((u: any) => u.username === 'zhaolei') || userRows[1];
-    const prodUser = userRows.find((u: any) => u.username === 'wangqiang') || userRows[2];
-    const qcUser = userRows.find((u: any) => u.username === 'zhoujie') || userRows[3];
+    const adminUser = userRows.find((u: Loose) => u.username === 'admin') || userRows[0];
+    const whUser = userRows.find((u: Loose) => u.username === 'zhaolei') || userRows[1];
+    const prodUser = userRows.find((u: Loose) => u.username === 'wangqiang') || userRows[2];
+    const qcUser = userRows.find((u: Loose) => u.username === 'zhoujie') || userRows[3];
 
     // ===== 重建基础数据：仓库 =====
     const whNames = [
@@ -150,7 +150,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           null,
         ]
       );
-      const [whRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [whRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       whMap[whCodes[i]] = whRow[0].id;
     }
     stats.inv_warehouse = whNames.length;
@@ -207,11 +207,11 @@ export const POST = withPermission(async (_request: NextRequest) => {
       },
     ];
     const matMap: Record<string, number> = {};
-    const matInfoMap: Record<string, any> = {};
+    const matInfoMap: Record<string, Loose> = {};
     for (let i = 1; i <= 50; i++) {
       const mt = matTypes[(i - 1) % matTypes.length];
       const spec = mt.specs[(i - 1) % mt.specs.length];
-      const catType = matCats.find((c: any) => c.category_type === mt.cat_type);
+      const catType = matCats.find((c: Loose) => c.category_type === mt.cat_type);
       const purchasePrice = randomAmount(mt.price_range[0], mt.price_range[1]);
       const salePrice = Math.round(purchasePrice * (1.3 + Math.random() * 0.7) * 100) / 100;
       const code = `MAT-${mt.prefix}-${pad(i, 4)}`;
@@ -236,7 +236,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           1,
         ]
       );
-      const [matRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [matRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       matMap[code] = matRow[0].id;
       matInfoMap[code] = {
         id: matRow[0].id,
@@ -251,10 +251,10 @@ export const POST = withPermission(async (_request: NextRequest) => {
     }
     stats.inv_material = 50;
     const materials = Object.values(matInfoMap);
-    const mainMats = materials.filter((m: any) => m.cat_type === 1);
-    const inkMats = materials.filter((m: any) => m.cat_type === 2);
-    const _auxMats = materials.filter((m: any) => m.cat_type === 3);
-    const productMats = materials.filter((m: any) => m.cat_type === 4);
+    const mainMats = materials.filter((m: Loose) => m.cat_type === 1);
+    const inkMats = materials.filter((m: Loose) => m.cat_type === 2);
+    const _auxMats = materials.filter((m: Loose) => m.cat_type === 3);
+    const productMats = materials.filter((m: Loose) => m.cat_type === 4);
 
     // ===== 重建基础数据：客户 =====
     const industries = [
@@ -296,7 +296,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           1,
         ]
       );
-      const [cusRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [cusRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       cusIds.push(cusRow[0].id);
     }
     stats.crm_customer = 30;
@@ -328,12 +328,12 @@ export const POST = withPermission(async (_request: NextRequest) => {
           1,
         ]
       );
-      const [supRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [supRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       supIds.push(supRow[0].id);
     }
     stats.pur_supplier = 30;
 
-    const warehouses: any[] = Object.entries(whMap).map(([code, id]) => ({
+    const warehouses: Loose[] = Object.entries(whMap).map(([code, id]) => ({
       id,
       warehouse_code: code,
     }));
@@ -371,7 +371,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 1. 销售订单 (sal_order + sal_order_detail) =====
     const orderIds: number[] = [];
-    const orderData: any[] = [];
+    const orderData: Loose[] = [];
     for (let i = 1; i <= TOTAL_ORDERS; i++) {
       const customer = customers[(i - 1) % customers.length];
       const orderDate = randomDate(yearStart, now);
@@ -409,7 +409,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           status,
         ]
       );
-      const [orderRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [orderRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const orderId = orderRow[0].id;
       orderIds.push(orderId);
 
@@ -446,7 +446,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 2. 生产工单 (prod_work_order) =====
     const woIds: number[] = [];
-    const woData: any[] = [];
+    const woData: Loose[] = [];
     for (let i = 1; i <= TOTAL_ORDERS; i++) {
       const od = orderData[(i - 1) % orderData.length];
       const planStart = new Date(new Date(od.orderDate).getTime() + randomInt(3, 10) * 86400000)
@@ -485,7 +485,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           adminUser.id,
         ]
       );
-      const [woRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [woRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       woIds.push(woRow[0].id);
       woData.push({
         id: woRow[0].id,
@@ -504,7 +504,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 3. 采购入库 (inv_inbound_order + inv_inbound_item + inv_material_label) =====
     const labelIds: number[] = [];
-    const labelData: any[] = [];
+    const labelData: Loose[] = [];
     for (let i = 1; i <= TOTAL_ORDERS; i++) {
       const wo = woData[(i - 1) % woData.length];
       const supplier = suppliers[(i - 1) % suppliers.length];
@@ -533,7 +533,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           inboundDate,
         ]
       );
-      const [inbRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [inbRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const inbId = inbRow[0].id;
 
       const batchNo = `B${now.getFullYear()}${pad(i, 4)}`;
@@ -580,7 +580,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           1,
         ]
       );
-      const [lblRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [lblRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       labelIds.push(lblRow[0].id);
       labelData.push({
         id: lblRow[0].id,
@@ -619,7 +619,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             1,
           ]
         );
-        const [inkLblRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [inkLblRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         labelIds.push(inkLblRow[0].id);
         labelData.push({
           id: inkLblRow[0].id,
@@ -640,7 +640,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 4. 分切管理 (inv_cutting_record + inv_cutting_detail) =====
     const cuttingLabelIds: number[] = [];
-    const cuttingLabelData: any[] = [];
+    const cuttingLabelData: Loose[] = [];
     for (let i = 1; i <= 30; i++) {
       const srcLabel = labelData[(i - 1) % labelData.length];
       if (!srcLabel.width) continue;
@@ -672,7 +672,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           1,
         ]
       );
-      const [cutRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [cutRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const cutId = cutRow[0].id;
 
       for (let j = 0; j < cutWidths.length; j++) {
@@ -701,7 +701,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             1,
           ]
         );
-        const [newLblRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [newLblRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         cuttingLabelIds.push(newLblRow[0].id);
         cuttingLabelData.push({
           id: newLblRow[0].id,
@@ -726,7 +726,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== 5. 工艺流程卡 (prd_process_card + prd_process_card_material) =====
     const cardIds: number[] = [];
-    const cardData: any[] = [];
+    const cardData: Loose[] = [];
     for (let i = 1; i <= TOTAL_ORDERS; i++) {
       const wo = woData[(i - 1) % woData.length];
       const mainLabel = labelData[(i - 1) % labelData.length];
@@ -753,7 +753,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           prodUser.real_name,
         ]
       );
-      const [cardRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [cardRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const cardId = cardRow[0].id;
       cardIds.push(cardId);
       cardData.push({
@@ -788,7 +788,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
       if (i <= 30) {
         const inkLabel = labelData.find(
-          (l: any) => l.materialCode?.startsWith('MAT-INK') && l.id > mainLabel.id
+          (l: Loose) => l.materialCode?.startsWith('MAT-INK') && l.id > mainLabel.id
         );
         if (inkLabel) {
           await conn.execute(
@@ -856,7 +856,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           whUser.id,
         ]
       );
-      const [miRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [miRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const miId = miRow[0].id;
 
       await conn.execute(
@@ -874,7 +874,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       );
 
       if (i <= 20) {
-        const inkLabel = labelData.find((l: any) => l.materialCode?.startsWith('MAT-INK'));
+        const inkLabel = labelData.find((l: Loose) => l.materialCode?.startsWith('MAT-INK'));
         if (inkLabel) {
           await conn.execute(
             `INSERT INTO prd_material_issue_item (issue_id, material_id, material_code, material_name, required_qty, issued_qty, unit, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -929,7 +929,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           i % 5 === 0 ? qcUser.real_name : null,
         ]
       );
-      const [rptRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rptRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       reportIds.push(rptRow[0].id);
     }
     stats.prd_work_report = 30;
@@ -957,7 +957,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           whUser.id,
         ]
       );
-      const [piRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [piRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const piId = piRow[0].id;
 
       const prodBatchNo = `PB${now.getFullYear()}${pad(i, 4)}`;
@@ -1020,7 +1020,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           `${traceDate} 10:00:00`,
         ]
       );
-      const [trRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [trRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const trId = trRow[0].id;
 
       await conn.execute(
@@ -1039,7 +1039,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
 
-      const inkLabel = labelData.find((l: any) => l.materialCode?.startsWith('MAT-INK'));
+      const inkLabel = labelData.find((l: Loose) => l.materialCode?.startsWith('MAT-INK'));
       if (inkLabel) {
         await conn.execute(
           `INSERT INTO inv_trace_detail (trace_id, label_id, label_no, material_code, material_name, specification, batch_no, supplier_name, receive_date, material_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,

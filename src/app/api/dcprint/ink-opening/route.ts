@@ -28,7 +28,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   let sql = `SELECT * FROM ink_opening_record WHERE deleted = 0`;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (keyword) {
     sql += ` AND (record_no LIKE ? OR material_code LIKE ? OR material_name LIKE ? OR batch_no LIKE ?)`;
@@ -50,7 +50,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const list = await query(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM ink_opening_record WHERE deleted = 0`;
-  const countResult = (await queryOne(countSql)) as any;
+  const countResult = (await queryOne(countSql)) as Loose;
 
   const summarySql = `SELECT
     COUNT(*) as total_count,
@@ -59,7 +59,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     COALESCE(SUM(CASE WHEN status = 3 THEN 1 ELSE 0 END), 0) as scrapped_count,
     COALESCE(SUM(CASE WHEN status = 1 AND expire_time < NOW() THEN 1 ELSE 0 END), 0) as overdue_using_count
   FROM ink_opening_record WHERE deleted = 0`;
-  const summary = (await queryOne(summarySql)) as any;
+  const summary = (await queryOne(summarySql)) as Loose;
 
   const overdueSql = `SELECT * FROM ink_opening_record
     WHERE deleted = 0 AND status = 1 AND expire_time < NOW()
@@ -109,7 +109,7 @@ export const POST = withPermission(
     } = body;
 
     if (batch_no) {
-      const expiredOpening: any = await queryOne(
+      const expiredOpening: Loose = await queryOne(
         `SELECT id, record_no, expire_time FROM ink_opening_record
        WHERE batch_no = ? AND material_id = ? AND status = 1 AND deleted = 0 AND expire_time < NOW()
        ORDER BY expire_time DESC LIMIT 1`,
@@ -123,7 +123,7 @@ export const POST = withPermission(
         );
       }
 
-      const activeOpening: any = await queryOne(
+      const activeOpening: Loose = await queryOne(
         `SELECT id, record_no, expire_time FROM ink_opening_record
        WHERE batch_no = ? AND material_id = ? AND status = 1 AND deleted = 0 AND expire_time >= NOW()
        ORDER BY expire_time DESC LIMIT 1`,
@@ -161,7 +161,7 @@ export const POST = withPermission(
 
       let finalExpireTime = expireTime;
       if (batch_no) {
-        const [batchRows]: any = await conn.execute(
+        const [batchRows]: Loose = await conn.execute(
           'SELECT expire_date FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0',
           [batch_no]
         );
@@ -174,7 +174,7 @@ export const POST = withPermission(
         }
       }
 
-      const [insertResult]: any = await conn.execute(
+      const [insertResult]: Loose = await conn.execute(
         `INSERT INTO ink_opening_record (record_no, material_id, material_code, material_name, batch_no, label_id, ink_type, open_time, expire_hours, expire_time, remaining_qty, unit, status, operator_id, operator_name, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
         [
@@ -281,7 +281,7 @@ export const PUT = withPermission(
     }
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: Loose[] = [];
     const allowedFields = ['remaining_qty', 'remark'];
     for (const field of allowedFields) {
       if (body[field] !== undefined) {

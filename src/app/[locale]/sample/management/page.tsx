@@ -153,8 +153,8 @@ export default function SampleManagementPage() {
 
   const sortedList = [...list].sort((a, b) => {
     if (!sortField) return 0;
-    const aVal = (a as any)[sortField];
-    const bVal = (b as any)[sortField];
+    const aVal = (a as Loose)[sortField];
+    const bVal = (b as Loose)[sortField];
     if (aVal == null && bVal == null) return 0;
     if (aVal == null) return 1;
     if (bVal == null) return -1;

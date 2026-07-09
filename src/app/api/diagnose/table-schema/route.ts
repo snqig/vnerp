@@ -10,11 +10,11 @@ export const GET = withPermission(async (_request: NextRequest) => {
       table: 'inv_inbound_item',
       columns: columns,
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: (error as Error).message,
       },
       { status: 500 }
     );

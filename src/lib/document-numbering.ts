@@ -44,7 +44,7 @@ const DEFAULT_CONFIG: DocumentNumberingConfig = {
 
 export async function getNumberingConfig(): Promise<DocumentNumberingConfig> {
   try {
-    const rows: any = await query(
+    const rows: Loose = await query(
       'SELECT config_key, config_value FROM sys_config WHERE deleted = 0 AND config_key IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         'sales_order_prefix',
@@ -68,7 +68,7 @@ export async function getNumberingConfig(): Promise<DocumentNumberingConfig> {
       ]
     );
     const configs: Record<string, string> = {};
-    rows.forEach((row: any) => {
+    rows.forEach((row: Loose) => {
       configs[row.config_key] = row.config_value;
     });
     return {
@@ -228,14 +228,14 @@ export async function checkDocumentNoDuplicate(
   }
 
   let sql = `SELECT id FROM ${tableInfo.table} WHERE ${tableInfo.field} = ? AND deleted = 0`;
-  const params: any[] = [docNo];
+  const params: Loose[] = [docNo];
 
   if (excludeId) {
     sql += ' AND id != ?';
     params.push(excludeId);
   }
 
-  const rows: any = await query(sql, params);
+  const rows: Loose = await query(sql, params);
   if (rows.length > 0) {
     return { duplicate: true, error: `单据编号 "${docNo}" 已存在，不能重复` };
   }
@@ -278,11 +278,11 @@ export async function generateDocumentNo(docType: DocumentType): Promise<string>
   let maxSerial = 0;
 
   if (tableInfo) {
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT ${tableInfo.field} FROM ${tableInfo.table} WHERE ${tableInfo.field} LIKE ? AND deleted = 0`,
       [`${prefixWithDate}%`]
     );
-    rows.forEach((row: any) => {
+    rows.forEach((row: Loose) => {
       const no = row[tableInfo.field];
       const serialPart = no.slice(prefixWithDate.length);
       const serialNum = parseInt(serialPart, 10);

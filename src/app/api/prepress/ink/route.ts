@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (inkCode) {
     where += ' AND ink_code LIKE ?';
     params.push('%' + inkCode + '%');
@@ -31,9 +31,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM prd_ink ' + where, params);
+  const totalRows: Loose = await query('SELECT COUNT(*) as total FROM prd_ink ' + where, params);
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM prd_ink ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -57,7 +57,7 @@ export const POST = withPermission(
       shelf_life,
       remark,
     } = body;
-    const result: any = await execute(
+    const result: Loose = await execute(
       'INSERT INTO prd_ink (ink_code, ink_name, ink_type, color_name, color_code, brand, supplier_id, unit, specification, safety_stock, shelf_life, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         ink_code,
@@ -99,7 +99,7 @@ export const PUT = withPermission(
       remark,
     } = body;
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: Loose[] = [];
     if (ink_name !== undefined) {
       fields.push('ink_name = ?');
       values.push(ink_name);

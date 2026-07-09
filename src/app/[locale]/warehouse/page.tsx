@@ -99,7 +99,7 @@ export default function WarehousePage() {
       },
     ],
   });
-  const [availableBatches, setAvailableBatches] = useState<any[]>([]);
+  const [availableBatches, setAvailableBatches] = useState<Loose[]>([]);
 
   const fetchBatches = async () => {
     setLoading(true);

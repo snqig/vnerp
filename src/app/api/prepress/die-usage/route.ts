@@ -17,7 +17,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     FROM prd_die_usage_log ul
     LEFT JOIN prd_die_template dt ON ul.die_id = dt.id
     WHERE 1=1`;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (die_id) {
     sql += ' AND ul.die_id = ?';
@@ -46,7 +46,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const list = await query(sql, values);
 
   let countSql = `SELECT COUNT(*) as total FROM prd_die_usage_log ul WHERE 1=1`;
-  const countValues: any[] = [];
+  const countValues: Loose[] = [];
   if (die_id) {
     countSql += ' AND ul.die_id = ?';
     countValues.push(parseInt(die_id));
@@ -63,7 +63,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     countSql += ' AND ul.usage_date <= ?';
     countValues.push(end_date);
   }
-  const countResult = (await queryOne(countSql, countValues)) as any;
+  const countResult = (await queryOne(countSql, countValues)) as Loose;
 
   const summaryStats = (await query(
     `SELECT
@@ -77,7 +77,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     ${start_date ? ' AND usage_date >= ?' : ''}
     ${end_date ? ' AND usage_date <= ?' : ''}`,
     [die_id, start_date, end_date].filter(Boolean)
-  )) as any[];
+  )) as Loose[];
 
   return successResponse({
     list,
@@ -104,7 +104,7 @@ export const POST = withPermission(
     }
 
     return await transaction(async (conn) => {
-      const [dieRows]: any = await conn.execute(
+      const [dieRows]: Loose = await conn.execute(
         'SELECT id, template_code, template_name, cumulative_impressions, max_impressions, warning_threshold, pieces_per_impression, die_status FROM prd_die_template WHERE id = ? AND deleted = 0',
         [dieId]
       );

@@ -8,51 +8,51 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const stats: Record<string, number> = {};
 
     const isEmpty = async (table: string): Promise<boolean> => {
-      const [rows]: any = await conn.execute(`SELECT COUNT(*) as cnt FROM \`${table}\``);
+      const [rows]: Loose = await conn.execute(`SELECT COUNT(*) as cnt FROM \`${table}\``);
       return rows[0].cnt === 0;
     };
 
-    const [existingWarehouses]: any = await conn.execute(
+    const [existingWarehouses]: Loose = await conn.execute(
       'SELECT id, warehouse_code, warehouse_name FROM inv_warehouse WHERE deleted = 0 OR deleted IS NULL LIMIT 10'
     );
-    const [existingSuppliers]: any = await conn.execute(
+    const [existingSuppliers]: Loose = await conn.execute(
       'SELECT id, supplier_code, supplier_name FROM pur_supplier LIMIT 10'
     );
-    const [existingCustomers]: any = await conn.execute(
+    const [existingCustomers]: Loose = await conn.execute(
       'SELECT id, customer_code, customer_name FROM crm_customer LIMIT 10'
     );
-    const [existingMaterials]: any = await conn.execute(
+    const [existingMaterials]: Loose = await conn.execute(
       'SELECT id, material_code, material_name, specification, unit, purchase_price, sale_price, material_type FROM inv_material LIMIT 20'
     );
-    const [existingEquipment]: any = await conn.execute(
+    const [existingEquipment]: Loose = await conn.execute(
       'SELECT id, equipment_code, equipment_name FROM eqp_equipment LIMIT 10'
     );
-    const [existingWorkOrders]: any = await conn.execute(
+    const [existingWorkOrders]: Loose = await conn.execute(
       'SELECT id, order_no FROM prod_work_order LIMIT 10'
     );
-    const [existingDieTemplates]: any = await conn.execute(
+    const [existingDieTemplates]: Loose = await conn.execute(
       'SELECT id, template_code, template_name FROM prd_die_template LIMIT 10'
     );
-    const [existingProcessRoutes]: any = await conn.execute(
+    const [existingProcessRoutes]: Loose = await conn.execute(
       'SELECT id, route_code, route_name FROM prd_process_route LIMIT 10'
     );
-    const [existingBoms]: any = await conn.execute(
+    const [existingBoms]: Loose = await conn.execute(
       'SELECT id, bom_name, product_id FROM prd_bom LIMIT 10'
     );
-    const [existingBomDetails]: any = await conn.execute(
+    const [existingBomDetails]: Loose = await conn.execute(
       'SELECT id, bom_id, material_id FROM prd_bom_detail LIMIT 20'
     );
-    const [existingBomLines]: any = await conn.execute(
+    const [existingBomLines]: Loose = await conn.execute(
       'SELECT id, bom_id, material_id, material_code, material_name FROM bom_line LIMIT 20'
     );
-    const [existingProducts]: any = await conn.execute(
+    const [existingProducts]: Loose = await conn.execute(
       'SELECT id, product_code, product_name FROM mdm_product LIMIT 10'
     );
-    const [existingLocations]: any = await conn.execute(
+    const [existingLocations]: Loose = await conn.execute(
       'SELECT id, location_code, location_name FROM inv_location LIMIT 10'
     );
-    const [existingUsers]: any = await conn.execute('SELECT id, username FROM sys_user LIMIT 10');
-    const [existingVehicles]: any = await conn.execute(
+    const [existingUsers]: Loose = await conn.execute('SELECT id, username FROM sys_user LIMIT 10');
+    const [existingVehicles]: Loose = await conn.execute(
       'SELECT id, vehicle_no FROM delivery_vehicle LIMIT 10'
     );
 
@@ -368,8 +368,8 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== hr_training_participant =====
     if (await isEmpty('hr_training_participant')) {
-      const [trainingIds]: any = await conn.execute('SELECT id FROM hr_training LIMIT 10');
-      const [employeeIds]: any = await conn.execute('SELECT id, name FROM sys_employee LIMIT 10');
+      const [trainingIds]: Loose = await conn.execute('SELECT id FROM hr_training LIMIT 10');
+      const [employeeIds]: Loose = await conn.execute('SELECT id, name FROM sys_employee LIMIT 10');
       let tpCount = 0;
       for (const t of trainingIds) {
         for (let j = 0; j < Math.min(3, employeeIds.length); j++) {
@@ -386,7 +386,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== ink_mixed_record =====
     if (await isEmpty('ink_mixed_record')) {
-      const [baseInks]: any = await conn.execute(
+      const [baseInks]: Loose = await conn.execute(
         'SELECT id, ink_code, ink_name FROM base_ink LIMIT 10'
       );
       for (let i = 1; i <= 10; i++) {
@@ -468,7 +468,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             `操作员${i}`,
           ]
         );
-        const [piRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [piRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const piId = piRows[0].id;
         const m = existingMaterials[(i - 1) % existingMaterials.length] || mat;
         await conn.execute(
@@ -505,7 +505,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             `配送员${i}`,
           ]
         );
-        const [soRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [soRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const soId = soRows[0].id;
         const m = existingMaterials[(i - 1) % existingMaterials.length] || mat;
         await conn.execute(
@@ -532,7 +532,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           `INSERT INTO inv_stock_adjust (adjust_no, warehouse_id, adjust_date, adjust_type, status, operator_name) VALUES (?, ?, ?, ?, 2, ?)`,
           [`ADJ202604${String(i).padStart(3, '0')}`, w.id, '2026-04-01', (i % 3) + 1, `操作员${i}`]
         );
-        const [adjRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [adjRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const adjId = adjRows[0].id;
         const m = existingMaterials[(i - 1) % existingMaterials.length] || mat;
         await conn.execute(
@@ -561,7 +561,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           `INSERT INTO inv_stocktaking (taking_no, warehouse_id, taking_date, taking_type, status, operator_name) VALUES (?, ?, ?, ?, 4, ?)`,
           [`TK202604${String(i).padStart(3, '0')}`, w.id, '2026-04-01', (i % 3) + 1, `盘点员${i}`]
         );
-        const [tkRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [tkRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const tkId = tkRows[0].id;
         const m = existingMaterials[(i - 1) % existingMaterials.length] || mat;
         const loc = existingLocations[(i - 1) % existingLocations.length] || { id: 1 };
@@ -600,7 +600,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             `操作员${i}`,
           ]
         );
-        const [trRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [trRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const trId = trRows[0].id;
         const m = existingMaterials[(i - 1) % existingMaterials.length] || mat;
         await conn.execute(
@@ -621,7 +621,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== inv_trace_detail =====
     if (await isEmpty('inv_trace_detail')) {
-      const [traceRecords]: any = await conn.execute(
+      const [traceRecords]: Loose = await conn.execute(
         'SELECT id, trace_no FROM inv_trace_record LIMIT 10'
       );
       if (traceRecords.length > 0) {
@@ -868,7 +868,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             `操作员${i}`,
           ]
         );
-        const [miRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [miRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const m = existingMaterials[(i - 1) % existingMaterials.length] || mat;
         await conn.execute(
           `INSERT INTO prd_material_issue_item (issue_id, material_id, material_code, material_name, required_qty, issued_qty, unit, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -903,7 +903,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             `操作员${i}`,
           ]
         );
-        const [mrRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [mrRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const m = existingMaterials[(i - 1) % existingMaterials.length] || mat;
         await conn.execute(
           `INSERT INTO prd_material_return_item (return_id, material_id, material_code, material_name, return_qty, unit, batch_no) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -923,7 +923,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== prd_product_label =====
     if (await isEmpty('prd_product_label')) {
-      const [existingLabelCount]: any = await conn.execute(
+      const [existingLabelCount]: Loose = await conn.execute(
         'SELECT COUNT(*) as cnt FROM prd_product_label'
       );
       if (existingLabelCount[0].cnt === 0) {
@@ -953,14 +953,14 @@ export const POST = withPermission(async (_request: NextRequest) => {
     }
     // ===== prd_process_card_material =====
     if (await isEmpty('prd_process_card_material')) {
-      const [existingPcmCount]: any = await conn.execute(
+      const [existingPcmCount]: Loose = await conn.execute(
         'SELECT COUNT(*) as cnt FROM prd_process_card_material'
       );
       if (existingPcmCount[0].cnt === 0) {
-        const [processCards]: any = await conn.execute(
+        const [processCards]: Loose = await conn.execute(
           'SELECT id, card_no FROM prd_process_card LIMIT 10'
         );
-        const [productLabels]: any = await conn.execute(
+        const [productLabels]: Loose = await conn.execute(
           'SELECT id, label_no FROM prd_product_label LIMIT 10'
         );
         if (processCards.length > 0 && productLabels.length > 0) {
@@ -1052,7 +1052,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             '2026-04-15',
           ]
         );
-        const [poRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [poRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const m = existingMaterials[(i - 1) % existingMaterials.length] || mat;
         const qty = 100 + i * 10;
         const price = m.purchase_price || 10.0;
@@ -1088,7 +1088,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             `申请人${i}`,
           ]
         );
-        const [prRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [prRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const qty = 50 + i * 10;
         const price = m.purchase_price || 10.0;
         await conn.execute(
@@ -1175,7 +1175,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
             `检验员${i}`,
           ]
         );
-        const [qciRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [qciRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const items = ['外观检查', '尺寸测量', '色差检测', '附着力测试', '耐溶剂性'];
         for (let j = 0; j < Math.min(3, items.length); j++) {
           await conn.execute(
@@ -1255,7 +1255,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     // ===== qc_unqualified =====
     if (await isEmpty('qc_unqualified')) {
-      const [unqualifiedRecords]: any = await conn.execute(
+      const [unqualifiedRecords]: Loose = await conn.execute(
         'SELECT id, unqualified_no FROM qc_unqualified LIMIT 10'
       );
       const handleTypes = [1, 2, 3, 1, 2, 3, 1, 2, 3, 1];

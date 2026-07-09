@@ -6,7 +6,7 @@ export function filterApprovedRecords(records: InboundRecord[]): InboundRecord[]
 
 export function mapRecordsToLabels(records: InboundRecord[]): PrintLabel[] {
   return records.flatMap((record) =>
-    (record.items || []).map((item: any, idx: number) => ({
+    (record.items || []).map((item: Loose, idx: number) => ({
       id: `${record.id}-${idx}`,
       labelNo: `${record.order_no}-${idx + 1}`,
       orderNo: record.order_no,

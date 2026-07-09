@@ -29,5 +29,5 @@ if (typeof globalThis.IntersectionObserver === 'undefined') {
     takeRecords(): IntersectionObserverEntry[] {
       return [];
     }
-  } as any;
+  } as Loose;
 }

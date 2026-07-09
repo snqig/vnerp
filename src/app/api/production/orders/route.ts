@@ -15,7 +15,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     FROM prod_work_order wo
     WHERE wo.deleted = 0
   `;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (keyword) {
     sql += ` AND (wo.work_order_no LIKE ? OR wo.product_name LIKE ?)`;
@@ -33,7 +33,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   const orders = await query(sql, values);
 
-  const result = (orders as any[]).map((order: any) => ({
+  const result = (orders as Loose[]).map((order: Loose) => ({
     id: order.id,
     work_order_no: order.work_order_no,
     order_id: order.sales_order_id,
@@ -53,7 +53,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }));
 
   let countSql = `SELECT COUNT(*) as total FROM prod_work_order wo WHERE wo.deleted = 0`;
-  const countValues: any[] = [];
+  const countValues: Loose[] = [];
   if (keyword) {
     countSql += ` AND (wo.work_order_no LIKE ? OR wo.product_name LIKE ?)`;
     countValues.push(`%${keyword}%`, `%${keyword}%`);
@@ -63,7 +63,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     countValues.push(status);
   }
   const countResult = await query(countSql, countValues);
-  const total = (countResult as any[])[0]?.total || 0;
+  const total = (countResult as Loose[])[0]?.total || 0;
 
   return successResponse({
     list: result,

@@ -55,7 +55,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let whereClause = 'WHERE l.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     whereClause += ` AND (l.label_no LIKE ? OR l.material_code LIKE ? OR l.material_name LIKE ? OR l.batch_no LIKE ?)`;
@@ -251,7 +251,7 @@ export const PUT = withPermission(
     }
 
     const updateFields: string[] = [];
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     const fieldColumnMap: Record<string, string> = {
       qrCode: 'qr_code',
@@ -322,7 +322,7 @@ export const DELETE = withPermission(
 async function queryPaginated<T>(
   sql: string,
   countSql: string,
-  params: any[],
+  params: Loose[],
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;

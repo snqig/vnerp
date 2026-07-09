@@ -128,13 +128,13 @@ export async function listColors(params: {
     sqlParams.push(Number(status));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM dcprint_ink_color c ${where}`,
     sqlParams
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT c.*,
        (SELECT v.version_no FROM dcprint_ink_formula_version v
         WHERE v.color_id = c.id AND v.status = 2 AND v.is_deleted = 0
@@ -147,14 +147,14 @@ export async function listColors(params: {
     [...sqlParams, pageSize, (page - 1) * pageSize]
   );
 
-  return { list: rows as any[], total };
+  return { list: rows as Loose[], total };
 }
 
 export async function createColor(
   data: Omit<InkColor, 'id' | 'create_time' | 'update_time' | 'create_by' | 'update_by'>,
   operatorId: number
 ): Promise<number> {
-  const result: any = await execute(
+  const result: Loose = await execute(
     `INSERT INTO dcprint_ink_color (color_code, color_name, color_series, base_ink_type, pantone_code, remark, status, create_by, update_by)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
@@ -192,7 +192,7 @@ export async function updateColor(
   for (const f of editable) {
     if (data[f as keyof InkColor] !== undefined) {
       fields.push(`${f} = ?`);
-      values.push(data[f as keyof InkColor] as any);
+      values.push(data[f as keyof InkColor] as Loose);
     }
   }
   if (fields.length === 0) return;
@@ -214,7 +214,7 @@ export async function deleteColor(id: number): Promise<void> {
 // ===== 版本管理 =====
 
 export async function listVersions(colorId: number): Promise<FormulaVersion[]> {
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT v.* FROM dcprint_ink_formula_version v
      WHERE v.color_id = ? AND v.is_deleted = 0
      ORDER BY v.status ASC, v.create_time DESC`,
@@ -224,7 +224,7 @@ export async function listVersions(colorId: number): Promise<FormulaVersion[]> {
 }
 
 export async function getVersionDetail(id: number): Promise<FormulaVersion | null> {
-  const versions: any = await query(
+  const versions: Loose = await query(
     `SELECT v.*, c.color_code, c.color_name, c.pantone_code, c.base_ink_type
      FROM dcprint_ink_formula_version v
      LEFT JOIN dcprint_ink_color c ON v.color_id = c.id
@@ -234,7 +234,7 @@ export async function getVersionDetail(id: number): Promise<FormulaVersion | nul
   if (!versions || versions.length === 0) return null;
 
   const version = versions[0];
-  const items: any = await query(
+  const items: Loose = await query(
     `SELECT * FROM dcprint_ink_formula_item WHERE version_id = ? ORDER BY sort, add_order`,
     [id]
   );
@@ -256,7 +256,7 @@ export async function createDraftVersion(
   operatorId: number
 ): Promise<number> {
   // 生成版本号：查找该色号已有版本数，生成 V1.0, V1.1, ...
-  const existing: any = await query(
+  const existing: Loose = await query(
     `SELECT version_no FROM dcprint_ink_formula_version
      WHERE color_id = ? AND is_deleted = 0 ORDER BY id DESC LIMIT 1`,
     [data.color_id]
@@ -274,7 +274,7 @@ export async function createDraftVersion(
   }
 
   const result = await transaction(async (conn) => {
-    const [insertResult]: any = await conn.execute(
+    const [insertResult]: Loose = await conn.execute(
       `INSERT INTO dcprint_ink_formula_version
        (color_id, version_no, version_name, status, change_reason, process_note, total_weight, unit, shelf_life_hours, cost_calc_status, create_by, update_by)
        VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, 0, ?, ?)`,
@@ -347,7 +347,7 @@ export async function duplicateVersion(
   }
 
   const result = await transaction(async (conn) => {
-    const [insertResult]: any = await conn.execute(
+    const [insertResult]: Loose = await conn.execute(
       `INSERT INTO dcprint_ink_formula_version
        (color_id, version_no, version_name, status, change_reason, source_version_id, process_note, total_weight, unit, shelf_life_hours, cost_calc_status, create_by, update_by)
        VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
@@ -435,7 +435,7 @@ export async function activateVersion(id: number, operatorId: number): Promise<v
     // 计算成本快照
     await calculateAndSnapshotCost(conn, id);
 
-    const [costRows]: any = await conn.execute(
+    const [costRows]: Loose = await conn.execute(
       'SELECT theoretical_cost FROM dcprint_ink_formula_version WHERE id = ?',
       [id]
     );
@@ -520,7 +520,7 @@ export async function updateVersion(
     for (const f of editable) {
       if (data[f as keyof typeof data] !== undefined) {
         fields.push(`${f} = ?`);
-        values.push((data as any)[f]);
+        values.push((data as Loose)[f]);
       }
     }
 
@@ -689,7 +689,7 @@ export async function compareVersions(leftId: number, rightId: number): Promise<
     'theoretical_cost',
   ];
   for (const f of baseFields) {
-    if (String((left as any)[f] ?? '') !== String((right as any)[f] ?? '')) {
+    if (String((left as Loose)[f] ?? '') !== String((right as Loose)[f] ?? '')) {
       diffFields.push(f);
     }
   }
@@ -735,8 +735,8 @@ export async function compareVersions(leftId: number, rightId: number): Promise<
  * 理论成本 = Σ (配比比例% × 原料单位成本)
  * 成本取值：base_ink.unit_price（计划价）
  */
-async function calculateAndSnapshotCost(conn: any, versionId: number): Promise<void> {
-  const items: any = await query(
+async function calculateAndSnapshotCost(conn: Loose, versionId: number): Promise<void> {
+  const items: Loose = await query(
     `SELECT fi.*, bi.unit_price
      FROM dcprint_ink_formula_item fi
      LEFT JOIN base_ink bi ON fi.material_id = bi.id
@@ -797,7 +797,7 @@ export async function previewCost(items: FormulaItem[]): Promise<{
   const materialIds = items.filter((i) => i.material_id).map((i) => i.material_id);
   const costMap = new Map<number, number>();
   if (materialIds.length > 0) {
-    const costs: any = await query(`SELECT id, unit_price FROM base_ink WHERE id IN (?)`, [
+    const costs: Loose = await query(`SELECT id, unit_price FROM base_ink WHERE id IN (?)`, [
       materialIds,
     ]);
     for (const c of costs) {

@@ -12,11 +12,14 @@ export const POST = withPermission(
         try {
           await conn.execute(sql);
           results.push(`${label}: OK`);
-        } catch (e: any) {
-          if (e.code === 'ER_DUP_FIELDNAME' || e.code === 'ER_DUP_KEYNAME') {
+        } catch (e) {
+          if (
+            (e as Error & { code?: string }).code === 'ER_DUP_FIELDNAME' ||
+            (e as Error & { code?: string }).code === 'ER_DUP_KEYNAME'
+          ) {
             results.push(`${label}: 已存在`);
           } else {
-            results.push(`${label}: ${e.message}`);
+            results.push(`${label}: ${(e as Error).message}`);
           }
         }
       };
@@ -25,11 +28,11 @@ export const POST = withPermission(
         try {
           await conn.execute(sql);
           results.push(`${name}: 创建成功`);
-        } catch (e: any) {
-          if (e.code === 'ER_TABLE_EXISTS_ERROR') {
+        } catch (e) {
+          if ((e as Error & { code?: string }).code === 'ER_TABLE_EXISTS_ERROR') {
             results.push(`${name}: 已存在`);
           } else {
-            results.push(`${name}: ${e.message}`);
+            results.push(`${name}: ${(e as Error).message}`);
           }
         }
       };

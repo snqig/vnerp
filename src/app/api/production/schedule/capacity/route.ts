@@ -9,7 +9,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const endDate = searchParams.get('endDate');
 
   // 1. 获取各车间设备数量与总产能
-  const equipmentRows: any = await query(
+  const equipmentRows: Loose = await query(
     `SELECT 
       workshop,
       equipment_type,
@@ -23,13 +23,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   // 2. 获取排程占用情况
   let scheduleFilter = '';
-  const scheduleParams: any[] = [];
+  const scheduleParams: Loose[] = [];
   if (startDate && endDate) {
     scheduleFilter = ' AND planned_start >= ? AND planned_end <= ?';
     scheduleParams.push(startDate, endDate);
   }
 
-  const scheduleRows: any = await query(
+  const scheduleRows: Loose = await query(
     `SELECT 
       workshop,
       COUNT(*) as schedule_count,
@@ -43,7 +43,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   // 3. 按设备统计占用
-  const equipmentUsageRows: any = await query(
+  const equipmentUsageRows: Loose = await query(
     `SELECT 
       e.id as equipment_id,
       e.equipment_name,
@@ -95,7 +95,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   // 设备级利用率
-  const equipmentUtilization = equipmentUsageRows.map((row: any) => {
+  const equipmentUtilization = equipmentUsageRows.map((row: Loose) => {
     const dailyCapacity = row.capacity_per_hour * 8;
     const utilizationRate = dailyCapacity > 0 ? Math.round((row.used_hours / 8) * 100) : 0;
     return {
@@ -117,12 +117,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       workshopCapacity: capacityData,
       equipmentUtilization,
       summary: {
-        totalEquipment: equipmentRows.reduce((sum: number, r: any) => sum + r.equipment_count, 0),
+        totalEquipment: equipmentRows.reduce((sum: number, r: Loose) => sum + r.equipment_count, 0),
         totalWorkshops: workshopMap.size,
         avgUtilization:
           capacityData.length > 0
             ? Math.round(
-                capacityData.reduce((sum: number, c: any) => sum + c.utilizationRate, 0) /
+                capacityData.reduce((sum: number, c: Loose) => sum + c.utilizationRate, 0) /
                   capacityData.length
               )
             : 0,

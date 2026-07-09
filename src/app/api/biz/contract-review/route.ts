@@ -11,7 +11,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const orderNo = searchParams.get('orderNo') || '';
 
   let where = 'WHERE cr.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (status) {
     where += ' AND cr.status = ?';
@@ -22,13 +22,13 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push(`%${orderNo}%`);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM biz_contract_review cr ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT cr.* FROM biz_contract_review cr ${where} ORDER BY cr.create_time DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -45,7 +45,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   }
 
   const result = await transaction(async (conn) => {
-    const [existingReview]: any = await conn.execute(
+    const [existingReview]: Loose = await conn.execute(
       'SELECT id, status FROM biz_contract_review WHERE order_id = ? AND deleted = 0',
       [order_id]
     );
@@ -62,13 +62,13 @@ export const POST = withPermission(async (request: NextRequest) => {
       String(now.getDate()).padStart(2, '0') +
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-    const [orderRows]: any = await conn.execute(
+    const [orderRows]: Loose = await conn.execute(
       'SELECT id, order_no, customer_id, customer_name, total_amount, delivery_date FROM sal_order WHERE id = ? AND deleted = 0',
       [order_id]
     );
 
     const orderData = orderRows.length > 0 ? orderRows[0] : {};
-    const [insertResult]: any = await conn.execute(
+    const [insertResult]: Loose = await conn.execute(
       `INSERT INTO biz_contract_review (review_no, order_id, order_no, customer_id, customer_name, total_amount, delivery_date, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
       [
@@ -102,7 +102,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
   }
 
   const result = await transaction(async (conn) => {
-    const [reviewRows]: any = await conn.execute(
+    const [reviewRows]: Loose = await conn.execute(
       'SELECT * FROM biz_contract_review WHERE id = ? AND deleted = 0 FOR UPDATE',
       [id]
     );
@@ -125,7 +125,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
       [opinion || null, reviewer || null, deptResult || null, id]
     );
 
-    const [updatedReview]: any = await conn.execute(
+    const [updatedReview]: Loose = await conn.execute(
       'SELECT * FROM biz_contract_review WHERE id = ?',
       [id]
     );

@@ -19,9 +19,9 @@ export const GET = withPermission(
       const cpuUsage = process.cpuUsage();
 
       // 数据库统计
-      let dbStats: Record<string, any> = {};
+      let dbStats: Record<string, Loose> = {};
       try {
-        const [userCount, orderCount, inventoryCount, logCount]: any[] = await Promise.all([
+        const [userCount, orderCount, inventoryCount, logCount]: Loose[] = await Promise.all([
           query('SELECT COUNT(*) as count FROM sys_user WHERE deleted = 0'),
           query('SELECT COUNT(*) as count FROM purchase_order WHERE deleted = 0'),
           query('SELECT COUNT(*) as count FROM warehouse_stock'),
@@ -70,7 +70,7 @@ export const GET = withPermission(
     // 数据库连接池状态
     if (type === 'database') {
       try {
-        const [threads, queries, slowQueries, connections]: any[] = await Promise.all([
+        const [threads, queries, slowQueries, connections]: Loose[] = await Promise.all([
           query('SHOW STATUS LIKE "Threads_connected"'),
           query('SHOW STATUS LIKE "Queries"'),
           query('SHOW STATUS LIKE "Slow_queries"'),
@@ -83,15 +83,15 @@ export const GET = withPermission(
           slowQueries: Number(slowQueries[0]?.Value || 0),
           maxUsedConnections: Number(connections[0]?.Value || 0),
         });
-      } catch (e: any) {
-        return successResponse({ error: e.message });
+      } catch (e) {
+        return successResponse({ error: (e as Error).message });
       }
     }
 
     // 最近操作日志
     if (type === 'logs') {
       const limit = parseInt(searchParams.get('limit') || '50');
-      const logs: any = await query(
+      const logs: Loose = await query(
         `SELECT l.*, u.real_name as operator_name
          FROM sys_operation_log l
          LEFT JOIN sys_user u ON l.user_id = u.id

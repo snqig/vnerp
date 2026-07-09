@@ -31,7 +31,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     `,
       [id]
     );
-    return successResponse((rows as any[])[0], '标签详情');
+    return successResponse((rows as Loose[])[0], '标签详情');
   }
 
   if (labelNo) {
@@ -45,7 +45,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     `,
       [labelNo]
     );
-    return successResponse((rows as any[])[0], '标签详情');
+    return successResponse((rows as Loose[])[0], '标签详情');
   }
 
   const page = parseInt(searchParams.get('page') || '1');
@@ -53,7 +53,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const offset = (page - 1) * pageSize;
 
   let whereClause = 'ml.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (materialCode) {
     whereClause += ' AND ml.material_code = ?';
@@ -93,7 +93,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   return successResponse(
     {
       list: rows,
-      total: (countResult as any[])[0].total,
+      total: (countResult as Loose[])[0].total,
       page,
       pageSize,
     },
@@ -172,10 +172,10 @@ export const POST = withPermission(async (request: NextRequest) => {
     ]
   );
 
-  return successResponse({ id: (result as any).insertId, labelNo }, '标签创建成功');
+  return successResponse({ id: (result as Loose).insertId, labelNo }, '标签创建成功');
 });
 
-async function handleCut(body: any) {
+async function handleCut(body: Loose) {
   const { parentLabelId, cutWidths, operatorName } = body;
 
   if (!parentLabelId || !cutWidths || !Array.isArray(cutWidths) || cutWidths.length === 0) {
@@ -189,7 +189,7 @@ async function handleCut(body: any) {
     [parentLabelId]
   );
 
-  const parent = (parentLabel as any[])[0];
+  const parent = (parentLabel as Loose[])[0];
 
   if (!parent) {
     return errorResponse('父标签不存在', 404);
@@ -205,7 +205,7 @@ async function handleCut(body: any) {
     return errorResponse(`分切总宽度 ${totalCutWidth} 超过原宽度 ${parent.width}`, 400);
   }
 
-  const newLabels: any[] = [];
+  const newLabels: Loose[] = [];
 
   for (const cutWidth of cutWidths) {
     const newLabelNo = generateLabelNo();
@@ -250,7 +250,7 @@ async function handleCut(body: any) {
     );
 
     newLabels.push({
-      id: (result as any).insertId,
+      id: (result as Loose).insertId,
       labelNo: newLabelNo,
       width: cutWidth,
       quantity: newQuantity,
@@ -285,7 +285,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
   }
 
   const updateFields: string[] = [];
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   const fieldMap: Record<string, string> = {
     warehouseId: 'warehouse_id',

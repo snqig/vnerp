@@ -333,8 +333,8 @@ export default function DieTemplatePage() {
 
   const sortedList = [...list].sort((a, b) => {
     if (!sortField) return 0;
-    const aVal = (a as Record<string, any>)[sortField];
-    const bVal = (b as Record<string, any>)[sortField];
+    const aVal = (a as Record<string, Loose>)[sortField];
+    const bVal = (b as Record<string, Loose>)[sortField];
     if (aVal == null && bVal == null) return 0;
     if (aVal == null) return 1;
     if (bVal == null) return -1;

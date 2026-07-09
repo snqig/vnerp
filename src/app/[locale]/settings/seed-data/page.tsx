@@ -54,9 +54,9 @@ export default function SeedDataPage() {
         setError(result.message || '初始化失败');
         toast.error(result.message || '初始化失败');
       }
-    } catch (e: any) {
-      setError(e.message || '网络错误');
-      toast.error('初始化失败: ' + e.message);
+    } catch (e) {
+      setError((e as Error).message || '网络错误');
+      toast.error('初始化失败: ' + (e as Error).message);
     } finally {
       setSystemLoading(false);
     }
@@ -84,9 +84,9 @@ export default function SeedDataPage() {
         setError(result.message || '初始化失败');
         toast.error(result.message || '初始化失败');
       }
-    } catch (e: any) {
-      setError(e.message || '网络错误');
-      toast.error('初始化失败: ' + e.message);
+    } catch (e) {
+      setError((e as Error).message || '网络错误');
+      toast.error('初始化失败: ' + (e as Error).message);
     } finally {
       setBusinessLoading(false);
     }

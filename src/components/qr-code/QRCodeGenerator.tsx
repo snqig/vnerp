@@ -28,7 +28,7 @@ import { logger } from '@/lib/logger';
 import type { QRCodeType, QRCodeGenerateParams } from './qr-code-types';
 
 interface QRCodeGeneratorProps {
-  onSuccess?: (qrCode: string, data: any) => void;
+  onSuccess?: (qrCode: string, data: Loose) => void;
   initialType?: QRCodeType;
   showDialog?: boolean;
   onDialogChange?: (open: boolean) => void;
@@ -90,7 +90,9 @@ export function QRCodeGenerator({
         toast({ title: t('generateFailed'), description: result.message, variant: 'destructive' });
       }
     } catch (error) {
-      logger.error(ctx, '生成异常', { error: error instanceof Error ? error.message : String(error) });
+      logger.error(ctx, '生成异常', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       toast({ title: tc('operationFailed'), variant: 'destructive' });
     } finally {
       setIsGenerating(false);

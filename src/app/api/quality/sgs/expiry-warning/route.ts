@@ -7,7 +7,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const { searchParams } = new URL(request.url);
   const days = Number(searchParams.get('days') || 90);
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT c.*, DATEDIFF(c.expire_date, CURDATE()) as days_remaining
      FROM qms_sgs_cert c
      WHERE c.deleted = 0 
@@ -18,8 +18,8 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     [days]
   );
 
-  const expired: any[] = [];
-  const expiring: any[] = [];
+  const expired: Loose[] = [];
+  const expiring: Loose[] = [];
 
   for (const row of rows) {
     const daysLeft = Number(row.days_remaining);
@@ -31,7 +31,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   if (expired.length > 0) {
-    const ids = expired.map((r: any) => r.id);
+    const ids = expired.map((r: Loose) => r.id);
     await execute(
       `UPDATE qms_sgs_cert SET status = 3 WHERE id IN (${ids.map(() => '?').join(',')}) AND status = 1`,
       ids

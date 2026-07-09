@@ -23,7 +23,7 @@ export async function generateReceivable(
 ): Promise<{ success: boolean; receivableId?: number; receivableNo?: string; message: string }> {
   try {
     // 查询销售订单和客户信息
-    const orderRows: any = await query(
+    const orderRows: Loose = await query(
       `SELECT so.*, c.customer_name
        FROM sal_order so
        LEFT JOIN crm_customer c ON so.customer_id = c.id
@@ -43,7 +43,7 @@ export async function generateReceivable(
     defaultDueDate.setDate(defaultDueDate.getDate() + 30);
     const finalDueDate = dueDate || defaultDueDate.toISOString().split('T')[0];
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO fin_receivable (
         receivable_no, source_type, source_id, source_no,
         customer_id, amount, received_amount, balance,
@@ -69,9 +69,9 @@ export async function generateReceivable(
       receivableNo,
       message: `应收单生成成功: ${receivableNo}`,
     };
-  } catch (error: any) {
-    secureLog('error', '应收单生成失败', { error: error.message, salesOrderId });
-    return { success: false, message: `生成失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '应收单生成失败', { error: (error as Error).message, salesOrderId });
+    return { success: false, message: `生成失败: ${(error as Error).message}` };
   }
 }
 
@@ -90,7 +90,7 @@ export async function recordReceipt(
   try {
     const result = await transaction(async (conn) => {
       // 1. 查询应收单
-      const [recRows]: any = await conn.execute(`SELECT * FROM fin_receivable WHERE id = ?`, [
+      const [recRows]: Loose = await conn.execute(`SELECT * FROM fin_receivable WHERE id = ?`, [
         receivableId,
       ]);
 
@@ -150,9 +150,9 @@ export async function recordReceipt(
       success: true,
       message: `回款录入成功，已收${result.newReceived}，余额${result.balance}`,
     };
-  } catch (error: any) {
-    secureLog('error', '回款录入失败', { error: error.message, receivableId });
-    return { success: false, message: `录入失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '回款录入失败', { error: (error as Error).message, receivableId });
+    return { success: false, message: `录入失败: ${(error as Error).message}` };
   }
 }
 
@@ -170,7 +170,7 @@ export async function generatePayable(
   dueDate?: string
 ): Promise<{ success: boolean; payableId?: number; payableNo?: string; message: string }> {
   try {
-    const orderRows: any = await query(
+    const orderRows: Loose = await query(
       `SELECT po.*, s.supplier_name
        FROM pur_order po
        LEFT JOIN pur_supplier s ON po.supplier_id = s.id
@@ -189,7 +189,7 @@ export async function generatePayable(
     defaultDueDate.setDate(defaultDueDate.getDate() + 30);
     const finalDueDate = dueDate || defaultDueDate.toISOString().split('T')[0];
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO fin_payable (
         payable_no, source_type, source_id, source_no,
         supplier_id, amount, paid_amount, balance,
@@ -215,9 +215,9 @@ export async function generatePayable(
       payableNo,
       message: `应付单生成成功: ${payableNo}`,
     };
-  } catch (error: any) {
-    secureLog('error', '应付单生成失败', { error: error.message, purchaseOrderId });
-    return { success: false, message: `生成失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '应付单生成失败', { error: (error as Error).message, purchaseOrderId });
+    return { success: false, message: `生成失败: ${(error as Error).message}` };
   }
 }
 
@@ -235,7 +235,7 @@ export async function recordPayment(
 ): Promise<{ success: boolean; message: string }> {
   try {
     const result = await transaction(async (conn) => {
-      const [payRows]: any = await conn.execute(`SELECT * FROM fin_payable WHERE id = ?`, [
+      const [payRows]: Loose = await conn.execute(`SELECT * FROM fin_payable WHERE id = ?`, [
         payableId,
       ]);
 
@@ -293,9 +293,9 @@ export async function recordPayment(
       success: true,
       message: `付款录入成功，已付${result.newPaid}，余额${result.balance}`,
     };
-  } catch (error: any) {
-    secureLog('error', '付款录入失败', { error: error.message, payableId });
-    return { success: false, message: `录入失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '付款录入失败', { error: (error as Error).message, payableId });
+    return { success: false, message: `录入失败: ${(error as Error).message}` };
   }
 }
 
@@ -308,10 +308,10 @@ export async function recordPayment(
  */
 export async function calculateWorkOrderCost(
   workOrderId: number
-): Promise<{ success: boolean; message: string; cost?: any }> {
+): Promise<{ success: boolean; message: string; cost?: Loose }> {
   try {
     // 1. 查询工单信息
-    const woRows: any = await query(`SELECT * FROM prd_work_order WHERE id = ? AND deleted = 0`, [
+    const woRows: Loose = await query(`SELECT * FROM prd_work_order WHERE id = ? AND deleted = 0`, [
       workOrderId,
     ]);
 
@@ -322,7 +322,7 @@ export async function calculateWorkOrderCost(
     const workOrder = woRows[0];
 
     // 2. 计算原材料成本（从小料领用记录）
-    const materialCostRows: any = await query(
+    const materialCostRows: Loose = await query(
       `SELECT COALESCE(SUM(total_cost), 0) as total_cost
        FROM material_requisition_items
        WHERE requisition_id IN (
@@ -334,7 +334,7 @@ export async function calculateWorkOrderCost(
     const materialCost = parseFloat(materialCostRows[0]?.total_cost) || 0;
 
     // 3. 计算人工成本（从工序报工）
-    const laborCostRows: any = await query(
+    const laborCostRows: Loose = await query(
       `SELECT COALESCE(SUM(actual_hours * hourly_rate), 0) as total_cost
        FROM prd_work_report
        WHERE work_order_id = ?`,
@@ -345,7 +345,7 @@ export async function calculateWorkOrderCost(
     // 4. 计算制造费用 — 优先从事件驱动已归集的实际数据读取
     // 事件路径（InkCostHandler/ScreenPlateCostHandler）在工单完工时已将实际制造费用累加写入 work_order_costs
     // 仅当事件路径未写入时，才使用估算系数兜底
-    const existingMfgRows: any = await query(
+    const existingMfgRows: Loose = await query(
       `SELECT manufacturing_cost, material_cost FROM work_order_costs WHERE work_order_id = ?`,
       [workOrderId]
     );
@@ -364,7 +364,10 @@ export async function calculateWorkOrderCost(
       }
     } else {
       // 事件路径无数据，使用配置系数估算兜底
-      const manufacturingCostRatio = await CalcParamService.getDecimal('cost.manufacturing_cost_ratio', 0.5);
+      const manufacturingCostRatio = await CalcParamService.getDecimal(
+        'cost.manufacturing_cost_ratio',
+        0.5
+      );
       manufacturingCost = laborCost * manufacturingCostRatio;
     }
 
@@ -373,7 +376,7 @@ export async function calculateWorkOrderCost(
     const unitCost = totalCost / completedQty;
 
     // 5. 保存或更新成本记录
-    const existingCost: any = await query(
+    const existingCost: Loose = await query(
       `SELECT id FROM work_order_costs WHERE work_order_id = ?`,
       [workOrderId]
     );
@@ -391,7 +394,15 @@ export async function calculateWorkOrderCost(
           status = 1,
           update_time = NOW()
         WHERE work_order_id = ?`,
-        [effectiveMaterialCost, laborCost, manufacturingCost, totalCost, unitCost, completedQty, workOrderId]
+        [
+          effectiveMaterialCost,
+          laborCost,
+          manufacturingCost,
+          totalCost,
+          unitCost,
+          completedQty,
+          workOrderId,
+        ]
       );
     } else {
       await execute(
@@ -433,9 +444,9 @@ export async function calculateWorkOrderCost(
         quantity: completedQty,
       },
     };
-  } catch (error: any) {
-    secureLog('error', '工单成本计算失败', { error: error.message, workOrderId });
-    return { success: false, message: `计算失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '工单成本计算失败', { error: (error as Error).message, workOrderId });
+    return { success: false, message: `计算失败: ${(error as Error).message}` };
   }
 }
 
@@ -446,16 +457,16 @@ export async function calculateWorkOrderCost(
 /**
  * 查询应收款汇总
  */
-export async function queryReceivableSummary(customerId?: number): Promise<any> {
+export async function queryReceivableSummary(customerId?: number): Promise<Loose> {
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (customerId) {
     where += ' AND customer_id = ?';
     params.push(customerId);
   }
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT
       status,
       COUNT(*) as count,
@@ -474,16 +485,16 @@ export async function queryReceivableSummary(customerId?: number): Promise<any> 
 /**
  * 查询应付款汇总
  */
-export async function queryPayableSummary(supplierId?: number): Promise<any> {
+export async function queryPayableSummary(supplierId?: number): Promise<Loose> {
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (supplierId) {
     where += ' AND supplier_id = ?';
     params.push(supplierId);
   }
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT
       status,
       COUNT(*) as count,

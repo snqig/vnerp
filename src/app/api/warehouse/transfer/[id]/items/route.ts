@@ -8,7 +8,7 @@ export const GET = withPermission(
     const resolvedParams = await params;
     const transferId = parseInt(resolvedParams.id);
 
-    const transfer: any = await queryOne(`SELECT * FROM transfers WHERE id = ? AND deleted = 0`, [
+    const transfer: Loose = await queryOne(`SELECT * FROM transfers WHERE id = ? AND deleted = 0`, [
       transferId,
     ]);
 
@@ -16,7 +16,7 @@ export const GET = withPermission(
       return commonErrors.notFound('调拨单不存在');
     }
 
-    const items: any[] = await query(
+    const items: Loose[] = await query(
       `SELECT ti.*,
             m.name as material_name
      FROM transfer_items ti

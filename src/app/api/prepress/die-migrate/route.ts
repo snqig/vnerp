@@ -7,11 +7,11 @@ async function safeAlterTable(tableName: string, sql: string) {
   try {
     await execute(sql);
     return { table: tableName, status: 'altered' };
-  } catch (e: any) {
-    if (e.message?.includes('Duplicate column')) {
+  } catch (e) {
+    if ((e as Error).message?.includes('Duplicate column')) {
       return { table: tableName, status: 'skipped', reason: 'column already exists' };
     }
-    return { table: tableName, status: 'error', message: e.message };
+    return { table: tableName, status: 'error', message: (e as Error).message };
   }
 }
 
@@ -19,14 +19,14 @@ async function safeCreateTable(tableName: string, sql: string) {
   try {
     await execute(sql);
     return { table: tableName, status: 'created' };
-  } catch (e: any) {
-    return { table: tableName, status: 'error', message: e.message };
+  } catch (e) {
+    return { table: tableName, status: 'error', message: (e as Error).message };
   }
 }
 
 export const POST = withPermission(
   async (_request: NextRequest, _userInfo) => {
-    const results: any[] = [];
+    const results: Loose[] = [];
 
     results.push(
       await safeAlterTable(
@@ -192,8 +192,8 @@ export const POST = withPermission(
         status: 'done',
         detail: 'migrated current_usage to cumulative_impressions',
       });
-    } catch (e: any) {
-      results.push({ action: 'migrate_data', status: 'error', message: e.message });
+    } catch (e) {
+      results.push({ action: 'migrate_data', status: 'error', message: (e as Error).message });
     }
 
     try {
@@ -211,8 +211,8 @@ export const POST = withPermission(
         status: 'done',
         detail: 'migrated old status to die_status',
       });
-    } catch (e: any) {
-      results.push({ action: 'migrate_status', status: 'error', message: e.message });
+    } catch (e) {
+      results.push({ action: 'migrate_status', status: 'error', message: (e as Error).message });
     }
 
     try {
@@ -224,8 +224,12 @@ export const POST = withPermission(
       WHERE asset_type = 'die'`
       );
       results.push({ action: 'migrate_asset_type', status: 'done' });
-    } catch (e: any) {
-      results.push({ action: 'migrate_asset_type', status: 'error', message: e.message });
+    } catch (e) {
+      results.push({
+        action: 'migrate_asset_type',
+        status: 'error',
+        message: (e as Error).message,
+      });
     }
 
     return successResponse(results, '刀模/网版表结构优化完成');

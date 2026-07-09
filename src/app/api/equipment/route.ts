@@ -19,7 +19,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 单个设备详情
   const id = searchParams.get('id');
   if (id) {
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT e.*,
               (SELECT COUNT(*) FROM eq_maintenance_record r WHERE r.equipment_id = e.id AND r.deleted = 0) as maintenance_count,
               (SELECT MAX(maintenance_date) FROM eq_maintenance_record r WHERE r.equipment_id = e.id AND r.deleted = 0) as last_maintenance_date
@@ -42,7 +42,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const workshop = searchParams.get('workshop') || '';
 
   let where = 'WHERE e.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     where += ' AND (e.equipment_code LIKE ? OR e.equipment_name LIKE ? OR e.model LIKE ?)';
@@ -62,13 +62,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(workshop);
   }
 
-  const countRows: any = await query(
+  const countRows: Loose = await query(
     `SELECT COUNT(*) as total FROM eq_equipment e ${where}`,
     params
   );
   const total = countRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT e.id, e.equipment_code, e.equipment_name, e.equipment_type, e.model,
             e.manufacturer, e.workshop, e.location, e.status,
             e.cumulative_run_hours, e.cumulative_print_count,
@@ -105,7 +105,7 @@ export const POST = withPermission(
     }
 
     // 检查编号唯一性
-    const existing: any = await query(
+    const existing: Loose = await query(
       'SELECT id FROM eq_equipment WHERE equipment_code = ? AND deleted = 0',
       [equipment_code]
     );
@@ -113,7 +113,7 @@ export const POST = withPermission(
       return errorResponse('设备编号已存在', 409, 409);
     }
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO eq_equipment
        (equipment_code, equipment_name, equipment_type, model, manufacturer,
         workshop, location, purchase_date, install_date, purchase_price,
@@ -168,7 +168,7 @@ export const PUT = withPermission(
     ];
 
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: Loose[] = [];
 
     for (const field of allowedFields) {
       if (fields[field] !== undefined) {

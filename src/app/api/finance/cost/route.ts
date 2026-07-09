@@ -11,7 +11,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const costType = searchParams.get('cost_type') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     where += ' AND (cost_no LIKE ? OR source_no LIKE ? OR description LIKE ?)';
@@ -23,18 +23,18 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push(costType);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM fin_cost_record ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT * FROM fin_cost_record ${where} ORDER BY cost_date DESC, id DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
 
-  const costSummary: any = await query(`
+  const costSummary: Loose = await query(`
     SELECT
       COALESCE(SUM(CASE WHEN cost_type = 'material' THEN amount ELSE 0 END), 0) as material,
       COALESCE(SUM(CASE WHEN cost_type = 'labor' THEN amount ELSE 0 END), 0) as labor,

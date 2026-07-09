@@ -11,7 +11,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const lifecycleStage = searchParams.get('lifecycleStage') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (productName) {
     where += ' AND product_name LIKE ?';
     params.push('%' + productName + '%');
@@ -21,12 +21,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(lifecycleStage);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM plm_product_lifecycle ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM plm_product_lifecycle ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -54,7 +54,7 @@ export const POST = withPermission(
       return errorResponse('产品ID和生命周期阶段不能为空', 400, 400);
     }
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO plm_product_lifecycle (product_id, product_code, product_name, lifecycle_stage, stage_status, version, change_type, change_reason, change_desc, effective_date, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -84,7 +84,7 @@ export const PUT = withPermission(
     if (!id) return errorResponse('ID不能为空', 400, 400);
 
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: Loose[] = [];
     const allowedFields = [
       'lifecycle_stage',
       'stage_status',

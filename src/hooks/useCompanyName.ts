@@ -35,10 +35,10 @@ export function useCompanyName() {
           const configData = await configRes.json();
           if (!cancelled && configData.success && configData.data?.list) {
             const companyNameConfig = configData.data.list.find(
-              (item: any) => item.config_key === 'company_name'
+              (item: Loose) => item.config_key === 'company_name'
             )?.config_value;
             const companyShortName = configData.data.list.find(
-              (item: any) => item.config_key === 'company_short_name'
+              (item: Loose) => item.config_key === 'company_short_name'
             )?.config_value;
             if (companyNameConfig) {
               setCompanyName(companyNameConfig);

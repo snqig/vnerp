@@ -20,7 +20,7 @@ interface UsePaginatedListResult<T> {
   refresh: () => void;
 }
 
-export function usePaginatedList<T = any>(
+export function usePaginatedList<T = Loose>(
   options: UsePaginatedListOptions<T>
 ): UsePaginatedListResult<T> {
   const { fetchUrl, searchKey = 'search', pageSize = 20 } = options;

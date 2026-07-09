@@ -85,7 +85,7 @@ const getInspectionItems = (t: (key: string) => string) => [
   { name: t('packagingCheck'), standard: t('packagingStandard') },
 ];
 
-const initialIncomingInspections: any[] = [
+const initialIncomingInspections: Loose[] = [
   {
     id: 'IQC20250303001',
     date: '2025-03-03',
@@ -248,7 +248,7 @@ export default function IncomingInspectionPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [incomingInspections, setIncomingInspections] = useState(() => {
     if (USE_MOCK) {
-      const mapped = mockQualityIncoming.map((item: any) => ({
+      const mapped = mockQualityIncoming.map((item: Loose) => ({
         id: item.inspect_no,
         date: item.inspect_time,
         supplier: item.supplier_name,
@@ -294,7 +294,7 @@ export default function IncomingInspectionPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentInspection, setCurrentInspection] = useState<any>(null);
+  const [currentInspection, setCurrentInspection] = useState<Loose>(null);
   const [formData, setFormData] = useState<{
     inspectionDate: string;
     supplierName: string;
@@ -388,7 +388,7 @@ export default function IncomingInspectionPage() {
     setIsAddDialogOpen(true);
   };
 
-  const handleEdit = (inspection: any) => {
+  const handleEdit = (inspection: Loose) => {
     setCurrentInspection(inspection);
     setFormData({
       inspectionDate: inspection.date,
@@ -412,7 +412,7 @@ export default function IncomingInspectionPage() {
       remark: inspection.remark || '',
       items:
         inspection.items.length > 0
-          ? inspection.items.map((item: any) => ({
+          ? inspection.items.map((item: Loose) => ({
               itemName: item.itemName,
               standard: item.standard,
               actualValue: item.actualValue,
@@ -492,7 +492,7 @@ export default function IncomingInspectionPage() {
     toast.success(t('incomingInspectionUpdated'));
   };
 
-  const handleDelete = (inspection: any) => {
+  const handleDelete = (inspection: Loose) => {
     setCurrentInspection(inspection);
     setIsDeleteDialogOpen(true);
   };

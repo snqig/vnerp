@@ -6,13 +6,17 @@ import { SampleProcessCardService } from '@/application/services/SampleProcessCa
 const service = new SampleProcessCardService();
 
 export const POST = withPermission(
-  async (_request: NextRequest, userInfo: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    _request: NextRequest,
+    userInfo: Loose,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
     try {
       const newCardId = await service.duplicateVersion(Number(id), userInfo.userId);
       return successResponse({ id: newCardId }, '新版本已创建');
-    } catch (e: any) {
-      return errorResponse(e.message, 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message, 400, 400);
     }
   },
   { logTitle: '复制打样工艺卡版本' }

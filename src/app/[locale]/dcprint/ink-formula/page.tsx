@@ -143,7 +143,7 @@ export default function InkFormulaVersionPage() {
   const [compareDialog, setCompareDialog] = useState(false);
   const [compareLeftId, setCompareLeftId] = useState<string>('');
   const [compareRightId, setCompareRightId] = useState<string>('');
-  const [compareResult, setCompareResult] = useState<any>(null);
+  const [compareResult, setCompareResult] = useState<Loose>(null);
 
   // 获取色号列表
   const fetchColors = useCallback(async () => {
@@ -429,9 +429,9 @@ export default function InkFormulaVersionPage() {
     });
   };
 
-  const updateItem = (index: number, field: keyof FormulaItem, value: any) => {
+  const updateItem = (index: number, field: keyof FormulaItem, value: Loose) => {
     const items = [...(editingVersion.items || [])];
-    (items[index] as any)[field] = value;
+    (items[index] as Loose)[field] = value;
     setEditingVersion({ ...editingVersion, items });
   };
 
@@ -1185,7 +1185,7 @@ export default function InkFormulaVersionPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {compareResult.items.modified.map((m: any, i: number) => (
+                        {compareResult.items.modified.map((m: Loose, i: number) => (
                           <TableRow key={i}>
                             <TableCell className="text-xs">{m.right.material_name}</TableCell>
                             <TableCell className="text-xs text-orange-600">
@@ -1193,12 +1193,12 @@ export default function InkFormulaVersionPage() {
                             </TableCell>
                             <TableCell className="text-xs">
                               {m.fields
-                                .map((f: string) => `${f}: ${(m.left as any)[f]}`)
+                                .map((f: string) => `${f}: ${(m.left as Loose)[f]}`)
                                 .join('; ')}
                             </TableCell>
                             <TableCell className="text-xs">
                               {m.fields
-                                .map((f: string) => `${f}: ${(m.right as any)[f]}`)
+                                .map((f: string) => `${f}: ${(m.right as Loose)[f]}`)
                                 .join('; ')}
                             </TableCell>
                           </TableRow>

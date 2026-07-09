@@ -183,7 +183,7 @@ export default function PurchaseOrdersPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
-  const [detailItems, setDetailItems] = useState<any[]>([]);
+  const [detailItems, setDetailItems] = useState<Loose[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [sortField, setSortField] = useState<string | null>(null);
@@ -633,7 +633,7 @@ export default function PurchaseOrdersPage() {
           lines.length > 0
             ? lines
                 .map(
-                  (item: any, idx: number) => `
+                  (item: Loose, idx: number) => `
           <tr>
             <td>${idx + 1}</td>
             <td>${item.material_code || '-'}</td>
@@ -724,7 +724,7 @@ export default function PurchaseOrdersPage() {
     setOrderItems((prev) => prev.filter((item) => item.id !== id));
   };
 
-  const updateItem = (id: number, field: keyof OrderItem, value: any) => {
+  const updateItem = (id: number, field: keyof OrderItem, value: Loose) => {
     setOrderItems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
@@ -1215,7 +1215,7 @@ export default function PurchaseOrdersPage() {
                                   </TableHeader>
                                   <TableBody>
                                     {lines.length > 0 ? (
-                                      lines.map((item: any, idx: number) => (
+                                      lines.map((item: Loose, idx: number) => (
                                         <TableRow
                                           key={idx}
                                           className="bg-transparent hover:bg-white/60 dark:hover:bg-slate-700/60"
@@ -1338,7 +1338,7 @@ export default function PurchaseOrdersPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {detailItems.map((item: any, idx: number) => (
+                        {detailItems.map((item: Loose, idx: number) => (
                           <TableRow key={idx}>
                             <TableCell>{item.material_code}</TableCell>
                             <TableCell>{item.material_name}</TableCell>

@@ -14,7 +14,7 @@ export interface QRCodeData {
   productionDate?: string;
   expireDate?: string;
   traceUrl?: string;
-  extraData?: Record<string, any>;
+  extraData?: Record<string, Loose>;
 }
 
 export interface QRCodeRecord {
@@ -82,7 +82,7 @@ export class QRCodeService {
   }
 
   static buildQRContent(data: QRCodeData): string {
-    const content: Record<string, any> = {
+    const content: Record<string, Loose> = {
       v: '1',
       t: data.type,
       id: data.id,
@@ -128,9 +128,9 @@ export class QRCodeService {
         errorCorrectionLevel: 'M',
       });
       return dataUrl;
-    } catch (error: any) {
-      secureLog('error', 'QR code generation failed', { error: error.message });
-      throw new Error(`二维码生成失败: ${error.message}`);
+    } catch (error) {
+      secureLog('error', 'QR code generation failed', { error: (error as Error).message });
+      throw new Error(`二维码生成失败: ${(error as Error).message}`);
     }
   }
 
@@ -147,7 +147,7 @@ export class QRCodeService {
     const qrCode = `MAT${materialId}${Date.now()}`;
 
     return await transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, material_id, material_code, material_name, warehouse_id, production_date, expire_date, trace_url, create_time)
          VALUES (?, 'material', 'material', ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
@@ -197,7 +197,7 @@ export class QRCodeService {
     }
   ): Promise<{ qrCode: string; qrImageUrl: string; qrId: number }> {
     return await transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, material_id, material_code, material_name, batch_no, warehouse_id, production_date, expire_date, trace_url, create_time)
          VALUES (?, 'batch', 'batch', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
@@ -248,7 +248,7 @@ export class QRCodeService {
     }
   ): Promise<{ qrCode: string; qrImageUrl: string; qrId: number }> {
     return await transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         `INSERT INTO inv_qr_code (qr_code, qr_type, source_type, source_id, source_no, work_order_no, trace_url, create_time)
          VALUES (?, 'workorder', 'workorder', ?, ?, ?, ?, NOW())`,
         [
@@ -281,7 +281,7 @@ export class QRCodeService {
   }
 
   static async getQRCodeInfo(qrCode: string): Promise<QRCodeRecord | null> {
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT q.*, w.warehouse_name
        FROM inv_qr_code q
        LEFT JOIN inv_warehouse w ON q.warehouse_id = w.id
@@ -335,7 +335,7 @@ export class QRCodeService {
       LEFT JOIN inv_warehouse w ON h.warehouse_id = w.id
       WHERE h.material_id = ?`;
 
-    const params: any[] = [sourceId];
+    const params: Loose[] = [sourceId];
 
     if (batchNo) {
       sql += ` AND h.batch_no = ?`;
@@ -344,8 +344,8 @@ export class QRCodeService {
 
     sql += ` ORDER BY h.create_time ASC`;
 
-    const rows: any = await query(sql, params);
-    return (rows || []).map((r: any) => ({
+    const rows: Loose = await query(sql, params);
+    return (rows || []).map((r: Loose) => ({
       timestamp: r.timestamp,
       event: this.getEventLabel(r.event),
       eventType: r.eventType,
@@ -376,7 +376,7 @@ export class QRCodeService {
   }
 
   static async getBatchQRCodeList(materialId: number): Promise<QRCodeRecord[]> {
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT q.*, w.warehouse_name
        FROM inv_qr_code q
        LEFT JOIN inv_warehouse w ON q.warehouse_id = w.id

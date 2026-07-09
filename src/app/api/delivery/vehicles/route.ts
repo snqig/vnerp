@@ -38,11 +38,11 @@ interface Vehicle {
 function buildQueryConditions(params: { status: string | null; keyword: string | null }): {
   sql: string;
   countSql: string;
-  values: any[];
+  values: Loose[];
 } {
   let sql = `SELECT * FROM delivery_vehicle WHERE deleted = 0`;
   let countSql = `SELECT COUNT(*) as total FROM delivery_vehicle WHERE deleted = 0`;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (params.status && params.status !== 'all') {
     const condition = ' AND status = ?';

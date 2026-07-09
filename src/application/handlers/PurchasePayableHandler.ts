@@ -33,7 +33,7 @@ export class PurchasePayableHandler implements EventHandler<PurchaseOrderReceive
         );
       }
 
-      const [supplierRows]: any = await conn.execute(
+      const [supplierRows]: Loose = await conn.execute(
         'SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0 LIMIT 1',
         [supplierId]
       );

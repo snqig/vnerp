@@ -13,7 +13,7 @@ export const PUT = withPermission(
     }
 
     let sql = 'UPDATE sys_config SET config_value = ?';
-    const params: any[] = [config_value];
+    const params: Loose[] = [config_value];
 
     if (config_name !== undefined) {
       sql += ', config_name = ?';

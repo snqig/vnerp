@@ -12,7 +12,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'bom_header'`
     );
 
-    if ((bomHeaderExists as any[]).length === 0) {
+    if ((bomHeaderExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE bom_header (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -56,7 +56,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'bom_line'`
     );
 
-    if ((bomLineExists as any[]).length === 0) {
+    if ((bomLineExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE bom_line (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -101,7 +101,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'bom_alternative'`
     );
 
-    if ((bomAltExists as any[]).length === 0) {
+    if ((bomAltExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE bom_alternative (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -132,7 +132,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'bom_version_history'`
     );
 
-    if ((bomHistoryExists as any[]).length === 0) {
+    if ((bomHistoryExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE bom_version_history (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -161,7 +161,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'bom_material'`
     );
 
-    if ((materialExists as any[]).length === 0) {
+    if ((materialExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE bom_material (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -200,7 +200,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'bom_material_category'`
     );
 
-    if ((categoryExists as any[]).length === 0) {
+    if ((categoryExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE bom_material_category (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -224,7 +224,7 @@ export async function GET(_request: NextRequest) {
 
     // 插入测试数据
     const categoryCount = await query(`SELECT COUNT(*) as count FROM bom_material_category`);
-    if ((categoryCount as any[])[0].count === 0) {
+    if ((categoryCount as Loose[])[0].count === 0) {
       await query(`
         INSERT INTO bom_material_category (category_code, category_name, level, sort_order) VALUES
         ('RAW', '原材料', 1, 1),
@@ -237,7 +237,7 @@ export async function GET(_request: NextRequest) {
     const materialCount = await query(
       `SELECT COUNT(*) as count FROM bom_material WHERE deleted = 0`
     );
-    if ((materialCount as any[])[0].count === 0) {
+    if ((materialCount as Loose[])[0].count === 0) {
       await query(`
         INSERT INTO bom_material (material_code, material_name, material_spec, material_type, category_id, unit, unit_cost) VALUES
         ('MAT001', '白色PET膜', '100M×1.5M, 0.1mm', 'RAW', 1, '卷', 50.00),
@@ -249,7 +249,7 @@ export async function GET(_request: NextRequest) {
     }
 
     const bomCount = await query(`SELECT COUNT(*) as count FROM bom_header WHERE deleted = 0`);
-    if ((bomCount as any[])[0].count === 0) {
+    if ((bomCount as Loose[])[0].count === 0) {
       await query(`
         INSERT INTO bom_header (bom_no, product_id, product_code, product_name, product_spec, version, status, base_qty, remark)
         VALUES ('BOM20250101001', 1, 'PROD001', 'ASUS笔记本标签', '261.7×99.1mm', 'V1.0', 30, 1000, '测试BOM')
@@ -296,7 +296,7 @@ export async function GET(_request: NextRequest) {
       message: 'BOM管理表初始化完成',
       details: results,
     });
-  } catch (error: any) {
-    return errorResponse(`初始化失败: ${error.message}`, 500, 500);
+  } catch (error) {
+    return errorResponse(`初始化失败: ${(error as Error).message}`, 500, 500);
   }
 }

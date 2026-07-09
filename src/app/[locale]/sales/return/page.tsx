@@ -196,7 +196,7 @@ export default function ReturnPage() {
     }));
   };
 
-  const updateItem = (index: number, field: string, value: any) => {
+  const updateItem = (index: number, field: string, value: Loose) => {
     setForm((prev) => {
       const items = [...(prev.items || [])];
       items[index] = { ...items[index], [field]: value };
@@ -494,7 +494,7 @@ export default function ReturnPage() {
                 <Select
                   value={String(form.customer_id || '')}
                   onValueChange={(v) => {
-                    const cust = customers.find((c: any) => c.id === parseInt(v));
+                    const cust = customers.find((c: Loose) => c.id === parseInt(v));
                     setForm((prev) => ({
                       ...prev,
                       customer_id: parseInt(v),
@@ -506,7 +506,7 @@ export default function ReturnPage() {
                     <SelectValue placeholder={t('selectCustomer')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {customers.map((c: any) => (
+                    {customers.map((c: Loose) => (
                       <SelectItem key={c.id} value={String(c.id)}>
                         {c.customer_name}
                       </SelectItem>

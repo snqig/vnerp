@@ -22,7 +22,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const categoryId = searchParams.get('categoryId') || '';
 
   let whereClause = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     whereClause += ' AND (material_code LIKE ? OR material_name LIKE ?)';
@@ -91,7 +91,7 @@ export const POST = withPermission(
       [materialCode]
     );
 
-    if ((existing as any[]).length > 0) {
+    if ((existing as Loose[]).length > 0) {
       return errorResponse('物料编码已存在', 400, 400);
     }
 
@@ -117,7 +117,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: (result as any).insertId, materialCode }, '物料创建成功');
+    return successResponse({ id: (result as Loose).insertId, materialCode }, '物料创建成功');
   },
   { logTitle: '创建BOM物料', logType: 'business' }
 );
@@ -137,12 +137,12 @@ export const PUT = withPermission(
 
     const material = await query('SELECT id FROM bom_material WHERE id = ? AND deleted = 0', [id]);
 
-    if ((material as any[]).length === 0) {
+    if ((material as Loose[]).length === 0) {
       return errorResponse('物料不存在', 404, 404);
     }
 
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: Loose[] = [];
 
     if (updateData.materialName !== undefined) {
       updateFields.push('material_name = ?');
@@ -204,7 +204,7 @@ export const DELETE = withPermission(
     // 检查是否被BOM引用
     const usedInBom = await query('SELECT 1 FROM bom_line WHERE material_id = ? LIMIT 1', [id]);
 
-    if ((usedInBom as any[]).length > 0) {
+    if ((usedInBom as Loose[]).length > 0) {
       return errorResponse('该物料已被BOM引用，不能删除', 400, 400);
     }
 

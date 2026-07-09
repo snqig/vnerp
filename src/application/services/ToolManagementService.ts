@@ -62,7 +62,7 @@ export class ToolManagementService {
   }): Promise<{ list: ToolListItem[]; total: number }> {
     const { toolType, status, keyword, page, pageSize } = params;
     let where = 'WHERE is_deleted = 0';
-    const args: any[] = [];
+    const args: Loose[] = [];
     if (toolType) {
       where += ' AND tool_type = ?';
       args.push(toolType);
@@ -76,7 +76,10 @@ export class ToolManagementService {
       args.push('%' + keyword + '%', '%' + keyword + '%');
     }
 
-    const countRows = await query<any>(`SELECT COUNT(*) as total FROM dcprint_tool ${where}`, args);
+    const countRows = await query<Loose>(
+      `SELECT COUNT(*) as total FROM dcprint_tool ${where}`,
+      args
+    );
     const total = countRows[0]?.total || 0;
 
     const offset = (page - 1) * pageSize;
@@ -111,7 +114,7 @@ export class ToolManagementService {
   }): Promise<number> {
     const unitCost = input.originalCost / input.totalLife;
     return transaction(async (conn) => {
-      const [dup]: any = await conn.execute(
+      const [dup]: Loose = await conn.execute(
         'SELECT id FROM dcprint_tool WHERE tool_code = ? AND is_deleted = 0',
         [input.toolCode]
       );
@@ -119,7 +122,7 @@ export class ToolManagementService {
         throw new Error(`Tool code ${input.toolCode} already exists`);
       }
 
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         `INSERT INTO dcprint_tool
          (tool_type, tool_code, tool_name, spec, material_id, total_life, warning_threshold,
           used_count, remain_life, original_cost, accumulated_cost, net_value, unit_cost,
@@ -181,7 +184,7 @@ export class ToolManagementService {
     };
 
     const sets: string[] = [];
-    const args: any[] = [];
+    const args: Loose[] = [];
     for (const key of allowed) {
       if (input[key as keyof typeof input] !== undefined) {
         sets.push(`${colMap[key]} = ?`);
@@ -202,7 +205,7 @@ export class ToolManagementService {
   }
 
   async activateTool(id: number): Promise<void> {
-    const rows = await query<any>(
+    const rows = await query<Loose>(
       'SELECT status FROM dcprint_tool WHERE id = ? AND is_deleted = 0',
       [id]
     );
@@ -226,7 +229,7 @@ export class ToolManagementService {
     remark?: string;
   }): Promise<void> {
     await transaction(async (conn) => {
-      const [rows]: any = await conn.execute(
+      const [rows]: Loose = await conn.execute(
         'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
         [input.toolId]
       );
@@ -300,7 +303,7 @@ export class ToolManagementService {
     remark?: string;
   }): Promise<number> {
     return transaction(async (conn) => {
-      const [rows]: any = await conn.execute(
+      const [rows]: Loose = await conn.execute(
         'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
         [input.toolId]
       );
@@ -312,7 +315,7 @@ export class ToolManagementService {
 
       await conn.execute('UPDATE dcprint_tool SET status = 3 WHERE id = ?', [input.toolId]);
 
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         `INSERT INTO dcprint_tool_maintenance
          (tool_id, maintenance_type, maintenance_cost, description, life_before, life_after,
           life_adjustment, status, start_time, operator_id, operator_name, remark)
@@ -338,14 +341,14 @@ export class ToolManagementService {
     description?: string;
   }): Promise<void> {
     await transaction(async (conn) => {
-      const [mRows]: any = await conn.execute(
+      const [mRows]: Loose = await conn.execute(
         'SELECT * FROM dcprint_tool_maintenance WHERE id = ? AND status = 1 FOR UPDATE',
         [input.maintenanceId]
       );
       if (mRows.length === 0) throw new Error('Maintenance record not found or already completed');
       const m = mRows[0];
 
-      const [tRows]: any = await conn.execute(
+      const [tRows]: Loose = await conn.execute(
         'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
         [m.tool_id]
       );
@@ -387,7 +390,7 @@ export class ToolManagementService {
 
   async scrapTool(input: { toolId: number; scrapReason: string; scrapBy: number }): Promise<void> {
     await transaction(async (conn) => {
-      const [rows]: any = await conn.execute(
+      const [rows]: Loose = await conn.execute(
         'SELECT * FROM dcprint_tool WHERE id = ? AND is_deleted = 0 FOR UPDATE',
         [input.toolId]
       );
@@ -424,7 +427,7 @@ export class ToolManagementService {
     scrappedTools: number;
     totalNetValue: number;
   }> {
-    const rows = await query<any>(
+    const rows = await query<Loose>(
       `SELECT
          COUNT(*) as total_tools,
          SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as active_tools,

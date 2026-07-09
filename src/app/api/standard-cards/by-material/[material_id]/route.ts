@@ -58,67 +58,65 @@ interface QualityStandardItem {
   defect_level?: string;
 }
 
-export const GET = withPermission(
-  async (request: NextRequest, userInfo, context) => {
-    const { material_id: materialIdStr } = await context.params;
-    const materialId = parseInt(materialIdStr);
+export const GET = withPermission(async (request: NextRequest, userInfo, context) => {
+  const { material_id: materialIdStr } = await context.params;
+  const materialId = parseInt(materialIdStr);
 
-    if (isNaN(materialId)) {
-      return errorResponse('无效的产品ID', 400, 400);
-    }
+  if (isNaN(materialId)) {
+    return errorResponse('无效的产品ID', 400, 400);
+  }
 
-    const card = await queryOne<StandardCard>(
-      `SELECT * FROM prd_standard_card
+  const card = await queryOne<StandardCard>(
+    `SELECT * FROM prd_standard_card
      WHERE material_id = ? AND status = 3 AND deleted = 0
      ORDER BY version DESC LIMIT 1`,
-      [materialId]
-    );
+    [materialId]
+  );
 
-    if (!card) {
-      return errorResponse('未找到该产品的标准卡', 404, 404);
-    }
-
-    let items: any[] = [];
-
-    switch (card.type) {
-      case 'color':
-        items = await query<ColorStandardItem>(
-          'SELECT * FROM color_standard_items WHERE standard_card_id = ?',
-          [card.id!]
-        );
-        break;
-      case 'process':
-        items = await query<ProcessStandardItem>(
-          'SELECT * FROM process_standard_items WHERE standard_card_id = ?',
-          [card.id!]
-        );
-        break;
-      case 'quality':
-        items = await query<QualityStandardItem>(
-          'SELECT * FROM quality_standard_items WHERE standard_card_id = ?',
-          [card.id!]
-        );
-        break;
-      case 'comprehensive':
-        const colorItems = await query<ColorStandardItem & { item_type: string }>(
-          'SELECT *, "color" as item_type FROM color_standard_items WHERE standard_card_id = ?',
-          [card.id!]
-        );
-        const processItems = await query<ProcessStandardItem & { item_type: string }>(
-          'SELECT *, "process" as item_type FROM process_standard_items WHERE standard_card_id = ?',
-          [card.id!]
-        );
-        const qualityItems = await query<QualityStandardItem & { item_type: string }>(
-          'SELECT *, "quality" as item_type FROM quality_standard_items WHERE standard_card_id = ?',
-          [card.id!]
-        );
-        items = [...colorItems, ...processItems, ...qualityItems];
-        break;
-    }
-
-    return successResponse({
-      ...card,
-      items,
-    });
+  if (!card) {
+    return errorResponse('未找到该产品的标准卡', 404, 404);
   }
-);
+
+  let items: Loose[] = [];
+
+  switch (card.type) {
+    case 'color':
+      items = await query<ColorStandardItem>(
+        'SELECT * FROM color_standard_items WHERE standard_card_id = ?',
+        [card.id!]
+      );
+      break;
+    case 'process':
+      items = await query<ProcessStandardItem>(
+        'SELECT * FROM process_standard_items WHERE standard_card_id = ?',
+        [card.id!]
+      );
+      break;
+    case 'quality':
+      items = await query<QualityStandardItem>(
+        'SELECT * FROM quality_standard_items WHERE standard_card_id = ?',
+        [card.id!]
+      );
+      break;
+    case 'comprehensive':
+      const colorItems = await query<ColorStandardItem & { item_type: string }>(
+        'SELECT *, "color" as item_type FROM color_standard_items WHERE standard_card_id = ?',
+        [card.id!]
+      );
+      const processItems = await query<ProcessStandardItem & { item_type: string }>(
+        'SELECT *, "process" as item_type FROM process_standard_items WHERE standard_card_id = ?',
+        [card.id!]
+      );
+      const qualityItems = await query<QualityStandardItem & { item_type: string }>(
+        'SELECT *, "quality" as item_type FROM quality_standard_items WHERE standard_card_id = ?',
+        [card.id!]
+      );
+      items = [...colorItems, ...processItems, ...qualityItems];
+      break;
+  }
+
+  return successResponse({
+    ...card,
+    items,
+  });
+});

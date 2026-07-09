@@ -52,7 +52,7 @@ export const GET = withPermission(
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
     let whereClause = 'WHERE l.deleted = 0';
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (keyword) {
       whereClause += ` AND (l.label_id LIKE ? OR l.material_code LIKE ? OR l.material_name LIKE ? OR l.supplier_name LIKE ?)`;
@@ -237,7 +237,7 @@ export const PUT = withPermission(
     }
 
     const updates: string[] = [];
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (labelStatus) {
       updates.push('label_status = ?');

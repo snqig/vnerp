@@ -912,7 +912,7 @@ export default function SalesOrdersPage() {
                       width: 30,
                       formatter: (_v, row) =>
                         row.items
-                          ?.map((i: any) => `${i.material_name} x${i.quantity}${i.unit}`)
+                          ?.map((i: Loose) => `${i.material_name} x${i.quantity}${i.unit}`)
                           .join('; ') || '-',
                     },
                   ]}

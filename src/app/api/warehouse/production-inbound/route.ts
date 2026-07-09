@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const workOrderNo = searchParams.get('workOrderNo') || '';
 
   let where = 'WHERE p.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (inboundNo) {
     where += ' AND p.inbound_no LIKE ?';
     params.push('%' + inboundNo + '%');
@@ -27,12 +27,12 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push('%' + workOrderNo + '%');
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM inv_production_inbound p ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT p.*, w.warehouse_name FROM inv_production_inbound p LEFT JOIN inv_warehouse w ON p.warehouse_id = w.id ' +
       where +
       ' ORDER BY p.create_time DESC LIMIT ? OFFSET ?',
@@ -40,7 +40,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   );
 
   for (const row of rows) {
-    const items: any = await query(
+    const items: Loose = await query(
       'SELECT * FROM inv_production_inbound_item WHERE inbound_id = ?',
       [row.id]
     );
@@ -78,9 +78,9 @@ export const POST = withPermission(async (request: NextRequest) => {
     String(now.getDate()).padStart(2, '0') +
     String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-  const result: any = await transaction(async (conn) => {
+  const result: Loose = await transaction(async (conn) => {
     if (work_order_id) {
-      const [woRows]: any = await conn.execute(
+      const [woRows]: Loose = await conn.execute(
         'SELECT id, order_no, status, plan_qty, completed_qty FROM prod_work_order WHERE id = ? AND deleted = 0 FOR UPDATE',
         [work_order_id]
       );
@@ -96,7 +96,7 @@ export const POST = withPermission(async (request: NextRequest) => {
       }
     }
 
-    const [orderResult]: any = await conn.execute(
+    const [orderResult]: Loose = await conn.execute(
       'INSERT INTO inv_production_inbound (inbound_no, work_order_id, work_order_no, warehouse_id, inbound_date, operator_name, qc_status, status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)',
       [
         inboundNo,
@@ -142,7 +142,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
   if (action === 'post') {
     const result = await transaction(async (conn) => {
-      const [inboundRows]: any = await conn.execute(
+      const [inboundRows]: Loose = await conn.execute(
         'SELECT id, inbound_no, work_order_id, work_order_no, warehouse_id, status, qc_status FROM inv_production_inbound WHERE id = ? AND deleted = 0 FOR UPDATE',
         [id]
       );
@@ -161,13 +161,13 @@ export const PUT = withPermission(async (request: NextRequest) => {
         throw new Error('质检不合格，不能入库');
       }
 
-      const [itemRows]: any = await conn.execute(
+      const [itemRows]: Loose = await conn.execute(
         'SELECT * FROM inv_production_inbound_item WHERE inbound_id = ?',
         [id]
       );
 
       for (const item of itemRows) {
-        const [existing]: any = await conn.execute(
+        const [existing]: Loose = await conn.execute(
           'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
           [item.material_id, inbound.warehouse_id]
         );
@@ -193,7 +193,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
         }
 
         const transNo = 'TRX' + Date.now() + String(item.id).slice(-4);
-        const [matRows]: any = await conn.execute(
+        const [matRows]: Loose = await conn.execute(
           'SELECT material_code FROM mdm_material WHERE id = ?',
           [item.material_id]
         );
@@ -226,7 +226,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
       if (inbound.work_order_id) {
         const totalQty = itemRows.reduce(
-          (sum: number, item: any) => sum + Number(item.quantity || 0),
+          (sum: number, item: Loose) => sum + Number(item.quantity || 0),
           0
         );
 
@@ -235,7 +235,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
           [totalQty, inbound.work_order_id]
         );
 
-        const [woRows]: any = await conn.execute(
+        const [woRows]: Loose = await conn.execute(
           'SELECT plan_qty, completed_qty, status FROM prod_work_order WHERE id = ?',
           [inbound.work_order_id]
         );
@@ -257,19 +257,19 @@ export const PUT = withPermission(async (request: NextRequest) => {
       return { id, status: 3 };
     });
 
-    const [outboundRows]: any = await query(
+    const [outboundRows]: Loose = await query(
       'SELECT id, inbound_no, work_order_id, work_order_no, warehouse_id, qc_status FROM inv_production_inbound WHERE id = ? AND deleted = 0',
       [id]
     );
     const inboundInfo = outboundRows[0];
 
     if (inboundInfo) {
-      const prodItems: any = await query(
+      const prodItems: Loose = await query(
         'SELECT * FROM inv_production_inbound_item WHERE inbound_id = ?',
         [id]
       );
 
-      for (const item of prodItems as any[]) {
+      for (const item of prodItems as Loose[]) {
         const qrCode = 'PR-' + randomUUID().replace(/-/g, '').substring(0, 16);
         await execute(
           `INSERT INTO qrcode_record (qr_code, qr_type, ref_id, ref_no, material_id, material_code, material_name, quantity, unit, warehouse_id, work_order_id, work_order_no, production_date, status, extra_data)
@@ -301,7 +301,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
         oper_method: 'PUT',
         oper_url: '/api/warehouse/production-inbound',
         oper_param: JSON.stringify({ id, action: 'post' }),
-        oper_result: `生产入库 ${inboundInfo.inbound_no} 过账成功，已生成 ${(prodItems as any[]).length} 个成品二维码`,
+        oper_result: `生产入库 ${inboundInfo.inbound_no} 过账成功，已生成 ${(prodItems as Loose[]).length} 个成品二维码`,
       });
     }
 
@@ -314,7 +314,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
       return errorResponse('质检结果不能为空', 400, 400);
     }
 
-    const hasFail = qc_results.some((q: any) => q.result === 'fail');
+    const hasFail = qc_results.some((q: Loose) => q.result === 'fail');
     const newQcStatus = hasFail ? 'fail' : 'pass';
 
     await execute('UPDATE inv_production_inbound SET qc_status = ? WHERE id = ? AND deleted = 0', [
@@ -323,13 +323,13 @@ export const PUT = withPermission(async (request: NextRequest) => {
     ]);
 
     if (hasFail) {
-      const [itemRows]: any = await query(
+      const [itemRows]: Loose = await query(
         'SELECT * FROM inv_production_inbound_item WHERE inbound_id = ?',
         [id]
       );
 
       for (const item of itemRows) {
-        const qcResult = qc_results.find((q: any) => q.item_id === item.id);
+        const qcResult = qc_results.find((q: Loose) => q.item_id === item.id);
         if (qcResult && qcResult.result === 'fail') {
           const now = new Date();
           const handleNo =
@@ -380,7 +380,7 @@ export const DELETE = withPermission(async (request: NextRequest) => {
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
 
-  const inbound: any = await query(
+  const inbound: Loose = await query(
     'SELECT status FROM inv_production_inbound WHERE id = ? AND deleted = 0',
     [Number(id)]
   );

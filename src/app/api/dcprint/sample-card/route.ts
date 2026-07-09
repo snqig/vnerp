@@ -37,8 +37,8 @@ export const POST = withPermission(
     try {
       const id = await service.createCard(parsed.data, userInfo.userId);
       return successResponse({ id }, '工艺卡创建成功');
-    } catch (e: any) {
-      return errorResponse(e.message, 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message, 400, 400);
     }
   },
   { logTitle: '创建打样工艺卡' }

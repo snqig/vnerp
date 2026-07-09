@@ -9,7 +9,7 @@ export async function GET(_request: NextRequest) {
     const aging60Days = Number(getConfig('aging_60_days') || 60);
     const aging90Days = Number(getConfig('aging_90_days') || 90);
 
-    const overview: any = {
+    const overview: Loose = {
       totalReceivable: 0,
       totalPayable: 0,
       monthRevenue: 0,
@@ -19,10 +19,10 @@ export async function GET(_request: NextRequest) {
       netProfit: 0,
     };
     try {
-      const recRows: any = await query(
+      const recRows: Loose = await query(
         `SELECT COALESCE(SUM(amount), 0) as total FROM fin_receivable WHERE deleted = 0 AND status = 1`
       );
-      const payRows: any = await query(
+      const payRows: Loose = await query(
         `SELECT COALESCE(SUM(amount), 0) as total FROM fin_payable WHERE deleted = 0 AND status = 1`
       );
       if (Array.isArray(recRows) && recRows.length > 0)
@@ -33,10 +33,10 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const revRows: any = await query(
+      const revRows: Loose = await query(
         `SELECT COALESCE(SUM(amount), 0) as total FROM fin_receipt_record WHERE deleted = 0 AND DATE(receipt_date) >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)`
       );
-      const expRows: any = await query(
+      const expRows: Loose = await query(
         `SELECT COALESCE(SUM(amount), 0) as total FROM fin_payment_record WHERE deleted = 0 AND DATE(payment_date) >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)`
       );
       if (Array.isArray(revRows) && revRows.length > 0)
@@ -45,9 +45,9 @@ export async function GET(_request: NextRequest) {
         overview.monthExpense = Number(expRows[0].total || 0);
     } catch {}
 
-    let revenueTrend: any[] = [];
+    let revenueTrend: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT DATE(receipt_date) as date, COALESCE(SUM(amount), 0) as amount
         FROM fin_receipt_record WHERE deleted = 0 AND receipt_date >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
         GROUP BY DATE(receipt_date) ORDER BY date
@@ -55,9 +55,9 @@ export async function GET(_request: NextRequest) {
       revenueTrend = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let expenseTrend: any[] = [];
+    let expenseTrend: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT DATE(payment_date) as date, COALESCE(SUM(amount), 0) as amount
         FROM fin_payment_record WHERE deleted = 0 AND payment_date >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
         GROUP BY DATE(payment_date) ORDER BY date
@@ -65,9 +65,9 @@ export async function GET(_request: NextRequest) {
       expenseTrend = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let receivableAging: any[] = [];
+    let receivableAging: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT
           CASE
             WHEN DATEDIFF(CURDATE(), create_time) <= ${aging30Days} THEN '0-${aging30Days}天'
@@ -82,24 +82,24 @@ export async function GET(_request: NextRequest) {
       receivableAging = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let recentTransactions: any[] = [];
+    let recentTransactions: Loose[] = [];
     try {
-      const recRows: any = await query(`
+      const recRows: Loose = await query(`
         SELECT 'receipt' as type, id, amount, receipt_date as date, remark FROM fin_receipt_record WHERE deleted = 0 ORDER BY receipt_date DESC LIMIT 5
       `);
-      const payRows: any = await query(`
+      const payRows: Loose = await query(`
         SELECT 'payment' as type, id, amount, payment_date as date, remark FROM fin_payment_record WHERE deleted = 0 ORDER BY payment_date DESC LIMIT 5
       `);
       const receipts = Array.isArray(recRows) ? recRows : [];
       const payments = Array.isArray(payRows) ? payRows : [];
       recentTransactions = [...receipts, ...payments]
-        .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .sort((a: Loose, b: Loose) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 10);
     } catch {}
 
-    let topPayables: any[] = [];
+    let topPayables: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT s.supplier_name, COALESCE(SUM(p.amount), 0) as total, COUNT(*) as count
         FROM fin_payable p
         LEFT JOIN pur_supplier s ON p.supplier_id = s.id

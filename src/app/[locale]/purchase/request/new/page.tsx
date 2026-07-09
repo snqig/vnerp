@@ -97,7 +97,7 @@ export default function NewPurchaseRequestPage() {
     return quantity * price;
   };
 
-  const updateItem = (index: number, field: keyof RequestItem, value: any) => {
+  const updateItem = (index: number, field: keyof RequestItem, value: Loose) => {
     setFormData((prev) => {
       const newItems = [...prev.items];
       newItems[index] = { ...newItems[index], [field]: value };

@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const endDate = searchParams.get('endDate') || '';
 
   let where = 'WHERE u.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     where += ' AND (u.usage_no LIKE ? OR u.batch_no LIKE ? OR u.color_name LIKE ?)';
@@ -38,10 +38,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(endDate);
   }
 
-  const totalRows: any = await query(`SELECT COUNT(*) as total FROM ink_usage u ${where}`, params);
+  const totalRows: Loose = await query(
+    `SELECT COUNT(*) as total FROM ink_usage u ${where}`,
+    params
+  );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT u.* FROM ink_usage u ${where} ORDER BY u.usage_date DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -92,7 +95,7 @@ export const POST = withPermission(
 
       let actualBatchNo = batch_no;
       if (qr_code && !batch_no) {
-        const [qrRows]: any = await conn.execute(
+        const [qrRows]: Loose = await conn.execute(
           "SELECT batch_no, extra_data FROM qrcode_record WHERE qr_code = ? AND qr_type IN ('ink_dispatch', 'ink_mixed', 'ink_open') AND deleted = 0",
           [qr_code]
         );
@@ -105,7 +108,7 @@ export const POST = withPermission(
         throw new Error('无法确定油墨批次号，请提供batch_no或qr_code');
       }
 
-      const [batchRows]: any = await conn.execute(
+      const [batchRows]: Loose = await conn.execute(
         'SELECT id, available_qty, material_name, warehouse_id, status, expire_date FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0 FOR UPDATE',
         [actualBatchNo]
       );
@@ -149,20 +152,20 @@ export const POST = withPermission(
       }
 
       if (usage_type === 'machine_load' && workorder_no) {
-        const [dispatchRows]: any = await conn.execute(
+        const [dispatchRows]: Loose = await conn.execute(
           'SELECT id, formula_no, color_name, pantone_code FROM ink_dispatch WHERE workorder_no = ? AND batch_no = ? AND deleted = 0',
           [workorder_no, actualBatchNo]
         );
 
         if (dispatchRows.length > 0) {
           const dispatch = dispatchRows[0];
-          const [formulaRows]: any = await conn.execute(
+          const [formulaRows]: Loose = await conn.execute(
             'SELECT id, formula_name, pantone_code FROM ink_formula WHERE formula_no = ? AND deleted = 0',
             [dispatch.formula_no || formula_no]
           );
 
           if (formulaRows.length > 0 && workorder_no) {
-            const [woFormulaRows]: any = await conn.execute(
+            const [woFormulaRows]: Loose = await conn.execute(
               'SELECT formula_id FROM ink_formula_workorder WHERE workorder_no = ? AND deleted = 0',
               [workorder_no]
             );
@@ -176,7 +179,7 @@ export const POST = withPermission(
         }
       }
 
-      const [insertResult]: any = await conn.execute(
+      const [insertResult]: Loose = await conn.execute(
         `INSERT INTO ink_usage (usage_no, usage_type, batch_no, qr_code, workorder_id, workorder_no, formula_id, formula_no, color_name, weight, unit, operator_id, operator_name, machine_id, machine_name, location_id, location_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
         [

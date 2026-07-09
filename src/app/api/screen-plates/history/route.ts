@@ -49,7 +49,7 @@ export const POST = withPermission(
     );
 
     const updateFields: string[] = ['update_time = NOW()'];
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (tensionValue !== undefined) {
       updateFields.push('tension_value = ?', 'tension_date = NOW()');
@@ -83,7 +83,7 @@ export const POST = withPermission(
       await execute(`UPDATE prd_screen_plate SET ${updateFields.join(', ')} WHERE id = ?`, params);
     }
 
-    return successResponse({ historyId: (result as any).insertId }, '生命周期记录添加成功');
+    return successResponse({ historyId: (result as Loose).insertId }, '生命周期记录添加成功');
   },
   { logTitle: '添加网版生命周期记录', logType: 'business' }
 );

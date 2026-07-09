@@ -7,12 +7,12 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const result = await transaction(async (conn) => {
       const errors: string[] = [];
 
-      const testInsert = async (table: string, sql: string, params: any[]) => {
+      const testInsert = async (table: string, sql: string, params: Loose[]) => {
         try {
           await conn.execute(sql, params);
           return { table, success: true };
-        } catch (e: any) {
-          return { table, success: false, error: e.message };
+        } catch (e) {
+          return { table, success: false, error: (e as Error).message };
         }
       };
 
@@ -49,11 +49,11 @@ export const POST = withPermission(async (_request: NextRequest) => {
       success: true,
       results: result,
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: (error as Error).message,
       },
       { status: 500 }
     );

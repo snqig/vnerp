@@ -1,7 +1,12 @@
 import { IReturnOrderRepository } from '@/domain/sales/repositories/IReturnOrderRepository';
 import { IInboundOrderRepository } from '@/domain/warehouse/repositories/IInboundOrderRepository';
 import { IReceivableRepository } from '@/domain/finance/repositories/IReceivableRepository';
-import { ReturnOrder, ReturnOrderProps, InboundResult, ReceivableResult } from '@/domain/sales/aggregates/ReturnOrder';
+import {
+  ReturnOrder,
+  ReturnOrderProps,
+  InboundResult,
+  ReceivableResult,
+} from '@/domain/sales/aggregates/ReturnOrder';
 import { InboundOrder, InboundOrderProps } from '@/domain/warehouse/aggregates/InboundOrder';
 import { InboundItemProps } from '@/domain/warehouse/entities/InboundItem';
 import { Receivable, ReceivableProps } from '@/domain/finance/aggregates/Receivable';
@@ -38,17 +43,15 @@ export class ReturnOrderApplicationService {
     const ret = await this.getReturnById(id);
     ret.approve(approveBy);
 
-    await this.returnRepo.updateApproval(
-      id,
-      ret.status.value,
-      ret.approveBy!,
-      ret.approveTime!
-    );
+    await this.returnRepo.updateApproval(id, ret.status.value, ret.approveBy!, ret.approveTime!);
     await this.persistAndPublishEvents('ReturnOrder', id, ret);
     return { status: ret.status.value };
   }
 
-  async completeReturn(id: number, completeBy: number): Promise<{
+  async completeReturn(
+    id: number,
+    completeBy: number
+  ): Promise<{
     status: number;
     inboundOrderId: number;
     inboundOrderNo: string;
@@ -125,7 +128,7 @@ export class ReturnOrderApplicationService {
   }
 
   private async createInboundForReturn(ret: ReturnOrder): Promise<InboundResult> {
-    const warehouseRows: any = await query(
+    const warehouseRows: Loose = await query(
       'SELECT warehouse_name FROM inv_warehouse WHERE id = ?',
       [ret.warehouseId]
     );
@@ -187,7 +190,7 @@ export class ReturnOrderApplicationService {
   private async persistAndPublishEvents(
     aggregateType: string,
     aggregateId: number,
-    aggregate: { getDomainEvents(): any[]; clearDomainEvents(): void }
+    aggregate: { getDomainEvents(): Loose[]; clearDomainEvents(): void }
   ): Promise<void> {
     const events = aggregate.getDomainEvents();
     if (events.length === 0) return;

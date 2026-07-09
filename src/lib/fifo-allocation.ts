@@ -96,7 +96,7 @@ export const DEFAULT_RETRY_DELAY_MS = 100;
  * @returns FIFO 分配结果，包含需求量、总可用量、已分配量、缺料信息及各批次分配明细
  */
 export async function allocateFIFO(
-  conn: any,
+  conn: Loose,
   materialId: number,
   warehouseId: number,
   requiredQty: number,
@@ -130,7 +130,7 @@ export async function allocateFIFO(
       id ASC
     FOR UPDATE`;
 
-  const [batches]: any = await conn.query(sql, [materialId, warehouseId]);
+  const [batches]: Loose = await conn.query(sql, [materialId, warehouseId]);
 
   const result: FIFOAllocationResult = {
     material_id: materialId,
@@ -146,7 +146,7 @@ export async function allocateFIFO(
 
   // 使用 Decimal 汇总所有批次的可用量，避免浮点精度丢失
   const totalAvailableDecimal = batches.reduce(
-    (sum: Decimal, b: any) => sum.plus(new Decimal(b.available_qty)),
+    (sum: Decimal, b: Loose) => sum.plus(new Decimal(b.available_qty)),
     new Decimal(0)
   );
   result.total_available = totalAvailableDecimal.toNumber();
@@ -207,7 +207,7 @@ export async function checkShortageAndWarn(
   materialId: number,
   requiredQty: number
 ): Promise<ShortageWarning | null> {
-  const [safetyRows]: any = await query(
+  const [safetyRows]: Loose = await query(
     `SELECT safety_stock, min_stock FROM inv_material WHERE id = ? AND deleted = 0`,
     [materialId]
   );
@@ -220,7 +220,7 @@ export async function checkShortageAndWarn(
   const safetyStock = parseFloat(safety_stock) || 0;
   const reorderPoint = parseFloat(reorder_point) || 0;
 
-  const [invRows]: any = await query(
+  const [invRows]: Loose = await query(
     `SELECT COALESCE(SUM(available_qty), 0) as total_available FROM inv_inventory_batch
      WHERE material_id = ? AND deleted = 0 AND status = 1`,
     [materialId]
@@ -274,7 +274,7 @@ export async function checkShortageAndWarn(
  * @throws 非乐观锁冲突的错误立即抛出原始异常
  */
 export async function executeFIFODeductionWithRetry(
-  conn: any,
+  conn: Loose,
   allocation: FIFOAllocationResult,
   params: {
     sourceType: string;
@@ -286,7 +286,7 @@ export async function executeFIFODeductionWithRetry(
     operatorName: string | null;
   },
   maxRetries: number = DEFAULT_RETRY_ATTEMPTS
-): Promise<{ deductionDetails: any[]; totalCost: number; attempts: number }> {
+): Promise<{ deductionDetails: Loose[]; totalCost: number; attempts: number }> {
   let attempts = 0;
   let lastError: string = '';
 
@@ -295,8 +295,8 @@ export async function executeFIFODeductionWithRetry(
     try {
       const result = await executeFIFODeductionInternal(conn, allocation, params);
       return { ...result, attempts };
-    } catch (error: any) {
-      lastError = error.message;
+    } catch (error) {
+      lastError = (error as Error).message;
       if (
         attempts < maxRetries &&
         (lastError.includes('已被其他操作修改') ||
@@ -331,7 +331,7 @@ export async function executeFIFODeductionWithRetry(
  * @throws 批次不存在时抛出 "FIFO库存更新失败" 异常
  */
 async function executeFIFODeductionInternal(
-  conn: any,
+  conn: Loose,
   allocation: FIFOAllocationResult,
   params: {
     sourceType: string;
@@ -342,13 +342,13 @@ async function executeFIFODeductionInternal(
     operatorId: number | null;
     operatorName: string | null;
   }
-): Promise<{ deductionDetails: any[]; totalCost: number }> {
-  const deductionDetails: any[] = [];
+): Promise<{ deductionDetails: Loose[]; totalCost: number }> {
+  const deductionDetails: Loose[] = [];
   const totalCostDecimal = new Decimal(0);
 
   for (const alloc of allocation.allocations) {
     // 使用乐观锁更新：WHERE 条件包含 version 字段，防止并发修改导致超扣
-    const [updateResult]: any = await conn.execute(
+    const [updateResult]: Loose = await conn.execute(
       `UPDATE inv_inventory_batch SET
         quantity = quantity - ?,
         available_qty = available_qty - ?,
@@ -360,7 +360,7 @@ async function executeFIFODeductionInternal(
 
     if (updateResult.affectedRows === 0) {
       // 乐观锁冲突：查询当前批次实际状态，用于生成详细错误信息
-      const [currentBatch]: any = await conn.query(
+      const [currentBatch]: Loose = await conn.query(
         'SELECT version, available_qty FROM inv_inventory_batch WHERE id = ?',
         [alloc.batch_id]
       );
@@ -389,7 +389,7 @@ async function executeFIFODeductionInternal(
     });
 
     // 查询物料在仓库的当前库存总量，用于记录库存流水的前后变化
-    const [currentInv]: any = await conn.query(
+    const [currentInv]: Loose = await conn.query(
       'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0',
       [alloc.material_id, params.warehouseId]
     );
@@ -514,13 +514,13 @@ export async function executeFIFOWithTransaction(
     });
 
     return finalResult;
-  } catch (error: any) {
+  } catch (error) {
     return {
       results,
       totalCost: totalCostDecimal.toNumber(),
       shortageWarnings,
       success: false,
-      error: error.message,
+      error: (error as Error).message,
     };
   }
 }
@@ -556,7 +556,7 @@ export async function executeFIFOWithTransaction(
  * @throws 当乐观锁冲突时抛出 "库存更新失败" 异常
  */
 export async function executeSpecifiedBatchDeduction(
-  conn: any,
+  conn: Loose,
   params: {
     batchNo: string;
     materialId: number;
@@ -571,8 +571,8 @@ export async function executeSpecifiedBatchDeduction(
     operatorId: number | null;
     operatorName: string | null;
   }
-): Promise<{ deductionDetail: any; totalCost: number }> {
-  const [batch]: any = await conn.query(
+): Promise<{ deductionDetail: Loose; totalCost: number }> {
+  const [batch]: Loose = await conn.query(
     `SELECT id, batch_no, available_qty, quantity, unit_price, version FROM inv_inventory_batch
      WHERE batch_no = ? AND material_id = ? AND warehouse_id = ? AND deleted = 0
      FOR UPDATE`,
@@ -596,7 +596,7 @@ export async function executeSpecifiedBatchDeduction(
   }
 
   // 使用乐观锁更新批次库存：version 字段防止并发冲突
-  const [updateResult]: any = await conn.execute(
+  const [updateResult]: Loose = await conn.execute(
     `UPDATE inv_inventory_batch SET
       quantity = quantity - ?,
       available_qty = available_qty - ?,
@@ -614,7 +614,7 @@ export async function executeSpecifiedBatchDeduction(
   const unitCostDecimal = new Decimal(batchData.unit_price || 0);
   const totalCostDecimal = requiredQtyDecimal.times(unitCostDecimal);
 
-  const [currentInv]: any = await conn.query(
+  const [currentInv]: Loose = await conn.query(
     'SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0',
     [params.materialId, params.warehouseId]
   );

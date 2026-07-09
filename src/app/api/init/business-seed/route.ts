@@ -10,7 +10,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     const safeDelete = async (tableName: string) => {
       try {
         await conn.execute(`DELETE FROM ${tableName} WHERE deleted = 0 OR deleted IS NULL`);
-      } catch (_e: any) {}
+      } catch (_e) {}
     };
 
     await safeDelete('inv_inbound_item');
@@ -32,7 +32,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     // 清理可能存在的重复库存数据
     try {
       await conn.execute('DELETE FROM inv_inventory');
-    } catch (_e: any) {}
+    } catch (_e) {}
 
     const customers = [
       {
@@ -87,7 +87,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     }
     stats.crm_customer = customers.length;
 
-    const [customerRows]: any = await conn.execute(
+    const [customerRows]: Loose = await conn.execute(
       'SELECT id, customer_name FROM crm_customer ORDER BY id'
     );
     const customerMap: Record<string, number> = {};
@@ -116,7 +116,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         [order.order_no, customerId, order.status, order.amount]
       );
 
-      const [orderRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [orderRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const orderId = orderRow[0].id;
 
       await conn.execute(
@@ -127,7 +127,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
     }
     stats.sal_order = salesOrders.length;
 
-    const [orderRows]: any = await conn.execute('SELECT id, order_no FROM sal_order ORDER BY id');
+    const [orderRows]: Loose = await conn.execute('SELECT id, order_no FROM sal_order ORDER BY id');
     const orderMap: Record<string, number> = {};
     for (const row of orderRows) {
       orderMap[row.order_no] = row.id;
@@ -612,7 +612,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
         ]
       );
 
-      const [orderRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [orderRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const orderId = orderRow[0].id;
 
       await conn.execute(
@@ -714,7 +714,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
       { material_name: '保护膜', material_code: 'MAT006', quantity: 800, min_quantity: 500 },
     ];
 
-    const [matRows]: any = await conn.execute(
+    const [matRows]: Loose = await conn.execute(
       'SELECT id, material_code FROM bom_material WHERE deleted = 0 LIMIT 20'
     );
     const matMap: Record<string, number> = {};

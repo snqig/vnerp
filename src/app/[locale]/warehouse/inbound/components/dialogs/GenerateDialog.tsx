@@ -63,8 +63,8 @@ export function GenerateDialog({
               </SelectTrigger>
               <SelectContent>
                 {suppliers
-                  .filter((s: any) => s.status !== 0 && s.status !== 'inactive')
-                  .map((s: any) => (
+                  .filter((s: Loose) => s.status !== 0 && s.status !== 'inactive')
+                  .map((s: Loose) => (
                     <SelectItem key={s.id} value={s.name || s.supplier_name}>
                       {s.name || s.supplier_name}
                     </SelectItem>

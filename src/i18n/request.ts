@@ -7,7 +7,7 @@ const seenMissingKeys = new Set<string>();
 export default getRequestConfig(async ({ requestLocale }) => {
   let locale = await requestLocale;
 
-  if (!locale || !locales.includes(locale as any)) {
+  if (!locale || !locales.includes(locale as Loose)) {
     locale = defaultLocale;
   }
 
@@ -32,7 +32,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
         seenMissingKeys.add(uniqueKey);
         console.warn(
           `[i18n] Missing translation key: "${namespace}.${key}" (locale: ${locale}). ` +
-          `Run: node scripts/debug-perf/diagnose_i18n_keys.mjs to find all missing keys.`
+            `Run: node scripts/debug-perf/diagnose_i18n_keys.mjs to find all missing keys.`
         );
       } else if (msg.includes('INVALID_MESSAGE')) {
         console.warn(`[i18n] Message format error (locale: ${locale}): ${msg}`);

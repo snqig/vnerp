@@ -53,9 +53,9 @@ export const POST = withPermission(
       });
 
       return successResponse(result, 'BOM展开成功');
-    } catch (error: any) {
-      if (error.message.includes('产品不存在')) {
-        return errorResponse(error.message, 404, 404);
+    } catch (error) {
+      if ((error as Error).message.includes('产品不存在')) {
+        return errorResponse((error as Error).message, 404, 404);
       }
       throw error;
     }
@@ -117,9 +117,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       const result = await expandBom(pid, qty, config);
       return successResponse(result, 'BOM展开成功');
     }
-  } catch (error: any) {
-    if (error.message.includes('产品不存在')) {
-      return errorResponse(error.message, 404, 404);
+  } catch (error) {
+    if ((error as Error).message.includes('产品不存在')) {
+      return errorResponse((error as Error).message, 404, 404);
     }
     throw error;
   }
@@ -217,9 +217,9 @@ export const PUT = withPermission(
       } else {
         return errorResponse(`不支持的操作类型: ${action}`, 400, 400);
       }
-    } catch (error: any) {
-      if (error.message.includes('产品不存在')) {
-        return errorResponse(error.message, 404, 404);
+    } catch (error) {
+      if ((error as Error).message.includes('产品不存在')) {
+        return errorResponse((error as Error).message, 404, 404);
       }
       throw error;
     }

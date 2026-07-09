@@ -110,6 +110,9 @@ const eslintConfig = defineConfig([
     'messages/**',
     'eslint-rules/**',
 
+    // 全局 Loose 类型定义（any 别名，逐步替换为具体类型）
+    'src/types/loose.d.ts',
+
     // 脚本目录允许 console（Node.js 脚本标准输出）
     'scripts/**',
 

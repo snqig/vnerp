@@ -93,8 +93,8 @@ export default function BatchPage() {
     supplier_name: '',
     remark: '',
   });
-  const [materials, setMaterials] = useState<any[]>([]);
-  const [warehouses, setWarehouses] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<Loose[]>([]);
+  const [warehouses, setWarehouses] = useState<Loose[]>([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -567,7 +567,7 @@ export default function BatchPage() {
                     <SelectValue placeholder={t('selectMaterial')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {materials.map((m: any) => (
+                    {materials.map((m: Loose) => (
                       <SelectItem key={m.id} value={String(m.id)}>
                         {m.material_code} - {m.material_name}
                       </SelectItem>
@@ -585,7 +585,7 @@ export default function BatchPage() {
                     <SelectValue placeholder={t('selectWarehouse')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {warehouses.map((w: any) => (
+                    {warehouses.map((w: Loose) => (
                       <SelectItem key={w.id} value={String(w.id)}>
                         {w.warehouse_name}
                       </SelectItem>

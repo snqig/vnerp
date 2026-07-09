@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const workorderNo = searchParams.get('workorderNo') || '';
 
   let where = 'WHERE f.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     where += ' AND (f.formula_no LIKE ? OR f.formula_name LIKE ? OR f.pantone_code LIKE ?)';
@@ -35,25 +35,25 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(workorderNo);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM ink_formula f ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT f.* FROM ink_formula f ${where} ORDER BY f.create_time DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
 
   for (const row of rows) {
-    const items: any = await query(
+    const items: Loose = await query(
       'SELECT * FROM ink_formula_item WHERE formula_id = ? AND deleted = 0 ORDER BY sort_order',
       [row.id]
     );
     row.items = items;
 
-    const workorders: any = await query(
+    const workorders: Loose = await query(
       `SELECT fw.*, wo.order_no, wo.product_name, wo.plan_qty, wo.status as workorder_status
        FROM ink_formula_workorder fw
        LEFT JOIN prod_work_order wo ON fw.workorder_id = wo.id
@@ -98,7 +98,7 @@ export const POST = withPermission(
         String(now.getDate()).padStart(2, '0') +
         String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-      const [insertResult]: any = await conn.execute(
+      const [insertResult]: Loose = await conn.execute(
         `INSERT INTO ink_formula (formula_no, formula_name, pantone_code, color_name, color_code, ink_type, base_ink_type, total_weight, unit, shelf_life_hours, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
         [

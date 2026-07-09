@@ -93,12 +93,12 @@ interface MaterialInfoRow {
  * @returns BOM 树的根节点，包含完整的父子层级结构
  */
 export async function explodeBOM(
-  conn: any,
+  conn: Loose,
   productId: number,
   quantity: number,
   maxDepth: number = 10
 ): Promise<BOMNode> {
-  const productRows: any = await conn.query(
+  const productRows: Loose = await conn.query(
     `SELECT id, material_code, material_name, unit FROM inv_material WHERE id = ? AND deleted = 0`,
     [productId]
   );
@@ -114,7 +114,7 @@ export async function explodeBOM(
   }
 
   const defaultLeadTime = await CalcParamService.getInt('mrp.default_lead_time_days', 7);
-  const leadTimeRows: any = await conn.query(
+  const leadTimeRows: Loose = await conn.query(
     `SELECT id FROM inv_material WHERE id = ? AND deleted = 0`,
     [productId]
   );
@@ -199,7 +199,7 @@ export async function explodeBOM(
 
       const childCircularKey = `${line.material_id}:${childPath}`;
 
-      const matInfoRows: any = await conn.query(
+      const matInfoRows: Loose = await conn.query(
         `SELECT id, material_code, material_name FROM inv_material WHERE id = ?`,
         [line.material_id]
       );
@@ -280,7 +280,7 @@ export interface TimeBucket {
  * @returns 各时间分段的 MRP 计算明细数组
  */
 export async function calculateTimeBuckets(
-  conn: any,
+  conn: Loose,
   materialId: number,
   warehouseId: number,
   startDate: string,
@@ -294,13 +294,13 @@ export async function calculateTimeBuckets(
   }
 
   const defaultLeadTime = await CalcParamService.getInt('mrp.default_lead_time_days', 7);
-  const matInfoRows: any = await conn.query(
+  const matInfoRows: Loose = await conn.query(
     `SELECT id FROM inv_material WHERE id = ? AND deleted = 0`,
     [materialId]
   );
   const leadTimeDays = defaultLeadTime;
 
-  const invRows: any = await conn.query(
+  const invRows: Loose = await conn.query(
     `SELECT COALESCE(SUM(available_qty), 0) as total_available
      FROM inv_inventory
      WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
@@ -308,7 +308,7 @@ export async function calculateTimeBuckets(
   );
   const currentOnHand = Number(invRows.length > 0 ? invRows[0].total_available : 0);
 
-  const requirementRows: any = await conn.query(
+  const requirementRows: Loose = await conn.query(
     `SELECT
        DATE(wo.plan_start_date) as req_date,
        COALESCE(SUM(bd.quantity * wo.plan_qty * (1 + bd.loss_rate / 100)), 0) as total_req
@@ -332,7 +332,7 @@ export async function calculateTimeBuckets(
     requirementMap.set(dateStr, Number(row.total_req));
   }
 
-  const receiptRows: any = await conn.query(
+  const receiptRows: Loose = await conn.query(
     `SELECT
        DATE(po.delivery_date) as receipt_date,
        COALESCE(SUM(pol.order_qty - pol.received_qty), 0) as total_receipt
@@ -531,7 +531,7 @@ export interface NetRequirement {
  * @returns 各物料的净需求分析结果数组，按物料聚合汇总
  */
 export async function calculateNetRequirements(
-  conn: any,
+  conn: Loose,
   workOrderIds: number[],
   warehouseId: number
 ): Promise<NetRequirement[]> {
@@ -541,7 +541,7 @@ export async function calculateNetRequirements(
 
   const placeholders = workOrderIds.map(() => '?').join(',');
 
-  const workOrders: any = await conn.query(
+  const workOrders: Loose = await conn.query(
     `SELECT wo.id, wo.work_order_no, wo.plan_qty, wo.plan_start_date, wo.material_id
      FROM prd_work_order wo
      WHERE wo.id IN (${placeholders})`,
@@ -603,7 +603,7 @@ export async function calculateNetRequirements(
   for (const entry of materialReqEntries) {
     const materialId = entry[0];
     const req = entry[1];
-    const invRows: any = await conn.query(
+    const invRows: Loose = await conn.query(
       `SELECT COALESCE(SUM(available_qty), 0) as total_available
        FROM inv_inventory
        WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
@@ -611,7 +611,7 @@ export async function calculateNetRequirements(
     );
     const onHandQty = Number(invRows.length > 0 ? invRows[0].total_available : 0);
 
-    const allocatedRows: any = await conn.query(
+    const allocatedRows: Loose = await conn.query(
       `SELECT COALESCE(SUM(mii.issued_qty), 0) as total_allocated
        FROM prd_material_issue_item mii
        INNER JOIN prd_material_issue mi ON mi.id = mii.issue_id
@@ -623,7 +623,7 @@ export async function calculateNetRequirements(
     );
     const allocatedQty = Number(allocatedRows.length > 0 ? allocatedRows[0].total_allocated : 0);
 
-    const inTransitRows: any = await conn.query(
+    const inTransitRows: Loose = await conn.query(
       `SELECT COALESCE(SUM(pol.order_qty - pol.received_qty), 0) as total_in_transit
        FROM pur_purchase_order_line pol
        INNER JOIN pur_purchase_order po ON po.id = pol.po_id
@@ -636,7 +636,7 @@ export async function calculateNetRequirements(
     const inTransitQty = Number(inTransitRows.length > 0 ? inTransitRows[0].total_in_transit : 0);
 
     const defaultLeadTime = await CalcParamService.getInt('mrp.default_lead_time_days', 7);
-    const matInfoRows: any = await conn.query(
+    const matInfoRows: Loose = await conn.query(
       `SELECT id, material_code, material_name, unit, safety_stock, purchase_price
        FROM inv_material WHERE id = ? AND deleted = 0`,
       [materialId]
@@ -756,7 +756,7 @@ export interface PlannedOrder {
  * @returns 按物料聚合的计划订单数组
  */
 export async function generatePlannedOrders(
-  conn: any,
+  conn: Loose,
   workOrderIds: number[],
   warehouseId: number
 ): Promise<PlannedOrder[]> {
@@ -831,7 +831,7 @@ export async function generatePlannedOrders(
  * @returns 生成的采购申请列表，每项包含申请编号和物料项数
  */
 export async function generatePurchaseRequestsFromMRP(
-  conn: any,
+  conn: Loose,
   plannedOrders: PlannedOrder[],
   operatorId: number | null,
   operatorName: string
@@ -845,7 +845,7 @@ export async function generatePurchaseRequestsFromMRP(
 
   const supplierMap = new Map<number | null, PlannedOrder[]>();
 
-  const matSupplierRows: any = await conn.query(
+  const matSupplierRows: Loose = await conn.query(
     `SELECT id, material_code, material_name
      FROM inv_material
      WHERE id IN (${matPlaceholders})`,
@@ -877,7 +877,7 @@ export async function generatePurchaseRequestsFromMRP(
 
     let supplierName = '';
     if (supplierId) {
-      const suppRows: any = await conn.query(
+      const suppRows: Loose = await conn.query(
         `SELECT supplier_name FROM pur_supplier WHERE id = ? AND deleted = 0`,
         [supplierId]
       );
@@ -886,7 +886,7 @@ export async function generatePurchaseRequestsFromMRP(
       }
     }
 
-    const [headerResult]: any = await conn.execute(
+    const [headerResult]: Loose = await conn.execute(
       `INSERT INTO pur_request
        (request_no, request_dept_id, requester_id, supplier_id, supplier_name, expected_date, status, source_type, create_by, create_time)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'mrp', ?, NOW())`,
@@ -908,7 +908,7 @@ export async function generatePurchaseRequestsFromMRP(
     for (const order of orders) {
       let suggestedPrice = 0;
 
-      const priceRows: any = await conn.query(
+      const priceRows: Loose = await conn.query(
         `SELECT purchase_price FROM inv_material WHERE id = ? AND deleted = 0`,
         [order.material_id]
       );
@@ -965,7 +965,7 @@ export async function generatePurchaseRequestsFromMRP(
  * @returns MRP 完整计算结果，包含 BOM 树、净需求、计划订单、采购申请（可选）和汇总统计
  */
 export async function runFullMRP(
-  conn: any,
+  conn: Loose,
   workOrderIds: number[],
   warehouseId: number,
   operatorId: number | null,
@@ -1010,7 +1010,7 @@ export async function runFullMRP(
   }
 
   const placeholders = workOrderIds.map(() => '?').join(',');
-  const workOrders: any = await conn.query(
+  const workOrders: Loose = await conn.query(
     `SELECT wo.id, wo.plan_qty, wo.material_id
      FROM prd_work_order wo
      WHERE wo.id IN (${placeholders})`,
@@ -1057,7 +1057,7 @@ export async function runFullMRP(
 
   let totalPlannedAmount = 0;
   for (const order of plannedOrders) {
-    const priceRows: any = await conn.query(
+    const priceRows: Loose = await conn.query(
       `SELECT purchase_price FROM inv_material WHERE id = ? AND deleted = 0`,
       [order.material_id]
     );

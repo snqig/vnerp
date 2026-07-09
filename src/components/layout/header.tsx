@@ -166,7 +166,7 @@ export function Header({ title, navigationMode = 'sidebar', menus: propMenus }: 
       const res = await fetch('/api/system/notice?page=1&pageSize=10');
       const result = await res.json();
       if (result.success && result.data?.list) {
-        const items = result.data.list.map((n: any) => ({
+        const items = result.data.list.map((n: Loose) => ({
           id: n.id,
           title: n.notice_title,
           content: n.notice_content || '',

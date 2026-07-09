@@ -18,7 +18,7 @@ export const GET = withPermission(async (request: NextRequest, user: UserInfo) =
   const status = searchParams.get('status');
 
   let whereClause = 'WHERE so.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     whereClause += ' AND (so.order_no LIKE ? OR c.customer_name LIKE ?)';
@@ -30,13 +30,13 @@ export const GET = withPermission(async (request: NextRequest, user: UserInfo) =
     params.push(parseInt(status));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM sal_order so LEFT JOIN crm_customer c ON so.customer_id = c.id ${whereClause}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any[] = await query(
+  const rows: Loose[] = await query(
     `SELECT so.*, c.customer_name
      FROM sal_order so
      LEFT JOIN crm_customer c ON so.customer_id = c.id
@@ -46,7 +46,7 @@ export const GET = withPermission(async (request: NextRequest, user: UserInfo) =
     [...params, pageSize, (page - 1) * pageSize]
   );
 
-  const list = (rows as any[]).map((order: any) => ({
+  const list = (rows as Loose[]).map((order: Loose) => ({
     id: order.id,
     order_no: order.order_no,
     order_date: order.order_date,
@@ -85,7 +85,7 @@ export const POST = withPermission(
 
     const order_no = 'SO' + Date.now();
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO sal_order (
       order_no, customer_id, order_date, delivery_date, status,
       salesman_id, payment_terms, contract_no, remark,
@@ -150,7 +150,9 @@ export const PUT = withPermission(
       return errorResponse('订单ID不能为空', 400, 400);
     }
 
-    const order: any = await queryOne('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [id]);
+    const order: Loose = await queryOne('SELECT * FROM sal_order WHERE id = ? AND deleted = 0', [
+      id,
+    ]);
 
     if (!order) {
       return errorResponse('订单不存在', 404, 404);
@@ -183,7 +185,7 @@ export const PUT = withPermission(
           return errorResponse('只有已提交的订单可以审核', 400, 400);
         }
 
-        const lines: any[] = await query(
+        const lines: Loose[] = await query(
           'SELECT * FROM sal_order_item WHERE order_id = ? AND deleted = 0',
           [id]
         );

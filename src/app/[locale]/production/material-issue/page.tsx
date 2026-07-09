@@ -93,7 +93,7 @@ export default function MaterialIssuePage() {
       const result = await res.json();
       if (result.success)
         setWarehouses(
-          (result.data?.list || result.data || []).map((w: any) => ({
+          (result.data?.list || result.data || []).map((w: Loose) => ({
             id: w.id,
             name: w.name || w.warehouse_name || '',
           }))

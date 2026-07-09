@@ -15,7 +15,7 @@ export async function GET(_request: NextRequest) {
       AND TABLE_NAME IN ('mdm_product', 'mdm_product_category', 'mdm_product_bom', 'mdm_product_route')
     `);
 
-    const existingTables = (tables as any[]).map((t) => t.TABLE_NAME);
+    const existingTables = (tables as Loose[]).map((t) => t.TABLE_NAME);
 
     // 1. 创建产品主表
     if (!existingTables.includes('mdm_product')) {
@@ -144,7 +144,7 @@ export async function GET(_request: NextRequest) {
     const categoryCount = await query(
       'SELECT COUNT(*) as count FROM mdm_product_category WHERE deleted = 0'
     );
-    if ((categoryCount as any[])[0].count === 0) {
+    if ((categoryCount as Loose[])[0].count === 0) {
       await query(`
         INSERT INTO mdm_product_category (category_code, category_name, parent_id, level, sort_order, description, status) VALUES
         ('CAT001', '包装膜', 0, 1, 1, '各类包装用薄膜产品', 1),
@@ -160,7 +160,7 @@ export async function GET(_request: NextRequest) {
 
     // 插入产品测试数据
     const productCount = await query('SELECT COUNT(*) as count FROM mdm_product WHERE deleted = 0');
-    if ((productCount as any[])[0].count === 0) {
+    if ((productCount as Loose[])[0].count === 0) {
       await query(`
         INSERT INTO mdm_product (product_code, product_name, short_name, specification, unit, category_id, category_name, customer_id, customer_name, bom_version, description, status, cost_price, sale_price, min_stock, max_stock, safety_stock) VALUES
         ('P001', '包装膜-透明', '透明膜', '厚度0.08mm,宽度1200mm,长度500m', '㎡', 1, '包装膜', NULL, '通用', 'V2.0', '高透明度包装膜，适用于食品包装', 'active', 2.50, 3.80, 1000, 10000, 2000),
@@ -181,7 +181,7 @@ export async function GET(_request: NextRequest) {
       message: '产品管理表初始化完成',
       details: results,
     });
-  } catch (error: any) {
-    return errorResponse(`创建表失败: ${error.message}`, 500, 500);
+  } catch (error) {
+    return errorResponse(`创建表失败: ${(error as Error).message}`, 500, 500);
   }
 }

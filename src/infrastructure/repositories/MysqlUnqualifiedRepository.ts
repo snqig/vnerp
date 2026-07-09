@@ -141,7 +141,8 @@ export class MysqlUnqualifiedRepository implements IUnqualifiedRepository {
     }
 
     if (filters?.keyword) {
-      const cond = ' AND (unqualified_no LIKE ? OR handle_no LIKE ? OR material_name LIKE ? OR defect_type LIKE ?)';
+      const cond =
+        ' AND (unqualified_no LIKE ? OR handle_no LIKE ? OR material_name LIKE ? OR defect_type LIKE ?)';
       sql += cond;
       countSql += cond;
       const kw = `%${filters.keyword}%`;
@@ -187,7 +188,7 @@ export class MysqlUnqualifiedRepository implements IUnqualifiedRepository {
     const unqualifiedNo = record.unqualifiedNo || generateUnqualifiedNo();
     const handleNo = record.handleNo || generateHandleNo();
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO qc_unqualified
        (unqualified_no, handle_no, inspection_id, source_type, source_no,
         material_id, material_code, material_name, quantity, defect_type, defect_desc,
@@ -233,13 +234,15 @@ export class MysqlUnqualifiedRepository implements IUnqualifiedRepository {
   ): Promise<boolean> {
     const newDbCode = UnqualifiedStatus.from(status).toDbCode();
     const currentDbCode = UnqualifiedStatus.from(currentStatus).toDbCode();
-    const sql = updateBy !== undefined
-      ? 'UPDATE qc_unqualified SET handle_status = ?, update_by = ?, update_time = NOW() WHERE id = ? AND handle_status = ? AND deleted = 0'
-      : 'UPDATE qc_unqualified SET handle_status = ?, update_time = NOW() WHERE id = ? AND handle_status = ? AND deleted = 0';
-    const params = updateBy !== undefined
-      ? [newDbCode, updateBy, id, currentDbCode]
-      : [newDbCode, id, currentDbCode];
-    const result: any = await execute(sql, params);
+    const sql =
+      updateBy !== undefined
+        ? 'UPDATE qc_unqualified SET handle_status = ?, update_by = ?, update_time = NOW() WHERE id = ? AND handle_status = ? AND deleted = 0'
+        : 'UPDATE qc_unqualified SET handle_status = ?, update_time = NOW() WHERE id = ? AND handle_status = ? AND deleted = 0';
+    const params =
+      updateBy !== undefined
+        ? [newDbCode, updateBy, id, currentDbCode]
+        : [newDbCode, id, currentDbCode];
+    const result: Loose = await execute(sql, params);
     return result.affectedRows > 0;
   }
 

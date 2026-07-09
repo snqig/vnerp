@@ -12,14 +12,15 @@ export const GET = withPermission(async (request: NextRequest) => {
   const ink_type = searchParams.get('ink_type') || '';
 
   let where = 'WHERE io.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (status) {
     where += ' AND io.status = ?';
     params.push(Number(status));
   }
   if (keyword) {
-    where += ' AND (io.record_no LIKE ? OR io.material_name LIKE ? OR io.material_code LIKE ? OR io.batch_no LIKE ?)';
+    where +=
+      ' AND (io.record_no LIKE ? OR io.material_name LIKE ? OR io.material_code LIKE ? OR io.batch_no LIKE ?)';
     const like = `%${keyword}%`;
     params.push(like, like, like, like);
   }
@@ -28,13 +29,13 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push(ink_type);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM ink_opening_record io ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT io.* FROM ink_opening_record io ${where} ORDER BY io.open_time DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -71,7 +72,7 @@ export const POST = withPermission(async (request: NextRequest) => {
       .slice(0, 19)
       .replace('T', ' ');
 
-    const [insertResult]: any = await conn.execute(
+    const [insertResult]: Loose = await conn.execute(
       `INSERT INTO ink_opening_record (record_no, material_id, material_code, material_name, batch_no, ink_type, open_time, expire_hours, expire_time, remaining_qty, unit, operator_id, operator_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
       [
@@ -115,7 +116,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
   if (status === 3) {
     await transaction(async (conn) => {
-      const [recordRows]: any = await conn.execute(
+      const [recordRows]: Loose = await conn.execute(
         'SELECT batch_no, remaining_qty FROM ink_opening_record WHERE id = ? AND deleted = 0',
         [id]
       );

@@ -24,7 +24,7 @@ interface Role {
 // 构建查询条件
 function buildQueryConditions(params: { keyword: string; status: string | null }): {
   sql: string;
-  values: any[];
+  values: Loose[];
 } {
   let sql = `
     SELECT
@@ -33,7 +33,7 @@ function buildQueryConditions(params: { keyword: string; status: string | null }
     FROM sys_role
     WHERE deleted = 0
   `;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (params.keyword) {
     sql += ' AND (role_name LIKE ? OR role_code LIKE ?)';
@@ -52,7 +52,7 @@ function buildQueryConditions(params: { keyword: string; status: string | null }
 }
 
 // 格式化角色数据
-function formatRole(role: any): Role {
+function formatRole(role: Loose): Role {
   let permissions: string[] = [];
   if (role.permissions) {
     try {
@@ -92,7 +92,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   });
 
   let countSql = `SELECT COUNT(*) as total FROM sys_role WHERE deleted = 0`;
-  const countValues: any[] = [];
+  const countValues: Loose[] = [];
 
   if (keyword) {
     countSql += ' AND (role_name LIKE ? OR role_code LIKE ?)';
@@ -105,13 +105,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   const countResult = await query(countSql, countValues);
-  const total = (countResult as any[])[0]?.total || 0;
+  const total = (countResult as Loose[])[0]?.total || 0;
 
   const paginatedSql = `${sql} LIMIT ? OFFSET ?`;
   const paginatedValues = [...values, pageSize, (page - 1) * pageSize];
 
   const roles = await query<Role>(paginatedSql, paginatedValues);
-  const formattedRoles = (roles as any[]).map(formatRole);
+  const formattedRoles = (roles as Loose[]).map(formatRole);
 
   return successResponse({
     list: formattedRoles,

@@ -44,8 +44,8 @@ export const POST = withPermission(
         },
         result.message
       );
-    } catch (error: any) {
-      return errorResponse('审批处理失败: ' + error.message, 500, 500);
+    } catch (error) {
+      return errorResponse('审批处理失败: ' + (error as Error).message, 500, 500);
     }
   },
   { logTitle: '执行审批操作' }
@@ -66,13 +66,13 @@ export const GET = withPermission(async (request: NextRequest) => {
   if (instanceId) {
     const rows = (await query('SELECT * FROM wf_approval_instance WHERE id = ?', [
       instanceId,
-    ])) as any[];
+    ])) as Loose[];
     instance = rows[0];
   } else {
     const rows = (await query(
       'SELECT * FROM wf_approval_instance WHERE source_type = ? AND source_id = ?',
       [sourceType, sourceId]
-    )) as any[];
+    )) as Loose[];
     instance = rows[0];
   }
 
@@ -88,12 +88,12 @@ export const GET = withPermission(async (request: NextRequest) => {
      WHERE t.instance_id = ?
      ORDER BY t.create_time ASC`,
     [instance.id]
-  )) as any[];
+  )) as Loose[];
 
   // 获取流程配置
-  const workflow: any = (await query('SELECT * FROM wf_workflow_config WHERE id = ?', [
+  const workflow: Loose = (await query('SELECT * FROM wf_workflow_config WHERE id = ?', [
     instance.workflow_id,
-  ])) as any[];
+  ])) as Loose[];
 
   const nodes =
     workflow.length > 0
@@ -123,7 +123,7 @@ export const GET = withPermission(async (request: NextRequest) => {
           ? {
               id: workflow[0].id,
               name: workflow[0].workflow_name,
-              nodes: nodes.map((n: any) => ({
+              nodes: nodes.map((n: Loose) => ({
                 id: n.id,
                 name: n.node_name,
                 type: n.node_type,
@@ -134,7 +134,7 @@ export const GET = withPermission(async (request: NextRequest) => {
               })),
             }
           : null,
-      tasks: tasks.map((t: any) => ({
+      tasks: tasks.map((t: Loose) => ({
         id: t.id,
         nodeId: t.node_id,
         nodeName: t.node_name,

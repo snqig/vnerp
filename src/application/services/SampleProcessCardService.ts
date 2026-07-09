@@ -88,7 +88,7 @@ async function fetchToolCosts(
   if (!dieToolId && !screenPlateId) return 0;
   const ids = [dieToolId, screenPlateId].filter(Boolean) as number[];
   const placeholders = ids.map(() => '?').join(',');
-  const [rows]: any = await query(
+  const [rows]: Loose = await query(
     `SELECT COALESCE(SUM(unit_cost), 0) AS total FROM dcprint_tool WHERE id IN (${placeholders}) AND is_deleted = 0`,
     ids
   );
@@ -101,7 +101,7 @@ async function generateSampleNo(): Promise<string> {
   const today = new Date();
   const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
   const prefix = `SP${ymd}`;
-  const [rows]: any = await query(
+  const [rows]: Loose = await query(
     `SELECT sample_no FROM dcprint_sample_process_card WHERE sample_no LIKE ? ORDER BY id DESC LIMIT 1`,
     [`${prefix}%`]
   );
@@ -125,7 +125,7 @@ export class SampleProcessCardService {
     pageSize: number;
   }) {
     const conditions: string[] = ['deleted = 0'];
-    const values: any[] = [];
+    const values: Loose[] = [];
 
     if (params.keyword) {
       conditions.push('(sample_no LIKE ? OR sample_name LIKE ? OR customer_name LIKE ?)');
@@ -144,13 +144,13 @@ export class SampleProcessCardService {
     const where = conditions.join(' AND ');
     const offset = (params.page - 1) * params.pageSize;
 
-    const [countRows]: any = await query(
+    const [countRows]: Loose = await query(
       `SELECT COUNT(*) AS total FROM dcprint_sample_process_card WHERE ${where}`,
       values
     );
     const total = countRows[0]?.total || 0;
 
-    const [rows]: any = await query(
+    const [rows]: Loose = await query(
       `SELECT * FROM dcprint_sample_process_card WHERE ${where} ORDER BY id DESC LIMIT ? OFFSET ?`,
       [...values, params.pageSize, offset]
     );
@@ -160,18 +160,18 @@ export class SampleProcessCardService {
 
   /** 详情（含明细） */
   async getCardDetail(id: number): Promise<SampleProcessCard | null> {
-    const [cards]: any = await query(
+    const [cards]: Loose = await query(
       `SELECT * FROM dcprint_sample_process_card WHERE id = ? AND deleted = 0 LIMIT 1`,
       [id]
     );
     if (cards.length === 0) return null;
     const card = cards[0];
 
-    const [items]: any = await query(
+    const [items]: Loose = await query(
       `SELECT * FROM dcprint_sample_process_item WHERE card_id = ? ORDER BY sort, id`,
       [id]
     );
-    const [steps]: any = await query(
+    const [steps]: Loose = await query(
       `SELECT * FROM dcprint_sample_process_step WHERE card_id = ? ORDER BY sort, id`,
       [id]
     );
@@ -213,7 +213,7 @@ export class SampleProcessCardService {
     const totalCost = baseCost.materialCost + baseCost.laborCost + totalToolCost;
 
     return await transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         `INSERT INTO dcprint_sample_process_card
          (sample_no, sample_name, customer_id, customer_name, product_id, product_name, version_no, status,
           substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
@@ -243,7 +243,7 @@ export class SampleProcessCardService {
           totalCost,
           data.remark || null,
           userId,
-        ] as any[]
+        ] as Loose[]
       );
       const cardId = result.insertId;
 
@@ -265,7 +265,7 @@ export class SampleProcessCardService {
             item.line_cost || 0,
             item.remark || null,
             item.sort || 0,
-          ] as any[]
+          ] as Loose[]
         );
       }
 
@@ -283,7 +283,7 @@ export class SampleProcessCardService {
             step.line_cost || 0,
             step.process_param || null,
             step.sort || 0,
-          ] as any[]
+          ] as Loose[]
         );
       }
 
@@ -298,7 +298,7 @@ export class SampleProcessCardService {
     data: Partial<SampleProcessCardInput>,
     userId: number
   ): Promise<void> {
-    const [existing]: any = await query(
+    const [existing]: Loose = await query(
       `SELECT status FROM dcprint_sample_process_card WHERE id = ? AND deleted = 0 LIMIT 1`,
       [id]
     );
@@ -319,7 +319,7 @@ export class SampleProcessCardService {
     const totalToolCost = Math.round(toolCost * 10000) / 10000;
 
     await transaction(async (conn) => {
-      const params: any[] = [
+      const params: Loose[] = [
         data.sample_name,
         data.customer_id || null,
         data.customer_name || null,
@@ -377,7 +377,7 @@ export class SampleProcessCardService {
               item.line_cost || 0,
               item.remark || null,
               item.sort || 0,
-            ] as any[]
+            ] as Loose[]
           );
         }
       }
@@ -398,7 +398,7 @@ export class SampleProcessCardService {
               step.line_cost || 0,
               step.process_param || null,
               step.sort || 0,
-            ] as any[]
+            ] as Loose[]
           );
         }
       }
@@ -407,7 +407,7 @@ export class SampleProcessCardService {
 
   /** 删除（软删除，仅草稿可删） */
   async deleteCard(id: number): Promise<void> {
-    const [existing]: any = await query(
+    const [existing]: Loose = await query(
       `SELECT status FROM dcprint_sample_process_card WHERE id = ? AND deleted = 0 LIMIT 1`,
       [id]
     );
@@ -438,7 +438,7 @@ export class SampleProcessCardService {
       );
 
       // 生成打样工单
-      const [woResult]: any = await conn.execute(
+      const [woResult]: Loose = await conn.execute(
         `INSERT INTO prd_work_order
          (work_order_no, work_order_date, material_id, plan_qty, unit, priority, status, remark, create_by, create_time)
          VALUES (?, CURDATE(), ?, 1, 'pcs', 1, 1, ?, ?, NOW())`,
@@ -447,7 +447,7 @@ export class SampleProcessCardService {
           card.substrate_material_id || 0,
           `打样工单 - ${card.sample_no} ${card.sample_name}`,
           userId,
-        ] as any[]
+        ] as Loose[]
       );
       const workOrderId = woResult.insertId;
 
@@ -470,7 +470,7 @@ export class SampleProcessCardService {
 
   /** 确认工艺卡（打样中→已确认） */
   async confirmCard(id: number, userId: number): Promise<void> {
-    const [existing]: any = await query(
+    const [existing]: Loose = await query(
       `SELECT status FROM dcprint_sample_process_card WHERE id = ? AND deleted = 0 LIMIT 1`,
       [id]
     );
@@ -485,7 +485,7 @@ export class SampleProcessCardService {
 
   /** 作废工艺卡 */
   async cancelCard(id: number, userId: number): Promise<void> {
-    const [existing]: any = await query(
+    const [existing]: Loose = await query(
       `SELECT status FROM dcprint_sample_process_card WHERE id = ? AND deleted = 0 LIMIT 1`,
       [id]
     );
@@ -509,7 +509,7 @@ export class SampleProcessCardService {
     const newSampleNo = await generateSampleNo();
 
     return await transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         `INSERT INTO dcprint_sample_process_card
          (sample_no, sample_name, customer_id, customer_name, product_id, product_name, version_no, status,
           substrate_material_id, substrate_material_name, spec, print_color, ink_color_id, screen_plate_id, die_tool_id,
@@ -540,7 +540,7 @@ export class SampleProcessCardService {
           source.remark,
           sourceId,
           userId,
-        ] as any[]
+        ] as Loose[]
       );
       const newCardId = result.insertId;
 
@@ -563,7 +563,7 @@ export class SampleProcessCardService {
               item.line_cost || 0,
               item.remark || null,
               item.sort || 0,
-            ] as any[]
+            ] as Loose[]
           );
         }
       }
@@ -583,7 +583,7 @@ export class SampleProcessCardService {
               step.line_cost || 0,
               step.process_param || null,
               step.sort || 0,
-            ] as any[]
+            ] as Loose[]
           );
         }
       }

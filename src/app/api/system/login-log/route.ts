@@ -12,7 +12,7 @@ export const GET = withPermission(
     const status = searchParams.get('status') || '';
 
     let where = 'WHERE 1=1';
-    const params: any[] = [];
+    const params: Loose[] = [];
     if (userName) {
       where += ' AND username LIKE ?';
       params.push('%' + userName + '%');
@@ -23,10 +23,10 @@ export const GET = withPermission(
     }
 
     const countSql = 'SELECT COUNT(*) as total FROM sys_login_log ' + where;
-    const totalRows: any = await query(countSql, params);
+    const totalRows: Loose = await query(countSql, params);
     const total = totalRows[0]?.total || 0;
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       'SELECT id, username as user_name, create_time as login_time, ip as ipaddr, location as login_location, user_agent as browser, login_type, status, error_msg as msg FROM sys_login_log ' +
         where +
         ' ORDER BY create_time DESC LIMIT ? OFFSET ?',

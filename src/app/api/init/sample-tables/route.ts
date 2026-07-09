@@ -15,7 +15,7 @@ export async function GET(_request: NextRequest) {
       AND TABLE_NAME IN ('sal_sample_order', 'sal_sample_order_history')
     `);
 
-    const existingTables = (tables as any[]).map((t) => t.TABLE_NAME);
+    const existingTables = (tables as Loose[]).map((t) => t.TABLE_NAME);
 
     // 1. 创建打样订单主表
     if (!existingTables.includes('sal_sample_order')) {
@@ -79,7 +79,7 @@ export async function GET(_request: NextRequest) {
       SELECT COUNT(*) as count FROM sal_sample_order WHERE deleted = 0
     `);
 
-    if ((testDataCount as any[])[0].count === 0) {
+    if ((testDataCount as Loose[])[0].count === 0) {
       await query(`
         INSERT INTO sal_sample_order (
           order_no, notify_date, customer_name, product_name, material_no, version, 
@@ -131,14 +131,14 @@ export async function GET(_request: NextRequest) {
       `);
       results.push('✅ 插入测试数据: 14条打样订单');
     } else {
-      results.push(`✓ 测试数据已存在: ${(testDataCount as any[])[0].count}条`);
+      results.push(`✓ 测试数据已存在: ${(testDataCount as Loose[])[0].count}条`);
     }
 
     return successResponse({
       message: '打样订单管理表初始化完成',
       details: results,
     });
-  } catch (error: any) {
-    return errorResponse(`创建表失败: ${error.message}`, 500, 500);
+  } catch (error) {
+    return errorResponse(`创建表失败: ${(error as Error).message}`, 500, 500);
   }
 }

@@ -768,8 +768,8 @@ async function migrateOldConfigs(): Promise<void> {
 // 确保sys_config表有所需的列
 async function ensureConfigTableColumns(): Promise<void> {
   // 先检查现有列
-  const columns: any[] = await query(`SHOW COLUMNS FROM sys_config`);
-  const existingColumns = new Set(columns.map((c: any) => c.Field));
+  const columns: Loose[] = await query(`SHOW COLUMNS FROM sys_config`);
+  const existingColumns = new Set(columns.map((c: Loose) => c.Field));
 
   const newColumns: [string, string][] = [
     ['config_type_enum', '配置类型'],
@@ -786,7 +786,7 @@ async function ensureConfigTableColumns(): Promise<void> {
     if (!existingColumns.has(colName)) {
       try {
         await execute(`ALTER TABLE sys_config ADD COLUMN ${colName} ${colDef}`);
-      } catch (_e: any) {}
+      } catch (_e) {}
     }
   }
 }
@@ -797,7 +797,7 @@ async function initDefaultConfigs(): Promise<void> {
   await migrateOldConfigs();
 
   for (const config of DEFAULT_CONFIGS) {
-    const existing: any = await queryOne(
+    const existing: Loose = await queryOne(
       `SELECT id, config_value FROM sys_config WHERE config_key = ?`,
       [config.config_key]
     );
@@ -848,14 +848,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   const category = searchParams.get('category');
 
   let where = 'WHERE status = 1';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (category && category !== 'all') {
     where += ' AND category = ?';
     params.push(category);
   }
 
-  const rows: any[] = await query(
+  const rows: Loose[] = await query(
     `SELECT id, config_name, config_key, config_value, config_type_enum as config_type, 
             category, display_name, description, sort_order, 
             is_required, approval_required, status 
@@ -865,21 +865,21 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
 
   // 提取唯一的分类，并按最小sort_order排序
   const categoryOrder = new Map<string, number>();
-  rows.forEach((row: any) => {
+  rows.forEach((row: Loose) => {
     if (!categoryOrder.has(row.category)) {
       categoryOrder.set(row.category, row.sort_order);
     }
   });
 
   const categories: string[] = [];
-  const grouped: Record<string, any[]> = {};
+  const grouped: Record<string, Loose[]> = {};
 
   // 按分类的最小sort_order排序
   const sortedCategories = Array.from(categoryOrder.entries())
     .sort((a, b) => a[1] - b[1])
     .map(([cat]) => cat);
 
-  rows.forEach((row: any) => {
+  rows.forEach((row: Loose) => {
     if (!categories.includes(row.category)) {
       categories.push(row.category);
     }
@@ -913,7 +913,7 @@ export const POST = withPermission(
       return errorResponse('缺少配置数据', 400, 400);
     }
 
-    const requireApproval: any = await queryOne(
+    const requireApproval: Loose = await queryOne(
       `SELECT config_value FROM sys_config WHERE config_key = 'require_approval_for_config_change'`
     );
 
@@ -946,7 +946,7 @@ export const POST = withPermission(
       }
 
       for (const config of configData) {
-        const current: any = await queryOne(
+        const current: Loose = await queryOne(
           `SELECT config_value FROM sys_config WHERE config_key = ?`,
           [config.config_key]
         );
@@ -993,7 +993,7 @@ export const PUT = withPermission(
       return errorResponse('缺少变更记录ID', 400, 400);
     }
 
-    const log: any = await queryOne(`SELECT * FROM sys_config_change_log WHERE id = ?`, [log_id]);
+    const log: Loose = await queryOne(`SELECT * FROM sys_config_change_log WHERE id = ?`, [log_id]);
 
     if (!log) {
       return commonErrors.notFound('变更记录不存在');

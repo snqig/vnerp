@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const workorderNo = searchParams.get('workorderNo') || '';
 
   let where = 'WHERE d.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     where += ' AND (d.dispatch_no LIKE ? OR d.color_name LIKE ?)';
@@ -29,19 +29,19 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(workorderNo);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM ink_dispatch d ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT d.* FROM ink_dispatch d ${where} ORDER BY d.create_time DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );
 
   for (const row of rows) {
-    const items: any = await query(
+    const items: Loose = await query(
       'SELECT * FROM ink_dispatch_item WHERE dispatch_id = ? AND deleted = 0 ORDER BY sort_order',
       [row.id]
     );
@@ -90,7 +90,7 @@ export const POST = withPermission(
 
       const batchNo = `INK${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
 
-      const [insertResult]: any = await conn.execute(
+      const [insertResult]: Loose = await conn.execute(
         `INSERT INTO ink_dispatch (dispatch_no, batch_no, workorder_id, workorder_no, formula_id, formula_no, color_name, color_code, pantone_code, total_weight, unit, tare_weight, net_weight, gross_weight, operator_id, operator_name, machine_id, machine_name, status, remark)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
         [
@@ -123,7 +123,7 @@ export const POST = withPermission(
         const sourceBatchNo = item.source_batch_no || null;
 
         if (sourceBatchNo && Number(item.actual_weight || 0) > 0) {
-          const [batchRows]: any = await conn.execute(
+          const [batchRows]: Loose = await conn.execute(
             'SELECT id, available_qty, material_name FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0 FOR UPDATE',
             [sourceBatchNo]
           );
@@ -194,7 +194,7 @@ export const POST = withPermission(
         ]
       );
 
-      const [whRows]: any = await conn.execute(
+      const [whRows]: Loose = await conn.execute(
         "SELECT id FROM inv_warehouse WHERE warehouse_name LIKE '%调色%' AND deleted = 0 LIMIT 1"
       );
       const warehouseId = whRows.length > 0 ? whRows[0].id : null;
@@ -240,7 +240,7 @@ export const PUT = withPermission(
           [tare_weight || 0, net_weight || 0, gross_weight || 0, id]
         );
 
-        const [dispatchRows]: any = await conn.execute(
+        const [dispatchRows]: Loose = await conn.execute(
           'SELECT batch_no, net_weight, total_weight FROM ink_dispatch WHERE id = ?',
           [id]
         );

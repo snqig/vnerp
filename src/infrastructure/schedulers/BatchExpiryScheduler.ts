@@ -18,7 +18,7 @@ export class BatchExpiryScheduler {
     };
 
     try {
-      const [batchResult]: any = await execute(
+      const [batchResult]: Loose = await execute(
         `UPDATE inv_inventory_batch
          SET status = 'expired'
          WHERE status = 'normal'
@@ -33,14 +33,14 @@ export class BatchExpiryScheduler {
           count: result.expiredBatches,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       secureLog('error', 'Failed to mark expired inventory batches', {
-        error: error?.message,
+        error: (error as Error)?.message,
       });
     }
 
     try {
-      const [inkResult]: any = await execute(
+      const [inkResult]: Loose = await execute(
         `UPDATE ink_opening_record
          SET status = 2
          WHERE status = 1
@@ -54,14 +54,14 @@ export class BatchExpiryScheduler {
           count: result.expiredInkOpenings,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       secureLog('error', 'Failed to mark expired ink opening records', {
-        error: error?.message,
+        error: (error as Error)?.message,
       });
     }
 
     try {
-      const warningBatches: any = await query(
+      const warningBatches: Loose = await query(
         `SELECT id, batch_no, material_code, material_name, expire_date
          FROM inv_inventory_batch
          WHERE status = 'normal'
@@ -70,12 +70,12 @@ export class BatchExpiryScheduler {
          AND expire_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
          AND deleted = 0`
       );
-      result.warningBatches = (warningBatches as any[]).length;
+      result.warningBatches = (warningBatches as Loose[]).length;
 
       if (result.warningBatches > 0) {
         secureLog('warn', 'Inventory batches expiring within 7 days', {
           count: result.warningBatches,
-          batches: (warningBatches as any[]).slice(0, 10).map((b: any) => ({
+          batches: (warningBatches as Loose[]).slice(0, 10).map((b: Loose) => ({
             id: b.id,
             batchNo: b.batch_no,
             materialCode: b.material_code,
@@ -83,14 +83,14 @@ export class BatchExpiryScheduler {
           })),
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       secureLog('error', 'Failed to check batch expiry warnings', {
-        error: error?.message,
+        error: (error as Error)?.message,
       });
     }
 
     try {
-      const warningInk: any = await query(
+      const warningInk: Loose = await query(
         `SELECT id, record_no, material_name, expire_time
          FROM ink_opening_record
          WHERE status = 1
@@ -98,12 +98,12 @@ export class BatchExpiryScheduler {
          AND expire_time <= DATE_ADD(NOW(), INTERVAL 24 HOUR)
          AND deleted = 0`
       );
-      result.warningInkOpenings = (warningInk as any[]).length;
+      result.warningInkOpenings = (warningInk as Loose[]).length;
 
       if (result.warningInkOpenings > 0) {
         secureLog('warn', 'Ink openings expiring within 24 hours', {
           count: result.warningInkOpenings,
-          records: (warningInk as any[]).slice(0, 10).map((r: any) => ({
+          records: (warningInk as Loose[]).slice(0, 10).map((r: Loose) => ({
             id: r.id,
             recordNo: r.record_no,
             materialName: r.material_name,
@@ -111,9 +111,9 @@ export class BatchExpiryScheduler {
           })),
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       secureLog('error', 'Failed to check ink expiry warnings', {
-        error: error?.message,
+        error: (error as Error)?.message,
       });
     }
 

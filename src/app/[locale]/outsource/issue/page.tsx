@@ -82,10 +82,10 @@ export default function OutsourceIssuePage() {
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
-  const [form, setForm] = useState<any>({ items: [] });
-  const [outsourceOrders, setOutsourceOrders] = useState<any[]>([]);
+  const [form, setForm] = useState<Loose>({ items: [] });
+  const [outsourceOrders, setOutsourceOrders] = useState<Loose[]>([]);
   const [warehouses, setWarehouses] = useState<{ id: number; warehouse_name: string }[]>([]);
-  const [materials, setMaterials] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<Loose[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const _exportColumns = [
@@ -104,8 +104,9 @@ export default function OutsourceIssuePage() {
       [tc('warehouse')]: item.warehouse_name || '-',
       [t('issueDate')]: item.issue_date || '-',
       [t('issueDetail')]:
-        (item.items || []).map((i: any) => `${i.material_name || '-'}×${i.quantity}`).join(', ') ||
-        '-',
+        (item.items || [])
+          .map((i: Loose) => `${i.material_name || '-'}×${i.quantity}`)
+          .join(', ') || '-',
       [t('operatorName')]: item.operator_name || '-',
       [tc('status')]: statusMap[item.status]?.label || '-',
     }));
@@ -219,11 +220,11 @@ export default function OutsourceIssuePage() {
     });
   };
 
-  const updateItem = (index: number, field: string, value: any) => {
+  const updateItem = (index: number, field: string, value: Loose) => {
     const items = [...(form.items || [])];
     items[index] = { ...items[index], [field]: value };
     if (field === 'material_id') {
-      const mat = materials.find((m: any) => m.id === Number(value));
+      const mat = materials.find((m: Loose) => m.id === Number(value));
       if (mat) {
         items[index].material_code = mat.material_code;
         items[index].material_name = mat.material_name;
@@ -280,7 +281,7 @@ export default function OutsourceIssuePage() {
                   width: 30,
                   formatter: (_v, row) =>
                     (row.items || [])
-                      .map((i: any) => `${i.material_name || '-'}×${i.quantity}`)
+                      .map((i: Loose) => `${i.material_name || '-'}×${i.quantity}`)
                       .join(', ') || '-',
                 },
                 {
@@ -339,7 +340,7 @@ export default function OutsourceIssuePage() {
                 {list.map((item) => {
                   const st = statusMap[item.status] || statusMap[1];
                   const itemSummary = (item.items || [])
-                    .map((i: any) => `${i.material_name || '-'}×${i.quantity}`)
+                    .map((i: Loose) => `${i.material_name || '-'}×${i.quantity}`)
                     .join(', ');
                   return (
                     <TableRow key={item.id}>
@@ -515,7 +516,7 @@ export default function OutsourceIssuePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(form.items || []).map((item: any, idx: number) => (
+                    {(form.items || []).map((item: Loose, idx: number) => (
                       <TableRow key={idx}>
                         <TableCell>
                           <Select
@@ -526,7 +527,7 @@ export default function OutsourceIssuePage() {
                               <SelectValue placeholder={t('selectMaterial')} />
                             </SelectTrigger>
                             <SelectContent>
-                              {materials.map((m: any) => (
+                              {materials.map((m: Loose) => (
                                 <SelectItem key={m.id} value={String(m.id)}>
                                   {m.material_name || m.name}
                                 </SelectItem>

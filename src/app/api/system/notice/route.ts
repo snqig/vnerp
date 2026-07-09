@@ -12,7 +12,7 @@ export const GET = withPermission(
     const noticeType = searchParams.get('noticeType') || '';
 
     let where = 'WHERE deleted = 0';
-    const params: any[] = [];
+    const params: Loose[] = [];
     if (noticeTitle) {
       where += ' AND notice_title LIKE ?';
       params.push('%' + noticeTitle + '%');
@@ -23,12 +23,12 @@ export const GET = withPermission(
     }
 
     const countSql = 'SELECT COUNT(*) as total FROM sys_notice ' + where;
-    const totalRows: any = await query(countSql, params);
+    const totalRows: Loose = await query(countSql, params);
     const total = totalRows[0]?.total || 0;
 
     const dataSql =
       'SELECT * FROM sys_notice ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?';
-    const rows: any = await query(dataSql, [...params, pageSize, (page - 1) * pageSize]);
+    const rows: Loose = await query(dataSql, [...params, pageSize, (page - 1) * pageSize]);
 
     return successResponse({ list: rows, total, page, pageSize });
   },
@@ -40,7 +40,7 @@ export const POST = withPermission(
     const body = await request.json();
     const { notice_title, notice_type, notice_content, status } = body;
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       'INSERT INTO sys_notice (notice_title, notice_type, notice_content, status) VALUES (?, ?, ?, ?)',
       [notice_title, notice_type, notice_content || null, status ?? 1]
     );

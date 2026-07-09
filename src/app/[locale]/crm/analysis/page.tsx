@@ -64,11 +64,14 @@ interface Summary {
 }
 
 export default function CustomerAnalysisPage() {
-
   const t = useTranslations('Crm');
   const tc = useTranslations('Common');
 
-  const periodMap: Record<string, string> = { month: t('monthly'), quarter: t('quarterly'), year: t('yearly') };
+  const periodMap: Record<string, string> = {
+    month: t('monthly'),
+    quarter: t('quarterly'),
+    year: t('yearly'),
+  };
   const levelMap: Record<
     string,
     { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
@@ -123,7 +126,7 @@ export default function CustomerAnalysisPage() {
         const rawList = data.data.list || [];
         const rawSummary = data.data.summary || {};
         setRecords(
-          rawList.map((r: any) => ({
+          rawList.map((r: Loose) => ({
             ...r,
             on_time_rate: r.on_time_rate != null ? Number(r.on_time_rate) : null,
             satisfaction_score: r.satisfaction_score != null ? Number(r.satisfaction_score) : null,

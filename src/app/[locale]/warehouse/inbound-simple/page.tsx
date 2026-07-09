@@ -14,7 +14,7 @@ interface InboundRecord {
   supplier_name: string;
   total_quantity: number;
   status: string;
-  items?: any[];
+  items?: Loose[];
 }
 
 export default function SimpleInboundPage() {
@@ -38,8 +38,8 @@ export default function SimpleInboundPage() {
         } else {
           setError(result.message);
         }
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e) {
+        setError((e as Error).message);
       } finally {
         setLoading(false);
       }

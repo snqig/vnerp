@@ -36,14 +36,14 @@ export async function checkInventoryAvailability(
       FROM inv_inventory
       WHERE material_id = ? AND warehouse_id = ? AND deleted = 0
     `;
-    const params: any[] = [materialId, warehouseId];
+    const params: Loose[] = [materialId, warehouseId];
 
     if (batchNo) {
       sql += ' AND batch_no = ?';
       params.push(batchNo);
     }
 
-    const rows: any = await query(sql, params);
+    const rows: Loose = await query(sql, params);
 
     if (rows.length === 0) {
       return {
@@ -72,11 +72,15 @@ export async function checkInventoryAvailability(
       currentStock: parseFloat(stock.quantity || '0'),
       availableStock: availableQty,
     };
-  } catch (error: any) {
-    secureLog('error', '库存检查失败', { error: error.message, materialId, warehouseId });
+  } catch (error) {
+    secureLog('error', '库存检查失败', {
+      error: (error as Error).message,
+      materialId,
+      warehouseId,
+    });
     return {
       success: false,
-      message: `库存检查异常: ${error.message}`,
+      message: `库存检查异常: ${(error as Error).message}`,
     };
   }
 }
@@ -121,7 +125,7 @@ export async function adjustInventory(
         FROM inv_inventory
         WHERE material_id = ? AND warehouse_id = ? AND deleted = 0
       `;
-      const selectParams: any[] = [materialId, warehouseId];
+      const selectParams: Loose[] = [materialId, warehouseId];
 
       if (batchNo) {
         selectSql += ' AND batch_no = ?';
@@ -130,7 +134,7 @@ export async function adjustInventory(
         selectSql += ' AND (batch_no IS NULL OR batch_no = "")';
       }
 
-      const [inventoryRows]: any = await conn.execute(selectSql, selectParams);
+      const [inventoryRows]: Loose = await conn.execute(selectSql, selectParams);
 
       let inventoryId: number;
       let beforeQty: number;
@@ -152,7 +156,7 @@ export async function adjustInventory(
           businessNo,
         });
 
-        const [insertResult]: any = await conn.execute(
+        const [insertResult]: Loose = await conn.execute(
           `INSERT INTO inv_inventory (
             material_id, warehouse_id, batch_no, quantity, locked_qty, available_qty
           ) VALUES (?, ?, ?, ?, 0, ?)`,
@@ -208,7 +212,7 @@ export async function adjustInventory(
           businessNo,
         });
 
-        const [updateResult]: any = await conn.execute(
+        const [updateResult]: Loose = await conn.execute(
           `UPDATE inv_inventory SET
             quantity = ?,
             available_qty = ?,
@@ -313,9 +317,9 @@ export async function adjustInventory(
       currentStock: result.afterQty,
       availableStock: result.afterQty,
     };
-  } catch (error: any) {
+  } catch (error) {
     secureLog('error', '库存调整失败', {
-      error: error.message,
+      error: (error as Error).message,
       materialId,
       warehouseId,
       quantity,
@@ -323,7 +327,7 @@ export async function adjustInventory(
     });
     return {
       success: false,
-      message: `库存调整失败: ${error.message}`,
+      message: `库存调整失败: ${(error as Error).message}`,
     };
   }
 }
@@ -345,7 +349,7 @@ export async function lockInventory(
     }
 
     await transaction(async (conn) => {
-      const [rows]: any = await conn.execute(
+      const [rows]: Loose = await conn.execute(
         `SELECT id, quantity, locked_qty, available_qty, version
          FROM inv_inventory
          WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
@@ -392,7 +396,7 @@ export async function lockInventory(
         businessNo,
       });
 
-      const [lockUpdateResult]: any = await conn.execute(
+      const [lockUpdateResult]: Loose = await conn.execute(
         `UPDATE inv_inventory SET
           locked_qty = ?,
           available_qty = ?,
@@ -451,9 +455,9 @@ export async function lockInventory(
       success: true,
       message: `库存锁定成功: ${lockQty}`,
     };
-  } catch (error: any) {
+  } catch (error) {
     secureLog('error', '库存锁定失败', {
-      error: error.message,
+      error: (error as Error).message,
       materialId,
       warehouseId,
       lockQty,
@@ -461,7 +465,7 @@ export async function lockInventory(
     });
     return {
       success: false,
-      message: `库存锁定失败: ${error.message}`,
+      message: `库存锁定失败: ${(error as Error).message}`,
     };
   }
 }
@@ -478,7 +482,7 @@ export async function unlockInventory(
 ): Promise<InventoryCheckResult> {
   try {
     await transaction(async (conn) => {
-      const [rows]: any = await conn.execute(
+      const [rows]: Loose = await conn.execute(
         `SELECT id, quantity, locked_qty, available_qty, version
          FROM inv_inventory
          WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
@@ -521,7 +525,7 @@ export async function unlockInventory(
         businessNo,
       });
 
-      const [unlockUpdateResult]: any = await conn.execute(
+      const [unlockUpdateResult]: Loose = await conn.execute(
         `UPDATE inv_inventory SET
           locked_qty = ?,
           available_qty = ?,
@@ -580,9 +584,9 @@ export async function unlockInventory(
       success: true,
       message: `库存解锁成功: ${unlockQty}`,
     };
-  } catch (error: any) {
+  } catch (error) {
     secureLog('error', '库存解锁失败', {
-      error: error.message,
+      error: (error as Error).message,
       materialId,
       warehouseId,
       unlockQty,
@@ -590,7 +594,7 @@ export async function unlockInventory(
     });
     return {
       success: false,
-      message: `库存解锁失败: ${error.message}`,
+      message: `库存解锁失败: ${(error as Error).message}`,
     };
   }
 }
@@ -598,8 +602,8 @@ export async function unlockInventory(
 /**
  * 获取负库存预警列表
  */
-export async function getNegativeStockWarnings(): Promise<any[]> {
-  const rows: any = await query(
+export async function getNegativeStockWarnings(): Promise<Loose[]> {
+  const rows: Loose = await query(
     `SELECT
       i.id,
       i.material_id,
@@ -621,7 +625,7 @@ export async function getNegativeStockWarnings(): Promise<any[]> {
     ORDER BY i.available_qty ASC`
   );
 
-  return rows.map((row: any) => ({
+  return rows.map((row: Loose) => ({
     ...row,
     warningType:
       row.quantity < 0 ? 'negative' : row.available_qty < 0 ? 'negative_available' : 'low_stock',
@@ -640,7 +644,7 @@ export async function getInventoryLogs(
   endDate?: string,
   page: number = 1,
   pageSize: number = 50
-): Promise<{ list: any[]; total: number }> {
+): Promise<{ list: Loose[]; total: number }> {
   let sql = `
     SELECT
       l.*,
@@ -654,7 +658,7 @@ export async function getInventoryLogs(
     LEFT JOIN sys_user u ON l.operator_id = u.id
     WHERE 1=1
   `;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (materialId) {
     sql += ' AND l.material_id = ?';
@@ -678,13 +682,13 @@ export async function getInventoryLogs(
   }
 
   const countSql = sql.replace(/SELECT.*?FROM/, 'SELECT COUNT(*) as total FROM');
-  const countResult: any = await query(countSql, params);
+  const countResult: Loose = await query(countSql, params);
   const total = countResult[0]?.total || 0;
 
   sql += ' ORDER BY l.create_time DESC LIMIT ? OFFSET ?';
   params.push(pageSize, (page - 1) * pageSize);
 
-  const rows: any = await query(sql, params);
+  const rows: Loose = await query(sql, params);
 
   const operationTypeLabels: Record<number, string> = {
     1: '入库',
@@ -697,7 +701,7 @@ export async function getInventoryLogs(
   };
 
   return {
-    list: rows.map((row: any) => ({
+    list: rows.map((row: Loose) => ({
       ...row,
       operation_type_label: operationTypeLabels[row.operation_type] || '未知',
     })),

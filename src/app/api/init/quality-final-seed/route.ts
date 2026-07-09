@@ -425,7 +425,7 @@ export const POST = withPermission(
       }
       stats.prd_standard_card = standardCards.length;
 
-      const [scRows]: any = await conn.execute(
+      const [scRows]: Loose = await conn.execute(
         'SELECT id, customer_code FROM prd_standard_card ORDER BY id'
       );
       const scMap: Record<string, number> = {};
@@ -736,10 +736,10 @@ export const POST = withPermission(
       }
       stats.prd_process_card = processCards.length;
 
-      const [pcRows]: any = await conn.execute(
+      const [pcRows]: Loose = await conn.execute(
         'SELECT id, card_no, work_order_no, product_name, plan_qty FROM prd_process_card ORDER BY id'
       );
-      const pcList: any[] = pcRows;
+      const pcList: Loose[] = pcRows;
 
       const inspectors = ['周质检', '吴质检', '郑质检', '孙质检', '钱质检'];
       const batchPrefix = 'B2024';
@@ -802,57 +802,57 @@ export const POST = withPermission(
 
 async function verifyDataIntegrity() {
   const errors: string[] = [];
-  const details: Record<string, any> = {};
+  const details: Record<string, Loose> = {};
 
-  const scCount: any = await queryOne(
+  const scCount: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM prd_standard_card WHERE deleted = 0'
   );
   details.standard_card_count = scCount?.cnt || 0;
   if (details.standard_card_count !== 20)
     errors.push(`标准卡数量不正确: 期望20, 实际${details.standard_card_count}`);
 
-  const pcCount: any = await queryOne(
+  const pcCount: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM prd_process_card WHERE deleted = 0'
   );
   details.process_card_count = pcCount?.cnt || 0;
   if (details.process_card_count !== 20)
     errors.push(`流程卡数量不正确: 期望20, 实际${details.process_card_count}`);
 
-  const fiCount: any = await queryOne(
+  const fiCount: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM qc_final_inspection WHERE deleted = 0'
   );
   details.final_inspection_count = fiCount?.cnt || 0;
   if (details.final_inspection_count !== 20)
     errors.push(`终检记录数量不正确: 期望20, 实际${details.final_inspection_count}`);
 
-  const statusDist: any = await queryOne(`SELECT
+  const statusDist: Loose = await queryOne(`SELECT
     COALESCE(SUM(CASE WHEN burdening_status = 2 THEN 1 ELSE 0 END), 0) as pending,
     COALESCE(SUM(CASE WHEN burdening_status = 3 THEN 1 ELSE 0 END), 0) as completed
   FROM prd_process_card WHERE deleted = 0`);
   details.process_card_status = statusDist;
 
-  const resultDist: any = await queryOne(`SELECT
+  const resultDist: Loose = await queryOne(`SELECT
     COALESCE(SUM(CASE WHEN inspection_result = 1 THEN 1 ELSE 0 END), 0) as passed,
     COALESCE(SUM(CASE WHEN inspection_result = 2 THEN 1 ELSE 0 END), 0) as failed
   FROM qc_final_inspection WHERE deleted = 0`);
   details.inspection_result = resultDist;
 
-  const totalQty: any = await queryOne(
+  const totalQty: Loose = await queryOne(
     'SELECT COALESCE(SUM(plan_qty), 0) as total FROM prd_process_card WHERE deleted = 0'
   );
   details.total_plan_qty = totalQty?.total || 0;
 
-  const totalQualified: any = await queryOne(
+  const totalQualified: Loose = await queryOne(
     'SELECT COALESCE(SUM(qualified_qty), 0) as total FROM qc_final_inspection WHERE deleted = 0'
   );
   details.total_qualified_qty = totalQualified?.total || 0;
 
-  const totalUnqualified: any = await queryOne(
+  const totalUnqualified: Loose = await queryOne(
     'SELECT COALESCE(SUM(unqualified_qty), 0) as total FROM qc_final_inspection WHERE deleted = 0'
   );
   details.total_unqualified_qty = totalUnqualified?.total || 0;
 
-  const orphanFi: any = await queryOne(
+  const orphanFi: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM qc_final_inspection WHERE work_order_id IS NULL AND deleted = 0'
   );
   details.orphan_inspections = orphanFi?.cnt || 0;

@@ -1,4 +1,4 @@
-﻿import { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { query, transaction } from '@/lib/db';
 import { successResponse } from '@/lib/api-response';
 
@@ -87,10 +87,10 @@ export const POST = withPermission(
 
       // 获取刚插入的部门ID映射
       const [allDepts] = (await connection.execute('SELECT id, dept_code FROM sys_department')) as [
-        any[],
-        any,
+        Loose[],
+        Loose,
       ];
-      const codeToIdMap = new Map(allDepts.map((d: any) => [d.dept_code, d.id]));
+      const codeToIdMap = new Map(allDepts.map((d: Loose) => [d.dept_code, d.id]));
 
       // 插入子部门
       for (const sub of subDepartmentData) {
@@ -108,7 +108,7 @@ export const POST = withPermission(
     );
 
     // 构建部门树结构
-    const buildTree = (departments: Department[], parentId: number = 0): any[] => {
+    const buildTree = (departments: Department[], parentId: number = 0): Loose[] => {
       return departments
         .filter((d) => d.parent_id === parentId)
         .map((d) => ({
@@ -141,7 +141,7 @@ export const GET = withPermission(
     );
 
     // 构建部门树结构
-    const buildTree = (departments: Department[], parentId: number = 0): any[] => {
+    const buildTree = (departments: Department[], parentId: number = 0): Loose[] => {
       return departments
         .filter((d) => d.parent_id === parentId)
         .map((d) => ({

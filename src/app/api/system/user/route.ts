@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE u.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (username) {
     where += ' AND u.username LIKE ?';
     params.push('%' + username + '%');
@@ -29,17 +29,17 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   }
 
   const countSql = 'SELECT COUNT(*) as total FROM sys_user u ' + where;
-  const totalRows: any = await query(countSql, params);
+  const totalRows: Loose = await query(countSql, params);
   const total = totalRows[0]?.total || 0;
 
   const dataSql =
     'SELECT u.id, u.username, COALESCE(e.name, u.real_name) AS real_name, u.real_name AS user_real_name, u.email, u.phone, u.department_id, u.status, u.first_login, u.create_time, d.dept_name, e.employee_no FROM sys_user u LEFT JOIN sys_department d ON u.department_id = d.id LEFT JOIN sys_employee e ON e.employee_no COLLATE utf8mb4_unicode_ci = u.username ' +
     where +
     ' ORDER BY u.id DESC LIMIT ? OFFSET ?';
-  const rows: any = await query(dataSql, [...params, pageSize, (page - 1) * pageSize]);
+  const rows: Loose = await query(dataSql, [...params, pageSize, (page - 1) * pageSize]);
 
   for (const user of rows) {
-    const roles: any = await query(
+    const roles: Loose = await query(
       'SELECT r.id, r.role_name, r.role_code FROM sys_user_role ur JOIN sys_role r ON ur.role_id = r.id WHERE ur.user_id = ?',
       [user.id]
     );
@@ -57,17 +57,18 @@ export const POST = withPermission(async (request: NextRequest, _userInfo: UserI
     return NextResponse.json({ success: false, message: '用户名和密码不能为空' }, { status: 400 });
   }
 
-  const existing: any = await query('SELECT id FROM sys_user WHERE username = ? AND deleted = 0', [
-    username,
-  ]);
+  const existing: Loose = await query(
+    'SELECT id FROM sys_user WHERE username = ? AND deleted = 0',
+    [username]
+  );
   if (existing && existing.length > 0) {
     return NextResponse.json({ success: false, message: '用户名已存在' }, { status: 409 });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const result: any = await transaction(async (conn) => {
-    const [res]: any = await conn.execute(
+  const result: Loose = await transaction(async (conn) => {
+    const [res]: Loose = await conn.execute(
       'INSERT INTO sys_user (username, password, real_name, email, phone, department_id, status, first_login) VALUES (?, ?, ?, ?, ?, ?, ?, 1)',
       [
         username,

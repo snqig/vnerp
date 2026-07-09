@@ -18,7 +18,7 @@ export default function ProfilePage() {
   const tc = useTranslations('Common');
   const { toast } = useToast();
 
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState<Loose>(null);
   const [profileForm, setProfileForm] = useState({
     realName: '',
     phone: '',

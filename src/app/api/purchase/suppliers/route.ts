@@ -41,7 +41,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   `;
 
   let countSql = `SELECT COUNT(*) as total FROM pur_supplier WHERE deleted = 0`;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     const keywordCondition = ` AND (supplier_code LIKE ? OR supplier_name LIKE ? OR short_name LIKE ?)`;
@@ -98,7 +98,7 @@ export const POST = withPermission(
       [supplier_code]
     );
 
-    if ((existing as any[]).length > 0) {
+    if ((existing as Loose[]).length > 0) {
       return errorResponse('供应商编码已存在', 400, 400);
     }
 
@@ -123,7 +123,7 @@ export const POST = withPermission(
       ]
     );
 
-    return successResponse({ id: (result as any).insertId, supplier_code }, '供应商创建成功');
+    return successResponse({ id: (result as Loose).insertId, supplier_code }, '供应商创建成功');
   },
   { logTitle: '创建供应商', logType: 'business' }
 );
@@ -139,7 +139,7 @@ export const PUT = withPermission(
 
     const existing = await query('SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0', [id]);
 
-    if ((existing as any[]).length === 0) {
+    if ((existing as Loose[]).length === 0) {
       return commonErrors.notFound('供应商不存在');
     }
 
@@ -161,7 +161,7 @@ export const PUT = withPermission(
     };
 
     const updateFields: string[] = [];
-    const updateParams: any[] = [];
+    const updateParams: Loose[] = [];
 
     for (const [key, value] of Object.entries(updateData)) {
       if (fieldMapping[key] && value !== undefined) {
@@ -196,7 +196,7 @@ export const DELETE = withPermission(
 
     const existing = await query('SELECT id FROM pur_supplier WHERE id = ? AND deleted = 0', [id]);
 
-    if ((existing as any[]).length === 0) {
+    if ((existing as Loose[]).length === 0) {
       return commonErrors.notFound('供应商不存在');
     }
 

@@ -158,7 +158,7 @@ export default function TransferPage() {
       const res = await authFetch('/api/warehouse?status=active&all=true');
       const result = await res.json();
       if (result.success) {
-        setWarehouses(result.data?.map((w: any) => ({ id: w.id, name: w.name })) || []);
+        setWarehouses(result.data?.map((w: Loose) => ({ id: w.id, name: w.name })) || []);
       }
     } catch {}
   };
@@ -218,9 +218,9 @@ export default function TransferPage() {
     }
   };
 
-  const handleAction = async (id: number, action: string, extraData?: any) => {
+  const handleAction = async (id: number, action: string, extraData?: Loose) => {
     try {
-      const body: any = { id, action };
+      const body: Loose = { id, action };
       if (extraData) Object.assign(body, extraData);
 
       const res = await authFetch('/api/warehouse/transfer', {
@@ -358,7 +358,7 @@ export default function TransferPage() {
   const updateScanItem = (
     index: number,
     field: 'material_id' | 'qr_code' | 'quantity',
-    value: any
+    value: Loose
   ) => {
     const updated = [...scanItems];
     updated[index] = { ...updated[index], [field]: value };
@@ -381,8 +381,8 @@ export default function TransferPage() {
   const sortedList = useCallback(() => {
     if (!sortField) return list;
     return [...list].sort((a, b) => {
-      const aVal = (a as any)[sortField];
-      const bVal = (b as any)[sortField];
+      const aVal = (a as Loose)[sortField];
+      const bVal = (b as Loose)[sortField];
       if (aVal === null || aVal === undefined) return 1;
       if (bVal === null || bVal === undefined) return -1;
       if (typeof aVal === 'string' && typeof bVal === 'string') {

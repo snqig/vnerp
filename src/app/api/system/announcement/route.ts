@@ -17,7 +17,7 @@ export const GET = withPermission(
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
     let where = 'WHERE 1=1';
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (type === 'published') {
       where += ' AND a.status = ? AND (a.expire_time IS NULL OR a.expire_time > NOW())';
@@ -29,13 +29,13 @@ export const GET = withPermission(
       // 管理员查看所有
     }
 
-    const countRows: any = await query(
+    const countRows: Loose = await query(
       `SELECT COUNT(*) as total FROM sys_announcement a ${where}`,
       params
     );
     const total = countRows[0]?.total || 0;
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT a.*, u.real_name as creator_name,
               (SELECT COUNT(*) FROM sys_announcement_read r WHERE r.announcement_id = a.id) as read_count,
               (SELECT COUNT(*) FROM sys_announcement_read r WHERE r.announcement_id = a.id AND r.user_id = ?) as is_read
@@ -64,7 +64,7 @@ export const POST = withPermission(
 
     const { title, content, type, priority, is_top, publish_time, expire_time, status } = body;
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO sys_announcement
        (title, content, type, priority, is_top, publish_time, expire_time, status, create_by, create_time, update_time)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -117,7 +117,7 @@ export const PUT = withPermission(
     // 通用更新
     const { title, content, type, priority, is_top, expire_time, status } = body;
     const updates: string[] = [];
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (title !== undefined) {
       updates.push('title = ?');

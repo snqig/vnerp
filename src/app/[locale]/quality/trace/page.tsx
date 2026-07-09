@@ -131,7 +131,7 @@ export default function TracePage() {
         // 统一处理API返回的数据结构
         const rawData = data.data;
         const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
-        const list = rawList.map((item: any) => ({
+        const list = rawList.map((item: Loose) => ({
           id: item.id,
           trace_no: item.traceNo || item.trace_no,
           card_no: item.cardNo || item.card_no,

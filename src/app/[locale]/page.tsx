@@ -120,21 +120,24 @@ export default function DashboardPage() {
           const orders = salesData.data?.list || salesData.data || [];
 
           const today = new Date().toISOString().split('T')[0];
-          const todayOrders = orders.filter((o: any) => o.order_date?.startsWith(today)).length;
+          const todayOrders = orders.filter((o: Loose) => o.order_date?.startsWith(today)).length;
           const pendingOrderCount = orders.filter(
-            (o: any) => o.status === 1 || o.status === 2
+            (o: Loose) => o.status === 1 || o.status === 2
           ).length;
-          const producingCount = orders.filter((o: any) => o.status === 3).length;
-          const completedCount = orders.filter((o: any) => o.status === 4).length;
-          const totalValue = orders.reduce((sum: number, o: any) => sum + (o.total_amount || 0), 0);
+          const producingCount = orders.filter((o: Loose) => o.status === 3).length;
+          const completedCount = orders.filter((o: Loose) => o.status === 4).length;
+          const totalValue = orders.reduce(
+            (sum: number, o: Loose) => sum + (o.total_amount || 0),
+            0
+          );
 
           setRecentOrders(
-            orders.slice(0, 20).map((o: any) => ({
+            orders.slice(0, 20).map((o: Loose) => ({
               id: o.order_no,
               customer: o.customer_name,
               product: o.items?.[0]?.material_name || '-',
               quantity:
-                o.items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0,
+                o.items?.reduce((sum: number, item: Loose) => sum + (item.quantity || 0), 0) || 0,
               status: STATUS_MAP[o.status]?.labelKey
                 ? t(STATUS_MAP[o.status].labelKey)
                 : t('unknown'),
@@ -149,7 +152,7 @@ export default function DashboardPage() {
           if (inventoryData.success) {
             const inventoryList = inventoryData.data?.list || inventoryData.data || [];
             inventoryWarnings = inventoryList.filter(
-              (item: any) => (item.quantity || 0) < (item.min_quantity || 0)
+              (item: Loose) => (item.quantity || 0) < (item.min_quantity || 0)
             ).length;
           }
 
@@ -159,11 +162,11 @@ export default function DashboardPage() {
           if (workOrdersData.success) {
             const workOrders = workOrdersData.data?.list || workOrdersData.data || [];
             pendingWorkOrders = workOrders.filter(
-              (wo: any) => wo.status === 1 || wo.status === 2
+              (wo: Loose) => wo.status === 1 || wo.status === 2
             ).length;
 
             setRecentWorkOrders(
-              workOrders.slice(0, 20).map((wo: any) => ({
+              workOrders.slice(0, 20).map((wo: Loose) => ({
                 id: wo.work_order_no,
                 product: wo.product_name || '-',
                 quantity: wo.quantity || 0,

@@ -33,7 +33,7 @@ export const GET = withPermission(
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
     let whereClause = '';
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (keyword) {
       whereClause += `WHERE (r.record_no LIKE ? OR r.source_label_no LIKE ?)`;
@@ -111,10 +111,10 @@ export const POST = withPermission(
     const finalOperatorId = operatorId || '1';
     const finalOperatorName = operatorName || '系统管理员';
 
-    let sourceLabel: any = null;
+    let sourceLabel: Loose = null;
 
     if (sourceLabelId && !isNaN(Number(sourceLabelId))) {
-      sourceLabel = await queryOne<any>(
+      sourceLabel = await queryOne<Loose>(
         `SELECT * FROM inv_material_label WHERE id = ? AND deleted = 0`,
         [sourceLabelId]
       );
@@ -122,7 +122,7 @@ export const POST = withPermission(
 
     if (!sourceLabel) {
       const labelNoToFind = sourceLabelNo || `${orderNo}-1`;
-      sourceLabel = await queryOne<any>(
+      sourceLabel = await queryOne<Loose>(
         `SELECT * FROM inv_material_label WHERE label_no = ? AND deleted = 0`,
         [labelNoToFind]
       );
@@ -160,7 +160,7 @@ export const POST = withPermission(
       );
 
       sourceLabel = {
-        id: (insertResult as any).insertId,
+        id: (insertResult as Loose).insertId,
         label_no: newLabelNo,
         purchase_order_no: orderNo || '',
         supplier_name: supplierName || '',
@@ -235,7 +235,7 @@ export const POST = withPermission(
         ]
       );
 
-      const recordId = (recordResult as any).insertId;
+      const recordId = (recordResult as Loose).insertId;
 
       await conn.execute(`UPDATE inv_material_label SET is_cut = 1, status = 'cut' WHERE id = ?`, [
         sourceLabel.id,
@@ -301,7 +301,7 @@ export const POST = withPermission(
           ]
         );
 
-        const newLabelId = (labelResult as any).insertId;
+        const newLabelId = (labelResult as Loose).insertId;
 
         await conn.execute(
           `INSERT INTO inv_cutting_detail (record_id, new_label_id, new_label_no, cut_width, sequence)
@@ -374,7 +374,7 @@ export const POST = withPermission(
           ]
         );
 
-        const remLabelId = (remLabelResult as any).insertId;
+        const remLabelId = (remLabelResult as Loose).insertId;
         newLabels.push({
           id: remLabelId,
           labelNo: remLabelNo,
@@ -412,7 +412,7 @@ function parseSpecWidth(spec: string): number | null {
 async function queryPaginated(
   sql: string,
   countSql: string,
-  params: any[],
+  params: Loose[],
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;
@@ -420,7 +420,7 @@ async function queryPaginated(
 
   try {
     const [data, countResult] = await Promise.all([
-      query<any[]>(`${sql} LIMIT ? OFFSET ?`, [...(params || []), pageSize, offset]),
+      query<Loose[]>(`${sql} LIMIT ? OFFSET ?`, [...(params || []), pageSize, offset]),
       queryOne<{ total: number }>(countSql, params || []),
     ]);
 

@@ -203,7 +203,7 @@ export default function ProductionDashboard() {
               qualityRate: 0,
             },
             equipmentStatus: d.equipmentStatus || [],
-            productionProgress: (d.recentOrders || []).map((o: any) => ({
+            productionProgress: (d.recentOrders || []).map((o: Loose) => ({
               orderNo: o.orderNo || '',
               customer: o.customer || '',
               productName: o.product || '',

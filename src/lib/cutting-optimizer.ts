@@ -272,10 +272,10 @@ export function calculateScrapRate(result: CuttingOptimizationResult): {
 }
 
 export async function generateCuttingPlan(
-  conn: any,
+  conn: Loose,
   cuttingRecordId: number
 ): Promise<CuttingOptimizationResult> {
-  const [records]: any = await conn.query(
+  const [records]: Loose = await conn.query(
     `SELECT
       r.id,
       r.record_no,
@@ -296,7 +296,7 @@ export async function generateCuttingPlan(
 
   const record = records[0];
 
-  const [labels]: any = await conn.query(
+  const [labels]: Loose = await conn.query(
     `SELECT
       id,
       label_no,
@@ -323,7 +323,7 @@ export async function generateCuttingPlan(
     throw new Error('无法确定原材料尺寸，请检查标签宽幅和长度信息');
   }
 
-  const [details]: any = await conn.query(
+  const [details]: Loose = await conn.query(
     `SELECT
       d.id,
       d.new_label_no,

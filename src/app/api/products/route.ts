@@ -47,7 +47,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   `;
 
   let countSql = `SELECT COUNT(*) as total FROM mdm_product p WHERE p.deleted = 0`;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     const keywordCondition = ` AND (p.product_code LIKE ? OR p.product_name LIKE ? OR p.short_name LIKE ?)`;
@@ -118,7 +118,7 @@ export const POST = withPermission(
       [product_code]
     );
 
-    if ((existingProducts as any[]).length > 0) {
+    if ((existingProducts as Loose[]).length > 0) {
       return errorResponse('产品编码已存在', 400, 400);
     }
 
@@ -148,7 +148,7 @@ export const POST = withPermission(
       ]
     );
 
-    const insertId = (result as any).insertId;
+    const insertId = (result as Loose).insertId;
 
     return successResponse({ id: insertId, product_code }, '产品创建成功');
   },
@@ -168,12 +168,12 @@ export const PUT = withPermission(
     // 查询产品
     const products = await query('SELECT * FROM mdm_product WHERE id = ? AND deleted = 0', [id]);
 
-    if (!products || (products as any[]).length === 0) {
+    if (!products || (products as Loose[]).length === 0) {
       return commonErrors.notFound('产品不存在');
     }
 
     const updateFields: string[] = [];
-    const updateParams: any[] = [];
+    const updateParams: Loose[] = [];
 
     const fieldMapping: { [key: string]: string } = {
       product_name: 'product_name',
@@ -229,7 +229,7 @@ export const DELETE = withPermission(
     // 查询产品
     const products = await query('SELECT * FROM mdm_product WHERE id = ? AND deleted = 0', [id]);
 
-    if (!products || (products as any[]).length === 0) {
+    if (!products || (products as Loose[]).length === 0) {
       return commonErrors.notFound('产品不存在');
     }
 

@@ -89,7 +89,7 @@ export default function BOMPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
-  const [bomDetail, setBomDetail] = useState<any>(null);
+  const [bomDetail, setBomDetail] = useState<Loose>(null);
 
   const fetchBOMList = async (overridePage?: number) => {
     try {
@@ -479,7 +479,7 @@ export default function BOMPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {bomDetail.lines?.map((line: any) => (
+                      {bomDetail.lines?.map((line: Loose) => (
                         <TableRow key={line.id}>
                           <TableCell>{line.line_no}</TableCell>
                           <TableCell>{line.material_code}</TableCell>

@@ -24,7 +24,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   if (id) {
-    const delivery = await queryOne<any>(
+    const delivery = await queryOne<Loose>(
       `SELECT d.*, c.customer_name, o.order_no
        FROM sal_delivery d
        LEFT JOIN crm_customer c ON d.customer_id = c.id
@@ -34,7 +34,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
     if (!delivery) return commonErrors.notFound('发货单不存在');
 
-    const items = await query<any>(
+    const items = await query<Loose>(
       `SELECT * FROM sal_delivery_detail WHERE delivery_id = ? AND deleted = 0 ORDER BY line_no`,
       [parseInt(id)]
     );
@@ -42,7 +42,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   if (orderId) {
-    const list = await query<any>(
+    const list = await query<Loose>(
       `SELECT d.*, c.customer_name, o.order_no
        FROM sal_delivery d
        LEFT JOIN crm_customer c ON d.customer_id = c.id
@@ -59,7 +59,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     LEFT JOIN crm_customer c ON d.customer_id = c.id
     LEFT JOIN sal_order o ON d.order_id = o.id
     WHERE d.deleted = 0`;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (keyword) {
     sql += ' AND (d.delivery_no LIKE ? OR c.customer_name LIKE ? OR o.order_no LIKE ?)';
@@ -75,10 +75,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   sql += ' ORDER BY d.create_time DESC LIMIT ? OFFSET ?';
   values.push(pageSize, (page - 1) * pageSize);
 
-  const list = await query<any>(sql, values);
+  const list = await query<Loose>(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM sal_delivery WHERE deleted = 0`;
-  const countResult = (await queryOne(countSql)) as any;
+  const countResult = (await queryOne(countSql)) as Loose;
 
   return successResponse({
     list,
@@ -159,7 +159,7 @@ export const POST = withPermission(
         ]
       );
 
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const deliveryId = rows[0].id;
 
       for (let i = 0; i < items.length; i++) {
@@ -239,7 +239,7 @@ export const PUT = withPermission(
     }
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: Loose[] = [];
     const allowedFields = [
       'logistics_company',
       'tracking_no',

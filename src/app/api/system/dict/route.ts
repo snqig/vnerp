@@ -18,7 +18,7 @@ export const GET = withPermission(
 
     if (dictType) {
       // 获取指定类型的字典数据
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT d.*, t.dict_name FROM sys_dict_data d
          LEFT JOIN sys_dict_type t ON d.dict_type = t.dict_type
          WHERE d.dict_type = ? AND d.status = 1
@@ -29,10 +29,10 @@ export const GET = withPermission(
     }
 
     // 获取所有字典类型
-    const countRows: any = await query('SELECT COUNT(*) as total FROM sys_dict_type');
+    const countRows: Loose = await query('SELECT COUNT(*) as total FROM sys_dict_type');
     const total = countRows[0]?.total || 0;
 
-    const types: any = await query(`SELECT * FROM sys_dict_type ORDER BY id LIMIT ? OFFSET ?`, [
+    const types: Loose = await query(`SELECT * FROM sys_dict_type ORDER BY id LIMIT ? OFFSET ?`, [
       pageSize,
       (page - 1) * pageSize,
     ]);
@@ -40,7 +40,7 @@ export const GET = withPermission(
     // 获取每个类型的数据
     const result = [];
     for (const type of types) {
-      const data: any = await query(
+      const data: Loose = await query(
         'SELECT * FROM sys_dict_data WHERE dict_type = ? ORDER BY sort_order',
         [type.dict_type]
       );
@@ -64,14 +64,14 @@ export const POST = withPermission(
         return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
       }
 
-      const existing: any = await query('SELECT id FROM sys_dict_type WHERE dict_type = ?', [
+      const existing: Loose = await query('SELECT id FROM sys_dict_type WHERE dict_type = ?', [
         body.dict_type,
       ]);
       if (existing.length > 0) {
         return errorResponse('字典类型编码已存在', 400, 400);
       }
 
-      const result: any = await execute(
+      const result: Loose = await execute(
         'INSERT INTO sys_dict_type (dict_name, dict_type, status, remark) VALUES (?, ?, ?, ?)',
         [body.dict_name, body.dict_type, body.status ?? 1, body.remark || null]
       );
@@ -85,7 +85,7 @@ export const POST = withPermission(
         return errorResponse(`缺少必填字段: ${validation.missing.join(', ')}`, 400, 400);
       }
 
-      const result: any = await execute(
+      const result: Loose = await execute(
         'INSERT INTO sys_dict_data (dict_type, dict_label, dict_value, sort_order, status, remark) VALUES (?, ?, ?, ?, ?, ?)',
         [
           body.dict_type,
@@ -114,7 +114,7 @@ export const PUT = withPermission(
     if (action === 'update_type') {
       if (!body.id) return errorResponse('ID不能为空', 400, 400);
       const updates: string[] = [];
-      const params: any[] = [];
+      const params: Loose[] = [];
       if (body.dict_name !== undefined) {
         updates.push('dict_name = ?');
         params.push(body.dict_name);
@@ -137,7 +137,7 @@ export const PUT = withPermission(
     if (action === 'update_data') {
       if (!body.id) return errorResponse('ID不能为空', 400, 400);
       const updates: string[] = [];
-      const params: any[] = [];
+      const params: Loose[] = [];
       if (body.dict_label !== undefined) {
         updates.push('dict_label = ?');
         params.push(body.dict_label);

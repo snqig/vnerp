@@ -3,7 +3,7 @@ import { query } from '@/lib/db';
 
 export async function GET(_request: NextRequest) {
   try {
-    const overview: any = {
+    const overview: Loose = {
       totalItems: 0,
       totalValue: 0,
       lowStock: 0,
@@ -13,7 +13,7 @@ export async function GET(_request: NextRequest) {
       pendingOutbound: 0,
     };
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT COUNT(*) as total,
           SUM(CASE WHEN safety_stock > 0 AND quantity <= safety_stock THEN 1 ELSE 0 END) as low_stock,
           COALESCE(SUM(quantity * COALESCE(unit_cost, cost_price, price, 0)), 0) as total_value
@@ -27,10 +27,10 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const inRows: any = await query(
+      const inRows: Loose = await query(
         `SELECT COUNT(*) as total FROM inv_inbound_order WHERE deleted = 0 AND DATE(create_time) = CURDATE()`
       );
-      const outRows: any = await query(
+      const outRows: Loose = await query(
         `SELECT COUNT(*) as total FROM inv_outbound_order WHERE deleted = 0 AND DATE(create_time) = CURDATE()`
       );
       if (Array.isArray(inRows) && inRows.length > 0)
@@ -39,9 +39,9 @@ export async function GET(_request: NextRequest) {
         overview.todayOutbound = Number(outRows[0].total || 0);
     } catch {}
 
-    let categoryDistribution: any[] = [];
+    let categoryDistribution: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT m.material_type, COUNT(DISTINCT m.id) as count,
           COALESCE(SUM(i.quantity * COALESCE(i.unit_cost, m.cost_price, m.price, 0)), 0) as value
         FROM inv_material m
@@ -51,9 +51,9 @@ export async function GET(_request: NextRequest) {
       categoryDistribution = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let lowStockItems: any[] = [];
+    let lowStockItems: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT m.material_code, m.material_name, COALESCE(i.quantity, 0) as stock_qty,
           m.safety_stock as min_stock, m.unit, m.specification
         FROM inv_material m
@@ -64,9 +64,9 @@ export async function GET(_request: NextRequest) {
       lowStockItems = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let recentTransactions: any[] = [];
+    let recentTransactions: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT t.trans_type as transaction_type, t.material_code,
           m.material_name, t.quantity, t.unit, t.create_time, t.remark
         FROM inv_inventory_transaction t
@@ -76,9 +76,9 @@ export async function GET(_request: NextRequest) {
       recentTransactions = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let warehouseOccupancy: any[] = [];
+    let warehouseOccupancy: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT w.warehouse_name, COUNT(DISTINCT i.material_id) as item_count,
           COALESCE(SUM(i.quantity), 0) as total_qty
         FROM inv_warehouse w

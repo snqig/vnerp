@@ -66,11 +66,11 @@ export async function POST(_request: NextRequest) {
       message: '财务表创建成功',
       tables: results,
     });
-  } catch (error: any) {
+  } catch (error) {
     return Response.json(
       {
         success: false,
-        error: error.message,
+        error: (error as Error).message,
         tables: results,
       },
       { status: 500 }

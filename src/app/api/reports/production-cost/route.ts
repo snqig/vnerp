@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const groupBy = searchParams.get('groupBy') || 'workshop'; // workshop, product
 
   let dateFilter = '';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (startDate && endDate) {
     dateFilter = ' AND wo.work_order_date BETWEEN ? AND ?';
@@ -23,7 +23,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   if (groupBy === 'workshop') {
     // 按车间统计
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT
         wo.workshop,
         COUNT(*) as work_order_count,
@@ -41,7 +41,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
 
-    const result = rows.map((row: any) => {
+    const result = rows.map((row: Loose) => {
       const standardCost = parseFloat(row.total_standard_cost) || 0;
       const actualCost = parseFloat(row.total_actual_cost) || 0;
       const costVariance = actualCost - standardCost;
@@ -67,14 +67,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       {
         list: result,
         summary: {
-          totalWorkOrders: result.reduce((sum: number, r: any) => sum + r.workOrderCount, 0),
-          totalStandardCost: result.reduce((sum: number, r: any) => sum + r.standardCost, 0),
-          totalActualCost: result.reduce((sum: number, r: any) => sum + r.actualCost, 0),
-          totalVariance: result.reduce((sum: number, r: any) => sum + r.costVariance, 0),
+          totalWorkOrders: result.reduce((sum: number, r: Loose) => sum + r.workOrderCount, 0),
+          totalStandardCost: result.reduce((sum: number, r: Loose) => sum + r.standardCost, 0),
+          totalActualCost: result.reduce((sum: number, r: Loose) => sum + r.actualCost, 0),
+          totalVariance: result.reduce((sum: number, r: Loose) => sum + r.costVariance, 0),
           avgVarianceRate:
             result.length > 0
               ? Math.round(
-                  result.reduce((sum: number, r: any) => sum + r.costVarianceRate, 0) /
+                  result.reduce((sum: number, r: Loose) => sum + r.costVarianceRate, 0) /
                     result.length
                 )
               : 0,
@@ -84,7 +84,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   } else {
     // 按产品统计
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT
         wo.material_id,
         m.material_code,
@@ -103,7 +103,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
 
-    const result = rows.map((row: any) => {
+    const result = rows.map((row: Loose) => {
       const standardCost = parseFloat(row.total_standard_cost) || 0;
       const actualCost = parseFloat(row.total_actual_cost) || 0;
       const costVariance = actualCost - standardCost;
@@ -135,9 +135,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         list: result,
         summary: {
           totalProducts: result.length,
-          totalStandardCost: result.reduce((sum: number, r: any) => sum + r.standardCost, 0),
-          totalActualCost: result.reduce((sum: number, r: any) => sum + r.actualCost, 0),
-          totalVariance: result.reduce((sum: number, r: any) => sum + r.costVariance, 0),
+          totalStandardCost: result.reduce((sum: number, r: Loose) => sum + r.standardCost, 0),
+          totalActualCost: result.reduce((sum: number, r: Loose) => sum + r.actualCost, 0),
+          totalVariance: result.reduce((sum: number, r: Loose) => sum + r.costVariance, 0),
         },
       },
       '获取产品成本报表成功'

@@ -48,7 +48,7 @@ export interface QrCodePayload {
   };
 
   timestamp?: number;
-  [key: string]: any;
+  [key: string]: Loose;
 }
 
 // 生成带复杂数据的二维码
@@ -100,8 +100,8 @@ export async function POST(request: NextRequest) {
       },
       '二维码生成成功'
     );
-  } catch (error: any) {
-    return errorResponse('二维码生成失败: ' + error.message, 500);
+  } catch (error) {
+    return errorResponse('二维码生成失败: ' + (error as Error).message, 500);
   }
 }
 
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let whereClause = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (qrCode) {
     whereClause += ' AND qr_code = ?';
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
     [...params, pageSize, offset]
   );
 
-  const countResult: any = await query(
+  const countResult: Loose = await query(
     `SELECT COUNT(*) as total FROM qrcode_record ${whereClause}`,
     params
   );

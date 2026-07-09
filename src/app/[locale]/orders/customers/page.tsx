@@ -171,7 +171,7 @@ export default function CustomersPage() {
       if (result.success) {
         // 转换数据库字段为前端格式
         const customerList = Array.isArray(result.data) ? result.data : result.data?.list || [];
-        const formattedCustomers: CustomerListItem[] = customerList.map((item: any) => ({
+        const formattedCustomers: CustomerListItem[] = customerList.map((item: Loose) => ({
           id: item.id,
           customerCode: item.customer_code,
           customerName: item.customer_name,
@@ -405,8 +405,8 @@ export default function CustomersPage() {
   const filteredCustomers = useMemo(() => {
     if (!sortField || !sortOrder) return customers;
     return [...customers].sort((a, b) => {
-      const aVal = (a as Record<string, any>)[sortField];
-      const bVal = (b as Record<string, any>)[sortField];
+      const aVal = (a as Record<string, Loose>)[sortField];
+      const bVal = (b as Record<string, Loose>)[sortField];
       const aStr = String(aVal ?? '').toLowerCase();
       const bStr = String(bVal ?? '').toLowerCase();
       if (aStr < bStr) return sortOrder === 'asc' ? -1 : 1;

@@ -27,7 +27,7 @@ export const GET = withPermission(
     const endDate = searchParams.get('endDate') || '';
 
     let where = 'WHERE 1=1';
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (invoiceType) {
       where += ' AND invoice_type = ?';
@@ -50,14 +50,14 @@ export const GET = withPermission(
       params.push(endDate);
     }
 
-    const countRows: any = await query(
+    const countRows: Loose = await query(
       `SELECT COUNT(*) as total FROM finance_invoice ${where}`,
       params
     );
     const total = countRows[0]?.total || 0;
     const totalPages = Math.ceil(total / pageSize);
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT * FROM finance_invoice ${where} ORDER BY id DESC LIMIT ? OFFSET ?`,
       [...params, pageSize, (page - 1) * pageSize]
     );
@@ -90,7 +90,7 @@ export const POST = withPermission(
     // 生成发票号
     const prefix = body.invoice_type === 'purchase' ? 'PI' : 'SI';
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const countRows: any = await query(
+    const countRows: Loose = await query(
       'SELECT COUNT(*) as cnt FROM finance_invoice WHERE invoice_no LIKE ?',
       [`${prefix}${dateStr}%`]
     );
@@ -112,7 +112,7 @@ export const POST = withPermission(
         totalTax += tax;
       }
 
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         `INSERT INTO finance_invoice
          (invoice_no, invoice_type, source_type, source_id, source_no,
           partner_id, partner_name, invoice_date, tax_rate,
@@ -189,7 +189,7 @@ export const PUT = withPermission(
       return errorResponse('参数不完整', 400, 400);
     }
 
-    const invoices: any = await query('SELECT * FROM finance_invoice WHERE id = ?', [id]);
+    const invoices: Loose = await query('SELECT * FROM finance_invoice WHERE id = ?', [id]);
     if (invoices.length === 0) {
       return errorResponse('发票不存在', 404, 404);
     }

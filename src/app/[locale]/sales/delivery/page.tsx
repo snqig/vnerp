@@ -306,7 +306,7 @@ export default function DeliveryPage() {
     }));
   };
 
-  const updateItem = (index: number, field: string, value: any) => {
+  const updateItem = (index: number, field: string, value: Loose) => {
     setForm((prev) => {
       const items = [...(prev.items || [])];
       items[index] = { ...items[index], [field]: value };
@@ -359,7 +359,7 @@ export default function DeliveryPage() {
     setShipForm({
       shipment_id: shipment.id,
       items:
-        (shipment as any).items?.map((item: ShipmentItem) => ({
+        (shipment as Loose).items?.map((item: ShipmentItem) => ({
           material_id: item.material_id,
           qr_code: '',
           quantity: item.quantity - item.shipped_quantity,
@@ -377,7 +377,7 @@ export default function DeliveryPage() {
     }));
   };
 
-  const updateShipItem = (index: number, field: string, value: any) => {
+  const updateShipItem = (index: number, field: string, value: Loose) => {
     setShipForm((prev) => {
       const items = [...prev.items];
       items[index] = { ...items[index], [field]: value };
@@ -749,7 +749,7 @@ export default function DeliveryPage() {
                 <Select
                   value={String(form.customer_id || '')}
                   onValueChange={(v) => {
-                    const cust = customers.find((c: any) => c.id === parseInt(v));
+                    const cust = customers.find((c: Loose) => c.id === parseInt(v));
                     setForm((prev) => ({
                       ...prev,
                       customer_id: parseInt(v),
@@ -761,7 +761,7 @@ export default function DeliveryPage() {
                     <SelectValue placeholder="选择客户" />
                   </SelectTrigger>
                   <SelectContent>
-                    {customers.map((c: any) => (
+                    {customers.map((c: Loose) => (
                       <SelectItem key={c.id} value={String(c.id)}>
                         {c.customer_name}
                       </SelectItem>

@@ -28,18 +28,18 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   if (id) {
-    const rc = await queryOne<any>(
+    const rc = await queryOne<Loose>(
       'SELECT * FROM sal_reconciliation WHERE id = ? AND deleted = 0',
       [parseInt(id)]
     );
     if (!rc) return commonErrors.notFound('对账单不存在');
 
     const [lines, writeOffs] = await Promise.all([
-      query<any>(
+      query<Loose>(
         'SELECT * FROM sal_reconciliation_line WHERE reconciliation_id = ? ORDER BY source_type, source_date',
         [parseInt(id)]
       ),
-      query<any>(
+      query<Loose>(
         'SELECT * FROM sal_reconciliation_writeoff WHERE reconciliation_id = ? ORDER BY write_off_date DESC',
         [parseInt(id)]
       ),
@@ -52,7 +52,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     FROM sal_reconciliation r
     LEFT JOIN crm_customer c ON r.customer_id = c.id
     WHERE r.deleted = 0`;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (keyword) {
     sql += ' AND (r.reconciliation_no LIKE ? OR r.customer_name LIKE ?)';
@@ -67,10 +67,10 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   sql += ' ORDER BY r.create_time DESC LIMIT ? OFFSET ?';
   values.push(pageSize, (page - 1) * pageSize);
 
-  const list = await query<any>(sql, values);
+  const list = await query<Loose>(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM sal_reconciliation WHERE deleted = 0`;
-  const countResult = (await queryOne(countSql)) as any;
+  const countResult = (await queryOne(countSql)) as Loose;
 
   return successResponse({ list, total: countResult?.total || 0, page, pageSize });
 });
@@ -85,23 +85,23 @@ export const POST = withPermission(
 
     const { customer_id, customer_name, period_start, period_end, discount_amount, remark } = body;
 
-    const deliveries = (await query<any>(
+    const deliveries = (await query<Loose>(
       `SELECT id, delivery_no, delivery_date, total_amount
      FROM sal_delivery
      WHERE customer_id = ? AND delivery_date BETWEEN ? AND ?
        AND deleted = 0 AND status >= 2
      ORDER BY delivery_date`,
       [customer_id, period_start, period_end]
-    )) as any[];
+    )) as Loose[];
 
-    const returns = (await query<any>(
+    const returns = (await query<Loose>(
       `SELECT id, return_no, return_date, total_amount
      FROM sal_return
      WHERE customer_id = ? AND return_date BETWEEN ? AND ?
        AND deleted = 0 AND status >= 3
      ORDER BY return_date`,
       [customer_id, period_start, period_end]
-    )) as any[];
+    )) as Loose[];
 
     const deliveryAmount = deliveries.reduce(
       (sum, d) => sum + (parseFloat(d.total_amount) || 0),

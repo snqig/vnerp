@@ -15,7 +15,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let sql = `SELECT pr.*, m.material_name as product_name FROM prd_process_route pr LEFT JOIN inv_material m ON pr.product_id = m.id WHERE pr.deleted = 0`;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (keyword) {
     sql += ' AND (pr.route_code LIKE ? OR pr.route_name LIKE ?)';
@@ -29,9 +29,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const list = await query(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM prd_process_route WHERE deleted = 0`;
-  const countResult = (await queryOne(countSql)) as any;
+  const countResult = (await queryOne(countSql)) as Loose;
 
-  for (const route of list as any[]) {
+  for (const route of list as Loose[]) {
     const steps = await query(
       'SELECT * FROM prd_process_route_step WHERE route_id = ? ORDER BY step_seq ASC',
       [route.id]
@@ -65,7 +65,7 @@ export const POST = withPermission(
         ]
       );
 
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const routeId = rows[0].id;
 
       if (body.steps && Array.isArray(body.steps)) {

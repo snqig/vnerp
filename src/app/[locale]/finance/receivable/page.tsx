@@ -107,7 +107,7 @@ export default function ReceivablePage() {
         // 统一处理API返回的数据结构
         const rawData = result.data;
         const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
-        const list = rawList.map((item: any) => ({
+        const list = rawList.map((item: Loose) => ({
           id: item.id,
           receivable_no: item.receivableNo || item.receivable_no,
           source_type: item.sourceType || item.source_type,
@@ -359,7 +359,7 @@ export default function ReceivablePage() {
                 {detailItem.receipts && detailItem.receipts.length > 0 && (
                   <div className="border-t pt-4">
                     <h4 className="font-medium mb-2">{t('receiptRecords')}</h4>
-                    {detailItem.receipts.map((rc: any) => (
+                    {detailItem.receipts.map((rc: Loose) => (
                       <div key={rc.id} className="flex justify-between text-sm py-1 border-b">
                         <span>{rc.receipt_date?.slice(0, 10)}</span>
                         <span>¥{formatAmount(rc.amount)}</span>

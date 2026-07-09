@@ -17,10 +17,10 @@ export async function GET(_request: NextRequest) {
       status: 'healthy',
       latency: Date.now() - dbStart,
     };
-  } catch (e: any) {
+  } catch (e) {
     checks.database = {
       status: 'unhealthy',
-      message: e.message || '数据库连接失败',
+      message: (e as Error).message || '数据库连接失败',
     };
   }
 

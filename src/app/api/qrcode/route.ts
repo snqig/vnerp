@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE q.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (qrType) {
     where += ' AND q.qr_type = ?';
     params.push(qrType);
@@ -29,13 +29,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(like, like, like, like);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM qrcode_record q ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT q.*, b.available_qty AS batch_available_qty, b.quantity AS batch_total_qty, b.status AS batch_status
      FROM qrcode_record q
      LEFT JOIN inv_inventory_batch b ON q.batch_no = b.batch_no AND b.deleted = 0
@@ -80,9 +80,9 @@ export const POST = withPermission(
     const qrCode =
       qr_type.toUpperCase().substring(0, 2) + '-' + randomUUID().replace(/-/g, '').substring(0, 16);
 
-    const result: any = await transaction(async (conn) => {
+    const result: Loose = await transaction(async (conn) => {
       if (batch_no && (qr_type === 'material' || qr_type === 'product')) {
-        const batch: any = await queryOne(
+        const batch: Loose = await queryOne(
           'SELECT id, batch_no, available_qty, quantity, status FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0',
           [batch_no]
         );
@@ -126,7 +126,7 @@ export const POST = withPermission(
       return insertResult;
     });
 
-    return successResponse({ id: (result as any).insertId, qr_code: qrCode }, '二维码生成成功');
+    return successResponse({ id: (result as Loose).insertId, qr_code: qrCode }, '二维码生成成功');
   },
   { logTitle: '生成二维码' }
 );
@@ -143,7 +143,7 @@ export const PUT = withPermission(
       if (!batch_no) return errorResponse('批次号不能为空', 400, 400);
 
       await transaction(async (conn) => {
-        const [batchResult]: any = await conn.execute(
+        const [batchResult]: Loose = await conn.execute(
           'UPDATE inv_inventory_batch SET available_qty = 0, status = 0 WHERE batch_no = ? AND deleted = 0',
           [batch_no]
         );
@@ -178,7 +178,7 @@ export const PUT = withPermission(
         scan_data,
         device_info,
       } = body;
-      const record: any = await queryOne(
+      const record: Loose = await queryOne(
         'SELECT * FROM qrcode_record WHERE id = ? AND deleted = 0',
         [id]
       );
@@ -231,7 +231,7 @@ export const PUT = withPermission(
     }
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: Loose[] = [];
     if (status !== undefined) {
       fields.push('status = ?');
       values.push(status);

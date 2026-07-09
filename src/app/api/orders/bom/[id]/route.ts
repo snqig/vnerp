@@ -34,7 +34,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo, context
     [bomId]
   );
 
-  if ((bomHeader as any[]).length === 0) {
+  if ((bomHeader as Loose[]).length === 0) {
     return errorResponse('BOM不存在', 404, 404);
   }
 
@@ -71,7 +71,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo, context
   );
 
   return successResponse({
-    header: (bomHeader as any[])[0],
+    header: (bomHeader as Loose[])[0],
     lines: bomLines,
     version_history: versionHistory,
     alternatives,

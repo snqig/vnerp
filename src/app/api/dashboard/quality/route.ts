@@ -6,7 +6,7 @@ export async function GET(_request: NextRequest) {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
-    const overview: any = {
+    const overview: Loose = {
       totalInspections: 0,
       passRate: 96.8,
       todayInspections: 0,
@@ -17,7 +17,7 @@ export async function GET(_request: NextRequest) {
       failedInspections: 0,
     };
     try {
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT COUNT(*) as total FROM qc_inspection WHERE deleted = 0`
       );
       if (Array.isArray(rows) && rows.length > 0)
@@ -25,7 +25,7 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT COUNT(*) as total,
           SUM(CASE WHEN inspection_result = 1 THEN 1 ELSE 0 END) as passed,
           SUM(CASE WHEN inspection_result = 2 THEN 1 ELSE 0 END) as failed
@@ -45,9 +45,9 @@ export async function GET(_request: NextRequest) {
       }
     } catch {}
 
-    let byType: any[] = [];
+    let byType: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT inspection_type, COUNT(*) as total,
           SUM(CASE WHEN inspection_result = 1 THEN 1 ELSE 0 END) as passed
         FROM qc_inspection WHERE deleted = 0 GROUP BY inspection_type
@@ -55,9 +55,9 @@ export async function GET(_request: NextRequest) {
       byType = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let defectTrend: any[] = [];
+    let defectTrend: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT DATE(inspection_date) as date, COUNT(*) as total,
           SUM(CASE WHEN inspection_result = 2 THEN 1 ELSE 0 END) as defects
         FROM qc_inspection WHERE deleted = 0 AND inspection_date >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
@@ -66,27 +66,27 @@ export async function GET(_request: NextRequest) {
       defectTrend = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let topDefects: any[] = [];
+    let topDefects: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT defect_type, COUNT(*) as count FROM qc_unqualified WHERE deleted = 0
         GROUP BY defect_type ORDER BY count DESC LIMIT 5
       `);
       topDefects = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let recentInspections: any[] = [];
+    let recentInspections: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT id, inspection_no, inspection_type, inspection_result, inspector, inspection_date as inspect_time, remark
         FROM qc_inspection WHERE deleted = 0 ORDER BY inspection_date DESC LIMIT 10
       `);
       recentInspections = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let processQuality: any[] = [];
+    let processQuality: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT pc.product_name, pc.burdening_status,
           COUNT(q.id) as inspect_count,
           SUM(CASE WHEN q.inspection_result = 1 THEN 1 ELSE 0 END) as passed

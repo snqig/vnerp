@@ -189,8 +189,8 @@ export function MixedAddDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {warehouseCategories
-                    .filter((wh: any) => wh.status !== 0)
-                    .map((wh: any) => (
+                    .filter((wh: Loose) => wh.status !== 0)
+                    .map((wh: Loose) => (
                       <SelectItem key={wh.id} value={wh.name}>
                         {wh.name}
                       </SelectItem>

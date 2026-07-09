@@ -59,11 +59,11 @@ export async function getTranslator(namespace?: string) {
   const locale = await getLocaleFromHeader();
   const messages = await getTranslations(locale);
 
-  return (key: string, params?: Record<string, any>): string => {
+  return (key: string, params?: Record<string, Loose>): string => {
     const fullKey = namespace ? `${namespace}.${key}` : key;
     const keys = fullKey.split('.');
 
-    let value: any = messages;
+    let value: Loose = messages;
     for (const k of keys) {
       value = value?.[k];
       if (value === undefined) {

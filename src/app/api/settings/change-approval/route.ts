@@ -29,7 +29,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const moduleName = searchParams.get('module') || 'all';
 
   let sql = `SELECT * FROM sys_config_change_request WHERE 1=1`;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (status !== 'all') {
     sql += ` AND status = ?`;
@@ -141,7 +141,7 @@ export const PUT = withPermission(
     const rows = (await query(
       `SELECT * FROM sys_config_change_request WHERE id = ? AND status = 'pending'`,
       [id]
-    )) as any[];
+    )) as Loose[];
 
     if (rows.length === 0) {
       return errorResponse('变更请求不存在或已处理', 404);

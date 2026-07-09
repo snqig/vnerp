@@ -121,7 +121,7 @@ export default function StocktakingPage() {
   const [currentCheckId, setCurrentCheckId] = useState<number | null>(null);
   const [scanQrCode, setScanQrCode] = useState('');
   const [scanQuantity, setScanQuantity] = useState('');
-  const [scanResult, setScanResult] = useState<any>(null);
+  const [scanResult, setScanResult] = useState<Loose>(null);
 
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [detailItems, setDetailItems] = useState<InventoryCheckItem[]>([]);
@@ -166,7 +166,7 @@ export default function StocktakingPage() {
       const res = await authFetch('/api/warehouse?status=active&all=true');
       const result = await res.json();
       if (result.success) {
-        setWarehouses(result.data?.map((w: any) => ({ id: w.id, name: w.name })) || []);
+        setWarehouses(result.data?.map((w: Loose) => ({ id: w.id, name: w.name })) || []);
       }
     } catch {}
   };
@@ -206,9 +206,9 @@ export default function StocktakingPage() {
     }
   };
 
-  const handleAction = async (id: number, action: string, extraData?: any) => {
+  const handleAction = async (id: number, action: string, extraData?: Loose) => {
     try {
-      const body: any = { id, action };
+      const body: Loose = { id, action };
       if (extraData) Object.assign(body, extraData);
 
       const res = await authFetch('/api/warehouse/stocktaking', {

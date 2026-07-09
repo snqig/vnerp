@@ -125,7 +125,7 @@ export class InboundApplicationService {
   async approveOrder(id: number): Promise<{ id: number; status: string }> {
     const order = await this.getOrderById(id);
 
-    const warehouseRows: any = await query(
+    const warehouseRows: Loose = await query(
       'SELECT warehouse_name FROM inv_warehouse WHERE id = ?',
       [order.warehouseId]
     );
@@ -135,7 +135,7 @@ export class InboundApplicationService {
     order.approve(warehouseName);
 
     await transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         "UPDATE inv_inbound_order SET status = 'approved', update_time = NOW() WHERE id = ? AND status = ?",
         [id, previousStatus === 'completed' ? 'approved' : previousStatus]
       );

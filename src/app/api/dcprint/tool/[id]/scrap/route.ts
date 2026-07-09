@@ -6,7 +6,11 @@ import { ToolManagementService } from '@/application/services/ToolManagementServ
 const service = new ToolManagementService();
 
 export const POST = withPermission(
-  async (request: NextRequest, userInfo: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    userInfo: Loose,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
     const body = await request.json();
     try {
@@ -16,8 +20,8 @@ export const POST = withPermission(
         scrapBy: userInfo?.id,
       });
       return successResponse({ id }, 'Tool scrapped');
-    } catch (e: any) {
-      return errorResponse(e.message, 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message, 400, 400);
     }
   },
   { logTitle: '工装报废' }

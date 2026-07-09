@@ -380,7 +380,7 @@ export default function AnnouncementPage() {
                 <Label>{tc('actions')}</Label>
                 <Select
                   value={form.status}
-                  onValueChange={(v: any) => setForm((f) => ({ ...f, status: v }))}
+                  onValueChange={(v: Loose) => setForm((f) => ({ ...f, status: v }))}
                 >
                   <SelectTrigger>
                     <SelectValue />

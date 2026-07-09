@@ -30,7 +30,7 @@ export const GET = withPermission(async (_request: NextRequest, _userInfo) => {
   `);
 
   const categoryWithMostWarehouses = null;
-  const categoryWithNoWarehouses = stats.map((c: any) => ({
+  const categoryWithNoWarehouses = stats.map((c: Loose) => ({
     id: c.id,
     name: c.name,
   }));

@@ -32,7 +32,7 @@ export interface GlobalExportToolbarProps {
   /** 列定义 */
   columns: ExportColumn[];
   /** 数据 */
-  data: Record<string, any>[];
+  data: Record<string, Loose>[];
   /** 副标题 */
   subtitle?: string;
   /** 是否横向（PDF） */
@@ -99,9 +99,11 @@ export function GlobalExportToolbar({
           footer,
         });
         toast.success(`${formatLabels[format]} ${t('exportSuccess') || '导出成功'}`);
-      } catch (error: any) {
+      } catch (error) {
         console.error('Export error:', error);
-        toast.error(`${formatLabels[format]} ${t('exportFailed') || '导出失败'}: ${error.message}`);
+        toast.error(
+          `${formatLabels[format]} ${t('exportFailed') || '导出失败'}: ${(error as Error).message}`
+        );
       } finally {
         setExporting(false);
       }
@@ -138,7 +140,11 @@ export function GlobalExportToolbar({
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size={size} disabled={disabled || exporting || data.length === 0}>
+          <Button
+            variant="outline"
+            size={size}
+            disabled={disabled || exporting || data.length === 0}
+          >
             {exporting ? (
               <CheckCircle2 className="mr-2 h-4 w-4 animate-pulse" />
             ) : (
@@ -159,9 +165,7 @@ export function GlobalExportToolbar({
               <span>{labels[fmt]}</span>
             </DropdownMenuItem>
           ))}
-          {formats.length > 1 && formats.includes('print') && (
-            <DropdownMenuSeparator />
-          )}
+          {formats.length > 1 && formats.includes('print') && <DropdownMenuSeparator />}
         </DropdownMenuContent>
       </DropdownMenu>
 

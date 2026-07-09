@@ -83,45 +83,45 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     for (const table of deleteTables) {
       try {
         await conn.execute(`DELETE FROM ${table}`);
-      } catch (_e: any) {}
+      } catch (_e) {}
     }
 
     await conn.execute('SET FOREIGN_KEY_CHECKS=0');
 
-    const [custRows]: any = await conn.execute(
+    const [custRows]: Loose = await conn.execute(
       'SELECT id, customer_code, customer_name FROM crm_customer ORDER BY id'
     );
-    const customers: any[] = custRows;
+    const customers: Loose[] = custRows;
 
-    const [suppRows]: any = await conn.execute(
+    const [suppRows]: Loose = await conn.execute(
       'SELECT id, supplier_code, supplier_name FROM pur_supplier ORDER BY id'
     );
-    const suppliers: any[] = suppRows;
+    const suppliers: Loose[] = suppRows;
 
-    const [matRows]: any = await conn.execute(
+    const [matRows]: Loose = await conn.execute(
       'SELECT id, material_code, material_name, specification, unit, purchase_price, sale_price FROM inv_material ORDER BY id'
     );
-    const materials: any[] = matRows;
+    const materials: Loose[] = matRows;
 
-    const [whRows]: any = await conn.execute(
+    const [whRows]: Loose = await conn.execute(
       'SELECT id, warehouse_code, warehouse_name FROM inv_warehouse ORDER BY id'
     );
-    const warehouses: any[] = whRows;
+    const warehouses: Loose[] = whRows;
 
-    const [woRows]: any = await conn.execute(
+    const [woRows]: Loose = await conn.execute(
       'SELECT id, work_order_no FROM prod_work_order ORDER BY id'
     );
-    const workOrders: any[] = woRows;
+    const workOrders: Loose[] = woRows;
 
-    const [soRows]: any = await conn.execute(
+    const [soRows]: Loose = await conn.execute(
       'SELECT id, order_no, customer_id FROM sal_order ORDER BY id'
     );
-    const salesOrders: any[] = soRows;
+    const salesOrders: Loose[] = soRows;
 
-    const [eqpRows]: any = await conn.execute(
+    const [eqpRows]: Loose = await conn.execute(
       'SELECT id, equipment_code, equipment_name FROM eqp_equipment ORDER BY id'
     );
-    let equipment: any[] = eqpRows;
+    let equipment: Loose[] = eqpRows;
     if (equipment.length === 0) {
       const eqpTypes = [
         { code: 'SMP', name: '半自动丝印机' },
@@ -160,16 +160,16 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           ]
         );
       }
-      const [newEqpRows]: any = await conn.execute(
+      const [newEqpRows]: Loose = await conn.execute(
         'SELECT id, equipment_code, equipment_name FROM eqp_equipment ORDER BY id'
       );
       equipment = newEqpRows;
     }
 
-    const [userRows]: any = await conn.execute(
+    const [userRows]: Loose = await conn.execute(
       'SELECT id, username, real_name FROM sys_user ORDER BY id'
     );
-    const users: any[] = userRows;
+    const users: Loose[] = userRows;
 
     const now = new Date();
     const yearStart = new Date(now.getFullYear(), 0, 1);
@@ -295,7 +295,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       productIds.push(idRow[0].id);
     }
     stats.mdm_product = 20;
@@ -441,7 +441,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       templateIds.push(idRow[0].id);
     }
     stats.prd_die_template = 20;
@@ -568,13 +568,13 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           1,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       formulaIds.push(idRow[0].id);
     }
     stats.ink_formula = 20;
 
     const inkMaterials = materials.filter(
-      (m: any) =>
+      (m: Loose) =>
         m.material_name?.includes('油墨') ||
         m.material_name?.includes('银浆') ||
         m.material_name?.includes('光油') ||
@@ -741,7 +741,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       bomIds.push(idRow[0].id);
     }
     stats.bom_header = 20;
@@ -764,7 +764,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           1,
         ]
       );
-      const [bmRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [bmRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       bomMaterialIds.push(bmRow[0].id);
     }
 
@@ -821,7 +821,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     const logisticsCompanies = ['顺丰速运', '德邦物流', '中通快递', '圆通速递', '京东物流'];
     for (let i = 0; i < 20; i++) {
       const so = salesOrders[i % salesOrders.length];
-      const [custRow]: any = await conn.execute(
+      const [custRow]: Loose = await conn.execute(
         'SELECT customer_name FROM crm_customer WHERE id = ?',
         [so.customer_id]
       );
@@ -856,7 +856,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       deliveryIds.push(idRow[0].id);
     }
     stats.sal_delivery = 20;
@@ -900,7 +900,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     const returnIds: number[] = [];
     for (let i = 0; i < 20; i++) {
       const so = salesOrders[i % salesOrders.length];
-      const [custRow]: any = await conn.execute(
+      const [custRow]: Loose = await conn.execute(
         'SELECT customer_name FROM crm_customer WHERE id = ?',
         [so.customer_id]
       );
@@ -926,7 +926,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       returnIds.push(idRow[0].id);
     }
     stats.sal_return = 20;
@@ -986,7 +986,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       reconciliationIds.push(idRow[0].id);
     }
     stats.sal_reconciliation = 20;
@@ -1025,7 +1025,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       materialReturnIds.push(idRow[0].id);
     }
     stats.prd_material_return = 20;
@@ -1196,7 +1196,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       transferIds.push(idRow[0].id);
     }
     stats.inv_transfer_order = 20;
@@ -1237,7 +1237,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       stocktakingIds.push(idRow[0].id);
     }
     stats.inv_stocktaking = 20;
@@ -1283,7 +1283,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       adjustIds.push(idRow[0].id);
     }
     stats.inv_stock_adjust = 20;
@@ -1314,7 +1314,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
     const outboundIds: number[] = [];
     for (let i = 0; i < 20; i++) {
       const so = salesOrders[i % salesOrders.length];
-      const [custRow]: any = await conn.execute(
+      const [custRow]: Loose = await conn.execute(
         'SELECT customer_name FROM crm_customer WHERE id = ?',
         [so.customer_id]
       );
@@ -1336,7 +1336,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       outboundIds.push(idRow[0].id);
     }
     stats.inv_sales_outbound = 20;
@@ -1394,7 +1394,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       poIds.push(idRow[0].id);
     }
     stats.pur_purchase_order = 20;
@@ -1460,7 +1460,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       requestIds.push(idRow[0].id);
     }
     stats.pur_request = 20;
@@ -1519,7 +1519,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       inspectionIds.push(idRow[0].id);
     }
     stats.qc_final_inspection = 20;
@@ -1850,7 +1850,7 @@ export const POST = withPermission(async (_request: NextRequest, _userInfo) => {
           defaultUserId,
         ]
       );
-      const [idRow]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [idRow]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       trainingIds.push(idRow[0].id);
     }
     stats.hr_training = 20;

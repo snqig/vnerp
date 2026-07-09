@@ -6,14 +6,14 @@ export interface ExportColumn {
   key: string;
   header: string;
   width?: number;
-  formatter?: (value: any, row: any) => string;
+  formatter?: (value: Loose, row: Loose) => string;
 }
 
 export interface ExportOptions {
   fileName: string;
   sheetName?: string;
   columns: ExportColumn[];
-  data: any[];
+  data: Loose[];
   title?: string;
   author?: string;
 }
@@ -22,7 +22,7 @@ export interface ImportValidationError {
   row: number;
   field: string;
   message: string;
-  value: any;
+  value: Loose;
 }
 
 export interface ImportResult<T> {
@@ -37,7 +37,7 @@ export interface ImportResult<T> {
 export interface ImportTemplate {
   sheetName: string;
   headers: string[];
-  sampleData?: any[];
+  sampleData?: Loose[];
   validationRules?: Record<
     string,
     {
@@ -47,7 +47,7 @@ export interface ImportTemplate {
       max?: number;
       pattern?: string;
       enum?: string[];
-      custom?: (value: any) => boolean | string;
+      custom?: (value: Loose) => boolean | string;
     }
   >;
 }
@@ -55,7 +55,7 @@ export interface ImportTemplate {
 export class ExcelExportService {
   static exportToExcel(options: ExportOptions): Buffer {
     const workbook = XLSX.utils.book_new();
-    const worksheetData: any[][] = [];
+    const worksheetData: Loose[][] = [];
 
     if (options.title) {
       worksheetData.push([options.title]);
@@ -100,7 +100,7 @@ export class ExcelExportService {
   }
 
   static exportToCSV(options: Omit<ExportOptions, 'fileName'>): string {
-    const worksheetData: any[][] = [];
+    const worksheetData: Loose[][] = [];
 
     if (options.title) {
       worksheetData.push([options.title]);
@@ -132,7 +132,7 @@ export class ExcelExportService {
 
   static generateTemplate(template: ImportTemplate): Buffer {
     const workbook = XLSX.utils.book_new();
-    const worksheetData: any[][] = [];
+    const worksheetData: Loose[][] = [];
 
     // 注意: 模板生成时无法获取locale,这些文本需要在调用时传入翻译后的文本
     worksheetData.push([template.sheetName + ' - Import Template']);
@@ -175,7 +175,7 @@ export class ExcelExportService {
 }
 
 export class ExcelImportService {
-  static parseExcelFile(buffer: Buffer): any[] {
+  static parseExcelFile(buffer: Buffer): Loose[] {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
@@ -198,7 +198,7 @@ export class ExcelImportService {
     const headerRow = options?.headerRow ?? 2;
 
     for (let i = headerRow; i < data.length; i++) {
-      const row = data[i] as any;
+      const row = data[i] as Loose;
       const rowNumber = i + 1;
 
       if (skipEmpty && this.isEmptyRow(row)) {
@@ -213,7 +213,7 @@ export class ExcelImportService {
             row: rowNumber,
             field: issue.path.join('.'),
             message: issue.message,
-            value: (row as any)[issue.path[0] as string],
+            value: (row as Loose)[issue.path[0] as string],
           });
         }
       } else {
@@ -231,11 +231,11 @@ export class ExcelImportService {
     };
   }
 
-  static validateAgainstTemplate(data: any[], template: ImportTemplate): ImportValidationError[] {
+  static validateAgainstTemplate(data: Loose[], template: ImportTemplate): ImportValidationError[] {
     const errors: ImportValidationError[] = [];
 
     for (let i = 0; i < data.length; i++) {
-      const row = data[i] as any;
+      const row = data[i] as Loose;
       const rowNumber = i + 2;
 
       for (const [fieldKey, rules] of Object.entries(template.validationRules || {})) {
@@ -347,7 +347,7 @@ export class ExcelImportService {
     return errors;
   }
 
-  private static isEmptyRow(row: any): boolean {
+  private static isEmptyRow(row: Loose): boolean {
     return Object.values(row).every(
       (value) => value === undefined || value === null || value === ''
     );

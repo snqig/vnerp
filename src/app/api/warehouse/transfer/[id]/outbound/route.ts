@@ -14,7 +14,7 @@ export const POST = withPermission(
       return errorResponse('缺少出库明细数据', 400, 400);
     }
 
-    const transfer: any = await queryOne(
+    const transfer: Loose = await queryOne(
       `SELECT * FROM inv_transfer_order WHERE id = ? AND deleted = 0`,
       [transferId]
     );
@@ -49,19 +49,19 @@ export const POST = withPermission(
           throw new Error('出库数量必须大于0');
         }
 
-        let inventoryItem: any;
+        let inventoryItem: Loose;
         if (qr_code) {
           const [rows] = await conn.execute(
             `SELECT * FROM inv_inventory WHERE qr_code = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE`,
             [qr_code, transfer.from_warehouse_id]
           );
-          inventoryItem = (rows as any[])[0];
+          inventoryItem = (rows as Loose[])[0];
         } else {
           const [rows] = await conn.execute(
             `SELECT * FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 ORDER BY create_time ASC LIMIT 1 FOR UPDATE`,
             [material_id, transfer.from_warehouse_id]
           );
-          inventoryItem = (rows as any[])[0];
+          inventoryItem = (rows as Loose[])[0];
         }
 
         if (!inventoryItem || inventoryItem.quantity < quantity) {
@@ -106,7 +106,7 @@ export const POST = withPermission(
          FROM inv_transfer_order_item WHERE transfer_id = ?`,
         [transferId]
       );
-      const allItemsOut = (statsRows as any[])[0];
+      const allItemsOut = (statsRows as Loose[])[0];
 
       let newStatus = 1;
       if (allItemsOut.complete_count === allItemsOut.total_count) {
@@ -120,7 +120,7 @@ export const POST = withPermission(
       );
     });
 
-    const allItemsOut: any = await queryOne(
+    const allItemsOut: Loose = await queryOne(
       `SELECT
         SUM(CASE WHEN out_quantity > 0 THEN 1 ELSE 0 END) as out_count,
         COUNT(*) as total_count

@@ -119,7 +119,7 @@ export const POST = withPermission(
         deliveryAddress: body.delivery_address || '',
         remark: body.remark || '',
         createBy: userInfo.userId,
-        lines: body.lines.map((line: any, index: number) => ({
+        lines: body.lines.map((line: Loose, index: number) => ({
           lineNo: index + 1,
           materialId: line.material_id,
           materialCode: line.material_code || '',

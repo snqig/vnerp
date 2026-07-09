@@ -84,7 +84,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     for (const migration of migrations) {
       try {
-        const [columns]: any = await conn.execute(
+        const [columns]: Loose = await conn.execute(
           `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
           [migration.table, migration.column]
         );
@@ -99,8 +99,10 @@ export const POST = withPermission(async (_request: NextRequest) => {
           `ALTER TABLE \`${migration.table}\` ADD COLUMN \`${migration.column}\` ${migration.definition}${afterClause}`
         );
         results.push(`${migration.table}.${migration.column}: 添加成功`);
-      } catch (err: any) {
-        results.push(`${migration.table}.${migration.column}: 添加失败 - ${err.message}`);
+      } catch (err) {
+        results.push(
+          `${migration.table}.${migration.column}: 添加失败 - ${(err as Error).message}`
+        );
       }
     }
 
@@ -153,7 +155,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     for (const table of createTables) {
       try {
-        const [rows]: any = await conn.execute(
+        const [rows]: Loose = await conn.execute(
           `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
           [table.name]
         );
@@ -163,8 +165,8 @@ export const POST = withPermission(async (_request: NextRequest) => {
           await conn.execute(table.sql);
           results.push(`${table.name}: 表创建成功`);
         }
-      } catch (err: any) {
-        results.push(`${table.name}: 创建失败 - ${err.message}`);
+      } catch (err) {
+        results.push(`${table.name}: 创建失败 - ${(err as Error).message}`);
       }
     }
 
@@ -178,7 +180,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
 
     for (const idxMigration of indexMigrations) {
       try {
-        const [indexes]: any = await conn.execute(
+        const [indexes]: Loose = await conn.execute(
           `SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?`,
           [idxMigration.table, idxMigration.indexName]
         );
@@ -192,9 +194,9 @@ export const POST = withPermission(async (_request: NextRequest) => {
           `ALTER TABLE \`${idxMigration.table}\` ADD INDEX ${idxMigration.definition}`
         );
         results.push(`${idxMigration.table}.${idxMigration.indexName}: 索引添加成功`);
-      } catch (err: any) {
+      } catch (err) {
         results.push(
-          `${idxMigration.table}.${idxMigration.indexName}: 索引添加失败 - ${err.message}`
+          `${idxMigration.table}.${idxMigration.indexName}: 索引添加失败 - ${(err as Error).message}`
         );
       }
     }

@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const isActive = searchParams.get('isActive');
 
   let whereClause = 'WHERE 1=1';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (moduleType) {
     whereClause += ' AND module_type = ?';
@@ -29,14 +29,14 @@ export const GET = withPermission(async (request: NextRequest) => {
   const workflows = (await query(
     `SELECT * FROM wf_workflow_config ${whereClause} ORDER BY priority DESC, create_time DESC`,
     params
-  )) as any[];
+  )) as Loose[];
 
   const result = await Promise.all(
-    (workflows as any[]).map(async (wf: any) => {
+    (workflows as Loose[]).map(async (wf: Loose) => {
       const nodes = (await query(
         'SELECT * FROM wf_workflow_node WHERE workflow_id = ? ORDER BY node_order',
         [wf.id]
-      )) as any[];
+      )) as Loose[];
       return { ...wf, nodes };
     })
   );
@@ -58,7 +58,7 @@ export const POST = withPermission(async (request: NextRequest, user: UserInfo) 
   }
 
   // 创建流程配置
-  const result: any = await execute(
+  const result: Loose = await execute(
     `INSERT INTO wf_workflow_config (
       workflow_name, module_type, description, is_active, priority,
       create_by, create_time, update_time, deleted
@@ -178,7 +178,7 @@ export const DELETE = withPermission(async (request: NextRequest) => {
   const activeInstances = (await query(
     'SELECT COUNT(*) as count FROM wf_approval_instance WHERE workflow_id = ? AND status IN (1, 2)',
     [workflowId]
-  )) as any[];
+  )) as Loose[];
 
   if (activeInstances[0]?.count > 0) {
     return errorResponse('该流程有正在进行的审批实例，无法删除', 400, 400);

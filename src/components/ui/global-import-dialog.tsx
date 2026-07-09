@@ -20,7 +20,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Upload, FileSpreadsheet, Download, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import {
+  Upload,
+  FileSpreadsheet,
+  Download,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+} from 'lucide-react';
 import { GlobalImportService, ImportColumn, ImportResult } from '@/lib/global-import-service';
 import { toast } from 'sonner';
 
@@ -34,13 +41,13 @@ export interface GlobalImportDialogProps {
   /** 列定义 */
   columns: ImportColumn[];
   /** 示例数据 */
-  sampleData?: Record<string, any>[];
+  sampleData?: Record<string, Loose>[];
   /** 模板说明 */
   templateDescription?: string;
   /** 导入确认回调 */
-  onConfirm: (validRows: Record<string, any>[]) => Promise<void> | void;
+  onConfirm: (validRows: Record<string, Loose>[]) => Promise<void> | void;
   /** 自定义校验函数 */
-  onValidate?: (row: Record<string, any>, rowIndex: number) => string | null;
+  onValidate?: (row: Record<string, Loose>, rowIndex: number) => string | null;
   /** Dialog 标题 */
   title?: string;
 }
@@ -71,8 +78,8 @@ export function GlobalImportDialog({
         description: templateDescription,
       });
       toast.success(t('templateDownloaded') || '模板下载成功');
-    } catch (error: any) {
-      toast.error(`${t('templateDownloadFailed') || '模板下载失败'}: ${error.message}`);
+    } catch (error) {
+      toast.error(`${t('templateDownloadFailed') || '模板下载失败'}: ${(error as Error).message}`);
     }
   }, [templateFilename, columns, sampleData, templateDescription, t]);
 
@@ -97,8 +104,8 @@ export function GlobalImportDialog({
         } else {
           toast.success(`${importResult.validCount} ${t('rowsParsed') || '行解析成功'}`);
         }
-      } catch (error: any) {
-        toast.error(`${t('parseFailed') || '解析失败'}: ${error.message}`);
+      } catch (error) {
+        toast.error(`${t('parseFailed') || '解析失败'}: ${(error as Error).message}`);
       } finally {
         setImporting(false);
       }
@@ -114,8 +121,8 @@ export function GlobalImportDialog({
       await onConfirm(result.validRows);
       toast.success(`${result.validRows.length} ${t('rowsImported') || '行导入成功'}`);
       handleClose();
-    } catch (error: any) {
-      toast.error(`${t('importFailed') || '导入失败'}: ${error.message}`);
+    } catch (error) {
+      toast.error(`${t('importFailed') || '导入失败'}: ${(error as Error).message}`);
     } finally {
       setImporting(false);
     }
@@ -149,7 +156,9 @@ export function GlobalImportDialog({
             <div className="flex items-center gap-2">
               <FileSpreadsheet className="h-8 w-8 text-green-600" />
               <div>
-                <p className="text-sm font-medium">{t('step1DownloadTemplate') || '步骤 1: 下载导入模板'}</p>
+                <p className="text-sm font-medium">
+                  {t('step1DownloadTemplate') || '步骤 1: 下载导入模板'}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {t('templateDescription') || '填写数据时请遵循模板格式'}
                 </p>
@@ -166,7 +175,9 @@ export function GlobalImportDialog({
             <div className="flex items-center gap-2">
               <Upload className="h-8 w-8 text-blue-600" />
               <div>
-                <p className="text-sm font-medium">{t('step2UploadFile') || '步骤 2: 上传填写好的文件'}</p>
+                <p className="text-sm font-medium">
+                  {t('step2UploadFile') || '步骤 2: 上传填写好的文件'}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {fileName || t('noFileSelected') || '未选择文件'}
                 </p>
@@ -179,7 +190,7 @@ export function GlobalImportDialog({
               disabled={importing}
             >
               <Upload className="mr-2 h-4 w-4" />
-              {importing ? (t('parsing') || '解析中...') : (t('selectFile') || '选择文件')}
+              {importing ? t('parsing') || '解析中...' : t('selectFile') || '选择文件'}
             </Button>
             <input
               ref={fileInputRef}
@@ -229,7 +240,8 @@ export function GlobalImportDialog({
                       ))}
                       {result.invalidRows.length > 20 && (
                         <div className="text-xs text-muted-foreground">
-                          ...{t('andMore') || '还有'} {result.invalidRows.length - 20} {t('errors') || '条错误'}
+                          ...{t('andMore') || '还有'} {result.invalidRows.length - 20}{' '}
+                          {t('errors') || '条错误'}
                         </div>
                       )}
                     </div>
@@ -267,7 +279,8 @@ export function GlobalImportDialog({
                   </div>
                   {result.validRows.length > 10 && (
                     <div className="border-t px-3 py-1.5 text-xs text-muted-foreground text-center">
-                      {t('showingFirst') || '显示前'} 10 {t('of') || '/'} {result.validRows.length} {t('rows') || '行'}
+                      {t('showingFirst') || '显示前'} 10 {t('of') || '/'} {result.validRows.length}{' '}
+                      {t('rows') || '行'}
                     </div>
                   )}
                 </div>
@@ -285,7 +298,7 @@ export function GlobalImportDialog({
             disabled={!result || result.validRows.length === 0 || importing}
           >
             {importing
-              ? (t('importing') || '导入中...')
+              ? t('importing') || '导入中...'
               : `${t('import') || '导入'}${result ? ` (${result.validCount})` : ''}`}
           </Button>
         </DialogFooter>

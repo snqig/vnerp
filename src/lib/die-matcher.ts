@@ -210,11 +210,11 @@ export function calculateDieMatchScore(die: DieTemplate, product: ProductSpec): 
 }
 
 export async function findBestDieMatch(
-  conn: any,
+  conn: Loose,
   productSpec: ProductSpec,
   limit: number = 5
 ): Promise<DieMatchResult[]> {
-  const [rows]: any = await conn.query(
+  const [rows]: Loose = await conn.query(
     `SELECT
       id,
       template_code,
@@ -238,7 +238,7 @@ export async function findBestDieMatch(
     return [];
   }
 
-  const [usageRows]: any = await conn.query(
+  const [usageRows]: Loose = await conn.query(
     `SELECT die_id, COUNT(DISTINCT work_order_no) as order_count
     FROM prd_die_usage_log
     WHERE work_order_no IS NOT NULL
@@ -285,7 +285,7 @@ export async function findBestDieMatch(
 }
 
 export async function predictDieLife(
-  conn: any,
+  conn: Loose,
   dieId: number
 ): Promise<{
   current_uses: number;
@@ -295,7 +295,7 @@ export async function predictDieLife(
   estimated_end_date: string;
   usage_trend: 'increasing' | 'stable' | 'decreasing';
 }> {
-  const [dieRows]: any = await conn.query(
+  const [dieRows]: Loose = await conn.query(
     `SELECT
       id,
       template_code,
@@ -323,7 +323,7 @@ export async function predictDieLife(
   const remainingLifePercent =
     maxUses > 0 ? Math.round(((maxUses - currentUses) / maxUses) * 10000) / 100 : 100;
 
-  const [usageLogs]: any = await conn.query(
+  const [usageLogs]: Loose = await conn.query(
     `SELECT
       impressions,
       cumulative_after,
@@ -340,7 +340,7 @@ export async function predictDieLife(
 
   if (usageLogs && usageLogs.length >= 2) {
     const totalImpressions = usageLogs.reduce(
-      (sum: number, log: any) => sum + (parseInt(log.impressions) || 0),
+      (sum: number, log: Loose) => sum + (parseInt(log.impressions) || 0),
       0
     );
 
@@ -359,10 +359,10 @@ export async function predictDieLife(
       const midpoint = Math.floor(usageLogs.length / 2);
       const firstHalfImpressions = usageLogs
         .slice(0, midpoint)
-        .reduce((sum: number, log: any) => sum + (parseInt(log.impressions) || 0), 0);
+        .reduce((sum: number, log: Loose) => sum + (parseInt(log.impressions) || 0), 0);
       const secondHalfImpressions = usageLogs
         .slice(midpoint)
-        .reduce((sum: number, log: any) => sum + (parseInt(log.impressions) || 0), 0);
+        .reduce((sum: number, log: Loose) => sum + (parseInt(log.impressions) || 0), 0);
 
       const firstHalfAvg = firstHalfImpressions / midpoint;
       const secondHalfAvg = secondHalfImpressions / (usageLogs.length - midpoint);

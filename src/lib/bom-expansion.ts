@@ -130,7 +130,9 @@ async function getBomLines(productId: number): Promise<BomLine[]> {
 /**
  * 检查物料是否有BOM（是否为半成品）
  */
-async function checkMaterialHasBom(materialId: number): Promise<{ hasBom: boolean; bomId?: number }> {
+async function checkMaterialHasBom(
+  materialId: number
+): Promise<{ hasBom: boolean; bomId?: number }> {
   const sql = `
     SELECT bh.id as bomId
     FROM bom_header bh
@@ -200,7 +202,7 @@ async function expandBomRecursive(
 
   // 获取BOM明细
   const bomLines = await getBomLines(productId);
-  
+
   if (bomLines.length === 0) {
     // 没有BOM，说明是叶子节点
     return items;
@@ -211,17 +213,17 @@ async function expandBomRecursive(
     // 计算当前层的需求量（考虑父级累计损耗）
     // 父级需求 × 子件用量 × (1 + 父级累计损耗/100)
     const baseQuantity = requiredQuantity * line.quantity;
-    
+
     // 子级损耗 = 父级损耗 + 子级自身损耗 × 父级用量
     // 实际计算：累计损耗率 = 父级累计损耗率 + 当前损耗率
     const currentAccumulatedLossRate = accumulatedLossRate + line.lossRate;
-    
+
     // 实际需求量 = 基础用量 × (1 + 累计损耗率/100)
     const actualQuantity = baseQuantity * (1 + currentAccumulatedLossRate / 100);
 
     // 检查物料是否有BOM（是否为半成品）
     const { hasBom, bomId } = await checkMaterialHasBom(line.materialId);
-    
+
     // 获取对应的产品ID（如果有）
     const relatedProductId = await getProductIdByMaterialId(line.materialId);
 
@@ -255,7 +257,7 @@ async function expandBomRecursive(
         visitedNodes,
         warnings
       );
-      
+
       // 标记为非叶子节点
       currentItem.isLeaf = false;
       items.push(currentItem);
@@ -286,7 +288,10 @@ function mergeMaterials(items: BomExpansionItem[]): BomExpansionItem[] {
       existing.baseQuantity += item.baseQuantity;
       existing.actualQuantity += item.actualQuantity;
       // 取较大的损耗率
-      existing.accumulatedLossRate = Math.max(existing.accumulatedLossRate, item.accumulatedLossRate);
+      existing.accumulatedLossRate = Math.max(
+        existing.accumulatedLossRate,
+        item.accumulatedLossRate
+      );
       // 取较深的层级
       existing.level = Math.max(existing.level, item.level);
     } else {
@@ -365,9 +370,9 @@ export async function expandBom(
     // 统计信息
     const statistics = {
       totalMaterials: mergedItems.length,
-      maxDepth: Math.max(...mergedItems.map(i => i.level), 0),
-      leafMaterials: mergedItems.filter(i => i.isLeaf).length,
-      intermediateMaterials: mergedItems.filter(i => !i.isLeaf).length,
+      maxDepth: Math.max(...mergedItems.map((i) => i.level), 0),
+      leafMaterials: mergedItems.filter((i) => i.isLeaf).length,
+      intermediateMaterials: mergedItems.filter((i) => !i.isLeaf).length,
     };
 
     return {
@@ -420,14 +425,17 @@ export async function expandBomBatch(
  * 合并多个BOM展开结果（用于汇总多个产品的物料需求）
  */
 export function mergeExpansionResults(results: BomExpansionResult[]): {
-  materials: Map<number, {
-    materialCode: string;
-    materialName: string;
-    materialSpec?: string;
-    unit: string;
-    totalActualQuantity: number;
-    sources: Array<{ productCode: string; quantity: number }>;
-  }>;
+  materials: Map<
+    number,
+    {
+      materialCode: string;
+      materialName: string;
+      materialSpec?: string;
+      unit: string;
+      totalActualQuantity: number;
+      sources: Array<{ productCode: string; quantity: number }>;
+    }
+  >;
 } {
   const materialMap = new Map<
     number,
@@ -497,7 +505,7 @@ export async function getBomExpansionTree(
     quantity: number;
     lossRate: number;
     level: number;
-    children: any[];
+    children: Loose[];
   };
   warnings?: string[];
 }> {
@@ -512,7 +520,7 @@ export async function getBomExpansionTree(
     plossRate: number,
     level: number,
     path: string[]
-  ): Promise<any> {
+  ): Promise<Loose> {
     // 深度和循环检查
     if (level >= (config.maxDepth || 10)) {
       warnings.push(`达到最大递归深度，产品 ${pcode} 的展开已停止`);
@@ -596,7 +604,9 @@ export async function getBomExpansionTree(
 
   // 获取产品信息
   const productSql = `SELECT id, code, name FROM products WHERE id = ?`;
-  const productRows = await query<{ id: number; code: string; name: string }>(productSql, [productId]);
+  const productRows = await query<{ id: number; code: string; name: string }>(productSql, [
+    productId,
+  ]);
 
   if (productRows.length === 0) {
     throw new Error(`产品不存在：ID ${productId}`);

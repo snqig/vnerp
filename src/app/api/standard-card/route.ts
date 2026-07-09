@@ -95,11 +95,11 @@ async function postHandler(request: NextRequest, user: UserInfo) {
       message: '创建成功',
       data: card.toProps(),
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         code: 400,
-        message: error.message || '创建失败',
+        message: (error as Error).message || '创建失败',
       },
       { status: 400 }
     );
@@ -122,11 +122,11 @@ async function putHandler(request: NextRequest, user: UserInfo) {
       message: '更新成功',
       data: card.toProps(),
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         code: 400,
-        message: error.message || '更新失败',
+        message: (error as Error).message || '更新失败',
       },
       { status: 400 }
     );
@@ -145,11 +145,11 @@ async function deleteHandler(request: NextRequest, user: UserInfo) {
       code: 200,
       message: '删除成功',
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         code: 400,
-        message: error.message || '删除失败',
+        message: (error as Error).message || '删除失败',
       },
       { status: 400 }
     );
@@ -159,4 +159,7 @@ async function deleteHandler(request: NextRequest, user: UserInfo) {
 export const GET = withPermission(getHandler);
 export const POST = withPermission(postHandler, { logTitle: '创建标准卡', logType: 'business' });
 export const PUT = withPermission(putHandler, { logTitle: '更新标准卡', logType: 'business' });
-export const DELETE = withPermission(deleteHandler, { logTitle: '删除标准卡', logType: 'business' });
+export const DELETE = withPermission(deleteHandler, {
+  logTitle: '删除标准卡',
+  logType: 'business',
+});

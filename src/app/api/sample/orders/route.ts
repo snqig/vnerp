@@ -55,7 +55,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   `;
 
   let countSql = `SELECT COUNT(*) as total FROM sal_sample_order WHERE deleted = 0`;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     const keywordCondition = ` AND (order_no LIKE ? OR product_name LIKE ? OR material_no LIKE ?)`;
@@ -149,7 +149,7 @@ export const POST = withPermission(
       ]
     );
 
-    const insertId = (result as any).insertId;
+    const insertId = (result as Loose).insertId;
 
     return successResponse({ id: insertId, order_no: orderNo }, '打样订单创建成功');
   },
@@ -169,12 +169,12 @@ export const PUT = withPermission(
     // 查询打样订单
     const orders = await query('SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0', [id]);
 
-    if (!orders || (orders as any[]).length === 0) {
+    if (!orders || (orders as Loose[]).length === 0) {
       return commonErrors.notFound('打样订单不存在');
     }
 
     const updateFields: string[] = [];
-    const updateParams: any[] = [];
+    const updateParams: Loose[] = [];
 
     const fieldMapping: { [key: string]: string } = {
       notify_date: 'notify_date',
@@ -226,7 +226,7 @@ export const DELETE = withPermission(
     // 查询打样订单
     const orders = await query('SELECT * FROM sal_sample_order WHERE id = ? AND deleted = 0', [id]);
 
-    if (!orders || (orders as any[]).length === 0) {
+    if (!orders || (orders as Loose[]).length === 0) {
       return commonErrors.notFound('打样订单不存在');
     }
 

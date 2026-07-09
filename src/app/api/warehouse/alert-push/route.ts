@@ -19,7 +19,7 @@ export const GET = withPermission(
 
     if (type === 'config') {
       // 获取推送配置
-      const configs: any = await query(
+      const configs: Loose = await query(
         'SELECT * FROM sys_config WHERE config_group = ? ORDER BY sort_order',
         ['inventory_alert']
       );
@@ -33,7 +33,7 @@ export const GET = withPermission(
       const unreadOnly = searchParams.get('unread') === 'true';
 
       let where = 'WHERE n.type = ?';
-      const params: any[] = ['inventory_alert'];
+      const params: Loose[] = ['inventory_alert'];
 
       if (unreadOnly) {
         where += ' AND n.is_read = 0';
@@ -43,13 +43,13 @@ export const GET = withPermission(
       where += ' AND (n.user_id = ? OR n.user_id IS NULL)';
       params.push(userInfo.userId);
 
-      const countRows: any = await query(
+      const countRows: Loose = await query(
         `SELECT COUNT(*) as total FROM sys_notification n ${where}`,
         params
       );
       const total = countRows[0]?.total || 0;
 
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT n.* FROM sys_notification n ${where}
          ORDER BY n.create_time DESC
          LIMIT ? OFFSET ?`,
@@ -61,7 +61,9 @@ export const GET = withPermission(
 
     if (type === 'rules') {
       // 获取预警规则
-      const rules: any = await query('SELECT * FROM inv_alert_rule WHERE deleted = 0 ORDER BY id');
+      const rules: Loose = await query(
+        'SELECT * FROM inv_alert_rule WHERE deleted = 0 ORDER BY id'
+      );
       return successResponse({ rules });
     }
 
@@ -97,7 +99,7 @@ export const POST = withPermission(
         return errorResponse('规则名称、预警类型和阈值不能为空', 400, 400);
       }
 
-      const result: any = await execute(
+      const result: Loose = await execute(
         `INSERT INTO inv_alert_rule
          (rule_name, material_id, warehouse_id, alert_type, threshold, notify_method, notify_users, enabled, create_by, create_time, update_time)
          VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, NOW(), NOW())`,
@@ -144,7 +146,7 @@ export const PUT = withPermission(
     }
 
     const updates: string[] = [];
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (rule_name !== undefined) {
       updates.push('rule_name = ?');
@@ -188,7 +190,7 @@ export const PUT = withPermission(
 // 触发预警推送
 async function triggerAlertPush(userInfo: UserInfo) {
   // 查询所有低于安全库存的物料
-  const alerts: any = await query(
+  const alerts: Loose = await query(
     `SELECT s.material_id, s.warehouse_id, s.quantity, m.material_name, m.material_code, m.safety_stock, m.unit,
             w.warehouse_name
      FROM stock s
@@ -202,7 +204,7 @@ async function triggerAlertPush(userInfo: UserInfo) {
   }
 
   // 获取需要通知的用户（仓库管理员和系统管理员）
-  const notifyUsers: any = await query(
+  const notifyUsers: Loose = await query(
     `SELECT u.id, u.real_name, u.email FROM sys_user u
      WHERE u.status = 1 AND (u.role_id IN (SELECT id FROM sys_role WHERE role_key IN ('admin', 'warehouse_manager')) OR u.id = ?)`,
     [userInfo.userId]
@@ -228,7 +230,7 @@ async function triggerAlertPush(userInfo: UserInfo) {
     {
       alertCount: alerts.length,
       pushCount,
-      alerts: alerts.map((a: any) => ({
+      alerts: alerts.map((a: Loose) => ({
         material_code: a.material_code,
         material_name: a.material_name,
         warehouse_name: a.warehouse_name,

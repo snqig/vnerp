@@ -11,7 +11,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const sopType = searchParams.get('sopType') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (sopName) {
     where += ' AND sop_name LIKE ?';
     params.push('%' + sopName + '%');
@@ -21,9 +21,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(sopType);
   }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM eng_sop ' + where, params);
+  const totalRows: Loose = await query('SELECT COUNT(*) as total FROM eng_sop ' + where, params);
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM eng_sop ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -59,7 +59,7 @@ export const POST = withPermission(
       String(now.getDate()).padStart(2, '0') +
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO eng_sop (sop_no, sop_name, product_id, product_code, product_name, process_code, process_name, version, sop_type, content, file_url, workshop, equipment_type, effective_date, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -93,7 +93,7 @@ export const PUT = withPermission(
     if (!id) return errorResponse('ID不能为空', 400, 400);
 
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: Loose[] = [];
     const allowedFields = [
       'sop_name',
       'version',

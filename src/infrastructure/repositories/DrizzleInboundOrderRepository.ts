@@ -61,7 +61,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
     const props: InboundOrderProps = {
       id: order.id,
       orderNo: order.orderNo,
-      status: (DB_TO_DOMAIN_STATUS[order.status ?? 'pending'] ?? 'pending') as any,
+      status: (DB_TO_DOMAIN_STATUS[order.status ?? 'pending'] ?? 'pending') as Loose,
       warehouseId: order.warehouseId,
       supplierName: order.supplierName ?? '',
       supplierId: order.supplierId ?? undefined,
@@ -167,7 +167,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
       InboundOrder.reconstitute({
         id: o.id,
         orderNo: o.orderNo,
-        status: (DB_TO_DOMAIN_STATUS[o.status ?? 'pending'] ?? 'pending') as any,
+        status: (DB_TO_DOMAIN_STATUS[o.status ?? 'pending'] ?? 'pending') as Loose,
         warehouseId: o.warehouseId,
         supplierName: o.supplierName ?? '',
         supplierId: o.supplierId ?? undefined,
@@ -218,7 +218,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
 
     return await transaction(async (conn) => {
       // 主表插入
-      const [orderResult]: any = await conn.execute(
+      const [orderResult]: Loose = await conn.execute(
         `INSERT INTO inv_inbound_order
          (order_no, order_type, warehouse_id, supplier_id, supplier_name, po_id, po_no,
           total_amount, total_quantity, status, inbound_date, remark, create_time)
@@ -281,7 +281,7 @@ export class DrizzleInboundOrderRepository implements IInboundOrderRepository {
       .where(and(eq(invInboundOrders.id, id), eq(invInboundOrders.status, dbCurrentStatus)));
 
     // affectedRows 在 mysql2 ResultSetHeader 上
-    return (result[0] as any)?.affectedRows > 0;
+    return (result[0] as Loose)?.affectedRows > 0;
   }
 
   /**

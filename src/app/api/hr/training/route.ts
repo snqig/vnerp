@@ -12,7 +12,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (trainingName) {
     where += ' AND training_name LIKE ?';
     params.push('%' + trainingName + '%');
@@ -26,9 +26,12 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM hr_training ' + where, params);
+  const totalRows: Loose = await query(
+    'SELECT COUNT(*) as total FROM hr_training ' + where,
+    params
+  );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM hr_training ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -56,7 +59,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     String(now.getDate()).padStart(2, '0') +
     String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-  const result: any = await execute(
+  const result: Loose = await execute(
     'INSERT INTO hr_training (training_no, training_name, training_type, training_date, training_hours, trainer, training_content, training_place, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       trainingNo,

@@ -103,7 +103,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 构建列表查询
   let sql = 'SELECT * FROM pur_request WHERE deleted = 0';
   let countSql = 'SELECT COUNT(*) as total FROM pur_request WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (status && status !== 'all') {
     const condition = ' AND status = ?';
@@ -124,20 +124,20 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const result = await queryPaginated<PurchaseRequest>(sql, countSql, params, { page, pageSize });
 
   if (result.data && result.data.length > 0) {
-    const requestIds = (result.data as any[]).map((r: any) => r.id);
+    const requestIds = (result.data as Loose[]).map((r: Loose) => r.id);
     const placeholders = requestIds.map(() => '?').join(',');
     const items = await query<RequestItem>(
       `SELECT * FROM pur_request_item WHERE request_id IN (${placeholders}) AND deleted = 0 ORDER BY request_id, line_no`,
       requestIds
     );
     const itemsMap = new Map();
-    for (const item of items as any[]) {
+    for (const item of items as Loose[]) {
       if (!itemsMap.has(item.request_id)) {
         itemsMap.set(item.request_id, []);
       }
       itemsMap.get(item.request_id).push(item);
     }
-    for (const req of result.data as any[]) {
+    for (const req of result.data as Loose[]) {
       req.items = itemsMap.get(req.id) || [];
     }
   }
@@ -201,7 +201,7 @@ export const POST = withPermission(
         ]
       );
 
-      const requestId = (requestResult as any).insertId;
+      const requestId = (requestResult as Loose).insertId;
 
       // 批量插入明细
       const itemValues = body.items.map((item: RequestItem, index: number) => [

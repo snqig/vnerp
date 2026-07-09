@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const groupBy = searchParams.get('groupBy') || 'month'; // month, customer
 
   let dateFilter = '';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (startDate && endDate) {
     dateFilter = ' AND so.order_date BETWEEN ? AND ?';
@@ -23,7 +23,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   if (groupBy === 'month') {
     // 按月统计
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT
         DATE_FORMAT(so.order_date, '%Y-%m') as month,
         COUNT(*) as total_orders,
@@ -38,7 +38,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
 
-    const result = rows.map((row: any) => ({
+    const result = rows.map((row: Loose) => ({
       month: row.month,
       totalOrders: row.total_orders,
       completedOrders: row.completed_orders,
@@ -55,18 +55,18 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       {
         list: result,
         summary: {
-          totalOrders: result.reduce((sum: number, r: any) => sum + r.totalOrders, 0),
-          completedOrders: result.reduce((sum: number, r: any) => sum + r.completedOrders, 0),
+          totalOrders: result.reduce((sum: number, r: Loose) => sum + r.totalOrders, 0),
+          completedOrders: result.reduce((sum: number, r: Loose) => sum + r.completedOrders, 0),
           avgDeliveryRate:
             result.length > 0
               ? Math.round(
-                  result.reduce((sum: number, r: any) => sum + r.deliveryRate, 0) / result.length
+                  result.reduce((sum: number, r: Loose) => sum + r.deliveryRate, 0) / result.length
                 )
               : 0,
           avgOnTimeRate:
             result.length > 0
               ? Math.round(
-                  result.reduce((sum: number, r: any) => sum + r.onTimeRate, 0) / result.length
+                  result.reduce((sum: number, r: Loose) => sum + r.onTimeRate, 0) / result.length
                 )
               : 0,
         },
@@ -75,7 +75,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   } else {
     // 按客户统计
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT
         so.customer_id,
         c.customer_name,
@@ -92,7 +92,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
 
-    const result = rows.map((row: any) => ({
+    const result = rows.map((row: Loose) => ({
       customerId: row.customer_id,
       customerName: row.customer_name || '未知客户',
       totalOrders: row.total_orders,
@@ -110,11 +110,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
         list: result,
         summary: {
           totalCustomers: result.length,
-          totalOrders: result.reduce((sum: number, r: any) => sum + r.totalOrders, 0),
+          totalOrders: result.reduce((sum: number, r: Loose) => sum + r.totalOrders, 0),
           avgDeliveryRate:
             result.length > 0
               ? Math.round(
-                  result.reduce((sum: number, r: any) => sum + r.deliveryRate, 0) / result.length
+                  result.reduce((sum: number, r: Loose) => sum + r.deliveryRate, 0) / result.length
                 )
               : 0,
         },

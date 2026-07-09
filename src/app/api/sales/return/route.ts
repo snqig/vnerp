@@ -32,7 +32,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '10');
 
   let where = 'WHERE r.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     where += ' AND (r.return_no LIKE ? OR r.remark LIKE ?)';
@@ -55,11 +55,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(endDate);
   }
 
-  const countRows: any = await query(`SELECT COUNT(*) as total FROM sal_return r ${where}`, params);
+  const countRows: Loose = await query(
+    `SELECT COUNT(*) as total FROM sal_return r ${where}`,
+    params
+  );
   const total = countRows[0]?.total || 0;
   const totalPages = Math.ceil(total / pageSize);
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT r.*, c.customer_name, c.customer_code,
       (SELECT COUNT(*) FROM sal_return_detail WHERE return_id = r.id AND deleted = 0) as item_count
     FROM sal_return r
@@ -133,7 +136,7 @@ export const POST = withPermission(
         ]
       );
 
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const returnId = rows[0].id;
 
       for (let i = 0; i < items.length; i++) {

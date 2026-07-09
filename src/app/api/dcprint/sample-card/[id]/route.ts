@@ -9,7 +9,7 @@ const service = new SampleProcessCardService();
 export const GET = withPermission(
   async (
     _request: NextRequest,
-    _userInfo: any,
+    _userInfo: Loose,
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;
@@ -21,7 +21,11 @@ export const GET = withPermission(
 );
 
 export const PUT = withPermission(
-  async (request: NextRequest, userInfo: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    userInfo: Loose,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await params;
     const body = await request.json();
     const parsed = sampleProcessCardSchema.partial().safeParse(body);
@@ -35,8 +39,8 @@ export const PUT = withPermission(
     try {
       await service.updateCard(Number(id), parsed.data, userInfo.userId);
       return successResponse({ id }, '工艺卡更新成功');
-    } catch (e: any) {
-      return errorResponse(e.message, 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message, 400, 400);
     }
   },
   { logTitle: '更新打样工艺卡' }
@@ -45,15 +49,15 @@ export const PUT = withPermission(
 export const DELETE = withPermission(
   async (
     _request: NextRequest,
-    _userInfo: any,
+    _userInfo: Loose,
     { params }: { params: Promise<{ id: string }> }
   ) => {
     const { id } = await params;
     try {
       await service.deleteCard(Number(id));
       return successResponse({ id }, '工艺卡已删除');
-    } catch (e: any) {
-      return errorResponse(e.message, 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message, 400, 400);
     }
   },
   { logTitle: '删除打样工艺卡' }

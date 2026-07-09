@@ -390,7 +390,7 @@ export default function CEODashboard() {
     className = '',
   }: {
     title: string;
-    icon: any;
+    icon: Loose;
     children: React.ReactNode;
     className?: string;
   }) => (

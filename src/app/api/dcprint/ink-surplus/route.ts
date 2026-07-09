@@ -24,7 +24,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   let where = `WHERE ib.deleted = 0 AND ib.available_qty > 0 AND ib.status = 'normal'
     AND (ib.material_name LIKE '%专色%' OR ib.material_name LIKE '%调色%' OR ib.material_name LIKE '%余墨%' OR ib.batch_no LIKE 'INK%' OR ib.batch_no LIKE 'MIX%')`;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (colorName) {
     where += ' AND ib.material_name LIKE ?';
@@ -35,13 +35,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(minWeight));
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM inv_inventory_batch ib ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT ib.*, w.warehouse_name,
       CASE
         WHEN ib.expire_date IS NOT NULL AND ib.expire_date < CURDATE() THEN 'EXPIRED'
@@ -59,14 +59,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   for (const row of rows) {
-    const usageHistory: any = await query(
+    const usageHistory: Loose = await query(
       `SELECT usage_type, workorder_no, weight, operator_name, machine_name, usage_time
        FROM ink_usage WHERE batch_no = ? AND deleted = 0 ORDER BY usage_time DESC LIMIT 10`,
       [row.batch_no]
     );
     row.usage_history = usageHistory;
 
-    const dispatchRows: any = await query(
+    const dispatchRows: Loose = await query(
       `SELECT d.workorder_no, d.color_name, d.pantone_code, d.formula_no
        FROM ink_dispatch d
        WHERE d.batch_no = ? AND d.deleted = 0`,
@@ -79,9 +79,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 });
 
 async function recommendSurplus(pantoneCode: string, colorName: string) {
-  const recommendations: any[] = [];
+  const recommendations: Loose[] = [];
 
-  const surplusInks: any = await query(`
+  const surplusInks: Loose = await query(`
     SELECT
       ib.batch_no,
       ib.material_name,
@@ -156,7 +156,7 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
   recommendations.sort((a, b) => b.match_score - a.match_score);
 
   const totalAvailable = surplusInks.reduce(
-    (sum: number, ink: any) => sum + Number(ink.available_qty || 0),
+    (sum: number, ink: Loose) => sum + Number(ink.available_qty || 0),
     0
   );
   const potentialSaving = totalAvailable * (surplusInks[0]?.unit_price || 50);
@@ -171,7 +171,7 @@ async function recommendSurplus(pantoneCode: string, colorName: string) {
 }
 
 async function getSurplusDetail(batchNo: string) {
-  const batchRows: any = await query(
+  const batchRows: Loose = await query(
     `
     SELECT ib.*, w.warehouse_name
     FROM inv_inventory_batch ib
@@ -187,22 +187,23 @@ async function getSurplusDetail(batchNo: string) {
 
   const batch = batchRows[0];
 
-  const dispatchRows: any = await query(
+  const dispatchRows: Loose = await query(
     'SELECT * FROM ink_dispatch WHERE batch_no = ? AND deleted = 0',
     [batchNo]
   );
 
   let formulaInfo = null;
-  let rawInks: any[] = [];
+  let rawInks: Loose[] = [];
 
   if (dispatchRows.length > 0) {
     const dispatch = dispatchRows[0];
-    const formulaRows: any = await query('SELECT * FROM ink_formula WHERE id = ? AND deleted = 0', [
-      dispatch.formula_id,
-    ]);
+    const formulaRows: Loose = await query(
+      'SELECT * FROM ink_formula WHERE id = ? AND deleted = 0',
+      [dispatch.formula_id]
+    );
     if (formulaRows.length > 0) {
       formulaInfo = formulaRows[0];
-      const items: any = await query(
+      const items: Loose = await query(
         'SELECT * FROM ink_formula_item WHERE formula_id = ? AND deleted = 0 ORDER BY sort_order',
         [formulaInfo.id]
       );
@@ -210,12 +211,12 @@ async function getSurplusDetail(batchNo: string) {
     }
   }
 
-  const usageHistory: any = await query(
+  const usageHistory: Loose = await query(
     `SELECT * FROM ink_usage WHERE batch_no = ? AND deleted = 0 ORDER BY usage_time DESC`,
     [batchNo]
   );
 
-  const openingRows: any = await query(
+  const openingRows: Loose = await query(
     'SELECT * FROM ink_opening_record WHERE batch_no = ? AND deleted = 0 ORDER BY open_time DESC LIMIT 1',
     [batchNo]
   );
@@ -250,7 +251,7 @@ export const POST = withPermission(
     }
 
     const result = await transaction(async (conn) => {
-      const [batchRows]: any = await conn.execute(
+      const [batchRows]: Loose = await conn.execute(
         'SELECT id, available_qty, material_name, status, expire_date FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0 FOR UPDATE',
         [batch_no]
       );
@@ -278,7 +279,7 @@ export const POST = withPermission(
         String(now.getDate()).padStart(2, '0') +
         String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-      const [insertResult]: any = await conn.execute(
+      const [insertResult]: Loose = await conn.execute(
         `INSERT INTO ink_usage (usage_no, usage_type, batch_no, workorder_no, color_name, weight, unit, operator_id, operator_name, location_id, location_name, status, remark)
        VALUES (?, 'return', ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
         [

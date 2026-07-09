@@ -60,7 +60,9 @@ export function useCutting(deps: UseCuttingDeps) {
     // 校验分支2: 物料是否可分切
     const materialNameForCheck = currentLabel.materialName || '';
     if (!isCuttableMaterial(materialNameForCheck)) {
-      logger.branch(ctx, 'validate', 'isCuttableMaterial', false, { materialName: materialNameForCheck });
+      logger.branch(ctx, 'validate', 'isCuttableMaterial', false, {
+        materialName: materialNameForCheck,
+      });
       toast.error(t('materialNotCuttable'));
       return;
     }
@@ -72,7 +74,9 @@ export function useCutting(deps: UseCuttingDeps) {
       toast.error(t('inputCutWidth'));
       return;
     }
-    logger.branch(ctx, 'validate', 'cutWidths not empty', true, { cutWidths: cuttingForm.cutWidths });
+    logger.branch(ctx, 'validate', 'cutWidths not empty', true, {
+      cutWidths: cuttingForm.cutWidths,
+    });
 
     try {
       // 解析分切宽度
@@ -102,7 +106,11 @@ export function useCutting(deps: UseCuttingDeps) {
       }
 
       // 组装请求数据
-      const materialName = currentLabel.materialName || currentLabel.material_name || currentLabel.item?.material_name || '';
+      const materialName =
+        currentLabel.materialName ||
+        currentLabel.material_name ||
+        currentLabel.item?.material_name ||
+        '';
       const recordId = currentLabel.record?.id || currentLabel.id;
       const itemIdx = currentLabel.item?.idx ?? currentLabel.itemIdx ?? 0;
       const numericRecordId =
@@ -163,7 +171,7 @@ export function useCutting(deps: UseCuttingDeps) {
         // 映射新标签到 PrintLabel
         if (result.data?.newLabels && result.data.newLabels.length > 0) {
           logger.info(ctx, '开始映射分切结果到打印标签', { count: result.data.newLabels.length });
-          const newPrintLabels = result.data.newLabels.map((nl: any, idx: number) => ({
+          const newPrintLabels = result.data.newLabels.map((nl: Loose, idx: number) => ({
             id: nl.id || `cut-${idx}`,
             labelNo:
               nl.labelNo ||
@@ -217,7 +225,16 @@ export function useCutting(deps: UseCuttingDeps) {
       });
       toast.error(t('cutFailed'));
     }
-  }, [currentLabel, cuttingForm, user, t, fetchInboundRecords, setIsCuttingDialogOpen, setPrintLabels, setIsCuttingResultOpen]);
+  }, [
+    currentLabel,
+    cuttingForm,
+    user,
+    t,
+    fetchInboundRecords,
+    setIsCuttingDialogOpen,
+    setPrintLabels,
+    setIsCuttingResultOpen,
+  ]);
 
   return {
     cuttingForm,

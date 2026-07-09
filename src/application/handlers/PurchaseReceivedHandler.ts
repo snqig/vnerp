@@ -9,7 +9,7 @@ export class PurchaseReceivedHandler implements EventHandler<PurchaseOrderReceiv
 
     await transaction(async (conn) => {
       for (const item of receivedItems) {
-        const [existingInv]: any = await conn.execute(
+        const [existingInv]: Loose = await conn.execute(
           'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
           [item.materialId, item.warehouseId]
         );
@@ -27,7 +27,7 @@ export class PurchaseReceivedHandler implements EventHandler<PurchaseOrderReceiv
           );
         }
 
-        const [existingBatch]: any = await conn.execute(
+        const [existingBatch]: Loose = await conn.execute(
           'SELECT id, available_qty, quantity FROM inv_inventory_batch WHERE batch_no = ? AND material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
           [item.batchNo, item.materialId, item.warehouseId]
         );

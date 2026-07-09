@@ -17,7 +17,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let where = 'WHERE e.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (status) {
     where += ' AND e.status = ?';
@@ -28,13 +28,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo: UserIn
     params.push(expenseType);
   }
 
-  const countRows: any = await query(
+  const countRows: Loose = await query(
     `SELECT COUNT(*) as total FROM finance_expense e ${where}`,
     params
   );
   const total = countRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT e.*, u.real_name as applicant_name, a.real_name as approver_name
        FROM finance_expense e
        LEFT JOIN sys_user u ON e.applicant_id = u.id
@@ -62,14 +62,14 @@ export const POST = withPermission(
 
     // 生成报销单号
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const countRows: any = await query(
+    const countRows: Loose = await query(
       'SELECT COUNT(*) as cnt FROM finance_expense WHERE expense_no LIKE ?',
       [`EXP${dateStr}%`]
     );
     const seq = String((countRows[0]?.cnt || 0) + 1).padStart(3, '0');
     const expenseNo = `EXP${dateStr}${seq}`;
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO finance_expense
        (expense_no, applicant_id, expense_type, amount, expense_date, description, status, create_by, create_time, update_time)
        VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, NOW(), NOW())`,

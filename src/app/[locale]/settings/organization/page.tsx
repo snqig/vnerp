@@ -247,7 +247,7 @@ export default function OrganizationPage() {
       const result = await response.json();
       if (result.success || result.code === 200) {
         const deptData = result.data;
-        let deptList: any[] = [];
+        let deptList: Loose[] = [];
         if (Array.isArray(deptData)) {
           deptList = deptData;
         } else if (deptData) {
@@ -406,7 +406,7 @@ export default function OrganizationPage() {
       const result = await response.json();
       if (result.success || result.code === 200) {
         const roleData = result.data;
-        let roleList: any[] = [];
+        let roleList: Loose[] = [];
         if (Array.isArray(roleData)) {
           roleList = roleData;
         } else if (roleData) {

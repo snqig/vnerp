@@ -82,8 +82,8 @@ export default function OutsourceSettlementPage() {
   const [page, setPage] = useState(1);
   const [searchNo, setSearchNo] = useState('');
   const [showDialog, setShowDialog] = useState(false);
-  const [form, setForm] = useState<any>({});
-  const [outsourceOrders, setOutsourceOrders] = useState<any[]>([]);
+  const [form, setForm] = useState<Loose>({});
+  const [outsourceOrders, setOutsourceOrders] = useState<Loose[]>([]);
 
   const fetchData = async () => {
     try {

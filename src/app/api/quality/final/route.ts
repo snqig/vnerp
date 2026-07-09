@@ -8,7 +8,7 @@ import { generateDocNo, getFprPrefix } from '@/lib/global-config';
 async function queryPaginatedLocal(
   sql: string,
   countSql: string,
-  values: any[],
+  values: Loose[],
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;
@@ -73,7 +73,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   `;
 
   let countSql = `SELECT COUNT(*) as total FROM prd_process_card pc WHERE pc.deleted = 0 AND pc.burdening_status >= 2`;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (status) {
     sql += ` AND pc.burdening_status = ?`;

@@ -13,7 +13,7 @@ export const POST = withPermission(
       return errorResponse('二维码内容不能为空', 400, 400);
     }
 
-    let qrData: any;
+    let qrData: Loose;
     try {
       qrData = JSON.parse(qrContent);
     } catch {
@@ -32,7 +32,7 @@ export const POST = withPermission(
     await logScan(scanType, qrContent, labelNo, operatorId, operatorName, 'scanning');
 
     // 根据类型查询不同信息
-    let result: any = null;
+    let result: Loose = null;
 
     switch (type) {
       case '0': // 母材标签
@@ -79,7 +79,7 @@ export const POST = withPermission(
 
 // 查询物料标签
 async function queryMaterialLabel(labelNo: string) {
-  const label = await queryOne<any>(
+  const label = await queryOne<Loose>(
     `SELECT
       l.id,
       l.label_no as labelNo,
@@ -120,7 +120,7 @@ async function queryMaterialLabel(labelNo: string) {
 
   // 查询分切记录（如果是母材）
   if (label.isMainMaterial === 1) {
-    const cuttingRecords = await query<any[]>(
+    const cuttingRecords = await query<Loose[]>(
       `SELECT
         r.id,
         r.record_no as recordNo,
@@ -144,7 +144,7 @@ async function queryMaterialLabel(labelNo: string) {
 
   // 查询子标签（如果有）
   if (label.isCut === 1) {
-    const childLabels = await query<any[]>(
+    const childLabels = await query<Loose[]>(
       `SELECT
         label_no as labelNo,
         width,
@@ -165,7 +165,7 @@ async function queryMaterialLabel(labelNo: string) {
 
 // 查询工单
 async function queryWorkOrder(workOrderNo: string) {
-  const workOrder = await queryOne<any>(
+  const workOrder = await queryOne<Loose>(
     `SELECT
       wo.id,
       wo.order_no as orderNo,
@@ -190,7 +190,7 @@ async function queryWorkOrder(workOrderNo: string) {
   if (!workOrder) return null;
 
   // 查询关联的流程卡
-  const processCards = await query<any[]>(
+  const processCards = await query<Loose[]>(
     `SELECT
       card_no as cardNo,
       main_label_no as mainLabelNo,
@@ -211,7 +211,7 @@ async function queryWorkOrder(workOrderNo: string) {
 
 // 查询流程卡
 async function queryProcessCard(cardNo: string) {
-  const card = await queryOne<any>(
+  const card = await queryOne<Loose>(
     `SELECT
       c.id,
       c.card_no as cardNo,
@@ -244,7 +244,7 @@ async function queryProcessCard(cardNo: string) {
   if (!card) return null;
 
   // 查询流程卡关联的物料
-  const materials = await query<any[]>(
+  const materials = await query<Loose[]>(
     `SELECT
       label_no as labelNo,
       material_type as materialType,
@@ -263,8 +263,8 @@ async function queryProcessCard(cardNo: string) {
   );
 
   card.materials = materials || [];
-  card.mainMaterials = materials?.filter((m: any) => m.materialType === 'main') || [];
-  card.auxiliaryMaterials = materials?.filter((m: any) => m.materialType === 'auxiliary') || [];
+  card.mainMaterials = materials?.filter((m: Loose) => m.materialType === 'main') || [];
+  card.auxiliaryMaterials = materials?.filter((m: Loose) => m.materialType === 'auxiliary') || [];
 
   return card;
 }

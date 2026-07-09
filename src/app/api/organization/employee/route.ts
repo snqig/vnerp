@@ -46,10 +46,10 @@ function buildQueryConditions(params: {
   dept_id?: string;
   role_id?: string;
   status?: string;
-}): { sql: string; countSql: string; values: any[] } {
+}): { sql: string; countSql: string; values: Loose[] } {
   let sql = 'SELECT * FROM sys_employee WHERE 1=1';
   let countSql = 'SELECT COUNT(*) as total FROM sys_employee WHERE 1=1';
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (params.keyword) {
     const condition = ' AND (name LIKE ? OR employee_no LIKE ? OR phone LIKE ?)';

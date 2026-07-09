@@ -13,7 +13,7 @@ export const GET = withPermission(
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
         [table, column]
       );
-      if ((cols as any[]).length === 0) {
+      if ((cols as Loose[]).length === 0) {
         await execute(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
         results.push(`Added ${table}.${column}`);
       } else {
@@ -27,7 +27,7 @@ export const GET = withPermission(
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?`,
         [table, indexName]
       );
-      if ((idx as any[]).length === 0) {
+      if ((idx as Loose[]).length === 0) {
         await execute(`ALTER TABLE ${table} ADD INDEX ${indexName} (${definition})`);
         results.push(`Added index ${indexName} on ${table}`);
       } else {
@@ -81,8 +81,8 @@ export const GET = withPermission(
        WHERE pr.request_dept_id IS NULL AND pr.request_dept IS NOT NULL AND d.id IS NOT NULL`
       );
       results.push('Backfilled request_dept_id from sys_department');
-    } catch (e: any) {
-      results.push(`Backfill request_dept_id skipped: ${e.message}`);
+    } catch (e) {
+      results.push(`Backfill request_dept_id skipped: ${(e as Error).message}`);
     }
 
     try {
@@ -93,8 +93,8 @@ export const GET = withPermission(
        WHERE pr.requester_id IS NULL AND pr.requester_name IS NOT NULL AND e.id IS NOT NULL`
       );
       results.push('Backfilled requester_id from sys_employee');
-    } catch (e: any) {
-      results.push(`Backfill requester_id skipped: ${e.message}`);
+    } catch (e) {
+      results.push(`Backfill requester_id skipped: ${(e as Error).message}`);
     }
 
     try {
@@ -105,8 +105,8 @@ export const GET = withPermission(
        WHERE pri.material_id IS NULL AND pri.material_name IS NOT NULL AND m.id IS NOT NULL`
       );
       results.push('Backfilled material_id from inv_material');
-    } catch (e: any) {
-      results.push(`Backfill material_id skipped: ${e.message}`);
+    } catch (e) {
+      results.push(`Backfill material_id skipped: ${(e as Error).message}`);
     }
 
     return successResponse(results, '迁移完成');

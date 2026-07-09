@@ -65,7 +65,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const type = searchParams.get('type') !== '' ? Number(searchParams.get('type')) : undefined;
 
   let where = 'WHERE s.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (checkNo) {
     where += ' AND s.taking_no LIKE ?';
@@ -80,13 +80,13 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push(type);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM inv_stocktaking s ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any[] = await query(
+  const rows: Loose[] = await query(
     `SELECT s.*, w.warehouse_name,
             u1.real_name as checker_name,
             u2.real_name as approver_name
@@ -101,7 +101,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   );
 
   return successResponse({
-    list: rows.map((row: any) => ({
+    list: rows.map((row: Loose) => ({
       ...row,
       check_no: row.taking_no,
       type_name: TYPE_MAP[row.taking_type] || '未知',
@@ -128,7 +128,7 @@ export const POST = withPermission(async (request: NextRequest) => {
   const _now = new Date();
   const checkNo = generateCheckNo();
 
-  const result: any = await execute(
+  const result: Loose = await execute(
     `INSERT INTO inv_stocktaking (
       taking_no, taking_type, warehouse_id, status,
       taking_date, operator_id, remark, create_time, update_time
@@ -142,7 +142,7 @@ export const POST = withPermission(async (request: NextRequest) => {
     warehouse_id,
   ]);
 
-  const inventoryItems: any[] = await query(
+  const inventoryItems: Loose[] = await query(
     `SELECT
       i.id as inventory_id,
       i.material_id,
@@ -197,9 +197,10 @@ export const PUT = withPermission(async (request: NextRequest) => {
   const body = await request.json();
   const { id, action, approver_id, items } = body;
 
-  const check: any = await queryOne(`SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0`, [
-    id,
-  ]);
+  const check: Loose = await queryOne(
+    `SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0`,
+    [id]
+  );
 
   if (!check) {
     return commonErrors.notFound('盘点单不存在');
@@ -211,7 +212,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
         return errorResponse('ONLY_IN_PROGRESS_CAN_SUBMIT', 400, 400);
       }
 
-      const uncheckedCount: any = await queryOne(
+      const uncheckedCount: Loose = await queryOne(
         `SELECT COUNT(*) as count FROM inv_stocktaking_item
          WHERE taking_id = ? AND actual_qty = 0`,
         [id]
@@ -221,7 +222,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
         return errorResponse(`盘点项目未完成，还有 ${uncheckedCount.count} 项未盘点`, 400, 400);
       }
 
-      const diffStats: any = await queryOne(
+      const diffStats: Loose = await queryOne(
         `SELECT
           COUNT(*) as diff_items,
           COALESCE(SUM(ABS(diff_qty)), 0) as diff_amount
@@ -253,18 +254,18 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
       // 使用事务保护盘点审批操作，确保数据一致性
       await transaction(async (conn) => {
-        const diffItems: any[] = await conn
+        const diffItems: Loose[] = await conn
           .execute(`SELECT * FROM inv_stocktaking_item WHERE taking_id = ? AND diff_qty != 0`, [id])
-          .then(([rows]) => rows as any[]);
+          .then(([rows]) => rows as Loose[]);
 
         for (const item of diffItems) {
           // 检查是否会产生负库存
-          const currentStock: any = await conn
+          const currentStock: Loose = await conn
             .execute(
               `SELECT quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0`,
               [item.material_id, check.warehouse_id]
             )
-            .then(([rows]) => (rows as any[])[0]);
+            .then(([rows]) => (rows as Loose[])[0]);
 
           if (currentStock && currentStock.quantity + item.diff_qty < 0) {
             throw new Error(`物料ID ${item.material_id} 盘点后将产生负库存，请检查盘点数据`);
@@ -332,7 +333,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
       for (const item of items) {
         const { id: itemId, actual_quantity, difference_reason } = item;
 
-        const checkItem: any = await queryOne(
+        const checkItem: Loose = await queryOne(
           `SELECT * FROM inv_stocktaking_item WHERE id = ? AND taking_id = ?`,
           [itemId, id]
         );
@@ -351,7 +352,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
         );
       }
 
-      const stats: any = await queryOne(
+      const stats: Loose = await queryOne(
         `SELECT
           COUNT(CASE WHEN actual_qty > 0 THEN 1 END) as checked_count,
           COUNT(*) as total_count
@@ -382,9 +383,10 @@ export const DELETE = withPermission(async (request: NextRequest) => {
     return errorResponse('ID_PARAM_REQUIRED', 400, 400);
   }
 
-  const check: any = await queryOne(`SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0`, [
-    Number(id),
-  ]);
+  const check: Loose = await queryOne(
+    `SELECT * FROM inv_stocktaking WHERE id = ? AND deleted = 0`,
+    [Number(id)]
+  );
 
   if (!check) {
     return commonErrors.notFound('盘点单不存在');

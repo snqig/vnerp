@@ -22,11 +22,11 @@ export const GET = withPermission(
           'inbound.approved': eventBus.getHandlerCount('inbound.approved'),
         },
       });
-    } catch (error: any) {
+    } catch (error) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Initialization failed: ' + error.message,
+          message: 'Initialization failed: ' + (error as Error).message,
         },
         { status: 500 }
       );

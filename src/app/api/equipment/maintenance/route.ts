@@ -19,7 +19,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   const id = searchParams.get('id');
   if (id) {
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT r.*, e.equipment_code, e.equipment_name, e.model
        FROM eq_maintenance_record r
        LEFT JOIN eq_equipment e ON r.equipment_id = e.id
@@ -41,7 +41,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const endDate = searchParams.get('end_date') || '';
 
   let where = 'WHERE r.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (equipmentId) {
     where += ' AND r.equipment_id = ?';
@@ -64,13 +64,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(endDate);
   }
 
-  const countRows: any = await query(
+  const countRows: Loose = await query(
     `SELECT COUNT(*) as total FROM eq_maintenance_record r ${where}`,
     params
   );
   const total = countRows[0]?.total || 0;
 
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT r.id, r.record_no, r.equipment_id, r.plan_id, r.maintenance_type,
             r.maintenance_date, r.start_time, r.end_time, r.actual_hours,
             r.actual_cost, r.technician_name, r.result, r.status, r.remark,
@@ -113,9 +113,10 @@ export const POST = withPermission(
     }
 
     // 验证设备存在
-    const equipRows: any = await query('SELECT id FROM eq_equipment WHERE id = ? AND deleted = 0', [
-      Number(equipment_id),
-    ]);
+    const equipRows: Loose = await query(
+      'SELECT id FROM eq_equipment WHERE id = ? AND deleted = 0',
+      [Number(equipment_id)]
+    );
     if (!equipRows || equipRows.length === 0) {
       return errorResponse('设备不存在', 404, 404);
     }
@@ -129,7 +130,7 @@ export const POST = withPermission(
       String(now.getDate()).padStart(2, '0') +
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-    const result2: any = await execute(
+    const result2: Loose = await execute(
       `INSERT INTO eq_maintenance_record
        (record_no, equipment_id, plan_id, maintenance_type, maintenance_date,
         start_time, end_time, actual_hours, actual_cost, technician_name,
@@ -166,7 +167,7 @@ export const POST = withPermission(
 
     // 若关联维保计划，同步计划的 last_executed_date 和 next_execute_date
     if (plan_id) {
-      const planRows: any = await query(
+      const planRows: Loose = await query(
         'SELECT cycle_type, cycle_days FROM eq_maintenance_plan WHERE id = ? AND deleted = 0',
         [Number(plan_id)]
       );
@@ -224,7 +225,7 @@ export const PUT = withPermission(
     ];
 
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: Loose[] = [];
 
     for (const field of allowedFields) {
       if (fields[field] !== undefined) {

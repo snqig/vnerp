@@ -145,7 +145,7 @@ export default function InkOpeningPage() {
     remark: '',
   });
 
-  const [materials, setMaterials] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<Loose[]>([]);
 
   const fetchRecords = useCallback(async () => {
     setLoading(true);

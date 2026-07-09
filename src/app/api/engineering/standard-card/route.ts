@@ -93,14 +93,17 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const keyword = searchParams.get('keyword') || '';
 
   let where = 'WHERE 1=1';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (keyword) {
     where += ' AND (card_no LIKE ? OR product_name LIKE ?)';
     params.push(`%${keyword}%`, `%${keyword}%`);
   }
 
-  const total: any = await query(`SELECT COUNT(*) as count FROM prd_process_card ${where}`, params);
-  const rows: any = await query(
+  const total: Loose = await query(
+    `SELECT COUNT(*) as count FROM prd_process_card ${where}`,
+    params
+  );
+  const rows: Loose = await query(
     `SELECT * FROM prd_process_card ${where} ORDER BY create_time DESC LIMIT ? OFFSET ?`,
     [...params, pageSize, (page - 1) * pageSize]
   );

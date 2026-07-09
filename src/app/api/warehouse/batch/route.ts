@@ -28,7 +28,7 @@ export const GET = withPermission(
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
     let where = 'WHERE 1=1';
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (materialId) {
       where += ' AND b.material_id = ?';
@@ -52,14 +52,14 @@ export const GET = withPermission(
         ' AND b.expiry_date IS NOT NULL AND b.expiry_date <= DATE_ADD(NOW(), INTERVAL 30 DAY) AND b.expiry_date > NOW() AND b.quantity > 0';
     }
 
-    const countRows: any = await query(
+    const countRows: Loose = await query(
       `SELECT COUNT(*) as total FROM inv_inventory_batch b ${where}`,
       params
     );
     const total = countRows[0]?.total || 0;
     const totalPages = Math.ceil(total / pageSize);
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT b.*, m.material_name, m.material_code, m.material_spec, m.unit,
               w.warehouse_name
        FROM inv_inventory_batch b
@@ -107,7 +107,7 @@ export const POST = withPermission(
     } = body;
 
     // 检查批次是否已存在
-    const existing: any = await query(
+    const existing: Loose = await query(
       'SELECT id, quantity FROM inv_inventory_batch WHERE material_id = ? AND warehouse_id = ? AND batch_no = ?',
       [material_id, warehouse_id, batch_no]
     );
@@ -131,7 +131,7 @@ export const POST = withPermission(
     }
 
     // 创建新批次
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO inv_inventory_batch
        (material_id, warehouse_id, batch_no, serial_no, quantity, available_qty,
         unit_price, cost_price, production_date, expiry_date,
@@ -180,7 +180,9 @@ export const PUT = withPermission(
 
     if (action === 'unfreeze') {
       // 解冻批次
-      const batch: any = await query('SELECT quantity FROM inv_inventory_batch WHERE id = ?', [id]);
+      const batch: Loose = await query('SELECT quantity FROM inv_inventory_batch WHERE id = ?', [
+        id,
+      ]);
       if (batch.length === 0) {
         return errorResponse('批次不存在', 404, 404);
       }
@@ -195,7 +197,7 @@ export const PUT = withPermission(
     // 通用更新
     const { production_date, expiry_date, remark } = body;
     const updates: string[] = [];
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (production_date !== undefined) {
       updates.push('production_date = ?');

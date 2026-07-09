@@ -47,7 +47,7 @@ export class SalesApplicationService {
     order.approve(auditBy);
 
     await transaction(async (conn) => {
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         'UPDATE sal_order SET status = ?, audit_by = ?, audit_time = NOW(), update_time = NOW() WHERE id = ? AND status = ?',
         [order.status.toDbCode(), auditBy, id, SalesOrderStatus.from(previousStatus).toDbCode()]
       );
@@ -81,7 +81,7 @@ export class SalesApplicationService {
 
     await transaction(async (conn) => {
       const currentDbStatus = SalesOrderStatus.from(previousStatus).toDbCode();
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         'UPDATE sal_order SET status = ?, update_time = NOW() WHERE id = ? AND status = ?',
         [order.status.toDbCode(), id, currentDbStatus]
       );

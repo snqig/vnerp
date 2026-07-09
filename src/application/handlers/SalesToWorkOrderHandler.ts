@@ -110,7 +110,7 @@ export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedE
         ]
       );
 
-      const woId = (result as any).insertId;
+      const woId = (result as Loose).insertId;
 
       await getDomainEventOutbox().saveEvents(conn, 'WorkOrder', woId, [
         new WorkOrderCreatedEvent({
@@ -150,7 +150,7 @@ export class SalesToWorkOrderHandler implements EventHandler<SalesOrderApprovedE
        LEFT JOIN inv_material m ON m.id = bd.material_id
        WHERE bd.bom_id IN (SELECT id FROM prd_bom WHERE product_id = ? AND status = 1)`,
       [productId]
-    )) as any[];
+    )) as Loose[];
 
     if (bomRows.length === 0) {
       return [];

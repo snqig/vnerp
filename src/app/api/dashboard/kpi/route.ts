@@ -10,7 +10,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const endDate = searchParams.get('endDate') || '';
 
   let dateFilter = '';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (startDate && endDate) {
     dateFilter = 'AND create_time BETWEEN ? AND ?';
@@ -30,9 +30,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 准时交付订单数 / 总应交付订单数 × 100%
   //    数据来源: sal_order.delivery_date vs 实际出库时间
   // ========================================
-  const otd: any = { rate: 0, totalOrders: 0, onTimeOrders: 0, lateOrders: 0, details: [] };
+  const otd: Loose = { rate: 0, totalOrders: 0, onTimeOrders: 0, lateOrders: 0, details: [] };
   try {
-    const otdRows: any = await query(
+    const otdRows: Loose = await query(
       `
       SELECT
         COUNT(*) as total_orders,
@@ -62,9 +62,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 销售成本 / 平均库存价值
   //    数据来源: fin_voucher(出库成本) / inv_inventory_batch(库存价值)
   // ========================================
-  const inventoryTurnover: any = { rate: 0, costOfGoods: 0, avgInventoryValue: 0, daysOnHand: 0 };
+  const inventoryTurnover: Loose = { rate: 0, costOfGoods: 0, avgInventoryValue: 0, daysOnHand: 0 };
   try {
-    const costRows: any = await query(
+    const costRows: Loose = await query(
       `
       SELECT COALESCE(SUM(amount), 0) as total_cost
       FROM fin_voucher
@@ -73,7 +73,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
 
-    const invValueRows: any = await query(`
+    const invValueRows: Loose = await query(`
       SELECT COALESCE(SUM(available_qty * unit_price), 0) as total_value
       FROM inv_inventory_batch
       WHERE deleted = 0 AND status = 'normal'
@@ -95,7 +95,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: OEE = 可用率(A) × 表现率(P) × 质量率(Q)
   //    数据来源: eqp_equipment + 生产报工 + 质检记录
   // ========================================
-  const oee: any = {
+  const oee: Loose = {
     overall: 0,
     availability: 0,
     performance: 0,
@@ -103,7 +103,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     equipmentDetails: [],
   };
   try {
-    const oeeRows: any = await query(`
+    const oeeRows: Loose = await query(`
       SELECT
         id, equipment_code, equipment_name,
         COALESCE(oee_availability, 0) as availability,
@@ -115,7 +115,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `);
 
     if (Array.isArray(oeeRows) && oeeRows.length > 0) {
-      oee.equipmentDetails = oeeRows.map((r: any) => ({
+      oee.equipmentDetails = oeeRows.map((r: Loose) => ({
         id: r.id,
         code: r.equipment_code,
         name: r.equipment_name,
@@ -128,15 +128,15 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       const count = oeeRows.length;
       oee.availability =
         Math.round(
-          (oeeRows.reduce((s: number, r: any) => s + Number(r.availability), 0) / count) * 100
+          (oeeRows.reduce((s: number, r: Loose) => s + Number(r.availability), 0) / count) * 100
         ) / 100;
       oee.performance =
         Math.round(
-          (oeeRows.reduce((s: number, r: any) => s + Number(r.performance), 0) / count) * 100
+          (oeeRows.reduce((s: number, r: Loose) => s + Number(r.performance), 0) / count) * 100
         ) / 100;
       oee.quality =
         Math.round(
-          (oeeRows.reduce((s: number, r: any) => s + Number(r.quality), 0) / count) * 100
+          (oeeRows.reduce((s: number, r: Loose) => s + Number(r.quality), 0) / count) * 100
         ) / 100;
       oee.overall =
         Math.round(((oee.availability * oee.performance * oee.quality) / 10000) * 100) / 100;
@@ -148,7 +148,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 合格批次数 / 总检验批次数 × 100%
   //    数据来源: qc_incoming_inspection + qc_process_inspection + qc_final_inspection
   // ========================================
-  const qualityRate: any = {
+  const qualityRate: Loose = {
     overall: 0,
     incoming: 0,
     process: 0,
@@ -161,7 +161,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     finalPassed: 0,
   };
   try {
-    const incomingRows: any = await query(
+    const incomingRows: Loose = await query(
       `
       SELECT
         COUNT(*) as total,
@@ -180,7 +180,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   } catch {}
 
   try {
-    const processRows: any = await query(
+    const processRows: Loose = await query(
       `
       SELECT
         COUNT(*) as total,
@@ -199,7 +199,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   } catch {}
 
   try {
-    const finalRows: any = await query(
+    const finalRows: Loose = await query(
       `
       SELECT
         COUNT(*) as total,
@@ -229,9 +229,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 质量40% + 交付30% + 价格30%
   //    数据来源: pur_supplier + 质检/交付/采购数据
   // ========================================
-  let supplierScores: any[] = [];
+  let supplierScores: Loose[] = [];
   try {
-    const supplierRows: any = await query(`
+    const supplierRows: Loose = await query(`
       SELECT
         ps.id, ps.supplier_name,
         COALESCE(ps.quality_score, 0) as quality_score,
@@ -245,7 +245,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `);
 
     if (Array.isArray(supplierRows)) {
-      supplierScores = supplierRows.map((s: any) => {
+      supplierScores = supplierRows.map((s: Loose) => {
         const q = Number(s.quality_score);
         const d = Number(s.delivery_score);
         const p = Number(s.price_score);
@@ -267,9 +267,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 6. 客户信用额度使用率
   //    数据来源: crm_customer + sal_order
   // ========================================
-  let customerCredit: any[] = [];
+  let customerCredit: Loose[] = [];
   try {
-    const creditRows: any = await query(`
+    const creditRows: Loose = await query(`
       SELECT
         cc.id, cc.customer_name,
         COALESCE(cc.credit_limit, 0) as credit_limit,
@@ -284,7 +284,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     `);
 
     if (Array.isArray(creditRows)) {
-      customerCredit = creditRows.map((c: any) => ({
+      customerCredit = creditRows.map((c: Loose) => ({
         id: c.id,
         name: c.customer_name,
         creditLimit: Number(c.credit_limit),
@@ -299,7 +299,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 遵循FIFO的出库次数 / 总出库次数 × 100%
   //    数据来源: inv_fifo_override_log
   // ========================================
-  const fifoCompliance: any = {
+  const fifoCompliance: Loose = {
     rate: 0,
     totalOutbound: 0,
     fifoFollowed: 0,
@@ -307,7 +307,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     pendingApprovals: 0,
   };
   try {
-    const fifoRows: any = await query(
+    const fifoRows: Loose = await query(
       `
       SELECT
         COUNT(*) as total_overrides,
@@ -318,7 +318,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
       params
     );
 
-    const outboundRows: any = await query(
+    const outboundRows: Loose = await query(
       `
       SELECT COUNT(*) as total
       FROM inv_inventory_transaction
@@ -341,14 +341,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 8. 部门协作效率
   //    数据来源: 合同评审耗时 / 打样转量产耗时
   // ========================================
-  const departmentEfficiency: any = {
+  const departmentEfficiency: Loose = {
     contractReviewAvgDays: 0,
     sampleToMassAvgDays: 0,
     reviewCount: 0,
     conversionCount: 0,
   };
   try {
-    const reviewRows: any = await query(
+    const reviewRows: Loose = await query(
       `
       SELECT
         COUNT(*) as total,
@@ -365,7 +365,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   } catch {}
 
   try {
-    const conversionRows: any = await query(
+    const conversionRows: Loose = await query(
       `
       SELECT
         COUNT(*) as total,
@@ -386,7 +386,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //    公式: 实际油墨消耗量 / 理论消耗量 × 100%
   //    数据来源: dcprint_ink_usage + 配方理论用量
   // ========================================
-  const inkConsumptionRate: any = {
+  const inkConsumptionRate: Loose = {
     rate: 0,
     actualUsage: 0,
     theoreticalUsage: 0,
@@ -394,7 +394,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     byWorkOrder: [],
   };
   try {
-    const inkUsageRows: any = await query(
+    const inkUsageRows: Loose = await query(
       `
       SELECT
         COALESCE(SUM(actual_weight), 0) as actual_usage,
@@ -419,7 +419,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   } catch {}
 
   try {
-    const inkByWO: any = await query(
+    const inkByWO: Loose = await query(
       `
       SELECT
         iu.work_order_no,
@@ -444,7 +444,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //     公式: 合格品数量 / 投入纸张数量 × 100%
   //     数据来源: prd_work_report + 物料出库
   // ========================================
-  const paperUtilizationRate: any = {
+  const paperUtilizationRate: Loose = {
     rate: 0,
     inputQty: 0,
     outputQty: 0,
@@ -452,7 +452,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     byProcess: [],
   };
   try {
-    const paperRows: any = await query(
+    const paperRows: Loose = await query(
       `
       SELECT
         COALESCE(SUM(completed_qty), 0) as total_completed,
@@ -476,7 +476,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   } catch {}
 
   try {
-    const paperByProcess: any = await query(
+    const paperByProcess: Loose = await query(
       `
       SELECT
         process_name,
@@ -501,7 +501,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //     公式: 再利用余墨量 / 总余墨退回量 × 100%
   //     数据来源: dcprint_ink_surplus + ink_dispatch
   // ========================================
-  const surplusInkReuseRate: any = {
+  const surplusInkReuseRate: Loose = {
     rate: 0,
     totalReturned: 0,
     totalReused: 0,
@@ -509,7 +509,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     pendingReuse: 0,
   };
   try {
-    const surplusRows: any = await query(
+    const surplusRows: Loose = await query(
       `
       SELECT
         COALESCE(SUM(current_weight), 0) as total_surplus,
@@ -539,7 +539,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //     公式: 平均换版时间 = 总换版时间 / 换版次数
   //     数据来源: prd_work_report (工序间隔) + 设备状态
   // ========================================
-  const setupTime: any = {
+  const setupTime: Loose = {
     avgMinutes: 0,
     totalSetups: 0,
     totalMinutes: 0,
@@ -547,7 +547,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     trend: [],
   };
   try {
-    const setupRows: any = await query(
+    const setupRows: Loose = await query(
       `
       SELECT
         e.equipment_name,
@@ -570,18 +570,18 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
 
     if (Array.isArray(setupRows) && setupRows.length > 0) {
-      setupTime.byEquipment = setupRows.map((r: any) => ({
+      setupTime.byEquipment = setupRows.map((r: Loose) => ({
         equipmentCode: r.equipment_code,
         equipmentName: r.equipment_name,
         setupCount: Number(r.setup_count),
         avgSetupMinutes: Math.round(Number(r.avg_setup_minutes || 0) * 100) / 100,
       }));
       setupTime.totalSetups = setupTime.byEquipment.reduce(
-        (s: number, r: any) => s + r.setupCount,
+        (s: number, r: Loose) => s + r.setupCount,
         0
       );
       setupTime.totalMinutes = setupTime.byEquipment.reduce(
-        (s: number, r: any) => s + r.avgSetupMinutes * r.setupCount,
+        (s: number, r: Loose) => s + r.avgSetupMinutes * r.setupCount,
         0
       );
       setupTime.avgMinutes =
@@ -596,9 +596,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //     公式: 首检合格次数 / 总首检次数 × 100%
   //     数据来源: prd_work_report (is_first_piece + first_piece_status)
   // ========================================
-  const ftq: any = { rate: 0, totalFirstPiece: 0, passedFirstPiece: 0, failedFirstPiece: 0 };
+  const ftq: Loose = { rate: 0, totalFirstPiece: 0, passedFirstPiece: 0, failedFirstPiece: 0 };
   try {
-    const ftqRows: any = await query(
+    const ftqRows: Loose = await query(
       `
       SELECT
         COUNT(*) as total,
@@ -623,7 +623,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   //     公式: 过期/冻结批次价值 / 总库存价值 × 100%
   //     数据来源: inv_inventory_batch
   // ========================================
-  const staleInventoryRate: any = {
+  const staleInventoryRate: Loose = {
     rate: 0,
     totalInventoryValue: 0,
     staleValue: 0,
@@ -632,7 +632,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     nearExpiryValue: 0,
   };
   try {
-    const staleRows: any = await query(`
+    const staleRows: Loose = await query(`
       SELECT
         COALESCE(SUM(available_qty * unit_price), 0) as total_value,
         COALESCE(SUM(CASE WHEN status = 'expired' OR (expire_date IS NOT NULL AND expire_date < CURDATE()) THEN available_qty * unit_price ELSE 0 END), 0) as expired_value,
@@ -660,7 +660,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 15. OEE 六大损失分类
   //     数据来源: 设备故障/设置调整/闲置/小停机/速度损失/废品
   // ========================================
-  const oeeLossAnalysis: any = {
+  const oeeLossAnalysis: Loose = {
     breakdownLoss: 0,
     setupLoss: 0,
     idleLoss: 0,
@@ -669,7 +669,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     defectLoss: 0,
   };
   try {
-    const lossRows: any = await query(
+    const lossRows: Loose = await query(
       `
       SELECT
         COALESCE(SUM(CASE WHEN current_status = 4 THEN 1 ELSE 0 END), 0) as breakdown_count,

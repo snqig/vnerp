@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest) => {
     FROM inv_material
     WHERE deleted = 0
   `;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (keyword) {
     sql += ` AND (material_code LIKE ? OR material_name LIKE ?)`;
@@ -29,14 +29,14 @@ export const GET = withPermission(async (request: NextRequest) => {
   const list = await query(sql, values);
 
   let countSql = `SELECT COUNT(*) as total FROM inv_material WHERE deleted = 0`;
-  const countValues: any[] = [];
+  const countValues: Loose[] = [];
   if (keyword) {
     countSql += ` AND (material_code LIKE ? OR material_name LIKE ?)`;
     const likeKeyword = `%${keyword}%`;
     countValues.push(likeKeyword, likeKeyword);
   }
   const countResult = await query(countSql, countValues);
-  const total = (countResult as any[])[0]?.total || 0;
+  const total = (countResult as Loose[])[0]?.total || 0;
 
   return successResponse({
     list,

@@ -12,7 +12,7 @@ export const GET = withPermission(
     const dictLabel = searchParams.get('dictLabel') || '';
 
     let where = 'WHERE d.deleted = 0';
-    const params: any[] = [];
+    const params: Loose[] = [];
     if (dictTypeId) {
       where += ' AND d.dict_type_id = ?';
       params.push(Number(dictTypeId));
@@ -22,13 +22,13 @@ export const GET = withPermission(
       params.push(`%${dictLabel}%`);
     }
 
-    const totalRows: any = await query(
+    const totalRows: Loose = await query(
       `SELECT COUNT(*) as total FROM sys_dict_data d ${where}`,
       params
     );
     const total = totalRows[0]?.total || 0;
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT d.*, t.dict_name, t.dict_code as dict_type_code FROM sys_dict_data d LEFT JOIN sys_dict_type t ON d.dict_type_id = t.id ${where} ORDER BY d.sort_order ASC, d.id DESC LIMIT ? OFFSET ?`,
       [...params, pageSize, (page - 1) * pageSize]
     );
@@ -46,7 +46,7 @@ export const POST = withPermission(
     if (!dict_type_id)
       return NextResponse.json({ success: false, message: '字典类型ID不能为空' }, { status: 400 });
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO sys_dict_data (dict_type_id, dict_label, dict_value, sort_order, status, remark) VALUES (?, ?, ?, ?, ?, ?)`,
       [dict_type_id, dict_label, dict_value, sort_order || 0, status ?? 1, remark || null]
     );

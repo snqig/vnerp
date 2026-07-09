@@ -12,7 +12,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const evalPeriod = searchParams.get('evalPeriod') || '';
 
   let where = 'WHERE e.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (supplierName) {
     where += ' AND e.supplier_name LIKE ?';
     params.push('%' + supplierName + '%');
@@ -26,12 +26,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(evalPeriod);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM srm_supplier_eval e ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT e.* FROM srm_supplier_eval e ' +
       where +
       ' ORDER BY e.create_time DESC LIMIT ? OFFSET ?',
@@ -75,7 +75,7 @@ export const POST = withPermission(
       String(now.getDate()).padStart(2, '0') +
       String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO srm_supplier_eval (eval_no, supplier_id, supplier_name, eval_period, period_start, period_end, quality_score, delivery_score, price_score, service_score, total_score, quality_rate, on_time_rate, order_count, defect_count, supplier_level, status, evaluator, eval_time, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 2, ?, NOW(), ?)`,
       [
@@ -134,7 +134,7 @@ export const PUT = withPermission(
     if (!id) return errorResponse('ID不能为空', 400, 400);
 
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: Loose[] = [];
     const allowedFields = [
       'quality_score',
       'delivery_score',

@@ -56,7 +56,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let whereClause = 'WHERE t.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     whereClause += ` AND (t.trace_no LIKE ? OR t.work_order_no LIKE ? OR t.product_code LIKE ?)`;
@@ -110,7 +110,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 转换为驼峰命名
   const result = {
     ...dbResult,
-    list: dbResult.list.map((item: any) => ({
+    list: dbResult.list.map((item: Loose) => ({
       id: item.id,
       traceNo: item.trace_no,
       cardNo: item.card_no,
@@ -136,7 +136,7 @@ export const POST = withPermission(
     }
 
     // 查询流程卡信息
-    const card = await queryOne<any>(
+    const card = await queryOne<Loose>(
       `SELECT
       c.id, c.card_no, c.work_order_no, c.product_code, c.product_name,
       c.main_label_id, c.main_label_no,
@@ -266,7 +266,7 @@ export const detail = withPermission(async (request: NextRequest, _userInfo) => 
     return errorResponse('追溯单号不能为空', 400, 400);
   }
 
-  const trace = await queryOne<any>(
+  const trace = await queryOne<Loose>(
     `SELECT
       t.id,
       t.trace_no as traceNo,
@@ -321,14 +321,14 @@ export const detail = withPermission(async (request: NextRequest, _userInfo) => 
 async function queryPaginated(
   sql: string,
   countSql: string,
-  params: any[],
+  params: Loose[],
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;
   const offset = (page - 1) * pageSize;
 
   const [data, countResult] = await Promise.all([
-    query<any[]>(`${sql} LIMIT ? OFFSET ?`, [...params, pageSize, offset]),
+    query<Loose[]>(`${sql} LIMIT ? OFFSET ?`, [...params, pageSize, offset]),
     queryOne<{ total: number }>(countSql, params),
   ]);
 

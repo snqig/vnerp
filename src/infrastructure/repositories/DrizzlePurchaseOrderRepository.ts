@@ -260,7 +260,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
     const orderNo = await generateDocumentNo('purchase_order');
 
     const result = await transaction(async (conn) => {
-      const [orderResult]: any = await conn.execute(
+      const [orderResult]: Loose = await conn.execute(
         `INSERT INTO pur_purchase_order
          (po_no, supplier_id, supplier_name, supplier_code, order_date, delivery_date,
           currency, exchange_rate, total_amount, total_quantity, tax_rate, tax_amount, grand_total,
@@ -346,7 +346,7 @@ export class DrizzlePurchaseOrderRepository implements IPurchaseOrderRepository 
       .set({ status: dbStatus, updateTime: new Date() })
       .where(and(eq(purPurchaseOrder.id, id), eq(purPurchaseOrder.status, dbCurrentStatus)));
 
-    const affected = (result[0] as any)?.affectedRows > 0;
+    const affected = (result[0] as Loose)?.affectedRows > 0;
     logOp(
       'updateStatus',
       'pur_purchase_order (UPDATE)',

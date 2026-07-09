@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE c.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (certNo) {
     where += ' AND c.cert_no LIKE ?';
     params.push('%' + certNo + '%');
@@ -37,13 +37,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   const countSql = 'SELECT COUNT(*) as total FROM qms_sgs_cert c ' + where;
-  const totalRows: any = await query(countSql, params);
+  const totalRows: Loose = await query(countSql, params);
   const total = totalRows[0]?.total || 0;
 
   const dataSql = `SELECT c.*, 
     (SELECT COUNT(*) FROM qms_sgs_cert_item WHERE cert_id = c.id) as item_count
     FROM qms_sgs_cert c ${where} ORDER BY c.create_time DESC LIMIT ? OFFSET ?`;
-  const rows: any = await query(dataSql, [...params, pageSize, (page - 1) * pageSize]);
+  const rows: Loose = await query(dataSql, [...params, pageSize, (page - 1) * pageSize]);
 
   return successResponse({ list: rows, total, page, pageSize });
 });
@@ -75,7 +75,7 @@ export const POST = withPermission(
       return errorResponse('SGS证书编号不能为空', 400, 400);
     }
 
-    const existing: any = await query(
+    const existing: Loose = await query(
       'SELECT id FROM qms_sgs_cert WHERE cert_no = ? AND deleted = 0',
       [cert_no]
     );
@@ -83,7 +83,7 @@ export const POST = withPermission(
       return errorResponse('证书编号已存在', 400, 400);
     }
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO qms_sgs_cert (cert_no, material_id, material_code, material_name, supplier_id, supplier_name, cert_type, test_items, test_result, test_report_no, test_org, issue_date, expire_date, status, file_url, remark)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -143,7 +143,7 @@ export const PUT = withPermission(
     }
 
     const updateFields: string[] = [];
-    const updateValues: any[] = [];
+    const updateValues: Loose[] = [];
 
     const allowedFields = [
       'material_id',

@@ -11,15 +11,15 @@ async function columnExists(tableName: string, columnName: string): Promise<bool
      AND COLUMN_NAME = ?`,
     [tableName, columnName]
   );
-  return (result as any[]).length > 0;
+  return (result as Loose[]).length > 0;
 }
 
 // 辅助函数：安全地添加列
 async function addColumnSafe(tableName: string, columnDef: string) {
   try {
     await query(`ALTER TABLE ${tableName} ADD COLUMN ${columnDef}`);
-  } catch (e: any) {
-    if (e.code === 'ER_DUP_FIELDNAME') {
+  } catch (e) {
+    if ((e as Error & { code?: string }).code === 'ER_DUP_FIELDNAME') {
       return;
     }
     throw e;
@@ -36,7 +36,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'biz_order_header'`
     );
 
-    if ((bizOrderExists as any[]).length === 0) {
+    if ((bizOrderExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE biz_order_header (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -87,7 +87,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'biz_order_line'`
     );
 
-    if ((bizOrderLineExists as any[]).length === 0) {
+    if ((bizOrderLineExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE biz_order_line (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -128,7 +128,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pur_request'`
     );
 
-    if ((prExists as any[]).length === 0) {
+    if ((prExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE pur_request (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -168,7 +168,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pur_request_line'`
     );
 
-    if ((prLineExists as any[]).length === 0) {
+    if ((prLineExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE pur_request_line (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -297,7 +297,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'link_order_po'`
     );
 
-    if ((linkExists as any[]).length === 0) {
+    if ((linkExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE link_order_po (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -326,7 +326,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'biz_consumption'`
     );
 
-    if ((consumptionExists as any[]).length === 0) {
+    if ((consumptionExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE biz_consumption (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -361,7 +361,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'order_tolerance_config'`
     );
 
-    if ((toleranceExists as any[]).length === 0) {
+    if ((toleranceExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE order_tolerance_config (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -391,7 +391,7 @@ export async function GET(_request: NextRequest) {
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'order_status_history'`
     );
 
-    if ((historyExists as any[]).length === 0) {
+    if ((historyExists as Loose[]).length === 0) {
       await query(`
         CREATE TABLE order_status_history (
           id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -418,7 +418,7 @@ export async function GET(_request: NextRequest) {
     const orderCount = await query(
       `SELECT COUNT(*) as count FROM biz_order_header WHERE deleted = 0`
     );
-    if ((orderCount as any[])[0].count === 0) {
+    if ((orderCount as Loose[])[0].count === 0) {
       await query(`
         INSERT INTO biz_order_header (order_no, order_type, customer_name, product_name, status, req_qty, delivery_date, remark)
         VALUES ('SO20250101001', 'SALE', '新普科技', 'ASUS笔记本标签', 20, 10000, '2025-02-15', '测试销售订单')
@@ -437,7 +437,7 @@ export async function GET(_request: NextRequest) {
     const toleranceCount = await query(
       `SELECT COUNT(*) as count FROM order_tolerance_config WHERE is_default = 1`
     );
-    if ((toleranceCount as any[])[0].count === 0) {
+    if ((toleranceCount as Loose[])[0].count === 0) {
       await query(`
         INSERT INTO order_tolerance_config (order_type, over_delivery_tolerance, under_delivery_tolerance, price_tolerance, action_on_exceed, is_default)
         VALUES ('PURCHASE', 5.00, 5.00, 2.00, 'WARNING', 1)
@@ -449,7 +449,7 @@ export async function GET(_request: NextRequest) {
       message: '三层勾稽模型表初始化完成',
       details: results,
     });
-  } catch (error: any) {
-    return errorResponse(`初始化失败: ${error.message}`, 500, 500);
+  } catch (error) {
+    return errorResponse(`初始化失败: ${(error as Error).message}`, 500, 500);
   }
 }

@@ -12,7 +12,7 @@ export const GET = withPermission(
     COALESCE(SUM(CASE WHEN status = 1 THEN balance ELSE 0 END), 0) as unpaid_balance,
     COALESCE(SUM(CASE WHEN status = 2 THEN balance ELSE 0 END), 0) as partial_balance,
     COALESCE(SUM(CASE WHEN due_date < CURDATE() AND status IN (1, 2) THEN balance ELSE 0 END), 0) as overdue_balance
-  FROM fin_receivable WHERE deleted = 0`)) as any;
+  FROM fin_receivable WHERE deleted = 0`)) as Loose;
 
     const payableSummary = (await queryOne(`SELECT
     COALESCE(SUM(amount), 0) as total_amount,
@@ -21,7 +21,7 @@ export const GET = withPermission(
     COALESCE(SUM(CASE WHEN status = 1 THEN balance ELSE 0 END), 0) as unpaid_balance,
     COALESCE(SUM(CASE WHEN status = 2 THEN balance ELSE 0 END), 0) as partial_balance,
     COALESCE(SUM(CASE WHEN due_date < CURDATE() AND status IN (1, 2) THEN balance ELSE 0 END), 0) as overdue_balance
-  FROM fin_payable WHERE deleted = 0`)) as any;
+  FROM fin_payable WHERE deleted = 0`)) as Loose;
 
     const receivableByStatus = await query(`SELECT
     status,
@@ -61,7 +61,7 @@ export const GET = withPermission(
     WHERE p.deleted = 0 AND p.status IN (1, 2)
     ORDER BY p.balance DESC LIMIT 10`);
 
-    const summary: any = await queryOne(`
+    const summary: Loose = await queryOne(`
     SELECT
       COALESCE((SELECT SUM(amount) FROM fin_receivable WHERE deleted = 0 AND status IN (2, 3)), 0) as total_revenue,
       COALESCE((SELECT SUM(amount) FROM fin_cost_record WHERE deleted = 0), 0) as total_cost

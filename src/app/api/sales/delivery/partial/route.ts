@@ -19,7 +19,7 @@ export const POST = withPermission(
     }
 
     // 查询销售订单
-    const order = await queryOne<any>(`SELECT * FROM sal_order WHERE id = ? AND deleted = 0`, [
+    const order = await queryOne<Loose>(`SELECT * FROM sal_order WHERE id = ? AND deleted = 0`, [
       sales_order_id,
     ]);
 

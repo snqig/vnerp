@@ -344,7 +344,7 @@ export default function SupplierEvalPage() {
     setDialogOpen(true);
   };
 
-  const updateItem = (idx: number, field: string, value: any) => {
+  const updateItem = (idx: number, field: string, value: Loose) => {
     const newItems = [...formItems];
     newItems[idx] = { ...newItems[idx], [field]: value };
     setFormItems(newItems);

@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     return errorResponse('请提供二维码编码、单号、批次号或物料编码', 400, 400);
   }
 
-  let record: any = null;
+  let record: Loose = null;
 
   if (qrCode) {
     record = await queryOne('SELECT * FROM qrcode_record WHERE qr_code = ? AND deleted = 0', [
@@ -42,17 +42,17 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   if (!record) return errorResponse('未找到对应的二维码记录', 404, 404);
 
-  const scanLogs: any = await query(
+  const scanLogs: Loose = await query(
     'SELECT * FROM qrcode_scan_log WHERE qr_code = ? ORDER BY create_time ASC',
     [record.qr_code]
   );
 
-  const relatedRecords: any = await query(
+  const relatedRecords: Loose = await query(
     'SELECT id, qr_code, qr_type, ref_no, batch_no, material_name, quantity, status, create_time FROM qrcode_record WHERE (ref_no = ? OR batch_no = ? OR material_code = ?) AND qr_code != ? AND deleted = 0 ORDER BY create_time ASC',
     [record.ref_no, record.batch_no || '', record.material_code || '', record.qr_code]
   );
 
-  let batchInfo: any = null;
+  let batchInfo: Loose = null;
   if (record.batch_no) {
     batchInfo = await queryOne(
       `SELECT b.*, w.warehouse_name
@@ -63,7 +63,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let inventoryInfo: any = null;
+  let inventoryInfo: Loose = null;
   if (record.material_id) {
     inventoryInfo = await query(
       'SELECT i.*, w.warehouse_name FROM inv_inventory i LEFT JOIN inv_warehouse w ON i.warehouse_id = w.id WHERE i.material_id = ? AND i.deleted = 0',
@@ -71,7 +71,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let inboundInfo: any = null;
+  let inboundInfo: Loose = null;
   if (record.batch_no) {
     inboundInfo = await query(
       `SELECT ii.*, io.order_no AS inbound_order_no, io.order_type AS inbound_type, io.status AS inbound_status
@@ -82,7 +82,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let productionUsage: any = null;
+  let productionUsage: Loose = null;
   if (record.material_id && record.qr_type === 'material') {
     productionUsage = await query(
       `SELECT wo.work_order_no, wo.status AS work_order_status, wo.plan_qty, wo.completed_qty
@@ -93,7 +93,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let productQRs: any = null;
+  let productQRs: Loose = null;
   if (record.qr_type === 'material' && record.work_order_no) {
     productQRs = await query(
       `SELECT qr.qr_code, qr.qr_type, qr.material_name, qr.quantity, qr.status, qr.create_time
@@ -104,7 +104,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let shipmentInfo: any = null;
+  let shipmentInfo: Loose = null;
   if (record.qr_type === 'product' && record.ref_no) {
     shipmentInfo = await query(
       `SELECT sd.delivery_no, sd.delivery_date, sd.customer_name, sd.status
@@ -115,7 +115,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let orderInfo: any = null;
+  let orderInfo: Loose = null;
   if (record.ref_no && record.ref_no.startsWith('SO')) {
     orderInfo = await queryOne('SELECT * FROM sales_order WHERE order_no = ? AND deleted = 0', [
       record.ref_no,
@@ -133,7 +133,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     );
   }
 
-  let qualityInfo: any = null;
+  let qualityInfo: Loose = null;
   if (record.ref_no) {
     qualityInfo = await query(
       'SELECT * FROM qc_incoming_inspection WHERE (batch_no = ? OR material_code = ?) AND deleted = 0 ORDER BY create_time DESC LIMIT 5',
@@ -142,14 +142,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   const timeline = [
-    ...scanLogs.map((log: any) => ({
+    ...scanLogs.map((log: Loose) => ({
       time: log.create_time,
       event: `${getScanTypeLabel(log.scan_type)}`,
       operator: log.operator_name || '-',
       result: log.scan_result,
       message: log.scan_message || '',
     })),
-  ].sort((a: any, b: any) => new Date(a.time).getTime() - new Date(b.time).getTime());
+  ].sort((a: Loose, b: Loose) => new Date(a.time).getTime() - new Date(b.time).getTime());
 
   if (record.create_time) {
     timeline.unshift({
@@ -172,7 +172,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   if (inboundInfo && inboundInfo.length > 0) {
-    inboundInfo.forEach((item: any) => {
+    inboundInfo.forEach((item: Loose) => {
       timeline.push({
         time: item.create_time,
         event: '入库记录',
@@ -183,7 +183,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     });
   }
 
-  timeline.sort((a: any, b: any) => new Date(a.time).getTime() - new Date(b.time).getTime());
+  timeline.sort((a: Loose, b: Loose) => new Date(a.time).getTime() - new Date(b.time).getTime());
 
   return successResponse({
     record,

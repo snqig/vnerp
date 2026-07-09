@@ -1,7 +1,8 @@
+import { IOutboundOrderRepository } from '@/domain/warehouse/repositories/IOutboundOrderRepository';
 import {
-  IOutboundOrderRepository,
-} from '@/domain/warehouse/repositories/IOutboundOrderRepository';
-import { Pagination, PaginatedResult } from '@/domain/warehouse/repositories/IInboundOrderRepository';
+  Pagination,
+  PaginatedResult,
+} from '@/domain/warehouse/repositories/IInboundOrderRepository';
 import { OutboundOrder, OutboundOrderProps } from '@/domain/warehouse/aggregates/OutboundOrder';
 import { query, execute, transaction, queryPaginated } from '@/lib/db';
 import { generateDocumentNo } from '@/lib/document-numbering';
@@ -26,14 +27,14 @@ const ITEM_COLUMNS = `id, order_id, material_id, material_code, material_name, m
 
 export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
   async findById(id: number): Promise<OutboundOrder | null> {
-    const orders = await query<any>(
+    const orders = await query<Loose>(
       'SELECT * FROM inv_outbound_order WHERE id = ? AND deleted = 0',
       [id]
     );
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
-    const items = await query<any>(
+    const items = await query<Loose>(
       `SELECT ${ITEM_COLUMNS} FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
       [id]
     );
@@ -42,14 +43,14 @@ export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
   }
 
   async findByOrderNo(orderNo: string): Promise<OutboundOrder | null> {
-    const orders = await query<any>(
+    const orders = await query<Loose>(
       'SELECT * FROM inv_outbound_order WHERE order_no = ? AND deleted = 0',
       [orderNo]
     );
     if (!orders || orders.length === 0) return null;
 
     const order = orders[0];
-    const items = await query<any>(
+    const items = await query<Loose>(
       `SELECT ${ITEM_COLUMNS} FROM inv_outbound_item WHERE order_id = ? AND deleted = 0`,
       [order.id]
     );
@@ -74,7 +75,7 @@ export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
                o.operator_id, o.operator_name, o.remark, o.create_time, o.update_time
                FROM inv_outbound_order o WHERE o.deleted = 0`;
     let countSql = `SELECT COUNT(*) as total FROM inv_outbound_order o WHERE o.deleted = 0`;
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (filters?.keyword) {
       const condition = ` AND (o.order_no LIKE ? OR o.customer_name LIKE ? OR o.work_order_no LIKE ?)`;
@@ -119,28 +120,28 @@ export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
     const result = await queryPaginated(sql, countSql, params, pagination);
 
     if (result.data.length > 0) {
-      const orderIds = result.data.map((o: any) => o.id);
+      const orderIds = result.data.map((o: Loose) => o.id);
       const placeholders = orderIds.map(() => '?').join(',');
       const items = await query(
         `SELECT ${ITEM_COLUMNS} FROM inv_outbound_item WHERE order_id IN (${placeholders}) AND deleted = 0`,
         orderIds
       );
 
-      const itemsMap = new Map<number, any[]>();
-      for (const item of items as any[]) {
+      const itemsMap = new Map<number, Loose[]>();
+      for (const item of items as Loose[]) {
         if (!itemsMap.has(item.order_id)) {
           itemsMap.set(item.order_id, []);
         }
         itemsMap.get(item.order_id)!.push(item);
       }
 
-      for (const order of result.data as any[]) {
+      for (const order of result.data as Loose[]) {
         order.items = itemsMap.get(order.id) || [];
       }
     }
 
     return {
-      data: result.data.map((o: any) =>
+      data: result.data.map((o: Loose) =>
         OutboundOrder.reconstitute(this.mapRowToProps(o, o.items || []))
       ),
       pagination: result.pagination,
@@ -152,7 +153,7 @@ export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
     const items = order.items;
 
     return await transaction(async (conn) => {
-      const [orderResult]: any = await conn.execute(
+      const [orderResult]: Loose = await conn.execute(
         `INSERT INTO inv_outbound_order
          (order_no, order_date, outbound_type, warehouse_id, warehouse_name,
           customer_id, customer_name, work_order_id, work_order_no,
@@ -241,11 +242,11 @@ export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
     ]);
   }
 
-  private mapRowToProps(order: any, items: any[]): OutboundOrderProps {
+  private mapRowToProps(order: Loose, items: Loose[]): OutboundOrderProps {
     return {
       id: order.id,
       orderNo: order.order_no,
-      status: (DB_TO_DOMAIN_STATUS[order.status] || order.status) as any,
+      status: (DB_TO_DOMAIN_STATUS[order.status] || order.status) as Loose,
       warehouseId: order.warehouse_id,
       warehouseName: order.warehouse_name,
       outboundType: order.outbound_type,
@@ -263,7 +264,7 @@ export class MysqlOutboundOrderRepository implements IOutboundOrderRepository {
       auditTime: order.audit_time,
       auditRemark: order.audit_remark,
       remark: order.remark,
-      items: items.map((item: any) => ({
+      items: items.map((item: Loose) => ({
         id: item.id,
         orderId: item.order_id,
         materialId: item.material_id,

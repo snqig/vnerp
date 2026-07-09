@@ -22,7 +22,7 @@ export const GET = withPermission(
 
     if (materialId) {
       // 查询指定物料的成本信息
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT s.*, m.material_name, m.material_code, m.material_spec, m.unit,
                 w.warehouse_name
          FROM stock s
@@ -34,7 +34,7 @@ export const GET = withPermission(
       );
 
       // 查询成本变动历史
-      const history: any = await query(
+      const history: Loose = await query(
         `SELECT sm.*, m.material_name, m.material_code
          FROM stock_movement sm
          LEFT JOIN materials m ON sm.material_id = m.id
@@ -49,14 +49,14 @@ export const GET = withPermission(
     }
 
     // 查询所有物料的成本汇总
-    const countRows: any = await query(
+    const countRows: Loose = await query(
       `SELECT COUNT(DISTINCT s.material_id) as total
        FROM stock s
        WHERE s.quantity > 0`
     );
     const total = countRows[0]?.total || 0;
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT s.material_id, m.material_name, m.material_code, m.material_spec, m.unit,
               SUM(s.quantity) as total_quantity,
               SUM(s.quantity * s.cost_price) as total_cost_amount,
@@ -94,7 +94,7 @@ export const POST = withPermission(
     }
 
     // 基于历史入库记录重新计算移动加权平均成本
-    const movements: any = await query(
+    const movements: Loose = await query(
       `SELECT sm.movement_type, sm.quantity, sm.unit_price, sm.create_time
        FROM stock_movement sm
        WHERE sm.material_id = ?

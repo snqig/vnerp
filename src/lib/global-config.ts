@@ -15,14 +15,14 @@ export interface SystemConfig {
 }
 
 interface ConfigCache {
-  data: Record<string, any>;
+  data: Record<string, Loose>;
   timestamp: number;
 }
 
 let configCache: ConfigCache | null = null;
 const CACHE_TTL = 5 * 60 * 1000;
 
-const DEFAULT_CONFIGS: Record<string, any> = {
+const DEFAULT_CONFIGS: Record<string, Loose> = {
   doc_date_format: 'YYYYMMDD',
   serial_number_length: 4,
 
@@ -85,25 +85,25 @@ const DEFAULT_CONFIGS: Record<string, any> = {
   stocktaking_diff_threshold: 100,
 };
 
-function getConfigFromCache(): Record<string, any> | null {
+function getConfigFromCache(): Record<string, Loose> | null {
   if (configCache && Date.now() - configCache.timestamp < CACHE_TTL) {
     return configCache.data;
   }
   return null;
 }
 
-function setConfigToCache(data: Record<string, any>): void {
+function setConfigToCache(data: Record<string, Loose>): void {
   configCache = {
     data,
     timestamp: Date.now(),
   };
 }
 
-export function getDefaultConfig(): Record<string, any> {
+export function getDefaultConfig(): Record<string, Loose> {
   return { ...DEFAULT_CONFIGS };
 }
 
-export function getConfig(key?: string): any {
+export function getConfig(key?: string): Loose {
   const cachedConfig = getConfigFromCache();
 
   if (!cachedConfig) {
@@ -117,7 +117,7 @@ export function getConfig(key?: string): any {
   return { ...DEFAULT_CONFIGS, ...cachedConfig };
 }
 
-export function setConfig(configs: Record<string, any>): void {
+export function setConfig(configs: Record<string, Loose>): void {
   setConfigToCache({ ...DEFAULT_CONFIGS, ...configs });
 }
 

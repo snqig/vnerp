@@ -12,7 +12,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (repairNo) {
     where += ' AND repair_no LIKE ?';
     params.push('%' + repairNo + '%');
@@ -22,9 +22,9 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(Number(status));
   }
 
-  const totalRows: any = await query('SELECT COUNT(*) as total FROM eqp_repair ' + where, params);
+  const totalRows: Loose = await query('SELECT COUNT(*) as total FROM eqp_repair ' + where, params);
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT * FROM eqp_repair ' + where + ' ORDER BY create_time DESC LIMIT ? OFFSET ?',
     [...params, pageSize, (page - 1) * pageSize]
   );
@@ -47,7 +47,7 @@ export const POST = withPermission(
     const _now = new Date();
     const repairNo = generateDocNo(getWxPrefix());
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       'INSERT INTO eqp_repair (repair_no, equipment_id, equipment_code, equipment_name, fault_date, fault_desc, repair_type, repair_person, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [
         repairNo,

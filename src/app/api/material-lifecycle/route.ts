@@ -85,11 +85,11 @@ async function getHandler(request: NextRequest, user: UserInfo) {
       default:
         return NextResponse.json({ code: 400, message: '无效的操作' }, { status: 400 });
     }
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         code: 500,
-        message: error.message || '查询失败',
+        message: (error as Error).message || '查询失败',
       },
       { status: 500 }
     );
@@ -149,11 +149,11 @@ async function postHandler(request: NextRequest, user: UserInfo) {
       default:
         return NextResponse.json({ code: 400, message: '无效的操作' }, { status: 400 });
     }
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         code: 500,
-        message: error.message || '操作失败',
+        message: (error as Error).message || '操作失败',
       },
       { status: 500 }
     );

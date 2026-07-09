@@ -266,7 +266,7 @@ export const POST = withPermission(async (_request: NextRequest) => {
           [emp.no, emp.name, emp.dept, emp.section, emp.position]
         );
         empCount++;
-      } catch (_e: any) {}
+      } catch (_e) {}
     }
     stats.employees = empCount;
 

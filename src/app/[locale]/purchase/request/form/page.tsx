@@ -235,7 +235,7 @@ export default function PurchaseRequestFormPage() {
 
     if (record.items && record.items.length > 0) {
       let nextItemId = Date.now();
-      const items = record.items.map((item: any) => ({
+      const items = record.items.map((item: Loose) => ({
         id: nextItemId++,
         material_id: item.material_id || 0,
         material_code: item.material_code || '',
@@ -262,7 +262,7 @@ export default function PurchaseRequestFormPage() {
     setMaterialPickerOpen(true);
   };
 
-  const onMaterialPicked = (mat: any) => {
+  const onMaterialPicked = (mat: Loose) => {
     if (materialPickerTargetIdx < 0) return;
     setPurchaseItems((prev) => {
       const next = [...prev];

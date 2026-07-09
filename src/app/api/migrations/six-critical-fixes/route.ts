@@ -8,7 +8,7 @@ async function tableExists(name: string): Promise<boolean> {
     `SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
     [name]
   );
-  return (rows as any[]).length > 0;
+  return (rows as Loose[]).length > 0;
 }
 
 async function columnExists(table: string, column: string): Promise<boolean> {
@@ -16,7 +16,7 @@ async function columnExists(table: string, column: string): Promise<boolean> {
     `SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
     [table, column]
   );
-  return (rows as any[]).length > 0;
+  return (rows as Loose[]).length > 0;
 }
 
 async function addColumnSafe(table: string, column: string, definition: string) {
@@ -32,7 +32,7 @@ async function indexExists(table: string, indexName: string): Promise<boolean> {
     `SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?`,
     [table, indexName]
   );
-  return (rows as any[]).length > 0;
+  return (rows as Loose[]).length > 0;
 }
 
 async function addIndexSafe(table: string, indexName: string, columns: string) {
@@ -147,7 +147,7 @@ export const GET = withPermission(
 
       try {
         const po1Count = await query('SELECT COUNT(*) as cnt FROM pur_order WHERE deleted = 0');
-        const cnt1 = (po1Count as any[])[0]?.cnt || 0;
+        const cnt1 = (po1Count as Loose[])[0]?.cnt || 0;
         if (cnt1 > 0) {
           await execute(`
           INSERT IGNORE INTO std_purchase_order (order_no, supplier_id, supplier_name, order_date, delivery_date, currency, exchange_rate, total_amount, tax_amount, grand_total, status, payment_terms, delivery_address, contact_person, contact_phone, remark, create_by, create_time, update_by, update_time, legacy_source, legacy_id)
@@ -160,15 +160,15 @@ export const GET = withPermission(
         } else {
           results.push('No data in pur_order to migrate');
         }
-      } catch (e: any) {
-        results.push(`Migrate pur_order skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`Migrate pur_order skipped: ${(e as Error).message}`);
       }
 
       try {
         const po2Count = await query(
           'SELECT COUNT(*) as cnt FROM pur_purchase_order WHERE deleted = 0'
         );
-        const cnt2 = (po2Count as any[])[0]?.cnt || 0;
+        const cnt2 = (po2Count as Loose[])[0]?.cnt || 0;
         if (cnt2 > 0) {
           await execute(`
           INSERT IGNORE INTO std_purchase_order (order_no, supplier_id, supplier_name, supplier_code, order_date, delivery_date, currency, exchange_rate, total_amount, total_quantity, tax_rate, tax_amount, grand_total, status, over_receipt_tolerance, payment_terms, delivery_address, contact_person, contact_phone, remark, create_by, create_time, update_by, update_time, approve_by, approve_time, close_by, close_time, close_reason, legacy_source, legacy_id)
@@ -181,13 +181,13 @@ export const GET = withPermission(
         } else {
           results.push('No data in pur_purchase_order to migrate');
         }
-      } catch (e: any) {
-        results.push(`Migrate pur_purchase_order skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`Migrate pur_purchase_order skipped: ${(e as Error).message}`);
       }
 
       try {
         const pod1Count = await query('SELECT COUNT(*) as cnt FROM pur_order_detail');
-        const cnt1 = (pod1Count as any[])[0]?.cnt || 0;
+        const cnt1 = (pod1Count as Loose[])[0]?.cnt || 0;
         if (cnt1 > 0) {
           await execute(`
           INSERT IGNORE INTO std_purchase_order_line (order_id, line_no, material_id, material_code, material_name, material_spec, unit, order_qty, received_qty, unit_price, amount, tax_rate, tax_amount, line_total, require_date, remark, create_time)
@@ -199,13 +199,13 @@ export const GET = withPermission(
         `);
           results.push(`Migrated ${cnt1} rows from pur_order_detail`);
         }
-      } catch (e: any) {
-        results.push(`Migrate pur_order_detail skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`Migrate pur_order_detail skipped: ${(e as Error).message}`);
       }
 
       try {
         const pod2Count = await query('SELECT COUNT(*) as cnt FROM pur_purchase_order_line');
-        const cnt2 = (pod2Count as any[])[0]?.cnt || 0;
+        const cnt2 = (pod2Count as Loose[])[0]?.cnt || 0;
         if (cnt2 > 0) {
           await execute(`
           INSERT IGNORE INTO std_purchase_order_line (order_id, line_no, material_id, material_code, material_name, material_spec, unit, order_qty, received_qty, returned_qty, unit_price, amount, tax_rate, tax_amount, line_total, require_date, closed_flag, closed_reason, remark, create_time, update_time)
@@ -216,8 +216,8 @@ export const GET = withPermission(
         `);
           results.push(`Migrated ${cnt2} rows from pur_purchase_order_line`);
         }
-      } catch (e: any) {
-        results.push(`Migrate pur_purchase_order_line skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`Migrate pur_purchase_order_line skipped: ${(e as Error).message}`);
       }
     }
 
@@ -313,7 +313,7 @@ export const GET = withPermission(
 
       try {
         const bom1Count = await query('SELECT COUNT(*) as cnt FROM prd_bom WHERE deleted = 0');
-        const cnt1 = (bom1Count as any[])[0]?.cnt || 0;
+        const cnt1 = (bom1Count as Loose[])[0]?.cnt || 0;
         if (cnt1 > 0) {
           await execute(`
           INSERT IGNORE INTO std_bom_header (bom_no, product_id, product_code, product_name, version, status, total_cost, remark, create_by, create_time, legacy_source, legacy_id)
@@ -324,13 +324,13 @@ export const GET = withPermission(
         `);
           results.push(`Migrated ${cnt1} rows from prd_bom`);
         }
-      } catch (e: any) {
-        results.push(`Migrate prd_bom skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`Migrate prd_bom skipped: ${(e as Error).message}`);
       }
 
       try {
         const bomDetailCount = await query('SELECT COUNT(*) as cnt FROM prd_bom_detail');
-        const cnt = (bomDetailCount as any[])[0]?.cnt || 0;
+        const cnt = (bomDetailCount as Loose[])[0]?.cnt || 0;
         if (cnt > 0) {
           await execute(`
           INSERT IGNORE INTO std_bom_line (bom_id, line_no, material_id, material_code, material_name, unit, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost, material_type, remark, create_time)
@@ -343,13 +343,13 @@ export const GET = withPermission(
         `);
           results.push(`Migrated ${cnt} rows from prd_bom_detail`);
         }
-      } catch (e: any) {
-        results.push(`Migrate prd_bom_detail skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`Migrate prd_bom_detail skipped: ${(e as Error).message}`);
       }
 
       try {
         const bom2Count = await query('SELECT COUNT(*) as cnt FROM bom_header WHERE deleted = 0');
-        const cnt2 = (bom2Count as any[])[0]?.cnt || 0;
+        const cnt2 = (bom2Count as Loose[])[0]?.cnt || 0;
         if (cnt2 > 0) {
           await execute(`
           INSERT IGNORE INTO std_bom_header (bom_no, product_id, product_code, product_name, product_spec, version, is_default, status, unit, base_qty, total_material_count, total_cost, remark, create_by, create_time, update_by, update_time, approve_by, approve_time, publish_time, legacy_source, legacy_id)
@@ -360,13 +360,13 @@ export const GET = withPermission(
         `);
           results.push(`Migrated ${cnt2} rows from bom_header`);
         }
-      } catch (e: any) {
-        results.push(`Migrate bom_header skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`Migrate bom_header skipped: ${(e as Error).message}`);
       }
 
       try {
         const bomLineCount = await query('SELECT COUNT(*) as cnt FROM bom_line');
-        const cnt = (bomLineCount as any[])[0]?.cnt || 0;
+        const cnt = (bomLineCount as Loose[])[0]?.cnt || 0;
         if (cnt > 0) {
           await execute(`
           INSERT IGNORE INTO std_bom_line (bom_id, line_no, parent_line_id, level, material_id, material_code, material_name, material_spec, unit, consumption_qty, loss_rate, actual_qty, unit_cost, total_cost, material_type, is_key_material, position_no, process_seq, process_name, remark, create_time, update_time)
@@ -379,20 +379,20 @@ export const GET = withPermission(
         `);
           results.push(`Migrated ${cnt} rows from bom_line`);
         }
-      } catch (e: any) {
-        results.push(`Migrate bom_line skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`Migrate bom_line skipped: ${(e as Error).message}`);
       }
 
       try {
         const bom3Count = await query('SELECT COUNT(*) as cnt FROM mdm_product_bom');
-        const cnt3 = (bom3Count as any[])[0]?.cnt || 0;
+        const cnt3 = (bom3Count as Loose[])[0]?.cnt || 0;
         if (cnt3 > 0) {
           results.push(`mdm_product_bom has ${cnt3} rows - requires manual mapping`);
         } else {
           results.push('No data in mdm_product_bom');
         }
-      } catch (e: any) {
-        results.push(`mdm_product_bom check skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`mdm_product_bom check skipped: ${(e as Error).message}`);
       }
     }
 
@@ -456,7 +456,7 @@ export const GET = withPermission(
         const invMatCount = await query(
           'SELECT COUNT(*) as cnt FROM inv_material WHERE deleted = 0'
         );
-        const cnt = (invMatCount as any[])[0]?.cnt || 0;
+        const cnt = (invMatCount as Loose[])[0]?.cnt || 0;
         if (cnt > 0) {
           await execute(`
           INSERT IGNORE INTO std_material (material_code, material_name, specification, category_id, material_type, unit, barcode, brand, safety_stock, max_stock, min_stock, purchase_price, sale_price, cost_price, warehouse_id, shelf_life, warning_days, is_batch_managed, is_serial_managed, status, remark, create_by, create_time, update_by, update_time, legacy_source, legacy_id)
@@ -465,15 +465,15 @@ export const GET = withPermission(
         `);
           results.push(`Migrated ${cnt} rows from inv_material`);
         }
-      } catch (e: any) {
-        results.push(`Migrate inv_material skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`Migrate inv_material skipped: ${(e as Error).message}`);
       }
 
       try {
         const bomMatCount = await query(
           'SELECT COUNT(*) as cnt FROM bom_material WHERE deleted = 0'
         );
-        const cnt = (bomMatCount as any[])[0]?.cnt || 0;
+        const cnt = (bomMatCount as Loose[])[0]?.cnt || 0;
         if (cnt > 0) {
           await execute(`
           INSERT IGNORE INTO std_material (material_code, material_name, specification, material_type, unit, cost_price, safety_stock, default_supplier_id, default_supplier_name, is_active, remark, create_time, update_time, legacy_source, legacy_id)
@@ -484,18 +484,18 @@ export const GET = withPermission(
         `);
           results.push(`Migrated ${cnt} rows from bom_material`);
         }
-      } catch (e: any) {
-        results.push(`Migrate bom_material skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`Migrate bom_material skipped: ${(e as Error).message}`);
       }
 
       try {
         const mdmMatCount = await query('SELECT COUNT(*) as cnt FROM mdm_material');
-        const cnt = (mdmMatCount as any[])[0]?.cnt || 0;
+        const cnt = (mdmMatCount as Loose[])[0]?.cnt || 0;
         if (cnt > 0) {
           results.push(`mdm_material has ${cnt} rows - requires field mapping`);
         }
-      } catch (e: any) {
-        results.push(`mdm_material check skipped: ${e.message}`);
+      } catch (e) {
+        results.push(`mdm_material check skipped: ${(e as Error).message}`);
       }
     }
 
@@ -551,7 +551,7 @@ export const GET = withPermission(
           const nullCount = await query(
             'SELECT COUNT(*) as cnt FROM hr_attendance WHERE employee_id_int IS NULL AND employee_id IS NOT NULL AND deleted = 0'
           );
-          const nullCnt = (nullCount as any[])[0]?.cnt || 0;
+          const nullCnt = (nullCount as Loose[])[0]?.cnt || 0;
           if (nullCnt > 0) {
             results.push(`WARNING: ${nullCnt} rows could not be matched to sys_employee`);
           }
@@ -563,8 +563,8 @@ export const GET = withPermission(
               'employee_id_int'
             )
           );
-        } catch (e: any) {
-          results.push(`Fix hr_attendance skipped: ${e.message}`);
+        } catch (e) {
+          results.push(`Fix hr_attendance skipped: ${(e as Error).message}`);
         }
       }
     }

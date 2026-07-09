@@ -40,8 +40,8 @@ export const POST = withPermission(
         remark: body.remark,
       });
       return successResponse({ id }, 'Tool created');
-    } catch (e: any) {
-      return errorResponse(e.message, 400, 400);
+    } catch (e) {
+      return errorResponse((e as Error).message, 400, 400);
     }
   },
   { logTitle: '创建工装' }

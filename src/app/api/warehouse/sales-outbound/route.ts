@@ -13,7 +13,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const orderNo = searchParams.get('orderNo') || '';
 
   let where = 'WHERE s.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (outboundNo) {
     where += ' AND s.outbound_no LIKE ?';
     params.push('%' + outboundNo + '%');
@@ -27,12 +27,12 @@ export const GET = withPermission(async (request: NextRequest) => {
     params.push('%' + orderNo + '%');
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     'SELECT COUNT(*) as total FROM inv_sales_outbound s ' + where,
     params
   );
   const total = totalRows[0]?.total || 0;
-  const rows: any = await query(
+  const rows: Loose = await query(
     'SELECT s.*, w.warehouse_name FROM inv_sales_outbound s LEFT JOIN inv_warehouse w ON s.warehouse_id = w.id ' +
       where +
       ' ORDER BY s.create_time DESC LIMIT ? OFFSET ?',
@@ -40,9 +40,10 @@ export const GET = withPermission(async (request: NextRequest) => {
   );
 
   for (const row of rows) {
-    const items: any = await query('SELECT * FROM inv_sales_outbound_item WHERE outbound_id = ?', [
-      row.id,
-    ]);
+    const items: Loose = await query(
+      'SELECT * FROM inv_sales_outbound_item WHERE outbound_id = ?',
+      [row.id]
+    );
     row.items = items;
   }
 
@@ -78,9 +79,9 @@ export const POST = withPermission(async (request: NextRequest) => {
     String(now.getDate()).padStart(2, '0') +
     String(Math.floor(Math.random() * 10000)).padStart(4, '0');
 
-  const result: any = await transaction(async (conn) => {
+  const result: Loose = await transaction(async (conn) => {
     if (order_id) {
-      const [orderRows]: any = await conn.execute(
+      const [orderRows]: Loose = await conn.execute(
         'SELECT id, order_no, status, total_amount FROM sales_order WHERE id = ? AND deleted = 0 FOR UPDATE',
         [order_id]
       );
@@ -100,7 +101,7 @@ export const POST = withPermission(async (request: NextRequest) => {
         throw new Error(`物料 ${item.material_name || item.material_id} 出库数量必须大于0`);
       }
 
-      const [invRows]: any = await conn.execute(
+      const [invRows]: Loose = await conn.execute(
         'SELECT id, quantity, material_code, material_name FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
         [item.material_id, warehouse_id]
       );
@@ -116,7 +117,7 @@ export const POST = withPermission(async (request: NextRequest) => {
       }
     }
 
-    const [orderResult]: any = await conn.execute(
+    const [orderResult]: Loose = await conn.execute(
       'INSERT INTO inv_sales_outbound (outbound_no, order_id, order_no, customer_id, customer_name, warehouse_id, outbound_date, delivery_person, status, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)',
       [
         outboundNo,
@@ -163,7 +164,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
   if (action === 'post') {
     const result = await transaction(async (conn) => {
-      const [outboundRows]: any = await conn.execute(
+      const [outboundRows]: Loose = await conn.execute(
         'SELECT id, outbound_no, order_id, order_no, customer_id, customer_name, warehouse_id, status FROM inv_sales_outbound WHERE id = ? AND deleted = 0 FOR UPDATE',
         [id]
       );
@@ -178,13 +179,13 @@ export const PUT = withPermission(async (request: NextRequest) => {
         throw new Error('出库单已完成或已取消，不能重复过账');
       }
 
-      const [itemRows]: any = await conn.execute(
+      const [itemRows]: Loose = await conn.execute(
         'SELECT * FROM inv_sales_outbound_item WHERE outbound_id = ?',
         [id]
       );
 
       for (const item of itemRows) {
-        const [invRows]: any = await conn.execute(
+        const [invRows]: Loose = await conn.execute(
           'SELECT id, quantity FROM inv_inventory WHERE material_id = ? AND warehouse_id = ? AND deleted = 0 FOR UPDATE',
           [item.material_id, outbound.warehouse_id]
         );
@@ -205,7 +206,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
           [item.quantity, inv.id]
         );
 
-        const [batchRows]: any = await conn.execute(
+        const [batchRows]: Loose = await conn.execute(
           `SELECT id, batch_no, available_qty, unit_price, inbound_date
            FROM inv_inventory_batch
            WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 'normal'
@@ -254,7 +255,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
         const avgCost = Number(item.quantity) > 0 ? totalCost / Number(item.quantity) : 0;
         const transNo = 'TRX' + Date.now() + String(item.id).slice(-4);
-        const [matRows]: any = await conn.execute(
+        const [matRows]: Loose = await conn.execute(
           'SELECT material_code FROM mdm_material WHERE id = ?',
           [item.material_id]
         );
@@ -307,19 +308,21 @@ export const PUT = withPermission(async (request: NextRequest) => {
 
       if (outbound.order_id) {
         const _totalOutQty = itemRows.reduce(
-          (sum: number, item: any) => sum + Number(item.quantity || 0),
+          (sum: number, item: Loose) => sum + Number(item.quantity || 0),
           0
         );
 
-        const [soItemRows]: any = await conn.execute(
+        const [soItemRows]: Loose = await conn.execute(
           'SELECT id, material_id, quantity, delivered_qty FROM sales_order_item WHERE order_id = ?',
           [outbound.order_id]
         );
 
         for (const soItem of soItemRows) {
-          const matchedOutItems = itemRows.filter((i: any) => i.material_id === soItem.material_id);
+          const matchedOutItems = itemRows.filter(
+            (i: Loose) => i.material_id === soItem.material_id
+          );
           const outQty = matchedOutItems.reduce(
-            (sum: number, i: any) => sum + Number(i.quantity || 0),
+            (sum: number, i: Loose) => sum + Number(i.quantity || 0),
             0
           );
           if (outQty > 0) {
@@ -330,15 +333,15 @@ export const PUT = withPermission(async (request: NextRequest) => {
           }
         }
 
-        const [updatedSoItems]: any = await conn.execute(
+        const [updatedSoItems]: Loose = await conn.execute(
           'SELECT quantity, COALESCE(delivered_qty, 0) as delivered_qty FROM sales_order_item WHERE order_id = ?',
           [outbound.order_id]
         );
 
         const allDelivered = updatedSoItems.every(
-          (item: any) => Number(item.delivered_qty) >= Number(item.quantity)
+          (item: Loose) => Number(item.delivered_qty) >= Number(item.quantity)
         );
-        const anyDelivered = updatedSoItems.some((item: any) => Number(item.delivered_qty) > 0);
+        const anyDelivered = updatedSoItems.some((item: Loose) => Number(item.delivered_qty) > 0);
 
         if (allDelivered) {
           await conn.execute('UPDATE sales_order SET status = 50 WHERE id = ? AND deleted = 0', [
@@ -356,7 +359,7 @@ export const PUT = withPermission(async (request: NextRequest) => {
     });
 
     const qrCode = 'SH-' + randomUUID().replace(/-/g, '').substring(0, 16);
-    const outboundInfo: any = await queryOne(
+    const outboundInfo: Loose = await queryOne(
       'SELECT * FROM inv_sales_outbound WHERE id = ? AND deleted = 0',
       [id]
     );
@@ -409,7 +412,7 @@ export const DELETE = withPermission(async (request: NextRequest) => {
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ success: false, message: '缺少id' }, { status: 400 });
 
-  const outbound: any = await query(
+  const outbound: Loose = await query(
     'SELECT status FROM inv_sales_outbound WHERE id = ? AND deleted = 0',
     [Number(id)]
   );

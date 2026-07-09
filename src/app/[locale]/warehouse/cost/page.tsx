@@ -49,7 +49,7 @@ export default function CostPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [detailData, setDetailData] = useState<any>(null);
+  const [detailData, setDetailData] = useState<Loose>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -298,7 +298,7 @@ export default function CostPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(detailData.stock || []).map((s: any, idx: number) => (
+                    {(detailData.stock || []).map((s: Loose, idx: number) => (
                       <TableRow key={idx}>
                         <TableCell className="text-sm">
                           {s.warehouse_name || `仓库${s.warehouse_id}`}
@@ -332,7 +332,7 @@ export default function CostPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(detailData.costHistory || []).map((h: any, idx: number) => (
+                    {(detailData.costHistory || []).map((h: Loose, idx: number) => (
                       <TableRow key={idx}>
                         <TableCell className="text-xs">{h.create_time}</TableCell>
                         <TableCell className="text-xs">{h.movement_type}</TableCell>

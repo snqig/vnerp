@@ -20,7 +20,7 @@ export const GET = withPermission(async (request: NextRequest) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '100');
 
   let sql = `SELECT * FROM inv_material WHERE deleted = 0 AND status = 1`;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (type) {
     sql += ' AND material_type = ?';
@@ -47,9 +47,9 @@ export const GET = withPermission(async (request: NextRequest) => {
 
   const materials = await query(sql, params);
 
-  const total = (materials as any[]).length;
+  const total = (materials as Loose[]).length;
   const start = (page - 1) * pageSize;
-  const list = (materials as any[]).slice(start, start + pageSize);
+  const list = (materials as Loose[]).slice(start, start + pageSize);
 
   return successResponse({
     list,

@@ -33,49 +33,49 @@ export interface IStandardCardRepository {
 }
 
 export interface IColorStandardItemRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, items: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<Loose[]>;
+  saveBatch(standardCardId: number, items: Loose[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IProcessStandardItemRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, items: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<Loose[]>;
+  saveBatch(standardCardId: number, items: Loose[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IQualityStandardItemRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, items: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<Loose[]>;
+  saveBatch(standardCardId: number, items: Loose[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IStandardCardMaterialRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, materials: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<Loose[]>;
+  saveBatch(standardCardId: number, materials: Loose[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IStandardCardInkRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, inks: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<Loose[]>;
+  saveBatch(standardCardId: number, inks: Loose[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IStandardCardToolingRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  saveBatch(standardCardId: number, toolings: any[]): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<Loose[]>;
+  saveBatch(standardCardId: number, toolings: Loose[]): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IStandardCardAttachmentRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  save(standardCardId: number, attachment: any): Promise<number>;
+  findByStandardCardId(standardCardId: number): Promise<Loose[]>;
+  save(standardCardId: number, attachment: Loose): Promise<number>;
   delete(id: number): Promise<void>;
   deleteByStandardCardId(standardCardId: number): Promise<void>;
 }
 
 export interface IVersionChangeLogRepository {
-  findByStandardCardId(standardCardId: number): Promise<any[]>;
-  save(log: any): Promise<void>;
+  findByStandardCardId(standardCardId: number): Promise<Loose[]>;
+  save(log: Loose): Promise<void>;
 }

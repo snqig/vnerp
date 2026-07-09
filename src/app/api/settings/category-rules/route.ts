@@ -59,7 +59,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     try {
       const rows = (await query(
         `SELECT id, code, name, status, parent_id FROM ${escapeId(tableName)} WHERE deleted = 0`
-      )) as any[];
+      )) as Loose[];
 
       const codeRegex = new RegExp(rules.code_pattern);
 

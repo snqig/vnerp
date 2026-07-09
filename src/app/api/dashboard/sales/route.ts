@@ -6,7 +6,7 @@ export async function GET(_request: NextRequest) {
   try {
     const dashboardDays = Number(getConfig('dashboard_trend_days') || 30);
 
-    const overview: any = {
+    const overview: Loose = {
       totalOrders: 0,
       todayOrders: 0,
       monthRevenue: 0,
@@ -15,7 +15,7 @@ export async function GET(_request: NextRequest) {
       orderChange: 0,
     };
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT COUNT(*) as total,
           SUM(CASE WHEN DATE(create_time) = CURDATE() THEN 1 ELSE 0 END) as today,
           SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as pending,
@@ -31,7 +31,7 @@ export async function GET(_request: NextRequest) {
     } catch {}
 
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT COALESCE(SUM(total_amount), 0) as total FROM sal_order
         WHERE deleted = 0 AND DATE(create_time) >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
       `);
@@ -39,9 +39,9 @@ export async function GET(_request: NextRequest) {
         overview.monthRevenue = Number(rows[0].total || 0);
     } catch {}
 
-    let orderTrend: any[] = [];
+    let orderTrend: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT DATE(create_time) as date, COUNT(*) as count, COALESCE(SUM(total_amount), 0) as amount
         FROM sal_order WHERE deleted = 0 AND create_time >= DATE_SUB(CURDATE(), INTERVAL ${dashboardDays} DAY)
         GROUP BY DATE(create_time) ORDER BY date
@@ -49,9 +49,9 @@ export async function GET(_request: NextRequest) {
       orderTrend = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let topCustomers: any[] = [];
+    let topCustomers: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT c.customer_name, COUNT(*) as order_count, COALESCE(SUM(o.total_amount), 0) as total_amount
         FROM sal_order o
         LEFT JOIN crm_customer c ON o.customer_id = c.id
@@ -60,18 +60,18 @@ export async function GET(_request: NextRequest) {
       topCustomers = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let topProducts: any[] = [];
+    let topProducts: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT product_name, SUM(quantity) as total_qty, COALESCE(SUM(amount), 0) as total_amount
         FROM sal_order_item WHERE deleted = 0 GROUP BY product_name ORDER BY total_amount DESC LIMIT 5
       `);
       topProducts = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let recentOrders: any[] = [];
+    let recentOrders: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT o.id, o.order_no, c.customer_name, o.total_amount, o.status, o.delivery_date, o.create_time
         FROM sal_order o
         LEFT JOIN crm_customer c ON o.customer_id = c.id
@@ -80,9 +80,9 @@ export async function GET(_request: NextRequest) {
       recentOrders = Array.isArray(rows) ? rows : [];
     } catch {}
 
-    let statusDistribution: any[] = [];
+    let statusDistribution: Loose[] = [];
     try {
-      const rows: any = await query(`
+      const rows: Loose = await query(`
         SELECT status, COUNT(*) as count FROM sal_order WHERE deleted = 0 GROUP BY status
       `);
       statusDistribution = Array.isArray(rows) ? rows : [];

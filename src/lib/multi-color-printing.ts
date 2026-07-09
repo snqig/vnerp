@@ -82,8 +82,8 @@ export function calculateInkConsumption(
 /**
  * 获取油墨配方信息
  */
-export async function getInkFormula(inkFormulaId: number): Promise<any> {
-  const rows: any = await query(
+export async function getInkFormula(inkFormulaId: number): Promise<Loose> {
+  const rows: Loose = await query(
     `SELECT id, formula_name, formula_code, ink_type, color_name, color_code,
             ink_density, default_thickness, default_loss_rate, unit_price, unit
      FROM prd_ink_formula
@@ -161,7 +161,7 @@ export async function findSuitableScreenPlate(
   colorName: string,
   meshCount?: number,
   customerId?: number
-): Promise<any[]> {
+): Promise<Loose[]> {
   let sql = `
     SELECT id, plate_code, plate_name, plate_type, mesh_count, size_spec,
            customer_id, product_name, remaining_count, status
@@ -169,7 +169,7 @@ export async function findSuitableScreenPlate(
     WHERE deleted = 0 AND status = 1
       AND (remaining_count > 0 OR remaining_count IS NULL)
   `;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (colorName) {
     sql += ` AND (plate_name LIKE ? OR product_name LIKE ?)`;
@@ -192,7 +192,7 @@ export async function findSuitableScreenPlate(
     create_time DESC`;
   params.push(customerId || 0);
 
-  const rows: any = await query(sql, params);
+  const rows: Loose = await query(sql, params);
   return rows;
 }
 
@@ -213,8 +213,8 @@ export async function updateScreenPlateUsage(
       [usedCount, usedCount, plateId]
     );
     return true;
-  } catch (error: any) {
-    secureLog('error', '更新网版使用次数失败', { error: error.message, plateId });
+  } catch (error) {
+    secureLog('error', '更新网版使用次数失败', { error: (error as Error).message, plateId });
     return false;
   }
 }
@@ -230,7 +230,7 @@ export async function extractColorSequencesFromStandardCard(
   standardCardId: number
 ): Promise<ColorSequence[]> {
   // 查询工艺卡的颜色信息
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT color_sequence, special_color, color_formula
      FROM prd_standard_card
      WHERE id = ? AND deleted = 0`,
@@ -248,7 +248,7 @@ export async function extractColorSequencesFromStandardCard(
   if (card.color_sequence) {
     try {
       const colors = JSON.parse(card.color_sequence);
-      colors.forEach((color: any, index: number) => {
+      colors.forEach((color: Loose, index: number) => {
         sequences.push({
           seqNo: index + 1,
           colorName: color.name || color.color_name || `色${index + 1}`,
@@ -328,7 +328,7 @@ export async function createMultiColorWorkOrder(
       const now = new Date();
       const workOrderNo = `WO${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
 
-      const [woResult]: any = await conn.execute(
+      const [woResult]: Loose = await conn.execute(
         `INSERT INTO prd_work_order (
           work_order_no, work_order_date, sales_order_id,
           material_id, plan_qty, unit, status, priority, remark
@@ -345,7 +345,7 @@ export async function createMultiColorWorkOrder(
         const selectedPlate = plates.length > 0 ? plates[0] : null;
 
         // 查找油墨配方
-        const inkRows: any = await query(
+        const inkRows: Loose = await query(
           `SELECT id FROM prd_ink_formula
            WHERE color_name = ? AND deleted = 0
            ORDER BY create_time DESC LIMIT 1`,
@@ -387,9 +387,9 @@ export async function createMultiColorWorkOrder(
       message: `多色套印工单创建成功: ${result.workOrderNo}, 共${result.colorSequences.length}色`,
       colorSequences: result.colorSequences,
     };
-  } catch (error: any) {
-    secureLog('error', '创建多色套印工单失败', { error: error.message, standardCardId });
-    return { success: false, message: `创建失败: ${error.message}` };
+  } catch (error) {
+    secureLog('error', '创建多色套印工单失败', { error: (error as Error).message, standardCardId });
+    return { success: false, message: `创建失败: ${(error as Error).message}` };
   }
 }
 
@@ -400,8 +400,8 @@ export async function createMultiColorWorkOrder(
 /**
  * 获取工单色序详情（含网版、油墨信息）
  */
-export async function getWorkOrderColorSequencesDetail(workOrderId: number): Promise<any[]> {
-  const rows: any = await query(
+export async function getWorkOrderColorSequencesDetail(workOrderId: number): Promise<Loose[]> {
+  const rows: Loose = await query(
     `SELECT
       cs.*,
       sp.plate_code as screen_plate_code,
@@ -439,7 +439,7 @@ export async function calculateWorkOrderInkCost(
     workOrderNo: '',
     productName: '',
     planQty,
-    colorSequences: colorSeqs.map((cs: any) => ({
+    colorSequences: colorSeqs.map((cs: Loose) => ({
       seqNo: cs.seq_no,
       colorName: cs.color_name,
       inkFormulaId: cs.ink_formula_id,

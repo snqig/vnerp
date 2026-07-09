@@ -44,7 +44,7 @@ export interface StandardCard {
   process_flow2?: string;
   print_type?: string;
   first_jump_distance?: string;
-  sequences?: string | any[];
+  sequences?: string | Loose[];
   film_manufacturer?: string;
   film_code?: string;
   film_size?: string;
@@ -169,7 +169,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     }
 
     // 解析sequences字段为JSON对象（如果是字符串）
-    const cardAny = card as any;
+    const cardAny = card as Loose;
     if (cardAny.sequences && typeof cardAny.sequences === 'string') {
       try {
         cardAny.sequences = JSON.parse(cardAny.sequences);
@@ -184,7 +184,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   // 构建查询条件
   let sql = `SELECT ${LIST_FIELDS} FROM prd_standard_card WHERE deleted = 0`;
   let countSql = 'SELECT COUNT(*) as total FROM prd_standard_card WHERE deleted = 0';
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (status && status !== 'all') {
     sql += ' AND status = ?';
@@ -239,7 +239,7 @@ export const POST = withPermission(
     }
 
     // 构建插入数据
-    const insertData: any = {
+    const insertData: Loose = {
       card_no: cardNo,
       version: body.version || '1.0',
       status: body.status || 1,
@@ -371,7 +371,7 @@ export const PUT = withPermission(
     }
 
     // 构建更新数据（过滤掉undefined值）
-    const updateData: any = {};
+    const updateData: Loose = {};
     const fieldMappings: Record<string, string> = {
       version: 'version',
       status: 'status',

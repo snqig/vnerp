@@ -145,7 +145,7 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [bomLines, setBomLines] = useState<BomLine[]>([]);
-  const [bomHeader, setBomHeader] = useState<any>(null);
+  const [bomHeader, setBomHeader] = useState<Loose>(null);
   const [versionHistory, setVersionHistory] = useState<BomVersion[]>([]);
   const [bomLoading, setBomLoading] = useState(false);
   const [sortField, setSortField] = useState<string | null>(null);
@@ -175,8 +175,8 @@ export default function ProductsPage() {
   const sortedProducts = useMemo(() => {
     if (!sortField || !sortOrder) return products;
     return [...products].sort((a, b) => {
-      const aVal = String((a as any)[sortField] ?? '').toLowerCase();
-      const bVal = String((b as any)[sortField] ?? '').toLowerCase();
+      const aVal = String((a as Loose)[sortField] ?? '').toLowerCase();
+      const bVal = String((b as Loose)[sortField] ?? '').toLowerCase();
       if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
       return 0;

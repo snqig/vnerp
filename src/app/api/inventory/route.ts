@@ -68,7 +68,7 @@ export const GET = withPermission(
     LEFT JOIN inv_material m ON ib.material_id = m.id
     WHERE ib.deleted = 0
   `;
-    const values: any[] = [];
+    const values: Loose[] = [];
 
     if (warehouseId && warehouseId !== 'all') {
       sql += ' AND ib.warehouse_id = ?';
@@ -87,7 +87,7 @@ export const GET = withPermission(
     }
 
     let countSql = `SELECT COUNT(*) as total FROM inv_inventory_batch ib LEFT JOIN inv_material m ON ib.material_id = m.id WHERE ib.deleted = 0`;
-    const countValues: any[] = [];
+    const countValues: Loose[] = [];
 
     if (warehouseId && warehouseId !== 'all') {
       countSql += ' AND ib.warehouse_id = ?';
@@ -106,7 +106,7 @@ export const GET = withPermission(
     }
 
     const countResult = await query(countSql, countValues);
-    const total = (countResult as any[])[0]?.total || 0;
+    const total = (countResult as Loose[])[0]?.total || 0;
 
     sql += ' ORDER BY ib.create_time DESC';
     sql += ' LIMIT ? OFFSET ?';
@@ -114,7 +114,7 @@ export const GET = withPermission(
 
     const data = await query(sql, values);
 
-    const processedData = (data as any[]).map((item) => ({
+    const processedData = (data as Loose[]).map((item) => ({
       ...item,
       alertLevel: calculateAlertLevel(
         parseFloat(item.available_qty) || 0,
@@ -152,7 +152,7 @@ export const POST = withPermission(
         );
       }
 
-      const material = await queryOne<any>(
+      const material = await queryOne<Loose>(
         'SELECT id, material_name, material_code, unit, purchase_price FROM inv_material WHERE id = ? AND deleted = 0',
         [materialId]
       );
@@ -160,7 +160,7 @@ export const POST = withPermission(
         return commonErrors.notFound('物料不存在');
       }
 
-      const warehouse = await queryOne<any>(
+      const warehouse = await queryOne<Loose>(
         'SELECT id, warehouse_name FROM inv_warehouse WHERE id = ? AND deleted = 0',
         [warehouseId]
       );
@@ -188,7 +188,7 @@ export const POST = withPermission(
           ]
         );
 
-        const [idRows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+        const [idRows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
         const newBatchId = idRows[0].id;
 
         await conn.execute(
@@ -280,7 +280,7 @@ export const POST = withPermission(
           }
 
           const result = await transaction(async (conn) => {
-            const [batchRows]: any = await conn.execute(
+            const [batchRows]: Loose = await conn.execute(
               'SELECT id, batch_no, material_id, material_name, warehouse_id, available_qty, quantity, unit, unit_price, version FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0 FOR UPDATE',
               [batchNo]
             );
@@ -295,7 +295,7 @@ export const POST = withPermission(
               throw new InventoryError('可用库存不足', 'insufficient');
             }
 
-            const [fifoBatches]: any = await conn.query(
+            const [fifoBatches]: Loose = await conn.query(
               `SELECT id, batch_no FROM inv_inventory_batch
              WHERE material_id = ? AND warehouse_id = ? AND available_qty > 0 AND deleted = 0 AND status = 'normal'
              ORDER BY
@@ -314,7 +314,7 @@ export const POST = withPermission(
             const newAvailableQty = parseFloat(batch.available_qty) - quantity;
             const newQuantity = parseFloat(batch.quantity) - quantity;
 
-            const [updateResult]: any = await conn.execute(
+            const [updateResult]: Loose = await conn.execute(
               'UPDATE inv_inventory_batch SET available_qty = ?, quantity = ?, version = version + 1, update_time = NOW() WHERE id = ? AND version = ?',
               [newAvailableQty, newQuantity, batch.id, batch.version]
             );
@@ -418,7 +418,7 @@ export const POST = withPermission(
             );
           }
 
-          const material = await queryOne<any>(
+          const material = await queryOne<Loose>(
             'SELECT id, material_name, material_code, unit FROM inv_material WHERE id = ? AND deleted = 0',
             [materialId]
           );
@@ -426,7 +426,7 @@ export const POST = withPermission(
             return commonErrors.notFound('物料不存在');
           }
 
-          const warehouse = await queryOne<any>(
+          const warehouse = await queryOne<Loose>(
             'SELECT id, warehouse_name, warehouse_code FROM inv_warehouse WHERE id = ? AND deleted = 0',
             [warehouseId]
           );
@@ -503,7 +503,7 @@ export const POST = withPermission(
               quantity,
               allocatedQty: result.allocation.allocated_qty,
               fifoMode: true,
-              batchDetails: result.deductionDetails.map((d: any) => ({
+              batchDetails: result.deductionDetails.map((d: Loose) => ({
                 batchNo: d.batch_no,
                 deductedQty: d.deducted_qty,
                 unitCost: d.unit_cost,
@@ -532,7 +532,7 @@ export const POST = withPermission(
 
       try {
         const result = await transaction(async (conn) => {
-          const [batchRows]: any = await conn.execute(
+          const [batchRows]: Loose = await conn.execute(
             'SELECT id, batch_no, material_id, material_name, warehouse_id, warehouse_name, available_qty, quantity, unit, unit_price, version FROM inv_inventory_batch WHERE batch_no = ? AND deleted = 0 FOR UPDATE',
             [batchNo]
           );
@@ -543,7 +543,7 @@ export const POST = withPermission(
 
           const batch = batchRows[0];
 
-          const [warehouseRows]: any = await conn.execute(
+          const [warehouseRows]: Loose = await conn.execute(
             'SELECT id, warehouse_name FROM inv_warehouse WHERE id = ? AND deleted = 0 FOR UPDATE',
             [warehouseId]
           );
@@ -556,7 +556,7 @@ export const POST = withPermission(
           const fromWarehouseId = batch.warehouse_id;
           const fromWarehouseName = batch.warehouse_name;
 
-          const [updateResult]: any = await conn.execute(
+          const [updateResult]: Loose = await conn.execute(
             'UPDATE inv_inventory_batch SET warehouse_id = ?, warehouse_name = ?, version = version + 1, update_time = NOW() WHERE id = ? AND version = ?',
             [warehouseId, targetWarehouse.warehouse_name, batch.id, batch.version]
           );

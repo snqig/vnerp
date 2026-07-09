@@ -62,7 +62,7 @@ export default function SchedulerPage() {
   const [loading, setLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<Loose[]>([]);
   const [form, setForm] = useState({
     task_name: '',
     task_type: 'inventory_alert',
@@ -392,7 +392,7 @@ export default function SchedulerPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                logs.map((log: any, idx: number) => (
+                logs.map((log: Loose, idx: number) => (
                   <TableRow key={idx}>
                     <TableCell className="text-xs">{log.start_time || '-'}</TableCell>
                     <TableCell className="text-xs">{log.end_time || '-'}</TableCell>

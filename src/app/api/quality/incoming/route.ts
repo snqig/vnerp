@@ -42,7 +42,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   `;
 
   let countSql = `SELECT COUNT(*) as total FROM qc_incoming_inspection i WHERE i.deleted = 0`;
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     const keywordCondition = ` AND (i.inspection_no LIKE ? OR i.supplier_name LIKE ? OR i.material_name LIKE ? OR i.batch_no LIKE ?)`;
@@ -76,7 +76,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
   // 获取每个检验单的明细
   if (result.data.length > 0) {
-    const inspectionIds = result.data.map((i: any) => i.id);
+    const inspectionIds = result.data.map((i: Loose) => i.id);
     const placeholders = inspectionIds.map(() => '?').join(',');
 
     const items = await query(
@@ -95,14 +95,14 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
 
     // 将明细分组到对应的检验单
     const itemsMap = new Map();
-    for (const item of items as any[]) {
+    for (const item of items as Loose[]) {
       if (!itemsMap.has(item.inspectionId)) {
         itemsMap.set(item.inspectionId, []);
       }
       itemsMap.get(item.inspectionId).push(item);
     }
 
-    for (const inspection of result.data as any[]) {
+    for (const inspection of result.data as Loose[]) {
       inspection.items = itemsMap.get(inspection.id) || [];
     }
   }
@@ -159,7 +159,7 @@ export const POST = withPermission(
         `SELECT MAX(inspection_no) as maxNo FROM qc_incoming_inspection WHERE inspection_no LIKE ?`,
         [`IQC${dateStr}%`]
       );
-      const maxNo = (maxInspection as any[])[0]?.maxNo;
+      const maxNo = (maxInspection as Loose[])[0]?.maxNo;
       const seq = maxNo ? String(parseInt(maxNo.slice(-3)) + 1).padStart(3, '0') : '001';
       const inspectionNo = `IQC${dateStr}${seq}`;
 
@@ -186,13 +186,13 @@ export const POST = withPermission(
           inspectorName,
           remark,
         ]
-      )) as [any, any];
+      )) as [Loose[], Loose];
 
-      const inspectionId = (insertResult as any).insertId;
+      const inspectionId = (insertResult as Loose).insertId;
 
       // 批量插入检验单明细
       if (items && items.length > 0) {
-        const itemValues = items.map((item: any) => [
+        const itemValues = items.map((item: Loose) => [
           inspectionId,
           inspectionNo,
           item.itemName,
@@ -330,7 +330,7 @@ export const PUT = withPermission(
       ]);
 
       // 插入新的明细
-      const itemValues = updateData.items.map((item: any) => [
+      const itemValues = updateData.items.map((item: Loose) => [
         id,
         updateData.inspectionNo,
         item.itemName,

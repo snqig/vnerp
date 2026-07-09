@@ -13,12 +13,12 @@ export interface BatchLabelResult {
   totalCount: number;
 }
 
-async function generateLabelNo(conn: any): Promise<string> {
+async function generateLabelNo(conn: Loose): Promise<string> {
   const today = new Date();
   const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
   const prefix = `LBL-${dateStr}`;
 
-  const [rows]: any = await conn.query(
+  const [rows]: Loose = await conn.query(
     `SELECT label_no FROM inv_material_label WHERE label_no LIKE ? AND deleted = 0`,
     [`${prefix}-%`]
   );
@@ -108,7 +108,7 @@ export async function generateInboundLabels(params: {
         ]
       );
 
-      const [labelRow]: any = await conn.query(
+      const [labelRow]: Loose = await conn.query(
         `SELECT id FROM inv_material_label WHERE label_no = ? AND deleted = 0`,
         [labelNo]
       );
@@ -182,7 +182,7 @@ export async function generateWorkOrderLabels(params: {
       [labelNo, qrUuid, params.productName, params.unit, params.workOrderNo, params.quantity]
     );
 
-    const [labelRow]: any = await conn.query(
+    const [labelRow]: Loose = await conn.query(
       `SELECT id FROM inv_material_label WHERE label_no = ? AND deleted = 0`,
       [labelNo]
     );
@@ -214,9 +214,9 @@ export async function scanToConfirmOutbound(params: {
   operatorId?: number;
   operatorName?: string;
   deviceInfo?: string;
-}): Promise<{ confirmed: boolean; materialInfo: any; message: string }> {
+}): Promise<{ confirmed: boolean; materialInfo: Loose; message: string }> {
   return transaction(async (conn) => {
-    const [qrRows]: any = await conn.execute(
+    const [qrRows]: Loose = await conn.execute(
       `SELECT * FROM qrcode_record WHERE qr_code = ? AND deleted = 0 FOR UPDATE`,
       [params.qrCode]
     );
@@ -239,7 +239,7 @@ export async function scanToConfirmOutbound(params: {
       };
     }
 
-    const [outboundItems]: any = await conn.execute(
+    const [outboundItems]: Loose = await conn.execute(
       `SELECT material_id, material_code, material_name, quantity
        FROM inv_outbound_item
        WHERE order_id = ? AND deleted = 0`,
@@ -247,7 +247,7 @@ export async function scanToConfirmOutbound(params: {
     );
 
     const matchedItem = (outboundItems || []).find(
-      (item: any) =>
+      (item: Loose) =>
         Number(item.material_id) === Number(qrRecord.material_id) ||
         item.material_code === qrRecord.material_code
     );
@@ -401,7 +401,7 @@ export async function generateFIFOPriorityLabels(params: {
   materialId: number;
   warehouseName: string;
 }): Promise<BatchLabelResult> {
-  const batches: any = await query(
+  const batches: Loose = await query(
     `SELECT
       id, batch_no, material_id, material_code, material_name,
       specification, available_qty, unit, expire_date, inbound_date
@@ -466,7 +466,7 @@ export async function generateFIFOPriorityLabels(params: {
         ]
       );
 
-      const [labelRow]: any = await conn.query(
+      const [labelRow]: Loose = await conn.query(
         `SELECT id FROM inv_material_label WHERE label_no = ? AND deleted = 0`,
         [labelNo]
       );

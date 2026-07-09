@@ -133,19 +133,19 @@ export default function ReconciliationPage() {
         setTotal(result.data?.total || 0);
         setSummary({
           totalDelivery: data.reduce(
-            (s: number, r: any) => s + parseFloat(String(r.delivery_amount || 0)),
+            (s: number, r: Loose) => s + parseFloat(String(r.delivery_amount || 0)),
             0
           ),
           totalReturn: data.reduce(
-            (s: number, r: any) => s + parseFloat(String(r.return_amount || 0)),
+            (s: number, r: Loose) => s + parseFloat(String(r.return_amount || 0)),
             0
           ),
           totalNet: data.reduce(
-            (s: number, r: any) => s + parseFloat(String(r.net_amount || 0)),
+            (s: number, r: Loose) => s + parseFloat(String(r.net_amount || 0)),
             0
           ),
           totalBalance: data.reduce(
-            (s: number, r: any) => s + parseFloat(String(r.balance_amount || 0)),
+            (s: number, r: Loose) => s + parseFloat(String(r.balance_amount || 0)),
             0
           ),
         });
@@ -426,7 +426,7 @@ export default function ReconciliationPage() {
               <Select
                 value={String(form.customer_id || '')}
                 onValueChange={(v) => {
-                  const cust = customers.find((c: any) => c.id === parseInt(v));
+                  const cust = customers.find((c: Loose) => c.id === parseInt(v));
                   setForm((prev) => ({
                     ...prev,
                     customer_id: parseInt(v),
@@ -438,7 +438,7 @@ export default function ReconciliationPage() {
                   <SelectValue placeholder={t('selectCustomer')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {customers.map((c: any) => (
+                  {customers.map((c: Loose) => (
                     <SelectItem key={c.id} value={String(c.id)}>
                       {c.customer_name}
                     </SelectItem>
@@ -564,7 +564,7 @@ export default function ReconciliationPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {detailItems.map((item: any, idx: number) => (
+                      {detailItems.map((item: Loose, idx: number) => (
                         <TableRow key={idx}>
                           <TableCell>
                             <Badge variant="outline">

@@ -19,7 +19,7 @@ export const GET = withPermission(
     const taskGroup = searchParams.get('taskGroup') || '';
 
     let where = 'WHERE 1=1';
-    const params: any[] = [];
+    const params: Loose[] = [];
 
     if (status) {
       where += ' AND status = ?';
@@ -30,14 +30,14 @@ export const GET = withPermission(
       params.push(taskGroup);
     }
 
-    const countRows: any = await query(
+    const countRows: Loose = await query(
       `SELECT COUNT(*) as total FROM sys_scheduled_task ${where}`,
       params
     );
     const total = countRows[0]?.total || 0;
     const totalPages = Math.ceil(total / pageSize);
 
-    const rows: any = await query(
+    const rows: Loose = await query(
       `SELECT * FROM sys_scheduled_task ${where} ORDER BY id DESC LIMIT ? OFFSET ?`,
       [...params, pageSize, (page - 1) * pageSize]
     );
@@ -59,7 +59,7 @@ export const POST = withPermission(
 
     const { task_name, task_type, cron_expression, task_group, description, config } = body;
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       `INSERT INTO sys_scheduled_task
        (task_name, task_type, task_group, cron_expression, description, config, status, create_by, create_time)
        VALUES (?, ?, ?, ?, ?, ?, 'active', ?, NOW())`,
@@ -101,7 +101,7 @@ export const PUT = withPermission(
 
     if (action === 'execute') {
       // 手动触发执行
-      const tasks: any = await query('SELECT * FROM sys_scheduled_task WHERE id = ?', [id]);
+      const tasks: Loose = await query('SELECT * FROM sys_scheduled_task WHERE id = ?', [id]);
       if (tasks.length === 0) {
         return errorResponse('任务不存在', 404, 404);
       }
@@ -138,19 +138,19 @@ export const PUT = withPermission(
         );
 
         return successResponse({ result: executionResult }, '任务执行完成');
-      } catch (error: any) {
+      } catch (error) {
         await execute(
           `UPDATE sys_task_execution_log SET end_time = NOW(), status = 'failed', result = ? WHERE task_id = ? AND status = 'running'`,
-          [error.message, task.id]
+          [(error as Error).message, task.id]
         );
-        return errorResponse(`任务执行失败: ${error.message}`, 500, 500);
+        return errorResponse(`任务执行失败: ${(error as Error).message}`, 500, 500);
       }
     }
 
     if (action === 'update') {
       const { task_name, cron_expression, description, config } = body;
       const updates: string[] = [];
-      const params: any[] = [];
+      const params: Loose[] = [];
 
       if (task_name) {
         updates.push('task_name = ?');
@@ -198,7 +198,7 @@ export const DELETE = withPermission(
 
 // 任务执行逻辑
 async function executeInventoryAlert(): Promise<string> {
-  const alerts: any = await query(
+  const alerts: Loose = await query(
     `SELECT s.material_id, m.material_name, s.quantity, w.warehouse_name
      FROM stock s
      LEFT JOIN materials m ON s.material_id = m.id
@@ -219,7 +219,7 @@ async function executeDataCleanup(config: string | null): Promise<string> {
     }
   }
 
-  const result: any = await execute(
+  const result: Loose = await execute(
     `DELETE FROM sys_operation_log WHERE create_time < DATE_SUB(NOW(), INTERVAL ? DAY)`,
     [retentionDays]
   );

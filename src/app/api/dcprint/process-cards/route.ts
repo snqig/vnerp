@@ -27,7 +27,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let whereClause = 'WHERE c.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (keyword) {
     whereClause += ` AND (c.card_no LIKE ? OR c.work_order_no LIKE ? OR c.product_code LIKE ? OR c.product_name LIKE ?)`;
@@ -134,7 +134,7 @@ export const POST = withPermission(
     } = body;
 
     // 检查主材标签是否已被使用
-    const mainLabel = await queryOne<any>(
+    const mainLabel = await queryOne<Loose>(
       `SELECT is_used, is_main_material FROM inv_material_label WHERE id = ? AND deleted = 0`,
       [mainLabelId]
     );
@@ -186,7 +186,7 @@ export const POST = withPermission(
         ]
       );
 
-      const cardId = (cardResult as any).insertId;
+      const cardId = (cardResult as Loose).insertId;
 
       // 2. 更新主材标签为已使用
       await conn.execute(`UPDATE inv_material_label SET is_used = 1 WHERE id = ?`, [mainLabelId]);
@@ -241,11 +241,11 @@ export const PUT = withPermission(
 );
 
 // 添加辅料到流程卡
-async function addMaterialToCard(cardIdentifier: string | number, data: any) {
+async function addMaterialToCard(cardIdentifier: string | number, data: Loose) {
   const { labelId, labelNo, createUserId, createUserName } = data;
 
   // 获取流程卡信息
-  const card = await queryOne<any>(
+  const card = await queryOne<Loose>(
     `SELECT id, card_no, lock_status FROM prd_process_card WHERE ${typeof cardIdentifier === 'number' ? 'id' : 'card_no'} = ? AND deleted = 0`,
     [cardIdentifier]
   );
@@ -259,7 +259,7 @@ async function addMaterialToCard(cardIdentifier: string | number, data: any) {
   }
 
   // 获取标签信息
-  const label = await queryOne<any>(
+  const label = await queryOne<Loose>(
     `SELECT material_code, material_name, specification, batch_no, quantity, unit
      FROM inv_material_label WHERE id = ? AND deleted = 0`,
     [labelId]
@@ -316,9 +316,9 @@ async function updateLockStatus(cardIdentifier: string | number, status: string)
 }
 
 // 更新流程卡基本信息
-async function updateCardInfo(cardIdentifier: string | number, data: any) {
+async function updateCardInfo(cardIdentifier: string | number, data: Loose) {
   const updateFields: string[] = [];
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   const fieldColumnMap: Record<string, string> = {
     productCode: 'product_code',
@@ -371,7 +371,7 @@ export const DELETE = withPermission(
 async function queryPaginated(
   sql: string,
   countSql: string,
-  params: any[],
+  params: Loose[],
   pagination: { page: number; pageSize: number }
 ) {
   const { page, pageSize } = pagination;
@@ -379,7 +379,7 @@ async function queryPaginated(
 
   try {
     const [data, countResult] = await Promise.all([
-      query<any[]>(`${sql} LIMIT ? OFFSET ?`, [...(params || []), pageSize, offset]),
+      query<Loose[]>(`${sql} LIMIT ? OFFSET ?`, [...(params || []), pageSize, offset]),
       queryOne<{ total: number }>(countSql, params || []),
     ]);
 

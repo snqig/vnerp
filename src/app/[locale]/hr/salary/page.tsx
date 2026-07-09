@@ -319,7 +319,7 @@ export default function HRSalaryPage() {
         // 统一处理API返回的数据结构
         const rawData = salaryData.data;
         const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
-        const list = rawList.map((item: any) => ({
+        const list = rawList.map((item: Loose) => ({
           id: item.id,
           employee_no: item.employeeNo || item.employee_no,
           name: item.name,
@@ -426,7 +426,7 @@ export default function HRSalaryPage() {
   const sortedSalaries = (() => {
     if (!sortField) return filteredSalaries;
     return [...filteredSalaries].sort((a, b) => {
-      let aVal: any, bVal: any;
+      let aVal: Loose, bVal: Loose;
       switch (sortField) {
         case 'name':
           aVal = a.name;

@@ -10,11 +10,11 @@ export const GET = withPermission(async (_request: NextRequest) => {
       table: 'qc_final_inspection',
       columns: columns,
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: (error as Error).message,
       },
       { status: 500 }
     );

@@ -59,7 +59,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') !== '' ? Number(searchParams.get('status')) : undefined;
 
   let where = 'WHERE t.deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
 
   if (transferNo) {
     where += ' AND t.transfer_no LIKE ?';
@@ -70,13 +70,13 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
     params.push(status);
   }
 
-  const totalRows: any = await query(
+  const totalRows: Loose = await query(
     `SELECT COUNT(*) as total FROM inv_transfer_order t ${where}`,
     params
   );
   const total = totalRows[0]?.total || 0;
 
-  const rows: any[] = await query(
+  const rows: Loose[] = await query(
     `SELECT t.*,
             w1.warehouse_name as from_warehouse_name,
             w2.warehouse_name as to_warehouse_name,
@@ -92,7 +92,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   );
 
   return successResponse({
-    list: rows.map((row: any) => ({
+    list: rows.map((row: Loose) => ({
       ...row,
       type_name: TYPE_MAP[row.type] || '未知',
       status_name: STATUS_MAP[row.status] || '未知',
@@ -142,7 +142,7 @@ export const POST = withPermission(async (request: NextRequest, _userInfo) => {
 
   const transferNo = generateTransferNo();
 
-  const result: any = await execute(
+  const result: Loose = await execute(
     `INSERT INTO inv_transfer_order (
       transfer_no, type, from_warehouse_id, to_warehouse_id,
       from_location, to_location, status, operator_id,
@@ -190,7 +190,7 @@ export const PUT = withPermission(async (request: NextRequest, _userInfo) => {
   const body = await request.json();
   const { id, action, approver_id } = body;
 
-  const transfer: any = await queryOne(
+  const transfer: Loose = await queryOne(
     `SELECT * FROM inv_transfer_order WHERE id = ? AND deleted = 0`,
     [id]
   );
@@ -263,7 +263,7 @@ export const DELETE = withPermission(async (request: NextRequest, _userInfo) => 
     return errorResponse('缺少ID参数', 400, 400);
   }
 
-  const transfer: any = await queryOne(
+  const transfer: Loose = await queryOne(
     `SELECT * FROM inv_transfer_order WHERE id = ? AND deleted = 0`,
     [Number(id)]
   );

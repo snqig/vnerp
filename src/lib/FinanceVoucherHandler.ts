@@ -94,9 +94,9 @@ export class FinanceVoucherHandler {
         total_amount: totalAmount,
         remark: `销售出库 - ${customerName || ''}`,
       });
-    } catch (error: any) {
-      secureLog('error', '生成销售出库凭证失败', { error: error.message, outboundId });
-      return { success: false, error: error.message };
+    } catch (error) {
+      secureLog('error', '生成销售出库凭证失败', { error: (error as Error).message, outboundId });
+      return { success: false, error: (error as Error).message };
     }
   }
 
@@ -144,9 +144,9 @@ export class FinanceVoucherHandler {
         total_amount: totalAmount,
         remark: `采购入库 - ${supplierName || ''}`,
       });
-    } catch (error: any) {
-      secureLog('error', '生成采购入库凭证失败', { error: error.message, inboundId });
-      return { success: false, error: error.message };
+    } catch (error) {
+      secureLog('error', '生成采购入库凭证失败', { error: (error as Error).message, inboundId });
+      return { success: false, error: (error as Error).message };
     }
   }
 
@@ -206,9 +206,9 @@ export class FinanceVoucherHandler {
         total_amount: totalActualCost,
         remark: `生产入库 - 工单${workOrderNo}`,
       });
-    } catch (error: any) {
-      secureLog('error', '生成生产入库凭证失败', { error: error.message, inboundId });
-      return { success: false, error: error.message };
+    } catch (error) {
+      secureLog('error', '生成生产入库凭证失败', { error: (error as Error).message, inboundId });
+      return { success: false, error: (error as Error).message };
     }
   }
 
@@ -255,15 +255,15 @@ export class FinanceVoucherHandler {
         total_amount: totalAmount,
         remark: `生产领料 - 工单${workOrderNo}`,
       });
-    } catch (error: any) {
-      secureLog('error', '生成领料凭证失败', { error: error.message, issueId });
-      return { success: false, error: error.message };
+    } catch (error) {
+      secureLog('error', '生成领料凭证失败', { error: (error as Error).message, issueId });
+      return { success: false, error: (error as Error).message };
     }
   }
 
   private static async createVoucher(data: VoucherData): Promise<VoucherResult> {
     return await transaction(async (conn) => {
-      const [existing]: any = await conn.execute(
+      const [existing]: Loose = await conn.execute(
         `SELECT id FROM fin_voucher WHERE source_type = ? AND source_id = ? AND deleted = 0`,
         [data.source_type, data.source_id]
       );
@@ -275,7 +275,7 @@ export class FinanceVoucherHandler {
         };
       }
 
-      const [result]: any = await conn.execute(
+      const [result]: Loose = await conn.execute(
         `INSERT INTO fin_voucher (
           voucher_no, voucher_date, source_type, source_id, source_no,
           total_amount, status, remark, create_time
@@ -335,7 +335,7 @@ export class FinanceVoucherHandler {
       String(today.getMonth() + 1).padStart(2, '0') +
       String(today.getDate()).padStart(2, '0');
 
-    const [rows]: any = await query(
+    const [rows]: Loose = await query(
       `SELECT COALESCE(MAX(CAST(SUBSTRING(voucher_no, 9) AS UNSIGNED)), 0) as max_no 
        FROM fin_voucher WHERE voucher_no LIKE ?`,
       [`${prefix}${dateStr}%`]
@@ -345,8 +345,8 @@ export class FinanceVoucherHandler {
     return `${prefix}${dateStr}${String(nextNo).padStart(4, '0')}`;
   }
 
-  static async getVouchersBySource(sourceType: VoucherSource, sourceId: number): Promise<any[]> {
-    const rows: any = await query(
+  static async getVouchersBySource(sourceType: VoucherSource, sourceId: number): Promise<Loose[]> {
+    const rows: Loose = await query(
       `SELECT v.*, 
               GROUP_CONCAT(
                 CONCAT(
@@ -366,7 +366,7 @@ export class FinanceVoucherHandler {
       [sourceType, sourceId]
     );
 
-    return rows.map((row: any) => ({
+    return rows.map((row: Loose) => ({
       ...row,
       lines: row.lines_data
         ? row.lines_data.split(';;').map((lineStr: string) => {
@@ -390,7 +390,7 @@ export class FinanceVoucherHandler {
     operatorName: string
   ): Promise<VoucherResult> {
     try {
-      const [voucherRows]: any = await query(
+      const [voucherRows]: Loose = await query(
         `SELECT * FROM fin_voucher WHERE id = ? AND deleted = 0`,
         [voucherId]
       );
@@ -404,11 +404,11 @@ export class FinanceVoucherHandler {
         return { success: false, error: '凭证已审核，无法冲销' };
       }
 
-      const [lineRows]: any = await query(`SELECT * FROM fin_voucher_line WHERE voucher_id = ?`, [
+      const [lineRows]: Loose = await query(`SELECT * FROM fin_voucher_line WHERE voucher_id = ?`, [
         voucherId,
       ]);
 
-      const reversedLines: VoucherLine[] = lineRows.map((line: any) => ({
+      const reversedLines: VoucherLine[] = lineRows.map((line: Loose) => ({
         debit_account: line.credit_account,
         credit_account: line.debit_account,
         amount: line.amount,
@@ -427,9 +427,9 @@ export class FinanceVoucherHandler {
         total_amount: voucher.total_amount,
         remark: `冲销原凭证${voucher.voucher_no} - 原因：${reason}`,
       });
-    } catch (error: any) {
-      secureLog('error', '冲销凭证失败', { error: error.message, voucherId });
-      return { success: false, error: error.message };
+    } catch (error) {
+      secureLog('error', '冲销凭证失败', { error: (error as Error).message, voucherId });
+      return { success: false, error: (error as Error).message };
     }
   }
 }

@@ -135,7 +135,7 @@ export default function AttendancePage() {
 
   const statusConfig: Record<
     string,
-    { label: string; color: string; icon: React.ComponentType<any> }
+    { label: string; color: string; icon: React.ComponentType<Loose> }
   > = {
     normal: {
       label: tc('normal'),
@@ -203,7 +203,7 @@ export default function AttendancePage() {
         const rawData = data.data;
         const rawList = Array.isArray(rawData) ? rawData : rawData?.list || [];
         setAttendanceRecords(
-          rawList.map((r: any, idx: number) => {
+          rawList.map((r: Loose, idx: number) => {
             let dateStr = r.attendanceDate || r.attendance_date || r.date || '';
             if (dateStr && dateStr.includes('T')) {
               dateStr = dateStr.slice(0, 10);
@@ -308,7 +308,7 @@ export default function AttendancePage() {
 
     if (sortField) {
       records = [...records].sort((a, b) => {
-        let aVal: any, bVal: any;
+        let aVal: Loose, bVal: Loose;
         switch (sortField) {
           case 'date':
             aVal = a.date;
@@ -390,7 +390,7 @@ export default function AttendancePage() {
   };
 
   // 编辑考勤记录
-  const handleEdit = (record: any) => {
+  const handleEdit = (record: Loose) => {
     setCurrentRecord(record);
     setFormData({
       attendanceDate: record.date,
@@ -472,7 +472,7 @@ export default function AttendancePage() {
   };
 
   // 删除考勤记录
-  const handleDelete = (record: any) => {
+  const handleDelete = (record: Loose) => {
     setCurrentRecord(record);
     setIsDeleteDialogOpen(true);
   };

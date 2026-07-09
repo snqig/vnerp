@@ -17,7 +17,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let sql = `SELECT wr.*, e.equipment_name FROM prd_work_report wr LEFT JOIN eqp_equipment e ON wr.equipment_id = e.id WHERE wr.deleted = 0`;
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (keyword) {
     sql += ' AND (wr.report_no LIKE ? OR wr.work_order_no LIKE ? OR wr.operator_name LIKE ?)';
@@ -35,11 +35,11 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const list = await query(sql, values);
 
   const countSql = `SELECT COUNT(*) as total FROM prd_work_report WHERE deleted = 0`;
-  const countResult = (await queryOne(countSql)) as any;
+  const countResult = (await queryOne(countSql)) as Loose;
 
   const summaryStats = (await query(
     `SELECT COALESCE(SUM(completed_qty), 0) as total_completed, COALESCE(SUM(qualified_qty), 0) as total_qualified, COALESCE(SUM(defective_qty), 0) as total_defective, COALESCE(SUM(scrap_qty), 0) as total_scrap FROM prd_work_report WHERE deleted = 0`
-  )) as any[];
+  )) as Loose[];
 
   return successResponse({
     list,
@@ -93,11 +93,11 @@ export const POST = withPermission(
         ]
       );
 
-      const [rows]: any = await conn.execute('SELECT LAST_INSERT_ID() as id');
+      const [rows]: Loose = await conn.execute('SELECT LAST_INSERT_ID() as id');
       const reportId = rows[0].id;
 
       if (body.die_template_id) {
-        const [dieRows]: any = await conn.execute(
+        const [dieRows]: Loose = await conn.execute(
           'SELECT id, template_code, cumulative_impressions, max_impressions, warning_threshold, pieces_per_impression, die_status FROM prd_die_template WHERE id = ? AND deleted = 0',
           [body.die_template_id]
         );
@@ -180,7 +180,7 @@ export const PUT = withPermission(
     if (!existing) return commonErrors.notFound('报工记录不存在');
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: Loose[] = [];
     const allowedFields = [
       'completed_qty',
       'qualified_qty',

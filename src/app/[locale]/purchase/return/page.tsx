@@ -120,11 +120,11 @@ export default function PurchaseReturnPage() {
     remark: '',
   });
   const [items, setItems] = useState<ReturnItem[]>([]);
-  const [detailItems, setDetailItems] = useState<any[]>([]);
+  const [detailItems, setDetailItems] = useState<Loose[]>([]);
   const [detailOrder, setDetailOrder] = useState<ReturnOrder | null>(null);
 
   // 采购订单列表（用于选择）
-  const [purchaseOrders, setPurchaseOrders] = useState<any[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<Loose[]>([]);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -162,7 +162,7 @@ export default function PurchaseReturnPage() {
   }, [fetchList]);
 
   const handleSelectOrder = (orderId: string) => {
-    const order = purchaseOrders.find((o: any) => String(o.id) === orderId);
+    const order = purchaseOrders.find((o: Loose) => String(o.id) === orderId);
     if (order) {
       setForm({
         ...form,
@@ -172,7 +172,7 @@ export default function PurchaseReturnPage() {
         supplier_name: order.supplier_name,
       });
       // 自动填充退货明细
-      const orderItems: ReturnItem[] = (order.lines || []).map((line: any, idx: number) => ({
+      const orderItems: ReturnItem[] = (order.lines || []).map((line: Loose, idx: number) => ({
         material_id: line.material_id,
         material_code: line.material_code,
         material_name: line.material_name,
@@ -188,7 +188,7 @@ export default function PurchaseReturnPage() {
     }
   };
 
-  const updateItem = (index: number, field: string, value: any) => {
+  const updateItem = (index: number, field: string, value: Loose) => {
     setItems((prev) => {
       const newItems = [...prev];
       newItems[index] = { ...newItems[index], [field]: value };
@@ -266,7 +266,7 @@ export default function PurchaseReturnPage() {
       const result = await res.json();
       if (result.success) {
         const data = result.data?.list || result.data || [];
-        const found = data.find((r: any) => r.id === order.id);
+        const found = data.find((r: Loose) => r.id === order.id);
         if (found?.items) setDetailItems(found.items);
         else setDetailItems([]);
       }
@@ -475,7 +475,7 @@ export default function PurchaseReturnPage() {
                     <SelectValue placeholder="选择采购订单" />
                   </SelectTrigger>
                   <SelectContent>
-                    {purchaseOrders.map((order: any) => (
+                    {purchaseOrders.map((order: Loose) => (
                       <SelectItem key={order.id} value={String(order.id)}>
                         {order.po_no} - {order.supplier_name}
                       </SelectItem>

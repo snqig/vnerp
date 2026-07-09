@@ -77,13 +77,13 @@ export const POST = withPermission(
   async (request: NextRequest, userInfo: UserInfo) => {
     const body = await request.json();
 
-    let validated: any;
+    let validated: Loose;
     try {
       validated = createInboundOrderSchema.parse(body);
     } catch (e) {
       if (e instanceof ZodError) {
         const messages = e.issues
-          .map((iss: any) => `${iss.path.join('.')}: ${iss.message}`)
+          .map((iss: Loose) => `${iss.path.join('.')}: ${iss.message}`)
           .join('; ');
         return errorResponse(`输入校验失败: ${messages}`, 422, 422);
       }
@@ -97,7 +97,7 @@ export const POST = withPermission(
       inboundDate: validated.inbound_date,
       remark: validated.remark,
       operatorId: userInfo.userId,
-      items: validated.items.map((item: any) => ({
+      items: validated.items.map((item: Loose) => ({
         materialId: item.material_id,
         materialCode: item.material_code,
         materialName: item.material_name,
@@ -120,13 +120,13 @@ export const PUT = withPermission(
   async (request: NextRequest, _userInfo: UserInfo) => {
     const body = await request.json();
 
-    let validated: any;
+    let validated: Loose;
     try {
       validated = updateInboundOrderSchema.parse(body);
     } catch (e) {
       if (e instanceof ZodError) {
         const messages = e.issues
-          .map((iss: any) => `${iss.path.join('.')}: ${iss.message}`)
+          .map((iss: Loose) => `${iss.path.join('.')}: ${iss.message}`)
           .join('; ');
         return errorResponse(`输入校验失败: ${messages}`, 422, 422);
       }

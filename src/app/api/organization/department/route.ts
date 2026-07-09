@@ -28,7 +28,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
   let where = 'WHERE deleted = 0';
-  const values: any[] = [];
+  const values: Loose[] = [];
 
   if (keyword) {
     where += ' AND (dept_name LIKE ? OR dept_code LIKE ?)';
@@ -41,7 +41,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   const countResult = await query(`SELECT COUNT(*) as total FROM sys_department ${where}`, values);
-  const total = (countResult as any[])[0]?.total || 0;
+  const total = (countResult as Loose[])[0]?.total || 0;
 
   const departments = await query<Department>(
     `SELECT id, dept_code, dept_name, parent_id, leader_id, sort_order, status, phone, email, create_time, update_time FROM sys_department ${where} ORDER BY sort_order ASC, id ASC LIMIT ? OFFSET ?`,

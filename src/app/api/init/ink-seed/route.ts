@@ -355,13 +355,13 @@ export const POST = withPermission(
 
 async function verifyDataIntegrity() {
   const errors: string[] = [];
-  const details: Record<string, any> = {};
+  const details: Record<string, Loose> = {};
 
-  const count: any = await queryOne('SELECT COUNT(*) as cnt FROM prd_ink WHERE deleted = 0');
+  const count: Loose = await queryOne('SELECT COUNT(*) as cnt FROM prd_ink WHERE deleted = 0');
   details.ink_count = count?.cnt || 0;
   if (details.ink_count !== 20) errors.push(`油墨数量不正确: 期望20, 实际${details.ink_count}`);
 
-  const typeDist: any = await queryOne(`SELECT
+  const typeDist: Loose = await queryOne(`SELECT
     COALESCE(SUM(CASE WHEN ink_type = 1 THEN 1 ELSE 0 END), 0) as water_based,
     COALESCE(SUM(CASE WHEN ink_type = 2 THEN 1 ELSE 0 END), 0) as solvent,
     COALESCE(SUM(CASE WHEN ink_type = 3 THEN 1 ELSE 0 END), 0) as uv,
@@ -370,18 +370,18 @@ async function verifyDataIntegrity() {
   FROM prd_ink WHERE deleted = 0`);
   details.type_distribution = typeDist;
 
-  const statusDist: any = await queryOne(`SELECT
+  const statusDist: Loose = await queryOne(`SELECT
     COALESCE(SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END), 0) as active,
     COALESCE(SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END), 0) as disabled
   FROM prd_ink WHERE deleted = 0`);
   details.status_distribution = statusDist;
 
-  const totalStock: any = await queryOne(
+  const totalStock: Loose = await queryOne(
     'SELECT COALESCE(SUM(stock_qty), 0) as total FROM prd_ink WHERE deleted = 0'
   );
   details.total_stock = totalStock?.total || 0;
 
-  const lowStock: any = await queryOne(
+  const lowStock: Loose = await queryOne(
     'SELECT COUNT(*) as cnt FROM prd_ink WHERE deleted = 0 AND stock_qty < safety_stock'
   );
   details.low_stock_count = lowStock?.cnt || 0;

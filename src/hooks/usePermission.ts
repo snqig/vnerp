@@ -89,7 +89,7 @@ const permissionModules = [
 ];
 
 // 安全获取 localStorage
-function safeGetUser(): any | null {
+function safeGetUser(): Loose | null {
   if (typeof window === 'undefined') return null;
   try {
     const userStr = localStorage.getItem('user');
@@ -127,14 +127,14 @@ export function usePermission() {
 
         let buttonPermissions: string[] = [];
         if (roleResult.success) {
-          const role = roleResult.data.find((r: any) => r.id === user.role_id);
+          const role = roleResult.data.find((r: Loose) => r.id === user.role_id);
           if (role && role.permissions) {
             buttonPermissions = role.permissions;
           }
         }
 
         setUserPermissions({
-          menus: result.data.map((p: any) => p.menu_id),
+          menus: result.data.map((p: Loose) => p.menu_id),
           buttons: buttonPermissions,
           loaded: true,
         });
@@ -146,7 +146,7 @@ export function usePermission() {
   const hasPermission = useCallback(
     (permissionId: string): boolean => {
       const user = safeGetUser();
-      if (user?.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
+      if (user?.roles?.some((r: Loose) => r.role_code === 'super_admin')) return true;
 
       return userPermissions.buttons.includes(permissionId);
     },
@@ -157,7 +157,7 @@ export function usePermission() {
   const hasMenuPermission = useCallback(
     (menuId: number): boolean => {
       const user = safeGetUser();
-      if (user?.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
+      if (user?.roles?.some((r: Loose) => r.role_code === 'super_admin')) return true;
 
       return userPermissions.menus.includes(menuId);
     },
@@ -168,7 +168,7 @@ export function usePermission() {
   const hasAnyPermission = useCallback(
     (permissionIds: string[]): boolean => {
       const user = safeGetUser();
-      if (user?.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
+      if (user?.roles?.some((r: Loose) => r.role_code === 'super_admin')) return true;
 
       return permissionIds.some((id) => userPermissions.buttons.includes(id));
     },
@@ -179,7 +179,7 @@ export function usePermission() {
   const hasAllPermissions = useCallback(
     (permissionIds: string[]): boolean => {
       const user = safeGetUser();
-      if (user?.roles?.some((r: any) => r.role_code === 'super_admin')) return true;
+      if (user?.roles?.some((r: Loose) => r.role_code === 'super_admin')) return true;
 
       return permissionIds.every((id) => userPermissions.buttons.includes(id));
     },

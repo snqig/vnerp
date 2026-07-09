@@ -14,7 +14,7 @@ let isVisibleColumnExists: boolean | null = null;
 async function checkIsVisibleColumn(): Promise<boolean> {
   if (isVisibleColumnExists !== null) return isVisibleColumnExists;
   try {
-    const colCheck: any = await query(
+    const colCheck: Loose = await query(
       `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sys_menu' AND COLUMN_NAME = 'is_visible'`
     );
     isVisibleColumnExists = colCheck.length > 0;
@@ -52,7 +52,7 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     });
   }
 
-  const roleIds = (userRoles as any[]).map((r) => r.id);
+  const roleIds = (userRoles as Loose[]).map((r) => r.id);
 
   const hasIsVisible = await checkIsVisibleColumn();
   const visibleCondition = hasIsVisible ? 'AND m.is_visible = 1' : '';
@@ -70,9 +70,9 @@ export const GET = withPermission(async (request: NextRequest, userInfo) => {
     roleIds
   );
 
-  const menuTree = buildMenuTree(menus as any[]);
+  const menuTree = buildMenuTree(menus as Loose[]);
 
-  const permissions = extractPermissions(menus as any[]);
+  const permissions = extractPermissions(menus as Loose[]);
 
   setCachedPermissions(userInfo.userId, permissions, menuTree);
 

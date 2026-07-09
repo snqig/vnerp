@@ -66,7 +66,7 @@ export async function allocateFIFO(
     const fifoEnabled = getConfig('fifo_enabled');
     if (!fifoEnabled) {
       // FIFO未启用，返回所有可用批次
-      const allBatches: any = await query(
+      const allBatches: Loose = await query(
         `SELECT * FROM inv_inventory_batch
          WHERE material_id = ? AND remaining_quantity > 0 AND status = 1
          ${warehouseId ? 'AND warehouse_id = ?' : ''}
@@ -78,7 +78,7 @@ export async function allocateFIFO(
     }
 
     // FIFO启用：余料优先 → 入库时间 → 效期
-    const batches: any = await query(
+    const batches: Loose = await query(
       `SELECT * FROM inv_inventory_batch
        WHERE material_id = ? AND remaining_quantity > 0 AND status = 1
        ${warehouseId ? 'AND warehouse_id = ?' : ''}
@@ -91,19 +91,23 @@ export async function allocateFIFO(
     );
 
     return allocateFromBatches(batches, quantity);
-  } catch (error: any) {
-    secureLog('error', 'FIFO批次分配失败', { error: error.message, materialId, quantity });
+  } catch (error) {
+    secureLog('error', 'FIFO批次分配失败', {
+      error: (error as Error).message,
+      materialId,
+      quantity,
+    });
     return {
       success: false,
       allocations: [],
       totalAllocated: 0,
       remainingNeed: quantity,
-      message: `FIFO分配失败: ${error.message}`,
+      message: `FIFO分配失败: ${(error as Error).message}`,
     };
   }
 }
 
-function allocateFromBatches(batches: any[], quantity: number): FIFOAllocationResult {
+function allocateFromBatches(batches: Loose[], quantity: number): FIFOAllocationResult {
   const allocations: BatchAllocation[] = [];
   let remainingNeed = quantity;
   let totalAllocated = 0;
@@ -155,7 +159,7 @@ export async function checkWholeMaterial(qrCode: string): Promise<{
   materialId?: number;
   message: string;
 }> {
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT * FROM inv_inventory_batch WHERE qr_code = ? AND deleted = 0`,
     [qrCode]
   );
@@ -194,7 +198,7 @@ export async function splitMaterial(
   try {
     const result = await transaction(async (conn) => {
       // 1. 查询整料信息
-      const [batchRows]: any = await conn.execute(
+      const [batchRows]: Loose = await conn.execute(
         `SELECT * FROM inv_inventory_batch
          WHERE qr_code = ? AND split_flag = 0 AND status = 1 AND deleted = 0`,
         [parentQRCode]
@@ -210,7 +214,7 @@ export async function splitMaterial(
       const unitCost = parseFloat(wholeMaterial.unit_cost) || 0;
 
       // 2. 获取物料信息和拆分标准
-      const [materialRows]: any = await conn.execute(
+      const [materialRows]: Loose = await conn.execute(
         `SELECT material_type, unit FROM inv_material WHERE id = ?`,
         [materialId]
       );
@@ -365,8 +369,8 @@ export async function splitMaterial(
       unitCost: result.unitCost,
       message: `拆分成功：生成小料${result.splitQuantity}${result.remainderQuantity > 0 ? `，余料${result.remainderQuantity}` : ''}`,
     };
-  } catch (error: any) {
-    secureLog('error', '小料拆分失败', { error: error.message, parentQRCode });
+  } catch (error) {
+    secureLog('error', '小料拆分失败', { error: (error as Error).message, parentQRCode });
     return {
       success: false,
       splitNo: '',
@@ -374,7 +378,7 @@ export async function splitMaterial(
       splitQuantity: 0,
       remainderQuantity: 0,
       unitCost: 0,
-      message: `拆分失败: ${error.message}`,
+      message: `拆分失败: ${(error as Error).message}`,
     };
   }
 }
@@ -457,7 +461,7 @@ export async function logFIFOOverride(
   operatorName?: string,
   requisitionId?: number
 ): Promise<number> {
-  const result: any = await execute(
+  const result: Loose = await execute(
     `INSERT INTO inv_fifo_override_log (
       material_id, recommended_batch_no, actual_batch_no,
       requisition_id, reason, operator_id, operator_name, status
@@ -486,8 +490,8 @@ export async function logFIFOOverride(
 export async function queryMaterialBatches(
   materialId: number,
   warehouseId?: number
-): Promise<any[]> {
-  const rows: any = await query(
+): Promise<Loose[]> {
+  const rows: Loose = await query(
     `SELECT
       b.*,
       m.material_code,
@@ -514,8 +518,8 @@ export async function queryMaterialBatches(
 /**
  * 查询即将过期物料
  */
-export async function queryExpiringMaterials(days: number = 30): Promise<any[]> {
-  const rows: any = await query(
+export async function queryExpiringMaterials(days: number = 30): Promise<Loose[]> {
+  const rows: Loose = await query(
     `SELECT
       b.*,
       m.material_code,
@@ -538,8 +542,8 @@ export async function queryExpiringMaterials(days: number = 30): Promise<any[]> 
 /**
  * 查询呆滞料
  */
-export async function queryObsoleteMaterials(days: number = 90): Promise<any[]> {
-  const rows: any = await query(
+export async function queryObsoleteMaterials(days: number = 90): Promise<Loose[]> {
+  const rows: Loose = await query(
     `SELECT
       b.*,
       m.material_code,

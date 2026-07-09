@@ -14,7 +14,7 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   const status = searchParams.get('status') || '';
 
   let where = 'WHERE deleted = 0';
-  const params: any[] = [];
+  const params: Loose[] = [];
   if (recordNo) {
     where += ' AND record_no LIKE ?';
     params.push('%' + recordNo + '%');
@@ -29,12 +29,12 @@ export const GET = withPermission(async (request: NextRequest, _userInfo) => {
   }
 
   const countSql = 'SELECT COUNT(*) as total FROM ink_mixed_record ' + where;
-  const totalRows: any = await query(countSql, params);
+  const totalRows: Loose = await query(countSql, params);
   const total = totalRows[0]?.total || 0;
 
   const dataSql =
     'SELECT * FROM ink_mixed_record ' + where + ' ORDER BY mix_time DESC LIMIT ? OFFSET ?';
-  const rows: any = await query(dataSql, [...params, pageSize, (page - 1) * pageSize]);
+  const rows: Loose = await query(dataSql, [...params, pageSize, (page - 1) * pageSize]);
 
   return successResponse({ list: rows, total, page, pageSize });
 });
@@ -65,7 +65,7 @@ export const POST = withPermission(
     const _now = new Date();
     const recordNo = generateDocNo(getMrPrefix());
 
-    const result: any = await execute(
+    const result: Loose = await execute(
       'INSERT INTO ink_mixed_record (record_no, base_ink_id, base_ink_code, base_ink_name, mix_ratio, color_name, color_code, company_id, company_name, mix_time, operator_id, operator_name, quantity, unit, warehouse_id, location_id, status, expire_time, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)',
       [
         recordNo,

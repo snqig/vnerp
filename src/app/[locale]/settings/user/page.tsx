@@ -111,7 +111,7 @@ export default function UserManagementPage() {
       // 支持多种数据响应格式
       if (result.success || result.code === 200 || result.code === 0) {
         const rawData = result.data || result;
-        let rawList: any[] = [];
+        let rawList: Loose[] = [];
         let totalCount = 0;
 
         if (Array.isArray(rawData)) {
@@ -284,7 +284,7 @@ export default function UserManagementPage() {
 
       if (result.success || result.code === 200 || result.code === 0) {
         const rawData = result.data || result;
-        let rawList: any[] = [];
+        let rawList: Loose[] = [];
         if (Array.isArray(rawData)) {
           rawList = rawData;
         } else if (rawData) {
@@ -333,7 +333,7 @@ export default function UserManagementPage() {
 
       if (result.success || result.code === 200 || result.code === 0) {
         const rawData = result.data || result;
-        let rawList: any[] = [];
+        let rawList: Loose[] = [];
         if (Array.isArray(rawData)) {
           rawList = rawData;
         } else if (rawData) {
@@ -380,7 +380,7 @@ export default function UserManagementPage() {
 
       if (result.success || result.code === 200 || result.code === 0) {
         const rawData = result.data || result;
-        let rawList: any[] = [];
+        let rawList: Loose[] = [];
         if (Array.isArray(rawData)) {
           rawList = rawData;
         } else if (rawData) {

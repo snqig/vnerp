@@ -99,8 +99,8 @@ export default function QRCodePage() {
   const [typeFilter, setTypeFilter] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [showTrace, setShowTrace] = useState(false);
-  const [form, setForm] = useState<any>({});
-  const [traceData, setTraceData] = useState<any>(null);
+  const [form, setForm] = useState<Loose>({});
+  const [traceData, setTraceData] = useState<Loose>(null);
   const [traceInput, setTraceInput] = useState('');
 
   const fetchData = useCallback(async () => {
@@ -114,7 +114,7 @@ export default function QRCodePage() {
       const res = await authFetch('/api/qrcode?' + params);
       const result = await res.json();
       if (result.success || result.code === 200) {
-        let rawList: any[] = [];
+        let rawList: Loose[] = [];
         let totalCount = 0;
         const rawData = result.data;
         if (Array.isArray(rawData)) {
@@ -281,7 +281,7 @@ export default function QRCodePage() {
                     key: 'status',
                     label: '状态',
                     width: 10,
-                    formatter: (v: any) => ['', '有效', '已用', '过期', '作废'][v] || String(v),
+                    formatter: (v: Loose) => ['', '有效', '已用', '过期', '作废'][v] || String(v),
                   },
                   { key: 'create_time', label: '创建时间', width: 18 },
                 ] as ExportColumn[]
@@ -688,7 +688,7 @@ export default function QRCodePage() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {traceData.timeline?.map((item: any, i: number) => (
+                      {traceData.timeline?.map((item: Loose, i: number) => (
                         <div key={i} className="flex gap-3 items-start">
                           <div className="flex flex-col items-center">
                             <div
@@ -735,7 +735,7 @@ export default function QRCodePage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {traceData.related_records?.map((r: any) => (
+                        {traceData.related_records?.map((r: Loose) => (
                           <TableRow key={r.id}>
                             <TableCell className="font-mono text-xs">{r.qr_code}</TableCell>
                             <TableCell>
@@ -772,7 +772,7 @@ export default function QRCodePage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {traceData.inventory?.map((inv: any, i: number) => (
+                        {traceData.inventory?.map((inv: Loose, i: number) => (
                           <TableRow key={i}>
                             <TableCell>{inv.warehouse_name || '-'}</TableCell>
                             <TableCell className="font-mono text-sm">{inv.material_code}</TableCell>

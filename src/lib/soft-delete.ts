@@ -162,7 +162,9 @@ export async function cancelDocument(options: SoftDeleteOptions): Promise<Cancel
     assertValidIdentifier(tableName);
 
     // 1. 查询原始数据（用于快照）
-    const rows: any = await query(`SELECT * FROM ${escapeId(tableName)} WHERE id = ?`, [recordId]);
+    const rows: Loose = await query(`SELECT * FROM ${escapeId(tableName)} WHERE id = ?`, [
+      recordId,
+    ]);
 
     if (rows.length === 0) {
       return { success: false, message: '单据不存在' };
@@ -236,8 +238,8 @@ export async function cancelDocument(options: SoftDeleteOptions): Promise<Cancel
     });
 
     return { success: true, message: '单据作废成功' };
-  } catch (error: any) {
-    return { success: false, message: `作废失败: ${error.message}` };
+  } catch (error) {
+    return { success: false, message: `作废失败: ${(error as Error).message}` };
   }
 }
 
@@ -254,7 +256,7 @@ export async function restoreDocument(
     assertValidIdentifier(tableName);
 
     // 1. 查询作废记录
-    const cancelRows: any = await query(
+    const cancelRows: Loose = await query(
       `SELECT * FROM document_cancel_log 
        WHERE table_name = ? AND record_id = ? AND is_restored = 0
        ORDER BY cancel_time DESC LIMIT 1`,
@@ -300,8 +302,8 @@ export async function restoreDocument(
     });
 
     return { success: true, message: '单据恢复成功' };
-  } catch (error: any) {
-    return { success: false, message: `恢复失败: ${error.message}` };
+  } catch (error) {
+    return { success: false, message: `恢复失败: ${(error as Error).message}` };
   }
 }
 
@@ -322,7 +324,9 @@ export async function physicalDelete(
     assertValidIdentifier(tableName);
 
     // 1. 查询当前状态
-    const rows: any = await query(`SELECT * FROM ${escapeId(tableName)} WHERE id = ?`, [recordId]);
+    const rows: Loose = await query(`SELECT * FROM ${escapeId(tableName)} WHERE id = ?`, [
+      recordId,
+    ]);
 
     if (rows.length === 0) {
       return { success: false, message: '记录不存在' };
@@ -354,8 +358,8 @@ export async function physicalDelete(
     await execute(`DELETE FROM ${escapeId(tableName)} WHERE id = ?`, [recordId]);
 
     return { success: true, message: '删除成功' };
-  } catch (error: any) {
-    return { success: false, message: `删除失败: ${error.message}` };
+  } catch (error) {
+    return { success: false, message: `删除失败: ${(error as Error).message}` };
   }
 }
 
@@ -376,7 +380,7 @@ async function checkBusinessCondition(
   switch (condition) {
     case 'not_received': {
       // 检查采购单是否已收货
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT COUNT(*) as count FROM inv_inbound_order
          WHERE source_type = 'purchase' AND source_id = ?`,
         [recordId]
@@ -389,7 +393,7 @@ async function checkBusinessCondition(
 
     case 'not_shipped': {
       // 检查销售单是否已发货
-      const rows: any = await query(
+      const rows: Loose = await query(
         `SELECT COUNT(*) as count FROM inv_outbound_order
          WHERE source_type = 'sales' AND source_id = ?`,
         [recordId]
@@ -402,7 +406,9 @@ async function checkBusinessCondition(
 
     case 'not_started': {
       // 检查工单是否已开工
-      const rows: any = await query(`SELECT status FROM prod_work_order WHERE id = ?`, [recordId]);
+      const rows: Loose = await query(`SELECT status FROM prod_work_order WHERE id = ?`, [
+        recordId,
+      ]);
       if (rows[0]?.status === 'producing' || rows[0]?.status === 'completed') {
         return { passed: false, message: '工单已开始生产，不可作废' };
       }
@@ -416,7 +422,7 @@ async function checkBusinessCondition(
 
     case 'not_completed': {
       // 检查调拨单是否已完成
-      const rows: any = await query(`SELECT status FROM inv_transfer_order WHERE id = ?`, [
+      const rows: Loose = await query(`SELECT status FROM inv_transfer_order WHERE id = ?`, [
         recordId,
       ]);
       if (rows[0]?.status === 'completed') {
@@ -427,9 +433,10 @@ async function checkBusinessCondition(
 
     case 'not_paid': {
       // 检查是否已付款/收款
-      const rows: any = await query(`SELECT paid_amount FROM ${escapeId(tableName)} WHERE id = ?`, [
-        recordId,
-      ]);
+      const rows: Loose = await query(
+        `SELECT paid_amount FROM ${escapeId(tableName)} WHERE id = ?`,
+        [recordId]
+      );
       if (rows[0]?.paid_amount > 0) {
         return { passed: false, message: '已付款记录不可作废' };
       }
@@ -438,7 +445,7 @@ async function checkBusinessCondition(
 
     case 'not_posted': {
       // 检查凭证是否已过账
-      const rows: any = await query(`SELECT status FROM fin_voucher WHERE id = ?`, [recordId]);
+      const rows: Loose = await query(`SELECT status FROM fin_voucher WHERE id = ?`, [recordId]);
       if (rows[0]?.status === 'posted') {
         return { passed: false, message: '凭证已过账，不可作废' };
       }
@@ -470,7 +477,7 @@ export async function quickCancel(
   }
 
   // 查询单据编号
-  const rows: any = await query(
+  const rows: Loose = await query(
     `SELECT ${escapeId(config.noField)} as doc_no, status FROM ${escapeId(config.tableName)} WHERE id = ?`,
     [recordId]
   );
